@@ -87,6 +87,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
       [
         "-p", fullPrompt,
         "--output-format", "stream-json",
+        "--verbose",
         "--max-turns", String(maxTurns),
         "--dangerously-skip-permissions",
       ],
