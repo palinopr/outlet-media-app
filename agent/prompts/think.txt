@@ -34,6 +34,15 @@ Rotate through them across cycles.
 - Check session/last-campaigns.json (last Meta pull) — any anomalies?
   - ROAS < 2.0 on any campaign is a flag
   - Spend spiking or dropping unexpectedly is a flag
+  - **Daily pacing check (do this every P4 cycle):**
+    - Each campaign has `daily_budget` (in cents) and `spend` (in cents) and `start_time`
+    - Calculate days_elapsed = (today - start_time) in days (minimum 1)
+    - expected_spend = daily_budget * days_elapsed
+    - pacing_ratio = spend / expected_spend
+    - Flag if pacing_ratio > 1.3 → "Campaign X is overpacing (+30%)"
+    - Flag if pacing_ratio < 0.7 → "Campaign X is underpacing (-30%)"
+    - Only flag ACTIVE campaigns (status === "ACTIVE")
+    - Note: spend and daily_budget are both in cents — no conversion needed for the ratio
 - Check session/last-events.json (last TM One pull) — any anomalies?
   - Slow ticket velocity on an upcoming show is a flag
   - Status changes (on_sale → cancelled) are flags

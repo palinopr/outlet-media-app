@@ -112,8 +112,29 @@ async function ingestTmEvents(body: IngestPayload) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  console.log(`Ingest: upserted ${rows.length} TM events`);
-  return NextResponse.json({ ok: true, inserted: rows.length });
+  // Write daily snapshots — one row per event per day (ignore conflicts = already snapshotted today)
+  const snapshots = events
+    .filter((e) => e.tickets_sold != null || e.gross != null)
+    .map((e) => ({
+      tm_id: e.tm_id,
+      tickets_sold: e.tickets_sold ?? null,
+      tickets_available: e.tickets_available ?? null,
+      gross: e.gross ?? null,
+    }));
+
+  if (snapshots.length > 0) {
+    const { error: snapErr } = await supabaseAdmin!
+      .from("event_snapshots")
+      .upsert(snapshots, { onConflict: "tm_id,snapshot_date", ignoreDuplicates: true });
+
+    if (snapErr) {
+      // Non-fatal: log and continue
+      console.warn("Supabase upsert warning (event_snapshots):", snapErr.message);
+    }
+  }
+
+  console.log(`Ingest: upserted ${rows.length} TM events, ${snapshots.length} snapshots`);
+  return NextResponse.json({ ok: true, inserted: rows.length, snapshots: snapshots.length });
 }
 
 async function ingestMetaCampaigns(body: IngestPayload) {
@@ -151,8 +172,33 @@ async function ingestMetaCampaigns(body: IngestPayload) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  console.log(`Ingest: upserted ${rows.length} Meta campaigns`);
-  return NextResponse.json({ ok: true, inserted: rows.length });
+  // Write daily snapshots — one row per campaign per day (ignore conflicts = already snapshotted today)
+  const snapshots = campaigns
+    .filter((c) => c.spend != null)
+    .map((c) => ({
+      campaign_id: c.campaign_id,
+      spend: c.spend ?? null,
+      impressions: c.impressions ?? null,
+      clicks: c.clicks ?? null,
+      roas: c.roas ?? null,
+      cpm: c.cpm ?? null,
+      cpc: c.cpc ?? null,
+      ctr: c.ctr ?? null,
+    }));
+
+  if (snapshots.length > 0) {
+    const { error: snapErr } = await supabaseAdmin!
+      .from("campaign_snapshots")
+      .upsert(snapshots, { onConflict: "campaign_id,snapshot_date", ignoreDuplicates: true });
+
+    if (snapErr) {
+      // Non-fatal: log and continue
+      console.warn("Supabase upsert warning (campaign_snapshots):", snapErr.message);
+    }
+  }
+
+  console.log(`Ingest: upserted ${rows.length} Meta campaigns, ${snapshots.length} snapshots`);
+  return NextResponse.json({ ok: true, inserted: rows.length, snapshots: snapshots.length });
 }
 
 export async function GET() {
