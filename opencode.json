@@ -11,7 +11,7 @@
       "command": ["/usr/local/bin/npx", "-y", "@modelcontextprotocol/server-github"],
       "enabled": true,
       "environment": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
       }
     },
     "memory": {

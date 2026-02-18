@@ -1,7 +1,6 @@
 # Global Instructions
 
-> Adapted from [sammcj/agentic-coding](https://github.com/sammcj/agentic-coding), [anthropics/skills](https://github.com/anthropics/skills), and [anthropics/claude-cookbooks](https://github.com/anthropics/claude-cookbooks) for Claude Code.
-> Skills and reference docs are in `.Claude/skills/`, commands in `.Claude/commands/`, agents in `.Claude/agents/`.
+> Skills and reference docs are in `.opencode/skills/`, commands in `.opencode/commands/`, agents in `.opencode/agents/`.
 
 ## Communication
 
@@ -104,7 +103,7 @@
 - Use purpose-built tools over manual approaches (e.g. search tools for documentation rather than guessing)
 - If stuck, use available tools to look up documentation or search the web - don't make things up
 - Use MCP tools (dev-tools, github, playwright, memory, n8n) effectively
-- When stuck on persistent problems, follow the systematic debugging methodology in `.Claude/skills/systematic-debugging.md`
+- When stuck on persistent problems, follow the systematic debugging methodology in `.opencode/skills/systematic-debugging.md`
 </TOOLS>
 
 ## Diagramming
@@ -130,7 +129,29 @@ classDef error fill:#FFCDD2,stroke:#EF5350,color:#C62828
 
 ## Self-Review Protocol
 
-After implementing a list of changes, perform a critical self-review pass before reporting completion, fixing any issues you find. See `.Claude/commands/self-review.md` for the full protocol.
+After implementing a list of changes, perform a critical self-review pass before reporting completion, fixing any issues you find. See `.opencode/commands/self-review.md` for the full protocol.
+
+## Learning Protocol
+
+**When you solve a novel problem, discover a reusable pattern, or establish a domain insight**, capture it so the next session can use it immediately without re-deriving it.
+
+**Create a skill** in `.opencode/skills/<name>.md` when:
+- A technique or workflow took meaningful effort to figure out and will recur
+- A third-party API, service, or tool has non-obvious behaviour worth documenting
+- A domain rule (business logic, data shape, integration quirk) was discovered during the task
+
+**Create an agent** in `.opencode/agents/<name>.md` when:
+- A multi-step task type repeats across sessions (e.g. "audit the DB schema", "review a PR")
+- A subagent pattern emerges that could be delegated as its own autonomous unit
+
+**Create a command** in `.opencode/commands/<name>.md` when:
+- A prompt template is used more than once across sessions
+
+**After creating any of the above**:
+1. Add it to the relevant table in this file (Skills, Commands, or Agents section below)
+2. Commit it with the session's other changes so it persists to the next session
+
+This is the equivalent of Codex's "mulch: update expertise" commits - durable knowledge that survives context resets.
 
 ## Rules
 
@@ -144,7 +165,7 @@ After implementing a list of changes, perform a critical self-review pass before
 - **You must not state something is fixed unless you have confirmed it by testing, measuring output, or building the application**
 - Edit only what's necessary - make precise, minimal changes unless instructed otherwise
 - Implement requirements in full or discuss with the user why you can't - don't defer work
-- If stuck on a persistent problem after multiple attempts, follow the systematic debugging methodology in `.Claude/skills/systematic-debugging.md`
+- If stuck on a persistent problem after multiple attempts, follow the systematic debugging methodology in `.opencode/skills/systematic-debugging.md`
 - When contributing to open source: match existing code style, read CONTRIBUTING.md first, no placeholder comments
 </RULES>
 
@@ -154,16 +175,16 @@ After implementing a list of changes, perform a critical self-review pass before
 
 **MANDATORY WORKFLOW:**
 
-1. **File GitHub issues for unfinished work** - Use the `mcp_github_create_issue` tool. One issue per distinct task. Include file paths and current state so the next session can pick up without re-reading history.
+1. **File GitHub issues for unfinished work** - One issue per distinct task. Include file paths and current state so the next session can pick up without re-reading history.
 2. **Run quality gates** (if code changed) - Linting, build, tests must pass before stopping.
-3. **Commit and push** - All changes committed with a clear message. If the repo has a remote:
+3. **Commit and push** - All changes committed with a clear message:
    ```bash
    git add -A
    git commit -m "type: description"
    git push
    ```
-4. **Update Memory MCP** - Use `mcp_memory_create_entities` or `mcp_memory_add_observations` to persist any domain decisions, architecture choices, or context that would take more than 2 minutes to re-derive next session.
-5. **Provide handoff summary** - Tell the user: what was done, what issues were filed, what the next action is.
+4. **Update Memory MCP** - Persist any domain decisions, architecture choices, or context that would take more than 2 minutes to re-derive next session.
+5. **Provide handoff summary** - What was done, what issues were filed, what the next action is.
 
 **CRITICAL RULES:**
 - Never say "ready to continue when you are" and stop - capture the state first.
@@ -172,46 +193,46 @@ After implementing a list of changes, perform a critical self-review pass before
 
 ## Available Skills Reference
 
-The following skill documents are available in `.Claude/skills/` for reference during tasks:
+The following skill documents are available in `.opencode/skills/` for reference during tasks:
 
 | Skill | When to Use |
 |-------|-------------|
-| `.Claude/skills/systematic-debugging.md` | Persistent bugs after multiple failed fix attempts |
-| `.Claude/skills/creating-development-plans.md` | Creating structured dev plans with phased task breakdowns |
-| `.Claude/skills/code-simplification.md` | Reviewing and refactoring code for simplicity |
-| `.Claude/skills/code-review.md` | Self-review after completing complex tasks |
-| `.Claude/skills/critical-thinking.md` | Analysing written content, arguments, and claims |
-| `.Claude/skills/prompt-enhancer.md` | Improving prompt quality for AI systems |
-| `.Claude/skills/testing-anti-patterns.md` | Writing or changing tests, avoiding common test mistakes |
-| `.Claude/skills/analyse-design.md` | Reverse-engineering UI design systems from code |
-| `.Claude/skills/frontend-design.md` | Building distinctive, production-grade web UIs and components |
-| `.Claude/skills/mcp-builder.md` | Creating MCP servers in TypeScript or Python |
-| `.Claude/skills/pdf-processing.md` | Reading, creating, merging, splitting, or OCR-ing PDF files |
-| `.Claude/skills/xlsx-processing.md` | Creating, editing, or analysing Excel/spreadsheet files |
-| `.Claude/skills/docx-processing.md` | Creating, editing, or manipulating Word documents |
-| `.Claude/skills/webapp-testing.md` | Testing local web applications with Playwright |
-| `.Claude/skills/doc-coauthoring.md` | Structured workflow for collaborative document creation |
-| `.Claude/skills/canvas-design.md` | Creating visual art/posters as PDF or PNG using design philosophy |
-| `.Claude/skills/skill-creator.md` | Creating or updating instruction documents for repeatable tasks |
-| `.Claude/skills/pptx-processing.md` | Creating, editing, or styling PowerPoint presentations |
-| `.Claude/skills/algorithmic-art.md` | Generative art with p5.js, seeded randomness, interactive controls |
-| `.Claude/skills/slack-gif-creator.md` | Creating animated GIFs optimised for Slack |
-| `.Claude/skills/web-artifacts-builder.md` | Building complex React + Tailwind + shadcn/ui web applications |
-| `.Claude/skills/agent-skills-spec.md` | Reference spec for the Agent Skills format |
-| `.Claude/skills/authoring-agents-md.md` | Creating and maintaining AGENTS.md project memory files effectively |
-| `.Claude/skills/diataxis-documentation.md` | Applying the Diataxis framework to create or improve technical documentation |
-| `.Claude/skills/shell-scripting.md` | Writing reliable, maintainable bash scripts with defensive programming |
-| `.Claude/skills/go-testing.md` | Applying current Go testing best practices |
-| `.Claude/skills/swift-best-practices.md` | Modern Swift 6+ for iOS/macOS: async/await, actors, MainActor, Sendable |
-| `.Claude/skills/deepeval.md` | Testing LLM applications with the DeepEval pytest-based framework |
-| `.Claude/skills/extract-wisdom.md` | Extracting insights and actionable takeaways from YouTube, articles, or text files |
-| `.Claude/skills/excalidraw-diagrams.md` | Creating Excalidraw diagrams as files or inline previews |
-| `.Claude/skills/aws-strands-agentcore.md` | AWS Strands Agents SDK and Amazon Bedrock AgentCore architecture and patterns |
-| `.Claude/skills/agent-sdk-patterns.md` | Feedback loop architecture, tool selection, and verification patterns for AI agents |
+| `systematic-debugging.md` | Persistent bugs after multiple failed fix attempts |
+| `creating-development-plans.md` | Creating structured dev plans with phased task breakdowns |
+| `code-simplification.md` | Reviewing and refactoring code for simplicity |
+| `code-review.md` | Self-review after completing complex tasks |
+| `critical-thinking.md` | Analysing written content, arguments, and claims |
+| `prompt-enhancer.md` | Improving prompt quality for AI systems |
+| `testing-anti-patterns.md` | Writing or changing tests, avoiding common test mistakes |
+| `analyse-design.md` | Reverse-engineering UI design systems from code |
+| `frontend-design.md` | Building distinctive, production-grade web UIs and components |
+| `mcp-builder.md` | Creating MCP servers in TypeScript or Python |
+| `pdf-processing.md` | Reading, creating, merging, splitting, or OCR-ing PDF files |
+| `xlsx-processing.md` | Creating, editing, or analysing Excel/spreadsheet files |
+| `docx-processing.md` | Creating, editing, or manipulating Word documents |
+| `webapp-testing.md` | Testing local web applications with Playwright |
+| `doc-coauthoring.md` | Structured workflow for collaborative document creation |
+| `canvas-design.md` | Creating visual art/posters as PDF or PNG using design philosophy |
+| `skill-creator.md` | Creating or updating instruction documents for repeatable tasks |
+| `pptx-processing.md` | Creating, editing, or styling PowerPoint presentations |
+| `algorithmic-art.md` | Generative art with p5.js, seeded randomness, interactive controls |
+| `slack-gif-creator.md` | Creating animated GIFs optimised for Slack |
+| `web-artifacts-builder.md` | Building complex React + Tailwind + shadcn/ui web applications |
+| `agent-skills-spec.md` | Reference spec for the Agent Skills format |
+| `authoring-agents-md.md` | Creating and maintaining AGENTS.md project memory files effectively |
+| `diataxis-documentation.md` | Applying the Diataxis framework to create or improve technical documentation |
+| `shell-scripting.md` | Writing reliable, maintainable bash scripts with defensive programming |
+| `go-testing.md` | Applying current Go testing best practices |
+| `swift-best-practices.md` | Modern Swift 6+ for iOS/macOS: async/await, actors, MainActor, Sendable |
+| `deepeval.md` | Testing LLM applications with the DeepEval pytest-based framework |
+| `extract-wisdom.md` | Extracting insights and actionable takeaways from YouTube, articles, or text files |
+| `excalidraw-diagrams.md` | Creating Excalidraw diagrams as files or inline previews |
+| `aws-strands-agentcore.md` | AWS Strands Agents SDK and Amazon Bedrock AgentCore architecture and patterns |
+| `agent-sdk-patterns.md` | Feedback loop architecture, tool selection, and verification patterns for AI agents |
 
 ## Available Command Templates
 
-Templates in `.Claude/commands/`:
+Templates in `.opencode/commands/`:
 
 | Command | Purpose |
 |---------|---------|
@@ -228,7 +249,7 @@ Templates in `.Claude/commands/`:
 
 ## Available Agent Patterns
 
-Reference patterns in `.Claude/agents/`:
+Reference patterns in `.opencode/agents/`:
 
 | Agent | Purpose |
 |-------|---------|
@@ -240,3 +261,28 @@ Reference patterns in `.Claude/agents/`:
 | `docs-quality-reviewer.md` | Audit and improve project documentation quality and structure |
 | `file-length-auditor.md` | Scan codebase for files over 700 lines, provide refactoring recommendations |
 | `peer-reviewer.md` | Use an external LLM CLI to peer-review complex implementations for quality assurance |
+| `tech-lead-orchestrator.md` | Orchestrate multi-step tasks across specialist agents - use for any complex feature |
+| `nextjs-expert.md` | Next.js 15 App Router - routes, server components, API routes, auth, dashboard UI |
+| `ticketmaster-scraper.md` | Ticketmaster API - event data, TM1 numbers, venue and sales info |
+| `meta-ads-manager.md` | Meta Marketing API - Facebook/Instagram campaign creation and performance tracking |
+
+---
+
+## AI Team Configuration (autogenerated 2026-02-18)
+
+**Important: YOU MUST USE subagents when available for the task.**
+
+**Detected Stack:**
+- Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui
+- Backend: Next.js API Routes (Server Actions)
+- External APIs: Ticketmaster API, Meta Marketing API
+- AI: OpenCode agents for autonomous campaign management
+
+| Task | Agent | Notes |
+|------|-------|-------|
+| Multi-step feature or architectural decision | `@tech-lead-orchestrator` | Always start here for complex tasks |
+| Next.js routes, components, API routes | `@nextjs-expert` | Fetches latest Next.js docs before implementing |
+| Ticketmaster data, TM1 numbers, event sync | `@ticketmaster-scraper` | All TM API integration goes through this agent |
+| Meta ads, campaign creation, performance | `@meta-ads-manager` | Facebook/Instagram ad automation |
+| Code review after any significant change | `@code-reviewer` | Run after every feature implementation |
+| Research libraries, APIs, or patterns | `@software-research-assistant` | Use before implementing unfamiliar APIs |

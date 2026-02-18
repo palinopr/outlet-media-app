@@ -2,8 +2,6 @@
 
 Reference patterns for orchestrator-subagent research workflows. Use when designing or implementing multi-agent research systems.
 
-Source: Adapted from `anthropics/claude-cookbooks/patterns/agents/prompts/`.
-
 ---
 
 ## Query Classification

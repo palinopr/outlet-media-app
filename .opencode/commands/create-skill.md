@@ -63,7 +63,7 @@ description: Third-person description of what the skill does and when to use it
 Optional fields:
 ```yaml
 allowed-tools: [Read, Write, Edit, Bash]  # Restrict tools for security (only add upon user request)
-model: claude-sonnet-4-5                  # Override default model (only add upon user request)
+model: openai/gpt-4o                      # Override default model (only add upon user request)
 ```
 
 ### Naming Rules

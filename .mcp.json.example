@@ -5,17 +5,17 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/jaimeortiz"
+        "/Users/YOUR_USERNAME"
       ]
     },
     "github": {
       "command": "/usr/local/bin/npx",
       "args": [
-        "-y", 
+        "-y",
         "@modelcontextprotocol/server-github"
       ],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "ghp_your_token_here"
       }
     },
     "memory": {
@@ -25,18 +25,6 @@
         "@modelcontextprotocol/server-memory"
       ]
     },
-    "n8n-mcp": {
-      "command": "/usr/local/bin/npx",
-      "args": [
-        "-y",
-        "n8n-mcp"
-      ],
-      "env": {
-        "MCP_MODE": "stdio",
-        "LOG_LEVEL": "error",
-        "DISABLE_CONSOLE_OUTPUT": "true"
-      }
-    },
     "playwright": {
       "command": "/usr/local/bin/npx",
       "args": [
@@ -45,20 +33,9 @@
       ]
     },
     "dev-tools": {
-      "command": "/Users/jaimeortiz/go/bin/mcp-devtools",
+      "command": "/path/to/mcp-devtools",
       "env": {
         "LOG_LEVEL": "error"
-      }
-    },
-    "polygon": {
-      "command": "uvx",
-      "args": [
-        "--from",
-        "git+https://github.com/polygon-io/mcp_polygon@v0.4.0",
-        "mcp_polygon"
-      ],
-      "env": {
-        "POLYGON_API_KEY": "3j1gVWCLZ0L4ZXhQrURaKeu6Jl9P_1mc"
       }
     }
   }
