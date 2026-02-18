@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 import { runClaude, turnsForAgent } from "./runner.js";
+import { state } from "./state.js";
 
 const POLL_INTERVAL_MS = 5_000; // 5 seconds
 
@@ -24,9 +25,6 @@ function getSupabase() {
 
 let polling = false;
 
-// Exported so the scheduler can check before starting a think cycle
-export let jobRunning = false;
-
 async function pollOnce() {
   const sb = getSupabase();
   if (!sb) return;
@@ -46,11 +44,17 @@ async function pollOnce() {
 
   if (!jobs || jobs.length === 0) return;
 
+  // Don't start a job while the think cycle is running (both use the claude CLI)
+  if (state.thinkRunning) {
+    console.log("[jobs] Skipping — think cycle is running");
+    return;
+  }
+
   const job = jobs[0];
   console.log(`[jobs] Picked up job ${job.id} for agent: ${job.agent_id}`);
 
   // Mark running
-  jobRunning = true;
+  state.jobRunning = true;
   await sb
     .from("agent_jobs")
     .update({ status: "running", started_at: new Date().toISOString() })
@@ -65,9 +69,11 @@ async function pollOnce() {
   let partialText = "";
   let lastStreamAt = Date.now();
 
+  const systemPromptName = job.agent_id === "assistant" ? "chat" : "command";
+
   const result = await runClaude({
     prompt: fullPrompt,
-    systemPromptName: "command",
+    systemPromptName,
     maxTurns: turnsForAgent(job.agent_id),
     onChunk: async (chunk) => {
       partialText += chunk;
@@ -83,7 +89,7 @@ async function pollOnce() {
     },
   });
 
-  jobRunning = false;
+  state.jobRunning = false;
 
   if (result.success) {
     await sb

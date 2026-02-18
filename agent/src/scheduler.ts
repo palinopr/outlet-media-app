@@ -2,7 +2,7 @@ import cron from "node-cron";
 import { readFileSync, existsSync, unlinkSync } from "node:fs";
 import { runClaude } from "./runner.js";
 import { notifyOwner } from "./bot.js";
-import { jobRunning } from "./jobs.js";
+import { state } from "./state.js";
 
 const CHECK_CRON     = process.env.CHECK_CRON ?? "0 */2 * * *"; // every 2 hours
 const META_CRON      = "0 */6 * * *";                            // every 6 hours
@@ -98,12 +98,13 @@ async function runMetaSync() {
 
 async function runThinkCycle() {
   // Don't think while another task is running (would compete for the claude CLI)
-  if (thinkRunning || tmRunning || metaRunning || jobRunning) {
+  if (thinkRunning || tmRunning || metaRunning || state.jobRunning) {
     console.log("[think] Skipping — another task is running");
     return;
   }
 
   thinkRunning = true;
+  state.thinkRunning = true;
   console.log("[think] Starting proactive think cycle...");
 
   try {
@@ -132,5 +133,6 @@ async function runThinkCycle() {
     console.error("[think] Cycle failed:", msg);
   } finally {
     thinkRunning = false;
+    state.thinkRunning = false;
   }
 }

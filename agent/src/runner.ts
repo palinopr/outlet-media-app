@@ -86,7 +86,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
       CLAUDE_PATH,
       [
         "-p", fullPrompt,
-        "--output-format", "text",
+        "--output-format", "stream-json",
         "--max-turns", String(maxTurns),
         "--dangerously-skip-permissions",
       ],
@@ -99,13 +99,45 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
       }
     );
 
-    let fullText = "";
+    let assembledText = "";  // built from assistant events
+    let fallbackResult = ""; // from type=result event if no assistant text
+    let lineBuffer = "";
     let errorText = "";
 
     proc.stdout.on("data", (chunk: Buffer) => {
-      const text = chunk.toString();
-      fullText += text;
-      onChunk?.(text);
+      lineBuffer += chunk.toString();
+      const lines = lineBuffer.split("\n");
+      // Last element is incomplete — keep in buffer
+      lineBuffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed) continue;
+
+        try {
+          const event = JSON.parse(trimmed) as Record<string, unknown>;
+
+          if (event.type === "assistant") {
+            // Extract text from content blocks and stream character by character
+            const msg = event.message as Record<string, unknown> | undefined;
+            const content = msg?.content as Array<Record<string, unknown>> | undefined;
+            if (Array.isArray(content)) {
+              for (const block of content) {
+                if (block.type === "text" && typeof block.text === "string") {
+                  assembledText += block.text;
+                  onChunk?.(block.text);
+                }
+              }
+            }
+          } else if (event.type === "result") {
+            // Final event — use result field as fallback if we got no assistant text
+            const result = event.result as string | undefined;
+            if (result) fallbackResult = result;
+          }
+        } catch {
+          // Non-JSON line (unlikely with stream-json but possible) — ignore
+        }
+      }
     });
 
     proc.stderr.on("data", (chunk: Buffer) => {
@@ -113,7 +145,18 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     });
 
     proc.on("close", (code) => {
-      const text = fullText.trim() || "Done.";
+      // Flush any remaining buffer content
+      if (lineBuffer.trim()) {
+        try {
+          const event = JSON.parse(lineBuffer.trim()) as Record<string, unknown>;
+          if (event.type === "result" && typeof event.result === "string") {
+            fallbackResult = event.result;
+          }
+        } catch { /* ignore */ }
+      }
+
+      const text = (assembledText.trim() || fallbackResult.trim() || "Done.").trim();
+
       if (code === 0) {
         console.log(`[runner] Done (${text.length} chars)`);
         resolve({ text, success: true });
