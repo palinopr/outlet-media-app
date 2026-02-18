@@ -70,8 +70,11 @@ async function getData(slug: string) {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
+// Spend from Meta API is stored in cents — divide by 100 for display
+function centsToUsd(cents: number | null) { return cents == null ? null : cents / 100; }
+
 function fmt(n: number) { return n.toLocaleString("en-US"); }
-function fmtUsd(n: number | null) { return n == null ? "—" : "$" + n.toLocaleString("en-US"); }
+function fmtUsd(n: number | null) { return n == null ? "—" : "$" + Math.round(n).toLocaleString("en-US"); }
 function fmtNum(n: number | null) {
   if (n == null) return "—";
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
@@ -108,8 +111,8 @@ export default async function ClientDashboard({ params }: Props) {
   const totalSold     = events.reduce((a, s) => a + (s.tickets_sold ?? 0), 0);
   const totalCapacity = events.reduce((a, s) => a + (s.tickets_sold ?? 0) + (s.tickets_available ?? 0), 0);
   const totalGross    = events.reduce((a, s) => a + (s.gross ?? 0), 0);
-  const totalSpend    = campaigns.reduce((a, c) => a + (c.spend ?? 0), 0);
-  const totalRevenue  = campaigns.reduce((a, c) => a + (c.spend ?? 0) * (c.roas ?? 0), 0);
+  const totalSpend    = campaigns.reduce((a, c) => a + (centsToUsd(c.spend) ?? 0), 0);
+  const totalRevenue  = campaigns.reduce((a, c) => a + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
   const blendedRoas   = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(1) : null;
 
   const clientName = slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -264,12 +267,12 @@ export default async function ClientDashboard({ params }: Props) {
                     <div className="flex gap-6 shrink-0 sm:text-right">
                       <div>
                         <p className="text-xs text-muted-foreground">Ad Spend</p>
-                        <p className="text-sm font-medium tabular-nums">{fmtUsd(c.spend)}</p>
+                        <p className="text-sm font-medium tabular-nums">{fmtUsd(centsToUsd(c.spend))}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Revenue</p>
                         <p className="text-sm font-medium tabular-nums">
-                          {c.spend != null && c.roas != null ? fmtUsd(Math.round(c.spend * c.roas)) : "—"}
+                          {c.spend != null && c.roas != null ? fmtUsd(centsToUsd(c.spend)! * c.roas) : "—"}
                         </p>
                       </div>
                       <div>

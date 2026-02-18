@@ -42,27 +42,54 @@ const MOCK_CAMPAIGNS: MetaCampaign[] = [
 
 // ─── Data fetching ─────────────────────────────────────────────────────────
 
+interface AgentLastRun {
+  agentId: string;
+  status: string;
+  finishedAt: string | null;
+}
+
 async function getData() {
   if (!supabaseAdmin) {
-    return { events: MOCK_EVENTS, campaigns: MOCK_CAMPAIGNS, fromDb: false };
+    return { events: MOCK_EVENTS, campaigns: MOCK_CAMPAIGNS, agentRuns: [], fromDb: false };
   }
 
-  const [eventsRes, campaignsRes] = await Promise.all([
+  const [eventsRes, campaignsRes, agentRunsRes] = await Promise.all([
     supabaseAdmin.from("tm_events").select("*").order("date", { ascending: true }).limit(10),
     supabaseAdmin.from("meta_campaigns").select("*").eq("status", "ACTIVE").order("spend", { ascending: false }).limit(5),
+    // Get the last completed run for each scheduled agent type
+    supabaseAdmin
+      .from("agent_jobs")
+      .select("agent_id, status, finished_at")
+      .in("agent_id", ["meta-ads", "tm-monitor"])
+      .in("status", ["done", "error"])
+      .order("finished_at", { ascending: false })
+      .limit(20),
   ]);
 
   const events = eventsRes.data?.length ? (eventsRes.data as TmEvent[]) : MOCK_EVENTS;
   const campaigns = campaignsRes.data?.length ? (campaignsRes.data as MetaCampaign[]) : MOCK_CAMPAIGNS;
   const fromDb = Boolean(eventsRes.data?.length || campaignsRes.data?.length);
 
-  return { events, campaigns, fromDb };
+  // Deduplicate to get the most recent run per agent type
+  const seen = new Set<string>();
+  const agentRuns: AgentLastRun[] = [];
+  for (const row of (agentRunsRes.data ?? [])) {
+    if (!seen.has(row.agent_id)) {
+      seen.add(row.agent_id);
+      agentRuns.push({ agentId: row.agent_id, status: row.status, finishedAt: row.finished_at });
+    }
+  }
+
+  return { events, campaigns, agentRuns, fromDb };
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
+// Spend from Meta API is stored in cents — divide by 100 for display
+function centsToUsd(cents: number | null) { return cents == null ? null : cents / 100; }
+
 function fmt(n: number) { return n.toLocaleString("en-US"); }
-function fmtUsd(n: number | null) { return n == null ? "—" : "$" + n.toLocaleString("en-US"); }
+function fmtUsd(n: number | null) { return n == null ? "—" : "$" + Math.round(n).toLocaleString("en-US"); }
 function fmtDate(d: string | null) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -93,13 +120,13 @@ function statusBadge(s: string) {
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 export default async function AdminDashboard() {
-  const { events, campaigns, fromDb } = await getData();
+  const { events, campaigns, agentRuns, fromDb } = await getData();
 
   const totalSold  = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
   const totalCap   = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
   const totalGross = events.reduce((s, e) => s + (e.gross ?? 0), 0);
-  const totalSpend = campaigns.reduce((s, c) => s + (c.spend ?? 0), 0);
-  const totalRoasRevenue = campaigns.reduce((s, c) => s + (c.spend ?? 0) * (c.roas ?? 0), 0);
+  const totalSpend = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0), 0);
+  const totalRoasRevenue = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
   const avgRoas = totalSpend > 0 ? totalRoasRevenue / totalSpend : 0;
 
   const now = new Date().toLocaleDateString("en-US", {
@@ -239,7 +266,7 @@ export default async function AdminDashboard() {
                     <div className="flex gap-6 shrink-0 text-right">
                       <div>
                         <p className="text-xs text-muted-foreground">Spend</p>
-                        <p className="text-sm font-medium tabular-nums">{fmtUsd(c.spend)}</p>
+                        <p className="text-sm font-medium tabular-nums">{fmtUsd(centsToUsd(c.spend))}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">ROAS</p>
@@ -270,54 +297,39 @@ export default async function AdminDashboard() {
             </a>
           </div>
           <div className="space-y-3">
-            <Card className="border-border/60">
-              <CardContent className="py-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Bot className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">TM One Monitor</span>
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-xs text-amber-400">
-                    <Zap className="h-3 w-3" />
-                    Idle
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  Last run: not started
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/60">
-              <CardContent className="py-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Megaphone className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Meta Ads Manager</span>
-                  </div>
-                  <span className="inline-flex items-center gap-1 text-xs text-amber-400">
-                    <Zap className="h-3 w-3" />
-                    Idle
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Clock className="h-3 w-3" />
-                  Last run: not started
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-border/60 border-dashed">
-              <CardContent className="py-4">
-                <p className="text-xs text-muted-foreground text-center">
-                  Start the agent to enable<br />autonomous monitoring
-                </p>
-                <div className="mt-3 text-center">
-                  <code className="text-xs bg-muted px-2 py-1 rounded">cd agent && npm start</code>
-                </div>
-              </CardContent>
-            </Card>
+            {(
+              [
+                { agentId: "tm-monitor",  label: "TM One Monitor",   icon: Bot      },
+                { agentId: "meta-ads",    label: "Meta Ads Manager",  icon: Megaphone },
+              ] as const
+            ).map(({ agentId, label, icon: Icon }) => {
+              const run = agentRuns.find((r) => r.agentId === agentId);
+              const lastRun = run?.finishedAt
+                ? new Date(run.finishedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
+                : "Not yet run";
+              const statusColor = run?.status === "done" ? "text-emerald-400" : run?.status === "error" ? "text-red-400" : "text-muted-foreground";
+              const statusLabel = run?.status === "done" ? "Done" : run?.status === "error" ? "Error" : "Idle";
+              return (
+                <Card key={agentId} className="border-border/60">
+                  <CardContent className="py-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{label}</span>
+                      </div>
+                      <span className={`inline-flex items-center gap-1 text-xs ${statusColor}`}>
+                        <Zap className="h-3 w-3" />
+                        {statusLabel}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                      <Clock className="h-3 w-3" />
+                      Last run: {lastRun}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
 
