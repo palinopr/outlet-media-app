@@ -153,6 +153,24 @@ After implementing a list of changes, perform a critical self-review pass before
 
 This is the equivalent of Codex's "mulch: update expertise" commits - durable knowledge that survives context resets.
 
+## Deployment
+
+<DEPLOYMENT>
+**Railway is the production host. It does NOT auto-deploy from git push — you must trigger it manually every time.**
+
+After every `git push`, run:
+```bash
+cd /Users/jaimeortiz/outlet-media-app && railway up --detach
+```
+
+**Never declare a task complete without triggering Railway.** The app will be stale until this runs.
+
+- Railway project: `outlet-media-app` (ID: `25cb843d-b4b5-4fe2-aa2d-754f6175e37d`)
+- Service ID: `e08125fc-7385-4121-a42f-1d381181de28`
+- Live URL: `https://outlet-media-app-production.up.railway.app`
+- CLI: `/opt/homebrew/bin/railway` — authenticated as `jaime@outletmedia.net`
+</DEPLOYMENT>
+
 ## Rules
 
 <RULES>
