@@ -36,7 +36,6 @@ export async function POST(request: Request) {
   await client.invitations.createInvitation({
     emailAddress: body.email,
     publicMetadata,
-    redirectUrl: `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/sign-in`,
   });
 
   return NextResponse.json({ ok: true });

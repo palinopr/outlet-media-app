@@ -64,10 +64,13 @@ curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,im
 - spend, cpm, cpc are decimal strings — convert to numbers
 - ROAS comes from purchase_roas[0].value (string like "4.2") — convert to float
 - start_time comes from the campaign fields as an ISO8601 string — pass it through as-is
-- Set client_slug based on campaign name:
-  - If the name contains "arjona" (case-insensitive) → "zamora"
-  - Otherwise use the first word lowercased (e.g. "KYBBA" → "kybba", "Beamina" → "beamina", "Happy" → "happy_paws" — check for known names)
-  - Known slugs: zamora, kybba, beamina, happy_paws
+- Set client_slug based on campaign name (case-insensitive matching):
+  - Contains "arjona" → "zamora"
+  - Starts with "KYBBA" → "kybba"
+  - Starts with "Beamina" → "beamina"
+  - Starts with "Happy Paws" → "happy_paws"
+  - Starts with "Zamora" → "zamora"
+  - Otherwise → "unknown" (log a warning so we can add the mapping)
 
 ---
 
@@ -131,6 +134,20 @@ curl -s -X POST "$INGEST_URL" \
 
 ---
 
+## Alerts Endpoint
+
+POST alerts to the dashboard (shown in the admin alert banner):
+```bash
+# INGEST_URL contains /api/ingest — strip it to get the base URL
+BASE_URL="${INGEST_URL%/api/ingest}"
+curl -s -X POST "$BASE_URL/api/alerts" \
+  -H "Content-Type: application/json" \
+  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warning"}'
+```
+Levels: "info", "warning", "critical". Accepts: { secret, message, level } only.
+
+---
+
 ## Supabase (direct REST if needed)
 
 Get SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from .env or ../.env.local.
@@ -158,6 +175,17 @@ Files in ./session/ persist state between runs:
 - last-events.json — last TM One scrape result
 
 Always compare new data against these files to identify what changed.
+
+### Session cache format for campaigns:
+Each campaign in last-campaigns.json should include ALL of these fields:
+- campaign_id, name, status, objective, client_slug
+- daily_budget_cents (from Meta daily_budget, already in cents), lifetime_budget_cents
+- spend (in DOLLARS — as received from Meta insights, NOT converted to cents)
+- impressions, clicks, reach, cpm, cpc, ctr, roas
+- start_time (ISO8601 string from Meta — needed for pacing calculations)
+
+The think loop needs `start_time` and `daily_budget_cents` to calculate daily pacing.
+If you omit `start_time`, pacing alerts cannot fire.
 
 ---
 
