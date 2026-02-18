@@ -1,7 +1,7 @@
 # Project Status
 
 **Last Updated**: 2026-02-18
-**Current Phase**: Foundation - scaffolding Next.js app and agent architecture
+**Current Phase**: Foundation complete - Next.js scaffold running, ready to wire APIs
 **Repo**: `palinopr/outlet-media-app` (private)
 
 ---
@@ -19,23 +19,27 @@ Setting up the autonomous ad agency platform. Two parallel tracks:
 
 - [x] Researched top OpenCode repos (rothnic, maclevison, microrepar, awesome-opencode)
 - [x] Rewrote AGENTS.md - OpenCode only, removed all Claude Code refs
-- [x] Created .gitignore, .mcp.json.example
-- [x] Created GitHub repos: `palinopr/claude-agent-template` (public), `palinopr/outlet-media-app` (private)
-- [x] Created STATUS.md (this file)
-- [x] Created domain-specific agents: tech-lead-orchestrator, nextjs-expert, ticketmaster-scraper, meta-ads-manager
+- [x] Created .gitignore, .mcp.json.example, opencode.json.example, .env.example
+- [x] Pushed to `palinopr/claude-agent-template` (public, clean - no secrets)
+- [x] Pushed to `palinopr/outlet-media-app` (private)
+- [x] Created STATUS.md
+- [x] Created domain-specific agents with YAML frontmatter: tech-lead-orchestrator, nextjs-expert, ticketmaster-scraper, meta-ads-manager
+- [x] Scaffolded Next.js 16.1.6 (React 19, TypeScript, Tailwind, App Router, Turbopack)
+- [x] Built 12 routes: /, /login, /admin/*, /client/[slug]/*, /api/*
+- [x] Build passes with 0 TypeScript errors
 
 ---
 
 ## Next Steps
 
-1. [ ] Push template to `palinopr/claude-agent-template`
-2. [ ] Push app to `palinopr/outlet-media-app`
-3. [ ] Run `create-next-app` in this directory
-4. [ ] Set up auth (admin vs client roles)
-5. [ ] Build admin dashboard skeleton
-6. [ ] Build client portal skeleton (Zamora view)
-7. [ ] Wire Ticketmaster API connection
-8. [ ] Wire Meta API connection
+1. [ ] Choose auth solution (Clerk recommended for fast setup, or NextAuth)
+2. [ ] Add auth middleware to protect /admin/* and /client/[slug]/*
+3. [ ] Wire Ticketmaster API - populate /admin/events with real data
+4. [ ] Wire Meta API - populate /admin/campaigns with real campaigns
+5. [ ] Build real dashboard with charts (Recharts or Tremor)
+6. [ ] Add database (Supabase or PlanetScale) for campaign data persistence
+7. [ ] Implement agent trigger UI in /admin/agents
+8. [ ] Deploy to Vercel
 
 ---
 
