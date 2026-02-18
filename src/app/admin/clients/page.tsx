@@ -8,13 +8,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { CopyButton } from "@/components/admin/copy-button";
 import {
   Users,
   DollarSign,
   Megaphone,
   TrendingUp,
   ExternalLink,
-  Copy,
 } from "lucide-react";
 
 // ─── Mock data (replace with Supabase query once connected) ───────────────
@@ -75,9 +75,6 @@ function fmtUsd(n: number) {
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 export default function ClientsPage() {
-  const portalBase =
-    typeof window !== "undefined" ? window.location.origin : "";
-
   return (
     <div className="space-y-8">
 
@@ -183,13 +180,7 @@ export default function ClientsPage() {
                           <ExternalLink className="h-3 w-3" />
                           Open
                         </a>
-                        <button
-                          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                          title={`Copy portal URL: /client/${c.slug}`}
-                        >
-                          <Copy className="h-3 w-3" />
-                          Copy
-                        </button>
+                        <CopyButton text={`/client/${c.slug}`} />
                       </div>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">

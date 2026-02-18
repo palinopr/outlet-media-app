@@ -327,7 +327,15 @@ export default async function ClientDashboard({ params }: Props) {
 
         {/* Campaigns */}
         <div>
-          <h2 className="text-sm font-semibold mb-3">Active Ad Campaigns</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold">Active Ad Campaigns</h2>
+            <a
+              href={`/client/${slug}/campaigns`}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              View all campaigns →
+            </a>
+          </div>
           <div className="space-y-3">
             {mockCampaigns.map((c) => (
               <Card key={c.name} className="border-border/60">
