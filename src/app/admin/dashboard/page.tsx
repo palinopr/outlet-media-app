@@ -18,169 +18,71 @@ import {
   Bot,
   Clock,
 } from "lucide-react";
+import { supabaseAdmin } from "@/lib/supabase";
+import type { Database } from "@/lib/database.types";
 
-// ─── Mock data (replace with Supabase queries once connected) ──────────────
+type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
+type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
-const stats = [
-  {
-    label: "Active Shows",
-    value: "8",
-    sub: "2 on sale this week",
-    icon: CalendarDays,
-    trend: "+2",
-  },
-  {
-    label: "Tickets Sold",
-    value: "12,847",
-    sub: "of 18,200 available",
-    icon: Ticket,
-    trend: "+843 today",
-  },
-  {
-    label: "Total Gross",
-    value: "$2.1M",
-    sub: "across all shows",
-    icon: DollarSign,
-    trend: "+$127K this week",
-  },
-  {
-    label: "Active Campaigns",
-    value: "3",
-    sub: "Facebook + Instagram",
-    icon: Megaphone,
-    trend: null,
-  },
-  {
-    label: "Ad Spend",
-    value: "$24,580",
-    sub: "this month",
-    icon: DollarSign,
-    trend: null,
-  },
-  {
-    label: "Avg. ROAS",
-    value: "4.2×",
-    sub: "return on ad spend",
-    icon: TrendingUp,
-    trend: "+0.3 vs last month",
-  },
+// ─── Mock fallbacks ────────────────────────────────────────────────────────
+
+const MOCK_EVENTS: TmEvent[] = [
+  { id: "1", tm_id: "1A2B3C4D5", tm1_number: "1A2B3C4D5", name: "Spring Tour 2026", artist: "Zamora", venue: "Kaseya Center", city: "Miami, FL", date: "2026-03-15", status: "on_sale", tickets_sold: 1247, tickets_available: 253, gross: 187050, url: "", scraped_at: "", created_at: "", updated_at: "" },
+  { id: "2", tm_id: "2B3C4D5E6", tm1_number: "2B3C4D5E6", name: "Spring Tour 2026", artist: "Zamora", venue: "United Center", city: "Chicago, IL", date: "2026-04-02", status: "on_sale", tickets_sold: 892, tickets_available: 1108, gross: 133800, url: "", scraped_at: "", created_at: "", updated_at: "" },
+  { id: "3", tm_id: "3C4D5E6F7", tm1_number: "3C4D5E6F7", name: "Spring Tour 2026", artist: "Zamora", venue: "Toyota Center", city: "Houston, TX", date: "2026-04-19", status: "on_sale", tickets_sold: 543, tickets_available: 657, gross: 81450, url: "", scraped_at: "", created_at: "", updated_at: "" },
+  { id: "4", tm_id: "4D5E6F7G8", tm1_number: "4D5E6F7G8", name: "Spring Tour 2026", artist: "Zamora", venue: "Crypto.com Arena", city: "Los Angeles, CA", date: "2026-05-08", status: "on_sale", tickets_sold: 2100, tickets_available: 1400, gross: 315000, url: "", scraped_at: "", created_at: "", updated_at: "" },
+  { id: "5", tm_id: "5E6F7G8H9", tm1_number: "5E6F7G8H9", name: "Spring Tour 2026", artist: "Zamora", venue: "Madison Square Garden", city: "New York, NY", date: "2026-05-22", status: "on_sale", tickets_sold: 3450, tickets_available: 1550, gross: 517500, url: "", scraped_at: "", created_at: "", updated_at: "" },
 ];
 
-const shows = [
-  {
-    tm1: "1A2B3C4D5",
-    artist: "Zamora",
-    event: "Spring Tour 2026",
-    venue: "Kaseya Center",
-    city: "Miami, FL",
-    date: "Mar 15, 2026",
-    sold: 1247,
-    capacity: 1500,
-    gross: 187050,
-    status: "on_sale",
-  },
-  {
-    tm1: "2B3C4D5E6",
-    artist: "Zamora",
-    event: "Spring Tour 2026",
-    venue: "United Center",
-    city: "Chicago, IL",
-    date: "Apr 2, 2026",
-    sold: 892,
-    capacity: 2000,
-    gross: 133800,
-    status: "on_sale",
-  },
-  {
-    tm1: "3C4D5E6F7",
-    artist: "Zamora",
-    event: "Spring Tour 2026",
-    venue: "Toyota Center",
-    city: "Houston, TX",
-    date: "Apr 19, 2026",
-    sold: 543,
-    capacity: 1200,
-    gross: 81450,
-    status: "on_sale",
-  },
-  {
-    tm1: "4D5E6F7G8",
-    artist: "Zamora",
-    event: "Spring Tour 2026",
-    venue: "Crypto.com Arena",
-    city: "Los Angeles, CA",
-    date: "May 8, 2026",
-    sold: 2100,
-    capacity: 3500,
-    gross: 315000,
-    status: "on_sale",
-  },
-  {
-    tm1: "5E6F7G8H9",
-    artist: "Zamora",
-    event: "Spring Tour 2026",
-    venue: "Madison Square Garden",
-    city: "New York, NY",
-    date: "May 22, 2026",
-    sold: 3450,
-    capacity: 5000,
-    gross: 517500,
-    status: "on_sale",
-  },
+const MOCK_CAMPAIGNS: MetaCampaign[] = [
+  { id: "c1", campaign_id: "c1", name: "Zamora Miami - Spring Tour", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 4200, roas: 5.2, impressions: 1200000, clicks: 28800, reach: 890000, cpm: 3.47, cpc: 0.14, ctr: 0.024, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
+  { id: "c2", campaign_id: "c2", name: "Zamora Chicago - Q2 Push", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 2850, roas: 3.8, impressions: 890000, clicks: 16910, reach: 640000, cpm: 3.19, cpc: 0.17, ctr: 0.019, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
+  { id: "c3", campaign_id: "c3", name: "Zamora National - Awareness", status: "ACTIVE", objective: "REACH", daily_budget: null, lifetime_budget: null, spend: 8100, roas: 4.1, impressions: 3420000, clicks: 58140, reach: 2800000, cpm: 2.37, cpc: 0.14, ctr: 0.017, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
 ];
 
-const campaigns = [
-  {
-    name: "Zamora Miami - Spring Tour",
-    platform: "Facebook + Instagram",
-    status: "active",
-    spend: 4200,
-    roas: 5.2,
-    impressions: "1.2M",
-    ctr: "2.4%",
-  },
-  {
-    name: "Zamora Chicago - Q2 Push",
-    platform: "Instagram",
-    status: "active",
-    spend: 2850,
-    roas: 3.8,
-    impressions: "890K",
-    ctr: "1.9%",
-  },
-  {
-    name: "Zamora National - Awareness",
-    platform: "Facebook + Instagram",
-    status: "active",
-    spend: 8100,
-    roas: 4.1,
-    impressions: "3.4M",
-    ctr: "1.7%",
-  },
-];
+// ─── Data fetching ─────────────────────────────────────────────────────────
+
+async function getData() {
+  if (!supabaseAdmin) {
+    return { events: MOCK_EVENTS, campaigns: MOCK_CAMPAIGNS, fromDb: false };
+  }
+
+  const [eventsRes, campaignsRes] = await Promise.all([
+    supabaseAdmin.from("tm_events").select("*").order("date", { ascending: true }).limit(10),
+    supabaseAdmin.from("meta_campaigns").select("*").eq("status", "ACTIVE").order("spend", { ascending: false }).limit(5),
+  ]);
+
+  const events = eventsRes.data?.length ? (eventsRes.data as TmEvent[]) : MOCK_EVENTS;
+  const campaigns = campaignsRes.data?.length ? (campaignsRes.data as MetaCampaign[]) : MOCK_CAMPAIGNS;
+  const fromDb = Boolean(eventsRes.data?.length || campaignsRes.data?.length);
+
+  return { events, campaigns, fromDb };
+}
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function fmt(n: number) {
-  return n.toLocaleString("en-US");
+function fmt(n: number) { return n.toLocaleString("en-US"); }
+function fmtUsd(n: number | null) { return n == null ? "—" : "$" + n.toLocaleString("en-US"); }
+function fmtDate(d: string | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
-
-function fmtUsd(n: number) {
-  return "$" + n.toLocaleString("en-US");
-}
-
-function sellPct(sold: number, cap: number) {
-  return Math.round((sold / cap) * 100);
+function fmtNum(n: number | null) {
+  if (n == null) return "—";
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
+  return String(n);
 }
 
 function statusBadge(s: string) {
   const map: Record<string, { label: string; classes: string }> = {
-    on_sale: { label: "On Sale", classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-    sold_out: { label: "Sold Out", classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-    cancelled: { label: "Cancelled", classes: "bg-red-500/10 text-red-400 border-red-500/20" },
-    upcoming: { label: "Upcoming", classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
+    on_sale:  { label: "On Sale",  classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+    onsale:   { label: "On Sale",  classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+    presale:  { label: "Presale",  classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+    sold_out: { label: "Sold Out", classes: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+    cancelled:{ label: "Cancelled",classes: "bg-red-500/10 text-red-400 border-red-500/20" },
   };
-  const { label, classes } = map[s] ?? map.upcoming;
+  const { label, classes } = map[s] ?? { label: s, classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}>
       {label}
@@ -190,12 +92,30 @@ function statusBadge(s: string) {
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 
-export default function AdminDashboard() {
+export default async function AdminDashboard() {
+  const { events, campaigns, fromDb } = await getData();
+
+  const totalSold  = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
+  const totalCap   = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
+  const totalGross = events.reduce((s, e) => s + (e.gross ?? 0), 0);
+  const totalSpend = campaigns.reduce((s, c) => s + (c.spend ?? 0), 0);
+  const totalRoasRevenue = campaigns.reduce((s, c) => s + (c.spend ?? 0) * (c.roas ?? 0), 0);
+  const avgRoas = totalSpend > 0 ? totalRoasRevenue / totalSpend : 0;
+
   const now = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
   });
+
+  const stats = [
+    { label: "Active Shows",       value: String(events.length),          sub: `${totalCap.toLocaleString()} total capacity`, icon: CalendarDays, trend: null },
+    { label: "Tickets Sold",       value: fmt(totalSold),                 sub: `of ${fmt(totalCap)} available`, icon: Ticket, trend: null },
+    { label: "Total Gross",        value: fmtUsd(totalGross),             sub: "across all shows", icon: DollarSign, trend: null },
+    { label: "Active Campaigns",   value: String(campaigns.length),       sub: "Facebook + Instagram", icon: Megaphone, trend: null },
+    { label: "Ad Spend",           value: fmtUsd(totalSpend),             sub: "total across campaigns", icon: DollarSign, trend: null },
+    { label: "Avg. ROAS",          value: avgRoas > 0 ? avgRoas.toFixed(1) + "×" : "—", sub: "return on ad spend", icon: TrendingUp, trend: null },
+  ];
 
   return (
     <div className="space-y-8">
@@ -206,10 +126,16 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">{now}</p>
         </div>
-        <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5">
-          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
-          Live data once connected
-        </Badge>
+        {fromDb ? (
+          <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5 text-emerald-400 border-emerald-500/20 bg-emerald-500/10">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
+            Live from Supabase
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5 text-amber-400 border-amber-500/20">
+            Mock data
+          </Badge>
+        )}
       </div>
 
       {/* Stat cards */}
@@ -255,29 +181,33 @@ export default function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {shows.map((s) => (
-                <TableRow key={s.tm1} className="border-border/60">
-                  <TableCell className="font-mono text-xs text-muted-foreground">{s.tm1}</TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="text-sm font-medium">{s.artist}</p>
-                      <p className="text-xs text-muted-foreground">{s.venue}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{s.city}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{s.date}</TableCell>
-                  <TableCell className="text-right">
-                    <div>
-                      <p className="text-sm font-medium tabular-nums">{fmt(s.sold)}</p>
-                      <p className="text-xs text-muted-foreground">{sellPct(s.sold, s.capacity)}% of {fmt(s.capacity)}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <p className="text-sm font-medium tabular-nums">{fmtUsd(s.gross)}</p>
-                  </TableCell>
-                  <TableCell>{statusBadge(s.status)}</TableCell>
-                </TableRow>
-              ))}
+              {events.map((e) => {
+                const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
+                const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : 0;
+                return (
+                  <TableRow key={e.id} className="border-border/60">
+                    <TableCell className="font-mono text-xs text-muted-foreground">{e.tm1_number || "—"}</TableCell>
+                    <TableCell>
+                      <div>
+                        <p className="text-sm font-medium">{e.artist}</p>
+                        <p className="text-xs text-muted-foreground">{e.venue}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{e.city}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{fmtDate(e.date)}</TableCell>
+                    <TableCell className="text-right">
+                      <div>
+                        <p className="text-sm font-medium tabular-nums">{fmt(e.tickets_sold ?? 0)}</p>
+                        <p className="text-xs text-muted-foreground">{pct}% of {fmt(cap)}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <p className="text-sm font-medium tabular-nums">{fmtUsd(e.gross)}</p>
+                    </TableCell>
+                    <TableCell>{statusBadge(e.status)}</TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Card>
@@ -296,7 +226,7 @@ export default function AdminDashboard() {
           </div>
           <div className="space-y-3">
             {campaigns.map((c) => (
-              <Card key={c.name} className="border-border/60">
+              <Card key={c.id} className="border-border/60">
                 <CardContent className="py-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
@@ -304,7 +234,7 @@ export default function AdminDashboard() {
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
                         <p className="text-sm font-medium truncate">{c.name}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground">{c.platform}</p>
+                      <p className="text-xs text-muted-foreground">{c.objective}</p>
                     </div>
                     <div className="flex gap-6 shrink-0 text-right">
                       <div>
@@ -313,15 +243,15 @@ export default function AdminDashboard() {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">ROAS</p>
-                        <p className="text-sm font-semibold text-emerald-400 tabular-nums">{c.roas}×</p>
+                        <p className="text-sm font-semibold text-emerald-400 tabular-nums">{c.roas != null ? c.roas.toFixed(1) + "×" : "—"}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Impressions</p>
-                        <p className="text-sm font-medium tabular-nums">{c.impressions}</p>
+                        <p className="text-sm font-medium tabular-nums">{fmtNum(c.impressions)}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">CTR</p>
-                        <p className="text-sm font-medium tabular-nums">{c.ctr}</p>
+                        <p className="text-sm font-medium tabular-nums">{c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}</p>
                       </div>
                     </div>
                   </div>

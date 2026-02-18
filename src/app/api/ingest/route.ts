@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
+// ─── TM One types ──────────────────────────────────────────────────────────
+
 interface TmEvent {
   tm_id: string;
   tm1_number: string;
@@ -17,14 +19,41 @@ interface TmEvent {
   scraped_at: string;
 }
 
+// ─── Meta types ────────────────────────────────────────────────────────────
+
+interface MetaCampaign {
+  campaign_id: string;
+  name: string;
+  status: string;
+  objective?: string;
+  daily_budget?: number;
+  lifetime_budget?: number;
+  spend?: number;
+  impressions?: number;
+  clicks?: number;
+  reach?: number;
+  cpm?: number;
+  cpc?: number;
+  ctr?: number;
+  roas?: number;
+  client_slug?: string;
+}
+
+// ─── Payload ───────────────────────────────────────────────────────────────
+
 interface IngestPayload {
   secret: string;
-  source: string;
+  source: "ticketmaster_one" | "meta";
   data: {
-    events: TmEvent[];
+    // TM One
+    events?: TmEvent[];
+    // Meta
+    campaigns?: MetaCampaign[];
     scraped_at: string;
   };
 }
+
+// ─── Handler ───────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
   const body = await request.json() as IngestPayload;
@@ -40,9 +69,21 @@ export async function POST(request: Request) {
     );
   }
 
-  const { events } = body.data;
+  if (body.source === "ticketmaster_one") {
+    return ingestTmEvents(body);
+  }
 
-  if (!Array.isArray(events) || events.length === 0) {
+  if (body.source === "meta") {
+    return ingestMetaCampaigns(body);
+  }
+
+  return NextResponse.json({ error: "Unknown source" }, { status: 400 });
+}
+
+async function ingestTmEvents(body: IngestPayload) {
+  const events = body.data.events ?? [];
+
+  if (events.length === 0) {
     return NextResponse.json({ ok: true, inserted: 0, message: "No events to insert" });
   }
 
@@ -62,19 +103,56 @@ export async function POST(request: Request) {
     scraped_at: e.scraped_at,
   }));
 
-  const { error } = await supabaseAdmin
+  const { error } = await supabaseAdmin!
     .from("tm_events")
     .upsert(rows, { onConflict: "tm_id" });
 
   if (error) {
-    console.error("Supabase upsert error:", error);
+    console.error("Supabase upsert error (tm_events):", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const count = rows.length;
-  console.log(`Ingest: upserted ${count} events from ${body.source}`);
+  console.log(`Ingest: upserted ${rows.length} TM events`);
+  return NextResponse.json({ ok: true, inserted: rows.length });
+}
 
-  return NextResponse.json({ ok: true, inserted: count });
+async function ingestMetaCampaigns(body: IngestPayload) {
+  const campaigns = body.data.campaigns ?? [];
+
+  if (campaigns.length === 0) {
+    return NextResponse.json({ ok: true, inserted: 0, message: "No campaigns to insert" });
+  }
+
+  const rows = campaigns.map((c) => ({
+    campaign_id: c.campaign_id,
+    name: c.name,
+    status: c.status,
+    objective: c.objective ?? "",
+    daily_budget: c.daily_budget ?? null,
+    lifetime_budget: c.lifetime_budget ?? null,
+    spend: c.spend ?? null,
+    impressions: c.impressions ?? null,
+    clicks: c.clicks ?? null,
+    reach: c.reach ?? null,
+    cpm: c.cpm ?? null,
+    cpc: c.cpc ?? null,
+    ctr: c.ctr ?? null,
+    roas: c.roas ?? null,
+    client_slug: c.client_slug ?? "zamora",
+    synced_at: body.data.scraped_at,
+  }));
+
+  const { error } = await supabaseAdmin!
+    .from("meta_campaigns")
+    .upsert(rows, { onConflict: "campaign_id" });
+
+  if (error) {
+    console.error("Supabase upsert error (meta_campaigns):", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  console.log(`Ingest: upserted ${rows.length} Meta campaigns`);
+  return NextResponse.json({ ok: true, inserted: rows.length });
 }
 
 export async function GET() {
@@ -82,5 +160,6 @@ export async function GET() {
     ok: true,
     message: "Ingest endpoint ready. POST scraped data here.",
     supabase_connected: !!supabaseAdmin,
+    sources: ["ticketmaster_one", "meta"],
   });
 }

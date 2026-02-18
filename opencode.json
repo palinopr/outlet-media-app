@@ -49,6 +49,11 @@
       "environment": {
         "POLYGON_API_KEY": "3j1gVWCLZ0L4ZXhQrURaKeu6Jl9P_1mc"
       }
+    },
+    "supabase": {
+      "type": "local",
+      "command": ["/usr/local/bin/npx", "-y", "@supabase/mcp-server-supabase@latest", "--access-token", "sbp_921df9d790509bf34c62cab938d021a05e43f4ed"],
+      "enabled": true
     }
   }
 }

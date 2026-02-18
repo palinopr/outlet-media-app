@@ -53,6 +53,22 @@ export interface Database {
         Insert: Omit<Database["public"]["Tables"]["meta_campaigns"]["Row"], "id" | "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["meta_campaigns"]["Insert"]>;
       };
+      agent_jobs: {
+        Row: {
+          id: string;
+          agent_id: string;
+          status: string;
+          prompt: string | null;
+          result: string | null;
+          error: string | null;
+          created_at: string;
+          updated_at: string;
+          started_at: string | null;
+          finished_at: string | null;
+        };
+        Insert: Omit<Database["public"]["Tables"]["agent_jobs"]["Row"], "id" | "created_at" | "updated_at">;
+        Update: Partial<Database["public"]["Tables"]["agent_jobs"]["Insert"]>;
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

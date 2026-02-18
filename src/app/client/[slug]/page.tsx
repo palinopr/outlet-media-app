@@ -14,142 +14,86 @@ import {
   Ticket,
   TrendingUp,
 } from "lucide-react";
+import { supabaseAdmin } from "@/lib/supabase";
+import type { Database } from "@/lib/database.types";
+
+type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
+type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// ─── Mock data (replace with Supabase queries once connected) ──────────────
+// ─── Mock fallbacks ────────────────────────────────────────────────────────
 
-const mockShows = [
-  {
-    tm1: "1A2B3C4D5",
-    event: "Spring Tour 2026",
-    venue: "Kaseya Center",
-    city: "Miami, FL",
-    date: "Mar 15, 2026",
-    sold: 1247,
-    capacity: 1500,
-    gross: 187050,
-    status: "on_sale",
-  },
-  {
-    tm1: "2B3C4D5E6",
-    event: "Spring Tour 2026",
-    venue: "United Center",
-    city: "Chicago, IL",
-    date: "Apr 2, 2026",
-    sold: 892,
-    capacity: 2000,
-    gross: 133800,
-    status: "on_sale",
-  },
-  {
-    tm1: "3C4D5E6F7",
-    event: "Spring Tour 2026",
-    venue: "Toyota Center",
-    city: "Houston, TX",
-    date: "Apr 19, 2026",
-    sold: 543,
-    capacity: 1200,
-    gross: 81450,
-    status: "on_sale",
-  },
-  {
-    tm1: "4D5E6F7G8",
-    event: "Spring Tour 2026",
-    venue: "Crypto.com Arena",
-    city: "Los Angeles, CA",
-    date: "May 8, 2026",
-    sold: 2100,
-    capacity: 3500,
-    gross: 315000,
-    status: "on_sale",
-  },
-  {
-    tm1: "5E6F7G8H9",
-    event: "Spring Tour 2026",
-    venue: "Madison Square Garden",
-    city: "New York, NY",
-    date: "May 22, 2026",
-    sold: 3450,
-    capacity: 5000,
-    gross: 517500,
-    status: "on_sale",
-  },
+const MOCK_EVENTS: TmEvent[] = [
+  { id: "1", tm_id: "1A2B3C4D5", tm1_number: "1A2B3C4D5", name: "Spring Tour 2026", artist: "Zamora", venue: "Kaseya Center", city: "Miami, FL", date: "2026-03-15", status: "on_sale", tickets_sold: 1247, tickets_available: 253, gross: 187050, url: "", scraped_at: "", created_at: "", updated_at: "" },
+  { id: "2", tm_id: "2B3C4D5E6", tm1_number: "2B3C4D5E6", name: "Spring Tour 2026", artist: "Zamora", venue: "United Center", city: "Chicago, IL", date: "2026-04-02", status: "on_sale", tickets_sold: 892, tickets_available: 1108, gross: 133800, url: "", scraped_at: "", created_at: "", updated_at: "" },
+  { id: "3", tm_id: "3C4D5E6F7", tm1_number: "3C4D5E6F7", name: "Spring Tour 2026", artist: "Zamora", venue: "Toyota Center", city: "Houston, TX", date: "2026-04-19", status: "on_sale", tickets_sold: 543, tickets_available: 657, gross: 81450, url: "", scraped_at: "", created_at: "", updated_at: "" },
+  { id: "4", tm_id: "4D5E6F7G8", tm1_number: "4D5E6F7G8", name: "Spring Tour 2026", artist: "Zamora", venue: "Crypto.com Arena", city: "Los Angeles, CA", date: "2026-05-08", status: "on_sale", tickets_sold: 2100, tickets_available: 1400, gross: 315000, url: "", scraped_at: "", created_at: "", updated_at: "" },
+  { id: "5", tm_id: "5E6F7G8H9", tm1_number: "5E6F7G8H9", name: "Spring Tour 2026", artist: "Zamora", venue: "Madison Square Garden", city: "New York, NY", date: "2026-05-22", status: "on_sale", tickets_sold: 3450, tickets_available: 1550, gross: 517500, url: "", scraped_at: "", created_at: "", updated_at: "" },
 ];
 
-const mockCampaigns = [
-  {
-    name: "Zamora Miami - Spring Tour",
-    platform: "Facebook + Instagram",
-    status: "active",
-    spend: 4200,
-    roas: 5.2,
-    impressions: "1.2M",
-    ctr: "2.4%",
-    revenue: 21840,
-  },
-  {
-    name: "Zamora Chicago - Q2 Push",
-    platform: "Instagram",
-    status: "active",
-    spend: 2850,
-    roas: 3.8,
-    impressions: "890K",
-    ctr: "1.9%",
-    revenue: 10830,
-  },
-  {
-    name: "Zamora National - Awareness",
-    platform: "Facebook + Instagram",
-    status: "active",
-    spend: 8100,
-    roas: 4.1,
-    impressions: "3.4M",
-    ctr: "1.7%",
-    revenue: 33210,
-  },
+const MOCK_CAMPAIGNS: MetaCampaign[] = [
+  { id: "c1", campaign_id: "c1", name: "Zamora Miami - Spring Tour", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 4200, roas: 5.2, impressions: 1200000, clicks: 28800, reach: 890000, cpm: 3.47, cpc: 0.14, ctr: 0.024, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
+  { id: "c2", campaign_id: "c2", name: "Zamora Chicago - Q2 Push", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 2850, roas: 3.8, impressions: 890000, clicks: 16910, reach: 640000, cpm: 3.19, cpc: 0.17, ctr: 0.019, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
+  { id: "c3", campaign_id: "c3", name: "Zamora National - Awareness", status: "ACTIVE", objective: "REACH", daily_budget: null, lifetime_budget: null, spend: 8100, roas: 4.1, impressions: 3420000, clicks: 58140, reach: 2800000, cpm: 2.37, cpc: 0.14, ctr: 0.017, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
 ];
+
+// ─── Data fetching ─────────────────────────────────────────────────────────
+
+async function getData(slug: string) {
+  if (!supabaseAdmin) {
+    return { events: MOCK_EVENTS, campaigns: MOCK_CAMPAIGNS, fromDb: false };
+  }
+
+  const [eventsRes, campaignsRes] = await Promise.all([
+    supabaseAdmin
+      .from("tm_events")
+      .select("*")
+      .order("date", { ascending: true })
+      .limit(50),
+    supabaseAdmin
+      .from("meta_campaigns")
+      .select("*")
+      .eq("client_slug", slug)
+      .order("spend", { ascending: false })
+      .limit(20),
+  ]);
+
+  const events = eventsRes.data?.length ? (eventsRes.data as TmEvent[]) : MOCK_EVENTS;
+  const campaigns = campaignsRes.data?.length ? (campaignsRes.data as MetaCampaign[]) : MOCK_CAMPAIGNS;
+  const fromDb = Boolean(eventsRes.data?.length || campaignsRes.data?.length);
+
+  return { events, campaigns, fromDb };
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
-function fmt(n: number) {
-  return n.toLocaleString("en-US");
+function fmt(n: number) { return n.toLocaleString("en-US"); }
+function fmtUsd(n: number | null) { return n == null ? "—" : "$" + n.toLocaleString("en-US"); }
+function fmtNum(n: number | null) {
+  if (n == null) return "—";
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
+  return String(n);
 }
-
-function fmtUsd(n: number) {
-  return "$" + n.toLocaleString("en-US");
-}
-
-function sellPct(sold: number, cap: number) {
-  return Math.round((sold / cap) * 100);
+function fmtDate(d: string | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function statusBadge(s: string) {
   const map: Record<string, { label: string; classes: string }> = {
-    on_sale: {
-      label: "On Sale",
-      classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    },
-    sold_out: {
-      label: "Sold Out",
-      classes: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    },
-    cancelled: {
-      label: "Cancelled",
-      classes: "bg-red-500/10 text-red-400 border-red-500/20",
-    },
-    upcoming: {
-      label: "Upcoming",
-      classes: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    },
+    on_sale:  { label: "On Sale",  classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+    onsale:   { label: "On Sale",  classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+    presale:  { label: "Presale",  classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+    sold_out: { label: "Sold Out", classes: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+    cancelled:{ label: "Cancelled",classes: "bg-red-500/10 text-red-400 border-red-500/20" },
   };
-  const { label, classes } = map[s] ?? map.upcoming;
+  const { label, classes } = map[s] ?? { label: s, classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" };
   return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}
-    >
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}>
       {label}
     </span>
   );
@@ -159,13 +103,14 @@ function statusBadge(s: string) {
 
 export default async function ClientDashboard({ params }: Props) {
   const { slug } = await params;
+  const { events, campaigns, fromDb } = await getData(slug);
 
-  const totalSold = mockShows.reduce((a, s) => a + s.sold, 0);
-  const totalCapacity = mockShows.reduce((a, s) => a + s.capacity, 0);
-  const totalGross = mockShows.reduce((a, s) => a + s.gross, 0);
-  const totalSpend = mockCampaigns.reduce((a, c) => a + c.spend, 0);
-  const totalRevenue = mockCampaigns.reduce((a, c) => a + c.revenue, 0);
-  const blendedRoas = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(1) : "—";
+  const totalSold     = events.reduce((a, s) => a + (s.tickets_sold ?? 0), 0);
+  const totalCapacity = events.reduce((a, s) => a + (s.tickets_sold ?? 0) + (s.tickets_available ?? 0), 0);
+  const totalGross    = events.reduce((a, s) => a + (s.gross ?? 0), 0);
+  const totalSpend    = campaigns.reduce((a, c) => a + (c.spend ?? 0), 0);
+  const totalRevenue  = campaigns.reduce((a, c) => a + (c.spend ?? 0) * (c.roas ?? 0), 0);
+  const blendedRoas   = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(1) : null;
 
   const clientName = slug.charAt(0).toUpperCase() + slug.slice(1);
 
@@ -176,42 +121,12 @@ export default async function ClientDashboard({ params }: Props) {
   });
 
   const stats = [
-    {
-      label: "Active Shows",
-      value: mockShows.length.toString(),
-      sub: "Spring Tour 2026",
-      icon: CalendarDays,
-    },
-    {
-      label: "Tickets Sold",
-      value: fmt(totalSold),
-      sub: `of ${fmt(totalCapacity)} available`,
-      icon: Ticket,
-    },
-    {
-      label: "Total Gross",
-      value: fmtUsd(totalGross),
-      sub: "across all shows",
-      icon: DollarSign,
-    },
-    {
-      label: "Active Campaigns",
-      value: mockCampaigns.length.toString(),
-      sub: "Facebook + Instagram",
-      icon: Megaphone,
-    },
-    {
-      label: "Ad Spend",
-      value: fmtUsd(totalSpend),
-      sub: "this month",
-      icon: DollarSign,
-    },
-    {
-      label: "Blended ROAS",
-      value: `${blendedRoas}×`,
-      sub: "return on ad spend",
-      icon: TrendingUp,
-    },
+    { label: "Active Shows",     value: String(events.length),   sub: "Upcoming dates",           icon: CalendarDays },
+    { label: "Tickets Sold",     value: fmt(totalSold),          sub: `of ${fmt(totalCapacity)} available`, icon: Ticket },
+    { label: "Total Gross",      value: fmtUsd(totalGross),      sub: "across all shows",         icon: DollarSign },
+    { label: "Active Campaigns", value: String(campaigns.length),sub: "Facebook + Instagram",     icon: Megaphone },
+    { label: "Ad Spend",         value: fmtUsd(totalSpend),      sub: "total across campaigns",   icon: DollarSign },
+    { label: "Blended ROAS",     value: blendedRoas ? `${blendedRoas}×` : "—", sub: "return on ad spend", icon: TrendingUp },
   ];
 
   return (
@@ -229,8 +144,17 @@ export default async function ClientDashboard({ params }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
-            <span className="text-xs text-muted-foreground">Updated {now}</span>
+            {fromDb ? (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
+                <span className="text-xs text-muted-foreground">Live · Updated {now}</span>
+              </>
+            ) : (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
+                <span className="text-xs text-muted-foreground">Mock data · {now}</span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -272,51 +196,40 @@ export default async function ClientDashboard({ params }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockShows.map((s) => {
-                  const pct = sellPct(s.sold, s.capacity);
-                  const barColor =
-                    pct >= 90
-                      ? "bg-emerald-500"
-                      : pct >= 60
-                      ? "bg-amber-500"
-                      : "bg-zinc-500";
+                {events.map((e) => {
+                  const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
+                  const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : 0;
+                  const barColor = pct >= 90 ? "bg-emerald-500" : pct >= 60 ? "bg-amber-500" : "bg-zinc-500";
                   return (
-                    <TableRow key={s.tm1} className="border-border/60">
+                    <TableRow key={e.id} className="border-border/60">
                       <TableCell className="font-mono text-xs text-muted-foreground">
-                        {s.tm1}
+                        {e.tm1_number || "—"}
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="text-sm font-medium">{s.event}</p>
-                          <p className="text-xs text-muted-foreground">{s.venue}</p>
+                          <p className="text-sm font-medium">{e.name}</p>
+                          <p className="text-xs text-muted-foreground">{e.venue}</p>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {s.city}
-                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{e.city}</TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                        {s.date}
+                        {fmtDate(e.date)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 min-w-[100px]">
                           <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                            <div
-                              className={`h-full rounded-full ${barColor}`}
-                              style={{ width: `${pct}%` }}
-                            />
+                            <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
                           </div>
-                          <span className="text-xs tabular-nums text-muted-foreground w-8 text-right">
-                            {pct}%
-                          </span>
+                          <span className="text-xs tabular-nums text-muted-foreground w-8 text-right">{pct}%</span>
                         </div>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {fmt(s.sold)} / {fmt(s.capacity)}
+                          {fmt(e.tickets_sold ?? 0)} / {fmt(cap)}
                         </p>
                       </TableCell>
                       <TableCell className="text-right text-sm font-medium tabular-nums">
-                        {fmtUsd(s.gross)}
+                        {fmtUsd(e.gross)}
                       </TableCell>
-                      <TableCell>{statusBadge(s.status)}</TableCell>
+                      <TableCell>{statusBadge(e.status)}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -337,8 +250,8 @@ export default async function ClientDashboard({ params }: Props) {
             </a>
           </div>
           <div className="space-y-3">
-            {mockCampaigns.map((c) => (
-              <Card key={c.name} className="border-border/60">
+            {campaigns.map((c) => (
+              <Card key={c.id} className="border-border/60">
                 <CardContent className="py-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="min-w-0">
@@ -346,7 +259,7 @@ export default async function ClientDashboard({ params }: Props) {
                         <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
                         <p className="text-sm font-medium truncate">{c.name}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground">{c.platform}</p>
+                      <p className="text-xs text-muted-foreground">{c.objective}</p>
                     </div>
                     <div className="flex gap-6 shrink-0 sm:text-right">
                       <div>
@@ -355,29 +268,27 @@ export default async function ClientDashboard({ params }: Props) {
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Revenue</p>
-                        <p className="text-sm font-medium tabular-nums">{fmtUsd(c.revenue)}</p>
+                        <p className="text-sm font-medium tabular-nums">
+                          {c.spend != null && c.roas != null ? fmtUsd(Math.round(c.spend * c.roas)) : "—"}
+                        </p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">ROAS</p>
-                        <p
-                          className={`text-sm font-semibold tabular-nums ${
-                            c.roas >= 4
-                              ? "text-emerald-400"
-                              : c.roas >= 2
-                              ? "text-amber-400"
-                              : "text-red-400"
-                          }`}
-                        >
-                          {c.roas}×
+                        <p className={`text-sm font-semibold tabular-nums ${
+                          (c.roas ?? 0) >= 4 ? "text-emerald-400" : (c.roas ?? 0) >= 2 ? "text-amber-400" : "text-red-400"
+                        }`}>
+                          {c.roas != null ? c.roas.toFixed(1) + "×" : "—"}
                         </p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Impressions</p>
-                        <p className="text-sm font-medium tabular-nums">{c.impressions}</p>
+                        <p className="text-sm font-medium tabular-nums">{fmtNum(c.impressions)}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">CTR</p>
-                        <p className="text-sm font-medium tabular-nums">{c.ctr}</p>
+                        <p className="text-sm font-medium tabular-nums">
+                          {c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}
+                        </p>
                       </div>
                     </div>
                   </div>

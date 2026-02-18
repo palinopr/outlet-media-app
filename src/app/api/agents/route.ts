@@ -22,9 +22,11 @@ export async function POST(request: Request) {
     );
   }
 
+  const source = (body as { source?: string }).source ?? "manual";
+
   const { data, error } = await supabaseAdmin
     .from("agent_jobs")
-    .insert({ agent_id: agent, status: "pending", prompt: prompt ?? null })
+    .insert({ agent_id: agent, status: "pending", prompt: prompt ?? null, source })
     .select("id, agent_id, status, created_at")
     .single();
 
