@@ -40,8 +40,13 @@ async function handleMessage(ctx: Context, prompt: string) {
 
   agentBusy = true;
 
-  // Send typing indicator and a working message we'll update
-  await ctx.api.sendChatAction(ctx.chat!.id, "typing");
+  // Send typing indicator and keep refreshing it every 4s while working
+  const chatId = ctx.chat!.id;
+  await ctx.api.sendChatAction(chatId, "typing");
+  const typingInterval = setInterval(() => {
+    ctx.api.sendChatAction(chatId, "typing").catch(() => {});
+  }, 4000);
+
   const workingMsg = await ctx.reply("Working on it...");
 
   let buffer = "";
@@ -92,6 +97,7 @@ async function handleMessage(ctx: Context, prompt: string) {
     const msg = err instanceof Error ? err.message : String(err);
     await ctx.reply(`Something went wrong: ${msg}`);
   } finally {
+    clearInterval(typingInterval);
     agentBusy = false;
   }
 }
