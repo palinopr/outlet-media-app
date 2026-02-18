@@ -34,51 +34,53 @@ interface ClientSummary {
   roas: number;
 }
 
+// Derive a display name from a slug (e.g. "happy_paws" → "Happy Paws")
+function slugToName(slug: string) {
+  return slug
+    .split("_")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 // ─── Data fetching ─────────────────────────────────────────────────────────
 
 async function getClientSummaries(): Promise<ClientSummary[]> {
-  // Only Zamora for now — expand when more clients are added
-  const slug = "zamora";
+  if (!supabaseAdmin) return [];
 
-  const [campaignsRes, eventsRes] = await Promise.all([
-    supabaseAdmin
-      ? supabaseAdmin.from("meta_campaigns").select("status, spend, roas").eq("client_slug", slug)
-      : { data: null, error: null },
-    supabaseAdmin
-      ? supabaseAdmin.from("tm_events").select("id", { count: "exact", head: true })
-      : { data: null, error: null, count: null },
-  ]);
+  // Fetch all campaigns in one query — group by client_slug in JS
+  const { data: campaigns } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select("client_slug, status, spend, roas");
 
-  const campaigns = campaignsRes.data ?? [];
-  const eventCount = ("count" in eventsRes ? eventsRes.count : null) ?? 0;
+  if (!campaigns?.length) return [];
 
-  // Spend is stored in cents
-  const totalSpend = campaigns.reduce((s, c) => s + ((c.spend ?? 0) / 100), 0);
-  const activeCampaigns = campaigns.filter((c) => c.status === "ACTIVE" || c.status === "active").length;
-  const totalRevenue = campaigns.reduce(
-    (s, c) => s + ((c.spend ?? 0) / 100) * (c.roas ?? 0),
-    0
-  );
-  const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+  // Group by slug
+  const bySlug: Record<string, typeof campaigns> = {};
+  for (const c of campaigns) {
+    const slug = c.client_slug ?? "unknown";
+    (bySlug[slug] ??= []).push(c);
+  }
 
-  // Fall back to placeholder values when Supabase has no data yet
-  const hasData = campaigns.length > 0;
+  return Object.entries(bySlug).map(([slug, rows]) => {
+    const totalSpend = rows.reduce((s, c) => s + ((c.spend ?? 0) / 100), 0);
+    const totalRevenue = rows.reduce((s, c) => s + ((c.spend ?? 0) / 100) * (c.roas ?? 0), 0);
+    const activeCampaigns = rows.filter((c) => c.status === "ACTIVE").length;
+    const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
 
-  return [
-    {
+    return {
       id: slug,
-      name: "Zamora",
+      name: slugToName(slug),
       slug,
       type: "Music Promoter",
-      status: "active",
+      status: activeCampaigns > 0 ? "active" : "paused",
       joinedAt: "Jan 2026",
-      activeShows: hasData ? eventCount : 8,
-      activeCampaigns: hasData ? activeCampaigns : 3,
-      totalSpend: hasData ? totalSpend : 24580,
-      totalRevenue: hasData ? totalRevenue : 103236,
-      roas: hasData ? roas : 4.2,
-    },
-  ];
+      activeShows: 0,         // TM1 not connected yet
+      activeCampaigns,
+      totalSpend,
+      totalRevenue,
+      roas,
+    };
+  });
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────

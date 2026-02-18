@@ -159,7 +159,7 @@ async function ingestMetaCampaigns(body: IngestPayload) {
     cpc: c.cpc ?? null,
     ctr: c.ctr ?? null,
     roas: c.roas ?? null,
-    client_slug: c.client_slug ?? "zamora",
+    client_slug: c.client_slug ?? "unknown",
     synced_at: body.data.scraped_at,
   }));
 

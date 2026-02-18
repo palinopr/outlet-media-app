@@ -34,17 +34,13 @@ const MOCK_EVENTS: TmEvent[] = [
   { id: "5", tm_id: "5E6F7G8H9", tm1_number: "5E6F7G8H9", name: "Spring Tour 2026", artist: "Zamora", venue: "Madison Square Garden", city: "New York, NY", date: "2026-05-22", status: "on_sale", tickets_sold: 3450, tickets_available: 1550, gross: 517500, url: "", scraped_at: "", created_at: "", updated_at: "" },
 ];
 
-const MOCK_CAMPAIGNS: MetaCampaign[] = [
-  { id: "c1", campaign_id: "c1", name: "Zamora Miami - Spring Tour", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 4200, roas: 5.2, impressions: 1200000, clicks: 28800, reach: 890000, cpm: 3.47, cpc: 0.14, ctr: 0.024, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
-  { id: "c2", campaign_id: "c2", name: "Zamora Chicago - Q2 Push", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 2850, roas: 3.8, impressions: 890000, clicks: 16910, reach: 640000, cpm: 3.19, cpc: 0.17, ctr: 0.019, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
-  { id: "c3", campaign_id: "c3", name: "Zamora National - Awareness", status: "ACTIVE", objective: "REACH", daily_budget: null, lifetime_budget: null, spend: 8100, roas: 4.1, impressions: 3420000, clicks: 58140, reach: 2800000, cpm: 2.37, cpc: 0.14, ctr: 0.017, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
-];
+
 
 // ─── Data fetching ─────────────────────────────────────────────────────────
 
 async function getData(slug: string) {
   if (!supabaseAdmin) {
-    return { events: MOCK_EVENTS, campaigns: MOCK_CAMPAIGNS, fromDb: false };
+    return { events: MOCK_EVENTS, campaigns: [], fromDb: false };
   }
 
   const [eventsRes, campaignsRes] = await Promise.all([
@@ -62,7 +58,7 @@ async function getData(slug: string) {
   ]);
 
   const events = (eventsRes.data ?? []) as TmEvent[];
-  const campaigns = campaignsRes.data?.length ? (campaignsRes.data as MetaCampaign[]) : MOCK_CAMPAIGNS;
+  const campaigns = (campaignsRes.data ?? []) as MetaCampaign[];
   const fromDb = Boolean(campaignsRes.data?.length);
 
   return { events, campaigns, fromDb };
