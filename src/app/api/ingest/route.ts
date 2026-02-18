@@ -37,6 +37,7 @@ interface MetaCampaign {
   ctr?: number;
   roas?: number;
   client_slug?: string;
+  start_time?: string;
 }
 
 // ─── Payload ───────────────────────────────────────────────────────────────
@@ -160,6 +161,7 @@ async function ingestMetaCampaigns(body: IngestPayload) {
     ctr: c.ctr ?? null,
     roas: c.roas ?? null,
     client_slug: c.client_slug ?? "unknown",
+    start_time: c.start_time ?? null,
     synced_at: body.data.scraped_at,
   }));
 

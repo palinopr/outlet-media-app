@@ -51,7 +51,7 @@ Base URL: https://graph.facebook.com/v21.0/
 
 ### List campaigns:
 ```bash
-curl -s "https://graph.facebook.com/v21.0/{AD_ACCOUNT_ID}/campaigns?fields=id,name,status,objective,daily_budget,lifetime_budget&access_token={TOKEN}"
+curl -s "https://graph.facebook.com/v21.0/{AD_ACCOUNT_ID}/campaigns?fields=id,name,status,objective,daily_budget,lifetime_budget,start_time&access_token={TOKEN}"
 ```
 
 ### Get campaign insights (last 30 days):
@@ -63,6 +63,7 @@ curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,im
 - Budgets from Meta are in CENTS (divide by 100 for dollars)
 - spend, cpm, cpc are decimal strings — convert to numbers
 - ROAS comes from purchase_roas[0].value (string like "4.2") — convert to float
+- start_time comes from the campaign fields as an ISO8601 string — pass it through as-is
 - Set client_slug based on campaign name:
   - If the name contains "arjona" (case-insensitive) → "zamora"
   - Otherwise use the first word lowercased (e.g. "KYBBA" → "kybba", "Beamina" → "beamina", "Happy" → "happy_paws" — check for known names)

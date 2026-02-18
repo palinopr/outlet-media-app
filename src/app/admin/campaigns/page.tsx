@@ -1,5 +1,4 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -8,41 +7,45 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Megaphone, ExternalLink, Plus, DollarSign, TrendingUp, Eye, MousePointerClick } from "lucide-react";
+import { Megaphone, ExternalLink, DollarSign, TrendingUp, Eye, MousePointerClick } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
+import { ClientFilter } from "@/components/admin/campaigns/client-filter";
+import { Suspense } from "react";
 
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
-// ─── Mock fallback ─────────────────────────────────────────────────────────
-
-const MOCK: MetaCampaign[] = [
-  { id: "c1", campaign_id: "c1", name: "Zamora Miami - Spring Tour", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: 600000, spend: 4200, roas: 5.2, impressions: 1210000, clicks: 29040, reach: 890000, cpm: 3.47, cpc: 0.14, ctr: 0.024, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
-  { id: "c2", campaign_id: "c2", name: "Zamora Chicago - Q2 Push", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: 400000, spend: 2850, roas: 3.8, impressions: 892000, clicks: 16948, reach: 640000, cpm: 3.19, cpc: 0.17, ctr: 0.019, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
-  { id: "c3", campaign_id: "c3", name: "Zamora National - Awareness", status: "ACTIVE", objective: "REACH", daily_budget: null, lifetime_budget: 1200000, spend: 8100, roas: 4.1, impressions: 3420000, clicks: 58140, reach: 2800000, cpm: 2.37, cpc: 0.14, ctr: 0.017, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
-  { id: "c4", campaign_id: "c4", name: "Zamora Houston - Early Access", status: "PAUSED", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: 200000, spend: 1340, roas: 2.1, impressions: 420000, clicks: 6300, reach: 310000, cpm: 3.19, cpc: 0.21, ctr: 0.015, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
-];
-
 // ─── Data fetching ─────────────────────────────────────────────────────────
 
-async function getCampaigns(): Promise<{ campaigns: MetaCampaign[]; fromDb: boolean }> {
-  if (!supabaseAdmin) return { campaigns: MOCK, fromDb: false };
+async function getCampaigns(clientSlug: string | null): Promise<{ campaigns: MetaCampaign[]; clients: string[]; fromDb: boolean }> {
+  if (!supabaseAdmin) return { campaigns: [], clients: [], fromDb: false };
 
-  const { data, error } = await supabaseAdmin
+  // Always fetch the distinct client list for the filter dropdown
+  const allRes = await supabaseAdmin
+    .from("meta_campaigns")
+    .select("client_slug")
+    .not("client_slug", "is", null);
+
+  const clients = [...new Set((allRes.data ?? []).map((r) => r.client_slug as string))].sort();
+
+  const query = supabaseAdmin
     .from("meta_campaigns")
     .select("*")
     .order("spend", { ascending: false })
     .limit(100);
 
-  if (error || !data?.length) return { campaigns: MOCK, fromDb: false };
-  return { campaigns: data as MetaCampaign[], fromDb: true };
+  if (clientSlug) query.eq("client_slug", clientSlug);
+
+  const { data, error } = await query;
+  if (error) return { campaigns: [], clients, fromDb: false };
+  return { campaigns: (data ?? []) as MetaCampaign[], clients, fromDb: Boolean(data?.length) };
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
 function fmtUsd(n: number | null) {
   if (n == null) return "—";
-  return "$" + n.toLocaleString("en-US");
+  return "$" + Math.round(n).toLocaleString("en-US");
 }
 function fmtNum(n: number | null) {
   if (n == null) return "—";
@@ -50,31 +53,19 @@ function fmtNum(n: number | null) {
   if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
   return String(n);
 }
-
-// Meta stores budgets and spend in cents
-function budgetDollars(n: number | null) {
-  if (n == null) return null;
-  return n / 100;
-}
-function spendDollars(n: number | null) {
-  if (n == null) return null;
-  return n / 100;
-}
+function centsToUsd(n: number | null) { return n == null ? null : n / 100; }
 
 function statusBadge(s: string) {
   const map: Record<string, { label: string; classes: string }> = {
-    ACTIVE:    { label: "Active",    classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-    PAUSED:    { label: "Paused",    classes: "bg-amber-500/10  text-amber-400  border-amber-500/20" },
-    ARCHIVED:  { label: "Archived",  classes: "bg-zinc-500/10   text-zinc-400   border-zinc-500/20" },
-    DELETED:   { label: "Deleted",   classes: "bg-red-500/10    text-red-400    border-red-500/20" },
-    // lowercase variants from mock
-    active:    { label: "Active",    classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-    paused:    { label: "Paused",    classes: "bg-amber-500/10  text-amber-400  border-amber-500/20" },
+    ACTIVE:   { label: "Active",   classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+    PAUSED:   { label: "Paused",   classes: "bg-amber-500/10  text-amber-400  border-amber-500/20" },
+    ARCHIVED: { label: "Archived", classes: "bg-zinc-500/10   text-zinc-400   border-zinc-500/20" },
+    DELETED:  { label: "Deleted",  classes: "bg-red-500/10    text-red-400    border-red-500/20" },
   };
-  const { label, classes } = map[s] ?? { label: s, classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" };
+  const entry = map[s.toUpperCase()] ?? { label: s, classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}>
-      {label}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${entry.classes}`}>
+      {entry.label}
     </span>
   );
 }
@@ -105,15 +96,27 @@ function RoasBadge({ roas }: { roas: number | null }) {
   return <span className={`text-sm font-semibold tabular-nums ${color}`}>{roas.toFixed(1)}×</span>;
 }
 
+function slugToLabel(slug: string | null) {
+  if (!slug) return "—";
+  return slug.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────
 
-export default async function CampaignsPage() {
-  const { campaigns, fromDb } = await getCampaigns();
+interface Props {
+  searchParams: Promise<{ client?: string }>;
+}
 
-  const totalSpend = campaigns.reduce((s, c) => s + (spendDollars(c.spend) ?? 0), 0);
+export default async function CampaignsPage({ searchParams }: Props) {
+  const { client } = await searchParams;
+  const clientSlug = client && client !== "all" ? client : null;
+
+  const { campaigns, clients, fromDb } = await getCampaigns(clientSlug);
+
+  const totalSpend = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0), 0);
   const totalImpressions = campaigns.reduce((s, c) => s + (c.impressions ?? 0), 0);
   const totalClicks = campaigns.reduce((s, c) => s + (c.clicks ?? 0), 0);
-  const totalRevenue = campaigns.reduce((s, c) => s + (spendDollars(c.spend) ?? 0) * (c.roas ?? 0), 0);
+  const totalRevenue = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
   const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
   const overallCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
 
@@ -136,13 +139,9 @@ export default async function CampaignsPage() {
             </span>
           ) : (
             <span className="text-xs text-amber-400 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded">
-              Mock data
+              No data
             </span>
           )}
-          <Button size="sm" className="gap-2 h-8 text-xs">
-            <Plus className="h-3.5 w-3.5" />
-            New Campaign
-          </Button>
         </div>
       </div>
 
@@ -168,6 +167,15 @@ export default async function CampaignsPage() {
 
       {/* Campaigns table */}
       <Card className="border-border/60">
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <p className="text-sm font-semibold">
+            {clientSlug ? slugToLabel(clientSlug) : "All clients"}
+            <span className="text-muted-foreground font-normal ml-1.5">({campaigns.length})</span>
+          </p>
+          <Suspense>
+            <ClientFilter clients={clients} selected={clientSlug ?? "all"} />
+          </Suspense>
+        </div>
         <Table>
           <TableHeader>
             <TableRow className="border-border/60 hover:bg-transparent">
@@ -182,51 +190,61 @@ export default async function CampaignsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {campaigns.map((c) => (
-              <TableRow key={c.id} className="border-border/60">
-                <TableCell>
-                  <div>
-                    <p className="text-sm font-medium">{c.name}</p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-muted-foreground">{c.client_slug ?? "—"}</span>
-                      <span className="text-xs text-muted-foreground/50">·</span>
-                      <span className="text-xs text-muted-foreground">{c.objective}</span>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>{statusBadge(c.status)}</TableCell>
-                <TableCell>
-                  <BudgetBar spend={spendDollars(c.spend)} budget={budgetDollars(c.lifetime_budget ?? c.daily_budget)} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <RoasBadge roas={c.roas} />
-                </TableCell>
-                <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
-                  {fmtNum(c.impressions)}
-                </TableCell>
-                <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
-                  {c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}
-                </TableCell>
-                <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
-                  {c.cpc != null ? "$" + c.cpc.toFixed(2) : "—"}
-                </TableCell>
-                <TableCell>
-                  <a
-                    href="https://www.facebook.com/adsmanager"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+            {campaigns.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={8} className="py-12 text-center text-xs text-muted-foreground">
+                  {fromDb ? "No campaigns match this filter" : "No campaign data — run the Meta sync agent to pull live data"}
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              campaigns.map((c) => (
+                <TableRow key={c.id} className="border-border/60">
+                  <TableCell>
+                    <div>
+                      <p className="text-sm font-medium">{c.name}</p>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-xs text-muted-foreground">{slugToLabel(c.client_slug)}</span>
+                        <span className="text-xs text-muted-foreground/50">·</span>
+                        <span className="text-xs text-muted-foreground">{c.objective}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>{statusBadge(c.status)}</TableCell>
+                  <TableCell>
+                    <BudgetBar
+                      spend={centsToUsd(c.spend)}
+                      budget={centsToUsd(c.lifetime_budget ?? c.daily_budget)}
+                    />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <RoasBadge roas={c.roas} />
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
+                    {fmtNum(c.impressions)}
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
+                    {c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}
+                  </TableCell>
+                  <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
+                    {c.cpc != null ? "$" + c.cpc.toFixed(2) : "—"}
+                  </TableCell>
+                  <TableCell>
+                    <a
+                      href="https://www.facebook.com/adsmanager"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </Card>
 
-      {/* Connect Meta CTA - only show when no live data */}
       {!fromDb && (
         <Card className="border-border/60 border-dashed">
           <CardContent className="py-6">
@@ -236,17 +254,18 @@ export default async function CampaignsPage() {
                   <Megaphone className="h-4 w-4 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Connect Meta Ads</p>
+                  <p className="text-sm font-medium">No campaign data</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Start the agent to pull live campaign data from the Meta Marketing API
+                    Run the Meta sync agent to pull live data from the Meta Marketing API
                   </p>
                 </div>
               </div>
-              <Button size="sm" variant="outline" className="gap-2 h-8 text-xs shrink-0" asChild>
-                <a href="/admin/agents">
-                  Run Agent
-                </a>
-              </Button>
+              <a
+                href="/admin/agents"
+                className="text-xs border border-border/60 px-3 py-1.5 rounded hover:bg-muted transition-colors shrink-0"
+              >
+                Run Agent
+              </a>
             </div>
           </CardContent>
         </Card>

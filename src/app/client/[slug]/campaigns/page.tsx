@@ -10,6 +10,7 @@ import {
 import { DollarSign, Megaphone, TrendingUp, MousePointerClick } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
+import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
@@ -19,18 +20,64 @@ interface Props {
 
 // ─── Data fetching ─────────────────────────────────────────────────────────
 
-async function getCampaigns(slug: string): Promise<{ campaigns: MetaCampaign[]; fromDb: boolean }> {
-  if (!supabaseAdmin) return { campaigns: [], fromDb: false };
+async function getCampaigns(slug: string) {
+  if (!supabaseAdmin) return { campaigns: [], snapshots: [], fromDb: false };
 
-  const { data, error } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select("*")
-    .eq("client_slug", slug)
-    .order("spend", { ascending: false })
-    .limit(50);
+  const [campaignsRes, snapshotsRes] = await Promise.all([
+    supabaseAdmin
+      .from("meta_campaigns")
+      .select("*")
+      .eq("client_slug", slug)
+      .order("spend", { ascending: false })
+      .limit(50),
+    // Fetch last 30 days of snapshots for campaigns belonging to this client
+    supabaseAdmin
+      .from("campaign_snapshots")
+      .select("snapshot_date, roas, spend, campaign_id")
+      .in(
+        "campaign_id",
+        // Subquery workaround: fetch campaign_ids first, then filter
+        // We'll post-filter in JS after getting all snapshots
+        ["placeholder"] // will be replaced below
+      )
+      .order("snapshot_date", { ascending: true })
+      .limit(500),
+  ]);
 
-  if (error || !data?.length) return { campaigns: [], fromDb: false };
-  return { campaigns: data as MetaCampaign[], fromDb: true };
+  const campaigns = (campaignsRes.data ?? []) as MetaCampaign[];
+  const campaignIds = campaigns.map((c) => c.campaign_id);
+
+  // Re-fetch snapshots with real campaign IDs
+  let snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null; campaign_id: string }> = [];
+  if (campaignIds.length > 0) {
+    const { data } = await supabaseAdmin
+      .from("campaign_snapshots")
+      .select("snapshot_date, roas, spend, campaign_id")
+      .in("campaign_id", campaignIds)
+      .order("snapshot_date", { ascending: true })
+      .limit(500);
+    snapshots = data ?? [];
+  }
+
+  return { campaigns, snapshots, fromDb: Boolean(campaigns.length) };
+}
+
+// Aggregate snapshots by date for trend charts
+function buildTrendData(snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null }>) {
+  const byDate: Record<string, { roasSum: number; roasCount: number; spendSum: number }> = {};
+  for (const s of snapshots) {
+    const d = s.snapshot_date;
+    if (!byDate[d]) byDate[d] = { roasSum: 0, roasCount: 0, spendSum: 0 };
+    if (s.roas != null) { byDate[d].roasSum += s.roas; byDate[d].roasCount++; }
+    if (s.spend != null) byDate[d].spendSum += s.spend / 100; // cents → dollars
+  }
+  return Object.entries(byDate)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, v]) => ({
+      date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      roas: v.roasCount > 0 ? v.roasSum / v.roasCount : 0,
+      spend: v.spendSum,
+    }));
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
@@ -69,30 +116,33 @@ function statusLabel(s: string) {
   return map[s] ?? s;
 }
 
+function slugToName(slug: string) {
+  return slug.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────
 
 export default async function ClientCampaigns({ params }: Props) {
   const { slug } = await params;
-  const clientName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const clientName = slugToName(slug);
 
-  const { campaigns, fromDb } = await getCampaigns(slug);
+  const { campaigns, snapshots, fromDb } = await getCampaigns(slug);
+  const trendData = buildTrendData(snapshots);
 
-  const totalSpend    = campaigns.reduce((a, c) => a + (centsToUsd(c.spend) ?? 0), 0);
-  const totalRevenue  = campaigns.reduce((a, c) => a + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
+  const totalSpend      = campaigns.reduce((a, c) => a + (centsToUsd(c.spend) ?? 0), 0);
+  const totalRevenue    = campaigns.reduce((a, c) => a + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
   const totalImpressions = campaigns.reduce((a, c) => a + (c.impressions ?? 0), 0);
-  const blendedRoas   = totalSpend > 0 ? (totalRevenue / totalSpend) : 0;
+  const blendedRoas     = totalSpend > 0 ? totalRevenue / totalSpend : 0;
 
   const now = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
+    weekday: "long", month: "long", day: "numeric",
   });
 
   const stats = [
-    { label: "Total Ad Spend",   value: fmtUsd(totalSpend),        sub: "last 30 days",               icon: DollarSign      },
-    { label: "Ad Revenue",       value: fmtUsd(totalRevenue),      sub: "attributed to campaigns",     icon: TrendingUp      },
-    { label: "Blended ROAS",     value: blendedRoas > 0 ? blendedRoas.toFixed(1) + "x" : "—", sub: "return on ad spend", icon: Megaphone },
-    { label: "Total Impressions",value: fmtNum(totalImpressions),  sub: "across all campaigns",        icon: MousePointerClick },
+    { label: "Total Ad Spend",    value: fmtUsd(totalSpend),       sub: "last 30 days",              icon: DollarSign       },
+    { label: "Ad Revenue",        value: fmtUsd(totalRevenue),     sub: "attributed to campaigns",   icon: TrendingUp       },
+    { label: "Blended ROAS",      value: blendedRoas > 0 ? blendedRoas.toFixed(1) + "×" : "—", sub: "return on ad spend", icon: Megaphone },
+    { label: "Total Impressions", value: fmtNum(totalImpressions), sub: "across all campaigns",      icon: MousePointerClick },
   ];
 
   return (
@@ -150,6 +200,32 @@ export default async function ClientCampaigns({ params }: Props) {
           ))}
         </div>
 
+        {/* Trend charts */}
+        {fromDb && (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Card className="border-border/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  ROAS Trend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RoasTrendChart data={trendData} />
+              </CardContent>
+            </Card>
+            <Card className="border-border/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Daily Spend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SpendTrendChart data={trendData} />
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         {/* Campaigns table */}
         <div>
           <h2 className="text-sm font-semibold mb-3">
@@ -191,12 +267,8 @@ export default async function ClientCampaigns({ params }: Props) {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-right text-sm font-medium tabular-nums">
-                          {fmtUsd(spend)}
-                        </TableCell>
-                        <TableCell className="text-right text-sm font-medium tabular-nums">
-                          {fmtUsd(revenue)}
-                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium tabular-nums">{fmtUsd(spend)}</TableCell>
+                        <TableCell className="text-right text-sm font-medium tabular-nums">{fmtUsd(revenue)}</TableCell>
                         <TableCell className="text-right">
                           <span className={`text-sm font-semibold tabular-nums ${
                             (c.roas ?? 0) >= 4 ? "text-emerald-400"
@@ -204,12 +276,10 @@ export default async function ClientCampaigns({ params }: Props) {
                             : c.roas != null ? "text-red-400"
                             : "text-muted-foreground"
                           }`}>
-                            {c.roas != null ? c.roas.toFixed(1) + "x" : "—"}
+                            {c.roas != null ? c.roas.toFixed(1) + "×" : "—"}
                           </span>
                         </TableCell>
-                        <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-                          {fmtNum(c.impressions)}
-                        </TableCell>
+                        <TableCell className="text-right text-sm tabular-nums text-muted-foreground">{fmtNum(c.impressions)}</TableCell>
                         <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
                           {c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}
                         </TableCell>

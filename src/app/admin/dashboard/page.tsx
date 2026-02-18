@@ -35,9 +35,9 @@ const MOCK_EVENTS: TmEvent[] = [
 ];
 
 const MOCK_CAMPAIGNS: MetaCampaign[] = [
-  { id: "c1", campaign_id: "c1", name: "Zamora Miami - Spring Tour", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 4200, roas: 5.2, impressions: 1200000, clicks: 28800, reach: 890000, cpm: 3.47, cpc: 0.14, ctr: 0.024, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
-  { id: "c2", campaign_id: "c2", name: "Zamora Chicago - Q2 Push", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 2850, roas: 3.8, impressions: 890000, clicks: 16910, reach: 640000, cpm: 3.19, cpc: 0.17, ctr: 0.019, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
-  { id: "c3", campaign_id: "c3", name: "Zamora National - Awareness", status: "ACTIVE", objective: "REACH", daily_budget: null, lifetime_budget: null, spend: 8100, roas: 4.1, impressions: 3420000, clicks: 58140, reach: 2800000, cpm: 2.37, cpc: 0.14, ctr: 0.017, client_slug: "zamora", tm_event_id: null, synced_at: "", created_at: "", updated_at: "" },
+  { id: "c1", campaign_id: "c1", name: "Zamora Miami - Spring Tour", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 4200, roas: 5.2, impressions: 1200000, clicks: 28800, reach: 890000, cpm: 3.47, cpc: 0.14, ctr: 0.024, client_slug: "zamora", tm_event_id: null, start_time: null, synced_at: "", created_at: "", updated_at: "" },
+  { id: "c2", campaign_id: "c2", name: "Zamora Chicago - Q2 Push", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 2850, roas: 3.8, impressions: 890000, clicks: 16910, reach: 640000, cpm: 3.19, cpc: 0.17, ctr: 0.019, client_slug: "zamora", tm_event_id: null, start_time: null, synced_at: "", created_at: "", updated_at: "" },
+  { id: "c3", campaign_id: "c3", name: "Zamora National - Awareness", status: "ACTIVE", objective: "REACH", daily_budget: null, lifetime_budget: null, spend: 8100, roas: 4.1, impressions: 3420000, clicks: 58140, reach: 2800000, cpm: 2.37, cpc: 0.14, ctr: 0.017, client_slug: "zamora", tm_event_id: null, start_time: null, synced_at: "", created_at: "", updated_at: "" },
 ];
 
 // ─── Data fetching ─────────────────────────────────────────────────────────

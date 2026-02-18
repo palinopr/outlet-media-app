@@ -46,6 +46,7 @@ export interface Database {
           roas: number | null;
           client_slug: string | null;
           tm_event_id: string | null;
+          start_time: string | null;
           synced_at: string;
           created_at: string;
           updated_at: string;
