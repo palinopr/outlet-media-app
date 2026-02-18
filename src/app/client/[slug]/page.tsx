@@ -61,9 +61,9 @@ async function getData(slug: string) {
       .limit(20),
   ]);
 
-  const events = eventsRes.data?.length ? (eventsRes.data as TmEvent[]) : MOCK_EVENTS;
+  const events = (eventsRes.data ?? []) as TmEvent[];
   const campaigns = campaignsRes.data?.length ? (campaignsRes.data as MetaCampaign[]) : MOCK_CAMPAIGNS;
-  const fromDb = Boolean(eventsRes.data?.length || campaignsRes.data?.length);
+  const fromDb = Boolean(campaignsRes.data?.length);
 
   return { events, campaigns, fromDb };
 }

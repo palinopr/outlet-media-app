@@ -38,8 +38,8 @@ async function getEvents(): Promise<{ events: TmEventRow[]; fromDb: boolean }> {
     .order("date", { ascending: true })
     .limit(200);
 
-  if (error || !data?.length) return { events: MOCK_EVENTS, fromDb: false };
-  return { events: data as TmEventRow[], fromDb: true };
+  if (error) return { events: [], fromDb: false };
+  return { events: (data ?? []) as TmEventRow[], fromDb: data.length > 0 };
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────

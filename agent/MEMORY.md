@@ -53,7 +53,7 @@
 - **Supabase stores monetary values in CENTS** (bigint): spend=224000 means $2,240.00
 - Meta API: `daily_budget` and `lifetime_budget` come in cents natively from Meta
 - Meta API: `spend`, `cpm`, `cpc` come as dollar strings — agent multiplies by 100 before storing
-- **KNOWN BUG (Cycle #4):** Dashboard displays cents as dollars (100x inflation). Needs fix in fmtUsd().
+- Dashboard and client portal use `centsToUsd(n) = n/100` helper — FIXED as of Feb 18 2026
 - ROAS is stored as a float (e.g., 8.4) — NOT in cents, not a percentage
 
 ## Things To Remember
@@ -64,4 +64,4 @@
 - LEARNINGS.md is the think-loop journal — read it first every cycle
 - session/ directory holds last-events.json and last-campaigns.json (inter-run cache)
 - session/proposals.md has 6 ranked capability proposals (created Cycle #4)
-- `/client/[slug]/campaigns/page.tsx` uses mock data only — needs Supabase query (see proposals)
+- `/client/[slug]/campaigns/page.tsx` wired to Supabase as of Feb 18 2026 — shows real campaign data

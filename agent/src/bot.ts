@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { Bot, type Context } from "grammy";
 import { runClaude } from "./runner.js";
+import { state } from "./state.js";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN not set in .env");
@@ -30,8 +31,10 @@ bot.on("message:text", async (ctx) => {
 });
 
 async function handleMessage(ctx: Context, prompt: string) {
-  if (agentBusy) {
-    await ctx.reply("I'm already working on something. Wait a moment.");
+  // Block if Telegram is already handling a message OR if a scheduled job/think cycle
+  // is running (both would compete for the claude CLI subprocess)
+  if (agentBusy || state.jobRunning || state.thinkRunning) {
+    await ctx.reply("Agent is busy. Try again in a moment.");
     return;
   }
 
@@ -47,6 +50,7 @@ async function handleMessage(ctx: Context, prompt: string) {
   try {
     const result = await runClaude({
       prompt,
+      systemPromptName: "chat",
       onChunk: async (chunk: string) => {
         buffer += chunk;
         // Throttle edits to avoid Telegram rate limits (max 1 edit/sec)

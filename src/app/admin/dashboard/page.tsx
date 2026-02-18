@@ -66,9 +66,11 @@ async function getData() {
       .limit(20),
   ]);
 
-  const events = eventsRes.data?.length ? (eventsRes.data as TmEvent[]) : MOCK_EVENTS;
+  // Events: only show real TM1 data — empty array until TM1 credentials are added
+  // Campaigns: fall back to mock only if Supabase is completely empty (first run)
+  const events = (eventsRes.data ?? []) as TmEvent[];
   const campaigns = campaignsRes.data?.length ? (campaignsRes.data as MetaCampaign[]) : MOCK_CAMPAIGNS;
-  const fromDb = Boolean(eventsRes.data?.length || campaignsRes.data?.length);
+  const fromDb = Boolean(campaignsRes.data?.length); // drives the "Live from Supabase" badge
 
   // Deduplicate to get the most recent run per agent type
   const seen = new Set<string>();
@@ -208,6 +210,13 @@ export default async function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {events.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-8 text-center text-xs text-muted-foreground">
+                    No events yet — TM One credentials needed to sync ticket data
+                  </TableCell>
+                </TableRow>
+              )}
               {events.map((e) => {
                 const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
                 const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : 0;

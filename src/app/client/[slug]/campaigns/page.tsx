@@ -8,71 +8,42 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { DollarSign, Megaphone, TrendingUp, MousePointerClick } from "lucide-react";
+import { supabaseAdmin } from "@/lib/supabase";
+import type { Database } from "@/lib/database.types";
+
+type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// ─── Mock data (replace with Supabase query once connected) ───────────────
+// ─── Data fetching ─────────────────────────────────────────────────────────
 
-const mockCampaigns = [
-  {
-    id: "c1",
-    name: "Zamora Miami - Spring Tour",
-    event: "Spring Tour 2026 - Kaseya Center",
-    platform: "Facebook + Instagram",
-    status: "active",
-    spend: 4200,
-    budget: 6000,
-    roas: 5.2,
-    revenue: 21840,
-    impressions: 1_200_000,
-    clicks: 28_800,
-    ctr: 2.4,
-    cpc: 0.15,
-    startDate: "Feb 1, 2026",
-  },
-  {
-    id: "c2",
-    name: "Zamora Chicago - Q2 Push",
-    event: "Spring Tour 2026 - United Center",
-    platform: "Instagram",
-    status: "active",
-    spend: 2850,
-    budget: 4000,
-    roas: 3.8,
-    revenue: 10830,
-    impressions: 890_000,
-    clicks: 16_910,
-    ctr: 1.9,
-    cpc: 0.17,
-    startDate: "Feb 8, 2026",
-  },
-  {
-    id: "c3",
-    name: "Zamora National - Awareness",
-    event: "Spring Tour 2026 - All Shows",
-    platform: "Facebook + Instagram",
-    status: "active",
-    spend: 8100,
-    budget: 12000,
-    roas: 4.1,
-    revenue: 33210,
-    impressions: 3_400_000,
-    clicks: 57_800,
-    ctr: 1.7,
-    cpc: 0.14,
-    startDate: "Jan 25, 2026",
-  },
-];
+async function getCampaigns(slug: string): Promise<{ campaigns: MetaCampaign[]; fromDb: boolean }> {
+  if (!supabaseAdmin) return { campaigns: [], fromDb: false };
+
+  const { data, error } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select("*")
+    .eq("client_slug", slug)
+    .order("spend", { ascending: false })
+    .limit(50);
+
+  if (error || !data?.length) return { campaigns: [], fromDb: false };
+  return { campaigns: data as MetaCampaign[], fromDb: true };
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
-function fmtUsd(n: number) {
-  return "$" + n.toLocaleString("en-US");
+function centsToUsd(cents: number | null) { return cents == null ? null : cents / 100; }
+
+function fmtUsd(n: number | null) {
+  if (n == null) return "—";
+  return "$" + Math.round(n).toLocaleString("en-US");
 }
 
-function fmtNum(n: number) {
+function fmtNum(n: number | null) {
+  if (n == null) return "—";
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
   return n.toLocaleString("en-US");
@@ -80,11 +51,22 @@ function fmtNum(n: number) {
 
 function statusDot(s: string) {
   const colors: Record<string, string> = {
+    ACTIVE: "bg-emerald-400",
     active: "bg-emerald-400",
+    PAUSED: "bg-amber-400",
     paused: "bg-amber-400",
-    completed: "bg-zinc-500",
+    ARCHIVED: "bg-zinc-500",
   };
   return colors[s] ?? "bg-zinc-500";
+}
+
+function statusLabel(s: string) {
+  const map: Record<string, string> = {
+    ACTIVE: "Active", active: "Active",
+    PAUSED: "Paused", paused: "Paused",
+    ARCHIVED: "Archived",
+  };
+  return map[s] ?? s;
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────
@@ -93,10 +75,12 @@ export default async function ClientCampaigns({ params }: Props) {
   const { slug } = await params;
   const clientName = slug.charAt(0).toUpperCase() + slug.slice(1);
 
-  const totalSpend = mockCampaigns.reduce((a, c) => a + c.spend, 0);
-  const totalRevenue = mockCampaigns.reduce((a, c) => a + c.revenue, 0);
-  const totalImpressions = mockCampaigns.reduce((a, c) => a + c.impressions, 0);
-  const blendedRoas = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(1) : "—";
+  const { campaigns, fromDb } = await getCampaigns(slug);
+
+  const totalSpend    = campaigns.reduce((a, c) => a + (centsToUsd(c.spend) ?? 0), 0);
+  const totalRevenue  = campaigns.reduce((a, c) => a + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
+  const totalImpressions = campaigns.reduce((a, c) => a + (c.impressions ?? 0), 0);
+  const blendedRoas   = totalSpend > 0 ? (totalRevenue / totalSpend) : 0;
 
   const now = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -105,30 +89,10 @@ export default async function ClientCampaigns({ params }: Props) {
   });
 
   const stats = [
-    {
-      label: "Total Ad Spend",
-      value: fmtUsd(totalSpend),
-      sub: "this month",
-      icon: DollarSign,
-    },
-    {
-      label: "Ad Revenue",
-      value: fmtUsd(totalRevenue),
-      sub: "attributed to campaigns",
-      icon: TrendingUp,
-    },
-    {
-      label: "Blended ROAS",
-      value: `${blendedRoas}×`,
-      sub: "return on ad spend",
-      icon: Megaphone,
-    },
-    {
-      label: "Total Impressions",
-      value: fmtNum(totalImpressions),
-      sub: "across all campaigns",
-      icon: MousePointerClick,
-    },
+    { label: "Total Ad Spend",   value: fmtUsd(totalSpend),        sub: "last 30 days",               icon: DollarSign      },
+    { label: "Ad Revenue",       value: fmtUsd(totalRevenue),      sub: "attributed to campaigns",     icon: TrendingUp      },
+    { label: "Blended ROAS",     value: blendedRoas > 0 ? blendedRoas.toFixed(1) + "x" : "—", sub: "return on ad spend", icon: Megaphone },
+    { label: "Total Impressions",value: fmtNum(totalImpressions),  sub: "across all campaigns",        icon: MousePointerClick },
   ];
 
   return (
@@ -146,15 +110,21 @@ export default async function ClientCampaigns({ params }: Props) {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <a
-              href={`/client/${slug}`}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              ← Overview
+            <a href={`/client/${slug}`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+              Back to overview
             </a>
             <div className="flex items-center gap-2">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
-              <span className="text-xs text-muted-foreground">Updated {now}</span>
+              {fromDb ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
+                  <span className="text-xs text-muted-foreground">Live · {now}</span>
+                </>
+              ) : (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
+                  <span className="text-xs text-muted-foreground">No data · {now}</span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -182,13 +152,15 @@ export default async function ClientCampaigns({ params }: Props) {
 
         {/* Campaigns table */}
         <div>
-          <h2 className="text-sm font-semibold mb-3">Active Campaigns</h2>
+          <h2 className="text-sm font-semibold mb-3">
+            All Campaigns
+            <span className="text-muted-foreground font-normal ml-2">({campaigns.length})</span>
+          </h2>
           <Card className="border-border/60">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/60 hover:bg-transparent">
                   <TableHead className="text-xs font-medium text-muted-foreground">Campaign</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground">Budget Used</TableHead>
                   <TableHead className="text-xs font-medium text-muted-foreground text-right">Spend</TableHead>
                   <TableHead className="text-xs font-medium text-muted-foreground text-right">Revenue</TableHead>
                   <TableHead className="text-xs font-medium text-muted-foreground text-right">ROAS</TableHead>
@@ -198,90 +170,60 @@ export default async function ClientCampaigns({ params }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockCampaigns.map((c) => {
-                  const budgetPct = Math.round((c.spend / c.budget) * 100);
-                  const budgetBarColor =
-                    budgetPct >= 90
-                      ? "bg-red-500"
-                      : budgetPct >= 70
-                      ? "bg-amber-500"
-                      : "bg-emerald-500";
-                  return (
-                    <TableRow key={c.id} className="border-border/60">
-                      <TableCell>
-                        <div>
+                {campaigns.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="py-12 text-center text-xs text-muted-foreground">
+                      No campaign data yet — syncs automatically every 6 hours
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  campaigns.map((c) => {
+                    const spend = centsToUsd(c.spend);
+                    const revenue = spend != null && c.roas != null ? spend * c.roas : null;
+                    return (
+                      <TableRow key={c.id} className="border-border/60">
+                        <TableCell>
                           <div className="flex items-center gap-2 mb-0.5">
                             <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusDot(c.status)}`} />
-                            <p className="text-sm font-medium">{c.name}</p>
-                          </div>
-                          <p className="text-xs text-muted-foreground pl-3.5">{c.event}</p>
-                          <p className="text-xs text-muted-foreground pl-3.5">{c.platform} &middot; since {c.startDate}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="min-w-[90px]">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                              <div
-                                className={`h-full rounded-full ${budgetBarColor}`}
-                                style={{ width: `${Math.min(budgetPct, 100)}%` }}
-                              />
+                            <div>
+                              <p className="text-sm font-medium">{c.name}</p>
+                              <p className="text-xs text-muted-foreground">{statusLabel(c.status)} · {c.objective}</p>
                             </div>
-                            <span className="text-xs tabular-nums text-muted-foreground w-7 text-right">
-                              {budgetPct}%
-                            </span>
                           </div>
-                          <p className="text-xs text-muted-foreground tabular-nums">
-                            {fmtUsd(c.spend)} / {fmtUsd(c.budget)}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right text-sm font-medium tabular-nums">
-                        {fmtUsd(c.spend)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm font-medium tabular-nums">
-                        {fmtUsd(c.revenue)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <span
-                          className={`text-sm font-semibold tabular-nums ${
-                            c.roas >= 4
-                              ? "text-emerald-400"
-                              : c.roas >= 2
-                              ? "text-amber-400"
-                              : "text-red-400"
-                          }`}
-                        >
-                          {c.roas}×
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-                        {fmtNum(c.impressions)}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-                        {c.ctr}%
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-                        ${c.cpc.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium tabular-nums">
+                          {fmtUsd(spend)}
+                        </TableCell>
+                        <TableCell className="text-right text-sm font-medium tabular-nums">
+                          {fmtUsd(revenue)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <span className={`text-sm font-semibold tabular-nums ${
+                            (c.roas ?? 0) >= 4 ? "text-emerald-400"
+                            : (c.roas ?? 0) >= 2 ? "text-amber-400"
+                            : c.roas != null ? "text-red-400"
+                            : "text-muted-foreground"
+                          }`}>
+                            {c.roas != null ? c.roas.toFixed(1) + "x" : "—"}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+                          {fmtNum(c.impressions)}
+                        </TableCell>
+                        <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+                          {c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}
+                        </TableCell>
+                        <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+                          {c.cpc != null ? "$" + c.cpc.toFixed(2) : "—"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
               </TableBody>
             </Table>
           </Card>
         </div>
-
-        {/* How it works note */}
-        <Card className="border-border/60 border-dashed">
-          <CardContent className="py-5">
-            <p className="text-xs text-muted-foreground">
-              Campaign data syncs automatically every 6 hours via the Outlet Media Meta Ads agent.
-              Spend and ROAS numbers reflect real Meta Ads Manager data once connected.
-              Questions about your campaigns? Contact your Outlet Media account manager.
-            </p>
-          </CardContent>
-        </Card>
 
         {/* Footer */}
         <div className="border-t border-border/60 pt-6 flex items-center justify-between text-xs text-muted-foreground">
