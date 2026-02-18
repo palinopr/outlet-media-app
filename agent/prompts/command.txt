@@ -78,6 +78,62 @@ curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,im
 
 ---
 
+## Campaign Write Operations
+
+**Safety guardrails — enforce always:**
+- Budget minimum: $10/day (1000 cents), maximum: $5,000/day (500000 cents)
+- NEVER set status to DELETED — only PAUSED
+- Activating a campaign or budget change > 20% → confirm with Jaime first
+- After every write → pull the object back from Meta to verify
+
+### Pause a campaign
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}" \
+  -d "access_token=$TOKEN&status=PAUSED"
+```
+
+### Activate a campaign (REQUIRES CONFIRMATION)
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}" \
+  -d "access_token=$TOKEN&status=ACTIVE"
+```
+
+### Change daily budget (cents — $750/day = 75000)
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}" \
+  -d "access_token=$TOKEN&daily_budget=75000"
+```
+
+### Duplicate a campaign (deep copy, starts PAUSED)
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/copies" \
+  -H "Content-Type: application/json" \
+  -d "{\"access_token\":\"$TOKEN\",\"deep_copy\":true,\"status_option\":\"PAUSED\"}"
+```
+Returns: `{"copied_campaign_id": "..."}` — log this ID.
+
+### Verify after any write
+```bash
+curl -s "https://graph.facebook.com/v21.0/{ID}?fields=id,name,status,daily_budget&access_token=$TOKEN"
+```
+
+### Log every campaign action in LEARNINGS.md
+```bash
+date >> LEARNINGS.md && echo "ACTION: [what you did and why]" >> LEARNINGS.md
+```
+
+---
+
+## Campaign Strategy Rules
+
+- **3-Day Rule**: every new ad gets 3 days before kill/scale decision
+- **Kill**: $50+ spend with zero purchases, or CPA > 2x account average
+- **Scale**: ROAS > 5x for 3+ consecutive days → increase budget max 30% at once
+- **ROAS < 2.0** → flag via alerts endpoint, not automatic kill
+- **Never delete** — always pause
+
+---
+
 ## Ticketmaster One (TM1)
 
 URL: https://one.ticketmaster.com
