@@ -8,21 +8,34 @@ if (!token) throw new Error("TELEGRAM_BOT_TOKEN not set in .env");
 
 /** Convert common markdown patterns to Telegram HTML */
 function mdToHtml(text: string): string {
-  return text
+  let out = text
+    // ```block``` → <pre>block</pre> (do first so inner content isn't double-converted)
+    .replace(/```[\w]*\n?([\s\S]*?)```/g, "<pre>$1</pre>")
     // Escape bare & < > that aren't already part of HTML tags
     .replace(/&(?!amp;|lt;|gt;|quot;)/g, "&amp;")
     // **bold** or __bold__ → <b>bold</b>
     .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
     .replace(/__(.+?)__/g, "<b>$1</b>")
-    // *italic* or _italic_ (but not inside URLs or already-converted tags)
-    .replace(/(?<![<\w])_([^_]+?)_(?![>\w])/g, "<i>$1</i>")
-    .replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, "<i>$1</i>")
     // `code` → <code>code</code>
     .replace(/`([^`]+?)`/g, "<code>$1</code>")
-    // ```block``` → <pre>block</pre>
-    .replace(/```[\w]*\n?([\s\S]*?)```/g, "<pre>$1</pre>")
     // ## headers → just bold the text
     .replace(/^#{1,3}\s+(.+)$/gm, "<b>$1</b>");
+
+  // Strip markdown tables — Telegram can't render them
+  // Convert "|col1|col2|" rows to "col1 · col2" and drop separator lines
+  out = out.replace(/^\|[-:| ]+\|$/gm, ""); // drop |---|---| separator rows
+  out = out.replace(/^\|(.+)\|$/gm, (_match, row: string) => {
+    return row
+      .split("|")
+      .map((cell: string) => cell.trim())
+      .filter(Boolean)
+      .join(" · ");
+  });
+
+  // Clean up multiple blank lines left over
+  out = out.replace(/\n{3,}/g, "\n\n");
+
+  return out.trim();
 }
 
 export const bot = new Bot(token);
