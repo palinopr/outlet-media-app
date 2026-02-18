@@ -6,6 +6,25 @@ import { state } from "./state.js";
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN not set in .env");
 
+/** Convert common markdown patterns to Telegram HTML */
+function mdToHtml(text: string): string {
+  return text
+    // Escape bare & < > that aren't already part of HTML tags
+    .replace(/&(?!amp;|lt;|gt;|quot;)/g, "&amp;")
+    // **bold** or __bold__ → <b>bold</b>
+    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+    .replace(/__(.+?)__/g, "<b>$1</b>")
+    // *italic* or _italic_ (but not inside URLs or already-converted tags)
+    .replace(/(?<![<\w])_([^_]+?)_(?![>\w])/g, "<i>$1</i>")
+    .replace(/(?<!\*)\*([^*]+?)\*(?!\*)/g, "<i>$1</i>")
+    // `code` → <code>code</code>
+    .replace(/`([^`]+?)`/g, "<code>$1</code>")
+    // ```block``` → <pre>block</pre>
+    .replace(/```[\w]*\n?([\s\S]*?)```/g, "<pre>$1</pre>")
+    // ## headers → just bold the text
+    .replace(/^#{1,3}\s+(.+)$/gm, "<b>$1</b>");
+}
+
 export const bot = new Bot(token);
 
 // Track running agent tasks so we don't run two at once
@@ -64,7 +83,8 @@ async function handleMessage(ctx: Context, prompt: string) {
             await ctx.api.editMessageText(
               workingMsg.chat.id,
               workingMsg.message_id,
-              buffer.slice(-4000) // Telegram max 4096 chars
+              mdToHtml(buffer.slice(-4000)),
+              { parse_mode: "HTML" }
             );
             lastEdit = Date.now();
           } catch {
@@ -74,23 +94,24 @@ async function handleMessage(ctx: Context, prompt: string) {
       },
     });
 
-    // Final message
-    const finalText = (result.text || "Done.").slice(0, 4096);
+    // Final message — convert any leftover markdown to HTML
+    const finalText = mdToHtml((result.text || "Done.").slice(0, 4096));
     try {
       await ctx.api.editMessageText(
         workingMsg.chat.id,
         workingMsg.message_id,
-        finalText
+        finalText,
+        { parse_mode: "HTML" }
       );
     } catch {
-      await ctx.reply(finalText);
+      await ctx.reply(finalText, { parse_mode: "HTML" });
     }
 
     // If response was long, send rest as follow-up
     if (result.text.length > 4096) {
       const chunks = chunkText(result.text.slice(4096), 4096);
       for (const chunk of chunks) {
-        await ctx.reply(chunk);
+        await ctx.reply(mdToHtml(chunk), { parse_mode: "HTML" });
       }
     }
   } catch (err) {
@@ -123,5 +144,5 @@ export async function notifyOwner(text: string): Promise<void> {
     console.warn("[bot] TELEGRAM_CHAT_ID not set - skipping notification");
     return;
   }
-  await bot.api.sendMessage(chatId, text.slice(0, 4096));
+  await bot.api.sendMessage(chatId, mdToHtml(text.slice(0, 4096)), { parse_mode: "HTML" });
 }

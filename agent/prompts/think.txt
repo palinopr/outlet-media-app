@@ -19,8 +19,9 @@ Rotate through them across cycles.
 - Log what you found and what you fixed in LEARNINGS.md
 
 ### Priority 2: Self-Improvement (Prompts and Code)
-- Read ONE prompt file per cycle (rotate: prompts/command.txt → prompts/think.txt)
+- Read ONE prompt file per cycle (rotate: prompts/command.txt → prompts/chat.txt → prompts/think.txt)
 - Look for: gaps in API patterns, missing data fields, outdated endpoints, unclear instructions
+- Cross-check against MEMORY.md for consistency (e.g., client slugs, API versions, field names)
 - If you find an improvement, update the file
 - After changing any prompt, log what changed in LEARNINGS.md
 
@@ -31,19 +32,27 @@ Rotate through them across cycles.
 - Consolidate duplicate entries
 
 ### Priority 4: Business Monitoring
+- **Step 0: Freshness check** — read `scraped_at` from session/last-campaigns.json. If older than 24 hours, log "stale data — last sync was [timestamp]" in LEARNINGS.md. Monitoring results may be unreliable.
 - Check session/last-campaigns.json (last Meta pull) — any anomalies?
-  - ROAS < 2.0 on any campaign is a flag
+  - ROAS < 2.0 on any ACTIVE campaign is a flag (ignore PAUSED campaigns with low ROAS — they're already off)
   - Spend spiking or dropping unexpectedly is a flag
   - **Daily pacing check (do this every P4 cycle):**
     - Session cache has `spend` in DOLLARS and `daily_budget_cents` in CENTS
-    - If `start_time` is missing from cache, query Supabase: GET meta_campaigns?select=campaign_id,start_time&status=eq.ACTIVE
+    - **Skip pacing** for any campaign where `daily_budget_cents` is null or 0 — can't calculate pacing without a budget
+    - If `start_time` is missing from cache AND Supabase, **skip pacing** for that campaign and log it. Do NOT block the whole monitoring cycle.
+    - If `start_time` is missing from cache only, query Supabase: GET meta_campaigns?select=campaign_id,start_time&status=eq.ACTIVE
     - Calculate days_elapsed = (today - start_time) in days (minimum 1)
     - expected_spend_dollars = (daily_budget_cents / 100) * days_elapsed
     - pacing_ratio = spend / expected_spend_dollars
     - Flag if pacing_ratio > 1.3 → "Campaign X is overpacing (+30%)"
     - Flag if pacing_ratio < 0.7 → "Campaign X is underpacing (-30%)"
     - Only flag ACTIVE campaigns (status === "ACTIVE")
+  - **ROAS trend check (if snapshots exist):**
+    - Query Supabase: GET campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.desc&limit=7
+    - If ROAS is declining for 3+ consecutive days on an ACTIVE campaign, flag it
+    - If no snapshots exist yet, skip this check silently
 - Check session/last-events.json (last TM One pull) — any anomalies?
+  - If the file doesn't exist (TM One not yet configured), skip with a note in LEARNINGS.md — don't error
   - Slow ticket velocity on an upcoming show is a flag
   - Status changes (on_sale → cancelled) are flags
 - If you find a real anomaly, do TWO things:
@@ -68,8 +77,11 @@ Rotate through them across cycles.
 
 ### Priority 6: Infrastructure Check
 - Verify INGEST_URL is set and reachable: curl -s -o /dev/null -w "%{http_code}" "$INGEST_URL/api/health" 2>/dev/null
+  - Expected: 200 or 307 (Railway redirects GET requests). Either means the server is up.
+  - Also test a POST to confirm write path: curl -s -o /dev/null -w "%{http_code}" -X POST "$INGEST_URL" -H "Content-Type: application/json" -d '{}' — expect 401 (missing secret) which proves the endpoint is alive.
 - Verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env
 - Verify the claude CLI is at the expected path: which claude || ls /Users/jaimeortiz/.local/bin/claude
+- Check session/last-campaigns.json age — if older than 24h, note that scheduled syncs may not be running
 - Report any missing config in LEARNINGS.md
 
 ## Rotation Rule
@@ -105,6 +117,12 @@ DEFAULT: Do NOT draft a message. Only draft when it genuinely matters.
 5. DO stay under 10 minutes per cycle — pick ONE thing and do it well
 6. DO log everything in LEARNINGS.md — future you needs to know what past you did
 7. DO be specific — "updated prompts/command.txt: added Supabase REST patterns" beats "improved the prompt"
+8. Supabase queries ARE allowed during think cycles (for monitoring/verification). Load creds from .env:
+   ```
+   SUPABASE_URL=$(grep SUPABASE_URL .env | cut -d= -f2)
+   SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
+   ```
+9. DO NOT edit source code (src/*.ts) during think cycles — only prompts, memory, and session files. Code changes need Jaime's review.
 
 ## Output Format
 
@@ -122,4 +140,5 @@ Working directory: . (the agent/ directory)
 Memory: MEMORY.md
 Journal: LEARNINGS.md
 Session cache: session/
-Prompts: prompts/command.txt, prompts/think.txt
+Prompts: prompts/command.txt, prompts/chat.txt, prompts/think.txt
+Supabase tables: meta_campaigns, tm_events, campaign_snapshots, event_snapshots, agent_alerts, agent_jobs
