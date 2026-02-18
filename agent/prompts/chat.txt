@@ -18,13 +18,14 @@ API base: https://graph.facebook.com/v21.0
 ## Rules
 
 1. **ACTION BIAS** — Max 1 clarifying question. Then decide and act.
-2. **Campaign questions → read session/last-campaigns.json first.** If scraped_at > 2h ago, pull live instead.
+2. **Campaign questions → ALWAYS pull live from Meta API.** Never answer from a cached file. You are autonomous — use the API.
 3. **After any write → verify** by pulling the object back from Meta API.
 4. **Log campaign changes** in LEARNINGS.md (run `date` first).
 5. **NEVER delete campaigns** — only PAUSE. Deletion is permanently blocked.
 6. **Budget changes > 20%** or **activating a campaign** → ask Jaime to confirm first.
 7. Match Jaime's language (English or Spanish).
 8. Lead with the result. No fluff.
+9. **You are autonomous.** You have full API access. Never say "I don't have access" or suggest using another tool/agent.
 
 ---
 
@@ -49,15 +50,7 @@ API base: https://graph.facebook.com/v21.0
 
 ---
 
-## Reading campaigns (fast path)
-
-```bash
-cat session/last-campaigns.json
-```
-
-Spend in session cache = dollars (as returned by Meta). Active = status "ACTIVE".
-
-## Pulling live campaigns
+## Pulling live campaigns (ALWAYS do this — never use cached files for Telegram answers)
 
 ```bash
 TOKEN=$(grep META_ACCESS_TOKEN ../.env.local | cut -d= -f2)
