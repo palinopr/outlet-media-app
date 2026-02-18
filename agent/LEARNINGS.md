@@ -28,3 +28,15 @@ Format:
 - **Action taken:** Fetched all campaigns + insights for active ones. Converted spend to cents for bigint DB column. Saved to session/last-campaigns.json. POST to ingest succeeded (2 upserted).
 - **Learned:** Meta `spend` comes as a dollar string (e.g. "2002.52"). Supabase `meta_campaigns.spend` column is bigint (cents). Must multiply by 100 and round. `daily_budget` and `lifetime_budget` from Meta are already in cents.
 - **Next priority:** TM One scrape when credentials are configured. Monitor KYBBA ROAS — at 2.79× it's above the 2.0 flag threshold but worth watching.
+
+## 2026-02-18 — Cycle #2 (Path Fix)
+- **Priority chosen:** P3 — Self-Improvement (Prompts & Logic)
+- **Self-improvement:** Full audit of all source files. Found systematic path bug: think.ts, system-prompt.ts, scheduler.ts, and MEMORY.md all referenced `agent/MEMORY.md`, `agent/LEARNINGS.md`, `agent/.env`, `.env.local` — but the agent's cwd IS the agent/ directory. These broken paths would cause file-not-found errors on every scheduled run.
+- **Monitoring:** Ingest endpoint responds 200. Claude CLI at expected path (/Users/jaimeortiz/.local/bin/claude v2.1.45). Both campaigns above 2.0 ROAS threshold. No anomalies.
+- **Action taken:**
+  - Fixed 10+ path references in src/think.ts: `agent/MEMORY.md` → `MEMORY.md`, `agent/LEARNINGS.md` → `LEARNINGS.md`, `agent/src/` → `src/`, `agent/session/` → `session/`
+  - Fixed src/system-prompt.ts: `agent/.env` → `.env`, `.env.local` → `../.env.local` (Meta creds are in parent dir)
+  - Fixed src/scheduler.ts: `.env.local` → `../.env.local`
+  - Fixed MEMORY.md: corrected path references, added working directory note
+- **Learned:** The agent cwd is set in agent.ts via `new URL("../", import.meta.url).pathname` which resolves to the agent/ project root. All file references in prompts must be relative to this directory. Meta .env.local lives in the parent outlet-media-app/ directory.
+- **Next priority:** P4 — Knowledge Expansion. Core infrastructure is now solid. Time to think about what capabilities would add the most value (budget pacing alerts, sell-through velocity, daily summary digest).

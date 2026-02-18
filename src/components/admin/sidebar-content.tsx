@@ -10,13 +10,13 @@ export function SidebarContent({ clerkEnabled }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="px-4 py-5 flex items-center gap-2">
-        <div className="h-6 w-6 rounded bg-primary flex items-center justify-center shrink-0">
-          <span className="text-primary-foreground text-xs font-bold">O</span>
+      <div className="px-4 py-5 flex items-center gap-2.5">
+        <div className="h-7 w-7 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+          <span className="text-white text-xs font-bold">O</span>
         </div>
         <div>
-          <p className="text-sm font-semibold leading-none">Outlet Media</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Ad Operations</p>
+          <p className="text-sm font-semibold leading-none text-white">Outlet Media</p>
+          <p className="text-xs text-white/50 mt-0.5">Ad Operations</p>
         </div>
       </div>
       <Separator />
@@ -30,8 +30,8 @@ export function SidebarContent({ clerkEnabled }: SidebarContentProps) {
       <div className="px-4 py-4 flex items-center gap-3">
         <UserAvatar clerkEnabled={clerkEnabled} />
         <div className="min-w-0">
-          <p className="text-xs font-medium truncate">Admin</p>
-          <p className="text-xs text-muted-foreground">Outlet Media</p>
+          <p className="text-xs font-medium truncate text-white">Jaime Ortiz</p>
+          <p className="text-xs text-white/50">Admin</p>
         </div>
       </div>
     </div>

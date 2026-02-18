@@ -184,7 +184,7 @@ export function ChatPanel({ initialJobs }: ChatPanelProps) {
     const res = await fetch("/api/agents", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ agent: "meta-ads", prompt: text, source: "chat" }),
+      body: JSON.stringify({ agent: "assistant", prompt: text }),
     });
 
     setSending(false);

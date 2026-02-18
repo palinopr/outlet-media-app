@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
-const VALID_AGENTS = ["tm-monitor", "meta-ads", "campaign-monitor"] as const;
+const VALID_AGENTS = ["tm-monitor", "meta-ads", "campaign-monitor", "assistant"] as const;
 type AgentId = (typeof VALID_AGENTS)[number];
 
 // ─── POST /api/agents ─ queue a job ──────────────────────────────────────────
@@ -22,11 +22,9 @@ export async function POST(request: Request) {
     );
   }
 
-  const source = (body as { source?: string }).source ?? "manual";
-
   const { data, error } = await supabaseAdmin
     .from("agent_jobs")
-    .insert({ agent_id: agent, status: "pending", prompt: prompt ?? null, source })
+    .insert({ agent_id: agent, status: "pending", prompt: prompt ?? null })
     .select("id, agent_id, status, created_at")
     .single();
 

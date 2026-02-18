@@ -28,13 +28,20 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="hidden lg:flex w-56 flex-col border-r border-border shrink-0">
+    <div className="flex min-h-screen bg-gray-50">
+      {/* Dark sidebar */}
+      <aside className="dark hidden lg:flex w-60 flex-col bg-sidebar shrink-0 shadow-sm">
         <SidebarContent clerkEnabled={clerkEnabled} />
       </aside>
+
+      {/* Mobile sidebar */}
       <MobileSidebar clerkEnabled={clerkEnabled} />
+
+      {/* Main content — light background with max width and padding */}
       <main className="flex-1 overflow-auto min-w-0">
-        <div className="p-6 lg:p-8 max-w-7xl mx-auto">{children}</div>
+        <div className="max-w-7xl mx-auto px-6 py-8 lg:px-8">
+          {children}
+        </div>
       </main>
     </div>
   );

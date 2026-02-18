@@ -31,6 +31,8 @@ Cross-reference ticket sales with ad spend.
 3. Flag any campaigns with ROAS below 2.0 as underperforming
 4. Report findings: top performers, underperformers, and recommended actions.
 `.trim(),
+
+  "assistant": `Answer the question or complete the task described in the prompt. You have access to Meta Ads data and Ticketmaster One data. Be concise and direct.`.trim(),
 };
 
 function getSupabase() {

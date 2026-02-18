@@ -7,7 +7,6 @@ export const dynamic = "force-dynamic";
 async function getInitialData() {
   if (!supabaseAdmin) return { jobs: [], isOnline: false, lastSeen: null };
 
-  // Last 30 jobs (excluding heartbeats), oldest first for chat order
   const { data: jobs } = await supabaseAdmin
     .from("agent_jobs")
     .select("id, agent_id, status, prompt, result, error, created_at, started_at, finished_at")
@@ -15,7 +14,6 @@ async function getInitialData() {
     .order("created_at", { ascending: true })
     .limit(30);
 
-  // Most recent heartbeat to determine online status
   const { data: hb } = await supabaseAdmin
     .from("agent_jobs")
     .select("created_at")
@@ -36,28 +34,24 @@ export default async function AgentsPage() {
   const { jobs, isOnline, lastSeen } = await getInitialData();
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] -m-6 lg:-m-8">
+    <div className="space-y-6">
 
-      {/* Page header */}
-      <div className="px-6 lg:px-8 py-4 border-b border-border/60 shrink-0">
-        <h1 className="text-xl font-semibold tracking-tight">Agent Command Center</h1>
-        <p className="text-xs text-muted-foreground mt-0.5">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Agent Command Center</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Talk to the agent, view all runs, trigger tasks manually
         </p>
       </div>
 
-      {/* Content — chat left, controls right */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_272px] gap-6 items-start">
 
-        {/* Chat feed */}
-        <div className="flex-1 overflow-hidden border-r border-border/60">
+        {/* Chat feed — fixed height card */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm h-[640px] flex flex-col overflow-hidden">
           <ChatPanel initialJobs={jobs} />
         </div>
 
         {/* Sidebar */}
-        <div className="w-72 shrink-0 overflow-y-auto p-4">
-          <AgentSidebar isOnline={isOnline} lastSeen={lastSeen} />
-        </div>
+        <AgentSidebar isOnline={isOnline} lastSeen={lastSeen} />
 
       </div>
     </div>
