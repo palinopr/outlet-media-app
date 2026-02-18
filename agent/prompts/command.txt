@@ -129,6 +129,20 @@ curl -s -X POST "$INGEST_URL" \
   -d '{"secret":"'"$INGEST_SECRET"'","source":"meta","data":{"campaigns":[...],"scraped_at":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}}'
 ```
 
+### Ingest payload field mapping for Meta campaigns:
+The ingest endpoint expects these EXACT field names (see /api/ingest/route.ts):
+- `campaign_id`, `name`, `status`, `objective`, `client_slug` — pass through as-is
+- `daily_budget` — in CENTS (Meta's native format). Session cache calls this `daily_budget_cents`, but the ingest field is `daily_budget`
+- `lifetime_budget` — in CENTS. Session cache calls this `lifetime_budget_cents`, ingest field is `lifetime_budget`
+- `spend` — in CENTS. Meta returns dollars, multiply by 100 before sending to ingest
+- `impressions`, `clicks`, `reach` — pass through as-is (integers)
+- `cpm`, `cpc`, `ctr` — in CENTS. Meta returns dollars, multiply by 100 before sending to ingest
+- `roas` — pass through as-is (float, e.g. 8.4)
+- `start_time` — ISO8601 string from Meta campaign fields. MUST be included — pacing calculations depend on it
+
+**DO NOT omit `daily_budget`, `start_time`, or `lifetime_budget` from the ingest payload.**
+These are currently null in Supabase because previous syncs didn't include them.
+
 ### POST TM events:
 ```bash
 curl -s -X POST "$INGEST_URL" \
@@ -188,8 +202,14 @@ Each campaign in last-campaigns.json should include ALL of these fields:
 - impressions, clicks, reach, cpm, cpc, ctr, roas
 - start_time (ISO8601 string from Meta — needed for pacing calculations)
 
-The think loop needs `start_time` and `daily_budget_cents` to calculate daily pacing.
-If you omit `start_time`, pacing alerts cannot fire.
+**CRITICAL for pacing:** The think loop needs `start_time` and `daily_budget_cents` to calculate daily pacing.
+Both fields are currently MISSING from the session cache. The next Meta sync MUST:
+1. Request `start_time` in the campaign fields query (it's already in the curl example above)
+2. Save `start_time` to the session cache for each campaign
+3. Include `start_time` in the ingest POST payload (field name: `start_time`)
+4. Include `daily_budget` (cents) in the ingest POST payload (field name: `daily_budget`, NOT `daily_budget_cents`)
+
+Without these, pacing alerts will never fire and Supabase will continue to have null values.
 
 ---
 

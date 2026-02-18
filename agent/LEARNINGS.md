@@ -83,3 +83,33 @@ Format:
   - Fix: Dashboard needs to divide spend, daily_budget, lifetime_budget, cpm, cpc, gross by 100 before display. OR: change the agent to store in dollars instead of cents.
   - Drafted Telegram alert to /tmp/outlet-media-proactive.txt
 - **Next priority:** P1 — Fix the spend display bug. Either update dashboard fmtUsd to handle cents, or change the agent's data transformation to store dollars. Recommend dashboard fix (dividing by 100) since the DB column is typed for cents and daily_budget from Meta is already in cents natively.
+
+## 2026-02-18 — Cycle #5 (Business Monitoring + Data Gap Discovery)
+- **Priority chosen:** P4 — Business Monitoring
+- **What I audited or read:**
+  - LEARNINGS.md, MEMORY.md (start-of-cycle context)
+  - session/last-campaigns.json (13 campaigns, 1 ACTIVE)
+  - Supabase meta_campaigns table (queried ACTIVE campaigns for pacing data)
+  - prompts/command.txt (ingest payload mapping)
+  - /api/ingest/route.ts (server-side field handling)
+  - .env (infra credentials check)
+- **Campaign health (from session cache):**
+  - 1 ACTIVE: Denver V2 — ROAS 8.40x, $2,240 spend, $750/day budget. No flags.
+  - 12 PAUSED: all above 2.0 ROAS threshold (where ROAS exists). 3 have null ROAS (Happy Paws, Denver Retargeting, Boston CPR 50) but all are paused with low spend.
+  - No ROAS anomalies. No spend spikes.
+- **Pacing check: BLOCKED — discovered data pipeline gap:**
+  - `daily_budget` is null for ALL 13 campaigns in Supabase (despite being present in session cache as `daily_budget_cents`)
+  - `start_time` is null for ALL 13 campaigns in both session cache AND Supabase
+  - Root cause: the Meta sync does not include `daily_budget` or `start_time` in the ingest POST payload
+  - The ingest route (/api/ingest/route.ts lines 148-165) DOES support both fields — they're mapped correctly. The agent just isn't sending them.
+  - Field name mismatch: session cache uses `daily_budget_cents` but ingest expects `daily_budget`
+- **Infra check (quick):**
+  - Ingest URL returns 307 (redirect) on /api/health — not a 200. The Railway app likely redirects GET requests. Not a real problem for POST operations.
+  - Supabase responds correctly to REST queries.
+  - TM One credentials still blank (TM_EMAIL, TM_PASSWORD empty).
+- **Action taken:**
+  - Updated prompts/command.txt: added explicit "Ingest payload field mapping" section after the POST example, listing exact field names the ingest expects vs session cache names
+  - Updated prompts/command.txt: added CRITICAL note in session cache format section emphasizing that `start_time` and `daily_budget` are currently missing and the next sync MUST include them
+  - These prompt changes ensure the next Meta sync will populate these fields in both the session cache and Supabase
+- **No Telegram draft** — no business anomalies detected; all campaigns healthy. The data gap is an internal pipeline issue, not something that needs Jaime's attention right now.
+- **Next priority:** P2 — Audit prompts/think.txt for any remaining gaps. Also, the next Meta sync should be verified to confirm it now sends `daily_budget` and `start_time` correctly.

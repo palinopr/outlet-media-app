@@ -35,6 +35,7 @@ async function getData(slug: string) {
     supabaseAdmin
       .from("tm_events")
       .select("*")
+      .eq("client_slug", slug)
       .order("date", { ascending: true })
       .limit(50),
     supabaseAdmin

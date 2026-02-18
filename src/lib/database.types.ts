@@ -21,6 +21,7 @@ export interface Database {
           gross: number | null;
           url: string;
           scraped_at: string;
+          client_slug: string | null;
           created_at: string;
           updated_at: string;
         };

@@ -17,6 +17,7 @@ interface TmEvent {
   gross?: number;
   url: string;
   scraped_at: string;
+  client_slug?: string;
 }
 
 // ─── Meta types ────────────────────────────────────────────────────────────
@@ -102,6 +103,7 @@ async function ingestTmEvents(body: IngestPayload) {
     gross: e.gross ?? null,
     url: e.url,
     scraped_at: e.scraped_at,
+    client_slug: e.client_slug ?? null,
   }));
 
   const { error } = await supabaseAdmin!

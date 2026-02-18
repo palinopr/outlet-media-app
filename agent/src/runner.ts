@@ -1,8 +1,7 @@
 /**
  * runner.ts — spawns the claude CLI as a subprocess.
  *
- * Replaces the @anthropic-ai/claude-agent-sdk wrapper.
- * Uses the same pattern as the Arjona agent: claude -p "systemPrompt\n---\ntask"
+ * Passes the system prompt inline: claude -p "systemPrompt\n---\ntask"
  * Claude reads CLAUDE.md from the working directory automatically for extra context.
  */
 

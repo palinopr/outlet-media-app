@@ -11,35 +11,35 @@ import {
 import { CalendarDays, ExternalLink, Bot, Ticket, DollarSign, TrendingUp } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
+import { ClientFilter } from "@/components/admin/campaigns/client-filter";
+import { Suspense } from "react";
 
 type TmEventRow = Database["public"]["Tables"]["tm_events"]["Row"];
 
-// ─── Mock data – replaced by Supabase when connected ──────────────────────
-
-const MOCK_EVENTS: TmEventRow[] = [
-  { id: "1", tm_id: "1A2B3C4D5", tm1_number: "1A2B3C4D5", name: "Spring Tour 2026", artist: "Zamora", venue: "Kaseya Center", city: "Miami, FL", date: "2026-03-15", status: "on_sale", tickets_sold: 1247, tickets_available: 253, gross: 187050, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "2", tm_id: "2B3C4D5E6", tm1_number: "2B3C4D5E6", name: "Spring Tour 2026", artist: "Zamora", venue: "United Center", city: "Chicago, IL", date: "2026-04-02", status: "on_sale", tickets_sold: 892, tickets_available: 1108, gross: 133800, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "3", tm_id: "3C4D5E6F7", tm1_number: "3C4D5E6F7", name: "Spring Tour 2026", artist: "Zamora", venue: "Toyota Center", city: "Houston, TX", date: "2026-04-19", status: "on_sale", tickets_sold: 543, tickets_available: 657, gross: 81450, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "4", tm_id: "4D5E6F7G8", tm1_number: "4D5E6F7G8", name: "Spring Tour 2026", artist: "Zamora", venue: "Crypto.com Arena", city: "Los Angeles, CA", date: "2026-05-08", status: "on_sale", tickets_sold: 2100, tickets_available: 1400, gross: 315000, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "5", tm_id: "5E6F7G8H9", tm1_number: "5E6F7G8H9", name: "Spring Tour 2026", artist: "Zamora", venue: "Madison Square Garden", city: "New York, NY", date: "2026-05-22", status: "on_sale", tickets_sold: 3450, tickets_available: 1550, gross: 517500, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "6", tm_id: "6F7G8H9I0", tm1_number: "6F7G8H9I0", name: "Spring Tour 2026", artist: "Zamora", venue: "American Airlines Center", city: "Dallas, TX", date: "2026-06-05", status: "on_sale", tickets_sold: 688, tickets_available: 1512, gross: 103200, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "7", tm_id: "7G8H9I0J1", tm1_number: "7G8H9I0J1", name: "Spring Tour 2026", artist: "Zamora", venue: "Chase Center", city: "San Francisco, CA", date: "2026-06-20", status: "presale", tickets_sold: 312, tickets_available: 2188, gross: 46800, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "8", tm_id: "8H9I0J1K2", tm1_number: "8H9I0J1K2", name: "Spring Tour 2026", artist: "Zamora", venue: "Ball Arena", city: "Denver, CO", date: "2026-07-04", status: "presale", tickets_sold: 124, tickets_available: 1876, gross: 18600, url: "", scraped_at: "", created_at: "", updated_at: "" },
-];
-
 // ─── Data fetching ─────────────────────────────────────────────────────────
 
-async function getEvents(): Promise<{ events: TmEventRow[]; fromDb: boolean }> {
-  if (!supabaseAdmin) return { events: MOCK_EVENTS, fromDb: false };
+async function getEvents(clientSlug: string | null): Promise<{ events: TmEventRow[]; clients: string[]; fromDb: boolean }> {
+  if (!supabaseAdmin) return { events: [], clients: [], fromDb: false };
 
-  const { data, error } = await supabaseAdmin
+  // Distinct client list for the filter dropdown
+  const clientsRes = await supabaseAdmin
+    .from("tm_events")
+    .select("client_slug")
+    .not("client_slug", "is", null);
+
+  const clients = [...new Set((clientsRes.data ?? []).map((r) => r.client_slug as string))].sort();
+
+  const query = supabaseAdmin
     .from("tm_events")
     .select("*")
     .order("date", { ascending: true })
     .limit(200);
 
-  if (error) return { events: [], fromDb: false };
-  return { events: (data ?? []) as TmEventRow[], fromDb: data.length > 0 };
+  if (clientSlug) query.eq("client_slug", clientSlug);
+
+  const { data, error } = await query;
+  if (error) return { events: [], clients, fromDb: false };
+  return { events: (data ?? []) as TmEventRow[], clients, fromDb: Boolean(data?.length) };
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -52,6 +52,11 @@ function fmtDate(d: string | null) {
 function fmtUsd(n: number | null) {
   if (n == null) return "—";
   return "$" + n.toLocaleString("en-US");
+}
+
+function slugToLabel(slug: string | null) {
+  if (!slug) return "—";
+  return slug.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
 function statusBadge(s: string) {
@@ -94,8 +99,15 @@ function SellBar({ sold, available }: { sold: number | null; available: number |
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 
-export default async function EventsPage() {
-  const { events, fromDb } = await getEvents();
+interface Props {
+  searchParams: Promise<{ client?: string }>;
+}
+
+export default async function EventsPage({ searchParams }: Props) {
+  const { client } = await searchParams;
+  const clientSlug = client && client !== "all" ? client : null;
+
+  const { events, clients, fromDb } = await getEvents(clientSlug);
 
   const totalSold = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
   const totalCap  = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
@@ -116,7 +128,7 @@ export default async function EventsPage() {
         <div className="flex items-center gap-2">
           {!fromDb && (
             <span className="text-xs text-amber-400 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded">
-              Mock data
+              No data
             </span>
           )}
           {fromDb && (
@@ -139,8 +151,8 @@ export default async function EventsPage() {
         {[
           { label: "Total Shows", value: String(events.length), icon: CalendarDays },
           { label: "Tickets Sold", value: totalSold.toLocaleString(), icon: Ticket },
-          { label: "Sell-through", value: `${avgSellPct}%`, icon: TrendingUp },
-          { label: "Total Gross", value: fmtUsd(totalGross), icon: DollarSign },
+          { label: "Sell-through", value: totalCap > 0 ? `${avgSellPct}%` : "—", icon: TrendingUp },
+          { label: "Total Gross", value: fmtUsd(totalGross > 0 ? totalGross : null), icon: DollarSign },
         ].map(({ label, value, icon: Icon }) => (
           <Card key={label} className="border-border/60">
             <CardContent className="pt-4 pb-4">
@@ -156,11 +168,23 @@ export default async function EventsPage() {
 
       {/* Table */}
       <Card className="border-border/60">
+        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+          <p className="text-sm font-semibold">
+            {clientSlug ? slugToLabel(clientSlug) : "All clients"}
+            <span className="text-muted-foreground font-normal ml-1.5">({events.length})</span>
+          </p>
+          {clients.length > 0 && (
+            <Suspense>
+              <ClientFilter clients={clients} selected={clientSlug ?? "all"} />
+            </Suspense>
+          )}
+        </div>
         <Table>
           <TableHeader>
             <TableRow className="border-border/60 hover:bg-transparent">
               <TableHead className="text-xs font-medium text-muted-foreground w-28">TM1 #</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">Artist / Event</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">Client</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">Venue</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">City</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">Date</TableHead>
@@ -173,14 +197,18 @@ export default async function EventsPage() {
           <TableBody>
             {events.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9}>
+                <TableCell colSpan={10}>
                   <div className="flex flex-col items-center justify-center py-16 text-center">
                     <CalendarDays className="h-10 w-10 text-muted-foreground/40 mb-3" />
                     <p className="text-sm font-medium mb-1">No events yet</p>
                     <p className="text-xs text-muted-foreground mb-4 max-w-xs">
-                      Start the agent on your Mac to pull events from the Ticketmaster promoter portal
+                      {fromDb
+                        ? "No events match this filter"
+                        : "Start the agent on your Mac to pull events from the Ticketmaster promoter portal"}
                     </p>
-                    <code className="text-xs bg-muted px-3 py-2 rounded">cd agent && npm start</code>
+                    {!fromDb && (
+                      <code className="text-xs bg-muted px-3 py-2 rounded">cd agent && npm start</code>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -194,6 +222,7 @@ export default async function EventsPage() {
                       <p className="text-xs text-muted-foreground">{e.name}</p>
                     </div>
                   </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{slugToLabel(e.client_slug)}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{e.venue}</TableCell>
                   <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{e.city}</TableCell>
                   <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{fmtDate(e.date)}</TableCell>
