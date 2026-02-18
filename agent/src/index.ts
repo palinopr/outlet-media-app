@@ -18,6 +18,14 @@ bot.start({
     console.log(`Telegram bot online: @${info.username}`);
     console.log("Send /start in Telegram to test it.");
   },
+}).catch((err: unknown) => {
+  const msg = err instanceof Error ? err.message : String(err);
+  // 409 means another instance is already polling - non-fatal
+  if (msg.includes("409")) {
+    console.warn("[bot] Another bot instance already running - Telegram polling disabled");
+  } else {
+    console.error("[bot] Fatal error:", msg);
+  }
 });
 
 // Start autonomous scheduler
