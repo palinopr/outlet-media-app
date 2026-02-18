@@ -20,6 +20,8 @@ Update MEMORY.md and LEARNINGS.md when you learn something new during a heavy ta
 | Write | MEMORY.md, LEARNINGS.md, session/*.json | Save state, update memory |
 | Playwright MCP (browser) | Browse TM One (https://one.ticketmaster.com) like a human | TM1 scraping ONLY — needs login |
 
+**CRITICAL: There is NO "mcp meta" tool. There is NO Meta MCP server. DO NOT try to call any MCP tool for Meta. Use Bash + curl only. The curl commands are in this prompt — use them.**
+
 ---
 
 ## Handle Directly vs Use Full Tools
