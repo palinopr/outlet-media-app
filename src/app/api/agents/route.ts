@@ -1,22 +1,83 @@
 import { NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase";
 
-// POST /api/agents - trigger an agent run
+const VALID_AGENTS = ["tm-monitor", "meta-ads", "campaign-monitor"] as const;
+type AgentId = (typeof VALID_AGENTS)[number];
+
+// ─── POST /api/agents ─ queue a job ──────────────────────────────────────────
+
 export async function POST(request: Request) {
-  const body = await request.json() as { agent: string; payload?: unknown };
-  const { agent, payload } = body;
+  const body = (await request.json()) as { agent: string; prompt?: string };
+  const { agent, prompt } = body;
 
-  // TODO: wire to actual agent execution (OpenCode SDK / Claude SDK)
-  console.log(`Agent triggered: ${agent}`, payload);
+  if (!VALID_AGENTS.includes(agent as AgentId)) {
+    return NextResponse.json({ error: "Unknown agent" }, { status: 400 });
+  }
 
-  return NextResponse.json({ status: "queued", agent, timestamp: new Date().toISOString() });
+  if (!supabaseAdmin) {
+    // Supabase not connected yet - return a clear message instead of crashing
+    return NextResponse.json(
+      { error: "Supabase not connected. Set SUPABASE_* env vars and redeploy." },
+      { status: 503 }
+    );
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("agent_jobs")
+    .insert({ agent_id: agent, status: "pending", prompt: prompt ?? null })
+    .select("id, agent_id, status, created_at")
+    .single();
+
+  if (error) {
+    console.error("[api/agents] insert failed:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ job: data });
 }
 
-// GET /api/agents - list agent statuses
+// ─── GET /api/agents ─ latest status per agent ──────────────────────────────
+
 export async function GET() {
-  const agents = [
-    { name: "ticketmaster-scraper", status: "idle", lastRun: null },
-    { name: "meta-ads-manager", status: "idle", lastRun: null },
-    { name: "campaign-monitor", status: "idle", lastRun: null },
-  ];
+  if (!supabaseAdmin) {
+    // Return idle stubs when DB not connected
+    return NextResponse.json({
+      agents: VALID_AGENTS.map((id) => ({
+        agent_id: id,
+        status: "idle",
+        last_run: null,
+        last_result: null,
+      })),
+    });
+  }
+
+  // Fetch the most recent job for each agent
+  const { data, error } = await supabaseAdmin
+    .from("agent_jobs")
+    .select("agent_id, status, result, error, finished_at")
+    .order("created_at", { ascending: false })
+    .limit(50); // enough to find one per agent
+
+  if (error) {
+    console.error("[api/agents] fetch failed:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  // Pick latest row per agent
+  const latest = new Map<string, (typeof data)[number]>();
+  for (const row of data ?? []) {
+    if (!latest.has(row.agent_id)) latest.set(row.agent_id, row);
+  }
+
+  const agents = VALID_AGENTS.map((id) => {
+    const job = latest.get(id);
+    return {
+      agent_id: id,
+      status: job?.status ?? "idle",
+      last_run: job?.finished_at ?? null,
+      last_result: job?.result ?? null,
+    };
+  });
+
   return NextResponse.json({ agents });
 }

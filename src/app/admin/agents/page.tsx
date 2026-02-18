@@ -1,8 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { RunButton } from "@/components/admin/run-button";
 import {
   Bot,
-  Play,
   ScrollText,
   CalendarDays,
   Megaphone,
@@ -140,10 +140,7 @@ export default function AgentsPage() {
                           <ScrollText className="h-3 w-3" />
                           Logs
                         </Button>
-                        <Button size="sm" className="h-7 text-xs gap-1.5" disabled>
-                          <Play className="h-3 w-3" />
-                          Run
-                        </Button>
+                        <RunButton agentId={agent.id} />
                       </div>
                     </div>
 

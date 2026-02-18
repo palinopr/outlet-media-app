@@ -2,6 +2,7 @@ import "dotenv/config";
 import { existsSync, mkdirSync } from "node:fs";
 import { bot } from "./bot.js";
 import { startScheduler } from "./scheduler.js";
+import { startJobPoller } from "./jobs.js";
 
 // Ensure session directory exists for TM One browser state
 const sessionDir = new URL("../session", import.meta.url).pathname;
@@ -21,6 +22,9 @@ bot.start({
 
 // Start autonomous scheduler
 startScheduler();
+
+// Poll Supabase for jobs queued from the web dashboard
+startJobPoller();
 
 // Graceful shutdown
 process.once("SIGINT", () => {

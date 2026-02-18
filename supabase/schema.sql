@@ -74,6 +74,36 @@ create index if not exists meta_campaigns_client_idx on public.meta_campaigns (c
 create index if not exists meta_campaigns_status_idx on public.meta_campaigns (status);
 
 -- ============================================================
+-- Agent Jobs (written by web app, polled by local agent)
+-- ============================================================
+create table if not exists public.agent_jobs (
+  id          uuid primary key default gen_random_uuid(),
+  agent_id    text not null,              -- tm-monitor | meta-ads | campaign-monitor
+  status      text not null default 'pending', -- pending | running | done | error
+  prompt      text,                       -- optional custom prompt override
+  result      text,                       -- agent output text
+  error       text,                       -- error message if status=error
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  started_at  timestamptz,
+  finished_at timestamptz
+);
+
+create trigger agent_jobs_updated_at
+  before update on public.agent_jobs
+  for each row execute procedure public.handle_updated_at();
+
+create index if not exists agent_jobs_status_idx on public.agent_jobs (status);
+create index if not exists agent_jobs_agent_idx  on public.agent_jobs (agent_id, created_at desc);
+
+alter table public.agent_jobs enable row level security;
+
+-- Web app (service role) can read/write. Anon key cannot.
+create policy "jobs_read"   on public.agent_jobs for select using (true);
+create policy "jobs_insert" on public.agent_jobs for insert with check (false);
+create policy "jobs_update" on public.agent_jobs for update using (false);
+
+-- ============================================================
 -- Row Level Security (RLS)
 -- Enable so anon key (client-side) can only read, not write
 -- Writes go through service role key (server-side only)
