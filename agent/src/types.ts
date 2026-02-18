@@ -16,9 +16,11 @@ export interface TmEvent {
 
 export interface AgentRunOptions {
   prompt: string;
+  /** Agent ID — used to customise tools/turns per agent type */
+  agentId?: string;
   /** If true, runs silently and only returns the final text */
   silent?: boolean;
-  /** Callback to stream text chunks (for Telegram live updates) */
+  /** Callback to stream text chunks (for Telegram live updates and DB streaming) */
   onChunk?: (text: string) => void;
 }
 

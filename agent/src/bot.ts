@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { Bot, type Context } from "grammy";
-import { runAgent } from "./agent.js";
+import { runClaude } from "./runner.js";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN not set in .env");
@@ -45,9 +45,9 @@ async function handleMessage(ctx: Context, prompt: string) {
   let lastEdit = Date.now();
 
   try {
-    const result = await runAgent({
+    const result = await runClaude({
       prompt,
-      onChunk: async (chunk) => {
+      onChunk: async (chunk: string) => {
         buffer += chunk;
         // Throttle edits to avoid Telegram rate limits (max 1 edit/sec)
         if (Date.now() - lastEdit > 1200 && buffer.trim()) {

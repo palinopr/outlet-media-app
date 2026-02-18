@@ -1,39 +1,19 @@
 import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
-import { runAgent } from "./agent.js";
+import { runClaude, turnsForAgent } from "./runner.js";
 
-const POLL_INTERVAL_MS = 30_000; // 30 seconds
+const POLL_INTERVAL_MS = 5_000; // 5 seconds
 
-// Agent-specific prompts when no custom prompt is provided
+// Short task descriptions — command.txt has all the API patterns and context
 const DEFAULT_PROMPTS: Record<string, string> = {
-  "tm-monitor": `
-Check Ticketmaster One for event updates.
-1. Go to one.ticketmaster.com and log in if needed
-2. Find the events list and extract all events with: name, TM1 number, venue, city, date, status, tickets sold, tickets available, gross
-3. Compare to ./session/last-events.json
-4. Save new data to ./session/last-events.json
-5. POST all events to the ingest endpoint
-6. Report what changed (or that nothing changed)
-`.trim(),
-
-  "meta-ads": `
-Pull the latest Meta Ads performance data.
-Use the Meta Marketing API to fetch all active campaigns for the configured ad account.
-For each campaign get: name, status, spend, impressions, clicks, CTR, ROAS.
-POST the data to the ingest endpoint.
-Report a summary of spend and performance.
-`.trim(),
-
-  "campaign-monitor": `
-Cross-reference ticket sales with ad spend.
-1. Read current tm_events and meta_campaigns from Supabase (GET the ingest endpoint or read from session cache)
-2. Calculate true ROAS per show (ticket revenue / ad spend attributed to that show)
-3. Flag any campaigns with ROAS below 2.0 as underperforming
-4. Report findings: top performers, underperformers, and recommended actions.
-`.trim(),
-
-  "assistant": `Answer the question or complete the task described in the prompt. You have access to Meta Ads data and Ticketmaster One data. Be concise and direct.`.trim(),
+  "tm-monitor": "Run the TM One monitor: log in to https://one.ticketmaster.com, extract all events, compare to session/last-events.json, POST changes to the ingest endpoint. Report what changed.",
+  "meta-ads": "Run the Meta Ads sync: pull all active campaigns and their last-30-day insights, save to session/last-campaigns.json, POST to the ingest endpoint. Report spend and ROAS summary.",
+  "campaign-monitor": "Cross-reference Meta spend against TM1 ticket sales. Read session/last-campaigns.json and session/last-events.json. Calculate ROAS per show. Flag any campaigns below 2.0. Report findings.",
+  "assistant": "Answer the question or complete the task described below. Be concise and direct.",
 };
+
+// Debounce interval for streaming partial results to Supabase
+const STREAM_DEBOUNCE_MS = 2_000;
 
 function getSupabase() {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -44,9 +24,12 @@ function getSupabase() {
 
 let polling = false;
 
+// Exported so the scheduler can check before starting a think cycle
+export let jobRunning = false;
+
 async function pollOnce() {
   const sb = getSupabase();
-  if (!sb) return; // Supabase not configured - skip silently
+  if (!sb) return;
 
   // Claim the oldest pending job
   const { data: jobs, error } = await sb
@@ -61,20 +44,46 @@ async function pollOnce() {
     return;
   }
 
-  if (!jobs || jobs.length === 0) return; // nothing to do
+  if (!jobs || jobs.length === 0) return;
 
   const job = jobs[0];
   console.log(`[jobs] Picked up job ${job.id} for agent: ${job.agent_id}`);
 
   // Mark running
+  jobRunning = true;
   await sb
     .from("agent_jobs")
     .update({ status: "running", started_at: new Date().toISOString() })
     .eq("id", job.id);
 
-  const prompt = job.prompt ?? DEFAULT_PROMPTS[job.agent_id] ?? `Run the ${job.agent_id} agent.`;
+  const taskPrompt = job.prompt ?? DEFAULT_PROMPTS[job.agent_id] ?? `Run the ${job.agent_id} agent.`;
+  const fullPrompt = job.agent_id === "assistant" && job.prompt
+    ? `${DEFAULT_PROMPTS["assistant"]}\n\n${job.prompt}`
+    : taskPrompt;
 
-  const result = await runAgent({ prompt });
+  // Stream partial text to Supabase so the chat UI shows live typing
+  let partialText = "";
+  let lastStreamAt = Date.now();
+
+  const result = await runClaude({
+    prompt: fullPrompt,
+    systemPromptName: "command",
+    maxTurns: turnsForAgent(job.agent_id),
+    onChunk: async (chunk) => {
+      partialText += chunk;
+      const now = Date.now();
+      if (now - lastStreamAt > STREAM_DEBOUNCE_MS) {
+        lastStreamAt = now;
+        // Write partial result while still running — UI polls every 3s and shows it
+        sb.from("agent_jobs")
+          .update({ result: partialText })
+          .eq("id", job.id)
+          .then(() => {}, () => {}); // non-fatal — final write will come regardless
+      }
+    },
+  });
+
+  jobRunning = false;
 
   if (result.success) {
     await sb
@@ -120,7 +129,6 @@ export function startJobPoller(): void {
     }
   };
 
-  // Run immediately on start, then on interval
   tick();
   setInterval(tick, POLL_INTERVAL_MS);
 }
