@@ -1,0 +1,23 @@
+{
+  "name": "outlet-media-agent",
+  "version": "1.0.0",
+  "description": "Autonomous TM One + Meta agent powered by Claude Code CLI",
+  "type": "module",
+  "scripts": {
+    "start": "node --import tsx/esm src/index.ts",
+    "dev": "node --watch --import tsx/esm src/index.ts"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.45",
+    "grammy": "^1.36.1",
+    "node-cron": "^3.0.3",
+    "dotenv": "^16.5.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.8.3",
+    "@types/node": "^22.13.5",
+    "@types/node-cron": "^3.0.11"
+  }
+}

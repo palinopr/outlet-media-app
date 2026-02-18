@@ -45,3 +45,7 @@ opencode.json
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# agent - browser session + credentials
+agent/.env
+agent/session/
