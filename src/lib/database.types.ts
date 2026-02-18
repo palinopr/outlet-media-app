@@ -70,6 +70,19 @@ export interface Database {
         Insert: Omit<Database["public"]["Tables"]["agent_jobs"]["Row"], "id" | "created_at" | "updated_at">;
         Update: Partial<Database["public"]["Tables"]["agent_jobs"]["Insert"]>;
       };
+      agent_alerts: {
+        Row: {
+          id: string;
+          level: string;
+          message: string;
+          client_slug: string | null;
+          campaign_id: string | null;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database["public"]["Tables"]["agent_alerts"]["Row"], "id" | "created_at">;
+        Update: Partial<Database["public"]["Tables"]["agent_alerts"]["Insert"]>;
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

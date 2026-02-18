@@ -46,7 +46,15 @@ Rotate through them across cycles.
 - Check session/last-events.json (last TM One pull) — any anomalies?
   - Slow ticket velocity on an upcoming show is a flag
   - Status changes (on_sale → cancelled) are flags
-- If you find a real anomaly, draft a brief alert (see Communication below)
+- If you find a real anomaly, do TWO things:
+  1. POST the alert to the dashboard via:
+     ```
+     curl -s -X POST "$INGEST_URL/api/alerts" \
+       -H "Content-Type: application/json" \
+       -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warning\",\"client_slug\":\"[slug if known]\"}"
+     ```
+     level must be one of: "info", "warning", "critical"
+  2. Draft a brief Telegram message (see Communication below)
 - DO NOT pull live API data during think cycles — work only from session cache
 
 ### Priority 5: Knowledge Expansion

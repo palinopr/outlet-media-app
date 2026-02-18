@@ -17,62 +17,56 @@ import {
   Zap,
   Bot,
   Clock,
+  AlertTriangle,
+  Info,
 } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
+import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 
 type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
-// ─── Mock fallbacks ────────────────────────────────────────────────────────
-
-const MOCK_EVENTS: TmEvent[] = [
-  { id: "1", tm_id: "1A2B3C4D5", tm1_number: "1A2B3C4D5", name: "Spring Tour 2026", artist: "Zamora", venue: "Kaseya Center", city: "Miami, FL", date: "2026-03-15", status: "on_sale", tickets_sold: 1247, tickets_available: 253, gross: 187050, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "2", tm_id: "2B3C4D5E6", tm1_number: "2B3C4D5E6", name: "Spring Tour 2026", artist: "Zamora", venue: "United Center", city: "Chicago, IL", date: "2026-04-02", status: "on_sale", tickets_sold: 892, tickets_available: 1108, gross: 133800, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "3", tm_id: "3C4D5E6F7", tm1_number: "3C4D5E6F7", name: "Spring Tour 2026", artist: "Zamora", venue: "Toyota Center", city: "Houston, TX", date: "2026-04-19", status: "on_sale", tickets_sold: 543, tickets_available: 657, gross: 81450, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "4", tm_id: "4D5E6F7G8", tm1_number: "4D5E6F7G8", name: "Spring Tour 2026", artist: "Zamora", venue: "Crypto.com Arena", city: "Los Angeles, CA", date: "2026-05-08", status: "on_sale", tickets_sold: 2100, tickets_available: 1400, gross: 315000, url: "", scraped_at: "", created_at: "", updated_at: "" },
-  { id: "5", tm_id: "5E6F7G8H9", tm1_number: "5E6F7G8H9", name: "Spring Tour 2026", artist: "Zamora", venue: "Madison Square Garden", city: "New York, NY", date: "2026-05-22", status: "on_sale", tickets_sold: 3450, tickets_available: 1550, gross: 517500, url: "", scraped_at: "", created_at: "", updated_at: "" },
-];
-
-const MOCK_CAMPAIGNS: MetaCampaign[] = [
-  { id: "c1", campaign_id: "c1", name: "Zamora Miami - Spring Tour", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 4200, roas: 5.2, impressions: 1200000, clicks: 28800, reach: 890000, cpm: 3.47, cpc: 0.14, ctr: 0.024, client_slug: "zamora", tm_event_id: null, start_time: null, synced_at: "", created_at: "", updated_at: "" },
-  { id: "c2", campaign_id: "c2", name: "Zamora Chicago - Q2 Push", status: "ACTIVE", objective: "CONVERSIONS", daily_budget: null, lifetime_budget: null, spend: 2850, roas: 3.8, impressions: 890000, clicks: 16910, reach: 640000, cpm: 3.19, cpc: 0.17, ctr: 0.019, client_slug: "zamora", tm_event_id: null, start_time: null, synced_at: "", created_at: "", updated_at: "" },
-  { id: "c3", campaign_id: "c3", name: "Zamora National - Awareness", status: "ACTIVE", objective: "REACH", daily_budget: null, lifetime_budget: null, spend: 8100, roas: 4.1, impressions: 3420000, clicks: 58140, reach: 2800000, cpm: 2.37, cpc: 0.14, ctr: 0.017, client_slug: "zamora", tm_event_id: null, start_time: null, synced_at: "", created_at: "", updated_at: "" },
-];
+interface AgentLastRun { agentId: string; status: string; finishedAt: string | null; }
+interface Alert { id: string; message: string; level: string; created_at: string; }
+interface SnapshotRow { snapshot_date: string; roas: number | null; spend: number | null; }
 
 // ─── Data fetching ─────────────────────────────────────────────────────────
 
-interface AgentLastRun {
-  agentId: string;
-  status: string;
-  finishedAt: string | null;
-}
-
 async function getData() {
   if (!supabaseAdmin) {
-    return { events: MOCK_EVENTS, campaigns: MOCK_CAMPAIGNS, agentRuns: [], fromDb: false };
+    return { events: [], campaigns: [], agentRuns: [], alerts: [], trendData: [], fromDb: false };
   }
 
-  const [eventsRes, campaignsRes, agentRunsRes] = await Promise.all([
+  const [eventsRes, campaignsRes, agentRunsRes, alertsRes, snapshotsRes] = await Promise.all([
     supabaseAdmin.from("tm_events").select("*").order("date", { ascending: true }).limit(10),
     supabaseAdmin.from("meta_campaigns").select("*").eq("status", "ACTIVE").order("spend", { ascending: false }).limit(5),
-    // Get the last completed run for each scheduled agent type
     supabaseAdmin
       .from("agent_jobs")
       .select("agent_id, status, finished_at")
-      .in("agent_id", ["meta-ads", "tm-monitor"])
+      .in("agent_id", ["meta-ads", "tm-monitor", "campaign-monitor"])
       .in("status", ["done", "error"])
       .order("finished_at", { ascending: false })
       .limit(20),
+    supabaseAdmin
+      .from("agent_alerts")
+      .select("id, message, level, created_at")
+      .is("read_at", null)
+      .order("created_at", { ascending: false })
+      .limit(5),
+    supabaseAdmin
+      .from("campaign_snapshots")
+      .select("snapshot_date, roas, spend")
+      .order("snapshot_date", { ascending: true })
+      .limit(300),
   ]);
 
-  // Events: only show real TM1 data — empty array until TM1 credentials are added
-  // Campaigns: fall back to mock only if Supabase is completely empty (first run)
   const events = (eventsRes.data ?? []) as TmEvent[];
-  const campaigns = campaignsRes.data?.length ? (campaignsRes.data as MetaCampaign[]) : MOCK_CAMPAIGNS;
-  const fromDb = Boolean(campaignsRes.data?.length); // drives the "Live from Supabase" badge
+  const campaigns = (campaignsRes.data ?? []) as MetaCampaign[];
+  const alerts = (alertsRes.data ?? []) as Alert[];
+  const snapshots = (snapshotsRes.data ?? []) as SnapshotRow[];
 
-  // Deduplicate to get the most recent run per agent type
+  // Deduplicate agent runs by agent_id
   const seen = new Set<string>();
   const agentRuns: AgentLastRun[] = [];
   for (const row of (agentRunsRes.data ?? [])) {
@@ -82,14 +76,28 @@ async function getData() {
     }
   }
 
-  return { events, campaigns, agentRuns, fromDb };
+  // Aggregate snapshots by date for trend chart
+  const byDate: Record<string, { roasSum: number; roasCount: number; spendSum: number }> = {};
+  for (const s of snapshots) {
+    const d = s.snapshot_date;
+    if (!byDate[d]) byDate[d] = { roasSum: 0, roasCount: 0, spendSum: 0 };
+    if (s.roas != null) { byDate[d].roasSum += s.roas; byDate[d].roasCount++; }
+    if (s.spend != null) byDate[d].spendSum += s.spend / 100;
+  }
+  const trendData = Object.entries(byDate)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, v]) => ({
+      date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      roas: v.roasCount > 0 ? v.roasSum / v.roasCount : 0,
+      spend: v.spendSum,
+    }));
+
+  return { events, campaigns, agentRuns, alerts, trendData, fromDb: Boolean(campaigns.length) };
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-// Spend from Meta API is stored in cents — divide by 100 for display
 function centsToUsd(cents: number | null) { return cents == null ? null : cents / 100; }
-
 function fmt(n: number) { return n.toLocaleString("en-US"); }
 function fmtUsd(n: number | null) { return n == null ? "—" : "$" + Math.round(n).toLocaleString("en-US"); }
 function fmtDate(d: string | null) {
@@ -103,13 +111,13 @@ function fmtNum(n: number | null) {
   return String(n);
 }
 
-function statusBadge(s: string) {
+function eventStatusBadge(s: string) {
   const map: Record<string, { label: string; classes: string }> = {
-    on_sale:  { label: "On Sale",  classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-    onsale:   { label: "On Sale",  classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-    presale:  { label: "Presale",  classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-    sold_out: { label: "Sold Out", classes: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
-    cancelled:{ label: "Cancelled",classes: "bg-red-500/10 text-red-400 border-red-500/20" },
+    on_sale:   { label: "On Sale",   classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+    onsale:    { label: "On Sale",   classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
+    presale:   { label: "Presale",   classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
+    sold_out:  { label: "Sold Out",  classes: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+    cancelled: { label: "Cancelled", classes: "bg-red-500/10 text-red-400 border-red-500/20" },
   };
   const { label, classes } = map[s] ?? { label: s, classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" };
   return (
@@ -122,28 +130,24 @@ function statusBadge(s: string) {
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 export default async function AdminDashboard() {
-  const { events, campaigns, agentRuns, fromDb } = await getData();
+  const { events, campaigns, agentRuns, alerts, trendData, fromDb } = await getData();
 
   const totalSold  = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
   const totalCap   = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
   const totalGross = events.reduce((s, e) => s + (e.gross ?? 0), 0);
   const totalSpend = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0), 0);
-  const totalRoasRevenue = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
-  const avgRoas = totalSpend > 0 ? totalRoasRevenue / totalSpend : 0;
+  const totalRevenue = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
+  const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
 
-  const now = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
+  const now = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
   const stats = [
-    { label: "Active Shows",       value: String(events.length),          sub: `${totalCap.toLocaleString()} total capacity`, icon: CalendarDays, trend: null },
-    { label: "Tickets Sold",       value: fmt(totalSold),                 sub: `of ${fmt(totalCap)} available`, icon: Ticket, trend: null },
-    { label: "Total Gross",        value: fmtUsd(totalGross),             sub: "across all shows", icon: DollarSign, trend: null },
-    { label: "Active Campaigns",   value: String(campaigns.length),       sub: "Facebook + Instagram", icon: Megaphone, trend: null },
-    { label: "Ad Spend",           value: fmtUsd(totalSpend),             sub: "total across campaigns", icon: DollarSign, trend: null },
-    { label: "Avg. ROAS",          value: avgRoas > 0 ? avgRoas.toFixed(1) + "×" : "—", sub: "return on ad spend", icon: TrendingUp, trend: null },
+    { label: "Active Shows",     value: String(events.length),    sub: `${fmt(totalCap)} total capacity`,   icon: CalendarDays },
+    { label: "Tickets Sold",     value: fmt(totalSold),           sub: `of ${fmt(totalCap)} available`,    icon: Ticket       },
+    { label: "Total Gross",      value: fmtUsd(totalGross),       sub: "across all shows",                 icon: DollarSign   },
+    { label: "Active Campaigns", value: String(campaigns.length), sub: "Facebook + Instagram",             icon: Megaphone    },
+    { label: "Ad Spend",         value: fmtUsd(totalSpend),       sub: "total across campaigns",           icon: DollarSign   },
+    { label: "Avg. ROAS",        value: avgRoas > 0 ? avgRoas.toFixed(1) + "×" : "—", sub: "return on ad spend", icon: TrendingUp },
   ];
 
   return (
@@ -162,14 +166,39 @@ export default async function AdminDashboard() {
           </Badge>
         ) : (
           <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5 text-amber-400 border-amber-500/20">
-            Mock data
+            No live data
           </Badge>
         )}
       </div>
 
+      {/* Agent alerts */}
+      {alerts.length > 0 && (
+        <div className="space-y-2">
+          {alerts.map((a) => {
+            const isCritical = a.level === "critical";
+            const isWarning  = a.level === "warning";
+            const Icon = isCritical || isWarning ? AlertTriangle : Info;
+            const classes = isCritical
+              ? "border-red-500/30 bg-red-500/5 text-red-400"
+              : isWarning
+              ? "border-amber-500/30 bg-amber-500/5 text-amber-400"
+              : "border-blue-500/30 bg-blue-500/5 text-blue-400";
+            return (
+              <div key={a.id} className={`flex items-start gap-3 px-4 py-3 rounded-lg border ${classes}`}>
+                <Icon className="h-4 w-4 shrink-0 mt-0.5" />
+                <p className="text-xs leading-relaxed">{a.message}</p>
+                <span className="ml-auto text-xs opacity-60 whitespace-nowrap shrink-0">
+                  {new Date(a.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Stat cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        {stats.map(({ label, value, sub, icon: Icon, trend }) => (
+        {stats.map(({ label, value, sub, icon: Icon }) => (
           <Card key={label} className="border-border/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -180,21 +209,30 @@ export default async function AdminDashboard() {
             <CardContent>
               <p className="text-3xl font-bold tracking-tight">{value}</p>
               <p className="text-xs text-muted-foreground mt-1">{sub}</p>
-              {trend && (
-                <p className="text-xs text-emerald-400 mt-1.5 font-medium">{trend}</p>
-              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
+      {/* ROAS trend chart */}
+      {trendData.length > 0 && (
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Blended ROAS Trend — All Clients
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RoasTrendChart data={trendData} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Shows table */}
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold">Active Shows</h2>
-          <a href="/admin/events" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            View all →
-          </a>
+          <a href="/admin/events" className="text-xs text-muted-foreground hover:text-foreground transition-colors">View all →</a>
         </div>
         <Card className="border-border/60">
           <Table>
@@ -210,14 +248,13 @@ export default async function AdminDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {events.length === 0 && (
+              {events.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="py-8 text-center text-xs text-muted-foreground">
                     No events yet — TM One credentials needed to sync ticket data
                   </TableCell>
                 </TableRow>
-              )}
-              {events.map((e) => {
+              ) : events.map((e) => {
                 const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
                 const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : 0;
                 return (
@@ -232,15 +269,13 @@ export default async function AdminDashboard() {
                     <TableCell className="text-sm text-muted-foreground">{e.city}</TableCell>
                     <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{fmtDate(e.date)}</TableCell>
                     <TableCell className="text-right">
-                      <div>
-                        <p className="text-sm font-medium tabular-nums">{fmt(e.tickets_sold ?? 0)}</p>
-                        <p className="text-xs text-muted-foreground">{pct}% of {fmt(cap)}</p>
-                      </div>
+                      <p className="text-sm font-medium tabular-nums">{fmt(e.tickets_sold ?? 0)}</p>
+                      <p className="text-xs text-muted-foreground">{pct}% of {fmt(cap)}</p>
                     </TableCell>
                     <TableCell className="text-right">
                       <p className="text-sm font-medium tabular-nums">{fmtUsd(e.gross)}</p>
                     </TableCell>
-                    <TableCell>{statusBadge(e.status)}</TableCell>
+                    <TableCell>{eventStatusBadge(e.status)}</TableCell>
                   </TableRow>
                 );
               })}
@@ -256,60 +291,67 @@ export default async function AdminDashboard() {
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold">Active Campaigns</h2>
-            <a href="/admin/campaigns" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              View all →
-            </a>
+            <a href="/admin/campaigns" className="text-xs text-muted-foreground hover:text-foreground transition-colors">View all →</a>
           </div>
-          <div className="space-y-3">
-            {campaigns.map((c) => (
-              <Card key={c.id} className="border-border/60">
-                <CardContent className="py-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
-                        <p className="text-sm font-medium truncate">{c.name}</p>
+          {campaigns.length === 0 ? (
+            <Card className="border-border/60 border-dashed">
+              <CardContent className="py-8 text-center text-xs text-muted-foreground">
+                No active campaigns — run the Meta sync agent to pull live data
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {campaigns.map((c) => (
+                <Card key={c.id} className="border-border/60">
+                  <CardContent className="py-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                          <p className="text-sm font-medium truncate">{c.name}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">{c.objective}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground">{c.objective}</p>
+                      <div className="flex gap-6 shrink-0 text-right">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Spend</p>
+                          <p className="text-sm font-medium tabular-nums">{fmtUsd(centsToUsd(c.spend))}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">ROAS</p>
+                          <p className={`text-sm font-semibold tabular-nums ${(c.roas ?? 0) >= 4 ? "text-emerald-400" : (c.roas ?? 0) >= 2 ? "text-amber-400" : "text-red-400"}`}>
+                            {c.roas != null ? c.roas.toFixed(1) + "×" : "—"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Impressions</p>
+                          <p className="text-sm font-medium tabular-nums">{fmtNum(c.impressions)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">CTR</p>
+                          <p className="text-sm font-medium tabular-nums">{c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}</p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex gap-6 shrink-0 text-right">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Spend</p>
-                        <p className="text-sm font-medium tabular-nums">{fmtUsd(centsToUsd(c.spend))}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">ROAS</p>
-                        <p className="text-sm font-semibold text-emerald-400 tabular-nums">{c.roas != null ? c.roas.toFixed(1) + "×" : "—"}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Impressions</p>
-                        <p className="text-sm font-medium tabular-nums">{fmtNum(c.impressions)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">CTR</p>
-                        <p className="text-sm font-medium tabular-nums">{c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Agent status */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold">Agents</h2>
-            <a href="/admin/agents" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Manage →
-            </a>
+            <a href="/admin/agents" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Manage →</a>
           </div>
           <div className="space-y-3">
             {(
               [
-                { agentId: "tm-monitor",  label: "TM One Monitor",   icon: Bot      },
-                { agentId: "meta-ads",    label: "Meta Ads Manager",  icon: Megaphone },
+                { agentId: "tm-monitor",       label: "TM One Monitor",   icon: Bot      },
+                { agentId: "meta-ads",          label: "Meta Ads Manager", icon: Megaphone },
+                { agentId: "campaign-monitor",  label: "Campaign Monitor", icon: TrendingUp },
               ] as const
             ).map(({ agentId, label, icon: Icon }) => {
               const run = agentRuns.find((r) => r.agentId === agentId);

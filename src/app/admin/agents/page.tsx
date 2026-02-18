@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { ChatPanel } from "@/components/admin/agents/chat-panel";
 import { AgentSidebar } from "@/components/admin/agents/agent-sidebar";
+import { JobHistory } from "@/components/admin/agents/job-history";
 
 export const dynamic = "force-dynamic";
 
@@ -11,8 +12,8 @@ async function getInitialData() {
     .from("agent_jobs")
     .select("id, agent_id, status, prompt, result, error, created_at, started_at, finished_at")
     .neq("agent_id", "heartbeat")
-    .order("created_at", { ascending: true })
-    .limit(30);
+    .order("created_at", { ascending: false })
+    .limit(80);
 
   const { data: hb } = await supabaseAdmin
     .from("agent_jobs")
@@ -33,6 +34,11 @@ async function getInitialData() {
 export default async function AgentsPage() {
   const { jobs, isOnline, lastSeen } = await getInitialData();
 
+  // Chat panel gets only assistant jobs, in ascending order
+  const chatJobs = [...jobs]
+    .filter((j) => j.agent_id === "assistant")
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
   return (
     <div className="space-y-6">
 
@@ -44,16 +50,14 @@ export default async function AgentsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_272px] gap-6 items-start">
-
-        {/* Chat feed — fixed height card */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm h-[640px] flex flex-col overflow-hidden">
-          <ChatPanel initialJobs={jobs} />
+          <ChatPanel initialJobs={chatJobs} />
         </div>
-
-        {/* Sidebar */}
         <AgentSidebar isOnline={isOnline} lastSeen={lastSeen} />
-
       </div>
+
+      <JobHistory jobs={jobs} />
+
     </div>
   );
 }
