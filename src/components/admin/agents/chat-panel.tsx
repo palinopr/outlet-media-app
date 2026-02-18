@@ -100,10 +100,15 @@ function JobBubble({ job }: { job: Job }) {
             {job.status === "pending" && (
               <p className="text-sm text-muted-foreground italic">Queued — waiting for agent to pick up...</p>
             )}
-            {job.status === "running" && (
+            {job.status === "running" && !job.result && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 <span>Working on it...</span>
+              </div>
+            )}
+            {job.status === "running" && job.result && (
+              <div>
+                <p className="text-sm whitespace-pre-wrap leading-relaxed">{job.result}<span className="inline-block w-0.5 h-3.5 bg-current ml-0.5 animate-pulse align-middle" /></p>
               </div>
             )}
             {job.status === "done" && job.result && (
@@ -123,7 +128,7 @@ interface ChatPanelProps {
   initialJobs: Job[];
 }
 
-const POLL_MS = 3000;
+const POLL_MS = 1000;
 const REFRESH_MS = 30_000;
 
 export function ChatPanel({ initialJobs }: ChatPanelProps) {

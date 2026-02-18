@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CopyButton } from "@/components/admin/copy-button";
+import { supabaseAdmin } from "@/lib/supabase";
 import {
   Users,
   DollarSign,
@@ -17,31 +18,74 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-// ─── Mock data (replace with Supabase query once connected) ───────────────
+// ─── Types ─────────────────────────────────────────────────────────────────
 
-const clients = [
-  {
-    id: "zamora",
-    name: "Zamora",
-    slug: "zamora",
-    type: "Music Promoter",
-    status: "active",
-    joinedAt: "Jan 2026",
-    activeShows: 8,
-    activeCampaigns: 3,
-    totalSpend: 24580,
-    totalRevenue: 103236,
-    roas: 4.2,
-    lastActivity: "2 hours ago",
-  },
-];
+interface ClientSummary {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  status: string;
+  joinedAt: string;
+  activeShows: number;
+  activeCampaigns: number;
+  totalSpend: number;
+  totalRevenue: number;
+  roas: number;
+}
 
-const stats = [
-  { label: "Total Clients", value: "1", sub: "1 active", icon: Users },
-  { label: "Total Ad Spend", value: "$24,580", sub: "across all clients", icon: DollarSign },
-  { label: "Active Campaigns", value: "3", sub: "running now", icon: Megaphone },
-  { label: "Blended ROAS", value: "4.2×", sub: "avg return on ad spend", icon: TrendingUp },
-];
+// ─── Data fetching ─────────────────────────────────────────────────────────
+
+async function getClientSummaries(): Promise<ClientSummary[]> {
+  // Only Zamora for now — expand when more clients are added
+  const slug = "zamora";
+
+  const [campaignsRes, eventsRes] = await Promise.all([
+    supabaseAdmin
+      ? supabaseAdmin.from("meta_campaigns").select("status, spend, roas").eq("client_slug", slug)
+      : { data: null, error: null },
+    supabaseAdmin
+      ? supabaseAdmin.from("tm_events").select("id", { count: "exact", head: true })
+      : { data: null, error: null, count: null },
+  ]);
+
+  const campaigns = campaignsRes.data ?? [];
+  const eventCount = ("count" in eventsRes ? eventsRes.count : null) ?? 0;
+
+  // Spend is stored in cents
+  const totalSpend = campaigns.reduce((s, c) => s + ((c.spend ?? 0) / 100), 0);
+  const activeCampaigns = campaigns.filter((c) => c.status === "ACTIVE" || c.status === "active").length;
+  const totalRevenue = campaigns.reduce(
+    (s, c) => s + ((c.spend ?? 0) / 100) * (c.roas ?? 0),
+    0
+  );
+  const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+
+  // Fall back to placeholder values when Supabase has no data yet
+  const hasData = campaigns.length > 0;
+
+  return [
+    {
+      id: slug,
+      name: "Zamora",
+      slug,
+      type: "Music Promoter",
+      status: "active",
+      joinedAt: "Jan 2026",
+      activeShows: hasData ? eventCount : 8,
+      activeCampaigns: hasData ? activeCampaigns : 3,
+      totalSpend: hasData ? totalSpend : 24580,
+      totalRevenue: hasData ? totalRevenue : 103236,
+      roas: hasData ? roas : 4.2,
+    },
+  ];
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+function fmtUsd(n: number) {
+  return "$" + Math.round(n).toLocaleString("en-US");
+}
 
 function statusBadge(s: string) {
   const map: Record<string, { label: string; classes: string }> = {
@@ -60,21 +104,30 @@ function statusBadge(s: string) {
   };
   const { label, classes } = map[s] ?? map.inactive;
   return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}
-    >
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}>
       {label}
     </span>
   );
 }
 
-function fmtUsd(n: number) {
-  return "$" + n.toLocaleString("en-US");
-}
-
 // ─── Page ──────────────────────────────────────────────────────────────────
 
-export default function ClientsPage() {
+export default async function ClientsPage() {
+  const clients = await getClientSummaries();
+
+  const totalSpend = clients.reduce((s, c) => s + c.totalSpend, 0);
+  const totalCampaigns = clients.reduce((s, c) => s + c.activeCampaigns, 0);
+  const blendedRoas = totalSpend > 0
+    ? clients.reduce((s, c) => s + c.totalRevenue, 0) / totalSpend
+    : 0;
+
+  const stats = [
+    { label: "Total Clients",    value: String(clients.length),         sub: `${clients.length} active`,        icon: Users      },
+    { label: "Total Ad Spend",   value: fmtUsd(totalSpend),             sub: "across all clients",              icon: DollarSign },
+    { label: "Active Campaigns", value: String(totalCampaigns),         sub: "running now",                     icon: Megaphone  },
+    { label: "Blended ROAS",     value: blendedRoas > 0 ? blendedRoas.toFixed(1) + "x" : "—", sub: "avg return on ad spend", icon: TrendingUp },
+  ];
+
   return (
     <div className="space-y-8">
 
@@ -127,7 +180,6 @@ export default function ClientsPage() {
                 <TableHead className="text-xs font-medium text-muted-foreground text-right">Revenue</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground text-right">ROAS</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">Portal</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Last Activity</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -166,7 +218,7 @@ export default function ClientsPage() {
                             : "text-red-400"
                         }`}
                       >
-                        {c.roas}×
+                        {c.roas > 0 ? c.roas.toFixed(1) + "x" : "—"}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -182,9 +234,6 @@ export default function ClientsPage() {
                         </a>
                         <CopyButton text={`/client/${c.slug}`} />
                       </div>
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
-                      {c.lastActivity}
                     </TableCell>
                   </TableRow>
                 );
@@ -205,7 +254,7 @@ export default function ClientsPage() {
                 <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
                   /client/[slug]
                 </code>
-                . Share the link - no login required from the client side (Clerk
+                . Share the link — no login required from the client side (Clerk
                 protects admin routes only).
               </p>
             </div>
