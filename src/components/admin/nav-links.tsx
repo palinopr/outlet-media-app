@@ -9,6 +9,7 @@ import {
   CalendarDays,
   Bot,
   Users,
+  UserCog,
 } from "lucide-react";
 
 const nav = [
@@ -17,6 +18,7 @@ const nav = [
   { href: "/admin/events", label: "Events", icon: CalendarDays },
   { href: "/admin/agents", label: "Agents", icon: Bot },
   { href: "/admin/clients", label: "Clients", icon: Users },
+  { href: "/admin/users", label: "Users", icon: UserCog },
 ];
 
 export function NavLinks() {
