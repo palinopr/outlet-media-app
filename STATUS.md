@@ -1,7 +1,7 @@
 # Project Status
 
 **Last Updated**: 2026-02-18
-**Current Phase**: Build green - ready to wire real data sources
+**Current Phase**: All admin pages done - build green - ready to build client portal + wire real data
 **Repo**: `palinopr/outlet-media-app` (private)
 
 ---
@@ -26,9 +26,9 @@ Autonomous ad agency platform for Outlet Media managing ads for Zamora (music pr
 ```
 / → redirects to /admin/dashboard
 /sign-in /sign-up → Clerk auth (force-dynamic)
-/admin/dashboard /campaigns /events /agents → Admin views
+/admin/dashboard /campaigns /events /agents → Admin views (all done)
 /api/ingest /api/agents /api/meta /api/ticketmaster → API routes
-/client/[slug] /client/[slug]/campaigns → Client portal
+/client/[slug] /client/[slug]/campaigns → Client portal (scaffold only)
 ```
 
 ---
@@ -41,47 +41,46 @@ Autonomous ad agency platform for Outlet Media managing ads for Zamora (music pr
 - [x] .gitignore, .mcp.json.example, opencode.json.example, .env.example
 - [x] 4 domain agents: tech-lead-orchestrator, nextjs-expert, ticketmaster-scraper, meta-ads-manager
 - [x] Next.js 16.1.6 scaffold with 14 routes
-- [x] shadcn/ui: Card, Button, Badge, Table, Separator, Avatar, Skeleton, Sidebar, Dropdown, Tooltip, Input, Sheet, NavigationMenu
+- [x] shadcn/ui components installed
 - [x] Clerk auth - proxy.ts middleware protecting all routes
 - [x] Supabase client (conditional on env vars, build works without them)
 - [x] `src/lib/database.types.ts` - full TypeScript types for tm_events, meta_campaigns
 - [x] `supabase/schema.sql` - SQL ready to paste into Supabase dashboard
-- [x] `POST /api/ingest` - receives scraper data, upserts to Supabase tm_events
-- [x] Local scraper scaffold in `scraper/` (needs `npm install`)
-- [x] Build passing with 0 TypeScript errors (fixed Supabase v2 generic bug in admin client)
+- [x] `POST /api/ingest` - receives agent data, upserts to Supabase tm_events
+- [x] `/admin/dashboard` - 6 stat cards, active shows table, campaigns section, agent status panel
+- [x] `/admin/events` - 4 stat cards, full shows table with sell-through progress bars
+- [x] `/admin/campaigns` - 4 stat cards, full campaigns table with ROAS indicators
+- [x] `/admin/agents` - setup banner, 3 agent cards (TM One Monitor, Meta Ads Manager, Campaign Monitor)
+- [x] Autonomous agent in `agent/` - Claude Agent SDK + Playwright MCP + Grammy Telegram bot
+- [x] Build passing with 0 TypeScript errors
 
 ---
 
 ## Next Steps (Priority Order)
 
-### 1. External services setup (blocking everything else)
+### 1. Build missing admin pages
+- [ ] `/admin/clients` - in sidebar nav but page doesn't exist yet
+
+### 2. Build client portal
+- [ ] `/client/[slug]` - proper Zamora-facing UI (currently basic scaffold)
+  - Shows their events with sell-through, gross revenue
+  - Active campaigns with spend/ROAS
+  - TM1 numbers
+  - Clean read-only view, no admin controls
+
+### 3. External services setup (user does these)
 - [ ] Create Supabase project at supabase.com, run `supabase/schema.sql`
 - [ ] Create Clerk project at dashboard.clerk.com, get publishable + secret keys
 - [ ] Create `.env.local` from `.env.example`, fill in all keys
+- [ ] Create Telegram bot via @BotFather, fill in `agent/.env`
+- [ ] Run `cd agent && npm install && npm start`
 
-### 2. Run scraper for first time
-```bash
-cd scraper && npm install && npx playwright install chromium
-cp .env.example .env
-# Fill in: TM_USERNAME, TM_PASSWORD, INGEST_URL, INGEST_SECRET
-npm run login    # opens browser, logs into TM One, saves session
-npm run scrape   # scrapes events, POSTs to /api/ingest
-```
+### 4. Wire real data
+- [ ] Swap mock arrays in all admin pages for Supabase queries (env vars already gated)
+- [ ] Get Meta access token, wire /admin/campaigns to real Meta API
+- [ ] Make agent "Run" buttons call /api/agents endpoint
 
-### 3. Wire Meta API
-- [ ] Get Meta access token from Meta for Developers
-- [ ] Set META_ACCESS_TOKEN + META_AD_ACCOUNT_ID in .env.local
-- [ ] Wire /admin/campaigns to fetch real campaign data via /api/meta
-
-### 4. Build out real dashboard
-- [ ] Add Recharts or Tremor for spend/impressions/ROAS charts in /admin/dashboard
-- [ ] Make agent "Run" buttons in /admin/agents call /api/agents endpoint
-
-### 5. Client portal
-- [ ] Decide on client slug for Zamora (e.g. `zamora`)
-- [ ] Wire /client/zamora with real Supabase data
-
-### 6. Deploy
+### 5. Deploy
 - [ ] Push to Vercel, set all env vars in Vercel dashboard
 
 ---
@@ -89,9 +88,27 @@ npm run scrape   # scrapes events, POSTs to /api/ingest
 ## Known Issues / Quirks
 
 - Workspace root warning from Next.js (two package-lock.json files) - non-blocking
-- Scraper selectors in `scraper/src/scrape-events.ts` are estimates - verify against actual TM One DOM with `HEADLESS=false`
 - `/admin/clients` is in the nav but page does not exist yet
-- `supabaseAdmin` in `src/lib/supabase.ts` has no Database generic - Supabase v2 resolves Insert types as `never` when using circular Omit definitions. Types are handled manually at each call site.
+- `supabaseAdmin` in `src/lib/supabase.ts` has no Database generic - Supabase v2 resolves Insert types as `never` with circular Omit definitions. Types handled manually at each call site.
+- Clerk: conditionally applied in root layout - app builds and works without real Clerk keys, shows plain avatar
+
+---
+
+## Autonomous Agent Architecture
+
+Data flows via agent, NOT a scraper:
+
+```
+agent/src/index.ts        → starts Grammy bot + cron scheduler
+agent/src/agent.ts        → Claude Agent SDK, spawns local claude CLI
+agent/src/bot.ts          → Telegram commands: /run, /status, /help
+agent/src/scheduler.ts    → node-cron every 2 hours
+agent/src/system-prompt.ts → instructs Claude to navigate TM One intelligently
+```
+
+Claude gets a real Chrome browser via Playwright MCP (`@playwright/mcp`). No brittle CSS selectors - Claude reads and understands the page. Results POST to `/api/ingest`.
+
+**Run**: `cd agent && npm install && cp .env.example .env && npm start`
 
 ---
 
@@ -103,6 +120,7 @@ npm run scrape   # scrapes events, POSTs to /api/ingest
 | `src/lib/supabase.ts` | Admin client has no Database generic (Supabase v2 type bug) |
 | `src/lib/database.types.ts` | Manual DB types for tm_events, meta_campaigns |
 | `supabase/schema.sql` | Paste into Supabase SQL editor |
-| `scraper/` | Local Playwright scraper - run on Mac, POSTs to /api/ingest |
+| `agent/` | Autonomous Claude agent - Telegram bot + TM One navigator |
+| `agent/.env.example` | TM credentials, Telegram token, INGEST config |
 | `.env.example` | All required env vars documented |
 | `AGENTS.md` | Full OpenCode agent config |
