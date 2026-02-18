@@ -73,9 +73,6 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     };
   }
 
-  // Prepend system prompt to task — same pattern as the Arjona agent
-  const fullPrompt = `${systemPrompt}\n\n---\n\nCurrent task:\n${prompt}`;
-
   console.log(
     `[runner] Spawning claude (${systemPromptName}, max-turns=${maxTurns}): ${prompt.slice(0, 80)}`
   );
@@ -84,17 +81,20 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     const proc = spawn(
       CLAUDE_PATH,
       [
-        "-p", fullPrompt,
+        "-p", prompt,
+        "--system-prompt", systemPrompt,
         "--output-format", "stream-json",
         "--verbose",
         "--max-turns", String(maxTurns),
         "--dangerously-skip-permissions",
+        // Block global project memory — prevents context bleed from
+        // ~/.claude/projects/ which references arjona-tour, insurance, etc.
+        "--setting-sources", "local",
       ],
       {
-        // Run from agent/ so Claude auto-reads CLAUDE.md and MEMORY.md
+        // Run from agent/ so Claude auto-reads agent/CLAUDE.md
         cwd: AGENT_DIR,
         env: { ...process.env, CLAUDECODE: undefined } as NodeJS.ProcessEnv,
-        // stdin: ignore — claude -p doesn't need interactive input
         stdio: ["ignore", "pipe", "pipe"],
       }
     );
