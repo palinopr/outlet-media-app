@@ -281,7 +281,7 @@ export default async function ClientCampaigns({ params }: Props) {
                         </TableCell>
                         <TableCell className="text-right text-sm tabular-nums text-muted-foreground">{fmtNum(c.impressions)}</TableCell>
                         <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-                          {c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}
+                          {c.ctr != null ? c.ctr.toFixed(2) + "%" : "—"}
                         </TableCell>
                         <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
                           {c.cpc != null ? "$" + c.cpc.toFixed(2) : "—"}

@@ -36,7 +36,7 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
   - Page ID: 175118299508364
   - Instagram ID: 17841402356610735
 - **Ingest endpoint**: POST /api/ingest with secret header (`x-ingest-secret` or body `secret`)
-- **Alerts endpoint**: POST /api/alerts `{ secret, message, level, client_slug? }` to create an alert visible in dashboard
+- **Alerts endpoint**: POST /api/alerts `{ secret, message, level }` to create an alert visible in dashboard (no client_slug field)
 - **Local agent**: runs on Jaime's Mac, polls Supabase for jobs, pushes data via ingest
 - **Telegram bot**: @Outletmedia_bot (token in .env)
 - **Dashboard app**: Railway (formerly localhost:3000 for dev)
@@ -65,15 +65,45 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - Dashboard and client portal use `centsToUsd(n) = n/100` helper
 - ROAS is stored as a float (e.g., 8.4) — NOT in cents, not a percentage
 - `start_time` on meta_campaigns is an ISO8601 timestamptz string (used for pacing calculations)
+- **Session cache naming**: `spend` = dollars (float), `daily_budget_cents` = cents (int). The ingest route expects `daily_budget` (in cents).
+- **Session cache vs Supabase gap**: session cache has daily_budget_cents for 11/13 campaigns, but Supabase daily_budget is null for ALL (ingest POST wasn't sending it — prompt fixed Cycle #5, awaiting sync)
+
+## Known Data Pipeline Gaps (as of Cycle #7, verified Cycle #7 Supabase query)
+- `daily_budget` is null for ALL 13 campaigns **in Supabase** — prompt was fixed (Cycle #5), but no Meta sync has run since to verify the fix works
+  - Session cache DOES have `daily_budget_cents` for 11/13 campaigns (null for Beamina V3 and KYBBA Miami)
+  - The ingest POST must map `daily_budget_cents` → `daily_budget` for Supabase
+- `start_time` is null for ALL 13 campaigns in BOTH session cache AND Supabase — the Meta API fetch does not request this field yet
+- `campaign_snapshots` and `event_snapshots` tables exist but are EMPTY — no snapshot insertion logic implemented yet
+- **Pacing checks (P4):** BLOCKED — need daily_budget and start_time in Supabase
+- **ROAS trend checks (P4):** BLOCKED — need campaign_snapshots to be populated
+- **Next Meta sync should verify:** daily_budget flows to Supabase; start_time is fetched from Meta API and stored
+
+## Current Campaign Landscape (as of 2026-02-18)
+- **13 total campaigns** in session cache (1 ACTIVE, 12 PAUSED)
+- **ACTIVE:** Denver V2 (Zamora) — ROAS 8.40×, $2,240 spend, $750/day budget. Healthy.
+- **Recently PAUSED:** KYBBA Miami — was ACTIVE at start of day (Cycle #1), paused by Cycle #5. ROAS 2.79× when paused.
+- **Clients represented:** Zamora (9 campaigns), KYBBA (1), Beamina (1), Happy Paws (1), Zamora-Denver Retargeting (1)
+- **No TM One data** — credentials still blank, no last-events.json exists
 
 ## Things To Remember
-- TM One credentials go in .env (TM_EMAIL, TM_PASSWORD) — not yet configured
+- TM One credentials go in .env (TM_EMAIL, TM_PASSWORD) — **not yet configured** (still blank as of Cycle #7)
 - Meta credentials are in the app's ../.env.local — agent reads them from the parent directory
 - Agent working directory is /Users/jaimeortiz/outlet-media-app/agent — all paths relative to here
 - INGEST_URL should point to Railway (or localhost:3000 for dev)
 - LEARNINGS.md is the think-loop journal — read it first every cycle
-- session/ directory holds last-events.json and last-campaigns.json (inter-run cache)
-- session/proposals.md has 6 ranked capability proposals (created Cycle #4)
+- session/ directory holds last-events.json (not yet created) and last-campaigns.json (inter-run cache)
+- session/proposals.md has 6 ranked capability proposals (created Cycle #4, status tracked in Proposals Status section below)
 - `/client/[slug]/campaigns/page.tsx` wired to Supabase, shows real campaign data + trend charts
 - Dashboard admin pages: /admin/dashboard (alert banner, ROAS chart), /admin/agents (job history), /admin/campaigns (client filter dropdown), /admin/clients (multi-client dynamic list)
 - All mock data removed from dashboard — all pages read from Supabase
+- **Scheduler timing:** TM One every 2h, Meta every 6h, Think every 30min (8am-10pm only), Heartbeat every 1min
+
+## Proposals Status (from session/proposals.md, Cycle #4, last verified Cycle #7)
+- **P5 (Fix campaigns page):** ✅ DONE — campaigns page now reads from Supabase
+- **P6 (Client slug validation):** ✅ RESOLVED — KYBBA now has correct slug "kybba"
+- **P1 (Campaign-event linking):** ⏳ BLOCKED — requires TM One data (no credentials yet)
+- **P3 (Daily pacing alerts):** ⏳ BLOCKED — requires daily_budget AND start_time in Supabase
+  - daily_budget: prompt fix done (Cycle #5), awaiting Meta sync to verify
+  - start_time: NOT being fetched from Meta API at all — needs additional prompt/code work
+- **P2 (Historical snapshots):** ⏳ NOT STARTED — tables exist but no insertion logic
+- **P4 (Sell-through velocity):** ⏳ BLOCKED — depends on P2 + TM One data

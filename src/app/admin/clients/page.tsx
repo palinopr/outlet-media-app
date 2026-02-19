@@ -149,19 +149,25 @@ export default async function ClientsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {stats.map(({ label, value, sub, icon: Icon }) => (
-          <Card key={label} className="border-border/60">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {label}
-              </CardTitle>
-              <Icon className="h-4 w-4 text-muted-foreground/60" />
-            </CardHeader>
-            <CardContent>
+        {[
+          { ...stats[0], accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
+          { ...stats[1], accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
+          { ...stats[2], accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
+          { ...stats[3], accent: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-400" },
+        ].map(({ label, value, sub, icon: Icon, accent, iconColor }) => (
+          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5">
+            <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+                <div className={`h-7 w-7 rounded-lg bg-white/[0.06] flex items-center justify-center ${iconColor}`}>
+                  <Icon className="h-3.5 w-3.5" />
+                </div>
+              </div>
               <p className="text-3xl font-bold tracking-tight">{value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{sub}</p>
-            </CardContent>
-          </Card>
+              <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>
+            </div>
+          </div>
         ))}
       </div>
 

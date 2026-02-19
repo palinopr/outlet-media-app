@@ -50,7 +50,7 @@ export default async function AgentsPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_272px] gap-6 items-start">
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm h-[640px] flex flex-col overflow-hidden">
+        <div className="rounded-xl border border-border/60 bg-card h-[640px] flex flex-col overflow-hidden">
           <ChatPanel initialJobs={chatJobs} />
         </div>
         <AgentSidebar isOnline={isOnline} lastSeen={lastSeen} />

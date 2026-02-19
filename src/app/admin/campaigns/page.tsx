@@ -148,20 +148,23 @@ export default async function CampaignsPage({ searchParams }: Props) {
       {/* Summary stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Spend",  value: fmtUsd(totalSpend),        icon: DollarSign },
-          { label: "Avg. ROAS",    value: avgRoas > 0 ? avgRoas.toFixed(1) + "×" : "—", icon: TrendingUp },
-          { label: "Impressions",  value: fmtNum(totalImpressions),  icon: Eye },
-          { label: "Clicks",       value: fmtNum(totalClicks) + (overallCtr > 0 ? ` (${overallCtr.toFixed(1)}% CTR)` : ""), icon: MousePointerClick },
-        ].map(({ label, value, icon: Icon }) => (
-          <Card key={label} className="border-border/60">
-            <CardContent className="pt-4 pb-4">
+          { label: "Total Spend",  value: fmtUsd(totalSpend),        icon: DollarSign, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
+          { label: "Avg. ROAS",    value: avgRoas > 0 ? avgRoas.toFixed(1) + "x" : "---", icon: TrendingUp, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
+          { label: "Impressions",  value: fmtNum(totalImpressions),  icon: Eye, accent: "from-blue-500/20 to-indigo-500/20", iconColor: "text-blue-400" },
+          { label: "Clicks / CTR", value: fmtNum(totalClicks) + (overallCtr > 0 ? ` (${overallCtr.toFixed(1)}%)` : ""), icon: MousePointerClick, accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
+        ].map(({ label, value, icon: Icon, accent, iconColor }) => (
+          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-4">
+            <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />
+            <div className="relative">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-                <Icon className="h-4 w-4 text-muted-foreground/60" />
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+                <div className={`h-7 w-7 rounded-lg bg-white/[0.06] flex items-center justify-center ${iconColor}`}>
+                  <Icon className="h-3.5 w-3.5" />
+                </div>
               </div>
               <p className="text-2xl font-bold tracking-tight">{value}</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
@@ -223,7 +226,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
                     {fmtNum(c.impressions)}
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
-                    {c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}
+                    {c.ctr != null ? c.ctr.toFixed(2) + "%" : "—"}
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
                     {c.cpc != null ? "$" + c.cpc.toFixed(2) : "—"}

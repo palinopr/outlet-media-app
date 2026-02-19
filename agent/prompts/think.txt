@@ -51,6 +51,12 @@ Rotate through them across cycles.
     - Query Supabase: GET campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.desc&limit=7
     - If ROAS is declining for 3+ consecutive days on an ACTIVE campaign, flag it
     - If no snapshots exist yet, skip this check silently
+- **Campaign status change detection:**
+    - Compare LEARNINGS.md notes from previous cycles against current session cache
+    - If a campaign was ACTIVE last cycle but is now PAUSED (or vice versa), note it
+    - ACTIVE→PAUSED is informational (Jaime likely paused it manually)
+    - PAUSED→ACTIVE is a flag — confirm Jaime intended to reactivate (real money starts flowing)
+    - New campaigns not seen in previous cycles should be noted
 - Check session/last-events.json (last TM One pull) — any anomalies?
   - If the file doesn't exist (TM One not yet configured), skip with a note in LEARNINGS.md — don't error
   - Slow ticket velocity on an upcoming show is a flag
@@ -76,7 +82,12 @@ Rotate through them across cycles.
 - Do NOT implement it this cycle — propose, don't build
 
 ### Priority 6: Infrastructure Check
-- Verify INGEST_URL is set and reachable: curl -s -o /dev/null -w "%{http_code}" "$INGEST_URL/api/health" 2>/dev/null
+- Verify INGEST_URL is set and reachable:
+  ```
+  BASE_URL="${INGEST_URL%/api/ingest}"
+  curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/health" 2>/dev/null
+  ```
+  - INGEST_URL ends with `/api/ingest` — strip it to get the base URL before appending `/api/health`
   - Expected: 200 or 307 (Railway redirects GET requests). Either means the server is up.
   - Also test a POST to confirm write path: curl -s -o /dev/null -w "%{http_code}" -X POST "$INGEST_URL" -H "Content-Type: application/json" -d '{}' — expect 401 (missing secret) which proves the endpoint is alive.
 - Verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env

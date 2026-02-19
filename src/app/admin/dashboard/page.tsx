@@ -19,6 +19,7 @@ import {
   Clock,
   AlertTriangle,
   Info,
+  ArrowRight,
 } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
@@ -31,7 +32,7 @@ interface AgentLastRun { agentId: string; status: string; finishedAt: string | n
 interface Alert { id: string; message: string; level: string; created_at: string; }
 interface SnapshotRow { snapshot_date: string; roas: number | null; spend: number | null; }
 
-// ─── Data fetching ─────────────────────────────────────────────────────────
+// --- Data fetching ---
 
 async function getData() {
   if (!supabaseAdmin) {
@@ -66,7 +67,6 @@ async function getData() {
   const alerts = (alertsRes.data ?? []) as Alert[];
   const snapshots = (snapshotsRes.data ?? []) as SnapshotRow[];
 
-  // Deduplicate agent runs by agent_id
   const seen = new Set<string>();
   const agentRuns: AgentLastRun[] = [];
   for (const row of (agentRunsRes.data ?? [])) {
@@ -76,7 +76,6 @@ async function getData() {
     }
   }
 
-  // Aggregate snapshots by date for trend chart
   const byDate: Record<string, { roasSum: number; roasCount: number; spendSum: number }> = {};
   for (const s of snapshots) {
     const d = s.snapshot_date;
@@ -95,17 +94,17 @@ async function getData() {
   return { events, campaigns, agentRuns, alerts, trendData, fromDb: Boolean(campaigns.length) };
 }
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
+// --- Helpers ---
 
 function centsToUsd(cents: number | null) { return cents == null ? null : cents / 100; }
 function fmt(n: number) { return n.toLocaleString("en-US"); }
-function fmtUsd(n: number | null) { return n == null ? "—" : "$" + Math.round(n).toLocaleString("en-US"); }
+function fmtUsd(n: number | null) { return n == null ? "---" : "$" + Math.round(n).toLocaleString("en-US"); }
 function fmtDate(d: string | null) {
-  if (!d) return "—";
+  if (!d) return "---";
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 function fmtNum(n: number | null) {
-  if (n == null) return "—";
+  if (n == null) return "---";
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
   return String(n);
@@ -127,7 +126,7 @@ function eventStatusBadge(s: string) {
   );
 }
 
-// ─── Page ──────────────────────────────────────────────────────────────────
+// --- Page ---
 
 export default async function AdminDashboard() {
   const { events, campaigns, agentRuns, alerts, trendData, fromDb } = await getData();
@@ -141,13 +140,17 @@ export default async function AdminDashboard() {
 
   const now = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
-  const stats = [
-    { label: "Active Shows",     value: String(events.length),    sub: `${fmt(totalCap)} total capacity`,   icon: CalendarDays },
-    { label: "Tickets Sold",     value: fmt(totalSold),           sub: `of ${fmt(totalCap)} available`,    icon: Ticket       },
-    { label: "Total Gross",      value: fmtUsd(totalGross),       sub: "across all shows",                 icon: DollarSign   },
-    { label: "Active Campaigns", value: String(campaigns.length), sub: "Facebook + Instagram",             icon: Megaphone    },
-    { label: "Ad Spend",         value: fmtUsd(totalSpend),       sub: "total across campaigns",           icon: DollarSign   },
-    { label: "Avg. ROAS",        value: avgRoas > 0 ? avgRoas.toFixed(1) + "×" : "—", sub: "return on ad spend", icon: TrendingUp },
+  // Featured metrics (top row with accent styling)
+  const heroStats = [
+    { label: "Ad Spend",         value: fmtUsd(totalSpend),       icon: DollarSign,  accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
+    { label: "Avg. ROAS",        value: avgRoas > 0 ? avgRoas.toFixed(1) + "x" : "---", icon: TrendingUp, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
+    { label: "Active Campaigns", value: String(campaigns.length), icon: Megaphone,   accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
+  ];
+
+  const secondaryStats = [
+    { label: "Active Shows",  value: String(events.length),  sub: `${fmt(totalCap)} capacity`, icon: CalendarDays },
+    { label: "Tickets Sold",  value: fmt(totalSold),         sub: `of ${fmt(totalCap)}`,       icon: Ticket },
+    { label: "Total Gross",   value: fmtUsd(totalGross),     sub: "box office revenue",        icon: DollarSign },
   ];
 
   return (
@@ -161,8 +164,8 @@ export default async function AdminDashboard() {
         </div>
         {fromDb ? (
           <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5 text-emerald-400 border-emerald-500/20 bg-emerald-500/10">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
-            Live from Supabase
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+            Live
           </Badge>
         ) : (
           <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5 text-amber-400 border-amber-500/20">
@@ -196,19 +199,35 @@ export default async function AdminDashboard() {
         </div>
       )}
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        {stats.map(({ label, value, sub, icon: Icon }) => (
-          <Card key={label} className="border-border/60">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                {label}
-              </CardTitle>
-              <Icon className="h-4 w-4 text-muted-foreground/60" />
-            </CardHeader>
-            <CardContent>
+      {/* Hero stat cards */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        {heroStats.map(({ label, value, icon: Icon, accent, iconColor }) => (
+          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5">
+            <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+                <div className={`h-8 w-8 rounded-lg bg-white/[0.06] flex items-center justify-center ${iconColor}`}>
+                  <Icon className="h-4 w-4" />
+                </div>
+              </div>
               <p className="text-3xl font-bold tracking-tight">{value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Secondary stats */}
+      <div className="grid grid-cols-3 gap-4">
+        {secondaryStats.map(({ label, value, sub, icon: Icon }) => (
+          <Card key={label} className="border-border/60">
+            <CardContent className="pt-4 pb-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+                <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
+              </div>
+              <p className="text-xl font-bold tracking-tight">{value}</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
             </CardContent>
           </Card>
         ))}
@@ -219,7 +238,7 @@ export default async function AdminDashboard() {
         <Card className="border-border/60">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Blended ROAS Trend — All Clients
+              Blended ROAS Trend -- All Clients
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -232,7 +251,9 @@ export default async function AdminDashboard() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold">Active Shows</h2>
-          <a href="/admin/events" className="text-xs text-muted-foreground hover:text-foreground transition-colors">View all →</a>
+          <a href="/admin/events" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+            View all <ArrowRight className="h-3 w-3" />
+          </a>
         </div>
         <Card className="border-border/60">
           <Table>
@@ -250,8 +271,12 @@ export default async function AdminDashboard() {
             <TableBody>
               {events.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center text-xs text-muted-foreground">
-                    No events yet — TM One credentials needed to sync ticket data
+                  <TableCell colSpan={7} className="py-12 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <CalendarDays className="h-8 w-8 text-muted-foreground/30" />
+                      <p className="text-sm text-muted-foreground">No events yet</p>
+                      <p className="text-xs text-muted-foreground/60">TM One credentials needed to sync ticket data</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : events.map((e) => {
@@ -259,7 +284,7 @@ export default async function AdminDashboard() {
                 const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : 0;
                 return (
                   <TableRow key={e.id} className="border-border/60">
-                    <TableCell className="font-mono text-xs text-muted-foreground">{e.tm1_number || "—"}</TableCell>
+                    <TableCell className="font-mono text-xs text-muted-foreground">{e.tm1_number || "---"}</TableCell>
                     <TableCell>
                       <div>
                         <p className="text-sm font-medium">{e.artist}</p>
@@ -291,45 +316,49 @@ export default async function AdminDashboard() {
         <div className="lg:col-span-2">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold">Active Campaigns</h2>
-            <a href="/admin/campaigns" className="text-xs text-muted-foreground hover:text-foreground transition-colors">View all →</a>
+            <a href="/admin/campaigns" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              View all <ArrowRight className="h-3 w-3" />
+            </a>
           </div>
           {campaigns.length === 0 ? (
             <Card className="border-border/60 border-dashed">
-              <CardContent className="py-8 text-center text-xs text-muted-foreground">
-                No active campaigns — run the Meta sync agent to pull live data
+              <CardContent className="py-12 text-center">
+                <Megaphone className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground">No active campaigns</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">Run the Meta sync agent to pull live data</p>
               </CardContent>
             </Card>
           ) : (
             <div className="space-y-3">
               {campaigns.map((c) => (
-                <Card key={c.id} className="border-border/60">
+                <Card key={c.id} className="border-border/60 hover:border-border transition-colors">
                   <CardContent className="py-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
                           <p className="text-sm font-medium truncate">{c.name}</p>
                         </div>
                         <p className="text-xs text-muted-foreground">{c.objective}</p>
                       </div>
                       <div className="flex gap-6 shrink-0 text-right">
                         <div>
-                          <p className="text-xs text-muted-foreground">Spend</p>
+                          <p className="text-[11px] text-muted-foreground">Spend</p>
                           <p className="text-sm font-medium tabular-nums">{fmtUsd(centsToUsd(c.spend))}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">ROAS</p>
+                          <p className="text-[11px] text-muted-foreground">ROAS</p>
                           <p className={`text-sm font-semibold tabular-nums ${(c.roas ?? 0) >= 4 ? "text-emerald-400" : (c.roas ?? 0) >= 2 ? "text-amber-400" : "text-red-400"}`}>
-                            {c.roas != null ? c.roas.toFixed(1) + "×" : "—"}
+                            {c.roas != null ? c.roas.toFixed(1) + "x" : "---"}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Impressions</p>
+                          <p className="text-[11px] text-muted-foreground">Impressions</p>
                           <p className="text-sm font-medium tabular-nums">{fmtNum(c.impressions)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">CTR</p>
-                          <p className="text-sm font-medium tabular-nums">{c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}</p>
+                          <p className="text-[11px] text-muted-foreground">CTR</p>
+                          <p className="text-sm font-medium tabular-nums">{c.ctr != null ? c.ctr.toFixed(2) + "%" : "---"}</p>
                         </div>
                       </div>
                     </div>
@@ -344,7 +373,9 @@ export default async function AdminDashboard() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold">Agents</h2>
-            <a href="/admin/agents" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Manage →</a>
+            <a href="/admin/agents" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              Manage <ArrowRight className="h-3 w-3" />
+            </a>
           </div>
           <div className="space-y-3">
             {(

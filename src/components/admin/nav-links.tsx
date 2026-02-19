@@ -33,16 +33,16 @@ export function NavLinks() {
             key={href}
             href={href}
             className={cn(
-              "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+              "flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150",
               active
-                ? "bg-white/10 text-white font-medium"
-                : "text-white/60 hover:text-white hover:bg-white/5"
+                ? "bg-white/[0.08] text-white font-medium shadow-sm"
+                : "text-white/50 hover:text-white/80 hover:bg-white/[0.04]"
             )}
           >
             <Icon
               className={cn(
                 "h-4 w-4 shrink-0",
-                active ? "text-white" : "text-white/60"
+                active ? "text-cyan-400" : "text-white/40"
               )}
             />
             {label}

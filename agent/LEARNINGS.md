@@ -113,3 +113,54 @@ Format:
   - These prompt changes ensure the next Meta sync will populate these fields in both the session cache and Supabase
 - **No Telegram draft** — no business anomalies detected; all campaigns healthy. The data gap is an internal pipeline issue, not something that needs Jaime's attention right now.
 - **Next priority:** P2 — Audit prompts/think.txt for any remaining gaps. Also, the next Meta sync should be verified to confirm it now sends `daily_budget` and `start_time` correctly.
+
+## 2026-02-18 — Cycle #6 (Prompt Audit: think.txt)
+- **Priority chosen:** P2 — Self-Improvement (Prompts)
+- **What I audited or read:**
+  - prompts/think.txt (full read + cross-check against MEMORY.md and command.txt)
+  - prompts/command.txt (full read for field name consistency)
+  - prompts/chat.txt (full read for API version, credential paths, client slugs)
+  - MEMORY.md (full read for cross-reference)
+  - session/last-campaigns.json (current state: 1 ACTIVE, 12 PAUSED)
+  - .env (confirmed INGEST_URL format ends with /api/ingest)
+- **Bugs found and fixed:**
+  1. **P6 health check URL bug in think.txt**: `$INGEST_URL/api/health` was wrong because INGEST_URL=`https://...railway.app/api/ingest` — concatenating `/api/health` produced `.../api/ingest/api/health`. Fixed to extract BASE_URL first with `${INGEST_URL%/api/ingest}`, then use `$BASE_URL/api/health`. This would have caused every P6 infra check to test a non-existent endpoint.
+  2. **MEMORY.md alerts endpoint inconsistency**: Said `{ secret, message, level, client_slug? }` but actual endpoint (verified Cycle #5) only accepts `{ secret, message, level }`. Removed the stale `client_slug?` reference.
+  3. **Missing P4 campaign status change detection**: think.txt P4 checked ROAS/spend/pacing but had no guidance for detecting ACTIVE↔PAUSED transitions between cycles. Added section to compare current session cache against previous cycle notes and flag unexpected reactivations.
+- **Cross-check results (no action needed):**
+  - API version v21.0 consistent across all files ✓
+  - Ad account ID consistent ✓
+  - Client slug mappings serve different purposes in chat.txt (user aliases) vs command.txt (campaign name patterns) — intentional, not a bug
+  - Credential path fallback order differs slightly between prompts — acceptable, different contexts
+  - Supabase URL in MEMORY.md vs .env — fine as reference material
+- **Next priority:** P3 — Memory Maintenance. Clean up MEMORY.md (remove any stale items, consolidate learnings from Cycles #0-6). Alternatively P4 if a fresh data sync happens first.
+
+## 2026-02-18 — Cycle #7 (Memory Maintenance)
+- **Priority chosen:** P3 — Memory Maintenance
+- **What I audited or read:**
+  - LEARNINGS.md (full read — Cycles #0-6, 137 lines)
+  - MEMORY.md (full read — 104 lines)
+  - session/last-campaigns.json (full read — 13 campaigns, scraped_at 2026-02-18T00:00:00Z, file modified 13:34 today)
+  - session/proposals.md (full read — 6 proposals with status tracking)
+  - src/scheduler.ts (read-only — verified cron schedule timings)
+  - Supabase meta_campaigns (queried: daily_budget STILL null for all 13, start_time STILL null for all 13)
+  - Supabase campaign_snapshots (queried: STILL empty — zero rows)
+- **Inconsistencies found and fixed:**
+  1. **"Cycle #7" phantom references:** MEMORY.md and proposals.md referenced "Cycle #7" but LEARNINGS.md only had Cycles #0-6. These were written during an earlier session that updated memory files but didn't log a LEARNINGS entry. Now resolved — this IS Cycle #7.
+  2. **Known Data Pipeline Gaps section outdated:** Said "daily_budget is null for ALL campaigns" without distinguishing session cache (has data for 11/13) from Supabase (null for ALL 13). Rewrote with precise per-system status.
+  3. **start_time clarification:** Previously lumped with daily_budget as "same status." Clarified that start_time has a DIFFERENT problem — it's not being fetched from Meta API at all (not just a POST mapping issue). This is important for whoever fixes it next.
+  4. **Proposals Status — P6 wording:** Changed "PARTIALLY RESOLVED" → "RESOLVED" (KYBBA slug fix is complete, not partial).
+  5. **Missing scheduler timing:** Added scheduler cron details to Things To Remember (TM 2h, Meta 6h, Think 30min 8am-10pm, Heartbeat 1min).
+  6. **Session cache precision:** Added note in Data Storage Conventions about the session-vs-Supabase gap for daily_budget_cents.
+  7. **Proposals.md "partially stale" note:** Cleaned up redundant wording in Things To Remember — now points to Proposals Status section instead.
+- **Supabase verification results:**
+  - daily_budget: null × 13 in Supabase (session cache has values for 11/13 — Beamina V3 and KYBBA Miami are null)
+  - start_time: null × 13 in both Supabase AND session cache (not fetched from Meta API at all)
+  - campaign_snapshots: 0 rows (table exists, no insertion logic)
+  - spend values in Supabase are in cents and match expected conversions (224000 = $2,240)
+- **What I did NOT change:**
+  - LEARNINGS.md early cycles (#0-#3): still useful as historical context and contain specific technical lessons. Not worth trimming yet.
+  - proposals.md "Cycle #7" references: now consistent since this IS Cycle #7.
+  - No stale campaign data to remove — landscape hasn't changed (1 ACTIVE Denver V2, 12 PAUSED).
+- **No Telegram draft** — routine memory maintenance, no business anomalies.
+- **Next priority:** P4 — Business Monitoring. Session cache is from today, so data is fresh enough. Run pacing check on Denver V2 (the one ACTIVE campaign). Note: pacing will be blocked without start_time, but ROAS check and status change detection should work.
