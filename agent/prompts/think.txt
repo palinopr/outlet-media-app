@@ -88,8 +88,8 @@ Rotate through them across cycles.
   curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/health" 2>/dev/null
   ```
   - INGEST_URL ends with `/api/ingest` — strip it to get the base URL before appending `/api/health`
-  - Expected: 200 or 307 (Railway redirects GET requests). Either means the server is up.
-  - Also test a POST to confirm write path: curl -s -o /dev/null -w "%{http_code}" -X POST "$INGEST_URL" -H "Content-Type: application/json" -d '{}' — expect 401 (missing secret) which proves the endpoint is alive.
+  - Expected: 404 (no health endpoint exists on this server as of 2026-02-19). This is not critical.
+  - The real liveness test is the POST: curl -s -o /dev/null -w "%{http_code}" -X POST "$INGEST_URL" -H "Content-Type: application/json" -d '{}' — expect 401 (missing secret) which proves the endpoint is alive. If this fails, the server is down.
 - Verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env
 - Verify the claude CLI is at the expected path: which claude || ls /Users/jaimeortiz/.local/bin/claude
 - Check session/last-campaigns.json age — if older than 24h, note that scheduled syncs may not be running

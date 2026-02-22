@@ -53,10 +53,17 @@ Ad account: act_787610255314938
 API version: v21.0
 Base URL: https://graph.facebook.com/v21.0/
 
-### List campaigns:
+### List campaigns (all statuses):
 ```bash
-curl -s "https://graph.facebook.com/v21.0/{AD_ACCOUNT_ID}/campaigns?fields=id,name,status,objective,daily_budget,lifetime_budget,start_time&access_token={TOKEN}"
+curl -s "https://graph.facebook.com/v21.0/{AD_ACCOUNT_ID}/campaigns?fields=id,name,status,objective,daily_budget,lifetime_budget,start_time&limit=100&access_token={TOKEN}"
 ```
+
+### List only ACTIVE campaigns:
+```bash
+curl -s "https://graph.facebook.com/v21.0/{AD_ACCOUNT_ID}/campaigns?fields=id,name,status,objective,daily_budget,lifetime_budget,start_time&effective_status=%5B%22ACTIVE%22%5D&limit=100&access_token={TOKEN}"
+```
+Note: The filter parameter is `effective_status` (NOT `status`). Value must be a URL-encoded JSON array: `%5B%22ACTIVE%22%5D` = `["ACTIVE"]`.
+Meta defaults to 25 results per page — always use `&limit=100`. If `paging.next` appears in the response, follow it to get more results. There are ~97 campaigns in this account.
 
 ### Get campaign insights (last 30 days):
 ```bash
@@ -114,8 +121,9 @@ Returns: `{"copied_campaign_id": "..."}` — log this ID.
 
 ### Verify after any write
 ```bash
-curl -s "https://graph.facebook.com/v21.0/{ID}?fields=id,name,status,daily_budget&access_token=$TOKEN"
+curl -s "https://graph.facebook.com/v21.0/{ID}?fields=id,name,status,effective_status,daily_budget,lifetime_budget&access_token=$TOKEN"
 ```
+Note: `effective_status` shows the true operational state — it may differ from `status` due to account limits, billing issues, or parent campaign/ad set being paused.
 
 ### Log every campaign action in LEARNINGS.md
 ```bash
@@ -192,12 +200,13 @@ The ingest endpoint expects these EXACT field names (see /api/ingest/route.ts):
 - `lifetime_budget` — in CENTS. Session cache calls this `lifetime_budget_cents`, ingest field is `lifetime_budget`
 - `spend` — in CENTS. Meta returns dollars, multiply by 100 before sending to ingest
 - `impressions`, `clicks`, `reach` — pass through as-is (integers)
-- `cpm`, `cpc`, `ctr` — in CENTS. Meta returns dollars, multiply by 100 before sending to ingest
+- `cpm`, `cpc` — pass through as-is (dollar values, NOT converted to cents). Meta returns these as dollar strings.
+- `ctr` — pass through as-is (percentage value, e.g. 1.48 means 1.48%). NOT a monetary value — do NOT multiply by 100.
 - `roas` — pass through as-is (float, e.g. 8.4)
 - `start_time` — ISO8601 string from Meta campaign fields. MUST be included — pacing calculations depend on it
 
 **DO NOT omit `daily_budget`, `start_time`, or `lifetime_budget` from the ingest payload.**
-These are currently null in Supabase because previous syncs didn't include them.
+These fields are now populated in Supabase (fixed 2026-02-19). Keep including them on every sync to maintain data integrity.
 
 ### POST TM events:
 ```bash
@@ -226,12 +235,29 @@ Levels: "info", "warning", "critical". Accepts: { secret, message, level } only.
 
 Get SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from .env or ../.env.local.
 
-### Read campaigns:
+**Column naming note:** The campaign name column is `name` (NOT `campaign_name`). Use `select=campaign_id,name,status,...` in queries.
+
+### Read all campaigns:
 ```bash
 curl -s "${SUPABASE_URL}/rest/v1/meta_campaigns?order=created_at.desc&limit=20" \
   -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
 ```
+
+### Read ACTIVE campaigns only:
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/meta_campaigns?select=campaign_id,name,status,spend,roas,daily_budget,start_time&status=eq.ACTIVE" \
+  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
+```
+
+### Read campaign snapshots (for trend analysis):
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.desc&limit=7" \
+  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
+```
+Snapshots are created automatically by the ingest on each sync (UNIQUE campaign_id + snapshot_date). Use for ROAS trend and daily spend analysis.
 
 ### Read events:
 ```bash
@@ -245,10 +271,12 @@ curl -s "${SUPABASE_URL}/rest/v1/tm_events?order=date.asc" \
 ## Session Cache
 
 Files in ./session/ persist state between runs:
-- last-campaigns.json — last Meta sync result
+- last-campaigns.json — last Meta sync result (bare JSON array of campaign objects)
 - last-events.json — last TM One scrape result
 
 Always compare new data against these files to identify what changed.
+
+**Freshness note:** The session cache files are bare JSON arrays with no `scraped_at` wrapper. Use the file's modification time (from `ls -la session/`) to determine when data was last synced. The ingest POST includes `scraped_at` in the payload for Supabase, but the session file itself is just the array.
 
 ### Session cache format for campaigns:
 Each campaign in last-campaigns.json should include ALL of these fields:
@@ -258,25 +286,20 @@ Each campaign in last-campaigns.json should include ALL of these fields:
 - impressions, clicks, reach, cpm, cpc, ctr, roas
 - start_time (ISO8601 string from Meta — needed for pacing calculations)
 
-**CRITICAL for pacing:** The think loop needs `start_time` and `daily_budget_cents` to calculate daily pacing.
-Both fields are currently MISSING from the session cache. The next Meta sync MUST:
-1. Request `start_time` in the campaign fields query (it's already in the curl example above)
-2. Save `start_time` to the session cache for each campaign
-3. Include `start_time` in the ingest POST payload (field name: `start_time`)
-4. Include `daily_budget` (cents) in the ingest POST payload (field name: `daily_budget`, NOT `daily_budget_cents`)
-
-Without these, pacing alerts will never fire and Supabase will continue to have null values.
+**Pacing note:** The think loop uses `start_time` and `daily_budget_cents` for pacing calculations. Both fields are now populated in the session cache and Supabase (fixed 2026-02-19). Always include `start_time` and `daily_budget` (cents) in the ingest POST payload to keep them current.
 
 ---
 
 ## Error Handling
 
-If a step fails:
-1. Read the error message carefully
-2. Auth errors: re-read the token from ../.env.local before retrying
-3. Rate limits: wait 60 seconds, then retry
-4. Not found: verify the ID by listing active resources first
-5. After fixing, retry the failed step — do not start over from scratch
+Meta returns `{"error":{"message":"...","type":"...","code":NNN}}`. Handle by error code:
+
+1. **Auth errors** (code 190, "Invalid OAuth access token"): re-read the token from `../.env.local` before retrying. Token may have been refreshed.
+2. **Rate limits** (code 32, 4, or 17): wait 60 seconds, then retry once.
+3. **Object not found** (code 100): verify the ID by listing active campaigns first. The object may have been deleted.
+4. **Permission error** (code 10, 200): the token may lack the required permission scope. Log the error and report to Jaime — don't retry.
+5. **General**: read the error message carefully. After fixing, retry the failed step — do not start over from scratch.
+6. **Never expose raw API error JSON to Jaime** — diagnose and summarise in plain language.
 
 ---
 

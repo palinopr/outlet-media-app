@@ -14,153 +14,256 @@ Format:
 
 ---
 
-## 2026-02-18 — Cycle #0 (Genesis)
-- **Priority chosen:** P6 — Build New Capabilities
-- **Self-improvement:** Think loop infrastructure created. MEMORY.md and LEARNINGS.md initialized.
-- **Monitoring:** Not yet active — first scheduled cycle pending.
-- **Action taken:** Ported proactive brain pattern from Arjona agent. Added retry utility, think cron job, memory-aware system prompt.
-- **Next priority:** P2 — Code Quality. Audit system-prompt.ts and scheduler.ts for any gaps.
+## 2026-02-18 — Cycles #0-3 Summary (Genesis & Setup)
 
-## 2026-02-18 — Cycle #1 (Meta Sync)
-- **Priority chosen:** P1 — Data Freshness
-- **Self-improvement:** Learned that the `/campaigns` endpoint needs `-G` with `--data-urlencode` for the token (special chars). Direct string interpolation in the URL fails with "Object does not exist" error.
-- **Monitoring:** 2 ACTIVE campaigns found out of 97 total. Denver V2 (ROAS 8.4×, strong) and KYBBA Miami (ROAS 2.79×, acceptable).
-- **Action taken:** Fetched all campaigns + insights for active ones. Converted spend to cents for bigint DB column. Saved to session/last-campaigns.json. POST to ingest succeeded (2 upserted).
-- **Learned:** Meta `spend` comes as a dollar string (e.g. "2002.52"). Supabase `meta_campaigns.spend` column is bigint (cents). Must multiply by 100 and round. `daily_budget` and `lifetime_budget` from Meta are already in cents.
-- **Next priority:** TM One scrape when credentials are configured. Monitor KYBBA ROAS — at 2.79× it's above the 2.0 flag threshold but worth watching.
+> Condensed from 4 detailed entries during Cycle #14 memory maintenance. See git history for originals.
 
-## 2026-02-18 — Cycle #2 (Path Fix)
-- **Priority chosen:** P3 — Self-Improvement (Prompts & Logic)
-- **Self-improvement:** Full audit of all source files. Found systematic path bug: think.ts, system-prompt.ts, scheduler.ts, and MEMORY.md all referenced `agent/MEMORY.md`, `agent/LEARNINGS.md`, `agent/.env`, `.env.local` — but the agent's cwd IS the agent/ directory. These broken paths would cause file-not-found errors on every scheduled run.
-- **Monitoring:** Ingest endpoint responds 200. Claude CLI at expected path (/Users/jaimeortiz/.local/bin/claude v2.1.45). Both campaigns above 2.0 ROAS threshold. No anomalies.
-- **Action taken:**
-  - Fixed 10+ path references in src/think.ts: `agent/MEMORY.md` → `MEMORY.md`, `agent/LEARNINGS.md` → `LEARNINGS.md`, `agent/src/` → `src/`, `agent/session/` → `session/`
-  - Fixed src/system-prompt.ts: `agent/.env` → `.env`, `.env.local` → `../.env.local` (Meta creds are in parent dir)
-  - Fixed src/scheduler.ts: `.env.local` → `../.env.local`
-  - Fixed MEMORY.md: corrected path references, added working directory note
-- **Learned:** The agent cwd is set in agent.ts via `new URL("../", import.meta.url).pathname` which resolves to the agent/ project root. All file references in prompts must be relative to this directory. Meta .env.local lives in the parent outlet-media-app/ directory.
-- **Next priority:** P4 — Knowledge Expansion. Core infrastructure is now solid. Time to think about what capabilities would add the most value (budget pacing alerts, sell-through velocity, daily summary digest).
+- **Cycle #0 (Genesis):** Ported proactive brain from Arjona agent. Created MEMORY.md, LEARNINGS.md, think cron, retry utility, system prompt.
+- **Cycle #1 (First Meta Sync):** First successful campaign fetch. 2 ACTIVE out of 97 total (Denver V2 ROAS 8.4×, KYBBA Miami 2.79×). Learned spend→cents conversion.
+- **Cycle #2 (Path Fix — Critical):** Found and fixed 10+ broken path references across think.ts, system-prompt.ts, scheduler.ts, MEMORY.md. All used `agent/MEMORY.md` but cwd IS agent/. Also fixed `.env.local` → `../.env.local` (Meta creds in parent dir).
+- **Cycle #3 (Second Sync):** Confirmed `effective_status` filter (not `status`). Essentially no data change from Cycle #1. TM One skipped (no credentials).
 
-## 2026-02-18 — Cycle #3 (Manual Sync Run)
-- **Priority chosen:** P1 — Data Freshness
-- **Self-improvement:** Confirmed `effective_status` filter works for campaigns endpoint (not `status`). Token URL-encoding via query string works fine — no need for `-G`/`--data-urlencode` when the URL is constructed directly.
-- **Monitoring:**
-  - 2 ACTIVE campaigns, same as Cycle #1. No new campaigns.
-  - Denver V2: ROAS 8.4× ($2,240 spend, 347K imps) — unchanged from last sync. Rock solid.
-  - KYBBA Miami: ROAS 2.79× ($2,002.52 spend, 224K imps) — impressions +1, otherwise identical. Stable but still worth watching.
-  - TM One: **Skipped** — TM_EMAIL and TM_PASSWORD are blank in .env. Need Jaime to provide credentials.
-- **Action taken:** Fetched campaigns + insights, saved to session/last-campaigns.json, POST to ingest succeeded (2 inserted).
-- **Changes from last sync:** Essentially no change. KYBBA impressions went from 224,039 → 224,040 (+1). Everything else identical.
-- **Next priority:** Get TM One credentials from Jaime. Continue monitoring KYBBA ROAS.
+**Key technical learnings preserved:**
+- Meta `spend` = dollar string → multiply by 100 for Supabase bigint cents
+- Meta `daily_budget`/`lifetime_budget` = already in cents natively
+- Use `effective_status` filter (not `status`) for campaign queries
+- Agent cwd = agent/ directory. All paths relative to here. Meta .env.local is in parent `../.env.local`
+- Token URL-encoding: use query string construction, not `-G`/`--data-urlencode`
 
-## 2026-02-18 — Cycle #4 (Knowledge Expansion)
-- **Priority chosen:** P5 — Knowledge Expansion
-- **What I audited or read:**
-  - All 6 source files in src/ (scheduler.ts, runner.ts, bot.ts, jobs.ts, index.ts, types.ts)
-  - Both prompt files (prompts/command.txt, prompts/think.txt)
-  - The full Next.js dashboard: page.tsx (client overview), campaigns/page.tsx (campaigns detail), api/ingest/route.ts, lib/database.types.ts
-  - session/last-campaigns.json (current state), .env (credentials)
-  - MEMORY.md and LEARNINGS.md
-- **Key findings:**
-  1. `/client/[slug]/campaigns/page.tsx` uses 100% hardcoded mock data — never queries Supabase. The overview page does query Supabase correctly. Quick win to fix.
-  2. `meta_campaigns.tm_event_id` column exists but is never populated — no campaign-to-event linking.
-  3. No historical snapshot tables — only latest state is stored. Can't compute trends or velocity.
-  4. KYBBA campaign labeled as `client_slug: "zamora"` — may or may not be correct. Need Jaime to confirm.
-  5. `meta_campaigns.spend` is typed as `number | null` in database.types.ts but Cycle #1 said it's bigint in cents. The session cache stores it in cents (224000 = $2,240.00). Dashboard fmtUsd() treats it as dollars. This is a display bug — $224,000 shows instead of $2,240.
-- **Action taken:** Created comprehensive proposals document at `session/proposals.md` with 6 ranked proposals:
-  - P5 (Fix campaigns page) — quick win, immediate value
-  - P1 (Campaign-event auto-linking) — high impact, small effort
-  - P3 (Daily pacing alerts) — monitoring-only, no code changes
-  - P2 (Historical snapshots) — enables trend analysis, medium effort
-  - P4 (Sell-through velocity) — depends on P2
-  - P6 (Client slug validation) — ask Jaime first
-- **CONFIRMED BUG — Spend Display 100x Inflation:**
-  - Queried Supabase directly: spend=224000 (Denver), spend=200252 (KYBBA), daily_budget=75000, daily_budget=10000
-  - These are cents ($2,240.00, $2,002.52, $750/day, $100/day)
-  - Dashboard `fmtUsd()` treats them as dollars → shows $224,000 and $200,252
-  - Affected: Ad Spend card, Revenue calc, all campaign spend figures on `/client/zamora`
-  - ROAS ratios are correct (they cancel out), but all absolute dollar amounts are 100x inflated
-  - Fix: Dashboard needs to divide spend, daily_budget, lifetime_budget, cpm, cpc, gross by 100 before display. OR: change the agent to store in dollars instead of cents.
-  - Drafted Telegram alert to /tmp/outlet-media-proactive.txt
-- **Next priority:** P1 — Fix the spend display bug. Either update dashboard fmtUsd to handle cents, or change the agent's data transformation to store dollars. Recommend dashboard fix (dividing by 100) since the DB column is typed for cents and daily_budget from Meta is already in cents natively.
+## 2026-02-18 — Cycles #4-7 Summary (Discovery & Hardening)
 
-## 2026-02-18 — Cycle #5 (Business Monitoring + Data Gap Discovery)
-- **Priority chosen:** P4 — Business Monitoring
-- **What I audited or read:**
-  - LEARNINGS.md, MEMORY.md (start-of-cycle context)
-  - session/last-campaigns.json (13 campaigns, 1 ACTIVE)
-  - Supabase meta_campaigns table (queried ACTIVE campaigns for pacing data)
-  - prompts/command.txt (ingest payload mapping)
-  - /api/ingest/route.ts (server-side field handling)
-  - .env (infra credentials check)
-- **Campaign health (from session cache):**
-  - 1 ACTIVE: Denver V2 — ROAS 8.40x, $2,240 spend, $750/day budget. No flags.
-  - 12 PAUSED: all above 2.0 ROAS threshold (where ROAS exists). 3 have null ROAS (Happy Paws, Denver Retargeting, Boston CPR 50) but all are paused with low spend.
-  - No ROAS anomalies. No spend spikes.
-- **Pacing check: BLOCKED — discovered data pipeline gap:**
-  - `daily_budget` is null for ALL 13 campaigns in Supabase (despite being present in session cache as `daily_budget_cents`)
-  - `start_time` is null for ALL 13 campaigns in both session cache AND Supabase
-  - Root cause: the Meta sync does not include `daily_budget` or `start_time` in the ingest POST payload
-  - The ingest route (/api/ingest/route.ts lines 148-165) DOES support both fields — they're mapped correctly. The agent just isn't sending them.
-  - Field name mismatch: session cache uses `daily_budget_cents` but ingest expects `daily_budget`
-- **Infra check (quick):**
-  - Ingest URL returns 307 (redirect) on /api/health — not a 200. The Railway app likely redirects GET requests. Not a real problem for POST operations.
-  - Supabase responds correctly to REST queries.
-  - TM One credentials still blank (TM_EMAIL, TM_PASSWORD empty).
-- **Action taken:**
-  - Updated prompts/command.txt: added explicit "Ingest payload field mapping" section after the POST example, listing exact field names the ingest expects vs session cache names
-  - Updated prompts/command.txt: added CRITICAL note in session cache format section emphasizing that `start_time` and `daily_budget` are currently missing and the next sync MUST include them
-  - These prompt changes ensure the next Meta sync will populate these fields in both the session cache and Supabase
-- **No Telegram draft** — no business anomalies detected; all campaigns healthy. The data gap is an internal pipeline issue, not something that needs Jaime's attention right now.
-- **Next priority:** P2 — Audit prompts/think.txt for any remaining gaps. Also, the next Meta sync should be verified to confirm it now sends `daily_budget` and `start_time` correctly.
+> Condensed from 4 detailed entries during Cycle #14 memory maintenance. See git history for originals.
 
-## 2026-02-18 — Cycle #6 (Prompt Audit: think.txt)
+- **Cycle #4 (P5 — Knowledge Expansion):** Full codebase audit. Created `session/proposals.md` with 6 ranked proposals. **Found 100x spend display bug** — dashboard `fmtUsd()` treats cents as dollars. Also found: campaigns page using mock data, `tm_event_id` never populated, no historical snapshots.
+- **Cycle #5 (P4 — Business Monitoring):** Discovered critical data pipeline gap: `daily_budget` null in Supabase (field name mismatch: session `daily_budget_cents` vs ingest `daily_budget`), `start_time` null everywhere (not fetched from Meta API). Fixed prompts/command.txt with ingest payload mapping. Pacing blocked.
+- **Cycle #6 (P2 — Prompt Audit: think.txt):** Fixed 3 bugs: (1) health check URL concatenation bug, (2) MEMORY.md stale `client_slug?` on alerts endpoint, (3) missing ACTIVE↔PAUSED status change detection in P4. All prompts cross-checked for API version/credential consistency.
+- **Cycle #7 (P3 — Memory Maintenance):** Fixed 7 inconsistencies in MEMORY.md and proposals.md. Verified daily_budget still null in Supabase, start_time still null everywhere, snapshots still empty. Clarified start_time has a different root cause than daily_budget.
+
+**Key pipeline findings (resolved by 2026-02-19 sync):**
+- daily_budget: was null in Supabase due to field name mismatch → prompt fix in Cycle #5 → ✅ populated after Feb 19 sync
+- start_time: was not fetched from Meta API at all → ✅ populated after Feb 19 sync
+- campaign_snapshots: was empty → ✅ first 13 rows inserted Feb 19
+- 100x spend display bug: reported to Jaime, fix is in dashboard code (not agent)
+
+## 2026-02-18 — Cycles #8-9 Summary (Monitoring + chat.txt Audit)
+
+> Condensed from 2 detailed entries during Cycle #14 memory maintenance.
+
+- **Cycle #8 (P4 — Business Monitoring):** 1 ACTIVE (Denver V2 ROAS 8.40×), 12 PAUSED. No anomalies. Pacing/ROAS trend/TM One all SKIPPED (pipeline gaps still present pre-Feb-19 sync). `/api/health` confirmed as 404 (endpoint doesn't exist — not critical). Ingest endpoint alive (401 on unauthenticated POST).
+- **Cycle #9 (P2 — Prompt Audit: chat.txt):** Fixed 6 gaps in chat.txt: (1) missing `purchase_roas` parsing guide, (2) missing Revenue/CPA formulas, (3) missing error handling with Meta error codes, (4) incomplete write verification fields, (5) missing Supabase REST reference, (6) missing Alerts endpoint. Also added `date_preset=today` empty response fallback. File grew 236→291 lines. All 3 prompts cross-checked — fully consistent.
+
+## 2026-02-19 — Cycles #10-11 Summary (First Pacing + Infra Audit)
+
+> Condensed from 2 detailed entries during Cycle #14 memory maintenance. See git history for originals.
+
+- **Cycle #10 (P4 — Business Monitoring):** First pacing check (now unblocked). Denver V2 at **37.3% pacing** ($2,240 of $6,000 expected over 8 days × $750/day) — underpacing flag. KYBBA pacing skipped (extensive pause history makes raw pacing meaningless). Discovered **spend freeze**: both ACTIVE campaigns at identical spend for 24+ hours. Discovered **/api/alerts blocked by Clerk auth** (307 redirect — needs `publicRoutes` fix in `middleware.ts`, Jaime's Next.js app). Noted pacing methodology limitation: start_time-based formula fails for campaigns with pause history; daily spend deltas from snapshots are better (future improvement). Drafted Telegram message with findings.
+- **Cycle #11 (P6 — Infrastructure Check):** Full credential audit (all set except TM One). Endpoint health: `/api/health` GET → 404 (definitive: endpoint doesn't exist), `/api/ingest` POST → 401/400 ✅ (alive), `/api/alerts` POST → 307 ❌ (Clerk bug persists). Claude CLI at v2.1.47. Session cache fresh (06:03, within 24h). **Data consistency verified**: session cache ↔ Supabase values match for Denver V2 and KYBBA (spend, daily_budget, start_time). Pipeline healthy end-to-end. Noted Supabase column is `name` not `campaign_name`.
+
+**Key findings preserved:**
+- 🔴 `/api/alerts` Clerk auth bug — blocks all dashboard alerts (persisted Cycles #10-11). Fix: add `/api/alerts` to `publicRoutes` in `middleware.ts`
+- 🔴 Spend freeze: Denver V2 stuck at $2,240, KYBBA at $2,069 for 24+ hours. Sync running but Meta returning same values
+- Pacing methodology: start_time-based formula unreliable for campaigns with pause history → use daily spend deltas from snapshots when available
+- Claude CLI: v2.1.47 at `/Users/jaimeortiz/.local/bin/claude`
+- `/api/health` definitively returns 404 — endpoint doesn't exist, not critical
+
+## 2026-02-19 — Cycle #12 (Prompt Audit: command.txt)
 - **Priority chosen:** P2 — Self-Improvement (Prompts)
 - **What I audited or read:**
-  - prompts/think.txt (full read + cross-check against MEMORY.md and command.txt)
-  - prompts/command.txt (full read for field name consistency)
-  - prompts/chat.txt (full read for API version, credential paths, client slugs)
-  - MEMORY.md (full read for cross-reference)
-  - session/last-campaigns.json (current state: 1 ACTIVE, 12 PAUSED)
-  - .env (confirmed INGEST_URL format ends with /api/ingest)
-- **Bugs found and fixed:**
-  1. **P6 health check URL bug in think.txt**: `$INGEST_URL/api/health` was wrong because INGEST_URL=`https://...railway.app/api/ingest` — concatenating `/api/health` produced `.../api/ingest/api/health`. Fixed to extract BASE_URL first with `${INGEST_URL%/api/ingest}`, then use `$BASE_URL/api/health`. This would have caused every P6 infra check to test a non-existent endpoint.
-  2. **MEMORY.md alerts endpoint inconsistency**: Said `{ secret, message, level, client_slug? }` but actual endpoint (verified Cycle #5) only accepts `{ secret, message, level }`. Removed the stale `client_slug?` reference.
-  3. **Missing P4 campaign status change detection**: think.txt P4 checked ROAS/spend/pacing but had no guidance for detecting ACTIVE↔PAUSED transitions between cycles. Added section to compare current session cache against previous cycle notes and flag unexpected reactivations.
-- **Cross-check results (no action needed):**
-  - API version v21.0 consistent across all files ✓
+  - prompts/command.txt (full read — 294 lines pre-edit, 316 lines post-edit)
+  - prompts/chat.txt (full read for cross-check — 291 lines)
+  - prompts/think.txt (full read for cross-check — 156 lines)
+  - MEMORY.md (full read for consistency check)
+  - session/last-campaigns.json (13 campaigns, current state reference)
+- **Gaps found and fixed in command.txt (4 changes):**
+  1. **Verify-after-write missing `effective_status` and `lifetime_budget`**: The POST-write verification query had `fields=id,name,status,daily_budget` — missing `effective_status` (shows true operational state) and `lifetime_budget`. chat.txt already had these. Fixed to match. Without `effective_status`, the agent wouldn't catch campaigns blocked by billing/account issues after a write.
+  2. **Error handling lacked specific Meta error codes**: Had generic 5-rule list ("Auth errors: re-read token"). chat.txt had detailed error codes (190, 32/4/17, 100, 10/200). Synced command.txt to same level of detail — now both prompts handle the same error codes consistently. Added "never expose raw API errors" rule.
+  3. **Supabase section missing useful queries**: Only had basic "read campaigns" and "read events". Added: ACTIVE-only filter query, campaign snapshots query (for trend analysis), and column naming note (`name` not `campaign_name`). The think loop and monitoring already use snapshot queries — having them in command.txt means the sync agent can verify snapshots were created.
+  4. **Session cache missing freshness guidance**: Added note clarifying files are bare JSON arrays with no `scraped_at` wrapper, and to use file mtime for freshness checks. This resolves the recurring confusion in P4 monitoring cycles about how to check data age.
+- **Cross-prompt fix (chat.txt):**
+  - chat.txt line 80 insights query was missing `actions` field, but line 97 referenced CPA calculation from `actions` array. Added `actions` to the insights fields list. Without this, any CPA calculation would fail silently (the data wouldn't be in the API response).
+- **MEMORY.md update:**
+  - Added Supabase column naming note (`name` not `campaign_name`) to Data Storage Conventions. This was flagged in Cycle #11 as missing.
+- **Cross-check results (no issues found):**
+  - API version v21.0 consistent across all 3 prompts ✓
   - Ad account ID consistent ✓
-  - Client slug mappings serve different purposes in chat.txt (user aliases) vs command.txt (campaign name patterns) — intentional, not a bug
-  - Credential path fallback order differs slightly between prompts — acceptable, different contexts
-  - Supabase URL in MEMORY.md vs .env — fine as reference material
-- **Next priority:** P3 — Memory Maintenance. Clean up MEMORY.md (remove any stale items, consolidate learnings from Cycles #0-6). Alternatively P4 if a fresh data sync happens first.
+  - Client slug mappings consistent (command.txt=name patterns, chat.txt=user aliases) ✓
+  - Safety guardrails consistent ✓
+  - Campaign strategy 3-Day Rule consistent ✓
+  - Alerts endpoint `{ secret, message, level }` only — consistent ✓
+  - Credential path `../.env.local` consistent ✓
+  - `effective_status` filter note — now consistent across command.txt and chat.txt ✓
+- **Gaps noted for future cycles (not fixed this cycle):**
+  - **command.txt insights query also missing `actions` field** — not critical for sync (ingest doesn't have a `purchases` field), but would enable purchase-count tracking in session cache. Worth a P5 proposal.
+  - **Session cache has no `purchases` field** — blocks CPA monitoring in think loop. Related to above.
+  - command.txt grew from 294 → 316 lines — all additions are operational guidance, no bloat.
+- **No Telegram draft** — routine prompt improvement, no business anomaly.
+- **Next priority:** P3 — Memory Maintenance. LEARNINGS.md is now 12 cycles long (~380 lines) and growing. Consider condensing early cycles (#0-3) into a summary. Also check if proposals.md needs updating. Alternatively P4 (Business Monitoring) — campaign_snapshots should now have 2 days of data (Feb 19-20 if another sync ran). Avoid P2 next cycle per rotation rule.
 
-## 2026-02-18 — Cycle #7 (Memory Maintenance)
-- **Priority chosen:** P3 — Memory Maintenance
+## 2026-02-19 12:31 CST — Cycle #13 (Business Monitoring)
+- **Priority chosen:** P4 — Business Monitoring
 - **What I audited or read:**
-  - LEARNINGS.md (full read — Cycles #0-6, 137 lines)
-  - MEMORY.md (full read — 104 lines)
-  - session/last-campaigns.json (full read — 13 campaigns, scraped_at 2026-02-18T00:00:00Z, file modified 13:34 today)
-  - session/proposals.md (full read — 6 proposals with status tracking)
-  - src/scheduler.ts (read-only — verified cron schedule timings)
-  - Supabase meta_campaigns (queried: daily_budget STILL null for all 13, start_time STILL null for all 13)
-  - Supabase campaign_snapshots (queried: STILL empty — zero rows)
-- **Inconsistencies found and fixed:**
-  1. **"Cycle #7" phantom references:** MEMORY.md and proposals.md referenced "Cycle #7" but LEARNINGS.md only had Cycles #0-6. These were written during an earlier session that updated memory files but didn't log a LEARNINGS entry. Now resolved — this IS Cycle #7.
-  2. **Known Data Pipeline Gaps section outdated:** Said "daily_budget is null for ALL campaigns" without distinguishing session cache (has data for 11/13) from Supabase (null for ALL 13). Rewrote with precise per-system status.
-  3. **start_time clarification:** Previously lumped with daily_budget as "same status." Clarified that start_time has a DIFFERENT problem — it's not being fetched from Meta API at all (not just a POST mapping issue). This is important for whoever fixes it next.
-  4. **Proposals Status — P6 wording:** Changed "PARTIALLY RESOLVED" → "RESOLVED" (KYBBA slug fix is complete, not partial).
-  5. **Missing scheduler timing:** Added scheduler cron details to Things To Remember (TM 2h, Meta 6h, Think 30min 8am-10pm, Heartbeat 1min).
-  6. **Session cache precision:** Added note in Data Storage Conventions about the session-vs-Supabase gap for daily_budget_cents.
-  7. **Proposals.md "partially stale" note:** Cleaned up redundant wording in Things To Remember — now points to Proposals Status section instead.
-- **Supabase verification results:**
-  - daily_budget: null × 13 in Supabase (session cache has values for 11/13 — Beamina V3 and KYBBA Miami are null)
-  - start_time: null × 13 in both Supabase AND session cache (not fetched from Meta API at all)
-  - campaign_snapshots: 0 rows (table exists, no insertion logic)
-  - spend values in Supabase are in cents and match expected conversions (224000 = $2,240)
-- **What I did NOT change:**
-  - LEARNINGS.md early cycles (#0-#3): still useful as historical context and contain specific technical lessons. Not worth trimming yet.
-  - proposals.md "Cycle #7" references: now consistent since this IS Cycle #7.
-  - No stale campaign data to remove — landscape hasn't changed (1 ACTIVE Denver V2, 12 PAUSED).
-- **No Telegram draft** — routine memory maintenance, no business anomalies.
-- **Next priority:** P4 — Business Monitoring. Session cache is from today, so data is fresh enough. Run pacing check on Denver V2 (the one ACTIVE campaign). Note: pacing will be blocked without start_time, but ROAS check and status change detection should work.
+  - LEARNINGS.md (full read — Cycles #0-12, 370 lines)
+  - MEMORY.md (full read)
+  - session/last-campaigns.json (13 campaigns, file modified Feb 19 06:03)
+  - Supabase meta_campaigns (ACTIVE campaigns: Denver V2 + KYBBA)
+  - Supabase campaign_snapshots (queried Denver V2 and KYBBA history)
+  - Infra: tested /api/ingest (401 ✅), /api/alerts (307 ❌)
+- **Data freshness:**
+  - Session cache modified Feb 19 06:03 — **6.5 hours old** at check time (12:31 CST)
+  - Meta sync runs every 6h → expected at ~12:03, now 28 min overdue. Scheduler may not be running (Mac asleep?) or timing drift. Not alarming yet — will become a concern if cache goes >12h stale.
+- **Campaign health:**
+  - 2 ACTIVE (unchanged): Denver V2 + KYBBA Miami. 11 PAUSED.
+  - **Denver V2:** ROAS 9.82× ($2,240 spend, $750/day budget). ROAS excellent. No quality flags.
+  - **KYBBA Miami:** ROAS 2.73× ($2,069 spend, $100/day budget). Above 2.0 threshold. No quality flags.
+- **Status change detection:**
+  - No changes since Cycle #10. Still 2 ACTIVE, 11 PAUSED. No new campaigns. No deletions.
+- **Pacing check:**
+  - **Denver V2:** days_elapsed = 9 (Feb 10 → Feb 19). expected_spend = $750 × 9 = $6,750. actual = $2,240. **pacing_ratio = 0.332 → UNDERPACING at 33%** (threshold <0.7). This is WORSE than Cycle #10 (was 37.3%) because another day passed with zero spend increase.
+  - **KYBBA Miami:** SKIPPED — campaign has extensive pause history (PAUSED most of Dec-Feb, only recently reactivated). Raw pacing = 32.8% but meaningless. Need daily spend delta from snapshots for real pacing.
+- **🔴 PERSISTENT ANOMALY — Both ACTIVE campaigns have ZERO spend increase:**
+  - Denver V2: spend = $2,240.00 — unchanged since AT LEAST Cycle #1 (Feb 18). Now 30+ hours frozen.
+  - KYBBA Miami: spend = $2,069.22 — also unchanged across multiple cycles.
+  - Session cache WAS refreshed (file modified 06:03 today) so the sync IS running, but Meta returned identical values.
+  - Possible causes: (1) Meta insights API lag/caching, (2) campaigns genuinely not spending (audience exhaustion, billing issue, ad review), (3) insights date_preset returning cumulative totals that haven't updated.
+  - Denver V2 ROAS changed (8.4→9.82) from attribution adjustments, suggesting Meta IS processing this campaign — just not new spend.
+  - **This is now a 2-day freeze on a $750/day campaign.** Expected ~$1,500 in new spend over this period. Getting $0 is a real flag.
+- **ROAS trend check: BLOCKED** — campaign_snapshots has only 1 day (Feb 19). Need 3+ consecutive days. Will be available ~Feb 22.
+- **TM One: SKIPPED** — no last-events.json, credentials still blank.
+- **Open issues (unchanged from Cycle #11, ranked):**
+  1. 🔴 `/api/alerts` Clerk auth bug — still 307 (3rd consecutive cycle). Blocks dashboard alerts. Needs Jaime.
+  2. 🔴 Denver V2 + KYBBA spend frozen for 30+ hours — escalating from 🟡 to 🔴. Both ACTIVE campaigns showing zero spend increase despite running.
+  3. 🟡 Meta sync may be overdue (expected 12:03, now 12:31) — scheduler might not be running.
+  4. 🟡 TM One credentials still blank — blocks event data.
+  5. 🟢 campaign_snapshots 1 day only — auto-unblocks by Feb 22.
+- **No Telegram draft** — Denver spend freeze was already drafted in Cycle #10. No new information that warrants a separate Telegram message. The anomaly is persistent but the diagnosis hasn't changed. Jaime was already alerted.
+- **Next priority:** P3 — Memory Maintenance. LEARNINGS.md is now 13 cycles (~430 lines) and growing fast. Early cycles (#0-3) should be condensed into a summary to keep the file manageable. Also need to update MEMORY.md to note the spend freeze as a tracked issue. Avoid P4 next cycle per rotation rule.
+
+## 2026-02-19 ~13:30 CST — Cycle #14 (Memory Maintenance) [retroactive entry]
+> This cycle ran but did not log itself. Evidence: LEARNINGS.md condensation headers reference "Cycle #14 memory maintenance" and MEMORY.md was updated at 13:33. Logging retroactively from Cycle #15.
+- **Priority chosen:** P3 — Memory Maintenance
+- **Action taken:** Condensed Cycles #0-3, #4-7, #8-9, #10-11 into summaries. Updated MEMORY.md with current campaign landscape, data pipeline status, known issues (ranked), and proposals status. Fixed LEARNINGS.md file size.
+- **Gap:** Did not log its own cycle entry in LEARNINGS.md.
+
+## 2026-02-19 14:30 CST — Cycle #15 (Infrastructure Check)
+- **Priority chosen:** P6 — Infrastructure Check
+- **What I audited or read:**
+  - LEARNINGS.md (full read — Cycles #0-14, 140 lines post-condensation)
+  - MEMORY.md (full read — 119 lines)
+  - session/ directory listing
+  - session/last-campaigns.json mtime (Feb 19 06:03 CST)
+  - .env credentials (all vars checked)
+  - Supabase: meta_campaigns (2 ACTIVE), campaign_snapshots (13 rows, all Feb 19), agent_jobs (last 5)
+  - Process list (`ps aux`) for scheduler/agent processes
+  - Scheduler source (src/scheduler.ts)
+  - Endpoints: /api/ingest (401 ✅), /api/alerts (307 ❌)
+  - Claude CLI: v2.1.47 ✅
+  - Desktop project at `/Users/jaimeortiz/personal meta/outlet-media-desktop/` (separate project, still running PID 78373)
+
+- **🔴 CRITICAL FINDING — Agent scheduler is NOT running:**
+  - **No `outlet-media-app/agent` process found** in ps aux. The scheduler (`startScheduler()` in src/scheduler.ts) uses `node-cron` and must run as a persistent Node process. No such process exists.
+  - **No crontab entries.** No LaunchAgents for the agent.
+  - **Last heartbeat in Supabase agent_jobs:** Feb 18 at 21:11 UTC (15:11 CST). Heartbeats fire every minute. This means the scheduler stopped running at ~15:11 CST on Feb 18 — **over 23 hours ago.**
+  - **Session cache last modified:** Feb 19 06:03 CST. This sync likely came from the separate `outlet-media-desktop` app (PID 78373, running since 8:30 AM Feb 19 from `/Users/jaimeortiz/personal meta/outlet-media-desktop/`). That app has its own `meta-ads.ts` module. However, it hasn't produced a sync since 06:03 either — the 12:00 scheduled sync did not fire.
+  - **Impact:** No Meta syncs, no think cycles (except this one, likely triggered manually or by the desktop app), no TM One checks, no heartbeats. Dashboard data is frozen at 06:03 values. Campaign_snapshots will NOT accumulate new days without syncs.
+  - **To restart:** From the agent directory, run `npm start` (or `npm run dev` for watch mode). This starts `src/index.ts` which calls `startScheduler()`. Needs a persistent terminal or `nohup`/`screen`/`tmux` session.
+
+- **Endpoint status:**
+  - `/api/ingest` POST → 401 ✅ (alive, rejects missing secret as expected)
+  - `/api/alerts` POST → 307 ❌ (Clerk auth redirect — **5th consecutive cycle confirming this bug**). Still needs `publicRoutes` fix in Next.js middleware.ts.
+
+- **Credential status:**
+  - SUPABASE_URL ✅ | SUPABASE_SERVICE_ROLE_KEY ✅
+  - TELEGRAM_BOT_TOKEN ✅ | TELEGRAM_CHAT_ID ✅
+  - TM_EMAIL ❌ (blank) | TM_PASSWORD ❌ (blank) — unchanged, still blocks TM One
+
+- **Supabase data consistency:**
+  - meta_campaigns `updated_at` = `2026-02-19T12:03:55+00:00` (06:03 CST) — matches session cache mtime. No update since.
+  - Denver V2: $2,240 spend, ROAS 9.82× — unchanged
+  - KYBBA: $2,069 spend, ROAS 2.73× — unchanged
+  - Spend freeze continues (now 36+ hours with no change on Denver V2 — a $750/day campaign)
+  - campaign_snapshots: still only 13 rows dated 2026-02-19 (no new dates — syncs not running)
+
+- **Desktop app note:** `outlet-media-desktop` at `/Users/jaimeortiz/personal meta/outlet-media-desktop/` is a separate, more complex autonomous agent framework (has orchestrator.ts, self-rewrite.ts, security-policy.ts, etc.). PID 78373, running since 8:30 AM. It may have triggered the 06:03 sync but is NOT a replacement for the `outlet-media-app/agent` scheduler — different codebase, no shared session directory.
+
+- **Updated Known Issues (ranked):**
+  1. 🔴 **Scheduler down** — agent not running, no syncs/heartbeats since ~15:11 CST Feb 18. Data stale 8.5h+. Needs `npm start` in a persistent terminal. **NEW — highest priority.**
+  2. 🔴 `/api/alerts` Clerk auth bug — still 307 (5th cycle). Blocks dashboard alerts. Needs Jaime.
+  3. 🔴 Spend freeze — Denver V2 + KYBBA both frozen 36+ hours. Cannot diagnose without fresh syncs (see #1).
+  4. 🟡 TM One credentials blank — blocks event data.
+  5. 🟢 campaign_snapshots 1 day only — blocked by #1 (no syncs = no new snapshot rows).
+
+- **Telegram draft written** — scheduler being down is a real infrastructure issue affecting data freshness and monitoring. Jaime needs to restart the agent.
+- **Next priority:** P2 — Self-Improvement (Prompt Audit). chat.txt is next in rotation (command.txt done Cycle #12, chat.txt done Cycle #9, think.txt done Cycle #6). Alternatively P4 if scheduler is restarted and fresh data arrives. But scheduler restart requires Jaime — agent can't self-heal this.
+
+## 2026-02-19 15:00 CST — Cycle #16 (Prompt Audit: chat.txt)
+- **Priority chosen:** P2 — Self-Improvement (Prompt Audit: chat.txt)
+- **What I audited or read:**
+  - LEARNINGS.md (full read — Cycles #0-15, ~197 lines)
+  - MEMORY.md (full read — 119 lines)
+  - prompts/chat.txt (full read — 291 lines pre-edit, 314 lines post-edit)
+  - prompts/command.txt (full read for cross-check — 316 lines)
+  - prompts/think.txt (full read for cross-check — 156 lines)
+  - session/last-campaigns.json (13 campaigns, file modified Feb 19 06:03)
+- **Gaps found and fixed in chat.txt (3 changes):**
+  1. **Context bleed warning missing**: command.txt had protection against LangGraph/LinkedIn/YouTube SaaS context contamination from other Claude projects on Jaime's machine. chat.txt had none. Added the same warning block after line 1. Without this, the Telegram agent could hallucinate about unrelated projects.
+  2. **Supabase section too basic (4 sub-fixes)**: (a) Added column naming note (`name` not `campaign_name`) — prevents silent query failures. (b) Added ACTIVE-only filter query (`status=eq.ACTIVE`). (c) Added campaign_snapshots query for ROAS trend analysis. (d) Expanded default select to include `daily_budget,start_time`. Previously only had one basic "read all campaigns" query with limited fields. Now matches command.txt's Supabase section.
+  3. **Session cache freshness note missing**: Added note explaining session files are bare JSON arrays — use `ls -la` mtime, not file contents, to check data freshness. If Jaime asks "when was data last updated?" via Telegram, the agent now knows how to answer.
+- **Cross-check results (no issues found):**
+  - API version v21.0 consistent across all 3 prompts ✓
+  - Ad account ID consistent ✓
+  - `effective_status` filter notes consistent ✓
+  - Safety guardrails consistent ✓
+  - Campaign strategy 3-Day Rule consistent ✓
+  - Alerts endpoint `{ secret, message, level }` consistent ✓
+  - Credential path `../.env.local` consistent ✓
+  - Column naming note now in both chat.txt and command.txt ✓
+  - Context bleed warning now in both chat.txt and command.txt ✓
+  - `actions` field in insights query present in chat.txt line 83 (verified — Cycle #12 fix was applied) ✓
+- **Verified Cycle #12 claim:** Cycle #12 logged "Added `actions` to chat.txt insights fields list." Confirmed present at line 83: `fields=...purchase_roas,actions&date_preset=last_30d`. The fix WAS applied correctly.
+- **No issues deferred** — all identified gaps fixed this cycle.
+- **chat.txt grew from 291 → 314 lines** — all additions are operational guidance, no bloat.
+- **Prompt audit rotation status:** command.txt (Cycle #12), chat.txt (Cycle #16 — this cycle), think.txt (Cycle #6). think.txt is most stale but was already comprehensive. Next prompt audit should target think.txt.
+- **Known issues unchanged from Cycle #15:** Scheduler down, /api/alerts Clerk bug, spend freeze, TM One blank. No new findings this cycle.
+- **No Telegram draft** — routine prompt improvement, no business anomaly.
+- **Next priority:** P4 — Business Monitoring (or P3 Memory Maintenance). P4 is due — session cache is now 9 hours stale but still worth checking for status changes. Alternatively P3 if LEARNINGS.md needs condensation. Avoid P2 next cycle per rotation rule.
+
+## 2026-02-19 ~16:00 CST — Cycle #17 (Business Monitoring)
+- **Priority chosen:** P4 — Business Monitoring
+- **What I audited or read:**
+  - LEARNINGS.md (full read — Cycles #0-16, ~229 lines)
+  - MEMORY.md (full read — 119 lines)
+  - session/last-campaigns.json (13 campaigns, file modified Feb 19 06:03 CST)
+  - Supabase: meta_campaigns (2 ACTIVE), campaign_snapshots (all 2026-02-19 only), agent_jobs (last 5 heartbeats)
+  - Endpoints: /api/ingest (401 ✅), /api/alerts (307 ❌ — 6th consecutive cycle)
+  - Process list (ps aux): no agent scheduler, only desktop app PID 78373 + esbuild watcher
+- **Data freshness:**
+  - Session cache modified Feb 19 06:03 CST — **~10 hours old** at check time. Growing staler.
+  - Supabase `updated_at` matches: 2026-02-19T12:03:55 UTC (06:03 CST). No new syncs.
+  - Last heartbeat: Feb 18 21:11 UTC (15:11 CST) — **~25 hours ago**. Scheduler confirmed still down.
+- **Campaign health:**
+  - 2 ACTIVE (unchanged): Denver V2 (ROAS 9.82×, $2,240 spend) + KYBBA Miami (ROAS 2.73×, $2,069 spend)
+  - 11 PAUSED (unchanged). No status transitions detected. No new campaigns.
+  - Both ROAS above 2.0 threshold ✅
+- **Pacing check:**
+  - **Denver V2:** days_elapsed = 9 (Feb 10→Feb 19). expected = $750 × 9 = $6,750. actual = $2,240. **pacing_ratio = 0.332 → 33.2% — SEVERELY UNDERPACING.** Worse than Cycle #10 (37.3%) and Cycle #13 (33.2%) simply because expected spend keeps growing while actual is frozen.
+  - **KYBBA:** SKIPPED — extensive pause history makes raw pacing meaningless. Only 1 snapshot day, can't do delta pacing.
+- **🔴 Spend freeze — now 40+ hours:**
+  - Denver V2: $2,240.00 — unchanged since AT LEAST Cycle #1 (Feb 18 ~15:00 CST).
+  - KYBBA: $2,069.22 — also unchanged.
+  - Session cache WAS refreshed at 06:03 today (desktop app likely ran sync) but Meta returned identical values. No further syncs since — scheduler is down.
+  - **With scheduler down, we can't distinguish between "Meta API returning frozen data" vs "we're just not checking."** This is a diagnostic blind spot.
+- **ROAS trend check:** BLOCKED — still only 1 snapshot date (2026-02-19). No new snapshots created because scheduler is down. Will remain blocked indefinitely until scheduler restarts.
+- **TM One:** SKIPPED — no last-events.json, credentials still blank.
+- **🔧 Schema discovery (MEMORY.md update):**
+  - Discovered actual column names via failed queries this cycle:
+    - `campaign_snapshots.spend` NOT `spend_cents` — value is in cents but column is just `spend`
+    - `agent_jobs.agent_id` NOT `job_type` — use `created_at` for ordering (not `started_at` which can be null)
+  - Updated MEMORY.md Supabase section with correct column listings for campaign_snapshots and agent_jobs. This prevents future query errors in P4 monitoring cycles.
+- **Known issues (unchanged from Cycle #15/16, ranked):**
+  1. 🔴 **Scheduler down** — 25h+ without heartbeat. Blocks all syncs, snapshots, and trend analysis. Needs Jaime.
+  2. 🔴 `/api/alerts` Clerk auth bug — 307 redirect (6th consecutive cycle). Blocks dashboard alerts. Needs Jaime.
+  3. 🔴 **Spend freeze** — Both ACTIVE campaigns at identical spend for 40+ hours. Cannot diagnose further without fresh syncs (#1). Denver V2 pacing at 33% of expected ($2,240 vs $6,750).
+  4. 🟡 TM One credentials blank — blocks event data.
+  5. 🟢 campaign_snapshots 1 day only — permanently blocked by #1 (no syncs = no new rows).
+- **No Telegram draft** — all issues already flagged in Cycle #15 Telegram draft. No new findings. Sending another message about the same problems would be redundant noise.
+- **Next priority:** P2 — Self-Improvement (think.txt audit). think.txt last audited Cycle #6 — most stale of the three prompts. OR P5 — Knowledge Expansion (proposals.md hasn't been updated since Cycle #4). Avoid P4 next cycle per rotation rule.

@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,6 +12,7 @@ import {
   Megaphone,
   Ticket,
   TrendingUp,
+  ArrowRight,
 } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
@@ -24,7 +24,7 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// ─── Data fetching ─────────────────────────────────────────────────────────
+// --- Data fetching ---
 
 async function getData(slug: string) {
   if (!supabaseAdmin) {
@@ -53,21 +53,19 @@ async function getData(slug: string) {
   return { events, campaigns, fromDb };
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────
+// --- Helpers ---
 
-// Spend from Meta API is stored in cents — divide by 100 for display
 function centsToUsd(cents: number | null) { return cents == null ? null : cents / 100; }
-
 function fmt(n: number) { return n.toLocaleString("en-US"); }
-function fmtUsd(n: number | null) { return n == null ? "—" : "$" + Math.round(n).toLocaleString("en-US"); }
+function fmtUsd(n: number | null) { return n == null ? "--" : "$" + Math.round(n).toLocaleString("en-US"); }
 function fmtNum(n: number | null) {
-  if (n == null) return "—";
+  if (n == null) return "--";
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
   return String(n);
 }
 function fmtDate(d: string | null) {
-  if (!d) return "—";
+  if (!d) return "--";
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
@@ -87,7 +85,7 @@ function statusBadge(s: string) {
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────
+// --- Page ---
 
 export default async function ClientDashboard({ params }: Props) {
   const { slug } = await params;
@@ -108,72 +106,115 @@ export default async function ClientDashboard({ params }: Props) {
     day: "numeric",
   });
 
-  const stats = [
-    { label: "Active Shows",     value: String(events.length),   sub: "Upcoming dates",           icon: CalendarDays },
-    { label: "Tickets Sold",     value: fmt(totalSold),          sub: `of ${fmt(totalCapacity)} available`, icon: Ticket },
-    { label: "Total Gross",      value: fmtUsd(totalGross),      sub: "across all shows",         icon: DollarSign },
-    { label: "Active Campaigns", value: String(campaigns.length),sub: "Facebook + Instagram",     icon: Megaphone },
-    { label: "Ad Spend",         value: fmtUsd(totalSpend),      sub: "total across campaigns",   icon: DollarSign },
-    { label: "Blended ROAS",     value: blendedRoas ? `${blendedRoas}×` : "—", sub: "return on ad spend", icon: TrendingUp },
+  const heroStats = [
+    {
+      label: "Tickets Sold",
+      value: fmt(totalSold),
+      sub: `of ${fmt(totalCapacity)} available`,
+      icon: Ticket,
+      gradient: "from-cyan-500/20 via-cyan-500/5 to-transparent",
+      iconBg: "bg-cyan-500/10",
+      iconColor: "text-cyan-400",
+    },
+    {
+      label: "Total Gross",
+      value: fmtUsd(totalGross),
+      sub: "across all shows",
+      icon: DollarSign,
+      gradient: "from-violet-500/20 via-violet-500/5 to-transparent",
+      iconBg: "bg-violet-500/10",
+      iconColor: "text-violet-400",
+    },
+    {
+      label: "Blended ROAS",
+      value: blendedRoas ? `${blendedRoas}x` : "--",
+      sub: "return on ad spend",
+      icon: TrendingUp,
+      gradient: "from-emerald-500/20 via-emerald-500/5 to-transparent",
+      iconBg: "bg-emerald-500/10",
+      iconColor: "text-emerald-400",
+    },
+  ];
+
+  const secondaryStats = [
+    { label: "Active Shows", value: String(events.length), icon: CalendarDays },
+    { label: "Active Campaigns", value: String(campaigns.length), icon: Megaphone },
+    { label: "Ad Spend", value: fmtUsd(totalSpend), icon: DollarSign },
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Top bar */}
-      <div className="border-b border-border/60">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-7 w-7 rounded bg-foreground text-background flex items-center justify-center text-xs font-bold">
-              {clientName.charAt(0)}
-            </div>
-            <div>
-              <p className="text-sm font-semibold leading-none">{clientName}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Campaign Dashboard</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {fromDb ? (
-              <>
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
-                <span className="text-xs text-muted-foreground">Live · Updated {now}</span>
-              </>
-            ) : (
-              <>
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
-                <span className="text-xs text-muted-foreground">Mock data · {now}</span>
-              </>
-            )}
-          </div>
+    <>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">{clientName} Overview</h1>
+          <p className="text-sm text-muted-foreground mt-1">{now}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {fromDb ? (
+            <>
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+              <span className="text-xs text-muted-foreground">Live data</span>
+            </>
+          ) : (
+            <>
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
+              <span className="text-xs text-muted-foreground">No data yet</span>
+            </>
+          )}
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-8 space-y-10">
+      {/* Hero stat cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
+        {heroStats.map(({ label, value, sub, icon: Icon, gradient, iconBg, iconColor }) => (
+          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5">
+            <div className={`absolute inset-0 bg-gradient-to-br ${gradient} pointer-events-none`} />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
+                <div className={`h-8 w-8 rounded-lg ${iconBg} flex items-center justify-center`}>
+                  <Icon className={`h-4 w-4 ${iconColor}`} />
+                </div>
+              </div>
+              <p className="text-3xl font-bold tracking-tight">{value}</p>
+              <p className="text-xs text-muted-foreground mt-1">{sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-          {stats.map(({ label, value, sub, icon: Icon }) => (
-            <Card key={label} className="border-border/60">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  {label}
-                </CardTitle>
-                <Icon className="h-4 w-4 text-muted-foreground/60" />
-              </CardHeader>
-              <CardContent>
-                <p className="text-3xl font-bold tracking-tight">{value}</p>
-                <p className="text-xs text-muted-foreground mt-1">{sub}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      {/* Secondary stats */}
+      <div className="grid grid-cols-3 gap-4 mb-10">
+        {secondaryStats.map(({ label, value, icon: Icon }) => (
+          <div key={label} className="rounded-lg border border-border/40 bg-card/50 p-4 flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0">
+              <Icon className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-lg font-semibold">{value}</p>
+              <p className="text-[11px] text-muted-foreground">{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
-        {/* Shows */}
-        <div>
-          <h2 className="text-sm font-semibold mb-3">Your Shows</h2>
-          <Card className="border-border/60">
+      {/* Shows table */}
+      <div className="mb-10">
+        <h2 className="text-sm font-semibold mb-3">Your Shows</h2>
+        {events.length === 0 ? (
+          <div className="rounded-xl border border-border/60 bg-card p-12 text-center">
+            <div className="mx-auto h-10 w-10 rounded-full bg-white/[0.06] flex items-center justify-center mb-3">
+              <CalendarDays className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">No shows synced yet</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Event data syncs from Ticketmaster automatically</p>
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="border-border/60 hover:bg-transparent">
+                <TableRow className="border-border/40 hover:bg-transparent">
                   <TableHead className="text-xs font-medium text-muted-foreground w-28">TM1 #</TableHead>
                   <TableHead className="text-xs font-medium text-muted-foreground">Event / Venue</TableHead>
                   <TableHead className="text-xs font-medium text-muted-foreground">City</TableHead>
@@ -189,15 +230,13 @@ export default async function ClientDashboard({ params }: Props) {
                   const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : 0;
                   const barColor = pct >= 90 ? "bg-emerald-500" : pct >= 60 ? "bg-amber-500" : "bg-zinc-500";
                   return (
-                    <TableRow key={e.id} className="border-border/60">
+                    <TableRow key={e.id} className="border-border/40">
                       <TableCell className="font-mono text-xs text-muted-foreground">
-                        {e.tm1_number || "—"}
+                        {e.tm1_number || "--"}
                       </TableCell>
                       <TableCell>
-                        <div>
-                          <p className="text-sm font-medium">{e.name}</p>
-                          <p className="text-xs text-muted-foreground">{e.venue}</p>
-                        </div>
+                        <p className="text-sm font-medium">{e.name}</p>
+                        <p className="text-xs text-muted-foreground">{e.venue}</p>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{e.city}</TableCell>
                       <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
@@ -205,7 +244,7 @@ export default async function ClientDashboard({ params }: Props) {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2 min-w-[100px]">
-                          <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                          <div className="flex-1 h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
                             <div className={`h-full rounded-full ${barColor}`} style={{ width: `${pct}%` }} />
                           </div>
                           <span className="text-xs tabular-nums text-muted-foreground w-8 text-right">{pct}%</span>
@@ -223,76 +262,85 @@ export default async function ClientDashboard({ params }: Props) {
                 })}
               </TableBody>
             </Table>
-          </Card>
-        </div>
-
-        {/* Campaigns */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold">Active Ad Campaigns</h2>
-            <a
-              href={`/client/${slug}/campaigns`}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              View all campaigns →
-            </a>
           </div>
+        )}
+      </div>
+
+      {/* Campaigns */}
+      <div className="mb-10">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-semibold">Active Ad Campaigns</h2>
+          <a
+            href={`/client/${slug}/campaigns`}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            View all campaigns <ArrowRight className="h-3 w-3" />
+          </a>
+        </div>
+        {campaigns.length === 0 ? (
+          <div className="rounded-xl border border-border/60 bg-card p-12 text-center">
+            <div className="mx-auto h-10 w-10 rounded-full bg-white/[0.06] flex items-center justify-center mb-3">
+              <Megaphone className="h-5 w-5 text-muted-foreground" />
+            </div>
+            <p className="text-sm text-muted-foreground">No campaigns yet</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Campaign data syncs automatically every 6 hours</p>
+          </div>
+        ) : (
           <div className="space-y-3">
             {campaigns.map((c) => (
-              <Card key={c.id} className="border-border/60">
-                <CardContent className="py-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0" />
-                        <p className="text-sm font-medium truncate">{c.name}</p>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{c.objective}</p>
+              <div key={c.id} className="rounded-xl border border-border/60 bg-card p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                        c.status === "ACTIVE" || c.status === "active" ? "bg-emerald-400" : "bg-amber-400"
+                      }`} />
+                      <p className="text-sm font-medium truncate">{c.name}</p>
                     </div>
-                    <div className="flex gap-6 shrink-0 sm:text-right">
-                      <div>
-                        <p className="text-xs text-muted-foreground">Ad Spend</p>
-                        <p className="text-sm font-medium tabular-nums">{fmtUsd(centsToUsd(c.spend))}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Revenue</p>
-                        <p className="text-sm font-medium tabular-nums">
-                          {c.spend != null && c.roas != null ? fmtUsd(centsToUsd(c.spend)! * c.roas) : "—"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">ROAS</p>
-                        <p className={`text-sm font-semibold tabular-nums ${
-                          (c.roas ?? 0) >= 4 ? "text-emerald-400" : (c.roas ?? 0) >= 2 ? "text-amber-400" : "text-red-400"
-                        }`}>
-                          {c.roas != null ? c.roas.toFixed(1) + "×" : "—"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Impressions</p>
-                        <p className="text-sm font-medium tabular-nums">{fmtNum(c.impressions)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">CTR</p>
-                        <p className="text-sm font-medium tabular-nums">
-                          {c.ctr != null ? (c.ctr * 100).toFixed(1) + "%" : "—"}
-                        </p>
-                      </div>
+                    <p className="text-xs text-muted-foreground">{c.objective}</p>
+                  </div>
+                  <div className="flex gap-6 shrink-0 sm:text-right">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Ad Spend</p>
+                      <p className="text-sm font-medium tabular-nums">{fmtUsd(centsToUsd(c.spend))}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Revenue</p>
+                      <p className="text-sm font-medium tabular-nums">
+                        {c.spend != null && c.roas != null ? fmtUsd(centsToUsd(c.spend)! * c.roas) : "--"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">ROAS</p>
+                      <p className={`text-sm font-semibold tabular-nums ${
+                        (c.roas ?? 0) >= 4 ? "text-emerald-400" : (c.roas ?? 0) >= 2 ? "text-amber-400" : "text-red-400"
+                      }`}>
+                        {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Impressions</p>
+                      <p className="text-sm font-medium tabular-nums">{fmtNum(c.impressions)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">CTR</p>
+                      <p className="text-sm font-medium tabular-nums">
+                        {c.ctr != null ? c.ctr.toFixed(2) + "%" : "--"}
+                      </p>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             ))}
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="border-t border-border/60 pt-6 flex items-center justify-between text-xs text-muted-foreground">
-          <span>Powered by Outlet Media</span>
-          <span>Data updates every 2 hours via autonomous agent</span>
-        </div>
-
+        )}
       </div>
-    </div>
+
+      {/* Footer */}
+      <div className="border-t border-border/40 pt-6 flex items-center justify-between text-xs text-muted-foreground">
+        <span>Powered by Outlet Media</span>
+        <span>Data updates every 2 hours via autonomous agent</span>
+      </div>
+    </>
   );
 }
