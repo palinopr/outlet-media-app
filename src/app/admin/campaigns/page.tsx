@@ -96,6 +96,11 @@ function RoasBadge({ roas }: { roas: number | null }) {
   return <span className={`text-sm font-semibold tabular-nums ${color}`}>{roas.toFixed(1)}×</span>;
 }
 
+function fmtObjective(raw: string | null) {
+  if (!raw) return null;
+  return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function slugToLabel(slug: string | null) {
   if (!slug) return "—";
   return slug.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
@@ -208,7 +213,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-xs text-muted-foreground">{slugToLabel(c.client_slug)}</span>
                         <span className="text-xs text-muted-foreground/50">·</span>
-                        <span className="text-xs text-muted-foreground">{c.objective}</span>
+                        <span className="text-xs text-muted-foreground">{fmtObjective(c.objective)}</span>
                       </div>
                     </div>
                   </TableCell>

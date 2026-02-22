@@ -152,7 +152,7 @@ export default async function EventsPage({ searchParams }: Props) {
           { label: "Total Shows", value: String(events.length), icon: CalendarDays, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
           { label: "Tickets Sold", value: totalSold.toLocaleString(), icon: Ticket, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
           { label: "Sell-through", value: totalCap > 0 ? `${avgSellPct}%` : "---", icon: TrendingUp, accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
-          { label: "Total Gross", value: fmtUsd(totalGross > 0 ? totalGross : null), icon: DollarSign, accent: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-400" },
+          { label: "Total Gross", value: fmtUsd(totalGross > 0 ? totalGross : null), icon: DollarSign, accent: "from-rose-500/20 to-pink-500/20", iconColor: "text-rose-400" },
         ].map(({ label, value, icon: Icon, accent, iconColor }) => (
           <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-4">
             <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />

@@ -153,7 +153,7 @@ export default async function ClientsPage() {
           { ...stats[0], accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
           { ...stats[1], accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
           { ...stats[2], accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
-          { ...stats[3], accent: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-400" },
+          { ...stats[3], accent: "from-rose-500/20 to-pink-500/20", iconColor: "text-rose-400" },
         ].map(({ label, value, sub, icon: Icon, accent, iconColor }) => (
           <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5">
             <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />

@@ -99,6 +99,10 @@ async function getData() {
 function centsToUsd(cents: number | null) { return cents == null ? null : cents / 100; }
 function fmt(n: number) { return n.toLocaleString("en-US"); }
 function fmtUsd(n: number | null) { return n == null ? "---" : "$" + Math.round(n).toLocaleString("en-US"); }
+function fmtObjective(raw: string | null) {
+  if (!raw) return null;
+  return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
 function fmtDate(d: string | null) {
   if (!d) return "---";
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
@@ -238,7 +242,7 @@ export default async function AdminDashboard() {
         <Card className="border-border/60">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Blended ROAS Trend -- All Clients
+              Blended ROAS Trend
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -339,7 +343,7 @@ export default async function AdminDashboard() {
                           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0 animate-pulse" />
                           <p className="text-sm font-medium truncate">{c.name}</p>
                         </div>
-                        <p className="text-xs text-muted-foreground">{c.objective}</p>
+                        <p className="text-xs text-muted-foreground">{fmtObjective(c.objective)}</p>
                       </div>
                       <div className="flex gap-6 shrink-0 text-right">
                         <div>

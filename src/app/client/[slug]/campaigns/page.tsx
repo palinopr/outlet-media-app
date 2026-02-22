@@ -69,6 +69,10 @@ function buildTrendData(snapshots: Array<{ snapshot_date: string; roas: number |
 // --- Helpers ---
 
 function centsToUsd(cents: number | null) { return cents == null ? null : cents / 100; }
+function fmtObjective(raw: string | null) {
+  if (!raw) return null;
+  return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 function fmtUsd(n: number | null) {
   if (n == null) return "--";
@@ -155,9 +159,9 @@ export default async function ClientCampaigns({ params }: Props) {
       value: fmtNum(totalImpressions),
       sub: "across all campaigns",
       icon: MousePointerClick,
-      gradient: "from-amber-500/20 via-amber-500/5 to-transparent",
-      iconBg: "bg-amber-500/10",
-      iconColor: "text-amber-400",
+      gradient: "from-rose-500/20 via-rose-500/5 to-transparent",
+      iconBg: "bg-rose-500/10",
+      iconColor: "text-rose-400",
     },
   ];
 
@@ -273,7 +277,7 @@ export default async function ClientCampaigns({ params }: Props) {
                           <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusDot(c.status)}`} />
                           <div>
                             <p className="text-sm font-medium">{c.name}</p>
-                            <p className="text-xs text-muted-foreground">{statusLabel(c.status)} - {c.objective}</p>
+                            <p className="text-xs text-muted-foreground">{statusLabel(c.status)}{fmtObjective(c.objective) ? ` · ${fmtObjective(c.objective)}` : ""}</p>
                           </div>
                         </div>
                       </TableCell>

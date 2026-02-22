@@ -56,6 +56,10 @@ async function getData(slug: string) {
 // --- Helpers ---
 
 function centsToUsd(cents: number | null) { return cents == null ? null : cents / 100; }
+function fmtObjective(raw: string | null) {
+  if (!raw) return null;
+  return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
 function fmt(n: number) { return n.toLocaleString("en-US"); }
 function fmtUsd(n: number | null) { return n == null ? "--" : "$" + Math.round(n).toLocaleString("en-US"); }
 function fmtNum(n: number | null) {
@@ -274,7 +278,7 @@ export default async function ClientDashboard({ params }: Props) {
             href={`/client/${slug}/campaigns`}
             className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
-            View all campaigns <ArrowRight className="h-3 w-3" />
+            {campaigns.length > 5 ? `View all ${campaigns.length}` : "View all"} <ArrowRight className="h-3 w-3" />
           </a>
         </div>
         {campaigns.length === 0 ? (
@@ -287,7 +291,7 @@ export default async function ClientDashboard({ params }: Props) {
           </div>
         ) : (
           <div className="space-y-3">
-            {campaigns.map((c) => (
+            {campaigns.slice(0, 5).map((c) => (
               <div key={c.id} className="rounded-xl border border-border/60 bg-card p-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="min-w-0">
@@ -297,7 +301,7 @@ export default async function ClientDashboard({ params }: Props) {
                       }`} />
                       <p className="text-sm font-medium truncate">{c.name}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground">{c.objective}</p>
+                    <p className="text-xs text-muted-foreground">{fmtObjective(c.objective)}</p>
                   </div>
                   <div className="flex gap-6 shrink-0 sm:text-right">
                     <div>
