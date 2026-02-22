@@ -14,7 +14,6 @@ import {
   Megaphone,
   Ticket,
   TrendingUp,
-  Zap,
   Bot,
   Clock,
   AlertTriangle,
@@ -206,7 +205,7 @@ export default async function AdminDashboard() {
       {/* Hero stat cards */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {heroStats.map(({ label, value, icon: Icon, accent, iconColor }) => (
-          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5">
+          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border/80 hover:shadow-lg hover:shadow-black/20">
             <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />
             <div className="relative">
               <div className="flex items-center justify-between mb-3">
@@ -224,16 +223,19 @@ export default async function AdminDashboard() {
       {/* Secondary stats */}
       <div className="grid grid-cols-3 gap-4">
         {secondaryStats.map(({ label, value, sub, icon: Icon }) => (
-          <Card key={label} className="border-border/60">
-            <CardContent className="pt-4 pb-4">
+          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border/80 hover:shadow-md hover:shadow-black/10">
+            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
+            <div className="relative">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-                <Icon className="h-3.5 w-3.5 text-muted-foreground/40" />
+                <div className="h-7 w-7 rounded-lg bg-white/[0.06] flex items-center justify-center">
+                  <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
               </div>
               <p className="text-xl font-bold tracking-tight">{value}</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         ))}
       </div>
 
@@ -403,8 +405,13 @@ export default async function AdminDashboard() {
                         <Icon className="h-4 w-4 text-muted-foreground" />
                         <span className="text-sm font-medium">{label}</span>
                       </div>
-                      <span className={`inline-flex items-center gap-1 text-xs ${statusColor}`}>
-                        <Zap className="h-3 w-3" />
+                      <span className={`inline-flex items-center gap-1.5 text-xs ${statusColor}`}>
+                        <span className={`h-1.5 w-1.5 rounded-full ${
+                          run?.status === "done" ? "bg-emerald-400 animate-pulse"
+                          : run?.status === "error" ? "bg-red-400"
+                          : run?.status === "running" ? "bg-blue-400 animate-pulse"
+                          : "bg-zinc-600"
+                        }`} />
                         {statusLabel}
                       </span>
                     </div>

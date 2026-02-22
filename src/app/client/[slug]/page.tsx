@@ -172,7 +172,7 @@ export default async function ClientDashboard({ params }: Props) {
       {/* Hero stat cards */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-6">
         {heroStats.map(({ label, value, sub, icon: Icon, gradient, iconBg, iconColor }) => (
-          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5">
+          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border/80 hover:shadow-lg hover:shadow-black/20">
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient} pointer-events-none`} />
             <div className="relative">
               <div className="flex items-center justify-between mb-3">
