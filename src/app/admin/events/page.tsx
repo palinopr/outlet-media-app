@@ -16,6 +16,7 @@ import { Suspense } from "react";
 
 type TmEventRow = Database["public"]["Tables"]["tm_events"]["Row"];
 type DemoRow = Database["public"]["Tables"]["tm_event_demographics"]["Row"];
+type CampaignRow = { name: string; status: string; spend: number | null; roas: number | null };
 
 // ─── Data fetching ─────────────────────────────────────────────────────────
 
@@ -23,9 +24,10 @@ async function getEvents(clientSlug: string | null): Promise<{
   events: TmEventRow[];
   clients: string[];
   demoMap: Record<string, DemoRow>;
+  campaigns: CampaignRow[];
   fromDb: boolean;
 }> {
-  if (!supabaseAdmin) return { events: [], clients: [], demoMap: {}, fromDb: false };
+  if (!supabaseAdmin) return { events: [], clients: [], demoMap: {}, campaigns: [], fromDb: false };
 
   // Distinct client list for the filter dropdown
   const clientsRes = await supabaseAdmin
@@ -43,19 +45,61 @@ async function getEvents(clientSlug: string | null): Promise<{
 
   if (clientSlug) query.eq("client_slug", clientSlug);
 
-  const [{ data, error }, demosRes] = await Promise.all([
+  const [{ data, error }, demosRes, campaignsRes] = await Promise.all([
     query,
     supabaseAdmin.from("tm_event_demographics").select("tm_id, fans_total, fans_female_pct, fans_male_pct, age_25_34_pct, age_35_44_pct"),
+    supabaseAdmin.from("meta_campaigns").select("name, status, spend, roas").not("client_slug", "is", null),
   ]);
 
-  if (error) return { events: [], clients, demoMap: {}, fromDb: false };
+  if (error) return { events: [], clients, demoMap: {}, campaigns: [], fromDb: false };
 
   const demoMap: Record<string, DemoRow> = {};
   for (const d of (demosRes.data ?? []) as DemoRow[]) {
     demoMap[d.tm_id] = d;
   }
 
-  return { events: (data ?? []) as TmEventRow[], clients, demoMap, fromDb: Boolean(data?.length) };
+  return {
+    events: (data ?? []) as TmEventRow[],
+    clients,
+    demoMap,
+    campaigns: (campaignsRes.data ?? []) as CampaignRow[],
+    fromDb: Boolean(data?.length),
+  };
+}
+
+// ─── Campaign-event matching ────────────────────────────────────────────────
+
+const CITY_KEYWORDS = [
+  "Seattle", "Portland", "Inglewood", "Boston", "San Jose", "San Diego",
+  "Phoenix", "West Valley", "Palm Desert", "Anaheim", "Sacramento",
+  "San Francisco", "Glendale", "San Antonio", "Austin", "Miami",
+  "Nashville", "Atlanta", "Washington", "Reading", "Denver", "Dallas",
+];
+
+function campaignCity(name: string): string | null {
+  const lower = name.toLowerCase();
+  return CITY_KEYWORDS.find((c) => lower.includes(c.toLowerCase())) ?? null;
+}
+
+function campaignArtist(name: string): string | null {
+  const lower = name.toLowerCase();
+  if (lower.includes("arjona")) return "Ricardo Arjona";
+  if (lower.includes("camila")) return "Camila";
+  if (lower.includes("alofoke")) return "Alofoke";
+  if (lower.includes("kybba")) return "KYBBA";
+  return null;
+}
+
+function matchedCampaigns(campaigns: CampaignRow[], event: TmEventRow): CampaignRow[] {
+  const eventArtist = (event.artist ?? "").toLowerCase();
+  const eventCity   = (event.city ?? "").toLowerCase();
+  return campaigns.filter((c) => {
+    const cArtist = campaignArtist(c.name)?.toLowerCase();
+    if (!cArtist || !eventArtist.includes(cArtist.split(" ")[0])) return false;
+    const cCity = campaignCity(c.name);
+    if (cCity) return eventCity.includes(cCity.toLowerCase());
+    return true; // no city in campaign name → matches all events of that artist
+  });
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -132,7 +176,7 @@ export default async function EventsPage({ searchParams }: Props) {
   const { client } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
 
-  const { events, clients, demoMap, fromDb } = await getEvents(clientSlug);
+  const { events, clients, demoMap, campaigns, fromDb } = await getEvents(clientSlug);
 
   const totalSold = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
   // Only include events that have capacity data for the sell-through calculation
@@ -224,6 +268,7 @@ export default async function EventsPage({ searchParams }: Props) {
               <TableHead className="text-xs font-medium text-muted-foreground">Sell-through</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">Gross</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">Ads</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">Fans</TableHead>
               <TableHead className="w-8" />
             </TableRow>
@@ -231,7 +276,7 @@ export default async function EventsPage({ searchParams }: Props) {
           <TableBody>
             {events.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={11}>
+                <TableCell colSpan={12}>
                   <div className="flex flex-col items-center justify-center py-16 text-center">
                     <CalendarDays className="h-10 w-10 text-muted-foreground/40 mb-3" />
                     <p className="text-sm font-medium mb-1">No events yet</p>
@@ -267,6 +312,29 @@ export default async function EventsPage({ searchParams }: Props) {
                     <p className="text-sm font-medium tabular-nums">{fmtUsd(e.gross)}</p>
                   </TableCell>
                    <TableCell>{statusBadge(e.status)}</TableCell>
+                   <TableCell>
+                     {(() => {
+                       const linked = matchedCampaigns(campaigns, e);
+                       const active = linked.filter((c) => c.status === "ACTIVE");
+                       if (active.length === 0 && linked.length === 0) {
+                         return <span className="text-muted-foreground">—</span>;
+                       }
+                       if (active.length === 0) {
+                         return <span className="text-xs text-muted-foreground">paused</span>;
+                       }
+                       const avgRoas = active.reduce((s, c) => s + (c.roas ?? 0), 0) / active.length;
+                       const totalSpend = active.reduce((s, c) => s + ((c.spend ?? 0) / 100), 0);
+                       return (
+                         <div>
+                           <span className="text-xs font-medium text-emerald-400">{active.length} active</span>
+                           <div className="text-xs text-muted-foreground tabular-nums">
+                             {avgRoas > 0 ? avgRoas.toFixed(1) + "× · " : ""}
+                             ${Math.round(totalSpend / 1000)}K
+                           </div>
+                         </div>
+                       );
+                     })()}
+                   </TableCell>
                    <TableCell className="text-right">
                      {demoMap[e.tm_id]?.fans_total != null ? (
                        <span className="text-sm tabular-nums font-medium">
