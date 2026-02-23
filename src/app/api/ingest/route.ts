@@ -132,30 +132,37 @@ async function ingestTmEvents(body: IngestPayload) {
     return NextResponse.json({ ok: true, inserted: 0, message: "No events to insert" });
   }
 
-  const rows = events.map((e) => ({
-    tm_id: e.tm_id,
-    tm1_number: e.tm1_number,
-    name: e.name,
-    artist: e.artist,
-    venue: e.venue,
-    city: e.city,
-    date: e.date || null,
-    status: e.status,
-    tickets_sold: e.tickets_sold ?? null,
-    tickets_available: e.tickets_available ?? null,
-    gross: e.gross ?? null,
-    avg_ticket_price: e.avg_ticket_price ?? null,
-    channel_mobile_pct: e.channel_mobile_pct ?? null,
-    channel_internet_pct: e.channel_internet_pct ?? null,
-    channel_box_pct: e.channel_box_pct ?? null,
-    channel_phone_pct: e.channel_phone_pct ?? null,
-    edp_total_views: e.edp_total_views ?? null,
-    edp_avg_daily_views: e.edp_avg_daily_views ?? null,
-    conversion_rate: e.conversion_rate ?? null,
-    url: e.url,
-    scraped_at: e.scraped_at,
-    client_slug: e.client_slug ?? null,
-  }));
+  const rows = events.map((e) => {
+    const base = {
+      tm_id: e.tm_id,
+      tm1_number: e.tm1_number,
+      name: e.name,
+      artist: e.artist,
+      venue: e.venue,
+      city: e.city,
+      date: e.date || null,
+      status: e.status,
+      url: e.url,
+      scraped_at: e.scraped_at,
+      client_slug: e.client_slug ?? null,
+    };
+    // Only include ticket/financial fields when present — omitting them preserves
+    // whatever is already in the DB rather than overwriting with null.
+    return {
+      ...base,
+      ...(e.tickets_sold != null       ? { tickets_sold: e.tickets_sold }             : {}),
+      ...(e.tickets_available != null  ? { tickets_available: e.tickets_available }   : {}),
+      ...(e.gross != null              ? { gross: e.gross }                           : {}),
+      ...(e.avg_ticket_price != null   ? { avg_ticket_price: e.avg_ticket_price }     : {}),
+      ...(e.channel_mobile_pct != null ? { channel_mobile_pct: e.channel_mobile_pct } : {}),
+      ...(e.channel_internet_pct != null ? { channel_internet_pct: e.channel_internet_pct } : {}),
+      ...(e.channel_box_pct != null    ? { channel_box_pct: e.channel_box_pct }       : {}),
+      ...(e.channel_phone_pct != null  ? { channel_phone_pct: e.channel_phone_pct }   : {}),
+      ...(e.edp_total_views != null    ? { edp_total_views: e.edp_total_views }       : {}),
+      ...(e.edp_avg_daily_views != null ? { edp_avg_daily_views: e.edp_avg_daily_views } : {}),
+      ...(e.conversion_rate != null    ? { conversion_rate: e.conversion_rate }       : {}),
+    };
+  });
 
   const { error } = await supabaseAdmin!
     .from("tm_events")
