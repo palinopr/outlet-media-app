@@ -1,6 +1,35 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
+// ─── TM Demographics types ─────────────────────────────────────────────────
+
+interface TmDemographics {
+  tm_id: string;
+  fans_total?: number;
+  fans_female_pct?: number;
+  fans_male_pct?: number;
+  fans_married_pct?: number;
+  fans_with_children_pct?: number;
+  age_18_24_pct?: number;
+  age_25_34_pct?: number;
+  age_35_44_pct?: number;
+  age_45_54_pct?: number;
+  age_over_54_pct?: number;
+  income_0_30k_pct?: number;
+  income_30_60k_pct?: number;
+  income_60_90k_pct?: number;
+  income_90_125k_pct?: number;
+  income_over_125k_pct?: number;
+  education_high_school_pct?: number;
+  education_college_pct?: number;
+  education_grad_school_pct?: number;
+  payment_visa_pct?: number;
+  payment_mc_pct?: number;
+  payment_amex_pct?: number;
+  payment_discover_pct?: number;
+  fetched_at: string;
+}
+
 // ─── TM One types ──────────────────────────────────────────────────────────
 
 interface TmEvent {
@@ -45,12 +74,14 @@ interface MetaCampaign {
 
 interface IngestPayload {
   secret: string;
-  source: "ticketmaster_one" | "meta";
+  source: "ticketmaster_one" | "meta" | "tm_demographics";
   data: {
     // TM One
     events?: TmEvent[];
     // Meta
     campaigns?: MetaCampaign[];
+    // TM Demographics
+    demographics?: TmDemographics[];
     scraped_at: string;
   };
 }
@@ -77,6 +108,10 @@ export async function POST(request: Request) {
 
   if (body.source === "meta") {
     return ingestMetaCampaigns(body);
+  }
+
+  if (body.source === "tm_demographics") {
+    return ingestTmDemographics(body);
   }
 
   return NextResponse.json({ error: "Unknown source" }, { status: 400 });
@@ -203,6 +238,26 @@ async function ingestMetaCampaigns(body: IngestPayload) {
 
   console.log(`Ingest: upserted ${rows.length} Meta campaigns, ${snapshots.length} snapshots`);
   return NextResponse.json({ ok: true, inserted: rows.length, snapshots: snapshots.length });
+}
+
+async function ingestTmDemographics(body: IngestPayload) {
+  const rows = body.data.demographics ?? [];
+
+  if (rows.length === 0) {
+    return NextResponse.json({ ok: true, inserted: 0, message: "No demographics to insert" });
+  }
+
+  const { error } = await supabaseAdmin!
+    .from("tm_event_demographics")
+    .upsert(rows, { onConflict: "tm_id" });
+
+  if (error) {
+    console.error("Supabase upsert error (tm_event_demographics):", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  console.log(`Ingest: upserted ${rows.length} TM demographics rows`);
+  return NextResponse.json({ ok: true, inserted: rows.length });
 }
 
 export async function GET() {

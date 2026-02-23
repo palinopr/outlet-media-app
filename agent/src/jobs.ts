@@ -7,7 +7,8 @@ const POLL_INTERVAL_MS = 5_000; // 5 seconds
 
 // Short task descriptions — command.txt has all the API patterns and context
 const DEFAULT_PROMPTS: Record<string, string> = {
-  "tm-monitor": "Run the TM One monitor: log in to https://one.ticketmaster.com, extract all events, compare to session/last-events.json, POST changes to the ingest endpoint. Report what changed.",
+  "tm-monitor": "Run the TM One monitor: log in to https://one.ticketmaster.com, extract all events, compare to session/last-events.json, POST changes to the ingest endpoint. Then fetch demographics for all events (see command.txt TM One Demographics section) and POST to the ingest endpoint with source tm_demographics. Report what changed.",
+  "tm-demographics": "Fetch TM One demographics for all 26 events. Read MEMORY.md for the surrogate IDs and API patterns. Log in to https://one.ticketmaster.com, then use the browser cookies to call the demographics API endpoint for each event, and POST all results to the ingest endpoint with source tm_demographics. See command.txt TM One Demographics section for the full procedure.",
   "meta-ads": "Run the Meta Ads sync: pull all active campaigns and their last-30-day insights, save to session/last-campaigns.json, POST to the ingest endpoint. Report spend and ROAS summary.",
   "campaign-monitor": "Cross-reference Meta spend against TM1 ticket sales. Read session/last-campaigns.json and session/last-events.json. Calculate ROAS per show. Flag any campaigns below 2.0. Report findings.",
   "assistant": "Answer the question or complete the task described below. Be concise and direct.",

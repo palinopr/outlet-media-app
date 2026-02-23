@@ -742,6 +742,104 @@ export type Database = {
           },
         ]
       }
+      tm_event_demographics: {
+        Row: {
+          age_18_24_pct: number | null
+          age_25_34_pct: number | null
+          age_35_44_pct: number | null
+          age_45_54_pct: number | null
+          age_over_54_pct: number | null
+          created_at: string
+          education_college_pct: number | null
+          education_grad_school_pct: number | null
+          education_high_school_pct: number | null
+          fans_female_pct: number | null
+          fans_male_pct: number | null
+          fans_married_pct: number | null
+          fans_total: number | null
+          fans_with_children_pct: number | null
+          fetched_at: string
+          id: string
+          income_0_30k_pct: number | null
+          income_30_60k_pct: number | null
+          income_60_90k_pct: number | null
+          income_90_125k_pct: number | null
+          income_over_125k_pct: number | null
+          payment_amex_pct: number | null
+          payment_discover_pct: number | null
+          payment_mc_pct: number | null
+          payment_visa_pct: number | null
+          tm_id: string
+          updated_at: string
+        }
+        Insert: {
+          age_18_24_pct?: number | null
+          age_25_34_pct?: number | null
+          age_35_44_pct?: number | null
+          age_45_54_pct?: number | null
+          age_over_54_pct?: number | null
+          created_at?: string
+          education_college_pct?: number | null
+          education_grad_school_pct?: number | null
+          education_high_school_pct?: number | null
+          fans_female_pct?: number | null
+          fans_male_pct?: number | null
+          fans_married_pct?: number | null
+          fans_total?: number | null
+          fans_with_children_pct?: number | null
+          fetched_at?: string
+          id?: string
+          income_0_30k_pct?: number | null
+          income_30_60k_pct?: number | null
+          income_60_90k_pct?: number | null
+          income_90_125k_pct?: number | null
+          income_over_125k_pct?: number | null
+          payment_amex_pct?: number | null
+          payment_discover_pct?: number | null
+          payment_mc_pct?: number | null
+          payment_visa_pct?: number | null
+          tm_id: string
+          updated_at?: string
+        }
+        Update: {
+          age_18_24_pct?: number | null
+          age_25_34_pct?: number | null
+          age_35_44_pct?: number | null
+          age_45_54_pct?: number | null
+          age_over_54_pct?: number | null
+          created_at?: string
+          education_college_pct?: number | null
+          education_grad_school_pct?: number | null
+          education_high_school_pct?: number | null
+          fans_female_pct?: number | null
+          fans_male_pct?: number | null
+          fans_married_pct?: number | null
+          fans_total?: number | null
+          fans_with_children_pct?: number | null
+          fetched_at?: string
+          id?: string
+          income_0_30k_pct?: number | null
+          income_30_60k_pct?: number | null
+          income_60_90k_pct?: number | null
+          income_90_125k_pct?: number | null
+          income_over_125k_pct?: number | null
+          payment_amex_pct?: number | null
+          payment_discover_pct?: number | null
+          payment_mc_pct?: number | null
+          payment_visa_pct?: number | null
+          tm_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tm_event_demographics_tm_id_fkey"
+            columns: ["tm_id"]
+            isOneToOne: true
+            referencedRelation: "tm_events"
+            referencedColumns: ["tm_id"]
+          },
+        ]
+      }
       tm_events: {
         Row: {
           artist: string
