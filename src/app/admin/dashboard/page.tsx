@@ -139,14 +139,16 @@ function fmtNum(n: number | null) {
 }
 
 function eventStatusBadge(s: string) {
+  const key = (s ?? "").toLowerCase().replace(/_/g, "");
   const map: Record<string, { label: string; classes: string }> = {
-    on_sale:   { label: "On Sale",   classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
     onsale:    { label: "On Sale",   classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
     presale:   { label: "Presale",   classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-    sold_out:  { label: "Sold Out",  classes: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+    soldout:   { label: "Sold Out",  classes: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
+    offsale:   { label: "Off Sale",  classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" },
     cancelled: { label: "Cancelled", classes: "bg-red-500/10 text-red-400 border-red-500/20" },
+    published: { label: "Published", classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
   };
-  const { label, classes } = map[s] ?? { label: s, classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" };
+  const { label, classes } = map[key] ?? { label: s, classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}>
       {label}
