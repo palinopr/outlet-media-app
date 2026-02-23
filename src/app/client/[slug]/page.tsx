@@ -1,20 +1,3 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  CalendarDays,
-  DollarSign,
-  Megaphone,
-  Ticket,
-  TrendingUp,
-  ArrowRight,
-  Users,
-} from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
@@ -405,6 +388,12 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <div style={{ borderTop: "1px solid #27272A", paddingTop: "1.5rem", display: "flex", justifyContent: "space-between" }}>
+        <span style={{ color: "#52525B", fontSize: "0.75rem" }}>Powered by Outlet Media</span>
+        <span style={{ color: "#52525B", fontSize: "0.75rem" }}>Data updates every 6 hours</span>
+      </div>
     </div>
   );
 }
