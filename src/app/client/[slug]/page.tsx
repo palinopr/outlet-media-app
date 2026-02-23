@@ -255,7 +255,65 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         ))}
       </div>
 
-      {/* City cards placeholder -- Task 3 */}
+      {/* City cards */}
+      <div style={{ marginBottom: "2.5rem" }}>
+        <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem" }}>
+          Your Shows
+        </p>
+        {events.length === 0 ? (
+          <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: "0.75rem", padding: "3rem", textAlign: "center" }}>
+            <p style={{ color: "#A1A1AA", fontSize: "0.875rem" }}>No shows synced yet</p>
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+            {events.map((e) => {
+              const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
+              const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : null;
+              return (
+                <div key={e.id} style={{
+                  background: "#18181B",
+                  border: "1px solid #27272A",
+                  borderRadius: "0.75rem",
+                  padding: "1.25rem",
+                }}>
+                  {/* City */}
+                  <p style={{ color: "#FAFAFA", fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>
+                    {e.city ?? e.name}
+                  </p>
+                  {/* Date + venue */}
+                  <p style={{ color: "#A1A1AA", fontSize: "0.75rem", marginBottom: "1rem" }}>
+                    {fmtDate(e.date)}{e.venue ? ` · ${e.venue}` : ""}
+                  </p>
+                  {/* Sell-through bar */}
+                  {pct != null && cap > 0 && (
+                    <div style={{ marginBottom: "0.75rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.375rem" }}>
+                        <span style={{ color: "#A1A1AA", fontSize: "0.6875rem" }}>Sell-through</span>
+                        <span style={{ color: "#FAFAFA", fontSize: "0.6875rem", fontWeight: 600 }}>{pct}%</span>
+                      </div>
+                      <div style={{ height: "4px", background: "#27272A", borderRadius: "9999px", overflow: "hidden" }}>
+                        <div style={{
+                          height: "100%",
+                          borderRadius: "9999px",
+                          background: "#818CF8",
+                          width: `${pct}%`,
+                        }} />
+                      </div>
+                    </div>
+                  )}
+                  {/* Status badge */}
+                  {e.status && (
+                    <div style={{ marginTop: "0.5rem" }}>
+                      {statusBadge(e.status)}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {/* Audience placeholder -- Task 4 */}
     </div>
   );
