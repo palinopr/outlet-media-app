@@ -14,11 +14,17 @@ import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { Suspense } from "react";
 
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
+type SnapshotPoint = { snapshot_date: string; roas: number | null; spend: number | null };
 
 // ─── Data fetching ─────────────────────────────────────────────────────────
 
-async function getCampaigns(clientSlug: string | null): Promise<{ campaigns: MetaCampaign[]; clients: string[]; fromDb: boolean }> {
-  if (!supabaseAdmin) return { campaigns: [], clients: [], fromDb: false };
+async function getCampaigns(clientSlug: string | null): Promise<{
+  campaigns: MetaCampaign[];
+  clients: string[];
+  snapshotsByCampaign: Record<string, SnapshotPoint[]>;
+  fromDb: boolean;
+}> {
+  if (!supabaseAdmin) return { campaigns: [], clients: [], snapshotsByCampaign: {}, fromDb: false };
 
   // Always fetch the distinct client list for the filter dropdown
   const allRes = await supabaseAdmin
@@ -36,9 +42,36 @@ async function getCampaigns(clientSlug: string | null): Promise<{ campaigns: Met
 
   if (clientSlug) query.eq("client_slug", clientSlug);
 
-  const { data, error } = await query;
-  if (error) return { campaigns: [], clients, fromDb: false };
-  return { campaigns: (data ?? []) as MetaCampaign[], clients, fromDb: Boolean(data?.length) };
+  const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+
+  const [{ data, error }, { data: snapData }] = await Promise.all([
+    query,
+    supabaseAdmin
+      .from("campaign_snapshots")
+      .select("campaign_id, snapshot_date, roas, spend")
+      .gte("snapshot_date", cutoff)
+      .order("snapshot_date", { ascending: true }),
+  ]);
+
+  if (error) return { campaigns: [], clients, snapshotsByCampaign: {}, fromDb: false };
+
+  // Group snapshots by campaign_id
+  const snapshotsByCampaign: Record<string, SnapshotPoint[]> = {};
+  for (const row of (snapData ?? [])) {
+    const id = row.campaign_id;
+    (snapshotsByCampaign[id] ??= []).push({
+      snapshot_date: row.snapshot_date,
+      roas: row.roas,
+      spend: row.spend,
+    });
+  }
+
+  return {
+    campaigns: (data ?? []) as MetaCampaign[],
+    clients,
+    snapshotsByCampaign,
+    fromDb: Boolean(data?.length),
+  };
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -106,6 +139,46 @@ function slugToLabel(slug: string | null) {
   return slug.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
+function RoasSparkline({ points }: { points: SnapshotPoint[] }) {
+  const vals = points.map((p) => p.roas).filter((v): v is number => v != null);
+  if (vals.length < 2) return null;
+
+  const W = 52, H = 18, PAD = 2;
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const range = max - min || 1;
+
+  const coords = vals.map((v, i) => {
+    const x = PAD + (i / (vals.length - 1)) * (W - PAD * 2);
+    const y = H - PAD - ((v - min) / range) * (H - PAD * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+
+  const first = vals[0], last = vals[vals.length - 1];
+  const trend = last > first + 0.05 ? "up" : last < first - 0.05 ? "down" : "flat";
+  const stroke = trend === "up" ? "#34d399" : trend === "down" ? "#f87171" : "#71717a";
+  const delta = last - first;
+  const deltaStr = (delta >= 0 ? "+" : "") + delta.toFixed(1) + "×";
+  const deltaColor = trend === "up" ? "text-emerald-400" : trend === "down" ? "text-red-400" : "text-zinc-400";
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <svg width={W} height={H} className="shrink-0">
+        <polyline
+          points={coords.join(" ")}
+          fill="none"
+          stroke={stroke}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <circle cx={coords[coords.length - 1].split(",")[0]} cy={coords[coords.length - 1].split(",")[1]} r="2" fill={stroke} />
+      </svg>
+      <span className={`text-[10px] tabular-nums font-medium ${deltaColor}`}>{deltaStr}</span>
+    </div>
+  );
+}
+
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -116,7 +189,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
   const { client } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
 
-  const { campaigns, clients, fromDb } = await getCampaigns(clientSlug);
+  const { campaigns, clients, snapshotsByCampaign, fromDb } = await getCampaigns(clientSlug);
 
   const totalSpend = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0), 0);
   const totalImpressions = campaigns.reduce((s, c) => s + (c.impressions ?? 0), 0);
@@ -191,6 +264,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
               <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">Budget spent</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">ROAS</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">Trend</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">Impressions</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">CTR</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">CPC</TableHead>
@@ -200,7 +274,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
           <TableBody>
             {campaigns.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-12 text-center text-xs text-muted-foreground">
+                <TableCell colSpan={9} className="py-12 text-center text-xs text-muted-foreground">
                   {fromDb ? "No campaigns match this filter" : "No campaign data — run the Meta sync agent to pull live data"}
                 </TableCell>
               </TableRow>
@@ -226,6 +300,9 @@ export default async function CampaignsPage({ searchParams }: Props) {
                   </TableCell>
                   <TableCell className="text-right">
                     <RoasBadge roas={c.roas} />
+                  </TableCell>
+                  <TableCell>
+                    <RoasSparkline points={snapshotsByCampaign[c.campaign_id] ?? []} />
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
                     {fmtNum(c.impressions)}
