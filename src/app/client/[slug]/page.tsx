@@ -314,7 +314,97 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         )}
       </div>
 
-      {/* Audience placeholder -- Task 4 */}
+      {/* Audience profile */}
+      {demographics && demographics.totalFans > 0 && (
+        <div style={{ marginBottom: "2.5rem" }}>
+          <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem" }}>
+            Audience Profile · {demographics.totalFans.toLocaleString()} tracked fans
+          </p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
+
+            {/* Gender */}
+            {(demographics.femalePct != null || demographics.malePct != null) && (
+              <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: "0.75rem", padding: "1.25rem" }}>
+                <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>Gender</p>
+                {[
+                  { label: "Female", value: demographics.femalePct, color: "#818CF8" },
+                  { label: "Male", value: demographics.malePct, color: "#22D3EE" },
+                ].map(({ label, value, color }) =>
+                  value != null ? (
+                    <div key={label} style={{ marginBottom: "0.625rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                        <span style={{ color: "#A1A1AA", fontSize: "0.75rem" }}>{label}</span>
+                        <span style={{ color: "#FAFAFA", fontSize: "0.75rem", fontWeight: 600 }}>{value.toFixed(0)}%</span>
+                      </div>
+                      <div style={{ height: "4px", background: "#27272A", borderRadius: "9999px" }}>
+                        <div style={{ height: "100%", borderRadius: "9999px", background: color, width: `${value}%` }} />
+                      </div>
+                    </div>
+                  ) : null
+                )}
+                {demographics.marriedPct != null && (
+                  <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", marginTop: "0.5rem" }}>
+                    {demographics.marriedPct.toFixed(0)}% married
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Age */}
+            {demographics.age1824 != null && (
+              <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: "0.75rem", padding: "1.25rem" }}>
+                <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>Age</p>
+                {[
+                  { label: "18\u201324", value: demographics.age1824 },
+                  { label: "25\u201334", value: demographics.age2534 },
+                  { label: "35\u201344", value: demographics.age3544 },
+                  { label: "45\u201354", value: demographics.age4554 },
+                  { label: "55+",   value: demographics.ageOver54 },
+                ].map(({ label, value }) =>
+                  value != null ? (
+                    <div key={label} style={{ marginBottom: "0.625rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                        <span style={{ color: "#A1A1AA", fontSize: "0.75rem" }}>{label}</span>
+                        <span style={{ color: "#FAFAFA", fontSize: "0.75rem", fontWeight: 600 }}>{value.toFixed(0)}%</span>
+                      </div>
+                      <div style={{ height: "4px", background: "#27272A", borderRadius: "9999px" }}>
+                        <div style={{ height: "100%", borderRadius: "9999px", background: "#4ADE80", width: `${value}%` }} />
+                      </div>
+                    </div>
+                  ) : null
+                )}
+              </div>
+            )}
+
+            {/* Income */}
+            {demographics.income0_30 != null && (
+              <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: "0.75rem", padding: "1.25rem" }}>
+                <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>Household Income</p>
+                {[
+                  { label: "<$30k",    value: demographics.income0_30 },
+                  { label: "$30\u201360k",  value: demographics.income30_60 },
+                  { label: "$60\u201390k",  value: demographics.income60_90 },
+                  { label: "$90\u2013125k", value: demographics.income90_125 },
+                  { label: "$125k+",   value: demographics.incomeOver125 },
+                ].map(({ label, value }) =>
+                  value != null ? (
+                    <div key={label} style={{ marginBottom: "0.625rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                        <span style={{ color: "#A1A1AA", fontSize: "0.75rem" }}>{label}</span>
+                        <span style={{ color: "#FAFAFA", fontSize: "0.75rem", fontWeight: 600 }}>{value.toFixed(0)}%</span>
+                      </div>
+                      <div style={{ height: "4px", background: "#27272A", borderRadius: "9999px" }}>
+                        <div style={{ height: "100%", borderRadius: "9999px", background: "#FCD34D", width: `${value}%` }} />
+                      </div>
+                    </div>
+                  ) : null
+                )}
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
