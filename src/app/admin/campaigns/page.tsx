@@ -139,6 +139,19 @@ function slugToLabel(slug: string | null) {
   return slug.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
+function computeMarginalRoas(points: SnapshotPoint[]): number | null {
+  if (points.length < 2) return null;
+  const sorted = [...points].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  if (first.spend == null || last.spend == null || first.roas == null || last.roas == null) return null;
+  const deltaSpend = (last.spend - first.spend) / 100;
+  if (deltaSpend <= 0) return null;
+  const revFirst = (first.spend / 100) * first.roas;
+  const revLast = (last.spend / 100) * last.roas;
+  return (revLast - revFirst) / deltaSpend;
+}
+
 function RoasSparkline({ points }: { points: SnapshotPoint[] }) {
   const vals = points.map((p) => p.roas).filter((v): v is number => v != null);
   if (vals.length < 2) return null;
@@ -265,6 +278,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
               <TableHead className="text-xs font-medium text-muted-foreground">Budget spent</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">ROAS</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">Trend</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground text-right">Marginal</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">Impressions</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">CTR</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">CPC</TableHead>
@@ -274,7 +288,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
           <TableBody>
             {campaigns.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-12 text-center text-xs text-muted-foreground">
+                <TableCell colSpan={10} className="py-12 text-center text-xs text-muted-foreground">
                   {fromDb ? "No campaigns match this filter" : "No campaign data — run the Meta sync agent to pull live data"}
                 </TableCell>
               </TableRow>
@@ -303,6 +317,14 @@ export default async function CampaignsPage({ searchParams }: Props) {
                   </TableCell>
                   <TableCell>
                     <RoasSparkline points={snapshotsByCampaign[c.campaign_id] ?? []} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {(() => {
+                      const m = computeMarginalRoas(snapshotsByCampaign[c.campaign_id] ?? []);
+                      if (m == null) return <span className="text-muted-foreground text-sm">—</span>;
+                      const color = m >= 2 ? "text-emerald-400" : m >= 1 ? "text-blue-400" : "text-red-400";
+                      return <span className={`text-sm font-semibold tabular-nums ${color}`}>{m.toFixed(1)}×</span>;
+                    })()}
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground tabular-nums">
                     {fmtNum(c.impressions)}

@@ -24,27 +24,29 @@ import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { TicketVelocityChart } from "@/components/charts/ticket-velocity-chart";
+import { matchedCampaigns } from "@/lib/campaign-event-match";
 
 type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
 interface AgentLastRun { agentId: string; status: string; finishedAt: string | null; }
 interface Alert { id: string; message: string; level: string; created_at: string; }
-interface SnapshotRow { snapshot_date: string; roas: number | null; spend: number | null; }
+interface SnapshotRow { snapshot_date: string; roas: number | null; spend: number | null; campaign_id: string; }
 interface DailyRow { snapshot_date: string; tickets_sold: number | null; }
 
 // --- Data fetching ---
 
 async function getData() {
   if (!supabaseAdmin) {
-    return { events: [], campaigns: [], agentRuns: [], alerts: [], trendData: [], velocityData: [], fromDb: false };
+    return { events: [], campaigns: [], allCampaigns: [], agentRuns: [], alerts: [], trendData: [], velocityData: [], snapshotsByCampaign: {}, fromDb: false };
   }
 
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-  const [eventsRes, campaignsRes, agentRunsRes, alertsRes, snapshotsRes, dailyRes] = await Promise.all([
+  const [eventsRes, campaignsRes, allCampaignsRes, agentRunsRes, alertsRes, snapshotsRes, dailyRes] = await Promise.all([
     supabaseAdmin.from("tm_events").select("*").order("date", { ascending: true }).limit(200),
     supabaseAdmin.from("meta_campaigns").select("*").eq("status", "ACTIVE").order("spend", { ascending: false }).limit(5),
+    supabaseAdmin.from("meta_campaigns").select("name, status, spend, roas, client_slug").order("spend", { ascending: false }).limit(100),
     supabaseAdmin
       .from("agent_jobs")
       .select("agent_id, status, finished_at")
@@ -60,9 +62,10 @@ async function getData() {
       .limit(5),
     supabaseAdmin
       .from("campaign_snapshots")
-      .select("snapshot_date, roas, spend")
+      .select("campaign_id, snapshot_date, roas, spend")
+      .gte("snapshot_date", thirtyDaysAgo)
       .order("snapshot_date", { ascending: true })
-      .limit(300),
+      .limit(500),
     supabaseAdmin
       .from("event_snapshots")
       .select("snapshot_date, tickets_sold")
@@ -73,6 +76,7 @@ async function getData() {
 
   const events = (eventsRes.data ?? []) as TmEvent[];
   const campaigns = (campaignsRes.data ?? []) as MetaCampaign[];
+  const allCampaigns = (allCampaignsRes.data ?? []) as Pick<MetaCampaign, "name" | "status" | "spend" | "roas" | "client_slug">[];
   const alerts = (alertsRes.data ?? []) as Alert[];
   const snapshots = (snapshotsRes.data ?? []) as SnapshotRow[];
   const dailyRows = (dailyRes.data ?? []) as DailyRow[];
@@ -84,6 +88,12 @@ async function getData() {
       seen.add(row.agent_id);
       agentRuns.push({ agentId: row.agent_id, status: row.status, finishedAt: row.finished_at });
     }
+  }
+
+  // Group snapshots by campaign_id for marginal ROAS
+  const snapshotsByCampaign: Record<string, SnapshotRow[]> = {};
+  for (const s of snapshots) {
+    (snapshotsByCampaign[s.campaign_id] ??= []).push(s);
   }
 
   const byDate: Record<string, { roasSum: number; roasCount: number; spendSum: number }> = {};
@@ -115,7 +125,7 @@ async function getData() {
       sold,
     }));
 
-  return { events, campaigns, agentRuns, alerts, trendData, velocityData, fromDb: Boolean(campaigns.length) };
+  return { events, campaigns, allCampaigns, agentRuns, alerts, trendData, velocityData, snapshotsByCampaign, fromDb: Boolean(campaigns.length) };
 }
 
 // --- Helpers ---
@@ -136,6 +146,24 @@ function fmtNum(n: number | null) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
   if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
   return String(n);
+}
+
+function computeMarginalRoas(points: SnapshotRow[]): number | null {
+  if (points.length < 2) return null;
+  const sorted = [...points].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+  const first = sorted[0], last = sorted[sorted.length - 1];
+  if (first.spend == null || last.spend == null || first.roas == null || last.roas == null) return null;
+  const deltaSpend = (last.spend - first.spend) / 100;
+  if (deltaSpend <= 0) return null;
+  const revFirst = (first.spend / 100) * first.roas;
+  const revLast = (last.spend / 100) * last.roas;
+  return (revLast - revFirst) / deltaSpend;
+}
+
+function daysUntil(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  const diff = new Date(dateStr).getTime() - Date.now();
+  return Math.ceil(diff / 86_400_000);
 }
 
 function eventStatusBadge(s: string) {
@@ -159,7 +187,17 @@ function eventStatusBadge(s: string) {
 // --- Page ---
 
 export default async function AdminDashboard() {
-  const { events, campaigns, agentRuns, alerts, trendData, velocityData, fromDb } = await getData();
+  const { events, campaigns, allCampaigns, agentRuns, alerts, trendData, velocityData, snapshotsByCampaign, fromDb } = await getData();
+
+  // Upcoming shows: next 30 days, sorted by date
+  const nowMs = Date.now();
+  const upcomingShows = events
+    .filter(e => {
+      if (!e.date) return false;
+      const d = new Date(e.date).getTime();
+      return d >= nowMs && d <= nowMs + 30 * 86_400_000;
+    })
+    .slice(0, 8);
 
   const totalSold  = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
   const totalCap   = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
@@ -358,6 +396,62 @@ export default async function AdminDashboard() {
         </Card>
       </div>
 
+      {/* Upcoming Shows countdown */}
+      {upcomingShows.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold">Upcoming Shows</h2>
+            <a href="/admin/events" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              View all <ArrowRight className="h-3 w-3" />
+            </a>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {upcomingShows.map((e) => {
+              const days = daysUntil(e.date);
+              const linked = matchedCampaigns(allCampaigns, e);
+              const hasActive = linked.some(c => c.status === "ACTIVE");
+              const hasPaused = linked.some(c => c.status === "PAUSED");
+              const urgent = days != null && days <= 7 && !hasActive;
+              const borderColor = urgent ? "border-red-500/40" : "border-border/60";
+              const bgColor = urgent ? "bg-red-500/5" : "bg-card";
+              return (
+                <div key={e.id} className={`rounded-xl border ${borderColor} ${bgColor} p-4`}>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{e.artist}</p>
+                      <p className="text-xs text-muted-foreground truncate">{e.city}</p>
+                    </div>
+                    {days != null && (
+                      <span className={`text-xs font-semibold tabular-nums shrink-0 px-1.5 py-0.5 rounded ${
+                        days <= 3 ? "bg-red-500/15 text-red-400" :
+                        days <= 7 ? "bg-amber-500/15 text-amber-400" :
+                        "bg-zinc-500/10 text-zinc-400"
+                      }`}>
+                        {days === 0 ? "Today" : days === 1 ? "Tomorrow" : `${days}d`}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2">{fmtDate(e.date)}</p>
+                  {hasActive ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-400">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                      Campaign active
+                    </span>
+                  ) : hasPaused ? (
+                    <span className="inline-flex items-center gap-1 text-xs text-amber-400">
+                      <AlertTriangle className="h-3 w-3" />
+                      Campaign paused
+                    </span>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">No campaign</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Campaigns + Agent status row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
@@ -401,6 +495,17 @@ export default async function AdminDashboard() {
                             {c.roas != null ? c.roas.toFixed(1) + "x" : "---"}
                           </p>
                         </div>
+                        {(() => {
+                          const m = computeMarginalRoas(snapshotsByCampaign[c.campaign_id] ?? []);
+                          if (m == null) return null;
+                          const color = m >= 2 ? "text-emerald-400" : m >= 1 ? "text-blue-400" : "text-red-400";
+                          return (
+                            <div>
+                              <p className="text-[11px] text-muted-foreground">Marginal</p>
+                              <p className={`text-sm font-semibold tabular-nums ${color}`}>{m.toFixed(1)}×</p>
+                            </div>
+                          );
+                        })()}
                         <div>
                           <p className="text-[11px] text-muted-foreground">Impressions</p>
                           <p className="text-sm font-medium tabular-nums">{fmtNum(c.impressions)}</p>
