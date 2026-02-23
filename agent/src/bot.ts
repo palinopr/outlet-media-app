@@ -148,14 +148,26 @@ function chunkText(text: string, maxLen: number): string[] {
 }
 
 /**
- * Send a proactive message to the owner's chat (for scheduled checks).
- * TELEGRAM_CHAT_ID must be set in .env.
+ * Send a proactive message to all configured channels (Telegram + Discord).
  */
 export async function notifyOwner(text: string): Promise<void> {
+  const { notifyDiscord } = await import("./discord.js");
   const chatId = process.env.TELEGRAM_CHAT_ID;
+
+  const results = await Promise.allSettled([
+    chatId
+      ? bot.api.sendMessage(chatId, mdToHtml(text.slice(0, 4096)), { parse_mode: "HTML" })
+      : Promise.resolve(),
+    notifyDiscord(text),
+  ]);
+
   if (!chatId) {
-    console.warn("[bot] TELEGRAM_CHAT_ID not set - skipping notification");
-    return;
+    console.warn("[bot] TELEGRAM_CHAT_ID not set - Telegram notification skipped");
   }
-  await bot.api.sendMessage(chatId, mdToHtml(text.slice(0, 4096)), { parse_mode: "HTML" });
+
+  for (const r of results) {
+    if (r.status === "rejected") {
+      console.warn("[bot] Notification failed:", r.reason);
+    }
+  }
 }

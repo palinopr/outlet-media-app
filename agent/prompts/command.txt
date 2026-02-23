@@ -136,6 +136,60 @@ date >> LEARNINGS.md && echo "ACTION: [what you did and why]" >> LEARNINGS.md
 
 ---
 
+## Adset & Targeting Operations
+
+Adsets control audience targeting, placement, and optimization within a campaign.
+
+### List adsets for a campaign:
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/adsets?fields=id,name,status,targeting,optimization_goal,billing_event,daily_budget&limit=50&access_token=$TOKEN"
+```
+
+### Read current targeting for an adset:
+```bash
+curl -s "https://graph.facebook.com/v21.0/{ADSET_ID}?fields=id,name,targeting&access_token=$TOKEN"
+```
+Targeting includes `geo_locations` (countries, regions, cities, custom_locations), `age_min`, `age_max`, `genders`, `flexible_spec` (interests).
+
+### Update targeting on an existing adset (e.g., expand radius):
+Use multipart form data (`-F`) for existing adset updates:
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/{ADSET_ID}" \
+  -F "access_token=$TOKEN" \
+  -F 'targeting={"geo_locations":{"custom_locations":[{"key":"LOCATION_KEY","latitude":LAT,"longitude":LON,"radius":RADIUS,"distance_unit":"mile"}]},"age_min":18,"age_max":65}'
+```
+**Key notes:**
+- `key` is Meta's internal location key (e.g., "150784128281218" for Sacramento Memorial Auditorium). Get it from the existing targeting first.
+- The entire `targeting` object must be sent — **partial updates NOT supported**. Read current targeting, modify, send back complete.
+- After updating, verify with a GET to confirm the change took effect.
+
+### Create a new adset (under a CBO campaign):
+Use `--data-urlencode` to `act_{ID}/adsets` — do NOT use `/{CAMPAIGN_ID}/copies` (returns 404):
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/act_{AD_ACCOUNT_ID}/adsets" \
+  --data-urlencode "name=New Adset Name" \
+  --data-urlencode "campaign_id={CAMPAIGN_ID}" \
+  --data-urlencode "status=ACTIVE" \
+  --data-urlencode "optimization_goal=OFFSITE_CONVERSIONS" \
+  --data-urlencode "billing_event=IMPRESSIONS" \
+  --data-urlencode "promoted_object={\"pixel_id\":\"879345548404130\",\"custom_event_type\":\"PURCHASE\"}" \
+  --data-urlencode 'targeting={"geo_locations":{"custom_locations":[{"latitude":LAT,"longitude":LON,"radius":RADIUS,"distance_unit":"mile"}]},"age_min":18,"age_max":65}' \
+  --data-urlencode "access_token=$TOKEN"
+```
+**CBO campaign note:** Adsets under CBO campaigns have NO `daily_budget` — budget is controlled at campaign level. Do NOT include `daily_budget` in the adset payload. For non-CBO campaigns, include `daily_budget` in cents.
+
+`promoted_object` must include pixel ID (879345548404130) and `PURCHASE` event type.
+
+After creation, Meta may normalize some fields (e.g., `targeting_automation.individual_setting` gets stripped). This is expected; `advantage_audience:1` is retained.
+
+### Bulk targeting updates:
+When updating multiple adsets (e.g., expanding radius across all adsets in a campaign):
+1. List all adsets for the campaign
+2. For each adset: GET current targeting → modify → POST back
+3. Verify each — Meta Ads Manager UI may lag (shows "recently edited" on only 1-2 adsets) but API confirms all updated. Trust the API.
+
+---
+
 ## Campaign Strategy Rules
 
 - **3-Day Rule**: every new ad gets 3 days before kill/scale decision
@@ -304,6 +358,133 @@ Meta returns `{"error":{"message":"...","type":"...","code":NNN}}`. Handle by er
 4. **Permission error** (code 10, 200): the token may lack the required permission scope. Log the error and report to Jaime — don't retry.
 5. **General**: read the error message carefully. After fixing, retry the failed step — do not start over from scratch.
 6. **Never expose raw API error JSON to Jaime** — diagnose and summarise in plain language.
+
+---
+
+## Ad Delivery Error Fixing
+
+Ads can silently fail to deliver. Periodically check for delivery issues on active adsets, especially after any targeting or creative change.
+
+### Check all ads in an adset for issues:
+```bash
+curl -s "https://graph.facebook.com/v21.0/{ADSET_ID}/ads?fields=id,name,status,effective_status,issues_info&access_token=$TOKEN"
+```
+Look for `"effective_status": "WITH_ISSUES"`. This blocks delivery even if `status=ACTIVE`.
+
+### Error code 2490085 — Deprecated 191x100 image crop key
+
+This is a HARD_ERROR. The ad's creative has `"image_crops": {"191x100": [[x,y],[w,h]]}` in its `asset_feed_spec.images` — Meta deprecated this crop key.
+
+**Step 1: Get the broken ad's creative**
+```bash
+curl -s "https://graph.facebook.com/v21.0/{AD_ID}?fields=name,adset_id,creative{asset_feed_spec}&access_token=$TOKEN"
+```
+Find the image entry with `image_crops.191x100`. Note its `hash` and `adlabels`.
+
+**Step 2: Determine whether the broken image hash is duplicated**
+- Scan all other entries in `asset_feed_spec.images`
+- If another entry has the **same hash**: the 191x100 image was just a cropped version of an existing image. **Drop it entirely.** Update `asset_customization_rules` to point any rules that referenced the broken image's label to the surviving image's label instead.
+- If the hash is unique: you can rebuild the creative with the same image minus the `image_crops` field.
+
+**Step 3: Create new creative with fresh label names**
+DO NOT reuse the original `placement_asset_HASH_TIMESTAMP` label names — they belong to the old creative. Use simple new names:
+```python
+# Example: two-image creative for stories + default placements
+spec = {
+    "images": [
+        {"adlabels": [{"name": "fix_img_main"}], "hash": "MAIN_HASH"},
+        {"adlabels": [{"name": "fix_img_stories"}], "hash": "STORIES_HASH"}
+    ],
+    "bodies": [{"adlabels": [{"name": "fix_body"}], "text": "Ad body text"}],
+    "call_to_action_types": ["SHOP_NOW"],
+    "descriptions": [{"text": ""}],
+    "link_urls": [{"adlabels": [{"name": "fix_link"}], "website_url": "https://..."}],
+    "titles": [{"adlabels": [{"name": "fix_title"}], "text": "Shop Now 👉"}],
+    "ad_formats": ["AUTOMATIC_FORMAT"],
+    "asset_customization_rules": [
+        {
+            "customization_spec": {
+                "age_max": 65, "age_min": 13,
+                "publisher_platforms": ["facebook","instagram","audience_network","messenger"],
+                "facebook_positions": ["facebook_reels","story"],
+                "instagram_positions": ["ig_search","profile_reels","story","reels"],
+                "messenger_positions": ["story"],
+                "audience_network_positions": ["classic"]
+            },
+            "image_label": {"name": "fix_img_stories"}, "body_label": {"name": "fix_body"},
+            "link_url_label": {"name": "fix_link"}, "title_label": {"name": "fix_title"}, "priority": 1
+        },
+        {
+            "customization_spec": {"age_max": 65, "age_min": 13},
+            "image_label": {"name": "fix_img_main"}, "body_label": {"name": "fix_body"},
+            "link_url_label": {"name": "fix_link"}, "title_label": {"name": "fix_title"}, "priority": 2
+        }
+    ],
+    "optimization_type": "PLACEMENT",
+    "additional_data": {"multi_share_end_card": False, "is_click_to_message": False}
+}
+```
+
+**Step 4: POST new creative, create new ad, pause old ad**
+```bash
+# Create creative
+curl -s -X POST "https://graph.facebook.com/v21.0/{ACCOUNT}/adcreatives" \
+  --data-urlencode "name=Ad name fixed" \
+  --data-urlencode "object_story_spec={\"page_id\":\"175118299508364\",\"instagram_user_id\":\"17841402356610735\"}" \
+  --data-urlencode "asset_feed_spec=$(echo $SPEC | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin)))')" \
+  --data-urlencode "access_token=$TOKEN"
+
+# Create new ad (ACTIVE)
+curl -s -X POST "https://graph.facebook.com/v21.0/{ACCOUNT}/ads" \
+  --data-urlencode "name=asset N" \
+  --data-urlencode "adset_id={ADSET_ID}" \
+  --data-urlencode "creative={\"creative_id\":\"{NEW_CREATIVE_ID}\"}" \
+  --data-urlencode "status=ACTIVE" \
+  --data-urlencode "access_token=$TOKEN"
+
+# Pause old broken ad
+curl -s -X POST "https://graph.facebook.com/v21.0/{OLD_AD_ID}" \
+  -d "access_token=$TOKEN&status=PAUSED"
+```
+
+**Step 5: Verify**
+```bash
+curl -s "https://graph.facebook.com/v21.0/{NEW_AD_ID}?fields=name,status,effective_status,issues_info&access_token=$TOKEN"
+```
+Expect `effective_status=IN_PROCESS` (going into review) or `ACTIVE`. No `issues_info`. Report to Jaime.
+
+---
+
+## TM One Sales by Location (Zip Codes)
+
+After logging in to TM One, pull the postal code breakdown for each event using the reporting page.
+
+**Report URL pattern:**
+```
+https://one.ticketmaster.com/app/reporting/type/sales-by-location/eventId/{surrogate_id}/eventStartDate/2020-01-01/eventEndDate/2029-12-31?mapViewBy=areaLevel3WithCountry
+```
+
+**Steps:**
+1. Navigate to the report URL for each event (use surrogate_id from the list below)
+2. Wait 4-5 seconds for the page to load (map + postal code table render asynchronously)
+3. Read the "Top 10 Ticket Sales by Location" section — find the POSTAL CODE column
+4. Extract zip codes and ticket counts from the table
+5. Save to session/camila-zipcodes.json (or session/last-zipcodes.json for all events)
+
+**Output shape:**
+```json
+{
+  "anaheim": [{"zip": "92801", "tickets": 150}, {"zip": "90001", "tickets": 120}],
+  "sacramento": [{"zip": "95825", "tickets": 100}, {"zip": "95628", "tickets": 80}],
+  "scraped_at": "2026-02-23T..."
+}
+```
+
+**When to run:** During TM One scraping cycles. Pull zip codes for all ACTIVE/upcoming events.
+
+**Why it matters:** Zip codes from actual buyers let us replace the blunt 25-mile radius targeting on Meta with precision zip code targeting — cutting wasted impressions on non-converting areas.
+
+**All 26 surrogate IDs are listed in the Demographics section below.**
 
 ---
 

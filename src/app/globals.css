@@ -124,3 +124,120 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* --- Client Dashboard Premium Styles --- */
+
+.glass-card {
+  background: oklch(0.18 0 0 / 60%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid oklch(1 0 0 / 6%);
+  border-radius: 0.875rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: oklch(1 0 0 / 12%);
+  background: oklch(0.18 0 0 / 80%);
+  box-shadow: 0 0 0 1px oklch(1 0 0 / 4%), 0 8px 32px oklch(0 0 0 / 40%);
+  transform: translateY(-1px);
+}
+
+.hero-stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-stat-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #06b6d4, #8b5cf6, #06b6d4);
+  background-size: 200% 100%;
+  animation: gradient-slide 4s ease infinite;
+}
+
+.hero-stat-card:hover::before {
+  height: 3px;
+}
+
+@keyframes gradient-slide {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.gradient-bar {
+  background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+  border-radius: 9999px;
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 20%), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 3s ease infinite;
+}
+
+.campaign-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.campaign-card::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: 0;
+  bottom: 12px;
+  width: 3px;
+  border-radius: 0 9999px 9999px 0;
+  background: linear-gradient(180deg, #06b6d4, #8b5cf6);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.campaign-card:hover::before {
+  opacity: 1;
+}
+
+.stat-glow {
+  box-shadow: 0 0 40px oklch(0.6 0.15 260 / 6%), 0 0 80px oklch(0.6 0.15 200 / 3%);
+}
+
+.progress-track {
+  height: 6px;
+  background: oklch(1 0 0 / 6%);
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: oklch(0.65 0 0);
+}

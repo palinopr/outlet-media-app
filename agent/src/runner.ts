@@ -35,12 +35,16 @@ export interface RunnerOptions {
   maxTurns?: number;
   /** Called with each stdout chunk — use for live streaming to Supabase */
   onChunk?: (text: string) => void;
+  /** Resume an existing session by ID (for multi-turn chat context) */
+  resumeSessionId?: string;
 }
 
 export interface RunnerResult {
   text: string;
   success: boolean;
   error?: string;
+  /** Session ID emitted by claude — pass back as resumeSessionId to continue the conversation */
+  sessionId?: string;
 }
 
 function loadPrompt(name: string): string {
@@ -58,39 +62,47 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     systemPromptName = "command",
     maxTurns = 20,
     onChunk,
+    resumeSessionId,
   } = opts;
 
-  let systemPrompt: string;
-  try {
-    systemPrompt = loadPrompt(systemPromptName);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[runner] Prompt file not found: prompts/${systemPromptName}.txt`);
-    return {
-      text: `Error: prompt file '${systemPromptName}.txt' not found.`,
-      success: false,
-      error: msg,
-    };
+  // When resuming, the system prompt is already baked into the session
+  let systemPrompt = "";
+  if (!resumeSessionId) {
+    try {
+      systemPrompt = loadPrompt(systemPromptName);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[runner] Prompt file not found: prompts/${systemPromptName}.txt`);
+      return {
+        text: `Error: prompt file '${systemPromptName}.txt' not found.`,
+        success: false,
+        error: msg,
+      };
+    }
   }
 
   console.log(
-    `[runner] Spawning claude (${systemPromptName}, max-turns=${maxTurns}): ${prompt.slice(0, 80)}`
+    `[runner] Spawning claude (${resumeSessionId ? `resume:${resumeSessionId.slice(0, 8)}` : systemPromptName}, max-turns=${maxTurns}): ${prompt.slice(0, 80)}`
   );
 
   return new Promise((resolve) => {
+    const baseArgs = [
+      "--output-format", "stream-json",
+      "--verbose",
+      "--max-turns", String(maxTurns),
+      "--dangerously-skip-permissions",
+      // Block global project memory — prevents context bleed from
+      // ~/.claude/projects/ which references arjona-tour, insurance, etc.
+      "--setting-sources", "local",
+    ];
+
+    const args = resumeSessionId
+      ? ["--resume", resumeSessionId, "-p", prompt, ...baseArgs]
+      : ["-p", prompt, "--system-prompt", systemPrompt, ...baseArgs];
+
     const proc = spawn(
       CLAUDE_PATH,
-      [
-        "-p", prompt,
-        "--system-prompt", systemPrompt,
-        "--output-format", "stream-json",
-        "--verbose",
-        "--max-turns", String(maxTurns),
-        "--dangerously-skip-permissions",
-        // Block global project memory — prevents context bleed from
-        // ~/.claude/projects/ which references arjona-tour, insurance, etc.
-        "--setting-sources", "local",
-      ],
+      args,
       {
         // Run from agent/ so Claude auto-reads agent/CLAUDE.md
         cwd: AGENT_DIR,
@@ -101,6 +113,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
 
     let assembledText = "";  // built from assistant events
     let fallbackResult = ""; // from type=result event if no assistant text
+    let capturedSessionId: string | undefined;
     let lineBuffer = "";
     let errorText = "";
 
@@ -116,6 +129,11 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
 
         try {
           const event = JSON.parse(trimmed) as Record<string, unknown>;
+
+          // Capture session ID from init or result events
+          if (typeof event.session_id === "string") {
+            capturedSessionId = event.session_id;
+          }
 
           if (event.type === "assistant") {
             // Extract text from content blocks and stream character by character
@@ -158,8 +176,8 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
       const text = (assembledText.trim() || fallbackResult.trim() || "Done.").trim();
 
       if (code === 0) {
-        console.log(`[runner] Done (${text.length} chars)`);
-        resolve({ text, success: true });
+        console.log(`[runner] Done (${text.length} chars, session=${capturedSessionId?.slice(0, 8) ?? "none"})`);
+        resolve({ text, success: true, sessionId: capturedSessionId });
       } else {
         console.error(
           `[runner] claude exited ${code}: ${errorText.slice(0, 200)}`
@@ -168,6 +186,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
           text: text || errorText.slice(0, 200) || `Exit code ${code}`,
           success: false,
           error: errorText.slice(0, 200),
+          sessionId: capturedSessionId,
         });
       }
     });

@@ -1,0 +1,69 @@
+[     753ms] [WARNING] using deprecated parameters for the initialization function; pass a single object instead @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:20764
+[     755ms] [WARNING] rumAccessToken will be required in the future @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/ufo-opentelemetry-api/294b1158/main.mjs:317
+[    1857ms] [WARNING] Warning - the `printer` exports from `graphql-tag` will be removed in the next major version.
+See https://github.com/apollographql/graphql-tag/issues/54 for more information. @ https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:40563
+[    1900ms] [WARNING] rumAccessToken will be required in the future @ https://one.ticketmaster.com/cdn/splunk/0.19.1/splunk-otel-js-web.js:0
+[    2141ms] [WARNING] subscription on pubsub2router for topic pattern tm360.contextnav.reporting.search @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34319
+[    2141ms] [WARNING] subscription on pubsub2router for topic pattern tm360.contextnav.reporting.upcomingEvents @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34319
+[    2141ms] [WARNING] subscription on pubsub2router for topic pattern tm360.contextnav.reporting.scheduledReports @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34319
+[    2141ms] [WARNING] subscription on pubsub2router for topic pattern tm360.contextnav.reporting.settlementReports @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34319
+[    2141ms] [WARNING] subscription on pubsub2router for topic pattern tm360.contextnav.reporting.search @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34319
+[    2142ms] [WARNING] subscription on pubsub2router for topic pattern tm360.contextnav.reporting.upcomingEvents @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34319
+[    2142ms] [WARNING] publication on pubsub2router for topic com.ticketmaster.portal.Sidebar.updateItem @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34316
+[    2142ms] [WARNING] subscription on pubsub2router for topic pattern tm360.contextnav.reporting.scheduledReports @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34319
+[    2142ms] [WARNING] publication on pubsub2router for topic com.ticketmaster.portal.Sidebar.updateItem @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34316
+[    2142ms] [WARNING] subscription on pubsub2router for topic pattern tm360.contextnav.reporting.settlementReports @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34319
+[    2142ms] [WARNING] publication on pubsub2router for topic com.ticketmaster.portal.Sidebar.updateItem @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34316
+[    2142ms] [WARNING] subscription on pubsub2router for topic pattern gadget-link @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34319
+[    2198ms] [WARNING] publication on pubsub2router for topic tm360.contextnav.close.all @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34316
+[    2198ms] [WARNING] publication on pubsub2router for topic gadget-state @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34316
+[    2200ms] [WARNING] publication on pubsub2router for topic tm360.contextnav.close.all @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34316
+[    2200ms] [WARNING] publication on pubsub2router for topic gadget-state @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34316
+[   12218ms] [WARNING] JQMIGRATE: $(html) HTML strings must start with '<' character @ https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/app.d572946a2aa0f656ab17.js:6
+[   12275ms] [WARNING] publication on pubsub2router for topic tm360.contextnav.close.all @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34316
+[   12275ms] [WARNING] publication on pubsub2router for topic gadget-state @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:34316
+[   12375ms] [WARNING] Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
+Arguments: 
+[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 14 MAR 2026 8:00 PM, _f: undefined, _strict: undefined, _locale: [object Object]
+Error
+    at hooks.createFromInputFallback (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27129:471468)
+    at https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27129:503460
+    at https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27129:503527
+    at prepareConfig (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27129:504009)
+    at createLocalOrUTC (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27129:504471)
+    at createLocal (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27129:504598)
+    at hooks (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27129:467307)
+    at getDay (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/app.d572946a2aa0f656ab17.js:1:385039)
+    at SingleEventInfoDesktop (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/app.d572946a2aa0f656ab17.js:123:1331654)
+    at Ch (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:59012)
+    at ck (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:111186)
+    at bk (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:98503)
+    at ak (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:98434)
+    at Tj (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:98303)
+    at Lj (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:95328)
+    at https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:44909 @ https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27128
+[   12377ms] [WARNING] Deprecation warning: value provided is not in a recognized RFC2822 or ISO format. moment construction falls back to js Date(), which is not reliable across all browsers and versions. Non RFC2822/ISO date formats are discouraged and will be removed in an upcoming major release. Please refer to http://momentjs.com/guides/#/warnings/js-date/ for more info.
+Arguments: 
+[0] _isAMomentObject: true, _isUTC: false, _useUTC: false, _l: undefined, _i: 3/14/2026, _f: undefined, _strict: undefined, _locale: [object Object]
+Error
+    at hooks.createFromInputFallback (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:13036:16087)
+    at https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:13036:45793
+    at https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:13036:45860
+    at prepareConfig (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:13036:46308)
+    at createLocalOrUTC (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:13036:46857)
+    at createLocal (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:13036:46984)
+    at hooks (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:13036:11711)
+    at updateDisabledExportsList (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/app.d572946a2aa0f656ab17.js:1:313428)
+    at HeaderExport_HeaderExport.UNSAFE_componentWillReceiveProps (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/app.d572946a2aa0f656ab17.js:123:1302757)
+    at Ng (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:49809)
+    at pi (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:70236)
+    at ck (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:112244)
+    at bk (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:98503)
+    at ak (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:98434)
+    at Tj (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:98303)
+    at Lj (https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:27258:95328) @ https://one.ticketmaster.com/cdn/@ticketmaster/PRD119/reports/2.280.0/vendor.a2fbe21eb17b7ea768c5.js:13035
+[   15316ms] [WARNING] As of February 21st, 2024, google.maps.Marker is deprecated. Please use google.maps.marker.AdvancedMarkerElement instead. At this time, google.maps.Marker is not scheduled to be discontinued, but google.maps.marker.AdvancedMarkerElement is recommended over google.maps.Marker. While google.maps.Marker will continue to receive bug fixes for any major regressions, existing bugs in google.maps.Marker will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/deprecations for additional details and https://developers.google.com/maps/documentation/javascript/advanced-markers/migration for the migration guide. @ https://maps.googleapis.com/maps-api-v3/api/js/63/14d/main.js:412
+[   15320ms] [WARNING] As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide. @ https://maps.googleapis.com/maps-api-v3/api/js/63/14d/places.js:41
+[   20313ms] [WARNING] Google Maps JavaScript API warning: RetiredVersion https://developers.google.com/maps/documentation/javascript/error-messages#retired-version @ https://maps.googleapis.com/maps-api-v3/api/js/63/14d/util.js:28
+[11508148ms] [ERROR] [ERROR page event property collection timeout (event_list_search). 157ms/50ms, 2/4 properties, 1/3 failures] @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/ufo-splunk-otel-web/06af885e/main.mjs:3241
+[11962476ms] [ERROR] [ERROR page event property collection timeout (event_code). 69ms/50ms, 4/4 properties, 1/3 failures] @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/ufo-splunk-otel-web/06af885e/main.mjs:3241

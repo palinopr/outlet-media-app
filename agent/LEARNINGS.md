@@ -102,211 +102,253 @@ Format:
 - TM One scraper v3: 25 events captured, login flow automated (email+password+2FA), per-event metrics still empty
 
 ## 2026-02-23 — Manual Actions (command-mode, not think cycles)
-- **12:04 UTC:** Manual Meta sync — 16 campaigns (5 ACTIVE, 11 PAUSED). Landscape changed: Denver V2 ACTIVE→PAUSED, 4 new campaigns (Alofoke, Camila Sac, Camila Anaheim, Camila Dallas), Arjona Sac V2 PAUSED→ACTIVE. Total spend: $11,330. Active avg ROAS: 4.42×.
-- **14:05 UTC:** Manual TM One monitor — 25 events, 0 changes from 12:02 run. POSTed to ingest (25 inserted, 0 snapshots). Sacramento Arjona event still missing from GraphQL.
-- **16:04 UTC:** Manual TM One monitor — 25 events, 0 changes from 14:04 run. Snapshot already exists for today.
+- **12:04 UTC:** Manual Meta sync — 16 campaigns (5 ACTIVE, 11 PAUSED). 4 new campaigns, Denver V2 PAUSED, Arjona Sac V2 reactivated.
+- **14:05/16:04 UTC:** Manual TM One runs — 25 events, no changes. Sacramento Arjona still missing from GraphQL.
 
-## 2026-02-23 ~08:30 CST — Cycle #22 (Business Monitoring — First Fresh Data in 4+ Days)
-- **Priority chosen:** P4 — Business Monitoring (justified over rotation rule: first fresh campaign data since Feb 19, major landscape change)
+## 2026-02-23 — Cycles #22-28 Summary (First Full Day of Fresh Data)
+
+> Condensed from 7 detailed entries during Cycle #29 memory maintenance. See git history for originals.
+
+- **Cycle #22 (P4 — first fresh data):** Campaign landscape transformed: 5→5 ACTIVE but entirely different mix. **Denver V2 PAUSED** (show past, 9.82× ROAS). **4 NEW Zamora campaigns** appeared (all started Feb 19): Alofoke (3.66×, Boston Mar 2), Camila Sacramento (3.66×), Camila Anaheim (3.42×), Camila Dallas (killed, $0.30). **Arjona Sac V2 reactivated** (8.91×). KYBBA declining: 2.73→2.46×. New campaigns 64-68% pacing (normal ramp-up). Seattle/Portland shows imminent with PAUSED campaigns (likely intentional). MEMORY.md comprehensively updated.
+- **Cycle #23 (P6 — infra check):** **ALL GREEN.** Cron syncs confirmed working (06:00/12:00 UTC — resolved Cycle #22's false alarm). Snapshot UPSERT is write-once (ON CONFLICT DO NOTHING) — each daily snapshot reflects midnight CST state. Beamina V3 only in 06:00 sync (excluded from manual runs). Zombie job from Feb 18 noted. Claude CLI v2.1.50.
+- **Cycle #24 (P3 — memory maintenance):** Condensed Cycles #18-21 (~158→15 lines). LEARNINGS.md 369→230 lines. MEMORY.md verified accurate — no updates needed.
+- **Cycle #25 (P4 — marginal ROAS discovery):** **🔑 KYBBA marginal ROAS = 0.61×** — losing money on incremental spend. Feb 19→23: Δspend=$300, Δrevenue=$184. Blended (2.46×) carried by historical performance. Projects to cross 2.0 threshold ~Feb 28. Caveat: 4-day snapshot gap makes this noisy. Methodology documented in prompts.
+- **Cycle #26 (P2 — prompt second-pass):** **5 fixes across 3 files**: (1) command.txt client slug mapping missing alofoke/camila→zamora (**real bug — would tag campaigns "unknown"**), (2) command.txt missing `actions` field for CPA, (3) command.txt missing Revenue/CPA formulas, (4) chat.txt missing alofoke/camila aliases, (5) think.txt+chat.txt: added marginal ROAS methodology. Units bug fixed in think.txt (snapshot spend in cents). All 3 prompts cross-checked consistent.
+- **Cycle #27 (P4 — 18:00 UTC sync):** **Arjona Sac V2 ACTIVE→PAUSED** (Jaime, intentional). Now 4 ACTIVE. **Pipeline gap found**: sync only pushes ACTIVE data to Supabase — PAUSED campaigns keep stale ACTIVE status. Elevated to Known Issue #2. **Meta intraday reporting lag confirmed**: <3% of expected daily spend shows after 12h (normal API behavior). ROAS: KYBBA 2.46× flat, others healthy (3.4-3.7×). MEMORY.md updated.
+- **Cycle #28 (P5 — proposals overhaul):** Complete proposals.md rewrite: 6 old (4 completed, 2 superseded) → 6 new ranked A-F. Top: **A: Campaign-Event Auto-Linking** (highest value — connects ad spend to ticket sales, now unblocked), B: Show Countdown Dashboard, C: Marginal ROAS in Dashboard, D: PAUSED Status Sync Fix (quick), E: Creative-Level Performance, F: Budget Recommendation Engine.
+
+**Key findings preserved from Cycles #22-28:**
+- Campaign landscape: 17 total, 4 ACTIVE (KYBBA, Alofoke, Camila Ana, Camila Sac), 13 PAUSED
+- 🔑 KYBBA marginal ROAS 0.61× — watch closely, blended crosses 2.0 ~Feb 28 at current rate
+- 🔑 Snapshot UPSERT = write-once at midnight CST. Intraday deltas unreliable.
+- 🔑 PAUSED campaigns don't get status updated in Supabase (pipeline gap, code fix needed)
+- 🔑 Client slug bug fixed in prompts — alofoke/camila now map to "zamora"
+- All 3 prompts completed second full audit cycle by Cycle #26
+- Proposals A-F drafted with campaign-event linking as #1 priority
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (Cycle #14), #12-17 (Cycle #20), #18-21 (Cycle #24), **#22-28 (Cycle #29)**
+
+## 2026-02-23 ~13:30 CST — Cycle #29 (Memory Maintenance)
+- **Priority chosen:** P3 — Memory Maintenance (recommended by Cycle #28, rotation-compliant — last was P5)
 - **What I audited or read:**
-  - LEARNINGS.md (full read — Cycles #0-21 + 2 manual action entries, 252 lines)
-  - MEMORY.md (full read — 136 lines, significantly outdated)
-  - session/last-campaigns.json (full read — 16 campaigns, mtime Feb 23 06:04 CST — FRESH!)
-  - session/last-events.json (full read — 25 events, mtime Feb 23 08:05 CST — FRESH!)
-  - Supabase: meta_campaigns ACTIVE (5 campaigns — CHANGED from 2!)
-  - Supabase: campaign_snapshots (2 dates: Feb 19 + Feb 23, 30 total rows)
-  - Supabase: meta_campaigns full list (17 total, 5 ACTIVE, 12 PAUSED)
-  - Supabase: agent_jobs non-heartbeat (still no automated meta-ads since Feb 18!)
-  - Supabase: heartbeats (alive at 14:28-14:30 UTC)
-  - Endpoints: ingest 401 ✅, alerts 401 ✅ (no Clerk regression)
-
-- **🟢 FRESH DATA — Campaign landscape dramatically changed:**
-  - **5 ACTIVE** (was 2): KYBBA Miami, Arjona Sacramento V2, Alofoke, Camila Anaheim, Camila Sacramento
-  - **Denver V2: ACTIVE → PAUSED** — Denver show was Feb 18 (past). ROAS was 9.82×, excellent performance.
-  - **4 NEW campaigns appeared** (all Zamora/started Feb 19):
-    - Alofoke: ACTIVE, ROAS 3.66×, $272 spend, $100/day — Boston show Mar 2
-    - Camila Sacramento: ACTIVE, ROAS 3.66×, $255, $100/day — show Mar 14-15
-    - Camila Anaheim: ACTIVE, ROAS 3.42×, $269, $100/day — show Mar 13-14
-    - Camila Dallas: PAUSED, $0.30 spend — killed almost immediately
-  - **Arjona Sacramento V2: was PAUSED → now ACTIVE** (ROAS 8.91×, $339)
-  - **Total: 17 campaigns in Supabase** (was 13). Session has 16 (Beamina V3 excluded, no recent spend).
-
-- **ROAS assessment (ACTIVE campaigns):**
-  - Arjona Sac V2: 8.91× — excellent (up from 7.18× on Feb 19)
-  - Alofoke: 3.66× — healthy
-  - Camila Sacramento: 3.66× — healthy
-  - Camila Anaheim: 3.42× — healthy
-  - **KYBBA Miami: 2.46× — above 2.0 but declining** (was 2.73× Feb 19, -10%). Show Mar 22 (27 days). Monitor.
-  - ✅ No ACTIVE campaign below 2.0 threshold.
-
-- **Pacing analysis (ACTIVE campaigns):**
-  - **KYBBA Miami:** SKIP — known pause history (Dec-Feb), start_time-based pacing unreliable.
-  - **Arjona Sacramento V2:** SKIP — was PAUSED and recently reactivated. 13 days since start but clearly not running the whole time. $153 spent in last 4 days (~$38/day on $100/day budget) — ramping up.
-  - **Alofoke:** 68% pacing ($272 of $400 expected over 4 days) — borderline, but normal for new campaign ramp-up.
-  - **Camila Anaheim:** 67% pacing ($269 of $400) — borderline, normal ramp-up.
-  - **Camila Sacramento:** 64% pacing ($255 of $400) — slightly under, normal ramp-up.
-  - **Assessment:** All 3 new campaigns 64-68% pacing after 4 days. Likely Meta learning phase. Not flagworthy yet — check again next cycle. If still under 70% after 7 days, escalate.
-
-- **⚠️ Seattle/Portland shows imminent but campaigns PAUSED:**
-  - Seattle show Feb 25 (2 days!) — Seattle V2 PAUSED (ROAS 10.63×, $189 spend)
-  - Portland show Feb 26 (3 days!) — Portland V2 PAUSED (ROAS 9.21×, $372 spend)
-  - Both campaigns had excellent ROAS. Likely intentionally paused by Jaime (budget shifted to other markets, or sufficient organic momentum). He was actively managing campaigns today.
-
-- **🟡 Scheduler auto-sync gap persists:**
-  - No automated `meta-ads` job since Feb 18 19:33 UTC — **5 days!**
-  - Scheduler heartbeats alive (every minute since Feb 22 restart).
-  - Jaime ran manual sync at 12:04 UTC and manual TM run at 14:05 UTC.
-  - META_CRON "0 */6 * * *" should fire at 00:00/06:00/12:00/18:00 UTC — not happening.
-  - Possible causes: cron disabled in code, env var override, scheduler only runs heartbeats.
-  - **This is the new #1 known issue.** Without auto-sync, agent depends on Jaime running manual syncs. Snapshots won't accumulate daily.
-
-- **Snapshot progress:**
-  - 2 dates: Feb 19 (13 campaigns) + Feb 23 (17 campaigns). First new snapshot in 4 days!
-  - ROAS trend still needs 1+ more day (3 consecutive needed).
-  - Next snapshot depends on either automated sync or another manual run.
-
-- **MEMORY.md updated comprehensively:**
-  - Data Pipeline Status: updated all items to current state
-  - Known Issues: reranked — scheduler auto-sync is now #1, added KYBBA ROAS decline as #4
-  - Campaign Landscape: completely rewritten for new 5-ACTIVE reality
-  - Upcoming Shows: updated with campaign alignment notes
-  - Proposals Status: updated pacing (resumed), snapshots (recovering)
-
-- **No Telegram draft** — Jaime is clearly active (ran manual syncs, created 4 new campaigns, paused Denver V2). No anomaly that requires his attention. KYBBA decline is worth watching but not alarming yet. New campaigns are healthy. The scheduler auto-sync issue is concerning but Jaime is compensating with manual runs — next P6 cycle should investigate.
-
-- **Next priority:** P6 — Infrastructure Check. Focus on diagnosing WHY the scheduler isn't auto-firing meta-ads jobs despite heartbeats running. This is the critical gap — without auto-sync, snapshots won't accumulate daily and ROAS trend analysis stays blocked. Also verify if TM One auto-checks are firing. Avoid P4 next per rotation rule.
-
-## 2026-02-23 ~09:30 CST — Cycle #23 (Infrastructure Check)
-- **Priority chosen:** P6 — Infrastructure Check (recommended by Cycle #22)
-- **What I audited or read:**
-  - LEARNINGS.md (full read — Cycles #0-22 + 2 manual action entries, 322 lines)
-  - MEMORY.md (full read — 143 lines, updated during manual command sessions earlier today)
-  - .env credentials (all 7 key vars confirmed set)
-  - Endpoints: /api/ingest, /api/alerts, /api/health
-  - Supabase: agent_jobs heartbeats, non-heartbeat jobs, campaign_snapshots, meta_campaigns
-  - Session cache file ages
-  - Claude CLI version
-
-- **Infrastructure health — ALL GREEN:**
-  - ✅ **Endpoints:** ingest 401, alerts 401, health 404 — all expected. No Clerk 307 regression.
-  - ✅ **Scheduler:** heartbeats every minute (latest 15:31 UTC, real-time).
-  - ✅ **Cron syncs confirmed working:**
-    - 06:00 UTC cron: created snapshots (created_at 06:04:00 UTC) ✅
-    - 12:00 UTC cron: updated campaigns (updated_at 12:04:36 UTC) ✅
-    - This was the Cycle #22 concern ("scheduler not auto-firing meta-ads") — **CONFIRMED RESOLVED.** Cron fires at 00/06/12/18 UTC. It doesn't create agent_jobs entries (known behavior).
-  - ✅ **Credentials:** All 7 key vars set (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, INGEST_URL, INGEST_SECRET, TM_EMAIL, TM_PASSWORD, TELEGRAM_BOT_TOKEN)
-  - ✅ **Claude CLI:** v2.1.50 at /Users/jaimeortiz/.local/bin/claude
-  - ✅ **Session cache fresh:** last-campaigns.json 3.5h old (06:04 CST), last-events.json 1.5h old (08:05 CST)
-
-- **🆕 NEW FINDING — Snapshot UPSERT is write-once (ON CONFLICT DO NOTHING):**
-  - Compared snapshot spend vs campaign spend for Feb 23:
-    - KYBBA: snapshot=236927¢ (@06:04) vs campaign=236930¢ (@12:04) — diff +3¢
-    - Alofoke: 27155 vs 27207 — diff +52¢
-    - Camila Anaheim: 26857 vs 26894 — diff +37¢
-    - Camila Sacramento: 25376 vs 25451 — diff +75¢
-    - PAUSED campaigns: identical (no spend change)
-  - **Conclusion:** Snapshots are created by the FIRST sync of the day (06:00 UTC = midnight CST) and NOT updated by subsequent syncs. The ingest uses `ON CONFLICT DO NOTHING` for snapshot upserts.
-  - **Implication:** Each daily snapshot represents the midnight CST state. This is actually GOOD for consistency — same time each day for trend comparison. But it means the 12:00/18:00 syncs only refresh `meta_campaigns` (live data), not snapshots.
-  - The small spend diffs (3-75 cents) are normal overnight spending (midnight-6am CST). Not anomalous.
-
-- **Other observations:**
-  - 🟡 Stale "running" job from Feb 18 18:56 UTC (agent_id "assistant") — zombie entry, never completed. Harmless but should be cleaned up by Jaime.
-  - 🟡 Event snapshots still empty (0 rows). TM One events are ingested to `tm_events` but snapshot pipeline for events not wired.
-  - 🟡 Beamina V3 (120219401679220525) only synced by 06:00 cron, not 12:04 manual sync — excluded from manual runs due to no last-30d spend filter. Its `updated_at` is 06:04, not 12:04.
-  - 🟡 Campaign snapshot dates: still only Feb 19 + Feb 23 (2 dates). Next new date: Feb 24 at 06:00 UTC (midnight CST). ROAS trend needs 3+ consecutive days — won't unlock until Feb 25 at earliest.
-
-- **MEMORY.md "Cycle #23" numbering note:** MEMORY.md references "Cycle #23" for the scheduler misdiagnosis correction, but that was a command session update (manual syncs at 12:04/14:05 UTC), not a formal think cycle. This think cycle is the actual Cycle #23. Numbering is consistent going forward.
-
-- **No Telegram draft** — infrastructure fully healthy. No anomaly, no breakage.
-
-- **Next priority:** P3 — Memory Maintenance. LEARNINGS.md is now 23 cycles and growing. Cycles #18-22 are detailed entries that could be condensed (like #0-3 and #4-7 were). Also should add snapshot UPSERT behavior finding to MEMORY.md Data Storage Conventions. Alternatively P4 — but last formal think cycle was P4 (#22), and data hasn't changed since 12:04 UTC. Avoid P6 next per rotation rule.
-
-## 2026-02-23 ~10:30 CST — Cycle #24 (Memory Maintenance)
-- **Priority chosen:** P3 — Memory Maintenance (recommended by Cycle #23)
-- **What I audited or read:**
-  - LEARNINGS.md (full read — 369 lines pre-edit)
-  - MEMORY.md (full read — 143 lines, verified all entries)
-  - session/ directory listing (44 files, noted new TM files from today: tm-debug-login.mjs 10:30, tm-after-market.png 10:23, tm-monitor-stderr.log 10:02)
-  - Supabase: agent_jobs heartbeats (alive 16:30 UTC), campaign_snapshots (2 dates: Feb 19 + Feb 23), event_snapshots (still empty), meta_campaigns ACTIVE (5, unchanged)
-- **P1 check:** No breakage. Scheduler alive. Session files fresh (campaigns 06:04, events 10:03). All 5 ACTIVE campaigns match MEMORY.md. No endpoint issues.
+  - LEARNINGS.md (full read — 390 lines pre-edit, Cycles #0-28)
+  - MEMORY.md (full read — 147 lines, verified all entries current)
+  - Supabase: heartbeats (alive at 19:30 UTC), endpoints (ingest 401 ✅, alerts 401 ✅)
+  - Session cache: last-campaigns.json mtime 12:02 CST (18:02 UTC), last-events.json mtime 12:02 CST — both fresh
+- **P1 check:** No breakage. Scheduler alive. All endpoints responding. No errors.
 - **Action taken:**
-  1. **Condensed Cycles #18-21** into summary block (~158 lines → ~15 lines). Preserved: alerts Clerk fix, scheduler restart, think.txt audit completion, TM One first data, cron timing correction.
-  2. **Consolidated 3 manual action entries** (12:04, 14:05, 16:04 UTC) into single section with one-liners. Removed duplicate entry from end of file.
-  3. **LEARNINGS.md: 369 → ~230 lines** (~40% reduction). Maintained all condensed summaries from prior P3 cycles (#0-3, #4-7, #8-9, #10-11, #12-17, now #18-21).
-  4. **MEMORY.md verified — no updates needed.** All entries confirmed accurate:
-     - Campaign landscape: 5 ACTIVE ✓ (verified against Supabase)
-     - Snapshot dates: Feb 19 + Feb 23 ✓
-     - Event snapshots: still empty ✓
-     - Known issues: all current ✓
-     - Data pipeline status: all accurate ✓
-     - Snapshot UPSERT behavior: already documented (added Cycle #23) ✓
-- **Condensation history:** #0-3 (Cycle #14), #4-7 (Cycle #14), #8-9 (Cycle #14), #10-11 (Cycle #14), #12-17 (Cycle #20), **#18-21 (Cycle #24 — this cycle)**. All cycles through #21 now condensed. #22-23 remain detailed (today's significant findings).
+  1. **Condensed Cycles #22-28** (7 entries, ~282 lines) into summary block (~25 lines). Preserved: campaign landscape transformation, KYBBA marginal ROAS finding, snapshot write-once behavior, PAUSED pipeline gap, client slug bug fix, Meta reporting lag, proposals A-F overhaul.
+  2. **Consolidated manual action entries** (3 lines → 2 lines).
+  3. **LEARNINGS.md: 390 → ~140 lines** (~64% reduction). All cycles through #28 now condensed. Only this entry (#29) remains detailed.
+  4. **MEMORY.md verified — no updates needed.** All entries confirmed accurate against current state (4 ACTIVE campaigns, known issues ranked, data pipeline status, proposals A-F).
 - **No Telegram draft** — routine memory maintenance, no business anomaly.
-- **Next priority:** P4 — Business Monitoring. The 18:00 UTC Meta sync should have fired by now (or will fire shortly). Can check if campaign data refreshed since 12:04 UTC. New campaigns are 5 days old now — pacing should be clearer. KYBBA ROAS decline worth monitoring. Seattle show is tomorrow (Feb 25). Alternatively P2 for lighter-touch prompt review. Avoid P3 next per rotation rule.
+- **Next priority:** P4 — Business Monitoring. The Feb 24 snapshot arrives at 06:00 UTC (midnight CST) — this will be the 3rd snapshot date (Feb 19, 23, 24), enabling marginal ROAS recalculation for KYBBA with consecutive days. First P4 cycle on Feb 24 will be the most impactful of the week. Until then, P6 or P2 are lower-value alternatives. Avoid P3 next per rotation rule.
 
-## 2026-02-23 ~11:00 CST — Cycle #25 (Business Monitoring)
-- **Priority chosen:** P4 — Business Monitoring (recommended by Cycle #24, rotation-compliant)
+---
+
+## 2026-02-23 — Manual Targeting + Ad Fix (Zip Code Buyer Data Response)
+
+**Trigger:** Buyer analysis showed 297 sales from SF Bay Area zip codes (top: 94509 Antioch) and geographic spread beyond existing 25-mile radii for both Sacramento and Anaheim.
+
+**Change 1 — Sacramento radius expanded 25 → 50 miles**
+- Campaign: Zamora - Camila - Sacramento (120242224072890525)
+- All 6 adsets updated: Sacramento Memorial Auditorium (key: 150784128281218, lat: 38.57883, lon: -121.48564)
+- Adsets: 120242301799720525, 120242301776810525, 120242301748660525, 120242301730720525, 120242301722110525, 120242224072910525
+
+**Change 2 — New Bay Area adset created**
+- New adset ID: 120242461121430525 (Camila - Sacramento - Bay Area)
+- Campaign: Zamora - Camila - Sacramento (120242224072890525), CBO $100/day
+- Targeting: custom_location 40-mile radius around Oakland (37.8044, -122.2712) covers East Bay, Antioch, South Bay
+- Billing/optimization: IMPRESSIONS / OFFSITE_CONVERSIONS (PURCHASE pixel 1553637492361321)
+- Note: Meta API normalized `targeting_automation.individual_setting` field out — expected, advantage_audience:1 retained
+
+**Change 3 — Anaheim radius expanded 25 → 40 miles**
+- Campaign: Camila - Anaheim (120242223986010525)
+- All 6 adsets updated: Honda Center (key: 12827521764, lat: 33.807297552665, lon: -117.87627216295)
+- Adsets: 120242301010780525, 120242300998520525, 120242300990090525, 120242300973180525, 120242300765120525, 120242223985990525
+
+**Change 4 — Fixed 191x100 deprecated crop key on 3 ads**
+- Error code 2490085 (HARD_ERROR): blocks delivery silently. Ad shows `effective_status=WITH_ISSUES`.
+- Root cause: `asset_feed_spec.images` had an entry with `"image_crops": {"191x100": ...}` — Meta deprecated this crop key.
+- Affected ads (all PAUSED after fix):
+  - Sacramento asset 2 (120242461398060525 = new replacement, ACTIVE)
+  - Anaheim-2 asset 2 (120242461665940525 = new replacement, ACTIVE)
+  - Anaheim original asset 1 (120242461670630525 = new replacement, ACTIVE)
+- **Fix procedure (documented in command.txt "Ad Delivery Error Fixing" section)**
+
+**API notes learned:**
+- Adset POST updates: `-F` multipart form data (existing adset)
+- Adset CREATE: `--data-urlencode` form encoding to `act_{ID}/adsets` (NOT `/copies` — returns 404)
+- CBO campaigns: adsets have no `daily_budget` — budget controlled at campaign level
+- New creative creation: NEVER reuse old adlabel names — they belong to the old creative, cause conflicts
+- Duplicate hash rejection: Meta rejects asset_feed_spec with two images sharing the same hash, even if one had a crop. Drop the duplicate entry instead of stripping the crop.
+- Meta Ads Manager UI lags on bulk targeting changes — only 1-2 adsets show "recently edited" badge, but API confirms all were updated. Trust the API.
+
+## 2026-02-23 ~14:30 CST — Cycle #30 (Business Monitoring)
+- **Priority chosen:** P4 — Business Monitoring (per rotation: last was P3 Cycle #29)
 - **What I audited or read:**
-  - LEARNINGS.md (full read — 246 lines)
-  - MEMORY.md (full read — 144 lines, verified current)
-  - session/last-campaigns.json (16 campaigns, mtime Feb 23 06:04 CST = 12:04 UTC — from 12:00 UTC sync)
-  - session/tm-monitor-stderr.log (latest TM run at 10:02 CST — 25 events, per-event API still empty)
-  - Supabase: meta_campaigns ACTIVE (5 campaigns — unchanged from Cycle #22)
-  - Supabase: campaign_snapshots (still only 2 dates: Feb 19 + Feb 23)
-  - Supabase: heartbeats (alive at 17:00 UTC)
-  - Endpoints: ingest 401 ✅, alerts 401 ✅
+  - LEARNINGS.md (full read), MEMORY.md (full read)
+  - Session cache: last-campaigns.json mtime 12:02 CST (18:02 UTC, ~7.5h old). last-events.json same mtime.
+  - Supabase: campaign_snapshots (30 rows across Feb 19 + Feb 23), agent_jobs heartbeats (alive at 20:30 UTC)
+  - Endpoints: ingest 401 ✅, alerts 401 ✅ (no Clerk regression)
+  - TM scraper files: tm-monitor-stderr.log from 14:08 Feb 23, no new errors
+- **P1 check:** No breakage. Scheduler alive. Endpoints healthy. No errors.
+- **Campaign status:** 4 ACTIVE (Alofoke, Camila Sac, Camila Ana, KYBBA), 12 PAUSED in session cache. No changes since Cycle #27.
+- **ROAS check (ACTIVE):**
+  - Alofoke: 3.66× ✅ — healthy
+  - Camila Sacramento: 3.65× ✅ — healthy
+  - Camila Anaheim: 3.41× ✅ — healthy
+  - KYBBA: 2.46× ⚠️ — above 2.0 threshold but declining
+- **Pacing check (ACTIVE):**
+  - Alofoke: $272 / $400 expected (4 days × $100/day) = 0.68 — at underpacing threshold. Normal for 4-day ramp-up.
+  - Camila Sac: $255 / $400 = 0.64 — slightly under. Normal ramp-up.
+  - Camila Ana: $269 / $400 = 0.67 — slightly under. Normal ramp-up.
+  - KYBBA: SKIP (extensive pause history Dec-Feb, raw pacing meaningless)
+- **Marginal ROAS (Feb 19→Feb 23 snapshots):**
+  - **KYBBA: marginal ROAS = 0.61×** — CONFIRMING Cycle #25 finding. Δspend=$300.09, Δrevenue=$183.76. Losing money on incremental spend.
+  - **Updated projection: blended ROAS crosses 2.0 ~Mar 3** (was ~Feb 28 in Cycle #25). Calculation: additional_spend = (5831.92 - 2.0 × 2369.27) / (2.0 - 0.612) = $788. At $100/day = 7.9 days past Feb 23. Show date Mar 22 — ~19 days of sub-2.0 spending if marginal ROAS holds.
+  - Caveat: 4-day snapshot gap (Feb 19→23) makes marginal ROAS noisy. Feb 24 snapshot will give first consecutive daily data.
+  - New campaigns (Alofoke, Camila) have no Feb 19 snapshot — marginal ROAS calculation needs Feb 24+ snapshot.
+- **PAUSED campaign attribution shifts (interesting, not actionable):**
+  - Portland V2: ROAS 7.88→9.21 (delayed attribution on existing spend while paused) ✅
+  - Others: minimal change
+  - Happy Paws: spend dropped 40000→33963 cents ($400→$339.63) — Meta attribution reversal. PAUSED, null ROAS. Not actionable.
+- **TM Events:** 25 events unchanged. Seattle (Feb 25, 2 days out) + Portland (Feb 26, 3 days out) — campaigns PAUSED, flagged previously as likely intentional. No status changes.
+- **New finding from manual session:** Ad delivery error 2490085 (deprecated 191x100 crop key) was found and fixed on 3 ads. Fix documented in command.txt. This is a real operational finding — deprecated Meta creative format was silently blocking ad delivery.
+- **Action taken:**
+  1. Updated KYBBA projection in MEMORY.md: ~Feb 28 → ~Mar 3
+  2. Noted: targeting changes from manual session (radius expansions, new Bay Area adset) should improve Camila Sac/Ana delivery — watch for spend velocity increase in Feb 24 snapshot
+- **No Telegram draft** — KYBBA finding already flagged Cycle #25. Projection improved slightly (Mar 3 vs Feb 28). No new business anomaly.
+- **Next priority:** P2 — Prompt Audit. All 3 prompts completed 2 audit cycles but manual session revealed new patterns (ad delivery error fixing, adset creation, creative management) that should be documented in prompts. Alternatively P6 if overdue. Avoid P4 next per rotation.
 
-- **Campaign data:** All values IDENTICAL to Cycle #22 (same 12:04 UTC sync). The 18:00 UTC sync hasn't fired yet (~17:00 UTC now). No intermediate data changes.
-  - 5 ACTIVE: KYBBA (2.46×), Arjona Sac V2 (8.91×), Alofoke (3.66×), Camila Anaheim (3.42×), Camila Sacramento (3.66×)
-  - No status changes since Cycle #22. No ROAS changes (same sync).
-
-- **🔍 NEW ANALYTICAL FINDING — KYBBA marginal ROAS is 0.61× (losing money on new spend):**
-  - Used snapshot comparison (Feb 19 → Feb 23) to calculate incremental returns:
-    - Feb 19: spend=$2,069, ROAS=2.73 → Revenue=$5,648
-    - Feb 23: spend=$2,369, ROAS=2.46 → Revenue=$5,832
-    - Δ spend=+$300, Δ revenue=+$184 → **Marginal ROAS = 0.61×**
-  - Meaning: every new $1 spent since Feb 19 generated only $0.61 in return. The campaign is LOSING money on incremental dollars.
-  - Blended ROAS (2.46×) is still above the 2.0 threshold only because of historical high-ROAS spend carrying the average.
-  - At this marginal rate, blended ROAS will cross below 2.0 after ~$560 more in spend (current $100/day budget → ~5-6 days → around Feb 28-Mar 1).
-  - **Caveat:** 4-day gap between snapshots (including 3 days of scheduler downtime). Marginal ROAS could be noisy. Need consecutive daily snapshots (Feb 24+) to confirm trend.
-  - **Methodology note:** Marginal ROAS = (Revenue_new - Revenue_old) / (Spend_new - Spend_old). This is more actionable than blended ROAS for ongoing optimization decisions.
-
-- **Pacing (unchanged — same data as Cycle #22):**
-  - New campaigns: 64-68% (4 days old, normal ramp-up). Will reassess with fresh data after 18:00 UTC sync and with Feb 24 values.
-  - KYBBA: SKIP (pause history). Arjona Sac V2: SKIP (recent reactivation).
-
-- **Snapshot accumulation:** Still 2 dates (Feb 19 + Feb 23). Feb 24 at 06:00 UTC will be 3rd. ROAS 3-day consecutive trend check unlocks Feb 25 at earliest (needs Feb 23, 24, 25).
-
-- **TM One:** Working (25 events, last run 10:02 CST). Per-event API still returns empty data (percentSold/ticketsSold null). No errors in stderr.
-
-- **Seattle/Portland shows (Feb 25-26):** Campaigns still PAUSED. Same as Cycle #22. Jaime is actively managing — likely intentional.
-
-- **No Telegram draft** — KYBBA marginal ROAS finding is significant but not yet actionable (blended still above 2.0, need consecutive daily snapshots to confirm trend, show is 27 days out). If Feb 24 snapshot shows blended ROAS dropping further toward or below 2.0, THEN alert Jaime.
-
-- **No dashboard alert posted** — same reasoning. Will alert if blended ROAS crosses 2.0 or marginal stays below 1.0 for 3+ consecutive days.
-
-- **Next priority:** P2 — Prompt Audit. All 3 prompts were fully audited by Cycle #19, so this is a second-pass review. Should add the marginal ROAS methodology to prompts/think.txt P4 section (it's a better analytical tool than just checking blended ROAS). Also consider adding it to chat.txt for when Jaime asks about campaign health. Rotate: command.txt was last audited Cycle #12 (first pass) — do command.txt for second-pass review. Avoid P4 next per rotation rule.
-
-## 2026-02-23 ~11:30 CST — Cycle #26 (Prompt Audit — Second Pass)
-- **Priority chosen:** P2 — Self-Improvement / Prompt Audit (recommended by Cycle #25, rotation-compliant)
+## 2026-02-23 ~15:00 CST — Cycle #31 (Prompt Audit — command.txt + chat.txt)
+- **Priority chosen:** P2 — Prompt Audit (per Cycle #30 recommendation — manual session revealed undocumented adset/targeting patterns)
+- **P1 check:** No breakage. Scheduler alive (heartbeat 21:00 UTC). Session cache from 18:02 UTC (on schedule). No error files.
 - **What I audited or read:**
-  - LEARNINGS.md (full read — 289 lines)
-  - MEMORY.md (full read — 144 lines, current campaign landscape has 4 new Zamora sub-brands)
-  - prompts/command.txt (full read — 423 lines, second-pass review)
-  - prompts/chat.txt (full read — 314 lines, cross-checked)
-  - prompts/think.txt (full read — 171 lines, cross-checked)
+  - LEARNINGS.md (full read — manual session entry with API notes)
+  - MEMORY.md (full read — verified campaign state, ad delivery error docs)
+  - command.txt (555 lines pre-edit)
+  - chat.txt (324 lines pre-edit)
+- **Action taken:**
+  1. **command.txt: Added "Adset & Targeting Operations" section** (lines 139-190, +53 lines → 608 total). Covers: list adsets, read targeting, update targeting (multipart `-F`), create new adset (`--data-urlencode` to `act_{ID}/adsets`), CBO campaign note (no daily_budget on adsets), bulk targeting update workflow, Meta API normalization behavior.
+  2. **chat.txt: Added targeting update + adset creation patterns** (+24 lines → 348 total). Added: `targeting` field to adset list query, targeting update via `-F` multipart form, new adset creation endpoint (not via copies), CBO budget note.
+  3. **Cross-check:** Pixel ID (879345548404130), ad account (act_787610255314938), API version (v21.0) all consistent across both files. think.txt not touched (targeting ops aren't part of think loop).
+- **Gaps addressed from manual session:**
+  - ✅ Adset targeting updates (radius expansion) — was undocumented
+  - ✅ Adset creation (fresh, not copies) — was undocumented
+  - ✅ CBO campaign behavior (no daily_budget on adsets) — was undocumented
+  - ✅ Bulk targeting workflow — was undocumented
+  - ✅ Meta normalization of targeting_automation — was undocumented
+  - Already documented: ad delivery error fixing (2490085), creative label naming, duplicate hash rejection
+- **No Telegram draft** — routine prompt improvement, no business anomaly.
+- **Next priority:** P4 — Business Monitoring. Feb 24 00:00 UTC sync should have fired (6pm CST Feb 23), bringing the 3rd snapshot date. First chance to check: (1) KYBBA marginal ROAS with consecutive days, (2) new campaigns' first marginal ROAS, (3) whether targeting changes improved Camila Sac/Ana delivery. Alternatively P6 if infra check overdue. Avoid P2 next per rotation.
 
-- **Gaps found and fixed (5 changes across 3 files):**
-  1. **command.txt — Client slug mapping missing Alofoke/Camila** (lines 82-83): Added `Contains "alofoke" → "zamora"` and `Contains "camila" → "zamora"` with "(Zamora sub-brand)" notes. Without this fix, all 4 new campaigns (Alofoke, Camila Sac, Camila Anaheim, Camila Dallas) would be tagged "unknown" during sync. **Real bug — would have caused data quality issues on next manual sync.**
-  2. **command.txt — Insights query missing `actions` field** (line 70): Added `actions` to the fields list. chat.txt had this fix since Cycle #12, but command.txt was missed. Without `actions`, CPA cannot be calculated in command mode.
-  3. **command.txt — Missing Revenue/CPA formulas** (lines 77-78): Added `Revenue = spend × ROAS` and `CPA = spend / purchases` calculation notes to Key Notes section, matching chat.txt's existing coverage.
-  4. **chat.txt — Client aliases missing new brands** (lines 37-38): Added `"alofoke" → Zamora (Alofoke sub-brand, Boston show)` and `"camila" → Zamora (Camila sub-brand, multiple cities)`. Without this, Jaime saying "check alofoke" or "how's camila" would trigger "can't match the name" prompt.
-  5. **think.txt — Marginal ROAS methodology added** (lines 58-65): New P4 sub-section with complete formula, flagging criteria (marginal < 1.0), blended ROAS crossover projection, and caveats about snapshot gaps. Also added to chat.txt (lines 258-262) for when Jaime asks "how's X doing?"
+## 2026-02-23 ~15:30 CST — Cycle #32 (Business Monitoring)
+- **Priority chosen:** P4 — Business Monitoring (per Cycle #31 recommendation, rotation-compliant — last was P2)
+- **P1 check:** No breakage. Scheduler alive (heartbeat 21:30 UTC). Endpoints healthy (ingest 401 ✅, alerts 401 ✅). No error files.
+- **What I audited or read:**
+  - LEARNINGS.md (full read), MEMORY.md (full read, verified accurate — 4 ACTIVE, 13 PAUSED ✅)
+  - Session cache: last-campaigns.json mtime 12:02 CST (18:02 UTC, ~3.5h old) — fresh
+  - Supabase: campaign_snapshots (still 2 dates: Feb 19 + Feb 23, 30 rows total), agent_jobs heartbeats (alive)
+  - Supabase: Beamina V3 (120219401679220525) confirmed PAUSED — not in session cache, correct
+  - Endpoints: ingest 401 ✅, alerts 401 ✅ (no Clerk regression)
+  - TM scraper files: unchanged since Cycle #30
+- **Campaign status:** 4 ACTIVE (Alofoke, Camila Sac, Camila Ana, KYBBA), 13 PAUSED. **No status changes since Cycle #30.**
+- **ROAS check (ACTIVE):**
+  - Alofoke: 3.66× ✅ — healthy
+  - Camila Sacramento: 3.65× ✅ — healthy
+  - Camila Anaheim: 3.41× ✅ — healthy
+  - KYBBA: 2.46× ⚠️ — above 2.0 but declining (marginal 0.61×, unchanged from Cycle #30)
+- **Pacing check (ACTIVE, same as Cycle #30):**
+  - Alofoke: $272 / $400 = 0.68, Camila Sac: $255 / $400 = 0.64, Camila Ana: $269 / $400 = 0.67 — all normal ramp-up
+  - KYBBA: SKIP (pause history)
+- **Marginal ROAS:** Same snapshot dates (Feb 19 + Feb 23) — KYBBA marginal 0.61× unchanged. New campaigns still have only 1 snapshot date (no Feb 19 baseline). **No new calculations possible until Feb 24 snapshot.**
+- **Key observation:** This cycle's data is identical to Cycle #30. The Feb 24 snapshot (06:00 UTC = midnight CST tonight) will be the first genuinely new data point — enabling: (1) KYBBA marginal ROAS from consecutive days (Feb 23→24), (2) first marginal ROAS for Alofoke/Camila campaigns, (3) first signal of targeting change impact (radius expansions + Bay Area adset).
+- **Action taken:** None — no new data, no anomalies, MEMORY.md already accurate.
+- **No Telegram draft** — no new findings since Cycle #30.
+- **Next priority:** P6 — Infrastructure Check. Last P6 was Cycle #23 (9 cycles ago — most overdue priority). After that, P4 on Feb 24 will be the highest-impact monitoring cycle (3rd snapshot date). Avoid P4 next per rotation.
 
-- **Units fix:** Caught and fixed a units bug in the think.txt marginal ROAS formula — snapshot `spend` is in cents, so denominator needs `/100` conversion to match revenue in dollars.
+## 2026-02-23 ~17:00 CST — Cycle #34 (Knowledge Expansion)
+- **Priority chosen:** P5 — Knowledge Expansion (most overdue — 5 cycles since #28, rotation-compliant — last was P6)
+- **P1 check:** No breakage. Scheduler alive (heartbeat 23:00 UTC). Endpoints healthy. No error files. Session cache: campaigns 18:02 UTC, events 22:08 UTC. ✅
+- **What I audited or read:**
+  - LEARNINGS.md (full read — 302 lines, Cycles #0-33)
+  - MEMORY.md (full read — 160 lines, verified accurate)
+  - session/proposals.md (179 lines, 6 proposals A-F from Cycle #28)
+  - session/last-campaigns.json (16 campaigns, 4 ACTIVE)
+  - session/last-events.json (25 events, scraped 22:07 UTC — fresh from 22:00 TM cron)
+  - Manual session notes in LEARNINGS.md (targeting changes, ad error fixing, zip code analysis)
+- **Key insight:** The Feb 23 manual session revealed two major automation gaps that the existing proposals didn't cover:
+  1. **Silent ad delivery failures** — 3 ads blocked by deprecated 191x100 crop key (error 2490085). No alert was generated. Agent syncs campaigns but never checks ad-level health. Each blocked ad = wasted CBO budget allocation.
+  2. **No post-show reporting** — Denver show passed Feb 18 with 9.82× ROAS ($2,240 spent, ~$22K revenue). No automated summary was generated for client reporting or internal learning loop.
+- **Action taken:**
+  1. **Added Proposal G: Automated Ad Health Scan** — After each Meta sync, query `effective_status=WITH_ISSUES` ads. Alert immediately via dashboard + Telegram. Very small effort (single API call). Ranked #1 — prevents active budget waste, proven need.
+  2. **Added Proposal H: Post-Show Performance Report** — Auto-generate campaign summary after show date passes. Total spend, ROAS curve, targeting strategy, learnings. Medium effort. Ranked #6.
+  3. **Updated priority ranking** — G and D now top (both very-small-effort, high ROI). A remains highest strategic value. Full ranking: G→D→A→C→B→H→E→F.
+  4. **Updated state summary** in proposals.md — 4 ACTIVE (not 5), noted command-mode capabilities, added manual session learnings context.
+- **No Telegram draft** — proposals are for Jaime's review when he's ready, not time-sensitive alerts.
+- **Next priority:** P4 — Business Monitoring. The 00:00 UTC sync (6PM CST tonight) will refresh session cache with any intraday spend changes. More importantly, the Feb 24 snapshot at 06:00 UTC (midnight CST) enables: (1) KYBBA marginal ROAS from consecutive days (Feb 23→24), (2) first marginal ROAS for Alofoke/Camila campaigns, (3) first signal of targeting change impact. First P4 on Feb 24 will be the highest-impact monitoring cycle of the week. Avoid P5 next per rotation.
 
-- **Cross-check results:** All 3 prompts now consistent on: API version (v21.0), ad account ID, client slug mappings (including new sub-brands), Supabase column naming, insights fields, error codes, session cache format, alerts endpoint. command.txt: 423→429 lines. chat.txt: 314→321 lines. think.txt: 171→179 lines.
+## 2026-02-23 ~16:30 CST — Cycle #33 (Infrastructure Check)
+- **Priority chosen:** P6 — Infrastructure Check (per Cycle #32 recommendation, last P6 was Cycle #23 — 10 cycles ago, most overdue)
+- **P1 check:** No breakage. Scheduler alive (heartbeat 22:30 UTC, every minute). No error files.
+- **What I audited or read:**
+  - LEARNINGS.md (full read), MEMORY.md (full read)
+  - .env: all 7 vars present (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, INGEST_URL, INGEST_SECRET, TELEGRAM_BOT_TOKEN, TM_EMAIL, TM_PASSWORD) ✅
+  - Claude CLI: v2.1.50 at `/Users/jaimeortiz/.local/bin/claude` ✅
+  - Endpoints: `/api/health` → 404 (expected), `/api/ingest` POST → 401 ✅, `/api/alerts` POST → 401 ✅ (no Clerk 307 regression)
+  - Scheduler: running in tmux "agent" session (PID 66704, started ~19:09 CST). Heartbeats every minute. ✅
+  - Session cache: last-campaigns.json 18:02 UTC (matches 18:00 Meta cron ✅), last-events.json 22:08 UTC (matches 22:00 TM cron ✅)
+  - Campaign snapshots: 30 rows, 2 dates (Feb 19 + Feb 23). Feb 24 expected at 06:00 UTC.
+  - Supabase meta_campaigns: 4 ACTIVE updated at 18:02 UTC (confirms 18:00 sync). PAUSED at 12:04 (manual run, expected).
+  - Non-heartbeat jobs: last was `tm-demographics` at 01:10 UTC Feb 23. Old Feb 18 jobs still in table.
+  - TM scraper stderr: all per-event API calls still returning "empty" (Known Issue #4 unchanged). 25 events via GraphQL. ✅
+- **New verification:** TM cron independently confirmed — last-events.json mtime 22:08 UTC matches 22:00 even-hour cron slot. Previous cycles only verified Meta cron timing.
+- **Full status summary — ALL GREEN:**
+  | Check | Status |
+  |-------|--------|
+  | INGEST_URL | ✅ Railway production |
+  | /api/ingest | ✅ 401 (alive) |
+  | /api/alerts | ✅ 401 (no Clerk regression) |
+  | .env (7 vars) | ✅ All present |
+  | Claude CLI | ✅ v2.1.50 |
+  | Heartbeats | ✅ Every minute |
+  | Scheduler PID | ✅ tmux "agent" session |
+  | Meta cron (18:00 UTC) | ✅ Confirmed by file mtime + Supabase |
+  | TM cron (22:00 UTC) | ✅ Confirmed by file mtime |
+  | Snapshots | ✅ 30 rows, Feb 24 pending |
+  | Supabase | ✅ Responsive |
+- **Action taken:** None — everything operational. Logged verification of TM cron timing (new).
+- **No Telegram draft** — all infrastructure healthy, no anomalies.
+- **Next priority:** P4 — Business Monitoring. **Feb 24 is the most important monitoring cycle yet.** The 06:00 UTC (midnight CST) sync creates Feb 24 snapshots, enabling: (1) KYBBA marginal ROAS from consecutive days (Feb 23→24), (2) first marginal ROAS for Alofoke/Camila (their Feb 23 snapshots + Feb 24 = 2 points), (3) first signal of targeting change impact (radius expansions + Bay Area adset from today's manual session). The 00:00 UTC sync (6PM CST tonight) refreshes session cache first. Alternatively P2/P3/P5 if P4 seems premature before snapshots land. Avoid P6 next per rotation.
 
-- **No Telegram draft** — routine prompt maintenance, no business anomaly.
+## 2026-02-23 ~19:00 CST — Manual KYBBA Deep Dive (Jaime + customer request)
 
-- **Next priority:** P4 — Business Monitoring. The 18:00 UTC sync should have fresh data by now (~17:30 UTC). Check if campaign values updated from the 06:04 UTC baseline. Also: Feb 24 snapshot arrives overnight (06:00 UTC) — will be 3rd snapshot date, enabling ROAS trend for campaigns with all 3 dates. KYBBA marginal ROAS needs watching. Alternatively P3 if P4 data hasn't changed. Avoid P2 next per rotation rule.
+**Trigger:** KYBBA customer asked how the campaign is doing.
+
+**Campaign-level summary (last 30d):**
+- Spend: $2,369 | Revenue: $5,832 | ROAS: 2.46× | Purchases: 50 | CPA: $47.39
+- Checkouts: 520 → Purchases: 50 = **9.6% checkout conversion** (90% abandonment)
+- CTR: 2.10% | CPM: $9.36 | CPC: $0.45 | Reach: 61,216 | Impressions: 253,234
+- Daily budget: $50/day | Show: Mar 22 (27 days out)
+
+**Trend:** Blended ROAS declining (2.73× Feb 19 → 2.46× Feb 23). Marginal ROAS 0.61× confirmed.
+
+**Ad set breakdown (5 active):**
+| Ad Set | Spend | Purchases | ROAS | CPA |
+|--------|-------|-----------|------|-----|
+| Video 12 (B) | $86 | 4 | 4.65× | $21.56 |
+| Video 12 (A) | $89 | 3 | 3.96× | $29.77 |
+| Video 11 | $894 | 24 | 3.32× | $37.24 |
+| Video 9 | $108 | 2 | 2.82× | $54.10 |
+| Video 1 | $175 | 4 | 2.67× | $43.77 |
+Paused ad sets (Videos 2-8, Assets 1-2): ~$1,017 for 13 purchases ($78 CPA)
+
+**Recommendations given to Jaime:**
+1. Kill Video 9 ($54 CPA) and Video 1 ($44 CPA) — dragging blended ROAS
+2. Scale Video 12 — best performer (4.65× and 3.96× ROAS)
+3. Video 11 is fatiguing (67% of budget, $37 CPA) — monitor, pause if <3×
+4. Checkout drop-off 520→50 (9.6%) is a landing page / ticketing UX problem
+5. Fresh creatives needed (Video 13/14) — urgency/FOMO angles with 27 days to show
+6. Test tighter age band (21-45) — all ad sets wide open 18-65 with Advantage+
+
+**Budget question:** Customer asked about increasing to $50 per ad set (from $50 total campaign). Analysis pending — see next entry.

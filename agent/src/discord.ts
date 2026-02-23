@@ -1,0 +1,189 @@
+import "dotenv/config";
+import {
+  Client,
+  GatewayIntentBits,
+  Partials,
+  type Message,
+  type TextChannel,
+} from "discord.js";
+import { runClaude } from "./runner.js";
+import { state } from "./state.js";
+
+const token = process.env.DISCORD_BOT_TOKEN;
+const channelId = process.env.DISCORD_CHANNEL_ID;
+
+export const discordClient = token
+  ? new Client({
+      intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.DirectMessages,
+        GatewayIntentBits.DirectMessageTyping,
+      ],
+      partials: [Partials.Channel, Partials.Message],
+    })
+  : null;
+
+let agentBusy = false;
+
+// Per-channel session IDs for multi-turn conversation context
+const channelSessions = new Map<string, string>();
+
+function chunkText(text: string, maxLen: number): string[] {
+  const chunks: string[] = [];
+  let i = 0;
+  while (i < text.length) {
+    chunks.push(text.slice(i, i + maxLen));
+    i += maxLen;
+  }
+  return chunks;
+}
+
+/** Convert Telegram HTML + markdown to Discord-compatible markdown */
+function cleanForDiscord(text: string): string {
+  return text
+    // HTML bold → Discord bold
+    .replace(/<b>([\s\S]*?)<\/b>/g, "**$1**")
+    // HTML italic
+    .replace(/<i>([\s\S]*?)<\/i>/g, "*$1*")
+    // HTML code blocks
+    .replace(/<pre>([\s\S]*?)<\/pre>/g, "```\n$1\n```")
+    // HTML inline code
+    .replace(/<code>([\s\S]*?)<\/code>/g, "`$1`")
+    // HTML entities
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    // Strip any remaining HTML tags
+    .replace(/<[^>]+>/g, "")
+    // Tables → plain text
+    .replace(/^\|[-:| ]+\|$/gm, "")
+    .replace(/^\|(.+)\|$/gm, (_m, row: string) =>
+      row.split("|").map((c) => c.trim()).filter(Boolean).join(" · ")
+    )
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+async function handleMessage(msg: Message, prompt: string) {
+  if (agentBusy || state.jobRunning || state.thinkRunning) {
+    await msg.reply("Agent is busy. Try again in a moment.");
+    return;
+  }
+
+  agentBusy = true;
+
+  // Show typing indicator (only on channels that support it)
+  const ch = msg.channel;
+  if ("sendTyping" in ch) await (ch as TextChannel).sendTyping().catch(() => {});
+  const typingInterval = setInterval(() => {
+    if ("sendTyping" in ch) (ch as TextChannel).sendTyping().catch(() => {});
+  }, 8000);
+
+  const working = await msg.reply("Working on it...");
+
+  let buffer = "";
+  let lastEdit = Date.now();
+
+  const channelId = msg.channelId;
+  const existingSession = channelSessions.get(channelId);
+
+  try {
+    const result = await runClaude({
+      prompt,
+      systemPromptName: "chat",
+      resumeSessionId: existingSession,
+      onChunk: async (chunk: string) => {
+        buffer += chunk;
+        if (Date.now() - lastEdit > 1500 && buffer.trim()) {
+          const preview = cleanForDiscord(buffer.slice(-1900));
+          await working.edit(preview || "...").catch(() => {});
+          lastEdit = Date.now();
+        }
+      },
+    });
+
+    if (result.sessionId) {
+      channelSessions.set(channelId, result.sessionId);
+    }
+
+    const full = cleanForDiscord(result.text || "Done.");
+    const chunks = chunkText(full, 1900);
+
+    await working.edit(chunks[0] || "Done.").catch(() => {});
+    for (const chunk of chunks.slice(1)) {
+      if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
+    }
+  } catch (err) {
+    const errMsg = err instanceof Error ? err.message : String(err);
+    await working.edit(`Something went wrong: ${errMsg}`).catch(() => {});
+  } finally {
+    clearInterval(typingInterval);
+    agentBusy = false;
+  }
+}
+
+export function startDiscordBot(): void {
+  if (!discordClient) {
+    console.warn("[discord] DISCORD_BOT_TOKEN not set — Discord bot disabled");
+    return;
+  }
+
+  discordClient.once("ready", (c) => {
+    console.log(`Discord bot online: ${c.user.tag}`);
+  });
+
+  discordClient.on("messageCreate", async (msg) => {
+    if (msg.author.bot) return;
+
+    const content = msg.content.trim();
+    if (!content) return;
+
+    // Simple commands
+    if (content === "!status" || content === "/status") {
+      const busy = agentBusy || state.jobRunning || state.thinkRunning;
+      await msg.reply(busy ? "Agent is busy running a task." : "Agent is idle and ready.");
+      return;
+    }
+
+    if (content === "!reset" || content === "/reset") {
+      channelSessions.delete(msg.channelId);
+      await msg.reply("Conversation reset. Starting fresh.");
+      return;
+    }
+
+    if (content === "!check" || content === "/check") {
+      await handleMessage(
+        msg,
+        "Check TM One for any updates. Compare against the last saved state and report what changed."
+      );
+      return;
+    }
+
+    // Any other message → send to agent
+    await handleMessage(msg, content);
+  });
+
+  discordClient.login(token).catch((err: unknown) => {
+    const m = err instanceof Error ? err.message : String(err);
+    console.error("[discord] Login failed:", m);
+  });
+}
+
+/** Send a proactive notification to the configured Discord channel. */
+export async function notifyDiscord(text: string): Promise<void> {
+  if (!discordClient || !channelId) return;
+  try {
+    const channel = await discordClient.channels.fetch(channelId);
+    if (channel && channel.isTextBased()) {
+      const chunks = chunkText(cleanForDiscord(text), 1900);
+      for (const chunk of chunks) {
+        await (channel as TextChannel).send(chunk);
+      }
+    }
+  } catch (err) {
+    const m = err instanceof Error ? err.message : String(err);
+    console.warn("[discord] Failed to send notification:", m);
+  }
+}

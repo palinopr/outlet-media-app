@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { existsSync, mkdirSync } from "node:fs";
 import { bot } from "./bot.js";
+import { startDiscordBot } from "./discord.js";
 import { startScheduler } from "./scheduler.js";
 import { startJobPoller } from "./jobs.js";
 
@@ -11,6 +12,9 @@ if (!existsSync(sessionDir)) mkdirSync(sessionDir, { recursive: true });
 console.log("=== Outlet Media Agent ===");
 console.log("Powered by Claude Code CLI +  Playwright MCP");
 console.log("");
+
+// Start Discord bot (if token configured)
+startDiscordBot();
 
 // Start Telegram bot (long-polling)
 bot.start({
@@ -44,4 +48,11 @@ process.once("SIGINT", () => {
 process.once("SIGTERM", () => {
   bot.stop();
   process.exit(0);
+});
+
+// Suppress unhandled Discord WS close errors on shutdown
+process.on("unhandledRejection", (reason) => {
+  const msg = reason instanceof Error ? reason.message : String(reason);
+  if (msg.includes("1000") || msg.includes("WebSocket")) return;
+  console.error("[unhandled]", msg);
 });

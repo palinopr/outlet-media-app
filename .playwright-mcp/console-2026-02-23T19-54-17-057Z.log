@@ -1,0 +1,2 @@
+[    3857ms] [WARNING] using deprecated parameters for the initialization function; pass a single object instead @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/initializer/294b1158/main-1RTPIvuy.js:20764
+[    3879ms] [WARNING] rumAccessToken will be required in the future @ https://one.ticketmaster.com/cdn/PRD3100/tm1-ufo/@tm1/ufo-opentelemetry-api/294b1158/main.mjs:317

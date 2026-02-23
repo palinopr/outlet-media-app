@@ -1,5 +1,17 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
+import {
+  DollarSign,
+  TrendingUp,
+  BarChart3,
+  MapPin,
+  Calendar,
+  Users,
+  Activity,
+  Ticket,
+  Heart,
+} from "lucide-react";
+
 type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 type DemographicsRow = Database["public"]["Tables"]["tm_event_demographics"]["Row"];
 
@@ -8,7 +20,14 @@ interface Props {
   searchParams: Promise<{ days?: string }>;
 }
 
-// --- Data fetching ---
+// --- Types ---
+
+interface CampaignCard {
+  id: string;
+  name: string;
+  spendCents: number;
+  roas: number | null;
+}
 
 interface AudienceProfile {
   totalFans: number;
@@ -26,6 +45,8 @@ interface AudienceProfile {
   incomeOver125: number | null;
   marriedPct: number | null;
 }
+
+// --- Helpers ---
 
 function weightedAvg(rows: DemographicsRow[], key: keyof DemographicsRow): number | null {
   const valid = rows.filter((r) => r[key] != null && (r.fans_total ?? 0) > 0);
@@ -55,89 +76,166 @@ function buildAudienceProfile(demos: DemographicsRow[]): AudienceProfile {
   };
 }
 
-function aggregateSnapshots(snapshots: { spend: number | null; roas: number | null }[]) {
-  const valid = snapshots.filter((s) => s.spend != null && s.spend > 0);
-  const totalSpendCents = valid.reduce((sum, s) => sum + (s.spend ?? 0), 0);
-  const weightedRoas = valid.reduce((sum, s) => sum + (s.roas ?? 0) * (s.spend ?? 0), 0);
-  const blendedRoas = totalSpendCents > 0 ? weightedRoas / totalSpendCents : null;
-  return { totalSpendCents, blendedRoas };
+function fmtUsd(n: number | null) {
+  return n == null ? "--" : "$" + Math.round(n).toLocaleString("en-US");
 }
 
-async function getData(slug: string, days: 7 | 14) {
-  if (!supabaseAdmin) return { events: [], snapshots: [], demographics: null };
-
-  // Get campaign IDs for this client
-  const campaignsRes = await supabaseAdmin
-    .from("meta_campaigns")
-    .select("campaign_id")
-    .eq("client_slug", slug);
-  const campaignIds = (campaignsRes.data ?? []).map((c) => c.campaign_id);
-
-  // Date cutoff
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
-
-  // Fetch snapshots in date range
-  const snapshotsRes = campaignIds.length > 0
-    ? await supabaseAdmin
-        .from("campaign_snapshots")
-        .select("spend, roas")
-        .in("campaign_id", campaignIds)
-        .gte("snapshot_date", cutoffStr)
-    : { data: [] };
-
-  // Fetch events
-  const eventsRes = await supabaseAdmin
-    .from("tm_events")
-    .select("*")
-    .eq("client_slug", slug)
-    .order("date", { ascending: true })
-    .limit(50);
-  const events = (eventsRes.data ?? []) as TmEvent[];
-
-  // Fetch demographics with actual tm_ids
-  let demographics: AudienceProfile | null = null;
-  if (events.length > 0) {
-    const tmIds = events.map((e) => e.tm_id);
-    const d = await supabaseAdmin
-      .from("tm_event_demographics")
-      .select("*")
-      .in("tm_id", tmIds);
-    const rows = (d.data ?? []) as DemographicsRow[];
-    if (rows.length > 0) demographics = buildAudienceProfile(rows);
-  }
-
-  return {
-    events,
-    snapshots: snapshotsRes.data ?? [],
-    demographics,
-  };
-}
-
-// --- Helpers ---
-
-function fmtUsd(n: number | null) { return n == null ? "--" : "$" + Math.round(n).toLocaleString("en-US"); }
 function fmtDate(d: string | null) {
   if (!d) return "--";
   return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
-function statusBadge(s: string) {
-  const key = (s ?? "").toLowerCase().replace(/_/g, "");
-  const map: Record<string, { label: string; classes: string }> = {
-    onsale:    { label: "On Sale",   classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-    presale:   { label: "Presale",   classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-    soldout:   { label: "Sold Out",  classes: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
-    offsale:   { label: "Off Sale",  classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" },
-    cancelled: { label: "Cancelled", classes: "bg-red-500/10 text-red-400 border-red-500/20" },
-    published: { label: "Published", classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  };
-  const { label, classes } = map[key] ?? { label: s, classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" };
+function roasColor(roas: number | null): string {
+  if (roas == null) return "text-white/40";
+  if (roas >= 3) return "text-emerald-400";
+  if (roas >= 2) return "text-amber-400";
+  return "text-red-400";
+}
+
+function roasDot(roas: number | null): string {
+  if (roas == null) return "bg-white/20";
+  if (roas >= 3) return "bg-emerald-400";
+  if (roas >= 2) return "bg-amber-400";
+  return "bg-red-400";
+}
+
+type StatusKey = "onsale" | "presale" | "soldout" | "offsale" | "cancelled" | "published";
+
+const statusConfig: Record<StatusKey, { label: string; text: string; bg: string; dot: string }> = {
+  onsale:    { label: "On Sale",   text: "text-emerald-400", bg: "bg-emerald-400/10", dot: "bg-emerald-400" },
+  presale:   { label: "Presale",   text: "text-blue-400",    bg: "bg-blue-400/10",    dot: "bg-blue-400" },
+  soldout:   { label: "Sold Out",  text: "text-violet-400",  bg: "bg-violet-400/10",  dot: "bg-violet-400" },
+  offsale:   { label: "Off Sale",  text: "text-zinc-400",    bg: "bg-zinc-400/10",    dot: "bg-zinc-400" },
+  cancelled: { label: "Cancelled", text: "text-red-400",     bg: "bg-red-400/10",     dot: "bg-red-400" },
+  published: { label: "Published", text: "text-blue-400",    bg: "bg-blue-400/10",    dot: "bg-blue-400" },
+};
+
+function StatusBadge({ status }: { status: string }) {
+  const key = (status ?? "").toLowerCase().replace(/_/g, "") as StatusKey;
+  const cfg = statusConfig[key] ?? { label: status, text: "text-amber-400", bg: "bg-amber-400/10", dot: "bg-amber-400" };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}>
-      {label}
+    <span className={`badge-status ${cfg.text} ${cfg.bg}`}>
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
     </span>
+  );
+}
+
+// --- Data fetching ---
+
+async function getData(slug: string, days: 7 | 14) {
+  if (!supabaseAdmin) return { campaignCards: [], events: [], demographics: null };
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - days);
+  const cutoffStr = cutoff.toISOString().slice(0, 10);
+
+  const [campaignsRes, eventsRes] = await Promise.all([
+    supabaseAdmin
+      .from("meta_campaigns")
+      .select("campaign_id, name")
+      .eq("client_slug", slug),
+    supabaseAdmin
+      .from("tm_events")
+      .select("*")
+      .eq("client_slug", slug)
+      .order("date", { ascending: true })
+      .limit(50),
+  ]);
+
+  const campaigns = campaignsRes.data ?? [];
+  const events = (eventsRes.data ?? []) as TmEvent[];
+  const campaignIds = campaigns.map((c) => c.campaign_id);
+
+  const snapshotsRes = campaignIds.length > 0
+    ? await supabaseAdmin
+        .from("campaign_snapshots")
+        .select("campaign_id, spend, roas")
+        .in("campaign_id", campaignIds)
+        .gte("snapshot_date", cutoffStr)
+    : { data: [] };
+
+  const byId = new Map<string, { spend: number; roasWeighted: number }>();
+  for (const s of (snapshotsRes.data ?? [])) {
+    const cur = byId.get(s.campaign_id) ?? { spend: 0, roasWeighted: 0 };
+    cur.spend += s.spend ?? 0;
+    cur.roasWeighted += (s.roas ?? 0) * (s.spend ?? 0);
+    byId.set(s.campaign_id, cur);
+  }
+
+  const campaignCards: CampaignCard[] = campaigns
+    .map((c) => {
+      const snap = byId.get(c.campaign_id);
+      const spendCents = snap?.spend ?? 0;
+      const roas = snap && snap.spend > 0 ? snap.roasWeighted / snap.spend : null;
+      return { id: c.campaign_id, name: c.name ?? "", spendCents, roas };
+    })
+    .filter((c) => c.spendCents > 0)
+    .sort((a, b) => b.spendCents - a.spendCents);
+
+  let demographics: AudienceProfile | null = null;
+  if (events.length > 0) {
+    const tmIds = events.map((e) => e.tm_id);
+    const demosRes = await supabaseAdmin
+      .from("tm_event_demographics")
+      .select("*")
+      .in("tm_id", tmIds);
+    const rows = (demosRes.data ?? []) as DemographicsRow[];
+    if (rows.length > 0) demographics = buildAudienceProfile(rows);
+  }
+
+  return { campaignCards, events, demographics };
+}
+
+// --- Progress Bar Component ---
+
+function ProgressBar({
+  value,
+  color = "gradient",
+  height = "h-1.5",
+}: {
+  value: number;
+  color?: "gradient" | "cyan" | "violet" | "emerald" | "amber";
+  height?: string;
+}) {
+  const barColors: Record<string, string> = {
+    gradient: "",
+    cyan: "bg-cyan-400",
+    violet: "bg-violet-400",
+    emerald: "bg-emerald-400",
+    amber: "bg-amber-400",
+  };
+
+  return (
+    <div className={`progress-track ${height}`}>
+      <div
+        className={`h-full rounded-full ${color === "gradient" ? "gradient-bar" : barColors[color]}`}
+        style={{ width: `${Math.min(value, 100)}%` }}
+      />
+    </div>
+  );
+}
+
+// --- Stat Helpers ---
+
+function DemoBar({
+  label,
+  value,
+  color,
+}: {
+  label: string;
+  value: number | null;
+  color: "cyan" | "violet" | "emerald" | "amber";
+}) {
+  if (value == null) return null;
+  return (
+    <div className="mb-3 last:mb-0">
+      <div className="flex items-center justify-between mb-1.5">
+        <span className="text-xs text-white/50">{label}</span>
+        <span className="text-xs font-semibold text-white/90">{value.toFixed(0)}%</span>
+      </div>
+      <ProgressBar value={value} color={color} />
+    </div>
   );
 }
 
@@ -147,50 +245,39 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const { slug } = await params;
   const { days: daysParam } = await searchParams;
   const days = daysParam === "14" ? 14 : 7;
-  const { events, snapshots, demographics } = await getData(slug, days);
-  const { totalSpendCents, blendedRoas } = aggregateSnapshots(snapshots);
+  const { campaignCards, events, demographics } = await getData(slug, days);
 
-  const clientName = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const totalSpendCents = campaignCards.reduce((s, c) => s + c.spendCents, 0);
+  const totalWeightedRoas = campaignCards.reduce((s, c) => s + (c.roas ?? 0) * c.spendCents, 0);
+  const blendedRoas = totalSpendCents > 0 ? totalWeightedRoas / totalSpendCents : null;
+
+  const clientName = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/_/g, " ");
   const now = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
+    weekday: "long", month: "long", day: "numeric",
   });
 
   return (
-    <div style={{ background: "#09090B", minHeight: "100vh", padding: "2rem" }}>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+    <div className="space-y-8">
+
+      {/* ─── Header ─── */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-          <h1 style={{ color: "#FAFAFA", fontSize: "1.25rem", fontWeight: 600 }}>
+          <h1 className="text-xl font-semibold text-white/95 tracking-tight">
             {clientName} Campaign
           </h1>
-          <p style={{ color: "#A1A1AA", fontSize: "0.75rem", marginTop: "0.25rem" }}>{now}</p>
+          <p className="text-xs text-white/40 mt-1">{now}</p>
         </div>
 
-        {/* Date filter toggle */}
-        <div style={{
-          display: "flex",
-          gap: "0.25rem",
-          background: "#18181B",
-          border: "1px solid #27272A",
-          borderRadius: "0.5rem",
-          padding: "0.25rem",
-        }}>
+        <div className="flex items-center gap-1 p-1 rounded-lg bg-white/[0.04] border border-white/[0.06]">
           {([7, 14] as const).map((d) => (
             <a
               key={d}
               href={`?days=${d}`}
-              style={{
-                padding: "0.25rem 0.75rem",
-                borderRadius: "0.375rem",
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                textDecoration: "none",
-                background: days === d ? "#FAFAFA" : "transparent",
-                color: days === d ? "#09090B" : "#A1A1AA",
-                transition: "all 0.15s",
-              }}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                days === d
+                  ? "bg-white text-zinc-900 shadow-sm"
+                  : "text-white/50 hover:text-white/80 hover:bg-white/[0.06]"
+              }`}
             >
               Last {d}d
             </a>
@@ -198,135 +285,176 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         </div>
       </div>
 
-      {/* Hero numbers */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1rem", marginBottom: "2rem" }}>
-        {[
-          {
-            label: "Total Spend",
-            value: fmtUsd(totalSpendCents / 100),
-            sub: `Last ${days} days`,
-          },
-          {
-            label: "Blended ROAS",
-            value: blendedRoas != null ? `${blendedRoas.toFixed(1)}x` : "--",
-            sub: "Return on ad spend",
-            valueColor: blendedRoas == null ? "#FAFAFA"
-              : blendedRoas >= 3 ? "#4ADE80"
-              : blendedRoas >= 2 ? "#FCD34D"
-              : "#F87171",
-          },
-          {
-            label: "Shows",
-            value: String(events.length),
-            sub: "On tour",
-          },
-        ].map(({ label, value, sub, valueColor }) => (
-          <div key={label} style={{
-            background: "#18181B",
-            border: "1px solid #27272A",
-            borderRadius: "0.75rem",
-            padding: "1.5rem",
-          }}>
-            <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
-              {label}
-            </p>
-            <p style={{ color: valueColor ?? "#FAFAFA", fontSize: "2.5rem", fontWeight: 700, lineHeight: 1 }}>
-              {value}
-            </p>
-            <p style={{ color: "#A1A1AA", fontSize: "0.75rem", marginTop: "0.375rem" }}>{sub}</p>
+      {/* ─── Hero Stats ─── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Total Spend */}
+        <div className="glass-card hero-stat-card stat-glow p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-cyan-500/10">
+              <DollarSign className="h-3.5 w-3.5 text-cyan-400" />
+            </div>
+            <span className="section-label">Total Spend</span>
           </div>
-        ))}
+          <p className="text-4xl font-bold text-white tracking-tight leading-none">
+            {fmtUsd(totalSpendCents / 100)}
+          </p>
+          <p className="text-[11px] text-white/30 mt-2">Last {days} days</p>
+        </div>
+
+        {/* Blended ROAS */}
+        <div className="glass-card hero-stat-card stat-glow p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-violet-500/10">
+              <TrendingUp className="h-3.5 w-3.5 text-violet-400" />
+            </div>
+            <span className="section-label">Blended ROAS</span>
+          </div>
+          <p className={`text-4xl font-bold tracking-tight leading-none ${roasColor(blendedRoas)}`}>
+            {blendedRoas != null ? `${blendedRoas.toFixed(1)}x` : "--"}
+          </p>
+          <p className="text-[11px] text-white/30 mt-2">Return on ad spend</p>
+        </div>
+
+        {/* Campaigns Count */}
+        <div className="glass-card hero-stat-card stat-glow p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-emerald-500/10">
+              <BarChart3 className="h-3.5 w-3.5 text-emerald-400" />
+            </div>
+            <span className="section-label">Campaigns</span>
+          </div>
+          <p className="text-4xl font-bold text-white tracking-tight leading-none">
+            {campaignCards.length}
+          </p>
+          <p className="text-[11px] text-white/30 mt-2">Running this period</p>
+        </div>
       </div>
 
-      {/* City cards */}
-      <div style={{ marginBottom: "2.5rem" }}>
-        <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem" }}>
-          Your Shows
-        </p>
-        {events.length === 0 ? (
-          <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: "0.75rem", padding: "3rem", textAlign: "center" }}>
-            <p style={{ color: "#A1A1AA", fontSize: "0.875rem" }}>No shows synced yet</p>
+      {/* ─── Campaign Cards ─── */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <Activity className="h-3.5 w-3.5 text-white/30" />
+          <span className="section-label">Your Campaigns</span>
+        </div>
+
+        {campaignCards.length === 0 ? (
+          <div className="glass-card py-12 text-center">
+            <p className="text-sm text-white/40">No campaign data for this period</p>
           </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: "1rem" }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {campaignCards.map((c) => (
+              <div key={c.id} className="glass-card campaign-card p-5">
+                <p className="text-base font-semibold text-white/90 mb-4 truncate">
+                  {c.name}
+                </p>
+                <div className="grid grid-cols-2 gap-6">
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <DollarSign className="h-3 w-3 text-white/30" />
+                      <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">Spend</span>
+                    </div>
+                    <p className="text-xl font-bold text-white/90">
+                      {fmtUsd(c.spendCents / 100)}
+                    </p>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <TrendingUp className="h-3 w-3 text-white/30" />
+                      <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">ROAS</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-block h-2 w-2 rounded-full ${roasDot(c.roas)}`} />
+                      <p className={`text-xl font-bold ${roasColor(c.roas)}`}>
+                        {c.roas != null ? `${c.roas.toFixed(1)}x` : "--"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* ─── Shows ─── */}
+      {events.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Ticket className="h-3.5 w-3.5 text-white/30" />
+            <span className="section-label">Your Shows</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((e) => {
               const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
               const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : null;
               return (
-                <div key={e.id} style={{
-                  background: "#18181B",
-                  border: "1px solid #27272A",
-                  borderRadius: "0.75rem",
-                  padding: "1.25rem",
-                }}>
-                  {/* City */}
-                  <p style={{ color: "#FAFAFA", fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.25rem" }}>
+                <div key={e.id} className="glass-card p-5">
+                  <p className="text-base font-semibold text-white/90 mb-0.5 truncate">
                     {e.city ?? e.name}
                   </p>
-                  {/* Date + venue */}
-                  <p style={{ color: "#A1A1AA", fontSize: "0.75rem", marginBottom: "1rem" }}>
-                    {fmtDate(e.date)}{e.venue ? ` · ${e.venue}` : ""}
-                  </p>
-                  {/* Sell-through bar */}
+                  <div className="flex items-center gap-2 text-xs text-white/40 mb-4">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      <span>{fmtDate(e.date)}</span>
+                    </div>
+                    {e.venue && (
+                      <>
+                        <span className="text-white/15">·</span>
+                        <div className="flex items-center gap-1 min-w-0">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{e.venue}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
                   {pct != null && cap > 0 && (
-                    <div style={{ marginBottom: "0.75rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.375rem" }}>
-                        <span style={{ color: "#A1A1AA", fontSize: "0.6875rem" }}>Sell-through</span>
-                        <span style={{ color: "#FAFAFA", fontSize: "0.6875rem", fontWeight: 600 }}>{pct}%</span>
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[11px] text-white/40">Sell-through</span>
+                        <span className="text-[11px] font-semibold text-white/80">{pct}%</span>
                       </div>
-                      <div style={{ height: "4px", background: "#27272A", borderRadius: "9999px", overflow: "hidden" }}>
-                        <div style={{
-                          height: "100%",
-                          borderRadius: "9999px",
-                          background: "#818CF8",
-                          width: `${pct}%`,
-                        }} />
-                      </div>
+                      <ProgressBar value={pct} />
                     </div>
                   )}
-                  {/* Status badge */}
+
                   {e.status && (
-                    <div style={{ marginTop: "0.5rem" }}>
-                      {statusBadge(e.status)}
+                    <div className="mt-3 pt-3 border-t border-white/[0.06]">
+                      <StatusBadge status={e.status} />
                     </div>
                   )}
                 </div>
               );
             })}
           </div>
-        )}
-      </div>
+        </section>
+      )}
 
-      {/* Audience profile */}
+      {/* ─── Audience Profile ─── */}
       {demographics && demographics.totalFans > 0 && (
-        <div style={{ marginBottom: "2.5rem" }}>
-          <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1rem" }}>
-            Audience Profile · {demographics.totalFans.toLocaleString()} tracked fans
+        <section>
+          <div className="flex items-center gap-2 mb-1">
+            <Users className="h-3.5 w-3.5 text-white/30" />
+            <span className="section-label">Audience Profile</span>
+          </div>
+          <p className="text-[11px] text-white/25 mb-4 ml-5.5">
+            {demographics.totalFans.toLocaleString()} tracked fans
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
             {/* Gender */}
             {(demographics.femalePct != null || demographics.malePct != null) && (
-              <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: "0.75rem", padding: "1.25rem" }}>
-                <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>Gender</p>
-                {[
-                  { label: "Female", value: demographics.femalePct, color: "#818CF8" },
-                  { label: "Male", value: demographics.malePct, color: "#22D3EE" },
-                ].map(({ label, value, color }) =>
-                  value != null ? (
-                    <div key={label} style={{ marginBottom: "0.625rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
-                        <span style={{ color: "#A1A1AA", fontSize: "0.75rem" }}>{label}</span>
-                        <span style={{ color: "#FAFAFA", fontSize: "0.75rem", fontWeight: 600 }}>{value.toFixed(0)}%</span>
-                      </div>
-                      <div style={{ height: "4px", background: "#27272A", borderRadius: "9999px" }}>
-                        <div style={{ height: "100%", borderRadius: "9999px", background: color, width: `${value}%` }} />
-                      </div>
-                    </div>
-                  ) : null
-                )}
+              <div className="glass-card p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Heart className="h-3.5 w-3.5 text-violet-400/60" />
+                  <span className="text-xs font-semibold text-white/60">Gender</span>
+                </div>
+                <DemoBar label="Female" value={demographics.femalePct} color="violet" />
+                <DemoBar label="Male" value={demographics.malePct} color="cyan" />
                 {demographics.marriedPct != null && (
-                  <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", marginTop: "0.5rem" }}>
+                  <p className="text-[11px] text-white/30 mt-3 pt-3 border-t border-white/[0.06]">
                     {demographics.marriedPct.toFixed(0)}% married
                   </p>
                 )}
@@ -335,65 +463,46 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
 
             {/* Age */}
             {demographics.age1824 != null && (
-              <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: "0.75rem", padding: "1.25rem" }}>
-                <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>Age</p>
-                {[
-                  { label: "18\u201324", value: demographics.age1824 },
-                  { label: "25\u201334", value: demographics.age2534 },
-                  { label: "35\u201344", value: demographics.age3544 },
-                  { label: "45\u201354", value: demographics.age4554 },
-                  { label: "55+",   value: demographics.ageOver54 },
-                ].map(({ label, value }) =>
-                  value != null ? (
-                    <div key={label} style={{ marginBottom: "0.625rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
-                        <span style={{ color: "#A1A1AA", fontSize: "0.75rem" }}>{label}</span>
-                        <span style={{ color: "#FAFAFA", fontSize: "0.75rem", fontWeight: 600 }}>{value.toFixed(0)}%</span>
-                      </div>
-                      <div style={{ height: "4px", background: "#27272A", borderRadius: "9999px" }}>
-                        <div style={{ height: "100%", borderRadius: "9999px", background: "#4ADE80", width: `${value}%` }} />
-                      </div>
-                    </div>
-                  ) : null
-                )}
+              <div className="glass-card p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <Users className="h-3.5 w-3.5 text-emerald-400/60" />
+                  <span className="text-xs font-semibold text-white/60">Age</span>
+                </div>
+                <DemoBar label="18–24" value={demographics.age1824} color="emerald" />
+                <DemoBar label="25–34" value={demographics.age2534} color="emerald" />
+                <DemoBar label="35–44" value={demographics.age3544} color="emerald" />
+                <DemoBar label="45–54" value={demographics.age4554} color="emerald" />
+                <DemoBar label="55+" value={demographics.ageOver54} color="emerald" />
               </div>
             )}
 
             {/* Income */}
             {demographics.income0_30 != null && (
-              <div style={{ background: "#18181B", border: "1px solid #27272A", borderRadius: "0.75rem", padding: "1.25rem" }}>
-                <p style={{ color: "#A1A1AA", fontSize: "0.6875rem", fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>Household Income</p>
-                {[
-                  { label: "<$30k",    value: demographics.income0_30 },
-                  { label: "$30\u201360k",  value: demographics.income30_60 },
-                  { label: "$60\u201390k",  value: demographics.income60_90 },
-                  { label: "$90\u2013125k", value: demographics.income90_125 },
-                  { label: "$125k+",   value: demographics.incomeOver125 },
-                ].map(({ label, value }) =>
-                  value != null ? (
-                    <div key={label} style={{ marginBottom: "0.625rem" }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.25rem" }}>
-                        <span style={{ color: "#A1A1AA", fontSize: "0.75rem" }}>{label}</span>
-                        <span style={{ color: "#FAFAFA", fontSize: "0.75rem", fontWeight: 600 }}>{value.toFixed(0)}%</span>
-                      </div>
-                      <div style={{ height: "4px", background: "#27272A", borderRadius: "9999px" }}>
-                        <div style={{ height: "100%", borderRadius: "9999px", background: "#FCD34D", width: `${value}%` }} />
-                      </div>
-                    </div>
-                  ) : null
-                )}
+              <div className="glass-card p-5">
+                <div className="flex items-center gap-2 mb-4">
+                  <DollarSign className="h-3.5 w-3.5 text-amber-400/60" />
+                  <span className="text-xs font-semibold text-white/60">Household Income</span>
+                </div>
+                <DemoBar label="<$30k" value={demographics.income0_30} color="amber" />
+                <DemoBar label="$30–60k" value={demographics.income30_60} color="amber" />
+                <DemoBar label="$60–90k" value={demographics.income60_90} color="amber" />
+                <DemoBar label="$90–125k" value={demographics.income90_125} color="amber" />
+                <DemoBar label="$125k+" value={demographics.incomeOver125} color="amber" />
               </div>
             )}
-
           </div>
-        </div>
+        </section>
       )}
 
-      {/* Footer */}
-      <div style={{ borderTop: "1px solid #27272A", paddingTop: "1.5rem", display: "flex", justifyContent: "space-between" }}>
-        <span style={{ color: "#52525B", fontSize: "0.75rem" }}>Powered by Outlet Media</span>
-        <span style={{ color: "#52525B", fontSize: "0.75rem" }}>Data updates every 6 hours</span>
-      </div>
+      {/* ─── Footer ─── */}
+      <footer className="pt-6">
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-5" />
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] text-white/20 font-medium">Powered by Outlet Media</span>
+          <span className="text-[11px] text-white/20">Data updates every 6 hours</span>
+        </div>
+      </footer>
+
     </div>
   );
 }
