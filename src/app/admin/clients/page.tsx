@@ -47,16 +47,23 @@ function slugToName(slug: string) {
 async function getClientSummaries(): Promise<ClientSummary[]> {
   if (!supabaseAdmin) return [];
 
-  // Fetch all campaigns in one query — group by client_slug in JS
-  const { data: campaigns } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select("client_slug, status, spend, roas");
+  const [campaignsRes, eventsRes] = await Promise.all([
+    supabaseAdmin.from("meta_campaigns").select("client_slug, status, spend, roas"),
+    supabaseAdmin.from("tm_events").select("client_slug").not("client_slug", "is", null),
+  ]);
 
-  if (!campaigns?.length) return [];
+  if (!campaignsRes.data?.length) return [];
 
-  // Group by slug
-  const bySlug: Record<string, typeof campaigns> = {};
-  for (const c of campaigns) {
+  // Count events per client
+  const showsBySlug: Record<string, number> = {};
+  for (const e of (eventsRes.data ?? [])) {
+    const slug = e.client_slug as string;
+    showsBySlug[slug] = (showsBySlug[slug] ?? 0) + 1;
+  }
+
+  // Group campaigns by slug
+  const bySlug: Record<string, typeof campaignsRes.data> = {};
+  for (const c of campaignsRes.data) {
     const slug = c.client_slug ?? "unknown";
     (bySlug[slug] ??= []).push(c);
   }
@@ -74,7 +81,7 @@ async function getClientSummaries(): Promise<ClientSummary[]> {
       type: "Music Promoter",
       status: activeCampaigns > 0 ? "active" : "paused",
       joinedAt: "Jan 2026",
-      activeShows: 0,         // TM1 not connected yet
+      activeShows: showsBySlug[slug] ?? 0,
       activeCampaigns,
       totalSpend,
       totalRevenue,
