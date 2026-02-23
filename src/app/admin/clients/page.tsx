@@ -48,7 +48,7 @@ async function getClientSummaries(): Promise<ClientSummary[]> {
   if (!supabaseAdmin) return [];
 
   const [campaignsRes, eventsRes] = await Promise.all([
-    supabaseAdmin.from("meta_campaigns").select("client_slug, status, spend, roas"),
+    supabaseAdmin.from("meta_campaigns").select("client_slug, status, spend, roas, start_time"),
     supabaseAdmin.from("tm_events").select("client_slug").not("client_slug", "is", null),
   ]);
 
@@ -74,13 +74,20 @@ async function getClientSummaries(): Promise<ClientSummary[]> {
     const activeCampaigns = rows.filter((c) => c.status === "ACTIVE").length;
     const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
 
+    // Use earliest campaign start_time as "joined" date
+    const startTimes = rows.map((c) => c.start_time).filter(Boolean) as string[];
+    const earliest = startTimes.length > 0 ? startTimes.sort()[0] : null;
+    const joinedAt = earliest
+      ? new Date(earliest).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+      : "—";
+
     return {
       id: slug,
       name: slugToName(slug),
       slug,
       type: "Music Promoter",
       status: activeCampaigns > 0 ? "active" : "paused",
-      joinedAt: "Jan 2026",
+      joinedAt,
       activeShows: showsBySlug[slug] ?? 0,
       activeCampaigns,
       totalSpend,

@@ -43,7 +43,7 @@ async function getData() {
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
   const [eventsRes, campaignsRes, agentRunsRes, alertsRes, snapshotsRes, dailyRes] = await Promise.all([
-    supabaseAdmin.from("tm_events").select("*").order("date", { ascending: true }).limit(10),
+    supabaseAdmin.from("tm_events").select("*").order("date", { ascending: true }).limit(200),
     supabaseAdmin.from("meta_campaigns").select("*").eq("status", "ACTIVE").order("spend", { ascending: false }).limit(5),
     supabaseAdmin
       .from("agent_jobs")
@@ -328,7 +328,7 @@ export default async function AdminDashboard() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ) : events.map((e) => {
+              ) : events.slice(0, 10).map((e) => {
                 const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
                 const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : 0;
                 return (
