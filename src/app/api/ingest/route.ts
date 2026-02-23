@@ -174,7 +174,8 @@ async function ingestTmEvents(body: IngestPayload) {
   }
 
   // Write daily snapshots — one row per event per day (ignore conflicts = already snapshotted today)
-  const snapshots = events
+  // Start with events that have fresh ticket data in the current payload
+  const freshSnapshots = events
     .filter((e) => e.tickets_sold != null || e.gross != null)
     .map((e) => ({
       tm_id: e.tm_id,
@@ -182,6 +183,30 @@ async function ingestTmEvents(body: IngestPayload) {
       tickets_available: e.tickets_available ?? null,
       gross: e.gross ?? null,
     }));
+
+  // For events without fresh data, fall back to whatever is stored in tm_events (preserves history)
+  const tmIdsWithFreshData = new Set(freshSnapshots.map((s) => s.tm_id));
+  const tmIdsNeedingFallback = events
+    .filter((e) => !tmIdsWithFreshData.has(e.tm_id))
+    .map((e) => e.tm_id);
+
+  let fallbackSnapshots: { tm_id: string; tickets_sold: number | null; tickets_available: number | null; gross: number | null }[] = [];
+  if (tmIdsNeedingFallback.length > 0) {
+    const { data: existing } = await supabaseAdmin!
+      .from("tm_events")
+      .select("tm_id, tickets_sold, tickets_available, gross")
+      .in("tm_id", tmIdsNeedingFallback)
+      .not("tickets_sold", "is", null);
+
+    fallbackSnapshots = (existing ?? []).map((row) => ({
+      tm_id: row.tm_id,
+      tickets_sold: row.tickets_sold ?? null,
+      tickets_available: row.tickets_available ?? null,
+      gross: row.gross ?? null,
+    }));
+  }
+
+  const snapshots = [...freshSnapshots, ...fallbackSnapshots];
 
   if (snapshots.length > 0) {
     const { error: snapErr } = await supabaseAdmin!
@@ -194,7 +219,7 @@ async function ingestTmEvents(body: IngestPayload) {
     }
   }
 
-  console.log(`Ingest: upserted ${rows.length} TM events, ${snapshots.length} snapshots`);
+  console.log(`Ingest: upserted ${rows.length} TM events, ${snapshots.length} snapshots (${freshSnapshots.length} fresh, ${fallbackSnapshots.length} from db)`);
   return NextResponse.json({ ok: true, inserted: rows.length, snapshots: snapshots.length });
 }
 
