@@ -12,6 +12,7 @@ import { CalendarDays, ExternalLink, Bot, Ticket, DollarSign, TrendingUp, Users 
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
+import { matchedCampaigns } from "@/lib/campaign-event-match";
 import { Suspense } from "react";
 
 type TmEventRow = Database["public"]["Tables"]["tm_events"]["Row"];
@@ -67,40 +68,6 @@ async function getEvents(clientSlug: string | null): Promise<{
   };
 }
 
-// ─── Campaign-event matching ────────────────────────────────────────────────
-
-const CITY_KEYWORDS = [
-  "Seattle", "Portland", "Inglewood", "Boston", "San Jose", "San Diego",
-  "Phoenix", "West Valley", "Palm Desert", "Anaheim", "Sacramento",
-  "San Francisco", "Glendale", "San Antonio", "Austin", "Miami",
-  "Nashville", "Atlanta", "Washington", "Reading", "Denver", "Dallas",
-];
-
-function campaignCity(name: string): string | null {
-  const lower = name.toLowerCase();
-  return CITY_KEYWORDS.find((c) => lower.includes(c.toLowerCase())) ?? null;
-}
-
-function campaignArtist(name: string): string | null {
-  const lower = name.toLowerCase();
-  if (lower.includes("arjona")) return "Ricardo Arjona";
-  if (lower.includes("camila")) return "Camila";
-  if (lower.includes("alofoke")) return "Alofoke";
-  if (lower.includes("kybba")) return "KYBBA";
-  return null;
-}
-
-function matchedCampaigns(campaigns: CampaignRow[], event: TmEventRow): CampaignRow[] {
-  const eventArtist = (event.artist ?? "").toLowerCase();
-  const eventCity   = (event.city ?? "").toLowerCase();
-  return campaigns.filter((c) => {
-    const cArtist = campaignArtist(c.name)?.toLowerCase();
-    if (!cArtist || !eventArtist.includes(cArtist.split(" ")[0])) return false;
-    const cCity = campaignCity(c.name);
-    if (cCity) return eventCity.includes(cCity.toLowerCase());
-    return true; // no city in campaign name → matches all events of that artist
-  });
-}
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 

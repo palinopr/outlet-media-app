@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
+import { matchedCampaigns } from "@/lib/campaign-event-match";
 
 type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
@@ -289,6 +290,7 @@ export default async function ClientDashboard({ params }: Props) {
                   <TableHead className="text-xs font-medium text-muted-foreground">Sell-Through</TableHead>
                   <TableHead className="text-xs font-medium text-muted-foreground text-right">Gross</TableHead>
                   <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                  <TableHead className="text-xs font-medium text-muted-foreground">Ads</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -324,6 +326,27 @@ export default async function ClientDashboard({ params }: Props) {
                         {fmtUsd(e.gross)}
                       </TableCell>
                       <TableCell>{statusBadge(e.status)}</TableCell>
+                      <TableCell>
+                        {(() => {
+                          const linked = matchedCampaigns(campaigns, e);
+                          const active = linked.filter((c) => c.status === "ACTIVE");
+                          if (active.length === 0 && linked.length === 0) {
+                            return <span className="text-muted-foreground text-xs">—</span>;
+                          }
+                          if (active.length === 0) {
+                            return <span className="text-xs text-muted-foreground">paused</span>;
+                          }
+                          const avgRoas = active.reduce((s, c) => s + (c.roas ?? 0), 0) / active.length;
+                          return (
+                            <div>
+                              <span className="text-xs font-medium text-emerald-400">{active.length} active</span>
+                              {avgRoas > 0 && (
+                                <div className="text-xs text-muted-foreground tabular-nums">{avgRoas.toFixed(1)}× ROAS</div>
+                              )}
+                            </div>
+                          );
+                        })()}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
