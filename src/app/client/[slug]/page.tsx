@@ -13,12 +13,14 @@ import {
   Ticket,
   TrendingUp,
   ArrowRight,
+  Users,
 } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 
 type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
+type DemographicsRow = Database["public"]["Tables"]["tm_event_demographics"]["Row"];
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -26,9 +28,54 @@ interface Props {
 
 // --- Data fetching ---
 
+interface AudienceProfile {
+  totalFans: number;
+  femalePct: number | null;
+  malePct: number | null;
+  age1824: number | null;
+  age2534: number | null;
+  age3544: number | null;
+  age4554: number | null;
+  ageOver54: number | null;
+  income0_30: number | null;
+  income30_60: number | null;
+  income60_90: number | null;
+  income90_125: number | null;
+  incomeOver125: number | null;
+  marriedPct: number | null;
+}
+
+function weightedAvg(rows: DemographicsRow[], key: keyof DemographicsRow): number | null {
+  const valid = rows.filter((r) => r[key] != null && (r.fans_total ?? 0) > 0);
+  if (!valid.length) return null;
+  const totalWeight = valid.reduce((s, r) => s + (r.fans_total ?? 0), 0);
+  const sum = valid.reduce((s, r) => s + Number(r[key]) * (r.fans_total ?? 0), 0);
+  return totalWeight > 0 ? sum / totalWeight : null;
+}
+
+function buildAudienceProfile(demos: DemographicsRow[]): AudienceProfile {
+  const totalFans = demos.reduce((s, d) => s + (d.fans_total ?? 0), 0);
+  return {
+    totalFans,
+    femalePct: weightedAvg(demos, "fans_female_pct"),
+    malePct: weightedAvg(demos, "fans_male_pct"),
+    age1824: weightedAvg(demos, "age_18_24_pct"),
+    age2534: weightedAvg(demos, "age_25_34_pct"),
+    age3544: weightedAvg(demos, "age_35_44_pct"),
+    age4554: weightedAvg(demos, "age_45_54_pct"),
+    ageOver54: weightedAvg(demos, "age_over_54_pct"),
+    income0_30: weightedAvg(demos, "income_0_30k_pct"),
+    income30_60: weightedAvg(demos, "income_30_60k_pct"),
+    income60_90: weightedAvg(demos, "income_60_90k_pct"),
+    income90_125: weightedAvg(demos, "income_90_125k_pct"),
+    incomeOver125: weightedAvg(demos, "income_over_125k_pct"),
+    marriedPct: weightedAvg(demos, "fans_married_pct"),
+  };
+}
+
 async function getData(slug: string) {
   if (!supabaseAdmin) {
-    return { events: [], campaigns: [], fromDb: false };
+    return { events: [], campaigns: [], demographics: null, fromDb: false };
   }
 
   const [eventsRes, campaignsRes] = await Promise.all([
@@ -50,7 +97,21 @@ async function getData(slug: string) {
   const campaigns = (campaignsRes.data ?? []) as MetaCampaign[];
   const fromDb = Boolean(campaignsRes.data?.length);
 
-  return { events, campaigns, fromDb };
+  // Fetch demographics for this client's events
+  let demographics: AudienceProfile | null = null;
+  if (events.length > 0) {
+    const tmIds = events.map((e) => e.tm_id);
+    const demosRes = await supabaseAdmin
+      .from("tm_event_demographics")
+      .select("*")
+      .in("tm_id", tmIds);
+    const demos = (demosRes.data ?? []) as DemographicsRow[];
+    if (demos.length > 0) {
+      demographics = buildAudienceProfile(demos);
+    }
+  }
+
+  return { events, campaigns, demographics, fromDb };
 }
 
 // --- Helpers ---
@@ -93,7 +154,7 @@ function statusBadge(s: string) {
 
 export default async function ClientDashboard({ params }: Props) {
   const { slug } = await params;
-  const { events, campaigns, fromDb } = await getData(slug);
+  const { events, campaigns, demographics, fromDb } = await getData(slug);
 
   const totalSold     = events.reduce((a, s) => a + (s.tickets_sold ?? 0), 0);
   const totalCapacity = events.reduce((a, s) => a + (s.tickets_sold ?? 0) + (s.tickets_available ?? 0), 0);
@@ -269,6 +330,110 @@ export default async function ClientDashboard({ params }: Props) {
           </div>
         )}
       </div>
+
+      {/* Audience profile */}
+      {demographics && demographics.totalFans > 0 && (
+        <div className="mb-10">
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-sm font-semibold">Audience Profile</h2>
+            <span className="text-xs text-muted-foreground">
+              {demographics.totalFans.toLocaleString()} tracked fans across your shows
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+            {/* Gender */}
+            {(demographics.femalePct != null || demographics.malePct != null) && (
+              <div className="rounded-xl border border-border/60 bg-card p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Gender</p>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { label: "Female", value: demographics.femalePct, color: "bg-violet-500" },
+                    { label: "Male", value: demographics.malePct, color: "bg-cyan-500" },
+                  ].map(({ label, value, color }) =>
+                    value != null ? (
+                      <div key={label}>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-muted-foreground">{label}</span>
+                          <span className="font-medium tabular-nums">{value.toFixed(0)}%</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-white/[0.06]">
+                          <div className={`h-full rounded-full ${color}`} style={{ width: `${value}%` }} />
+                        </div>
+                      </div>
+                    ) : null
+                  )}
+                  {demographics.marriedPct != null && (
+                    <p className="text-xs text-muted-foreground pt-1">
+                      {demographics.marriedPct.toFixed(0)}% married
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Age */}
+            {demographics.age1824 != null && (
+              <div className="rounded-xl border border-border/60 bg-card p-4">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Age</p>
+                <div className="space-y-2">
+                  {[
+                    { label: "18–24", value: demographics.age1824 },
+                    { label: "25–34", value: demographics.age2534 },
+                    { label: "35–44", value: demographics.age3544 },
+                    { label: "45–54", value: demographics.age4554 },
+                    { label: "55+",   value: demographics.ageOver54 },
+                  ].map(({ label, value }) =>
+                    value != null ? (
+                      <div key={label}>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-muted-foreground">{label}</span>
+                          <span className="font-medium tabular-nums">{value.toFixed(0)}%</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-white/[0.06]">
+                          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${value}%` }} />
+                        </div>
+                      </div>
+                    ) : null
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Income */}
+            {demographics.income0_30 != null && (
+              <div className="rounded-xl border border-border/60 bg-card p-4">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">Household Income</p>
+                <div className="space-y-2">
+                  {[
+                    { label: "<$30k",     value: demographics.income0_30 },
+                    { label: "$30–60k",   value: demographics.income30_60 },
+                    { label: "$60–90k",   value: demographics.income60_90 },
+                    { label: "$90–125k",  value: demographics.income90_125 },
+                    { label: "$125k+",    value: demographics.incomeOver125 },
+                  ].map(({ label, value }) =>
+                    value != null ? (
+                      <div key={label}>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="text-muted-foreground">{label}</span>
+                          <span className="font-medium tabular-nums">{value.toFixed(0)}%</span>
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-white/[0.06]">
+                          <div className="h-full rounded-full bg-amber-500" style={{ width: `${value}%` }} />
+                        </div>
+                      </div>
+                    ) : null
+                  )}
+                </div>
+              </div>
+            )}
+
+          </div>
+        </div>
+      )}
 
       {/* Campaigns */}
       <div className="mb-10">

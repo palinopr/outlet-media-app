@@ -23,6 +23,7 @@ import {
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
+import { TicketVelocityChart } from "@/components/charts/ticket-velocity-chart";
 
 type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
@@ -30,15 +31,18 @@ type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 interface AgentLastRun { agentId: string; status: string; finishedAt: string | null; }
 interface Alert { id: string; message: string; level: string; created_at: string; }
 interface SnapshotRow { snapshot_date: string; roas: number | null; spend: number | null; }
+interface DailyRow { date: string; tickets_sold: number; }
 
 // --- Data fetching ---
 
 async function getData() {
   if (!supabaseAdmin) {
-    return { events: [], campaigns: [], agentRuns: [], alerts: [], trendData: [], fromDb: false };
+    return { events: [], campaigns: [], agentRuns: [], alerts: [], trendData: [], velocityData: [], fromDb: false };
   }
 
-  const [eventsRes, campaignsRes, agentRunsRes, alertsRes, snapshotsRes] = await Promise.all([
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+  const [eventsRes, campaignsRes, agentRunsRes, alertsRes, snapshotsRes, dailyRes] = await Promise.all([
     supabaseAdmin.from("tm_events").select("*").order("date", { ascending: true }).limit(10),
     supabaseAdmin.from("meta_campaigns").select("*").eq("status", "ACTIVE").order("spend", { ascending: false }).limit(5),
     supabaseAdmin
@@ -59,12 +63,18 @@ async function getData() {
       .select("snapshot_date, roas, spend")
       .order("snapshot_date", { ascending: true })
       .limit(300),
+    supabaseAdmin
+      .from("tm_event_daily")
+      .select("date, tickets_sold")
+      .gte("date", thirtyDaysAgo)
+      .order("date", { ascending: true }),
   ]);
 
   const events = (eventsRes.data ?? []) as TmEvent[];
   const campaigns = (campaignsRes.data ?? []) as MetaCampaign[];
   const alerts = (alertsRes.data ?? []) as Alert[];
   const snapshots = (snapshotsRes.data ?? []) as SnapshotRow[];
+  const dailyRows = (dailyRes.data ?? []) as DailyRow[];
 
   const seen = new Set<string>();
   const agentRuns: AgentLastRun[] = [];
@@ -90,7 +100,19 @@ async function getData() {
       spend: v.spendSum,
     }));
 
-  return { events, campaigns, agentRuns, alerts, trendData, fromDb: Boolean(campaigns.length) };
+  // Aggregate daily ticket sales across all events by date
+  const dailyByDate: Record<string, number> = {};
+  for (const row of dailyRows) {
+    dailyByDate[row.date] = (dailyByDate[row.date] ?? 0) + row.tickets_sold;
+  }
+  const velocityData = Object.entries(dailyByDate)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, sold]) => ({
+      date: new Date(date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      sold,
+    }));
+
+  return { events, campaigns, agentRuns, alerts, trendData, velocityData, fromDb: Boolean(campaigns.length) };
 }
 
 // --- Helpers ---
@@ -132,7 +154,7 @@ function eventStatusBadge(s: string) {
 // --- Page ---
 
 export default async function AdminDashboard() {
-  const { events, campaigns, agentRuns, alerts, trendData, fromDb } = await getData();
+  const { events, campaigns, agentRuns, alerts, trendData, velocityData, fromDb } = await getData();
 
   const totalSold  = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
   const totalCap   = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
@@ -239,18 +261,34 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
-      {/* ROAS trend chart */}
-      {trendData.length > 0 && (
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-              Blended ROAS Trend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <RoasTrendChart data={trendData} />
-          </CardContent>
-        </Card>
+      {/* Trend charts */}
+      {(trendData.length > 0 || velocityData.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {trendData.length > 0 && (
+            <Card className="border-border/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Blended ROAS Trend
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RoasTrendChart data={trendData} />
+              </CardContent>
+            </Card>
+          )}
+          {velocityData.length > 0 && (
+            <Card className="border-border/60">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Daily Ticket Sales (All Shows)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TicketVelocityChart data={velocityData} />
+              </CardContent>
+            </Card>
+          )}
+        </div>
       )}
 
       {/* Shows table */}

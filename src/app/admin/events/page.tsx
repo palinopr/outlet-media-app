@@ -8,18 +8,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarDays, ExternalLink, Bot, Ticket, DollarSign, TrendingUp } from "lucide-react";
+import { CalendarDays, ExternalLink, Bot, Ticket, DollarSign, TrendingUp, Users } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { Suspense } from "react";
 
 type TmEventRow = Database["public"]["Tables"]["tm_events"]["Row"];
+type DemoRow = Database["public"]["Tables"]["tm_event_demographics"]["Row"];
 
 // ─── Data fetching ─────────────────────────────────────────────────────────
 
-async function getEvents(clientSlug: string | null): Promise<{ events: TmEventRow[]; clients: string[]; fromDb: boolean }> {
-  if (!supabaseAdmin) return { events: [], clients: [], fromDb: false };
+async function getEvents(clientSlug: string | null): Promise<{
+  events: TmEventRow[];
+  clients: string[];
+  demoMap: Record<string, DemoRow>;
+  fromDb: boolean;
+}> {
+  if (!supabaseAdmin) return { events: [], clients: [], demoMap: {}, fromDb: false };
 
   // Distinct client list for the filter dropdown
   const clientsRes = await supabaseAdmin
@@ -37,9 +43,19 @@ async function getEvents(clientSlug: string | null): Promise<{ events: TmEventRo
 
   if (clientSlug) query.eq("client_slug", clientSlug);
 
-  const { data, error } = await query;
-  if (error) return { events: [], clients, fromDb: false };
-  return { events: (data ?? []) as TmEventRow[], clients, fromDb: Boolean(data?.length) };
+  const [{ data, error }, demosRes] = await Promise.all([
+    query,
+    supabaseAdmin.from("tm_event_demographics").select("tm_id, fans_total, fans_female_pct, fans_male_pct, age_25_34_pct, age_35_44_pct"),
+  ]);
+
+  if (error) return { events: [], clients, demoMap: {}, fromDb: false };
+
+  const demoMap: Record<string, DemoRow> = {};
+  for (const d of (demosRes.data ?? []) as DemoRow[]) {
+    demoMap[d.tm_id] = d;
+  }
+
+  return { events: (data ?? []) as TmEventRow[], clients, demoMap, fromDb: Boolean(data?.length) };
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
@@ -107,12 +123,13 @@ export default async function EventsPage({ searchParams }: Props) {
   const { client } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
 
-  const { events, clients, fromDb } = await getEvents(clientSlug);
+  const { events, clients, demoMap, fromDb } = await getEvents(clientSlug);
 
   const totalSold = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
   const totalCap  = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
   const totalGross = events.reduce((s, e) => s + (e.gross ?? 0), 0);
   const avgSellPct = totalCap > 0 ? Math.round((totalSold / totalCap) * 100) : 0;
+  const totalFans = Object.values(demoMap).reduce((s, d) => s + (d.fans_total ?? 0), 0);
 
   return (
     <div className="space-y-6">
@@ -147,12 +164,13 @@ export default async function EventsPage({ searchParams }: Props) {
       </div>
 
       {/* Summary stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: "Total Shows", value: String(events.length), icon: CalendarDays, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
-          { label: "Tickets Sold", value: totalSold.toLocaleString(), icon: Ticket, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
-          { label: "Sell-through", value: totalCap > 0 ? `${avgSellPct}%` : "---", icon: TrendingUp, accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
-          { label: "Total Gross", value: fmtUsd(totalGross > 0 ? totalGross : null), icon: DollarSign, accent: "from-rose-500/20 to-pink-500/20", iconColor: "text-rose-400" },
+          { label: "Total Shows",  value: String(events.length),                       icon: CalendarDays, accent: "from-cyan-500/20 to-blue-500/20",    iconColor: "text-cyan-400" },
+          { label: "Tickets Sold", value: totalSold.toLocaleString(),                  icon: Ticket,       accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
+          { label: "Sell-through", value: totalCap > 0 ? `${avgSellPct}%` : "---",    icon: TrendingUp,   accent: "from-emerald-500/20 to-teal-500/20",  iconColor: "text-emerald-400" },
+          { label: "Total Gross",  value: fmtUsd(totalGross > 0 ? totalGross : null),  icon: DollarSign,   accent: "from-rose-500/20 to-pink-500/20",     iconColor: "text-rose-400" },
+          { label: "Total Fans",   value: totalFans > 0 ? totalFans.toLocaleString() : "---", icon: Users, accent: "from-orange-500/20 to-amber-500/20", iconColor: "text-orange-400" },
         ].map(({ label, value, icon: Icon, accent, iconColor }) => (
           <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-4 transition-all duration-200 hover:border-border/80 hover:shadow-lg hover:shadow-black/20">
             <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />
@@ -194,13 +212,14 @@ export default async function EventsPage({ searchParams }: Props) {
               <TableHead className="text-xs font-medium text-muted-foreground">Sell-through</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground text-right">Gross</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground text-right">Fans</TableHead>
               <TableHead className="w-8" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {events.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10}>
+                <TableCell colSpan={11}>
                   <div className="flex flex-col items-center justify-center py-16 text-center">
                     <CalendarDays className="h-10 w-10 text-muted-foreground/40 mb-3" />
                     <p className="text-sm font-medium mb-1">No events yet</p>
@@ -235,14 +254,23 @@ export default async function EventsPage({ searchParams }: Props) {
                   <TableCell className="text-right">
                     <p className="text-sm font-medium tabular-nums">{fmtUsd(e.gross)}</p>
                   </TableCell>
-                  <TableCell>{statusBadge(e.status)}</TableCell>
-                  <TableCell>
-                    {e.url ? (
-                      <a href={e.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    ) : null}
-                  </TableCell>
+                   <TableCell>{statusBadge(e.status)}</TableCell>
+                   <TableCell className="text-right">
+                     {demoMap[e.tm_id]?.fans_total != null ? (
+                       <span className="text-sm tabular-nums font-medium">
+                         {(demoMap[e.tm_id].fans_total ?? 0).toLocaleString()}
+                       </span>
+                     ) : (
+                       <span className="text-muted-foreground">—</span>
+                     )}
+                   </TableCell>
+                   <TableCell>
+                     {e.url ? (
+                       <a href={e.url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors">
+                         <ExternalLink className="h-3.5 w-3.5" />
+                       </a>
+                     ) : null}
+                   </TableCell>
                 </TableRow>
               ))
             )}
