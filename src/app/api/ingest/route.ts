@@ -44,6 +44,14 @@ interface TmEvent {
   tickets_sold?: number;
   tickets_available?: number;
   gross?: number;
+  avg_ticket_price?: number;
+  channel_mobile_pct?: number;
+  channel_internet_pct?: number;
+  channel_box_pct?: number;
+  channel_phone_pct?: number;
+  edp_total_views?: number;
+  edp_avg_daily_views?: number;
+  conversion_rate?: number;
   url: string;
   scraped_at: string;
   client_slug?: string;
@@ -136,6 +144,14 @@ async function ingestTmEvents(body: IngestPayload) {
     tickets_sold: e.tickets_sold ?? null,
     tickets_available: e.tickets_available ?? null,
     gross: e.gross ?? null,
+    avg_ticket_price: e.avg_ticket_price ?? null,
+    channel_mobile_pct: e.channel_mobile_pct ?? null,
+    channel_internet_pct: e.channel_internet_pct ?? null,
+    channel_box_pct: e.channel_box_pct ?? null,
+    channel_phone_pct: e.channel_phone_pct ?? null,
+    edp_total_views: e.edp_total_views ?? null,
+    edp_avg_daily_views: e.edp_avg_daily_views ?? null,
+    conversion_rate: e.conversion_rate ?? null,
     url: e.url,
     scraped_at: e.scraped_at,
     client_slug: e.client_slug ?? null,

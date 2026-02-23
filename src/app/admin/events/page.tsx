@@ -93,7 +93,15 @@ function statusBadge(s: string) {
 }
 
 function SellBar({ sold, available }: { sold: number | null; available: number | null }) {
-  if (sold == null || available == null) return <span className="text-muted-foreground">—</span>;
+  if (sold == null) return <span className="text-muted-foreground">—</span>;
+  if (available == null) {
+    return (
+      <div className="min-w-[120px]">
+        <span className="text-sm font-medium tabular-nums">{sold.toLocaleString()}</span>
+        <div className="text-xs text-muted-foreground mt-0.5">tickets sold</div>
+      </div>
+    );
+  }
   const capacity = sold + available;
   const pct = Math.round((sold / capacity) * 100);
   const barColor = pct >= 90 ? "bg-purple-500" : pct >= 60 ? "bg-emerald-500" : pct >= 30 ? "bg-blue-500" : "bg-zinc-600";
@@ -126,9 +134,12 @@ export default async function EventsPage({ searchParams }: Props) {
   const { events, clients, demoMap, fromDb } = await getEvents(clientSlug);
 
   const totalSold = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
-  const totalCap  = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
+  // Only include events that have capacity data for the sell-through calculation
+  const eventsWithCap = events.filter((e) => e.tickets_sold != null && e.tickets_available != null);
+  const capSold = eventsWithCap.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
+  const capTotal = eventsWithCap.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
   const totalGross = events.reduce((s, e) => s + (e.gross ?? 0), 0);
-  const avgSellPct = totalCap > 0 ? Math.round((totalSold / totalCap) * 100) : 0;
+  const avgSellPct = capTotal > 0 ? Math.round((capSold / capTotal) * 100) : 0;
   const totalFans = Object.values(demoMap).reduce((s, d) => s + (d.fans_total ?? 0), 0);
 
   return (
@@ -168,7 +179,7 @@ export default async function EventsPage({ searchParams }: Props) {
         {[
           { label: "Total Shows",  value: String(events.length),                       icon: CalendarDays, accent: "from-cyan-500/20 to-blue-500/20",    iconColor: "text-cyan-400" },
           { label: "Tickets Sold", value: totalSold.toLocaleString(),                  icon: Ticket,       accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
-          { label: "Sell-through", value: totalCap > 0 ? `${avgSellPct}%` : "---",    icon: TrendingUp,   accent: "from-emerald-500/20 to-teal-500/20",  iconColor: "text-emerald-400" },
+          { label: "Sell-through", value: capTotal > 0 ? `${avgSellPct}%` : "---",    icon: TrendingUp,   accent: "from-emerald-500/20 to-teal-500/20",  iconColor: "text-emerald-400" },
           { label: "Total Gross",  value: fmtUsd(totalGross > 0 ? totalGross : null),  icon: DollarSign,   accent: "from-rose-500/20 to-pink-500/20",     iconColor: "text-rose-400" },
           { label: "Total Fans",   value: totalFans > 0 ? totalFans.toLocaleString() : "---", icon: Users, accent: "from-orange-500/20 to-amber-500/20", iconColor: "text-orange-400" },
         ].map(({ label, value, icon: Icon, accent, iconColor }) => (
