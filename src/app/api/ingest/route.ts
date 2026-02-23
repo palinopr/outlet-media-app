@@ -284,6 +284,27 @@ async function ingestMetaCampaigns(body: IngestPayload) {
     }
   }
 
+  // Mark any campaigns currently ACTIVE in DB but absent from this payload as PAUSED.
+  // The agent sends all ACTIVE campaigns each sync — if one is missing, it was paused.
+  // Only do this when we received a non-empty payload to avoid false-positive deactivations.
+  const incomingIds = campaigns.map((c) => c.campaign_id);
+  if (incomingIds.length > 0) {
+    const { data: stale } = await supabaseAdmin!
+      .from("meta_campaigns")
+      .select("campaign_id")
+      .eq("status", "ACTIVE")
+      .not("campaign_id", "in", `(${incomingIds.join(",")})`);
+
+    if (stale && stale.length > 0) {
+      const staleIds = stale.map((r) => r.campaign_id);
+      await supabaseAdmin!
+        .from("meta_campaigns")
+        .update({ status: "PAUSED", synced_at: body.data.scraped_at })
+        .in("campaign_id", staleIds);
+      console.log(`Ingest: marked ${staleIds.length} campaign(s) PAUSED (absent from sync):`, staleIds);
+    }
+  }
+
   console.log(`Ingest: upserted ${rows.length} Meta campaigns, ${snapshots.length} snapshots`);
   return NextResponse.json({ ok: true, inserted: rows.length, snapshots: snapshots.length });
 }
