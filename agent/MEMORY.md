@@ -75,49 +75,69 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - `start_time` on meta_campaigns is an ISO8601 timestamptz string (used for pacing calculations)
 - **Session cache naming**: `spend` = dollars (float), `daily_budget_cents` = cents (int). The ingest route expects `daily_budget` (in cents).
 - **Session cache vs Supabase alignment**: Both session cache (`daily_budget_cents`) and Supabase (`daily_budget`) are populated for all campaigns as of 2026-02-19. The ingest maps `daily_budget_cents` → `daily_budget`.
+- **Snapshot UPSERT is write-once**: `campaign_snapshots` uses ON CONFLICT DO NOTHING — first sync of the day creates the snapshot, subsequent syncs only update `meta_campaigns`. Each daily snapshot reflects the 06:00 UTC (midnight CST) state. Good for consistency (same time daily), but live campaign data may differ from snapshot data within the same day.
 
-## Data Pipeline Status (verified 2026-02-19, Cycle #14)
-- `daily_budget` ✅ populated for all 13 campaigns in Supabase
-- `start_time` ✅ populated for all 13 campaigns in Supabase
-- `campaign_snapshots` ✅ 13 rows exist — ALL dated 2026-02-19 (only 1 day of data so far)
-- `event_snapshots` table exists but still EMPTY — no TM One data yet
-- **Pacing checks (P4):** UNBLOCKED — daily_budget and start_time in Supabase. First pacing check ran Cycle #10.
-- **ROAS trend checks (P4):** Still waiting for 3+ days of snapshot data (available ~Feb 22). Only 1 snapshot date exists so far.
+## Data Pipeline Status (verified 2026-02-23, Cycle #23)
+- `daily_budget` ✅ populated for all 17 campaigns in Supabase
+- `start_time` ✅ populated for all 17 campaigns in Supabase
+- `campaign_snapshots` ✅ 2 snapshot dates: Feb 19 (13 campaigns) + Feb 23 (17 campaigns). Feb 20-22 gap (scheduler downtime, unrecoverable). ROAS trend needs 1+ more consecutive day.
+- `event_snapshots` table exists but still EMPTY — TM One scraper captures 25 events, but ingest pipeline for event snapshots not yet wired.
+- **Meta syncs:** ✅ **WORKING** — scheduler cron fires at 00/06/12/18 UTC. Confirmed by snapshot `created_at` of 06:04 UTC matching the 06:00 cron slot. Jaime also ran manual sync at 12:04 UTC. **Note:** cron-triggered runs do NOT create `agent_jobs` entries — only the job poller (dashboard-triggered) does. To verify cron ran, check `campaign_snapshots.created_at` or session file mtime.
+- **TM One events:** ✅ `last-events.json` populated (25 events, scraped Feb 23 14:04 UTC). Events include 20 Arjona tour dates + 4 Camila + 1 Alofoke. Missing: ticket counts, sell-through %, pricing (per-event API returns empty data). TM cron fires at even hours UTC.
+- **Pacing checks (P4):** ✅ RESUMED — fresh data available. New campaigns (Alofoke, Camila) slightly underpacing (64-68%) — normal for 4-day-old ramp-up.
+- **ROAS trend checks (P4):** BLOCKED — need 3+ consecutive days of snapshots. Have Feb 19 + Feb 23 (2 dates, 4-day gap). Next snapshot expected Feb 24 at 06:00 UTC.
 
-## Known Issues (tracked, ranked by impact — updated Cycle #15)
-1. 🔴 **Agent scheduler is NOT running** — No `outlet-media-app/agent` process in ps aux. Last heartbeat in Supabase: Feb 18 15:11 CST (~23h ago). Session cache last updated Feb 19 06:03 (likely from desktop app, not agent scheduler). No Meta syncs, think cycles, or heartbeats firing. **Fix: `npm start` in a persistent terminal (tmux/screen/nohup) from the agent directory.** (Discovered Cycle #15)
-2. 🔴 **`/api/alerts` blocked by Clerk auth** — POST returns 307 redirect to /sign-in. Root cause: `/api/alerts` not in Clerk `publicRoutes` in `middleware.ts` (Next.js app). Agent cannot post dashboard alerts. **Needs Jaime to fix.** (Discovered Cycle #10, confirmed Cycles #11-15)
-3. 🔴 **Spend freeze on both ACTIVE campaigns** — Denver V2 ($2,240) and KYBBA ($2,069) unchanged since at least Feb 18 (36+ hours). Cannot diagnose further without fresh syncs (blocked by #1). Flagged to Jaime via Telegram draft in Cycle #10.
-4. 🟡 **TM One credentials blank** — blocks event data, sell-through analysis, campaign-event linking.
+## Known Issues (tracked, ranked by impact — updated Cycle #23)
+1. 🟡 **Campaign snapshots gap Feb 20-22** — 3 days of ROAS history lost (unrecoverable). ROAS trend analysis needs 1+ more consecutive snapshot day. Feb 19 + Feb 23 exist but aren't consecutive. With cron now confirmed working, Feb 24 snapshot expected automatically.
+2. 🟡 **TM One per-event data incomplete** — Scraper v3 (tm-monitor.mjs) captures 25 events via GraphQL interception. Per-event API returns empty data (percentSold, ticketsSold null). Event list works; detailed metrics don't yet. Sacramento Arjona event (G5vYZbw5fHgxe) missing from GraphQL responses.
+3. 🟡 **KYBBA ROAS declining — marginal ROAS 0.61×** — Blended: 2.73× (Feb 19) → 2.46× (Feb 23). Still above 2.0 threshold. BUT marginal ROAS on new $300 spend is only 0.61× (losing money on incremental dollars). At current rate, blended crosses 2.0 in ~5-6 days (~Feb 28). Show date Mar 22 (27 days out). Needs consecutive daily snapshots to confirm. **WATCH CLOSELY.**
+4. 🟡 **Cron-triggered runs are invisible in agent_jobs** — scheduler cron (Meta, TM, Think) calls `runClaude()` directly without creating agent_jobs entries. Only the job poller (dashboard-triggered) creates entries. To verify cron health, check `campaign_snapshots.created_at` or session file mtimes. Consider adding agent_jobs logging to scheduler (code change, needs Jaime's review).
 5. 🟢 **`/api/health` returns 404** — endpoint doesn't exist on Railway server. Not critical.
+- ✅ **RESOLVED: Scheduler not auto-firing Meta syncs** — MISDIAGNOSIS corrected Cycle #23. The cron WAS firing all along — snapshot `created_at` of 06:04 UTC matches 06:00 cron slot. We only checked `agent_jobs` which doesn't track cron runs.
+- ✅ **RESOLVED: `/api/alerts` Clerk auth bug** — Fixed as of Cycle #18 (Feb 22). Returns 401 (correct, wrong secret), no Clerk 307 regression.
+- ✅ **RESOLVED: Campaign data staleness** — Auto-sync + manual sync both working. Session cache refreshed regularly.
+- ✅ **RESOLVED: Scheduler down** — Restarted Feb 22 ~19:12 CST. Heartbeats + crons alive.
 
-## Current Campaign Landscape (as of 2026-02-19 13:30 CST)
-- **13 total campaigns** in session cache (2 ACTIVE, 11 PAUSED)
-- **ACTIVE:** Denver V2 (Zamora) — ROAS 9.82×, $2,240 spend, $750/day budget. Star performer but spend frozen.
-- **ACTIVE:** KYBBA Miami — ROAS 2.73×, $2,069 spend, $100/day budget. Back to ACTIVE (was PAUSED on 2026-02-18). Above 2.0 threshold but trending down. Show date 03/22 (~1 month out).
-- **⚠️ SPEND FREEZE (tracked since Cycle #10, persistent through Cycle #15):** Both ACTIVE campaigns show zero spend increase for 36+ hours. Denver V2 stuck at $2,240, KYBBA at $2,069. Session cache last refreshed 06:03 Feb 19 — but scheduler is confirmed DOWN since ~15:11 CST Feb 18, so no new syncs are firing. Cannot determine if spend is truly frozen or if we're just not getting fresh data.
-- **⚠️ Denver Retargeting** — ROAS 0.39× (PAUSED). Below 2.0 threshold. Low spend ($126). Not urgent since paused.
-- **Clients represented:** Zamora (10 campaigns), KYBBA (1), Beamina (1), Happy Paws (1)
-- **No TM One data** — credentials still blank, no last-events.json exists
+## Current Campaign Landscape (as of 2026-02-23 12:04 UTC — FRESH DATA)
+- **17 total campaigns** in Supabase (5 ACTIVE, 12 PAUSED). Session cache has 16 (Beamina V3 excluded — no last-30d spend).
+- **ACTIVE:** Arjona Sacramento V2 (Zamora) — ROAS 8.91×, $339 spend, $100/day budget. Started Feb 10. (Was PAUSED, recently reactivated.)
+- **ACTIVE:** Alofoke (Zamora) — ROAS 3.66×, $272 spend, $100/day budget. Started Feb 19. **NEW campaign.** Boston show Mar 2 (7 days out).
+- **ACTIVE:** Camila Anaheim (Zamora) — ROAS 3.42×, $269 spend, $100/day budget. Started Feb 19. **NEW campaign.** Show Mar 13-14.
+- **ACTIVE:** Camila Sacramento (Zamora) — ROAS 3.66×, $255 spend, $100/day budget. Started Feb 19. **NEW campaign.** Show Mar 14-15.
+- **ACTIVE:** KYBBA Miami — ROAS 2.46×, $2,369 spend, $100/day budget. Show date 03/22 (~27 days out). Above 2.0 but declining (was 2.73×).
+- **PAUSED (notable):** Denver V2 — ROAS 9.82×, $2,240, $750/day. **Was ACTIVE → now PAUSED.** Denver show was Feb 18 (past).
+- **PAUSED:** Denver Retargeting — ROAS 0.39× ($126). Seattle V2 — ROAS 10.63× ($189). Portland V2 — ROAS 9.21× ($372). All Boston campaigns (4). Camila Dallas ($0.30). Happy Paws. Beamina V3.
+- **⚠️ Seattle & Portland shows imminent (Feb 25-26) but campaigns PAUSED** — may be intentional (Jaime actively managing campaigns today).
+- **Clients represented:** Zamora (13 campaigns), KYBBA (1), Beamina (1), Happy Paws (1). Zamora includes new Camila + Alofoke sub-brands.
+- **TM One status:** ✅ Scraper v3 (tm-monitor.mjs) WORKING — 25 events captured. Login + 2FA automated. Per-event ticket metrics still returning empty.
+
+## Upcoming Shows (from last-events.json, scraped Feb 23 14:04 UTC)
+- **IMMINENT:** Seattle Feb 25 (2 days! Campaign PAUSED), Portland Feb 26 (3 days! Campaign PAUSED), Inglewood Mar 1
+- **Next week:** Alofoke Boston Mar 2 (Campaign ACTIVE), San Jose Mar 6, San Diego Mar 7 (Camila), Phoenix Mar 8 (Camila), Salt Lake City Mar 9
+- **Mid-March:** Palm Desert Mar 12, Anaheim Mar 14 (Camila, Campaign ACTIVE) + Mar 16 (Arjona), Sacramento Mar 15 (Camila, Campaign ACTIVE) + SF Mar 15 (Arjona), Glendale Mar 21
+- **Late March+:** San Antonio Mar 26, Austin Mar 30, Miami Apr 3-8 (5 shows), Nashville Apr 11, Atlanta Apr 12, DC Apr 14, Reading Apr 17
+- **Artists:** 20 Arjona dates, 4 Camila dates, 1 Alofoke (Boston Mar 2)
+- **Campaign-Event alignment:** Alofoke→Boston ✓, Camila Anaheim→Anaheim ✓, Camila Sacramento→Sacramento ✓, Arjona Sacramento V2→(no TM event, known missing from GraphQL), KYBBA Miami→(not in TM One, different promoter)
+- **Note:** Denver V2 campaign now PAUSED — Denver show was Feb 18 (past)
 
 ## Things To Remember
-- TM One credentials go in .env (TM_EMAIL, TM_PASSWORD) — **not yet configured** (still blank as of Cycle #14)
+- TM One credentials in .env (TM_EMAIL, TM_PASSWORD) — ✅ **configured** as of Feb 22 (jaime@outletmedia.net)
 - Meta credentials are in the app's ../.env.local — agent reads them from the parent directory
 - Agent working directory is /Users/jaimeortiz/outlet-media-app/agent — all paths relative to here
 - INGEST_URL should point to Railway (or localhost:3000 for dev)
 - LEARNINGS.md is the think-loop journal — read it first every cycle
-- session/ directory holds last-events.json (not yet created) and last-campaigns.json (inter-run cache)
+- session/ directory holds last-events.json (25 TM One events, first populated Feb 22) and last-campaigns.json (inter-run cache)
 - session/proposals.md has 6 ranked capability proposals (created Cycle #4, status tracked in Proposals Status section above)
 - `/client/[slug]/campaigns/page.tsx` wired to Supabase, shows real campaign data + trend charts
 - Dashboard admin pages: /admin/dashboard (alert banner, ROAS chart), /admin/agents (job history), /admin/campaigns (client filter dropdown), /admin/clients (multi-client dynamic list)
 - All mock data removed from dashboard — all pages read from Supabase
-- **Scheduler timing:** TM One every 2h, Meta every 6h, Think every 30min (8am-10pm only), Heartbeat every 1min
-- **Claude CLI:** v2.1.47 at `/Users/jaimeortiz/.local/bin/claude`
+- **Scheduler timing:** TM One every 2h, Meta every 6h, Think every 30min (8am-10pm only), Heartbeat every 1min. All cron-based (fixed UTC times, NOT intervals-from-start). Meta fires at 00:00/06:00/12:00/18:00 UTC. TM fires at even hours UTC.
+- **Claude CLI:** v2.1.50 at `/Users/jaimeortiz/.local/bin/claude` (upgraded from v2.1.47 between Cycles #17-22)
 
-## Proposals Status (from session/proposals.md, last verified Cycle #14)
+## Proposals Status (from session/proposals.md, last verified Cycle #22)
 - **P5 (Fix campaigns page):** ✅ DONE
 - **P6 (Client slug validation):** ✅ RESOLVED
-- **P1 (Campaign-event linking):** ⏳ BLOCKED — requires TM One credentials (still blank)
-- **P3 (Daily pacing alerts):** ✅ ACTIVE — first pacing check ran Cycle #10. Denver V2 flagged at 37% pacing. Methodology needs improvement for campaigns with pause history.
-- **P2 (Historical snapshots):** ✅ ACTIVE — 13 snapshots exist (all 2026-02-19). Need 3+ days for ROAS trend analysis (~Feb 22).
-- **P4 (Sell-through velocity):** ⏳ BLOCKED — depends on TM One credentials + multi-day snapshot data
+- **P1 (Campaign-event linking):** ⏳ UNBLOCKED — TM One has 25 events, 5 ACTIVE campaigns. Campaign↔event mapping partially working (Alofoke→Boston, Camila Anaheim→Anaheim, Camila Sacramento→Sacramento). Needs: automated matching logic.
+- **P3 (Daily pacing alerts):** ✅ RESUMED — first pacing on fresh data ran Cycle #22. New campaigns underpacing 64-68% (normal ramp-up). KYBBA skipped (pause history).
+- **P2 (Historical snapshots):** 🟡 RECOVERING — Feb 19 + Feb 23 snapshots exist. Gap Feb 20-22 unrecoverable. ROAS trend needs 1+ more consecutive day (~Feb 24).
+- **P4 (Sell-through velocity):** ⏳ PARTIALLY UNBLOCKED — TM One events captured, but per-event API returns empty percentSold/ticketsSold. Needs working per-event metrics OR alternative scraping approach.

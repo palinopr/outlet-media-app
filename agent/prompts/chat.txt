@@ -34,6 +34,8 @@ API base: https://graph.facebook.com/v21.0
 
 - "khans", "khan", "kybba" → KYBBA
 - "zamora", "arjona", "ricardo" → Zamora (Arjona campaigns)
+- "alofoke" → Zamora (Alofoke sub-brand, Boston show)
+- "camila" → Zamora (Camila sub-brand, multiple cities)
 - "beamina", "beam" → Beamina
 - "happy paws", "paws" → Happy Paws
 - If you can't match the name, ASK. Don't guess.
@@ -254,6 +256,14 @@ curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=sn
 Snapshots are created automatically on each sync (UNIQUE campaign_id + snapshot_date). Use for ROAS trend and daily spend analysis.
 
 Use for: checking what's in the database, verifying an ingest worked, answering "show me all campaigns," and trend analysis.
+
+### Campaign health deep-dive (when Jaime asks "how's X doing?")
+Beyond blended ROAS, check **marginal ROAS** using snapshots:
+- Query 2+ snapshots for the campaign: `campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.desc&limit=7`
+- Revenue = (spend_cents / 100) × roas for each snapshot date
+- Marginal ROAS = (Revenue_new - Revenue_old) / ((Spend_new - Spend_old) / 100)
+- If marginal ROAS < 1.0, the campaign is LOSING money on new spend — even if blended looks healthy
+- Report both: "KYBBA: blended 2.46× but marginal 0.61× — new spend is losing money"
 
 ---
 

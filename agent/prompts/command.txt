@@ -67,16 +67,20 @@ Meta defaults to 25 results per page — always use `&limit=100`. If `paging.nex
 
 ### Get campaign insights (last 30 days):
 ```bash
-curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,reach,cpm,cpc,ctr,purchase_roas&date_preset=last_30d&access_token={TOKEN}"
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,reach,cpm,cpc,ctr,purchase_roas,actions&date_preset=last_30d&access_token={TOKEN}"
 ```
 
 ### Key notes:
 - Budgets from Meta are in CENTS (divide by 100 for dollars)
 - spend, cpm, cpc are decimal strings — convert to numbers
 - ROAS comes from purchase_roas[0].value (string like "4.2") — convert to float
+- Revenue = spend × ROAS (Meta doesn't return a direct revenue field)
+- Purchases come from `actions` array where `action_type` = "purchase" — use for CPA = spend / purchases
 - start_time comes from the campaign fields as an ISO8601 string — pass it through as-is
 - Set client_slug based on campaign name (case-insensitive matching):
   - Contains "arjona" → "zamora"
+  - Contains "alofoke" → "zamora" (Zamora sub-brand)
+  - Contains "camila" → "zamora" (Zamora sub-brand)
   - Starts with "KYBBA" → "kybba"
   - Starts with "Beamina" → "beamina"
   - Starts with "Happy Paws" → "happy_paws"

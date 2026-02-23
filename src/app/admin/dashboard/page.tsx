@@ -31,7 +31,7 @@ type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 interface AgentLastRun { agentId: string; status: string; finishedAt: string | null; }
 interface Alert { id: string; message: string; level: string; created_at: string; }
 interface SnapshotRow { snapshot_date: string; roas: number | null; spend: number | null; }
-interface DailyRow { date: string; tickets_sold: number; }
+interface DailyRow { snapshot_date: string; tickets_sold: number | null; }
 
 // --- Data fetching ---
 
@@ -64,10 +64,11 @@ async function getData() {
       .order("snapshot_date", { ascending: true })
       .limit(300),
     supabaseAdmin
-      .from("tm_event_daily")
-      .select("date, tickets_sold")
-      .gte("date", thirtyDaysAgo)
-      .order("date", { ascending: true }),
+      .from("event_snapshots")
+      .select("snapshot_date, tickets_sold")
+      .gte("snapshot_date", thirtyDaysAgo)
+      .not("tickets_sold", "is", null)
+      .order("snapshot_date", { ascending: true }),
   ]);
 
   const events = (eventsRes.data ?? []) as TmEvent[];
@@ -103,7 +104,9 @@ async function getData() {
   // Aggregate daily ticket sales across all events by date
   const dailyByDate: Record<string, number> = {};
   for (const row of dailyRows) {
-    dailyByDate[row.date] = (dailyByDate[row.date] ?? 0) + row.tickets_sold;
+    if (row.tickets_sold != null) {
+      dailyByDate[row.snapshot_date] = (dailyByDate[row.snapshot_date] ?? 0) + row.tickets_sold;
+    }
   }
   const velocityData = Object.entries(dailyByDate)
     .sort(([a], [b]) => a.localeCompare(b))
