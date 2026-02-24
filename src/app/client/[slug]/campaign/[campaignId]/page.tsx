@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ArrowLeft,
-  DollarSign,
   TrendingUp,
   Eye,
   MousePointer,
@@ -13,12 +12,10 @@ import {
   Shield,
   Sparkles,
   Layers,
+  Activity,
 } from "lucide-react";
 import type { DateRange } from "../../data";
 import {
-  type AgeGenderBreakdown,
-  type PlacementBreakdown,
-  type AdCard,
   fmtUsd,
   fmtNum,
   fmtDate,
@@ -28,6 +25,18 @@ import {
   AGE_BRACKETS,
 } from "../../lib";
 import { getCampaignDetail } from "./data";
+import {
+  AgeDistributionChart,
+  GenderDonutChart,
+  AgeGenderHeatmap,
+  PlacementTreemap,
+  PlacementTable,
+  type AgeRow,
+  type GenderRow,
+  type AgeGenderCell,
+  type PlacementRow,
+} from "@/components/client/campaign-charts";
+import { AdsPreview, type AdPreview } from "@/components/client/ads-preview";
 
 interface Props {
   params: Promise<{ slug: string; campaignId: string }>;
@@ -52,7 +61,7 @@ function StatCard({
   value,
   sub,
 }: {
-  icon: typeof DollarSign;
+  icon: typeof TrendingUp;
   iconColor: string;
   label: string;
   value: string;
@@ -74,15 +83,6 @@ function StatCard({
   );
 }
 
-function ProgressBar({ value, color = "gradient" }: { value: number; color?: string }) {
-  const cls = color === "gradient" ? "gradient-bar" : color;
-  return (
-    <div className="progress-track h-1.5">
-      <div className={`h-full rounded-full ${cls}`} style={{ width: `${Math.min(value, 100)}%` }} />
-    </div>
-  );
-}
-
 function CampaignStatusBadge({ status }: { status: string }) {
   const cfg = getCampaignStatusCfg(status);
   return (
@@ -90,246 +90,6 @@ function CampaignStatusBadge({ status }: { status: string }) {
       <span className={`inline-block h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
       {cfg.label}
     </span>
-  );
-}
-
-// --- Age/Gender Section ---
-
-function AgeGenderSection({ data }: { data: AgeGenderBreakdown[] }) {
-  if (data.length === 0) return null;
-
-  // Aggregate by age bracket
-  const byAge = new Map<string, { spend: number; impressions: number; clicks: number }>();
-  for (const row of data) {
-    const prev = byAge.get(row.age) ?? { spend: 0, impressions: 0, clicks: 0 };
-    byAge.set(row.age, {
-      spend: prev.spend + row.spend,
-      impressions: prev.impressions + row.impressions,
-      clicks: prev.clicks + row.clicks,
-    });
-  }
-
-  // Aggregate by gender
-  const byGender = new Map<string, { spend: number; impressions: number }>();
-  for (const row of data) {
-    const prev = byGender.get(row.gender) ?? { spend: 0, impressions: 0 };
-    byGender.set(row.gender, {
-      spend: prev.spend + row.spend,
-      impressions: prev.impressions + row.impressions,
-    });
-  }
-
-  const totalImpressions = data.reduce((s, r) => s + r.impressions, 0);
-  const totalSpend = data.reduce((s, r) => s + r.spend, 0);
-
-  // Sort age brackets in standard order
-  const ageEntries = AGE_BRACKETS
-    .filter((a) => byAge.has(a))
-    .map((a) => ({ age: a, ...byAge.get(a)! }));
-
-  const genderEntries = Array.from(byGender.entries())
-    .map(([gender, vals]) => ({ gender, ...vals }))
-    .sort((a, b) => b.impressions - a.impressions);
-
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      {/* Age breakdown */}
-      <div className="glass-card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="h-3.5 w-3.5 text-cyan-400/60" />
-          <span className="text-xs font-semibold text-white/60">Age Distribution</span>
-        </div>
-        <div className="space-y-3">
-          {ageEntries.map((row) => {
-            const pct = totalImpressions > 0 ? (row.impressions / totalImpressions) * 100 : 0;
-            return (
-              <div key={row.age}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-white/50">{row.age}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] text-white/30">{fmtUsd(row.spend)}</span>
-                    <span className="text-xs font-semibold text-white/80 w-10 text-right">
-                      {pct.toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-                <ProgressBar value={pct} color="bg-cyan-400" />
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Gender breakdown */}
-      <div className="glass-card p-5">
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="h-3.5 w-3.5 text-violet-400/60" />
-          <span className="text-xs font-semibold text-white/60">Gender Split</span>
-        </div>
-        <div className="space-y-4">
-          {genderEntries.map((row) => {
-            const pctImp = totalImpressions > 0 ? (row.impressions / totalImpressions) * 100 : 0;
-            const pctSpend = totalSpend > 0 ? (row.spend / totalSpend) * 100 : 0;
-            const barColor = row.gender === "Female" ? "bg-violet-400" : row.gender === "Male" ? "bg-cyan-400" : "bg-white/30";
-            return (
-              <div key={row.gender}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-white/50">{row.gender}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] text-white/30">{fmtUsd(row.spend)}</span>
-                    <span className="text-xs font-semibold text-white/80 w-10 text-right">
-                      {pctImp.toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-                <ProgressBar value={pctImp} color={barColor} />
-                <p className="text-[10px] text-white/20 mt-1">
-                  {pctSpend.toFixed(0)}% of spend
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --- Placements Section ---
-
-function PlacementsSection({ data }: { data: PlacementBreakdown[] }) {
-  if (data.length === 0) return null;
-
-  const totalSpend = data.reduce((s, r) => s + r.spend, 0);
-  const sorted = [...data].sort((a, b) => b.spend - a.spend);
-
-  const platformColors: Record<string, string> = {
-    Facebook: "bg-blue-400",
-    Instagram: "bg-violet-400",
-    Messenger: "bg-cyan-400",
-    "Audience Network": "bg-amber-400",
-  };
-
-  return (
-    <div className="glass-card p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <Layers className="h-3.5 w-3.5 text-blue-400/60" />
-        <span className="text-xs font-semibold text-white/60">Placements</span>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead>
-            <tr className="text-white/30 text-left border-b border-white/[0.06]">
-              <th className="pb-2 font-medium">Platform</th>
-              <th className="pb-2 font-medium">Position</th>
-              <th className="pb-2 font-medium text-right">Spend</th>
-              <th className="pb-2 font-medium text-right">Impressions</th>
-              <th className="pb-2 font-medium text-right">Clicks</th>
-              <th className="pb-2 font-medium text-right">CTR</th>
-              <th className="pb-2 font-medium text-right">Share</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sorted.map((row, i) => {
-              const pct = totalSpend > 0 ? (row.spend / totalSpend) * 100 : 0;
-              const dotColor = platformColors[row.platform] ?? "bg-white/30";
-              return (
-                <tr key={i} className="border-b border-white/[0.03] last:border-0">
-                  <td className="py-2.5">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
-                      <span className="text-white/70">{row.platform}</span>
-                    </div>
-                  </td>
-                  <td className="py-2.5 text-white/50">{row.position}</td>
-                  <td className="py-2.5 text-white/70 text-right font-medium">{fmtUsd(row.spend)}</td>
-                  <td className="py-2.5 text-white/50 text-right">{fmtNum(row.impressions)}</td>
-                  <td className="py-2.5 text-white/50 text-right">{fmtNum(row.clicks)}</td>
-                  <td className="py-2.5 text-white/50 text-right">
-                    {row.ctr != null ? `${row.ctr.toFixed(2)}%` : "--"}
-                  </td>
-                  <td className="py-2.5 text-white/60 text-right font-medium">{pct.toFixed(0)}%</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-// --- Ads Section ---
-
-function AdsSection({ ads }: { ads: AdCard[] }) {
-  if (ads.length === 0) return null;
-
-  const sorted = [...ads].sort((a, b) => b.spend - a.spend);
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {sorted.map((ad) => (
-        <div key={ad.adId} className="glass-card p-4 flex flex-col">
-          {/* Thumbnail */}
-          {ad.thumbnailUrl && (
-            <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-3 bg-white/[0.03]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={ad.thumbnailUrl}
-                alt={ad.name}
-                className="object-cover w-full h-full"
-              />
-            </div>
-          )}
-
-          {/* Ad name and status */}
-          <div className="flex items-start justify-between gap-2 mb-1">
-            <p className="text-xs font-semibold text-white/80 leading-tight line-clamp-2">
-              {ad.name}
-            </p>
-            <CampaignStatusBadge status={ad.status} />
-          </div>
-
-          {ad.creativeTitle && (
-            <p className="text-[10px] text-white/30 mb-2 line-clamp-1">{ad.creativeTitle}</p>
-          )}
-
-          {/* Metrics */}
-          <div className="grid grid-cols-2 gap-x-3 gap-y-2 mt-auto pt-3 border-t border-white/[0.06]">
-            <div>
-              <p className="text-[9px] text-white/25">Spend</p>
-              <p className="text-sm font-bold text-white/80">{fmtUsd(ad.spend)}</p>
-            </div>
-            {ad.roas != null && (
-              <div>
-                <p className="text-[9px] text-white/25">ROAS</p>
-                <p className={`text-sm font-bold ${roasColor(ad.roas)}`}>{ad.roas.toFixed(1)}x</p>
-              </div>
-            )}
-            <div>
-              <p className="text-[9px] text-white/25">Impressions</p>
-              <p className="text-xs font-semibold text-white/60">{fmtNum(ad.impressions)}</p>
-            </div>
-            <div>
-              <p className="text-[9px] text-white/25">Clicks</p>
-              <p className="text-xs font-semibold text-white/60">{fmtNum(ad.clicks)}</p>
-            </div>
-            {ad.reach != null && (
-              <div>
-                <p className="text-[9px] text-white/25">Reach</p>
-                <p className="text-xs font-semibold text-white/60">{fmtNum(ad.reach)}</p>
-              </div>
-            )}
-            {ad.ctr != null && (
-              <div>
-                <p className="text-[9px] text-white/25">CTR</p>
-                <p className="text-xs font-semibold text-white/60">{ad.ctr.toFixed(2)}%</p>
-              </div>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 
@@ -363,6 +123,70 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 
   const { campaign: c, ageGender, placements, ads, dataSource, rangeLabel } = data;
 
+  // --- Prepare chart data (serialize for client components) ---
+
+  const totalImp = ageGender.reduce((s, r) => s + r.impressions, 0);
+
+  // Age chart data
+  const byAge = new Map<string, { impressions: number; clicks: number; ctr: number | null }>();
+  for (const row of ageGender) {
+    const prev = byAge.get(row.age) ?? { impressions: 0, clicks: 0, ctr: null };
+    const imp = prev.impressions + row.impressions;
+    const clk = prev.clicks + row.clicks;
+    byAge.set(row.age, { impressions: imp, clicks: clk, ctr: imp > 0 ? (clk / imp) * 100 : null });
+  }
+  const ageChartData: AgeRow[] = AGE_BRACKETS
+    .filter((a) => byAge.has(a))
+    .map((a) => ({ age: a, ...byAge.get(a)! }));
+
+  // Gender chart data
+  const byGender = new Map<string, number>();
+  for (const row of ageGender) {
+    byGender.set(row.gender, (byGender.get(row.gender) ?? 0) + row.impressions);
+  }
+  const genderChartData: GenderRow[] = Array.from(byGender.entries())
+    .map(([gender, impressions]) => ({
+      gender,
+      impressions,
+      pct: totalImp > 0 ? (impressions / totalImp) * 100 : 0,
+    }))
+    .sort((a, b) => b.impressions - a.impressions);
+
+  // Heatmap data
+  const heatmapData: AgeGenderCell[] = ageGender.map((row) => ({
+    age: row.age,
+    gender: row.gender,
+    impressions: row.impressions,
+    pct: totalImp > 0 ? (row.impressions / totalImp) * 100 : 0,
+  }));
+  const heatmapAges = AGE_BRACKETS.filter((a) => byAge.has(a));
+
+  // Placement chart data (no spend)
+  const totalPlacementImp = placements.reduce((s, r) => s + r.impressions, 0);
+  const placementData: PlacementRow[] = placements.map((r) => ({
+    platform: r.platform,
+    position: r.position,
+    impressions: r.impressions,
+    clicks: r.clicks,
+    ctr: r.ctr,
+    pct: totalPlacementImp > 0 ? (r.impressions / totalPlacementImp) * 100 : 0,
+  }));
+
+  // Ads preview data (no spend)
+  const adsPreviewData: AdPreview[] = ads.map((ad) => ({
+    adId: ad.adId,
+    name: ad.name,
+    status: ad.status,
+    thumbnailUrl: ad.thumbnailUrl,
+    creativeTitle: ad.creativeTitle,
+    creativeBody: ad.creativeBody,
+    impressions: ad.impressions,
+    clicks: ad.clicks,
+    reach: ad.reach,
+    ctr: ad.ctr,
+    roas: ad.roas,
+  }));
+
   return (
     <div className="space-y-6">
       {/* -- Header -- */}
@@ -371,7 +195,6 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-violet-500/[0.08] to-transparent rounded-full blur-3xl" />
 
         <div className="relative">
-          {/* Back link */}
           <Link
             href={`/client/${slug}?range=${range}`}
             className="inline-flex items-center gap-1.5 text-[11px] text-white/30 hover:text-white/60 transition mb-4"
@@ -389,7 +212,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
                 </span>
               </div>
               <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">{c.name}</h1>
-              <div className="flex items-center gap-3 mt-2">
+              <div className="flex items-center gap-3 mt-2 flex-wrap">
                 <CampaignStatusBadge status={c.status} />
                 {c.startTime && (
                   <span className="text-[10px] text-white/25">Since {fmtDate(c.startTime)}</span>
@@ -408,7 +231,6 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
               </div>
             </div>
 
-            {/* Date filter */}
             <div className="flex items-center gap-0.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] self-start">
               {DATE_OPTIONS.map((opt) => (
                 <a
@@ -428,14 +250,8 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         </div>
       </div>
 
-      {/* -- Key Metrics -- */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-3">
-        <StatCard
-          icon={DollarSign}
-          iconColor="bg-cyan-500/10 ring-1 ring-cyan-500/20 text-cyan-400"
-          label="Spend"
-          value={fmtUsd(c.spend)}
-        />
+      {/* -- Key Metrics (no spend at campaign level either -- keep ROAS, revenue, impressions, clicks, CTR, CPC) -- */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <StatCard
           icon={TrendingUp}
           iconColor="bg-violet-500/10 ring-1 ring-violet-500/20 text-violet-400"
@@ -463,15 +279,15 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           sub={c.ctr != null ? `${c.ctr.toFixed(2)}% CTR` : undefined}
         />
         <StatCard
-          icon={DollarSign}
-          iconColor="bg-rose-500/10 ring-1 ring-rose-500/20 text-rose-400"
+          icon={Activity}
+          iconColor="bg-cyan-500/10 ring-1 ring-cyan-500/20 text-cyan-400"
           label="CPC"
           value={c.cpc != null ? `$${c.cpc.toFixed(2)}` : "--"}
           sub={c.cpm != null ? `$${c.cpm.toFixed(2)} CPM` : undefined}
         />
       </div>
 
-      {/* -- Demographics (Age/Gender) -- */}
+      {/* -- Demographics: Charts + Heatmap -- */}
       {ageGender.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
@@ -479,35 +295,47 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
             <span className="section-label">Audience Demographics</span>
             <span className="text-[10px] text-white/20 ml-auto">{rangeLabel}</span>
           </div>
-          <AgeGenderSection data={ageGender} />
+
+          {/* Row 1: Age bar chart + Gender donut */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+            <AgeDistributionChart data={ageChartData} />
+            <GenderDonutChart data={genderChartData} />
+          </div>
+
+          {/* Row 2: Age x Gender heatmap (full width) */}
+          <AgeGenderHeatmap data={heatmapData} ages={[...heatmapAges]} />
         </section>
       )}
 
-      {/* -- Placements -- */}
+      {/* -- Placements: Treemap + Table -- */}
       {placements.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
             <Layers className="h-3.5 w-3.5 text-white/30" />
-            <span className="section-label">Placement Breakdown</span>
+            <span className="section-label">Placements</span>
             <span className="text-[10px] text-white/20 ml-auto">{rangeLabel}</span>
           </div>
-          <PlacementsSection data={placements} />
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <PlacementTreemap data={placementData} />
+            <PlacementTable data={placementData} />
+          </div>
         </section>
       )}
 
-      {/* -- Ads -- */}
+      {/* -- Ads: 3 previews + expand -- */}
       {ads.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
             <Image className="h-3.5 w-3.5 text-white/30" />
-            <span className="section-label">Ads</span>
+            <span className="section-label">Ad Creatives</span>
             <span className="text-[10px] text-white/20 ml-auto">{ads.length} ads</span>
           </div>
-          <AdsSection ads={ads} />
+          <AdsPreview ads={adsPreviewData} />
         </section>
       )}
 
-      {/* -- Empty state for Supabase fallback -- */}
+      {/* -- Empty state -- */}
       {dataSource === "supabase" && ageGender.length === 0 && ads.length === 0 && (
         <div className="glass-card p-8 text-center">
           <p className="text-sm text-white/30 mb-1">Demographics and ad breakdowns unavailable</p>
