@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   DollarSign,
   TrendingUp,
@@ -18,6 +19,7 @@ import {
   GraduationCap,
   CreditCard,
   Baby,
+  ChevronRight,
 } from "lucide-react";
 import { getData, type DateRange } from "./data";
 import {
@@ -107,12 +109,18 @@ function Delta({ value }: { value: number | null }) {
 
 // --- Campaign Card ---
 
-function CampaignCardUI({ c }: { c: CampaignCard }) {
+function CampaignCardUI({ c, slug, range }: { c: CampaignCard; slug: string; range: DateRange }) {
   return (
-    <div className="glass-card p-5 flex flex-col">
+    <Link
+      href={`/client/${slug}/campaign/${c.campaignId}?range=${range}`}
+      className="glass-card p-5 flex flex-col hover:ring-1 hover:ring-white/10 hover:bg-white/[0.03] transition-all duration-200 group"
+    >
       <div className="flex items-start justify-between gap-2 mb-1">
-        <p className="text-sm font-semibold text-white/90 leading-tight">{c.name}</p>
-        <CampaignStatusBadge status={c.status} />
+        <p className="text-sm font-semibold text-white/90 leading-tight group-hover:text-cyan-300 transition-colors">{c.name}</p>
+        <div className="flex items-center gap-1.5">
+          <CampaignStatusBadge status={c.status} />
+          <ChevronRight className="h-3 w-3 text-white/15 group-hover:text-white/40 transition-colors" />
+        </div>
       </div>
       {c.startTime && (
         <p className="text-[10px] text-white/25 mb-4">
@@ -163,7 +171,7 @@ function CampaignCardUI({ c }: { c: CampaignCard }) {
           <ProgressBar value={Math.min(c.roas * 25, 100)} />
         </div>
       )}
-    </div>
+    </Link>
   );
 }
 
@@ -475,7 +483,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {campaigns.map((c) => (
-              <CampaignCardUI key={c.campaignId} c={c} />
+              <CampaignCardUI key={c.campaignId} c={c} slug={slug} range={range} />
             ))}
           </div>
         </section>

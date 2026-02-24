@@ -83,6 +83,56 @@ export interface Insight {
   type: "positive" | "neutral" | "warning";
 }
 
+// --- Campaign detail types ---
+
+export interface AgeGenderBreakdown {
+  age: string;
+  gender: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+  roas: number | null;
+}
+
+export interface PlacementBreakdown {
+  platform: string;
+  position: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+}
+
+export interface AdCard {
+  adId: string;
+  name: string;
+  status: string;
+  thumbnailUrl: string | null;
+  creativeTitle: string | null;
+  creativeBody: string | null;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  reach: number | null;
+  ctr: number | null;
+  cpc: number | null;
+  roas: number | null;
+  revenue: number | null;
+}
+
+export interface CampaignDetailData {
+  campaign: CampaignCard;
+  ageGender: AgeGenderBreakdown[];
+  placements: PlacementBreakdown[];
+  ads: AdCard[];
+  dataSource: "meta_api" | "supabase";
+  rangeLabel: string;
+}
+
+// Age bracket labels used by Meta
+export const AGE_BRACKETS = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"] as const;
+
 // --- Formatting ---
 
 export function fmtUsd(n: number | null): string {
