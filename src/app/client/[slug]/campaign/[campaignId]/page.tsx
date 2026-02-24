@@ -296,12 +296,12 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
               </div>
             </div>
 
-            <div className="flex items-center gap-0.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] self-start overflow-x-auto max-w-full">
+            <div className="flex flex-wrap items-center gap-1 sm:gap-0.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] self-start">
               {DATE_OPTIONS.map((opt) => (
                 <a
                   key={opt.value}
                   href={`?range=${opt.value}`}
-                  className={`shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-300 ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-300 ${
                     range === opt.value
                       ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
                       : "text-white/40 hover:text-white/70 hover:bg-white/[0.06]"
