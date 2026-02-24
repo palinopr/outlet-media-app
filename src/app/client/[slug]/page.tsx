@@ -198,34 +198,38 @@ async function getData(slug: string, days: 7 | 14) {
   const snapshotsRes = campaignIds.length > 0
     ? await supabaseAdmin
       .from("campaign_snapshots")
-      .select("campaign_id, spend, roas, clicks, impressions, ctr, cpc, cpm")
+      .select("campaign_id, spend, roas, clicks, impressions, ctr, cpc, cpm, snapshot_date")
       .in("campaign_id", campaignIds)
       .gte("snapshot_date", cutoffStr)
+      .order("snapshot_date", { ascending: false })
     : { data: [] };
 
-  const byId = new Map<string, { spend: number; roasWeighted: number; clicks: number; impressions: number; ctrWeighted: number; cpcWeighted: number; cpmWeighted: number }>();
+  // Snapshots store CUMULATIVE lifetime values, not daily deltas.
+  // Take only the LATEST snapshot per campaign to avoid double-counting.
+  const latestById = new Map<string, { spend: number; roas: number | null; clicks: number; impressions: number; ctr: number | null; cpc: number | null; cpm: number | null }>();
   for (const s of (snapshotsRes.data ?? [])) {
-    const cur = byId.get(s.campaign_id) ?? { spend: 0, roasWeighted: 0, clicks: 0, impressions: 0, ctrWeighted: 0, cpcWeighted: 0, cpmWeighted: 0 };
-    cur.spend += s.spend ?? 0;
-    cur.roasWeighted += (s.roas ?? 0) * (s.spend ?? 0);
-    cur.clicks += s.clicks ?? 0;
-    cur.impressions += s.impressions ?? 0;
-    if (s.ctr != null) cur.ctrWeighted += s.ctr * (s.impressions ?? 1);
-    if (s.cpc != null) cur.cpcWeighted += s.cpc * (s.clicks ?? 1);
-    if (s.cpm != null) cur.cpmWeighted += s.cpm * (s.impressions ?? 1);
-    byId.set(s.campaign_id, cur);
+    if (latestById.has(s.campaign_id)) continue; // skip older snapshots
+    latestById.set(s.campaign_id, {
+      spend: s.spend ?? 0,
+      roas: s.roas,
+      clicks: s.clicks ?? 0,
+      impressions: s.impressions ?? 0,
+      ctr: s.ctr,
+      cpc: s.cpc,
+      cpm: s.cpm,
+    });
   }
 
   const campaignCards: CampaignCard[] = campaigns
     .map((c) => {
-      const snap = byId.get(c.campaign_id);
+      const snap = latestById.get(c.campaign_id);
       const spendCents = snap?.spend ?? 0;
-      const roas = snap && snap.spend > 0 ? snap.roasWeighted / snap.spend : null;
+      const roas = snap?.roas ?? null;
       const clicks = snap?.clicks ?? 0;
       const impressions = snap?.impressions ?? 0;
-      const ctr = impressions > 0 && snap ? snap.ctrWeighted / impressions : null;
-      const cpc = clicks > 0 && snap ? snap.cpcWeighted / clicks : null;
-      const cpm = impressions > 0 && snap ? snap.cpmWeighted / impressions : null;
+      const ctr = snap?.ctr ?? null;
+      const cpc = snap?.cpc ?? null;
+      const cpm = snap?.cpm ?? null;
       return { id: c.campaign_id, name: c.name ?? "", spendCents, roas, clicks, impressions, ctr, cpc, cpm };
     })
     .filter((c) => c.spendCents > 0)
