@@ -37,14 +37,21 @@ function getMetaCreds(): { token: string; accountId: string } | null {
   return { token, accountId: rawId.replace(/^act_/, "") };
 }
 
-async function metaGet<T>(url: URL): Promise<T | null> {
+async function metaGet<T>(url: URL, label?: string): Promise<T | null> {
   try {
     const res = await fetch(url.toString(), { next: { revalidate: 300 } });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error(`[meta:${label ?? "unknown"}] HTTP ${res.status}`);
+      return null;
+    }
     const json = await res.json();
-    if (json.error) return null;
+    if (json.error) {
+      console.error(`[meta:${label ?? "unknown"}] API error:`, json.error.message ?? json.error);
+      return null;
+    }
     return json as T;
-  } catch {
+  } catch (err) {
+    console.error(`[meta:${label ?? "unknown"}] fetch failed:`, err);
     return null;
   }
 }
@@ -93,8 +100,8 @@ async function fetchCampaignOverview(
   insightsUrl.searchParams.set("date_preset", META_PRESETS[range]);
 
   const [infoRes, insightsRes] = await Promise.all([
-    metaGet<MetaCampaignInfo>(infoUrl),
-    metaGet<{ data: MetaInsightRow[] }>(insightsUrl),
+    metaGet<MetaCampaignInfo>(infoUrl, "campaignInfo"),
+    metaGet<{ data: MetaInsightRow[] }>(insightsUrl, "campaignInsights"),
   ]);
 
   return {
@@ -105,14 +112,16 @@ async function fetchCampaignOverview(
 
 // --- Fetch age/gender breakdowns ---
 
+// Breakdown dimensions (age, gender) come automatically in the response
+// when specified via the `breakdowns` param -- do NOT include them in `fields`.
+// `purchase_roas` is an action metric incompatible with demographic breakdowns.
 interface MetaAgeGenderRow {
   age: string;
   gender: string;
-  spend: string;
   impressions: string;
   clicks: string;
   ctr: string;
-  purchase_roas?: Array<{ action_type: string; value: string }>;
+  spend?: string;
 }
 
 async function fetchAgeGender(
@@ -122,37 +131,35 @@ async function fetchAgeGender(
 ): Promise<AgeGenderBreakdown[]> {
   const url = new URL(`https://graph.facebook.com/v21.0/${campaignId}/insights`);
   url.searchParams.set("access_token", creds.token);
-  url.searchParams.set("fields", "age,gender,spend,impressions,clicks,ctr,purchase_roas");
+  url.searchParams.set("fields", "impressions,clicks,ctr,spend");
   url.searchParams.set("breakdowns", "age,gender");
   url.searchParams.set("date_preset", META_PRESETS[range]);
   url.searchParams.set("limit", "100");
 
-  const res = await metaGet<{ data: MetaAgeGenderRow[] }>(url);
+  const res = await metaGet<{ data: MetaAgeGenderRow[] }>(url, "ageGender");
   if (!res?.data) return [];
 
-  return res.data.map((r) => {
-    const roas = r.purchase_roas?.find((x) => x.action_type === "omni_purchase")?.value;
-    return {
-      age: r.age,
-      gender: r.gender === "male" ? "Male" : r.gender === "female" ? "Female" : r.gender,
-      spend: parseFloat(r.spend) || 0,
-      impressions: parseInt(r.impressions) || 0,
-      clicks: parseInt(r.clicks) || 0,
-      ctr: parseFloat(r.ctr) || null,
-      roas: roas ? parseFloat(roas) : null,
-    };
-  });
+  return res.data.map((r) => ({
+    age: r.age,
+    gender: r.gender === "male" ? "Male" : r.gender === "female" ? "Female" : r.gender,
+    spend: r.spend ? parseFloat(r.spend) : 0,
+    impressions: parseInt(r.impressions) || 0,
+    clicks: parseInt(r.clicks) || 0,
+    ctr: parseFloat(r.ctr) || null,
+    roas: null,
+  }));
 }
 
 // --- Fetch placement breakdowns ---
 
+// Same as age/gender: breakdown dimensions come from the `breakdowns` param.
 interface MetaPlacementRow {
   publisher_platform: string;
   platform_position: string;
-  spend: string;
   impressions: string;
   clicks: string;
   ctr: string;
+  spend?: string;
 }
 
 async function fetchPlacements(
@@ -162,21 +169,18 @@ async function fetchPlacements(
 ): Promise<PlacementBreakdown[]> {
   const url = new URL(`https://graph.facebook.com/v21.0/${campaignId}/insights`);
   url.searchParams.set("access_token", creds.token);
-  url.searchParams.set(
-    "fields",
-    "publisher_platform,platform_position,spend,impressions,clicks,ctr",
-  );
+  url.searchParams.set("fields", "impressions,clicks,ctr,spend");
   url.searchParams.set("breakdowns", "publisher_platform,platform_position");
   url.searchParams.set("date_preset", META_PRESETS[range]);
   url.searchParams.set("limit", "100");
 
-  const res = await metaGet<{ data: MetaPlacementRow[] }>(url);
+  const res = await metaGet<{ data: MetaPlacementRow[] }>(url, "placements");
   if (!res?.data) return [];
 
   return res.data.map((r) => ({
     platform: formatPlatform(r.publisher_platform),
     position: formatPosition(r.platform_position),
-    spend: parseFloat(r.spend) || 0,
+    spend: r.spend ? parseFloat(r.spend) : 0,
     impressions: parseInt(r.impressions) || 0,
     clicks: parseInt(r.clicks) || 0,
     ctr: parseFloat(r.ctr) || null,
@@ -236,7 +240,7 @@ async function fetchAds(
   );
   url.searchParams.set("limit", "50");
 
-  const res = await metaGet<{ data: MetaAdRow[] }>(url);
+  const res = await metaGet<{ data: MetaAdRow[] }>(url, "ads");
   if (!res?.data) return [];
 
   return res.data.map((ad) => {
