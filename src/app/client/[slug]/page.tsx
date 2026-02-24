@@ -21,7 +21,7 @@ import {
   CreditCard,
   Baby,
 } from "lucide-react";
-import { getData } from "./data";
+import { getData, type DateRange } from "./data";
 import {
   type CityCardData,
   type AudienceProfile,
@@ -39,8 +39,17 @@ import { ExportButton } from "@/components/client/export-button";
 
 interface Props {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ days?: string }>;
+  searchParams: Promise<{ range?: string }>;
 }
+
+const DATE_OPTIONS: { value: DateRange; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "yesterday", label: "Yesterday" },
+  { value: "7", label: "7d" },
+  { value: "14", label: "14d" },
+  { value: "30", label: "30d" },
+  { value: "lifetime", label: "Lifetime" },
+];
 
 // --- Small UI pieces ---
 
@@ -298,9 +307,10 @@ function AudienceSection({ demo }: { demo: AudienceProfile }) {
 
 export default async function ClientDashboard({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { days: daysParam } = await searchParams;
-  const days = daysParam === "14" ? 14 : 7;
-  const { heroStats, cities, audience, channels, totalPotentialRevenue, totalCurrentRevenue } = await getData(slug, days);
+  const { range: rangeParam } = await searchParams;
+  const validRanges: DateRange[] = ["today", "yesterday", "7", "14", "30", "lifetime"];
+  const range: DateRange = validRanges.includes(rangeParam as DateRange) ? (rangeParam as DateRange) : "7";
+  const { heroStats, cities, audience, channels, totalPotentialRevenue, totalCurrentRevenue } = await getData(slug, range);
 
   const insights = generateInsights(heroStats, cities, audience);
   const clientName = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/_/g, " ");
@@ -330,19 +340,19 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start">
+          <div className="flex items-center gap-3 self-start flex-wrap">
             <ExportButton />
-            <div className="flex items-center gap-1 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08]">
-              {([7, 14] as const).map((d) => (
+            <div className="flex items-center gap-0.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08]">
+              {DATE_OPTIONS.map((opt) => (
                 <a
-                  key={d}
-                  href={`?days=${d}`}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300 ${days === d
+                  key={opt.value}
+                  href={`?range=${opt.value}`}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-300 ${range === opt.value
                     ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
                     : "text-white/40 hover:text-white/70 hover:bg-white/[0.06]"
                   }`}
                 >
-                  Last {d}d
+                  {opt.label}
                 </a>
               ))}
             </div>
@@ -362,10 +372,12 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
             {fmtUsd(heroStats.totalSpend)}
           </p>
-          <div className="flex items-center gap-2 mt-2">
-            <Delta value={heroStats.spendDelta} />
-            <span className="text-[10px] text-white/20">vs prev {days}d</span>
-          </div>
+          {range !== "lifetime" && (
+            <div className="flex items-center gap-2 mt-2">
+              <Delta value={heroStats.spendDelta} />
+              <span className="text-[10px] text-white/20">vs prev period</span>
+            </div>
+          )}
         </div>
 
         <div className="glass-card hero-stat-card stat-glow p-5">
@@ -393,10 +405,12 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           <p className="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tighter leading-none">
             {fmtUsd(heroStats.totalRevenue)}
           </p>
-          <div className="flex items-center gap-2 mt-2">
-            <Delta value={heroStats.revenueDelta} />
-            <span className="text-[10px] text-white/20">vs prev {days}d</span>
-          </div>
+          {range !== "lifetime" && (
+            <div className="flex items-center gap-2 mt-2">
+              <Delta value={heroStats.revenueDelta} />
+              <span className="text-[10px] text-white/20">vs prev period</span>
+            </div>
+          )}
         </div>
 
         <div className="glass-card hero-stat-card stat-glow p-5">

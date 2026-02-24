@@ -34,18 +34,47 @@ const EMPTY: ClientData = {
   totalCurrentRevenue: null,
 };
 
+export type DateRange = "today" | "yesterday" | "7" | "14" | "30" | "lifetime";
+
+function buildDateRange(range: DateRange) {
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+
+  switch (range) {
+    case "today":
+      return { cutoffStr: todayStr, prevCutoffStr: yesterdayStr, label: "today" };
+    case "yesterday": {
+      const dayBefore = new Date(yesterday);
+      dayBefore.setDate(dayBefore.getDate() - 1);
+      return { cutoffStr: yesterdayStr, prevCutoffStr: dayBefore.toISOString().slice(0, 10), label: "yesterday" };
+    }
+    case "lifetime":
+      return { cutoffStr: null, prevCutoffStr: null, label: "lifetime" };
+    default: {
+      const days = Number(range);
+      const cutoff = new Date(now);
+      cutoff.setDate(cutoff.getDate() - days);
+      const prevCutoff = new Date(cutoff);
+      prevCutoff.setDate(prevCutoff.getDate() - days);
+      return {
+        cutoffStr: cutoff.toISOString().slice(0, 10),
+        prevCutoffStr: prevCutoff.toISOString().slice(0, 10),
+        label: `${days}d`,
+      };
+    }
+  }
+}
+
 export async function getData(
   slug: string,
-  days: 7 | 14,
+  range: DateRange,
 ): Promise<ClientData> {
   if (!supabaseAdmin) return EMPTY;
 
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - days);
-  const prevCutoff = new Date(cutoff);
-  prevCutoff.setDate(prevCutoff.getDate() - days);
-  const cutoffStr = cutoff.toISOString().slice(0, 10);
-  const prevCutoffStr = prevCutoff.toISOString().slice(0, 10);
+  const { cutoffStr, prevCutoffStr } = buildDateRange(range);
 
   // --- Batch 1: campaigns + events ---
   const [campaignsRes, eventsRes] = await Promise.all([
@@ -69,14 +98,17 @@ export async function getData(
   if (campaignIds.length === 0 && events.length === 0) return EMPTY;
 
   // --- Batch 2: snapshots, daily tickets, demographics ---
+  const snapshotQuery = supabaseAdmin
+    .from("campaign_snapshots")
+    .select("campaign_id, spend, roas, snapshot_date")
+    .in("campaign_id", campaignIds)
+    .order("snapshot_date", { ascending: false });
+  // For lifetime, fetch all snapshots; otherwise filter by previous period start
+  if (prevCutoffStr) snapshotQuery.gte("snapshot_date", prevCutoffStr);
+
   const [snapshotsRes, dailyRes, demosRes] = await Promise.all([
     campaignIds.length > 0
-      ? supabaseAdmin
-          .from("campaign_snapshots")
-          .select("campaign_id, spend, roas, snapshot_date")
-          .in("campaign_id", campaignIds)
-          .gte("snapshot_date", prevCutoffStr)
-          .order("snapshot_date", { ascending: false })
+      ? snapshotQuery
       : Promise.resolve({ data: [] as never[] }),
     tmIds.length > 0
       ? supabaseAdmin
@@ -106,10 +138,10 @@ export async function getData(
   for (const s of snapshots) {
     const val = { spend: s.spend ?? 0, roas: s.roas };
     if (!latest.has(s.campaign_id)) latest.set(s.campaign_id, val);
-    if (s.snapshot_date <= cutoffStr && !atCutoff.has(s.campaign_id)) {
+    if (cutoffStr && s.snapshot_date <= cutoffStr && !atCutoff.has(s.campaign_id)) {
       atCutoff.set(s.campaign_id, val);
     }
-    if (s.snapshot_date <= prevCutoffStr && !atPrev.has(s.campaign_id)) {
+    if (prevCutoffStr && s.snapshot_date <= prevCutoffStr && !atPrev.has(s.campaign_id)) {
       atPrev.set(s.campaign_id, val);
     }
   }
