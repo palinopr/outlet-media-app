@@ -15,7 +15,12 @@ import {
   Clock,
   Shield,
   Sparkles,
+  MousePointerClick,
+  Eye,
+  Target,
+  ChevronRight,
 } from "lucide-react";
+import Link from "next/link";
 
 type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 type DemographicsRow = Database["public"]["Tables"]["tm_event_demographics"]["Row"];
@@ -32,6 +37,11 @@ interface CampaignCard {
   name: string;
   spendCents: number;
   roas: number | null;
+  clicks: number;
+  impressions: number;
+  ctr: number | null;
+  cpc: number | null;
+  cpm: number | null;
 }
 
 interface AudienceProfile {
@@ -120,6 +130,23 @@ function roasBg(roas: number | null): string {
   return "bg-red-500/10";
 }
 
+function fmtNum(n: number | null): string {
+  if (n == null) return "--";
+  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
+  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
+  return n.toLocaleString("en-US");
+}
+
+function fmtPct(n: number | null): string {
+  if (n == null) return "--";
+  return n.toFixed(2) + "%";
+}
+
+function fmtCurrency(n: number | null): string {
+  if (n == null) return "--";
+  return "$" + n.toFixed(2);
+}
+
 type StatusKey = "onsale" | "presale" | "soldout" | "offsale" | "cancelled" | "published";
 
 const statusConfig: Record<StatusKey, { label: string; text: string; bg: string; dot: string }> = {
@@ -171,16 +198,21 @@ async function getData(slug: string, days: 7 | 14) {
   const snapshotsRes = campaignIds.length > 0
     ? await supabaseAdmin
       .from("campaign_snapshots")
-      .select("campaign_id, spend, roas")
+      .select("campaign_id, spend, roas, clicks, impressions, ctr, cpc, cpm")
       .in("campaign_id", campaignIds)
       .gte("snapshot_date", cutoffStr)
     : { data: [] };
 
-  const byId = new Map<string, { spend: number; roasWeighted: number }>();
+  const byId = new Map<string, { spend: number; roasWeighted: number; clicks: number; impressions: number; ctrWeighted: number; cpcWeighted: number; cpmWeighted: number }>();
   for (const s of (snapshotsRes.data ?? [])) {
-    const cur = byId.get(s.campaign_id) ?? { spend: 0, roasWeighted: 0 };
+    const cur = byId.get(s.campaign_id) ?? { spend: 0, roasWeighted: 0, clicks: 0, impressions: 0, ctrWeighted: 0, cpcWeighted: 0, cpmWeighted: 0 };
     cur.spend += s.spend ?? 0;
     cur.roasWeighted += (s.roas ?? 0) * (s.spend ?? 0);
+    cur.clicks += s.clicks ?? 0;
+    cur.impressions += s.impressions ?? 0;
+    if (s.ctr != null) cur.ctrWeighted += s.ctr * (s.impressions ?? 1);
+    if (s.cpc != null) cur.cpcWeighted += s.cpc * (s.clicks ?? 1);
+    if (s.cpm != null) cur.cpmWeighted += s.cpm * (s.impressions ?? 1);
     byId.set(s.campaign_id, cur);
   }
 
@@ -189,7 +221,12 @@ async function getData(slug: string, days: 7 | 14) {
       const snap = byId.get(c.campaign_id);
       const spendCents = snap?.spend ?? 0;
       const roas = snap && snap.spend > 0 ? snap.roasWeighted / snap.spend : null;
-      return { id: c.campaign_id, name: c.name ?? "", spendCents, roas };
+      const clicks = snap?.clicks ?? 0;
+      const impressions = snap?.impressions ?? 0;
+      const ctr = impressions > 0 && snap ? snap.ctrWeighted / impressions : null;
+      const cpc = clicks > 0 && snap ? snap.cpcWeighted / clicks : null;
+      const cpm = impressions > 0 && snap ? snap.cpmWeighted / impressions : null;
+      return { id: c.campaign_id, name: c.name ?? "", spendCents, roas, clicks, impressions, ctr, cpc, cpm };
     })
     .filter((c) => c.spendCents > 0)
     .sort((a, b) => b.spendCents - a.spendCents);
@@ -271,6 +308,11 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const totalSpendCents = campaignCards.reduce((s, c) => s + c.spendCents, 0);
   const totalWeightedRoas = campaignCards.reduce((s, c) => s + (c.roas ?? 0) * c.spendCents, 0);
   const blendedRoas = totalSpendCents > 0 ? totalWeightedRoas / totalSpendCents : null;
+  const totalImpressions = campaignCards.reduce((s, c) => s + c.impressions, 0);
+  const totalClicks = campaignCards.reduce((s, c) => s + c.clicks, 0);
+  const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : null;
+  const avgCpc = totalClicks > 0 ? (totalSpendCents / 100) / totalClicks : null;
+  const avgCpm = totalImpressions > 0 ? (totalSpendCents / 100) / (totalImpressions / 1000) : null;
 
   const clientName = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/_/g, " ");
   const now = new Date().toLocaleDateString("en-US", {
@@ -317,8 +359,8 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
                 key={d}
                 href={`?days=${d}`}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-300 ${days === d
-                    ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
-                    : "text-white/40 hover:text-white/70 hover:bg-white/[0.06]"
+                  ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
+                  : "text-white/40 hover:text-white/70 hover:bg-white/[0.06]"
                   }`}
               >
                 Last {d} days
@@ -329,62 +371,91 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       </div>
 
       {/* ─── Hero Stats ─── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {/* Total Spend */}
-        <div className="glass-card hero-stat-card stat-glow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-cyan-500/10 ring-1 ring-cyan-500/20">
-                <DollarSign className="h-4 w-4 text-cyan-400" />
-              </div>
-              <span className="section-label">Total Spend</span>
+        <div className="glass-card hero-stat-card stat-glow p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-cyan-500/10 ring-1 ring-cyan-500/20">
+              <DollarSign className="h-3.5 w-3.5 text-cyan-400" />
             </div>
+            <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">Spend</span>
           </div>
-          <p className="text-4xl sm:text-5xl font-extrabold text-white tracking-tighter leading-none">
+          <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
             {fmtUsd(totalSpendCents / 100)}
           </p>
-          <p className="text-xs text-white/25 mt-2.5 flex items-center gap-1">
-            <Clock className="h-3 w-3" />
-            Last {days} days
-          </p>
+          <p className="text-[10px] text-white/20 mt-2">Last {days} days</p>
         </div>
 
         {/* Blended ROAS */}
-        <div className="glass-card hero-stat-card stat-glow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-violet-500/10 ring-1 ring-violet-500/20">
-                <TrendingUp className="h-4 w-4 text-violet-400" />
-              </div>
-              <span className="section-label">Blended ROAS</span>
+        <div className="glass-card hero-stat-card stat-glow p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/20">
+              <TrendingUp className="h-3.5 w-3.5 text-violet-400" />
             </div>
-            {blendedRoas != null && (
-              <span className={`badge-status text-[10px] ${roasColor(blendedRoas)} ${roasBg(blendedRoas)}`}>
-                <ArrowUpRight className="h-3 w-3" />
-                {roasLabel(blendedRoas)}
-              </span>
-            )}
+            <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">ROAS</span>
           </div>
-          <p className={`text-4xl sm:text-5xl font-extrabold tracking-tighter leading-none ${roasColor(blendedRoas)}`}>
+          <p className={`text-2xl sm:text-3xl font-extrabold tracking-tighter leading-none ${roasColor(blendedRoas)}`}>
             {blendedRoas != null ? `${blendedRoas.toFixed(1)}x` : "--"}
           </p>
-          <p className="text-xs text-white/25 mt-2.5">Return on ad spend</p>
+          {blendedRoas != null && (
+            <p className={`text-[10px] mt-2 font-medium ${roasColor(blendedRoas)}`}>{roasLabel(blendedRoas)}</p>
+          )}
         </div>
 
-        {/* Campaigns Count */}
-        <div className="glass-card hero-stat-card stat-glow p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-emerald-500/10 ring-1 ring-emerald-500/20">
-                <BarChart3 className="h-4 w-4 text-emerald-400" />
-              </div>
-              <span className="section-label">Active Campaigns</span>
+        {/* Impressions */}
+        <div className="glass-card hero-stat-card stat-glow p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-blue-500/10 ring-1 ring-blue-500/20">
+              <Eye className="h-3.5 w-3.5 text-blue-400" />
             </div>
+            <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">Impressions</span>
           </div>
-          <p className="text-4xl sm:text-5xl font-extrabold text-white tracking-tighter leading-none">
-            {campaignCards.length}
+          <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
+            {fmtNum(totalImpressions)}
           </p>
-          <p className="text-xs text-white/25 mt-2.5">Running this period</p>
+          <p className="text-[10px] text-white/20 mt-2">People reached</p>
+        </div>
+
+        {/* Clicks */}
+        <div className="glass-card hero-stat-card stat-glow p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20">
+              <MousePointerClick className="h-3.5 w-3.5 text-emerald-400" />
+            </div>
+            <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">Clicks</span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
+            {fmtNum(totalClicks)}
+          </p>
+          <p className="text-[10px] text-white/20 mt-2">CTR {fmtPct(avgCtr)}</p>
+        </div>
+
+        {/* CPC */}
+        <div className="glass-card hero-stat-card stat-glow p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-amber-500/10 ring-1 ring-amber-500/20">
+              <Target className="h-3.5 w-3.5 text-amber-400" />
+            </div>
+            <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">CPC</span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
+            {fmtCurrency(avgCpc)}
+          </p>
+          <p className="text-[10px] text-white/20 mt-2">Cost per click</p>
+        </div>
+
+        {/* CPM */}
+        <div className="glass-card hero-stat-card stat-glow p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-rose-500/10 ring-1 ring-rose-500/20">
+              <BarChart3 className="h-3.5 w-3.5 text-rose-400" />
+            </div>
+            <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">CPM</span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
+            {fmtCurrency(avgCpm)}
+          </p>
+          <p className="text-[10px] text-white/20 mt-2">Cost per 1K views</p>
         </div>
       </div>
 
@@ -406,7 +477,14 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
             <Activity className="h-3.5 w-3.5 text-white/30" />
             <span className="section-label">Your Campaigns</span>
           </div>
-          <span className="text-[10px] text-white/20">{campaignCards.length} active</span>
+          <div className="flex items-center gap-3">
+            <span className="text-[10px] text-white/20">{campaignCards.length} active</span>
+            {campaignCards.length > 0 && (
+              <Link href={`/client/${slug}/campaigns`} className="text-[10px] font-medium text-cyan-400/70 hover:text-cyan-400 transition-colors flex items-center gap-0.5">
+                View all <ChevronRight className="h-3 w-3" />
+              </Link>
+            )}
+          </div>
         </div>
 
         {campaignCards.length === 0 ? (
@@ -418,55 +496,97 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
             <p className="text-xs text-white/25">Campaign metrics will appear here once data starts flowing.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-4">
             {campaignCards.map((c) => {
               const spendDollars = c.spendCents / 100;
+              const revenue = c.roas != null ? spendDollars * c.roas : null;
               return (
-                <div key={c.id} className="glass-card campaign-card p-6">
-                  <div className="flex items-start justify-between mb-5">
-                    <p className="text-base font-semibold text-white/90 truncate pr-4">
-                      {c.name}
-                    </p>
+                <Link key={c.id} href={`/client/${slug}/campaigns`} className="block">
+                  <div className="glass-card campaign-card p-6 cursor-pointer group">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <p className="text-base font-semibold text-white/90 truncate">
+                          {c.name}
+                        </p>
+                        {c.roas != null && (
+                          <span className={`badge-status text-[10px] shrink-0 ${roasColor(c.roas)} ${roasBg(c.roas)}`}>
+                            {roasLabel(c.roas)}
+                          </span>
+                        )}
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-white/20 group-hover:text-white/50 transition-colors shrink-0" />
+                    </div>
+
+                    {/* Primary Metrics */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-5">
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <DollarSign className="h-3 w-3 text-cyan-400/50" />
+                          <span className="text-[10px] font-semibold tracking-wider uppercase text-white/30">Spend</span>
+                        </div>
+                        <p className="text-xl font-bold text-white/90">{fmtUsd(spendDollars)}</p>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <TrendingUp className="h-3 w-3 text-violet-400/50" />
+                          <span className="text-[10px] font-semibold tracking-wider uppercase text-white/30">ROAS</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`inline-block h-2 w-2 rounded-full ${roasDot(c.roas)}`} />
+                          <p className={`text-xl font-bold ${roasColor(c.roas)}`}>
+                            {c.roas != null ? `${c.roas.toFixed(1)}x` : "--"}
+                          </p>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <ArrowUpRight className="h-3 w-3 text-emerald-400/50" />
+                          <span className="text-[10px] font-semibold tracking-wider uppercase text-white/30">Revenue</span>
+                        </div>
+                        <p className="text-xl font-bold text-emerald-400/80">{revenue != null ? fmtUsd(revenue) : "--"}</p>
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Eye className="h-3 w-3 text-blue-400/50" />
+                          <span className="text-[10px] font-semibold tracking-wider uppercase text-white/30">Impressions</span>
+                        </div>
+                        <p className="text-xl font-bold text-white/80">{fmtNum(c.impressions)}</p>
+                      </div>
+                    </div>
+
+                    {/* Secondary Metrics Row */}
+                    <div className="grid grid-cols-4 gap-3 pt-4 border-t border-white/[0.06]">
+                      <div className="text-center">
+                        <p className="text-[10px] text-white/30 mb-1">CTR</p>
+                        <p className="text-sm font-semibold text-white/70">{fmtPct(c.ctr)}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-white/30 mb-1">CPC</p>
+                        <p className="text-sm font-semibold text-white/70">{fmtCurrency(c.cpc)}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-white/30 mb-1">CPM</p>
+                        <p className="text-sm font-semibold text-white/70">{fmtCurrency(c.cpm)}</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-[10px] text-white/30 mb-1">Clicks</p>
+                        <p className="text-sm font-semibold text-white/70">{fmtNum(c.clicks)}</p>
+                      </div>
+                    </div>
+
+                    {/* Performance bar */}
                     {c.roas != null && (
-                      <span className={`badge-status text-[10px] shrink-0 ${roasColor(c.roas)} ${roasBg(c.roas)}`}>
-                        {roasLabel(c.roas)}
-                      </span>
+                      <div className="mt-4">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] text-white/25">Performance Score</span>
+                          <span className="text-[10px] text-white/40 font-medium">{Math.min(Math.round(c.roas * 25), 100)}%</span>
+                        </div>
+                        <ProgressBar value={Math.min(c.roas * 25, 100)} />
+                      </div>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-6 mb-5">
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <DollarSign className="h-3 w-3 text-white/30" />
-                        <span className="text-[10px] font-semibold tracking-wider uppercase text-white/35">Spend</span>
-                      </div>
-                      <p className="text-2xl font-bold text-white/90">
-                        {fmtUsd(spendDollars)}
-                      </p>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <TrendingUp className="h-3 w-3 text-white/30" />
-                        <span className="text-[10px] font-semibold tracking-wider uppercase text-white/35">ROAS</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`inline-block h-2 w-2 rounded-full ${roasDot(c.roas)}`} />
-                        <p className={`text-2xl font-bold ${roasColor(c.roas)}`}>
-                          {c.roas != null ? `${c.roas.toFixed(1)}x` : "--"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Visual performance bar */}
-                  {c.roas != null && (
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className="text-[10px] text-white/30">Performance</span>
-                        <span className="text-[10px] text-white/50 font-medium">{Math.min(Math.round(c.roas * 25), 100)}%</span>
-                      </div>
-                      <ProgressBar value={Math.min(c.roas * 25, 100)} />
-                    </div>
-                  )}
-                </div>
+                </Link>
               );
             })}
           </div>
