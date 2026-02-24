@@ -6,38 +6,51 @@ export type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 export type DemographicsRow =
   Database["public"]["Tables"]["tm_event_demographics"]["Row"];
 
-// --- Domain types ---
+// --- Campaign types ---
+
+export interface CampaignCard {
+  campaignId: string;
+  name: string;
+  status: string;
+  spend: number;
+  roas: number | null;
+  revenue: number | null;
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+  cpc: number | null;
+  cpm: number | null;
+  dailyBudget: number | null;
+  startTime: string | null;
+}
 
 export interface HeroStats {
   totalSpend: number;
   blendedRoas: number | null;
   totalRevenue: number | null;
-  showsRunning: number;
+  totalImpressions: number;
+  totalClicks: number;
+  activeCampaigns: number;
+  totalCampaigns: number;
   spendDelta: number | null;
   revenueDelta: number | null;
 }
 
-export interface CityCardData {
+// --- Event types (for TM clients) ---
+
+export interface EventCard {
   id: string;
+  name: string;
+  venue: string;
   city: string;
   date: string | null;
-  venue: string;
   status: string;
   ticketsSold: number;
-  ticketsAvailable: number;
+  ticketsAvailable: number | null;
   sellThrough: number | null;
   avgTicketPrice: number | null;
-  edpViews: number | null;
-  conversionRate: number | null;
   potentialRevenue: number | null;
   gross: number | null;
-  showSpend: number;
-  showRoas: number | null;
-  dailyTickets: { date: string; sold: number }[];
-  channelMobile: number | null;
-  channelInternet: number | null;
-  channelBox: number | null;
-  channelPhone: number | null;
 }
 
 export interface AudienceProfile {
@@ -68,13 +81,6 @@ export interface AudienceProfile {
 export interface Insight {
   text: string;
   type: "positive" | "neutral" | "warning";
-}
-
-export interface ChannelBreakdown {
-  mobile: number | null;
-  internet: number | null;
-  box: number | null;
-  phone: number | null;
 }
 
 // --- Formatting ---
@@ -125,16 +131,34 @@ export function roasLabel(roas: number | null): string {
 
 // --- Status ---
 
-type StatusKey =
-  | "onsale"
-  | "presale"
-  | "soldout"
-  | "offsale"
-  | "cancelled"
-  | "published";
+type CampaignStatus = "ACTIVE" | "PAUSED" | "DELETED" | "ARCHIVED";
 
-const statusMap: Record<
-  StatusKey,
+const campaignStatusMap: Record<
+  CampaignStatus,
+  { label: string; text: string; bg: string; dot: string }
+> = {
+  ACTIVE: { label: "Active", text: "text-emerald-400", bg: "bg-emerald-400/10", dot: "bg-emerald-400" },
+  PAUSED: { label: "Paused", text: "text-amber-400", bg: "bg-amber-400/10", dot: "bg-amber-400" },
+  DELETED: { label: "Deleted", text: "text-red-400", bg: "bg-red-400/10", dot: "bg-red-400" },
+  ARCHIVED: { label: "Archived", text: "text-zinc-400", bg: "bg-zinc-400/10", dot: "bg-zinc-400" },
+};
+
+export function getCampaignStatusCfg(status: string) {
+  const key = status.toUpperCase() as CampaignStatus;
+  return (
+    campaignStatusMap[key] ?? {
+      label: status,
+      text: "text-white/40",
+      bg: "bg-white/5",
+      dot: "bg-white/40",
+    }
+  );
+}
+
+type EventStatus = "onsale" | "presale" | "soldout" | "offsale" | "cancelled" | "published";
+
+const eventStatusMap: Record<
+  EventStatus,
   { label: string; text: string; bg: string; dot: string }
 > = {
   onsale: { label: "On Sale", text: "text-emerald-400", bg: "bg-emerald-400/10", dot: "bg-emerald-400" },
@@ -145,10 +169,10 @@ const statusMap: Record<
   published: { label: "Published", text: "text-blue-400", bg: "bg-blue-400/10", dot: "bg-blue-400" },
 };
 
-export function getStatusCfg(status: string) {
-  const key = (status ?? "").toLowerCase().replace(/_/g, "") as StatusKey;
+export function getEventStatusCfg(status: string) {
+  const key = (status ?? "").toLowerCase().replace(/_/g, "") as EventStatus;
   return (
-    statusMap[key] ?? {
+    eventStatusMap[key] ?? {
       label: status,
       text: "text-amber-400",
       bg: "bg-amber-400/10",
@@ -207,23 +231,54 @@ export function buildAudienceProfile(
 
 export function generateInsights(
   hero: HeroStats,
-  cities: CityCardData[],
+  campaigns: CampaignCard[],
+  events: EventCard[],
   audience: AudienceProfile | null,
 ): Insight[] {
   const out: Insight[] = [];
 
-  // Best-selling market
-  const ranked = cities
-    .filter((c) => c.sellThrough != null)
-    .sort((a, b) => (b.sellThrough ?? 0) - (a.sellThrough ?? 0));
-  if (ranked.length >= 2) {
+  // ROI statement
+  if (hero.totalRevenue != null && hero.totalSpend > 0) {
+    const ratio = hero.totalRevenue / hero.totalSpend;
     out.push({
-      text: `${ranked[0].city} is your best-selling market at ${ranked[0].sellThrough}% sell-through.`,
+      text: `Every $1 in ad spend has generated $${ratio.toFixed(2)} in attributed revenue.`,
+      type: ratio >= 2 ? "positive" : "neutral",
+    });
+  }
+
+  // Best performing campaign
+  const withRoas = campaigns.filter((c) => c.roas != null && c.spend > 0);
+  if (withRoas.length >= 2) {
+    const best = withRoas.sort((a, b) => (b.roas ?? 0) - (a.roas ?? 0))[0];
+    out.push({
+      text: `"${best.name}" is your top performer at ${best.roas?.toFixed(1)}x ROAS.`,
       type: "positive",
     });
   }
 
-  // Strongest audience segment
+  // Active campaign count
+  const active = campaigns.filter((c) => c.status === "ACTIVE");
+  if (active.length > 0 && campaigns.length > active.length) {
+    out.push({
+      text: `${active.length} of ${campaigns.length} campaigns currently active.`,
+      type: "neutral",
+    });
+  }
+
+  // Best-selling event (TM clients)
+  if (events.length > 0) {
+    const ranked = events
+      .filter((e) => e.sellThrough != null)
+      .sort((a, b) => (b.sellThrough ?? 0) - (a.sellThrough ?? 0));
+    if (ranked.length >= 1) {
+      out.push({
+        text: `${ranked[0].city} is your top market at ${ranked[0].sellThrough}% sell-through.`,
+        type: "positive",
+      });
+    }
+  }
+
+  // Audience segment
   if (audience) {
     const ages = [
       { label: "18-24", pct: audience.age1824 },
@@ -236,35 +291,10 @@ export function generateInsights(
       .sort((a, b) => (b.pct ?? 0) - (a.pct ?? 0));
     if (ages.length > 0) {
       const gender =
-        (audience.femalePct ?? 0) > (audience.malePct ?? 0)
-          ? "Female"
-          : "Male";
+        (audience.femalePct ?? 0) > (audience.malePct ?? 0) ? "Female" : "Male";
       out.push({
-        text: `Your strongest audience: ${gender} ${ages[0].label} (${ages[0].pct?.toFixed(0)}% of buyers).`,
+        text: `Core audience: ${gender} ${ages[0].label} (${ages[0].pct?.toFixed(0)}% of buyers).`,
         type: "neutral",
-      });
-    }
-  }
-
-  // ROI statement
-  if (hero.totalRevenue != null && hero.totalSpend > 0) {
-    const ratio = hero.totalRevenue / hero.totalSpend;
-    out.push({
-      text: `Every $1 in ad spend has generated $${ratio.toFixed(2)} in attributed ticket revenue.`,
-      type: ratio >= 2 ? "positive" : "neutral",
-    });
-  }
-
-  // Conversion rate
-  const withConversion = cities.filter((c) => c.conversionRate != null);
-  if (withConversion.length > 0) {
-    const avg =
-      withConversion.reduce((s, c) => s + (c.conversionRate ?? 0), 0) /
-      withConversion.length;
-    if (avg > 2) {
-      out.push({
-        text: `Event pages convert at ${avg.toFixed(1)}% -- above the industry average.`,
-        type: "positive",
       });
     }
   }

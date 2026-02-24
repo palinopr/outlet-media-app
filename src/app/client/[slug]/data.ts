@@ -2,20 +2,24 @@ import { supabaseAdmin } from "@/lib/supabase";
 import {
   type TmEvent,
   type DemographicsRow,
-  type CityCardData,
+  type CampaignCard,
+  type EventCard,
   type HeroStats,
   type AudienceProfile,
-  type ChannelBreakdown,
   buildAudienceProfile,
 } from "./lib";
 
+// --- Public types ---
+
+export type DateRange = "today" | "yesterday" | "7" | "14" | "30" | "lifetime";
+
 export interface ClientData {
   heroStats: HeroStats;
-  cities: CityCardData[];
+  campaigns: CampaignCard[];
+  events: EventCard[];
   audience: AudienceProfile | null;
-  channels: ChannelBreakdown;
-  totalPotentialRevenue: number | null;
-  totalCurrentRevenue: number | null;
+  dataSource: "meta_api" | "supabase";
+  rangeLabel: string;
 }
 
 const EMPTY: ClientData = {
@@ -23,50 +27,256 @@ const EMPTY: ClientData = {
     totalSpend: 0,
     blendedRoas: null,
     totalRevenue: null,
-    showsRunning: 0,
+    totalImpressions: 0,
+    totalClicks: 0,
+    activeCampaigns: 0,
+    totalCampaigns: 0,
     spendDelta: null,
     revenueDelta: null,
   },
-  cities: [],
+  campaigns: [],
+  events: [],
   audience: null,
-  channels: { mobile: null, internet: null, box: null, phone: null },
-  totalPotentialRevenue: null,
-  totalCurrentRevenue: null,
+  dataSource: "supabase",
+  rangeLabel: "Last 7 days",
 };
 
-export type DateRange = "today" | "yesterday" | "7" | "14" | "30" | "lifetime";
+// --- Meta Graph API date presets ---
 
-function buildDateRange(range: DateRange) {
-  const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
-  const yesterday = new Date(now);
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+const META_PRESETS: Record<DateRange, string> = {
+  today: "today",
+  yesterday: "yesterday",
+  "7": "last_7d",
+  "14": "last_14d",
+  "30": "last_30d",
+  lifetime: "maximum",
+};
 
-  switch (range) {
-    case "today":
-      return { cutoffStr: todayStr, prevCutoffStr: yesterdayStr, label: "today" };
-    case "yesterday": {
-      const dayBefore = new Date(yesterday);
-      dayBefore.setDate(dayBefore.getDate() - 1);
-      return { cutoffStr: yesterdayStr, prevCutoffStr: dayBefore.toISOString().slice(0, 10), label: "yesterday" };
-    }
-    case "lifetime":
-      return { cutoffStr: null, prevCutoffStr: null, label: "lifetime" };
-    default: {
-      const days = Number(range);
-      const cutoff = new Date(now);
-      cutoff.setDate(cutoff.getDate() - days);
-      const prevCutoff = new Date(cutoff);
-      prevCutoff.setDate(prevCutoff.getDate() - days);
-      return {
-        cutoffStr: cutoff.toISOString().slice(0, 10),
-        prevCutoffStr: prevCutoff.toISOString().slice(0, 10),
-        label: `${days}d`,
-      };
-    }
+const RANGE_LABELS: Record<DateRange, string> = {
+  today: "Today",
+  yesterday: "Yesterday",
+  "7": "Last 7 days",
+  "14": "Last 14 days",
+  "30": "Last 30 days",
+  lifetime: "Lifetime",
+};
+
+// --- Meta Graph API types ---
+
+interface MetaInsightRow {
+  campaign_id: string;
+  campaign_name: string;
+  spend: string;
+  impressions: string;
+  clicks: string;
+  ctr: string;
+  cpc: string;
+  cpm: string;
+  purchase_roas?: Array<{ action_type: string; value: string }>;
+}
+
+interface MetaCampaignRow {
+  id: string;
+  name: string;
+  status: string;
+  daily_budget?: string;
+  start_time?: string;
+}
+
+// --- Meta API fetch ---
+
+async function fetchMetaInsights(
+  campaignIds: string[],
+  range: DateRange,
+): Promise<{ insights: MetaInsightRow[]; campaigns: MetaCampaignRow[] } | null> {
+  const token = process.env.META_ACCESS_TOKEN;
+  const accountId = process.env.META_AD_ACCOUNT_ID;
+  if (!token || !accountId) return null;
+
+  const filterJson = JSON.stringify([
+    { field: "campaign.id", operator: "IN", value: campaignIds },
+  ]);
+
+  const insightsUrl = new URL(
+    `https://graph.facebook.com/v21.0/act_${accountId}/insights`,
+  );
+  insightsUrl.searchParams.set("access_token", token);
+  insightsUrl.searchParams.set("level", "campaign");
+  insightsUrl.searchParams.set(
+    "fields",
+    "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,purchase_roas",
+  );
+  insightsUrl.searchParams.set("date_preset", META_PRESETS[range]);
+  insightsUrl.searchParams.set("filtering", filterJson);
+  insightsUrl.searchParams.set("limit", "500");
+
+  const campaignsUrl = new URL(
+    `https://graph.facebook.com/v21.0/act_${accountId}/campaigns`,
+  );
+  campaignsUrl.searchParams.set("access_token", token);
+  campaignsUrl.searchParams.set("fields", "id,name,status,daily_budget,start_time");
+  campaignsUrl.searchParams.set("filtering", filterJson);
+  campaignsUrl.searchParams.set("limit", "500");
+
+  try {
+    const [insightsRes, campaignsRes] = await Promise.all([
+      fetch(insightsUrl.toString(), { next: { revalidate: 300 } }),
+      fetch(campaignsUrl.toString(), { next: { revalidate: 300 } }),
+    ]);
+
+    if (!insightsRes.ok || !campaignsRes.ok) return null;
+
+    const insightsJson = await insightsRes.json();
+    const campaignsJson = await campaignsRes.json();
+
+    if (insightsJson.error || campaignsJson.error) return null;
+
+    return {
+      insights: insightsJson.data ?? [],
+      campaigns: campaignsJson.data ?? [],
+    };
+  } catch {
+    return null;
   }
 }
+
+// --- Build campaigns from Meta API ---
+
+function buildFromMeta(
+  insights: MetaInsightRow[],
+  metaCampaigns: MetaCampaignRow[],
+): CampaignCard[] {
+  const statusMap = new Map<string, MetaCampaignRow>();
+  for (const c of metaCampaigns) statusMap.set(c.id, c);
+
+  return insights.map((row) => {
+    const info = statusMap.get(row.campaign_id);
+    const spend = parseFloat(row.spend) || 0;
+    const roas =
+      row.purchase_roas?.find((r) => r.action_type === "omni_purchase")?.value;
+    const roasNum = roas ? parseFloat(roas) : null;
+
+    return {
+      campaignId: row.campaign_id,
+      name: row.campaign_name || info?.name || "Unknown Campaign",
+      status: info?.status ?? "UNKNOWN",
+      spend,
+      roas: roasNum,
+      revenue: roasNum != null ? spend * roasNum : null,
+      impressions: parseInt(row.impressions) || 0,
+      clicks: parseInt(row.clicks) || 0,
+      ctr: parseFloat(row.ctr) || null,
+      cpc: parseFloat(row.cpc) || null,
+      cpm: parseFloat(row.cpm) || null,
+      dailyBudget: info?.daily_budget ? parseInt(info.daily_budget) / 100 : null,
+      startTime: info?.start_time ?? null,
+    };
+  });
+}
+
+// --- Build campaigns from Supabase (fallback) ---
+
+function buildFromSupabase(
+  rows: Array<{
+    campaign_id: string;
+    name: string | null;
+    status: string | null;
+    spend: number | null;
+    roas: number | null;
+    impressions: number | null;
+    clicks: number | null;
+    ctr: number | null;
+    cpc: number | null;
+    cpm: number | null;
+    daily_budget: number | null;
+    start_time: string | null;
+  }>,
+): CampaignCard[] {
+  return rows.map((r) => {
+    const spend = (r.spend ?? 0) / 100;
+    const roas = r.roas != null ? Number(r.roas) : null;
+    return {
+      campaignId: r.campaign_id,
+      name: r.name ?? "Unknown Campaign",
+      status: r.status ?? "UNKNOWN",
+      spend,
+      roas,
+      revenue: roas != null ? spend * roas : null,
+      impressions: r.impressions ?? 0,
+      clicks: r.clicks ?? 0,
+      ctr: r.ctr != null ? Number(r.ctr) : null,
+      cpc: r.cpc != null ? Number(r.cpc) : null,
+      cpm: r.cpm != null ? Number(r.cpm) : null,
+      dailyBudget: r.daily_budget != null ? r.daily_budget / 100 : null,
+      startTime: r.start_time,
+    };
+  });
+}
+
+// --- Build hero stats ---
+
+function buildHeroStats(campaigns: CampaignCard[]): HeroStats {
+  let totalSpend = 0;
+  let totalRevenue = 0;
+  let totalImpressions = 0;
+  let totalClicks = 0;
+  let weightedRoas = 0;
+  let spendWithRoas = 0;
+
+  for (const c of campaigns) {
+    totalSpend += c.spend;
+    totalRevenue += c.revenue ?? 0;
+    totalImpressions += c.impressions;
+    totalClicks += c.clicks;
+    if (c.roas != null && c.spend > 0) {
+      weightedRoas += c.roas * c.spend;
+      spendWithRoas += c.spend;
+    }
+  }
+
+  const blendedRoas = spendWithRoas > 0 ? weightedRoas / spendWithRoas : null;
+  const active = campaigns.filter((c) => c.status === "ACTIVE").length;
+
+  return {
+    totalSpend,
+    blendedRoas,
+    totalRevenue: totalRevenue > 0 ? totalRevenue : null,
+    totalImpressions,
+    totalClicks,
+    activeCampaigns: active,
+    totalCampaigns: campaigns.length,
+    spendDelta: null,
+    revenueDelta: null,
+  };
+}
+
+// --- Build event cards from TM data ---
+
+function buildEventCards(events: TmEvent[]): EventCard[] {
+  return events.map((e) => {
+    const sold = e.tickets_sold ?? 0;
+    const available = e.tickets_available;
+    const cap = available != null ? sold + available : null;
+    const sellThrough = cap != null && cap > 0 ? Math.round((sold / cap) * 100) : null;
+
+    return {
+      id: e.id,
+      name: e.name,
+      venue: e.venue,
+      city: e.city ?? "",
+      date: e.date,
+      status: e.status,
+      ticketsSold: sold,
+      ticketsAvailable: available,
+      sellThrough,
+      avgTicketPrice: e.avg_ticket_price != null ? Number(e.avg_ticket_price) : null,
+      potentialRevenue: e.potential_revenue,
+      gross: e.gross,
+    };
+  });
+}
+
+// --- Main data function ---
 
 export async function getData(
   slug: string,
@@ -74,236 +284,98 @@ export async function getData(
 ): Promise<ClientData> {
   if (!supabaseAdmin) return EMPTY;
 
-  const { cutoffStr, prevCutoffStr } = buildDateRange(range);
+  // Step 1: Get campaign IDs for this client from Supabase
+  const { data: campaignRows } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select(
+      "campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time",
+    )
+    .eq("client_slug", slug);
 
-  // --- Batch 1: campaigns + events ---
-  const [campaignsRes, eventsRes] = await Promise.all([
-    supabaseAdmin
-      .from("meta_campaigns")
-      .select("campaign_id, tm_event_id")
-      .eq("client_slug", slug),
+  if (!campaignRows || campaignRows.length === 0) return EMPTY;
+
+  const campaignIds = campaignRows.map((c) => c.campaign_id);
+
+  // Step 2: Try Meta Graph API for fresh date-range-specific data
+  let campaigns: CampaignCard[];
+  let dataSource: "meta_api" | "supabase";
+
+  const metaResult = await fetchMetaInsights(campaignIds, range);
+
+  if (metaResult && metaResult.insights.length > 0) {
+    campaigns = buildFromMeta(metaResult.insights, metaResult.campaigns);
+    dataSource = "meta_api";
+  } else if (metaResult && metaResult.campaigns.length > 0 && metaResult.insights.length === 0) {
+    // Meta API connected but no insights for this date range (e.g., no spend today).
+    // Show campaigns with zero metrics for the period, but use Meta status.
+    const statusMap = new Map(metaResult.campaigns.map((c) => [c.id, c]));
+    campaigns = campaignRows.map((r) => {
+      const meta = statusMap.get(r.campaign_id);
+      return {
+        campaignId: r.campaign_id,
+        name: meta?.name ?? r.name ?? "Unknown Campaign",
+        status: meta?.status ?? r.status ?? "UNKNOWN",
+        spend: 0,
+        roas: null,
+        revenue: null,
+        impressions: 0,
+        clicks: 0,
+        ctr: null,
+        cpc: null,
+        cpm: null,
+        dailyBudget: meta?.daily_budget ? parseInt(meta.daily_budget) / 100 : (r.daily_budget != null ? r.daily_budget / 100 : null),
+        startTime: meta?.start_time ?? r.start_time,
+      };
+    });
+    dataSource = "meta_api";
+  } else {
+    // Fallback: use Supabase data (lifetime totals from last agent sync)
+    campaigns = buildFromSupabase(campaignRows);
+    dataSource = "supabase";
+  }
+
+  // Step 3: Fetch TM events for this client (optional enrichment)
+  const [eventsRes, demosRes] = await Promise.all([
     supabaseAdmin
       .from("tm_events")
       .select("*")
       .eq("client_slug", slug)
       .order("date", { ascending: true })
       .limit(50),
+    supabaseAdmin
+      .from("tm_event_demographics")
+      .select("*")
+      .in(
+        "tm_id",
+        // We need tm_ids, but we don't have them yet. Query events first.
+        // This is a workaround: we fetch events, then demographics in sequence.
+        // For now, pass empty array -- we'll handle below.
+        [],
+      ),
   ]);
 
-  const campaigns = campaignsRes.data ?? [];
-  const events = (eventsRes.data ?? []) as TmEvent[];
-  const campaignIds = campaigns.map((c) => c.campaign_id);
-  const tmIds = events.map((e) => e.tm_id);
+  const tmEvents = (eventsRes.data ?? []) as TmEvent[];
+  const events = buildEventCards(tmEvents);
 
-  if (campaignIds.length === 0 && events.length === 0) return EMPTY;
-
-  // --- Batch 2: snapshots, daily tickets, demographics ---
-  const snapshotQuery = supabaseAdmin
-    .from("campaign_snapshots")
-    .select("campaign_id, spend, roas, snapshot_date")
-    .in("campaign_id", campaignIds)
-    .order("snapshot_date", { ascending: false });
-  // For lifetime, fetch all snapshots; otherwise filter by previous period start
-  if (prevCutoffStr) snapshotQuery.gte("snapshot_date", prevCutoffStr);
-
-  const [snapshotsRes, dailyRes, demosRes] = await Promise.all([
-    campaignIds.length > 0
-      ? snapshotQuery
-      : Promise.resolve({ data: [] as never[] }),
-    tmIds.length > 0
-      ? supabaseAdmin
-          .from("tm_event_daily")
-          .select("tm_id, date, tickets_sold")
-          .in("tm_id", tmIds)
-          .order("date", { ascending: true })
-      : Promise.resolve({ data: [] as never[] }),
-    tmIds.length > 0
-      ? supabaseAdmin
-          .from("tm_event_demographics")
-          .select("*")
-          .in("tm_id", tmIds)
-      : Promise.resolve({ data: [] as never[] }),
-  ]);
-
-  const snapshots = snapshotsRes.data ?? [];
-  const dailyData = dailyRes.data ?? [];
-  const demoRows = (demosRes.data ?? []) as DemographicsRow[];
-
-  // --- Snapshot aggregation ---
-  // Snapshots are cumulative. Get latest, at-cutoff, and at-prev-cutoff per campaign.
-  const latest = new Map<string, { spend: number; roas: number | null }>();
-  const atCutoff = new Map<string, { spend: number; roas: number | null }>();
-  const atPrev = new Map<string, { spend: number; roas: number | null }>();
-
-  for (const s of snapshots) {
-    const val = { spend: s.spend ?? 0, roas: s.roas };
-    if (!latest.has(s.campaign_id)) latest.set(s.campaign_id, val);
-    if (cutoffStr && s.snapshot_date <= cutoffStr && !atCutoff.has(s.campaign_id)) {
-      atCutoff.set(s.campaign_id, val);
-    }
-    if (prevCutoffStr && s.snapshot_date <= prevCutoffStr && !atPrev.has(s.campaign_id)) {
-      atPrev.set(s.campaign_id, val);
+  // Fetch demographics if events exist
+  let audience: AudienceProfile | null = null;
+  if (tmEvents.length > 0) {
+    const tmIds = tmEvents.map((e) => e.tm_id);
+    const { data: demoRows } = await supabaseAdmin
+      .from("tm_event_demographics")
+      .select("*")
+      .in("tm_id", tmIds);
+    if (demoRows && demoRows.length > 0) {
+      audience = buildAudienceProfile(demoRows as DemographicsRow[]);
     }
   }
-
-  // Total cumulative spend and weighted ROAS
-  let totalSpendCents = 0;
-  let weightedRoas = 0;
-  for (const [, v] of latest) {
-    totalSpendCents += v.spend;
-    weightedRoas += (v.roas ?? 0) * v.spend;
-  }
-  const blendedRoas =
-    totalSpendCents > 0 ? weightedRoas / totalSpendCents : null;
-  const totalSpend = totalSpendCents / 100;
-  const totalRevenue =
-    blendedRoas != null ? totalSpend * blendedRoas : null;
-
-  // Period deltas: compare spend in current period vs previous period
-  let cutoffSpendCents = 0;
-  let prevSpendCents = 0;
-  for (const cid of campaignIds) {
-    const c = atCutoff.get(cid);
-    const p = atPrev.get(cid);
-    cutoffSpendCents += c?.spend ?? 0;
-    prevSpendCents += p?.spend ?? 0;
-  }
-  const currentPeriodSpend = totalSpendCents - cutoffSpendCents;
-  const prevPeriodSpend = cutoffSpendCents - prevSpendCents;
-  const spendDelta =
-    prevPeriodSpend > 0
-      ? ((currentPeriodSpend - prevPeriodSpend) / prevPeriodSpend) * 100
-      : null;
-
-  const currentRev =
-    blendedRoas != null ? (currentPeriodSpend / 100) * blendedRoas : null;
-  const prevRev =
-    prevPeriodSpend > 0 && blendedRoas != null
-      ? (prevPeriodSpend / 100) * blendedRoas
-      : null;
-  const revenueDelta =
-    prevRev != null && prevRev > 0 && currentRev != null
-      ? ((currentRev - prevRev) / prevRev) * 100
-      : null;
-
-  // --- Per-event ad spend (via tm_event_id -> events.id) ---
-  const spendByEventId = new Map<
-    string,
-    { totalSpend: number; totalWeighted: number }
-  >();
-  for (const c of campaigns) {
-    if (!c.tm_event_id) continue;
-    const snap = latest.get(c.campaign_id);
-    if (!snap) continue;
-    const cur = spendByEventId.get(c.tm_event_id) ?? {
-      totalSpend: 0,
-      totalWeighted: 0,
-    };
-    cur.totalSpend += snap.spend;
-    cur.totalWeighted += (snap.roas ?? 0) * snap.spend;
-    spendByEventId.set(c.tm_event_id, cur);
-  }
-
-  // --- Daily ticket data per event (for sparklines) ---
-  const dailyByTmId = new Map<string, { date: string; sold: number }[]>();
-  for (const d of dailyData) {
-    if (!dailyByTmId.has(d.tm_id)) dailyByTmId.set(d.tm_id, []);
-    dailyByTmId.get(d.tm_id)!.push({
-      date: d.date,
-      sold: d.tickets_sold ?? 0,
-    });
-  }
-
-  // --- Build city cards ---
-  const cities: CityCardData[] = events.map((e) => {
-    const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
-    const sellThrough =
-      cap > 0
-        ? Math.round(((e.tickets_sold ?? 0) / cap) * 100)
-        : null;
-    const ad = spendByEventId.get(e.id);
-    const showSpend = ad ? ad.totalSpend / 100 : 0;
-    const showRoas =
-      ad && ad.totalSpend > 0
-        ? ad.totalWeighted / ad.totalSpend
-        : null;
-
-    return {
-      id: e.id,
-      city: e.city ?? e.name,
-      date: e.date,
-      venue: e.venue,
-      status: e.status,
-      ticketsSold: e.tickets_sold ?? 0,
-      ticketsAvailable: e.tickets_available ?? 0,
-      sellThrough,
-      avgTicketPrice: e.avg_ticket_price,
-      edpViews: e.edp_total_views,
-      conversionRate: e.conversion_rate,
-      potentialRevenue: e.potential_revenue,
-      gross: e.gross,
-      showSpend,
-      showRoas,
-      dailyTickets: dailyByTmId.get(e.tm_id) ?? [],
-      channelMobile: e.channel_mobile_pct,
-      channelInternet: e.channel_internet_pct,
-      channelBox: e.channel_box_pct,
-      channelPhone: e.channel_phone_pct,
-    };
-  });
-
-  // --- Aggregate sales channels ---
-  const withChannels = events.filter((e) => e.channel_mobile_pct != null);
-  const n = withChannels.length;
-  const channels: ChannelBreakdown =
-    n > 0
-      ? {
-          mobile:
-            withChannels.reduce(
-              (s, e) => s + (e.channel_mobile_pct ?? 0),
-              0,
-            ) / n,
-          internet:
-            withChannels.reduce(
-              (s, e) => s + (e.channel_internet_pct ?? 0),
-              0,
-            ) / n,
-          box:
-            withChannels.reduce(
-              (s, e) => s + (e.channel_box_pct ?? 0),
-              0,
-            ) / n,
-          phone:
-            withChannels.reduce(
-              (s, e) => s + (e.channel_phone_pct ?? 0),
-              0,
-            ) / n,
-        }
-      : { mobile: null, internet: null, box: null, phone: null };
-
-  // --- Revenue projections ---
-  const totalPotentialRevenue =
-    events.reduce((s, e) => s + (e.potential_revenue ?? 0), 0) || null;
-  const totalCurrentRevenue =
-    events.reduce((s, e) => s + (e.gross ?? 0), 0) || null;
-
-  // --- Audience ---
-  const audience =
-    demoRows.length > 0 ? buildAudienceProfile(demoRows) : null;
 
   return {
-    heroStats: {
-      totalSpend,
-      blendedRoas,
-      totalRevenue,
-      showsRunning: events.length,
-      spendDelta,
-      revenueDelta,
-    },
-    cities,
+    heroStats: buildHeroStats(campaigns),
+    campaigns,
+    events,
     audience,
-    channels,
-    totalPotentialRevenue,
-    totalCurrentRevenue,
+    dataSource,
+    rangeLabel: RANGE_LABELS[range],
   };
 }

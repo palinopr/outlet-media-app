@@ -1,10 +1,8 @@
 import {
   DollarSign,
   TrendingUp,
-  MapPin,
-  Calendar,
   Users,
-  Ticket,
+  Megaphone,
   Heart,
   Zap,
   ArrowUp,
@@ -14,16 +12,17 @@ import {
   Sparkles,
   Eye,
   Target,
-  Smartphone,
-  Globe,
-  Building2,
+  MapPin,
+  Calendar,
+  Ticket,
   GraduationCap,
   CreditCard,
   Baby,
 } from "lucide-react";
 import { getData, type DateRange } from "./data";
 import {
-  type CityCardData,
+  type CampaignCard,
+  type EventCard,
   type AudienceProfile,
   fmtUsd,
   fmtDate,
@@ -31,10 +30,10 @@ import {
   fmtPct,
   roasColor,
   roasLabel,
-  getStatusCfg,
+  getCampaignStatusCfg,
+  getEventStatusCfg,
   generateInsights,
 } from "./lib";
-import { TicketSparkline } from "@/components/client/ticket-sparkline";
 import { ExportButton } from "@/components/client/export-button";
 
 interface Props {
@@ -75,8 +74,18 @@ function DemoBar({ label, value, color }: { label: string; value: number | null;
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const cfg = getStatusCfg(status);
+function CampaignStatusBadge({ status }: { status: string }) {
+  const cfg = getCampaignStatusCfg(status);
+  return (
+    <span className={`badge-status ${cfg.text} ${cfg.bg}`}>
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
+}
+
+function EventStatusBadge({ status }: { status: string }) {
+  const cfg = getEventStatusCfg(status);
   return (
     <span className={`badge-status ${cfg.text} ${cfg.bg}`}>
       <span className={`inline-block h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
@@ -96,108 +105,119 @@ function Delta({ value }: { value: number | null }) {
   );
 }
 
-function ChannelRow({ label, icon: Icon, value }: { label: string; icon: React.ComponentType<{ className?: string }>; value: number | null }) {
-  if (value == null) return null;
+// --- Campaign Card ---
+
+function CampaignCardUI({ c }: { c: CampaignCard }) {
   return (
-    <div className="flex items-center gap-3">
-      <Icon className="h-3.5 w-3.5 text-white/30 shrink-0" />
-      <span className="text-xs text-white/50 w-16">{label}</span>
-      <div className="flex-1 progress-track h-2">
-        <div className="h-full rounded-full gradient-bar" style={{ width: `${Math.min(value, 100)}%` }} />
+    <div className="glass-card p-5 flex flex-col">
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <p className="text-sm font-semibold text-white/90 leading-tight">{c.name}</p>
+        <CampaignStatusBadge status={c.status} />
       </div>
-      <span className="text-xs font-semibold text-white/80 w-10 text-right">{value.toFixed(0)}%</span>
+      {c.startTime && (
+        <p className="text-[10px] text-white/25 mb-4">
+          Since {fmtDate(c.startTime)}
+          {c.dailyBudget != null && ` | ${fmtUsd(c.dailyBudget)}/day budget`}
+        </p>
+      )}
+
+      {/* Metrics grid */}
+      <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-auto">
+        <div>
+          <p className="text-[10px] text-white/30 mb-0.5">Spend</p>
+          <p className="text-lg font-bold text-white/90">{fmtUsd(c.spend)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] text-white/30 mb-0.5">ROAS</p>
+          <p className={`text-lg font-bold ${roasColor(c.roas)}`}>
+            {c.roas != null ? `${c.roas.toFixed(1)}x` : "--"}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] text-white/30 mb-0.5">Revenue</p>
+          <p className="text-sm font-bold text-emerald-400/80">{fmtUsd(c.revenue)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] text-white/30 mb-0.5">Impressions</p>
+          <p className="text-sm font-bold text-white/70">{fmtNum(c.impressions)}</p>
+        </div>
+        <div>
+          <p className="text-[10px] text-white/30 mb-0.5">Clicks</p>
+          <p className="text-sm font-bold text-white/70">{fmtNum(c.clicks)}</p>
+        </div>
+        {c.ctr != null && (
+          <div>
+            <p className="text-[10px] text-white/30 mb-0.5">CTR</p>
+            <p className="text-sm font-bold text-white/70">{c.ctr.toFixed(2)}%</p>
+          </div>
+        )}
+      </div>
+
+      {/* ROAS indicator bar */}
+      {c.roas != null && (
+        <div className="mt-4 pt-3 border-t border-white/[0.06]">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] text-white/30">Performance</span>
+            <span className={`text-[10px] font-semibold ${roasColor(c.roas)}`}>{roasLabel(c.roas)}</span>
+          </div>
+          <ProgressBar value={Math.min(c.roas * 25, 100)} />
+        </div>
+      )}
     </div>
   );
 }
 
-// --- City Card ---
+// --- Event Card (for TM clients) ---
 
-function CityCard({ c }: { c: CityCardData }) {
-  const cap = c.ticketsSold + c.ticketsAvailable;
+function EventCardUI({ e }: { e: EventCard }) {
   return (
     <div className="glass-card p-5 flex flex-col">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-1">
-        <p className="text-lg font-semibold text-white/90 truncate">{c.city}</p>
-        {c.status && <StatusBadge status={c.status} />}
+      <div className="flex items-start justify-between gap-2 mb-1">
+        <p className="text-sm font-semibold text-white/90 leading-tight truncate">{e.city || e.name}</p>
+        <EventStatusBadge status={e.status} />
       </div>
-      <div className="flex items-center gap-2 text-xs text-white/40 mb-4">
-        <div className="flex items-center gap-1">
-          <Calendar className="h-3 w-3" />
-          <span>{fmtDate(c.date)}</span>
-        </div>
-        {c.venue && (
+      <div className="flex items-center gap-2 text-[10px] text-white/30 mb-4">
+        <Calendar className="h-3 w-3" />
+        <span>{fmtDate(e.date)}</span>
+        {e.venue && (
           <>
-            <span className="text-white/15">|</span>
-            <div className="flex items-center gap-1 min-w-0">
-              <MapPin className="h-3 w-3 shrink-0" />
-              <span className="truncate">{c.venue}</span>
-            </div>
+            <span className="text-white/10">|</span>
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="truncate">{e.venue}</span>
           </>
         )}
       </div>
 
-      {/* Ticket velocity sparkline */}
-      {c.dailyTickets.length >= 2 && (
-        <div className="mb-4 -mx-1">
-          <p className="text-[10px] text-white/25 mb-1 mx-1">Ticket velocity</p>
-          <TicketSparkline data={c.dailyTickets} />
-        </div>
-      )}
-
-      {/* Sell-through */}
-      {c.sellThrough != null && cap > 0 && (
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] text-white/40">Sell-through</span>
-            <span className="text-[11px] font-semibold text-white/80">{c.sellThrough}%</span>
-          </div>
-          <ProgressBar value={c.sellThrough} />
-          <p className="text-[10px] text-white/20 mt-1.5">
-            {c.ticketsSold.toLocaleString()} of {cap.toLocaleString()} tickets
-          </p>
-        </div>
-      )}
-
-      {/* Key metrics grid */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-3 mt-auto">
-        {c.showSpend > 0 && (
+        <div>
+          <p className="text-[10px] text-white/30 mb-0.5">Tickets Sold</p>
+          <p className="text-sm font-bold text-white/80">{e.ticketsSold.toLocaleString()}</p>
+        </div>
+        {e.sellThrough != null && (
           <div>
-            <p className="text-[10px] text-white/30 mb-0.5">Ad Spend</p>
-            <p className="text-sm font-bold text-white/80">{fmtUsd(c.showSpend)}</p>
+            <p className="text-[10px] text-white/30 mb-0.5">Sell-Through</p>
+            <p className="text-sm font-bold text-white/80">{e.sellThrough}%</p>
           </div>
         )}
-        {c.showRoas != null && (
-          <div>
-            <p className="text-[10px] text-white/30 mb-0.5">ROAS</p>
-            <p className={`text-sm font-bold ${roasColor(c.showRoas)}`}>{c.showRoas.toFixed(1)}x</p>
-          </div>
-        )}
-        {c.avgTicketPrice != null && (
+        {e.avgTicketPrice != null && (
           <div>
             <p className="text-[10px] text-white/30 mb-0.5">Avg Ticket</p>
-            <p className="text-sm font-bold text-white/80">${c.avgTicketPrice.toFixed(0)}</p>
+            <p className="text-sm font-bold text-white/80">${e.avgTicketPrice.toFixed(0)}</p>
           </div>
         )}
-        {c.edpViews != null && (
+        {e.gross != null && e.gross > 0 && (
           <div>
-            <p className="text-[10px] text-white/30 mb-0.5">Page Views</p>
-            <p className="text-sm font-bold text-white/80">{fmtNum(c.edpViews)}</p>
-          </div>
-        )}
-        {c.conversionRate != null && (
-          <div>
-            <p className="text-[10px] text-white/30 mb-0.5">Conversion</p>
-            <p className="text-sm font-bold text-white/80">{c.conversionRate.toFixed(1)}%</p>
-          </div>
-        )}
-        {c.gross != null && c.gross > 0 && (
-          <div>
-            <p className="text-[10px] text-white/30 mb-0.5">Revenue</p>
-            <p className="text-sm font-bold text-emerald-400/80">{fmtUsd(c.gross)}</p>
+            <p className="text-[10px] text-white/30 mb-0.5">Gross</p>
+            <p className="text-sm font-bold text-emerald-400/80">{fmtUsd(e.gross)}</p>
           </div>
         )}
       </div>
+
+      {e.sellThrough != null && (
+        <div className="mt-3 pt-3 border-t border-white/[0.06]">
+          <ProgressBar value={e.sellThrough} />
+        </div>
+      )}
     </div>
   );
 }
@@ -207,7 +227,6 @@ function CityCard({ c }: { c: CityCardData }) {
 function AudienceSection({ demo }: { demo: AudienceProfile }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {/* Gender */}
       {(demo.femalePct != null || demo.malePct != null) && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
@@ -221,15 +240,9 @@ function AudienceSection({ demo }: { demo: AudienceProfile }) {
               {demo.marriedPct.toFixed(0)}% married
             </p>
           )}
-          {demo.childrenPct != null && (
-            <p className="text-[11px] text-white/30 mt-1">
-              {demo.childrenPct.toFixed(0)}% have children
-            </p>
-          )}
         </div>
       )}
 
-      {/* Age */}
       {demo.age1824 != null && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
@@ -244,7 +257,6 @@ function AudienceSection({ demo }: { demo: AudienceProfile }) {
         </div>
       )}
 
-      {/* Income */}
       {demo.income0_30 != null && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
@@ -259,7 +271,6 @@ function AudienceSection({ demo }: { demo: AudienceProfile }) {
         </div>
       )}
 
-      {/* Education */}
       {demo.educationCollege != null && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
@@ -272,7 +283,6 @@ function AudienceSection({ demo }: { demo: AudienceProfile }) {
         </div>
       )}
 
-      {/* Payment Methods */}
       {demo.paymentVisa != null && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
@@ -286,7 +296,6 @@ function AudienceSection({ demo }: { demo: AudienceProfile }) {
         </div>
       )}
 
-      {/* Family */}
       {demo.childrenPct != null && demo.marriedPct != null && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
@@ -309,15 +318,13 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const { slug } = await params;
   const { range: rangeParam } = await searchParams;
   const validRanges: DateRange[] = ["today", "yesterday", "7", "14", "30", "lifetime"];
-  const range: DateRange = validRanges.includes(rangeParam as DateRange) ? (rangeParam as DateRange) : "7";
-  const { heroStats, cities, audience, channels, totalPotentialRevenue, totalCurrentRevenue } = await getData(slug, range);
+  const range: DateRange = validRanges.includes(rangeParam as DateRange) ? (rangeParam as DateRange) : "lifetime";
+  const data = await getData(slug, range);
+  const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = data;
 
-  const insights = generateInsights(heroStats, cities, audience);
+  const insights = generateInsights(heroStats, campaigns, events, audience);
   const clientName = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/_/g, " ");
   const now = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  const hasChannelData = channels.mobile != null;
-  const hasRevenueProjection = totalPotentialRevenue != null && totalCurrentRevenue != null && totalPotentialRevenue > 0;
-  const revenuePct = hasRevenueProjection ? Math.round((totalCurrentRevenue! / totalPotentialRevenue!) * 100) : null;
 
   return (
     <div className="space-y-6">
@@ -337,6 +344,17 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
             <p className="text-sm text-white/40 mt-1.5 flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
               {now}
+              <span className="text-white/15">|</span>
+              <span className="text-white/25">{rangeLabel}</span>
+              {dataSource === "meta_api" && (
+                <>
+                  <span className="text-white/15">|</span>
+                  <span className="inline-flex items-center gap-1 text-emerald-400/50">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Live
+                  </span>
+                </>
+              )}
             </p>
           </div>
 
@@ -360,7 +378,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         </div>
       </div>
 
-      {/* -- Hero Stats (4 cards: Spend, ROAS, Revenue, Shows) -- */}
+      {/* -- Hero Stats -- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="glass-card hero-stat-card stat-glow p-5">
           <div className="flex items-center gap-2 mb-3">
@@ -372,10 +390,9 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
             {fmtUsd(heroStats.totalSpend)}
           </p>
-          {range !== "lifetime" && (
+          {heroStats.spendDelta != null && (
             <div className="flex items-center gap-2 mt-2">
               <Delta value={heroStats.spendDelta} />
-              <span className="text-[10px] text-white/20">vs prev period</span>
             </div>
           )}
         </div>
@@ -405,25 +422,24 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           <p className="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tighter leading-none">
             {fmtUsd(heroStats.totalRevenue)}
           </p>
-          {range !== "lifetime" && (
-            <div className="flex items-center gap-2 mt-2">
-              <Delta value={heroStats.revenueDelta} />
-              <span className="text-[10px] text-white/20">vs prev period</span>
-            </div>
-          )}
+          <p className="text-[10px] text-white/20 mt-2">
+            {fmtNum(heroStats.totalImpressions)} impressions | {fmtNum(heroStats.totalClicks)} clicks
+          </p>
         </div>
 
         <div className="glass-card hero-stat-card stat-glow p-5">
           <div className="flex items-center gap-2 mb-3">
             <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-blue-500/10 ring-1 ring-blue-500/20">
-              <Ticket className="h-3.5 w-3.5 text-blue-400" />
+              <Megaphone className="h-3.5 w-3.5 text-blue-400" />
             </div>
-            <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">Shows</span>
+            <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">Campaigns</span>
           </div>
           <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
-            {heroStats.showsRunning}
+            {heroStats.activeCampaigns}
           </p>
-          <p className="text-[10px] text-white/20 mt-2">Active events</p>
+          <p className="text-[10px] text-white/20 mt-2">
+            {heroStats.activeCampaigns} active of {heroStats.totalCampaigns} total
+          </p>
         </div>
       </div>
 
@@ -447,67 +463,43 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         </div>
       )}
 
-      {/* -- City Cards (Your Shows) -- */}
-      {cities.length > 0 && (
+      {/* -- Campaign Cards -- */}
+      {campaigns.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Ticket className="h-3.5 w-3.5 text-white/30" />
-              <span className="section-label">Your Shows</span>
+              <Megaphone className="h-3.5 w-3.5 text-white/30" />
+              <span className="section-label">Your Campaigns</span>
             </div>
-            <span className="text-[10px] text-white/20">{cities.length} events</span>
+            <span className="text-[10px] text-white/20">{rangeLabel}</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {cities.map((c) => (
-              <CityCard key={c.id} c={c} />
+            {campaigns.map((c) => (
+              <CampaignCardUI key={c.campaignId} c={c} />
             ))}
           </div>
         </section>
       )}
 
-      {/* -- Sales Channels -- */}
-      {hasChannelData && (
+      {/* -- Event Cards (Ticketmaster clients only) -- */}
+      {events.length > 0 && (
         <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Smartphone className="h-3.5 w-3.5 text-white/30" />
-            <span className="section-label">Where Fans Buy Tickets</span>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Ticket className="h-3.5 w-3.5 text-white/30" />
+              <span className="section-label">Events</span>
+            </div>
+            <span className="text-[10px] text-white/20">{events.length} events</span>
           </div>
-          <div className="glass-card p-5 space-y-3">
-            <ChannelRow label="Mobile" icon={Smartphone} value={channels.mobile} />
-            <ChannelRow label="Web" icon={Globe} value={channels.internet} />
-            <ChannelRow label="Box Office" icon={Building2} value={channels.box} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {events.map((e) => (
+              <EventCardUI key={e.id} e={e} />
+            ))}
           </div>
         </section>
       )}
 
-      {/* -- Revenue Projection -- */}
-      {hasRevenueProjection && (
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <TrendingUp className="h-3.5 w-3.5 text-white/30" />
-            <span className="section-label">Revenue Outlook</span>
-          </div>
-          <div className="glass-card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-[10px] text-white/30 mb-0.5">Current Ticket Revenue</p>
-                <p className="text-xl font-bold text-white/90">{fmtUsd(totalCurrentRevenue)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] text-white/30 mb-0.5">Projected at Full Capacity</p>
-                <p className="text-xl font-bold text-white/50">{fmtUsd(totalPotentialRevenue)}</p>
-              </div>
-            </div>
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] text-white/30">Progress to projected</span>
-              <span className="text-[10px] font-semibold text-white/60">{revenuePct}%</span>
-            </div>
-            <ProgressBar value={revenuePct ?? 0} />
-          </div>
-        </section>
-      )}
-
-      {/* -- Audience Profile -- */}
+      {/* -- Audience Profile (TM clients) -- */}
       {audience && audience.totalFans > 0 && (
         <section>
           <div className="flex items-center justify-between mb-1">
@@ -540,8 +532,8 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
               <span>Secure Portal</span>
             </div>
             <div className="flex items-center gap-1.5 text-[11px] text-white/20">
-              <Clock className="h-3 w-3" />
-              <span>Updates every 6 hours</span>
+              <Eye className="h-3 w-3" />
+              <span>{dataSource === "meta_api" ? "Live from Meta" : "Last sync"}</span>
             </div>
           </div>
         </div>
