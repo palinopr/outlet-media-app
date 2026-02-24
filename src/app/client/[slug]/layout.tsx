@@ -46,30 +46,38 @@ export default async function ClientLayout({ children, params }: Props) {
 
   return (
     <div className="dark flex min-h-screen bg-background text-foreground">
-      <aside className="hidden lg:flex w-56 border-r border-border/50 bg-[oklch(0.16_0_0)] flex-col shrink-0">
-        <div className="px-4 pt-5 pb-4">
-          <div className="flex items-center gap-2.5 mb-4">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center shrink-0">
+      <aside className="hidden lg:flex w-60 border-r border-white/[0.04] bg-[oklch(0.12_0_0)] flex-col shrink-0 relative">
+        {/* Subtle gradient accent on the edge */}
+        <div className="absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-cyan-500/20 via-violet-500/10 to-transparent" />
+        <div className="px-5 pt-6 pb-5">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20">
               <span className="text-white text-sm font-bold">{clientName.charAt(0)}</span>
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white/90 truncate">{clientName}</p>
-              <p className="text-[10px] text-white/40">Client Portal</p>
+              <p className="text-sm font-bold text-white/90 truncate">{clientName}</p>
+              <p className="text-[10px] text-white/30 font-medium tracking-wide">Client Portal</p>
             </div>
           </div>
-          <div className="h-px bg-white/[0.06]" />
+          <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
         </div>
-        <nav className="flex-1 px-2 py-1 space-y-0.5">
+        <nav className="flex-1 px-3 py-1 space-y-1">
           <a
             href={`/client/${slug}`}
-            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-white/60 hover:text-white hover:bg-white/[0.08] transition-colors"
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 bg-white/[0.06] border border-white/[0.04] transition-all"
           >
+            <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
             Overview
           </a>
         </nav>
-        <div className="px-4 py-3">
-          <div className="h-px bg-white/[0.06] mb-3" />
-          <p className="text-[10px] text-white/30">Powered by Outlet Media</p>
+        <div className="px-5 py-4">
+          <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent mb-4" />
+          <div className="flex items-center gap-2">
+            <div className="h-5 w-5 rounded-md bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center">
+              <span className="text-white text-[8px] font-bold">O</span>
+            </div>
+            <p className="text-[10px] text-white/25 font-medium">Outlet Media</p>
+          </div>
         </div>
       </aside>
       {/* Mobile header */}
