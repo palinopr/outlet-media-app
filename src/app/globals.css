@@ -241,3 +241,32 @@
   letter-spacing: 0.08em;
   color: oklch(0.65 0 0);
 }
+
+/* --- Print styles for export --- */
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .glass-card {
+    background: white !important;
+    border: 1px solid #e5e7eb !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+  .hero-stat-card::before,
+  .campaign-card::before,
+  .gradient-bar::after {
+    display: none !important;
+  }
+  .stat-glow {
+    box-shadow: none !important;
+  }
+  .progress-track {
+    background: #e5e7eb !important;
+  }
+  .gradient-bar {
+    background: #4f46e5 !important;
+  }
+}
