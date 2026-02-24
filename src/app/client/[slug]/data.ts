@@ -90,8 +90,11 @@ async function fetchMetaInsights(
   range: DateRange,
 ): Promise<{ insights: MetaInsightRow[]; campaigns: MetaCampaignRow[] } | null> {
   const token = process.env.META_ACCESS_TOKEN;
-  const accountId = process.env.META_AD_ACCOUNT_ID;
-  if (!token || !accountId) return null;
+  const rawAccountId = process.env.META_AD_ACCOUNT_ID;
+  if (!token || !rawAccountId) return null;
+
+  // Strip act_ prefix if present -- the URL template adds it
+  const accountId = rawAccountId.replace(/^act_/, "");
 
   const filterJson = JSON.stringify([
     { field: "campaign.id", operator: "IN", value: campaignIds },
