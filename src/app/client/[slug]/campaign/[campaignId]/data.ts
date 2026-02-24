@@ -1,11 +1,15 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import type { DateRange } from "../../data";
-import type {
-  CampaignCard,
-  CampaignDetailData,
-  AgeGenderBreakdown,
-  PlacementBreakdown,
-  AdCard,
+import {
+  type CampaignCard,
+  type CampaignDetailData,
+  type AgeGenderBreakdown,
+  type PlacementBreakdown,
+  type AdCard,
+  type HourlyBreakdown,
+  type DailyPoint,
+  DAY_LABELS,
+  generateRecommendations,
 } from "../../lib";
 
 // --- Meta API date presets (duplicated from parent to avoid circular imports) ---
@@ -203,6 +207,77 @@ function formatPosition(p: string): string {
     .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+// --- Fetch hourly breakdown ---
+
+interface MetaHourlyRow {
+  hourly_stats_aggregated_by_advertiser_time_zone: string; // "00:00:00" - "23:00:00"
+  impressions: string;
+  clicks: string;
+  ctr: string;
+}
+
+async function fetchHourly(
+  campaignId: string,
+  range: DateRange,
+  creds: { token: string; accountId: string },
+): Promise<HourlyBreakdown[]> {
+  const url = new URL(`https://graph.facebook.com/v21.0/${campaignId}/insights`);
+  url.searchParams.set("access_token", creds.token);
+  url.searchParams.set("fields", "impressions,clicks,ctr");
+  url.searchParams.set("breakdowns", "hourly_stats_aggregated_by_advertiser_time_zone");
+  url.searchParams.set("date_preset", META_PRESETS[range]);
+  url.searchParams.set("limit", "50");
+
+  const res = await metaGet<{ data: MetaHourlyRow[] }>(url, "hourly");
+  if (!res?.data) return [];
+
+  return res.data.map((r) => ({
+    hour: parseInt(r.hourly_stats_aggregated_by_advertiser_time_zone) || 0,
+    impressions: parseInt(r.impressions) || 0,
+    clicks: parseInt(r.clicks) || 0,
+    ctr: parseFloat(r.ctr) || null,
+  })).sort((a, b) => a.hour - b.hour);
+}
+
+// --- Fetch daily time series ---
+
+interface MetaDailyRow {
+  date_start: string;
+  date_stop: string;
+  impressions: string;
+  clicks: string;
+  ctr: string;
+}
+
+async function fetchDaily(
+  campaignId: string,
+  range: DateRange,
+  creds: { token: string; accountId: string },
+): Promise<DailyPoint[]> {
+  // time_increment=1 gives day-by-day breakdown
+  const url = new URL(`https://graph.facebook.com/v21.0/${campaignId}/insights`);
+  url.searchParams.set("access_token", creds.token);
+  url.searchParams.set("fields", "impressions,clicks,ctr");
+  url.searchParams.set("time_increment", "1");
+  url.searchParams.set("date_preset", META_PRESETS[range]);
+  url.searchParams.set("limit", "90");
+
+  const res = await metaGet<{ data: MetaDailyRow[] }>(url, "daily");
+  if (!res?.data) return [];
+
+  return res.data.map((r) => {
+    const d = new Date(r.date_start + "T12:00:00");
+    return {
+      date: r.date_start,
+      dayOfWeek: d.getDay(),
+      dayLabel: DAY_LABELS[d.getDay()],
+      impressions: parseInt(r.impressions) || 0,
+      clicks: parseInt(r.clicks) || 0,
+      ctr: parseFloat(r.ctr) || null,
+    };
+  }).sort((a, b) => a.date.localeCompare(b.date));
+}
+
 // --- Fetch ads with creative info ---
 
 interface MetaAdRow {
@@ -281,11 +356,13 @@ export async function getCampaignDetail(
 
   // Try Meta API first (parallel calls for speed)
   if (creds) {
-    const [overview, ageGender, placements, ads] = await Promise.all([
+    const [overview, ageGender, placements, ads, hourly, daily] = await Promise.all([
       fetchCampaignOverview(campaignId, range, creds),
       fetchAgeGender(campaignId, range, creds),
       fetchPlacements(campaignId, range, creds),
       fetchAds(campaignId, range, creds),
+      fetchHourly(campaignId, range, creds),
+      fetchDaily(campaignId, range, creds),
     ]);
 
     if (overview.info) {
@@ -313,11 +390,23 @@ export async function getCampaignDetail(
         startTime: overview.info.start_time ?? null,
       };
 
+      const recommendations = generateRecommendations(
+        campaign,
+        ageGender,
+        placements,
+        ads,
+        hourly,
+        daily,
+      );
+
       return {
         campaign,
         ageGender,
         placements,
         ads,
+        hourly,
+        daily,
+        recommendations,
         dataSource: "meta_api",
         rangeLabel: RANGE_LABELS[range],
       };
@@ -360,6 +449,9 @@ export async function getCampaignDetail(
     ageGender: [],
     placements: [],
     ads: [],
+    hourly: [],
+    daily: [],
+    recommendations: [],
     dataSource: "supabase",
     rangeLabel: RANGE_LABELS[range],
   };

@@ -121,17 +121,44 @@ export interface AdCard {
   revenue: number | null;
 }
 
+export interface HourlyBreakdown {
+  hour: number; // 0-23
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+}
+
+export interface DailyPoint {
+  date: string; // YYYY-MM-DD
+  dayOfWeek: number; // 0=Sun .. 6=Sat
+  dayLabel: string; // "Mon", "Tue", etc.
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+}
+
+export interface Recommendation {
+  title: string;
+  detail: string;
+  type: "success" | "opportunity" | "info";
+}
+
 export interface CampaignDetailData {
   campaign: CampaignCard;
   ageGender: AgeGenderBreakdown[];
   placements: PlacementBreakdown[];
   ads: AdCard[];
+  hourly: HourlyBreakdown[];
+  daily: DailyPoint[];
+  recommendations: Recommendation[];
   dataSource: "meta_api" | "supabase";
   rangeLabel: string;
 }
 
 // Age bracket labels used by Meta
 export const AGE_BRACKETS = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"] as const;
+
+export const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 // --- Formatting ---
 
@@ -350,4 +377,134 @@ export function generateInsights(
   }
 
   return out.slice(0, 3);
+}
+
+// --- Campaign detail recommendations ---
+
+export function generateRecommendations(
+  campaign: CampaignCard,
+  ageGender: AgeGenderBreakdown[],
+  placements: PlacementBreakdown[],
+  ads: AdCard[],
+  hourly: HourlyBreakdown[],
+  daily: DailyPoint[],
+): Recommendation[] {
+  const recs: Recommendation[] = [];
+
+  // ROAS summary
+  if (campaign.roas != null) {
+    if (campaign.roas >= 3) {
+      recs.push({
+        title: "Strong return on investment",
+        detail: `This campaign is generating $${campaign.roas.toFixed(2)} for every dollar invested. This is above the 3x benchmark.`,
+        type: "success",
+      });
+    } else if (campaign.roas >= 2) {
+      recs.push({
+        title: "Solid performance",
+        detail: `At ${campaign.roas.toFixed(1)}x ROAS, this campaign is profitable. Scaling budget could amplify returns.`,
+        type: "success",
+      });
+    } else if (campaign.roas >= 1) {
+      recs.push({
+        title: "Room to improve",
+        detail: `ROAS of ${campaign.roas.toFixed(1)}x means you're breaking even. Tightening targeting or refreshing creatives could help.`,
+        type: "opportunity",
+      });
+    }
+  }
+
+  // Best audience segment
+  if (ageGender.length > 0) {
+    const totalImp = ageGender.reduce((s, r) => s + r.impressions, 0);
+    const sorted = [...ageGender].sort((a, b) => b.impressions - a.impressions);
+    const top = sorted[0];
+    const topPct = totalImp > 0 ? ((top.impressions / totalImp) * 100).toFixed(0) : "0";
+    recs.push({
+      title: `${top.gender} ${top.age} is your strongest segment`,
+      detail: `This group accounts for ${topPct}% of impressions. Consider tailoring creative messaging to this demographic.`,
+      type: "info",
+    });
+
+    // CTR comparison between genders
+    const genderCtr = new Map<string, { clicks: number; impressions: number }>();
+    for (const r of ageGender) {
+      const prev = genderCtr.get(r.gender) ?? { clicks: 0, impressions: 0 };
+      genderCtr.set(r.gender, { clicks: prev.clicks + r.clicks, impressions: prev.impressions + r.impressions });
+    }
+    const genderRates = Array.from(genderCtr.entries())
+      .map(([g, v]) => ({ gender: g, ctr: v.impressions > 0 ? (v.clicks / v.impressions) * 100 : 0 }))
+      .sort((a, b) => b.ctr - a.ctr);
+    if (genderRates.length >= 2 && genderRates[0].ctr > genderRates[1].ctr * 1.2) {
+      recs.push({
+        title: `${genderRates[0].gender} audience engages more`,
+        detail: `${genderRates[0].gender} CTR is ${genderRates[0].ctr.toFixed(2)}% vs ${genderRates[1].ctr.toFixed(2)}% for ${genderRates[1].gender}. Consider increasing reach to the higher-engagement group.`,
+        type: "opportunity",
+      });
+    }
+  }
+
+  // Best placement
+  if (placements.length > 1) {
+    const totalImp = placements.reduce((s, r) => s + r.impressions, 0);
+    const byCtr = [...placements].filter((p) => p.impressions > totalImp * 0.05).sort((a, b) => (b.ctr ?? 0) - (a.ctr ?? 0));
+    if (byCtr.length > 0 && byCtr[0].ctr != null) {
+      recs.push({
+        title: `${byCtr[0].platform} ${byCtr[0].position} drives highest engagement`,
+        detail: `CTR of ${byCtr[0].ctr.toFixed(2)}% in this placement. Allocating more delivery here could improve overall performance.`,
+        type: "opportunity",
+      });
+    }
+  }
+
+  // Best time of day
+  if (hourly.length > 0) {
+    const peak = [...hourly].sort((a, b) => b.impressions - a.impressions);
+    const topHours = peak.slice(0, 3).map((h) => formatHour(h.hour));
+    recs.push({
+      title: "Peak activity hours",
+      detail: `Highest engagement at ${topHours.join(", ")}. Your audience is most active during these windows.`,
+      type: "info",
+    });
+  }
+
+  // Best day of week
+  if (daily.length >= 7) {
+    const byDay = new Map<number, { impressions: number; clicks: number }>();
+    for (const d of daily) {
+      const prev = byDay.get(d.dayOfWeek) ?? { impressions: 0, clicks: 0 };
+      byDay.set(d.dayOfWeek, { impressions: prev.impressions + d.impressions, clicks: prev.clicks + d.clicks });
+    }
+    const dayRanked = Array.from(byDay.entries())
+      .map(([dow, v]) => ({ dow, ...v }))
+      .sort((a, b) => b.impressions - a.impressions);
+    if (dayRanked.length >= 2) {
+      const bestDay = DAY_LABELS[dayRanked[0].dow];
+      const worstDay = DAY_LABELS[dayRanked[dayRanked.length - 1].dow];
+      recs.push({
+        title: `${bestDay}s are your best day`,
+        detail: `${bestDay} consistently sees the highest activity, while ${worstDay} is the quietest. Schedule key launches and pushes mid-week.`,
+        type: "info",
+      });
+    }
+  }
+
+  // Top performing ad
+  const adsWithRoas = ads.filter((a) => a.roas != null && a.roas > 0);
+  if (adsWithRoas.length >= 2) {
+    const best = [...adsWithRoas].sort((a, b) => (b.roas ?? 0) - (a.roas ?? 0))[0];
+    recs.push({
+      title: `"${best.name}" is your top creative`,
+      detail: `At ${best.roas?.toFixed(1)}x ROAS, this ad outperforms the rest. Consider using similar messaging and visuals for new creatives.`,
+      type: "success",
+    });
+  }
+
+  return recs.slice(0, 6);
+}
+
+function formatHour(h: number): string {
+  if (h === 0) return "12 AM";
+  if (h === 12) return "12 PM";
+  return h < 12 ? `${h} AM` : `${h - 12} PM`;
 }

@@ -13,6 +13,8 @@ import {
   Sparkles,
   Layers,
   Activity,
+  CalendarDays,
+  Lightbulb,
 } from "lucide-react";
 import type { DateRange } from "../../data";
 import {
@@ -23,6 +25,7 @@ import {
   roasLabel,
   getCampaignStatusCfg,
   AGE_BRACKETS,
+  DAY_LABELS,
 } from "../../lib";
 import { getCampaignDetail } from "./data";
 import {
@@ -31,12 +34,22 @@ import {
   AgeGenderHeatmap,
   PlacementTreemap,
   PlacementTable,
+  HourlyHeatmap,
+  DailyTrendChart,
+  DayOfWeekChart,
   type AgeRow,
   type GenderRow,
   type AgeGenderCell,
   type PlacementRow,
+  type HourlyRow,
+  type DailyRow,
+  type DayOfWeekRow,
 } from "@/components/client/campaign-charts";
 import { AdsPreview, type AdPreview } from "@/components/client/ads-preview";
+import {
+  RecommendationsList,
+  type RecommendationItem,
+} from "@/components/client/recommendations";
 
 interface Props {
   params: Promise<{ slug: string; campaignId: string }>;
@@ -121,7 +134,17 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
     );
   }
 
-  const { campaign: c, ageGender, placements, ads, dataSource, rangeLabel } = data;
+  const {
+    campaign: c,
+    ageGender,
+    placements,
+    ads,
+    hourly,
+    daily,
+    recommendations,
+    dataSource,
+    rangeLabel,
+  } = data;
 
   // --- Prepare chart data (serialize for client components) ---
 
@@ -187,6 +210,48 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
     roas: ad.roas,
   }));
 
+  // Hourly heatmap data
+  const hourlyData: HourlyRow[] = hourly.map((h) => ({
+    hour: h.hour,
+    impressions: h.impressions,
+    clicks: h.clicks,
+    ctr: h.ctr,
+  }));
+
+  // Daily trend data
+  const dailyData: DailyRow[] = daily.map((d) => ({
+    date: d.date,
+    dayOfWeek: d.dayOfWeek,
+    dayLabel: d.dayLabel,
+    impressions: d.impressions,
+    clicks: d.clicks,
+    ctr: d.ctr,
+  }));
+
+  // Day-of-week aggregation
+  const dowMap = new Map<number, { impressions: number; clicks: number }>();
+  for (const d of daily) {
+    const prev = dowMap.get(d.dayOfWeek) ?? { impressions: 0, clicks: 0 };
+    dowMap.set(d.dayOfWeek, {
+      impressions: prev.impressions + d.impressions,
+      clicks: prev.clicks + d.clicks,
+    });
+  }
+  const dowData: DayOfWeekRow[] = [1, 2, 3, 4, 5, 6, 0] // Mon-Sun order
+    .filter((dow) => dowMap.has(dow))
+    .map((dow) => ({
+      day: DAY_LABELS[dow],
+      impressions: dowMap.get(dow)!.impressions,
+      clicks: dowMap.get(dow)!.clicks,
+    }));
+
+  // Recommendations
+  const recsData: RecommendationItem[] = recommendations.map((r) => ({
+    title: r.title,
+    detail: r.detail,
+    type: r.type,
+  }));
+
   return (
     <div className="space-y-6">
       {/* -- Header -- */}
@@ -231,12 +296,12 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
               </div>
             </div>
 
-            <div className="flex items-center gap-0.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] self-start">
+            <div className="flex items-center gap-0.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] self-start overflow-x-auto max-w-full">
               {DATE_OPTIONS.map((opt) => (
                 <a
                   key={opt.value}
                   href={`?range=${opt.value}`}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-300 ${
+                  className={`shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-300 ${
                     range === opt.value
                       ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
                       : "text-white/40 hover:text-white/70 hover:bg-white/[0.06]"
@@ -320,6 +385,36 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
             <PlacementTreemap data={placementData} />
             <PlacementTable data={placementData} />
           </div>
+        </section>
+      )}
+
+      {/* -- Performance Timeline: Hourly heatmap + Daily trend -- */}
+      {(hourly.length > 0 || daily.length >= 2) && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <CalendarDays className="h-3.5 w-3.5 text-white/30" />
+            <span className="section-label">Performance Timeline</span>
+            <span className="text-[10px] text-white/20 ml-auto">{rangeLabel}</span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            {daily.length >= 2 && <DailyTrendChart data={dailyData} />}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {hourly.length > 0 && <HourlyHeatmap data={hourlyData} />}
+              {dowData.length > 0 && <DayOfWeekChart data={dowData} />}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* -- Recommendations -- */}
+      {recsData.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Lightbulb className="h-3.5 w-3.5 text-white/30" />
+            <span className="section-label">Insights & Recommendations</span>
+          </div>
+          <RecommendationsList items={recsData} />
         </section>
       )}
 
