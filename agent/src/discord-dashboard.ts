@@ -10,6 +10,7 @@
 
 import { EmbedBuilder, type Client, type TextChannel } from "discord.js";
 import { readFile, writeFile } from "node:fs/promises";
+import { dashboardButtons } from "./discord-buttons.js";
 
 const CAMPAIGNS_FILE = "session/last-campaigns.json";
 const DASHBOARD_STATE_FILE = "session/dashboard-state.json";
@@ -198,7 +199,7 @@ export async function updateDashboard(client: Client): Promise<string> {
   if (dashState.messageId) {
     try {
       const existing = await channel.messages.fetch(dashState.messageId);
-      await existing.edit({ embeds: [embed] });
+      await existing.edit({ embeds: [embed], components: [dashboardButtons()] });
       dashState.lastUpdated = new Date().toISOString();
       await saveDashboardState(dashState);
       return `Dashboard updated (edited message ${dashState.messageId}).`;
@@ -207,8 +208,8 @@ export async function updateDashboard(client: Client): Promise<string> {
     }
   }
 
-  // Send new message
-  const sent = await channel.send({ embeds: [embed] });
+  // Send new message with action buttons
+  const sent = await channel.send({ embeds: [embed], components: [dashboardButtons()] });
   dashState.messageId = sent.id;
   dashState.lastUpdated = new Date().toISOString();
   await saveDashboardState(dashState);

@@ -281,10 +281,19 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
 
   const embed = new EmbedBuilder()
     .setTitle(`Welcome to ${guild.name}!`)
-    .setDescription(`Hey ${member}, welcome to the team.`)
+    .setDescription(`Hey ${member}, welcome to the Outlet Media team.`)
     .addFields(
-      { name: "Who we are", value: "Outlet Media -- we buy ads for music promoters.", inline: false },
-      { name: "Need help?", value: "Ask in any channel or DM an admin.", inline: false },
+      { name: "What we do", value: "We buy ads for music promoters. Every channel here is powered by an AI agent.", inline: false },
+      { name: "#boss", value: "Orchestrator -- big picture, multi-agent tasks", inline: true },
+      { name: "#media-buyer", value: "Meta Ads -- budgets, ROAS, campaigns", inline: true },
+      { name: "#tm-data", value: "Ticketmaster -- events, tickets, demographics", inline: true },
+      { name: "#creative", value: "Ad creative -- images, video, copy review", inline: true },
+      { name: "#dashboard", value: "Reporting -- analytics, trends, data", inline: true },
+      { name: "#zamora / #kybba", value: "Client channels -- per-client conversations", inline: true },
+      { name: "#general", value: "Team chat and announcements", inline: true },
+      { name: "#agent-feed", value: "Quiet activity log (muted by default)", inline: true },
+      { name: "#schedule", value: "View and toggle scheduled jobs", inline: true },
+      { name: "Quick start", value: "Type `!help` in any channel for all commands. Just chat naturally -- the agents understand plain language.", inline: false },
     )
     .setColor(0x5865f2)
     .setTimestamp();
@@ -293,16 +302,16 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
     await welcomeChannel.send({ embeds: [embed] }).catch(() => {});
   }
 
+  // DM the new member with the same guide
   try {
-    await member.send(
-      `Welcome to **${guild.name}**! You've been added to the team. ` +
-      `Check the channels and let us know if you need anything.`
-    );
+    await member.send({ embeds: [embed] });
   } catch {
     // User has DMs disabled
   }
 
-  const defaultRoleId = process.env.DISCORD_DEFAULT_ROLE_ID;
+  // Auto-assign Viewer role
+  const viewerRole = guild.roles.cache.find(r => r.name === "Viewer");
+  const defaultRoleId = process.env.DISCORD_DEFAULT_ROLE_ID ?? viewerRole?.id;
   if (defaultRoleId) {
     await member.roles.add(defaultRoleId).catch((err) => {
       console.warn("[discord-admin] Could not assign default role:", err.message);

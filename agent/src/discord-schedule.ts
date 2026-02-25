@@ -10,6 +10,7 @@
 
 import cron, { type ScheduledTask } from "node-cron";
 import { EmbedBuilder, type Client, type TextChannel } from "discord.js";
+import { scheduleButtons } from "./discord-buttons.js";
 
 /** Lazy import to avoid circular dependency with discord.ts */
 async function postToFeed(text: string): Promise<void> {
@@ -176,24 +177,24 @@ export async function handleScheduleCommand(
   content: string,
   client: Client,
   channelName: string,
-): Promise<{ text?: string; embed?: EmbedBuilder } | null> {
+): Promise<{ text?: string; embed?: EmbedBuilder; buttons?: boolean } | null> {
   // Only respond in #schedule
   if (channelName !== "schedule") return null;
 
   const lower = content.toLowerCase().trim();
 
   if (lower === "!schedule" || lower === "!schedule list") {
-    return { embed: buildScheduleEmbed() };
+    return { embed: buildScheduleEmbed(), buttons: true };
   }
 
   if (lower.startsWith("!enable-all")) {
     const result = enableAll();
-    return { text: result, embed: buildScheduleEmbed() };
+    return { text: result, embed: buildScheduleEmbed(), buttons: true };
   }
 
   if (lower.startsWith("!disable-all")) {
     const result = disableAll();
-    return { text: result, embed: buildScheduleEmbed() };
+    return { text: result, embed: buildScheduleEmbed(), buttons: true };
   }
 
   const enableMatch = lower.match(/^!enable\s+(.+)$/);

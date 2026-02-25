@@ -168,6 +168,18 @@ async function handleMessage(
 
     // Boss intake: log activity for supervisor review
     logActivity(channelName, msg.author.username, prompt, agent.description, responseText).catch(() => {});
+
+    // Agent memory self-update (fire-and-forget, never blocks response)
+    import("./discord-memory.js")
+      .then(({ maybeUpdateMemory }) => maybeUpdateMemory(agent.promptFile, prompt, responseText))
+      .catch(() => {});
+
+    // Boss delegation: if Boss response contains @agent directives, execute them
+    if (channelName === "boss" && discordClient && responseText.includes("@")) {
+      import("./discord-delegate.js")
+        .then(({ processDelegations }) => processDelegations(discordClient!, responseText))
+        .catch(() => {});
+    }
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     await working.edit(`Something went wrong: ${errMsg}`).catch(() => {});
@@ -253,6 +265,11 @@ export function startDiscordBot(): void {
     const { getJobRunners } = await import("./scheduler.js");
     initScheduleJobs(getJobRunners());
     console.log("[discord] Schedule job runners initialized");
+
+    // Register interactive button handler
+    const { registerButtonHandler } = await import("./discord-buttons.js");
+    registerButtonHandler(discordClient!);
+    console.log("[discord] Button interaction handler registered");
 
     // Auto-deploy internals on startup (one-time, remove after first deploy)
     if (process.env.DEPLOY_INTERNALS_ON_STARTUP === "1") {
@@ -394,7 +411,14 @@ export function startDiscordBot(): void {
       const schedResult = await handleScheduleCommand(content, discordClient!, channelName);
       if (schedResult) {
         if (schedResult.text) await msg.reply(schedResult.text);
-        if (schedResult.embed) await (msg.channel as TextChannel).send({ embeds: [schedResult.embed] });
+        if (schedResult.embed) {
+          const sendOpts: Record<string, unknown> = { embeds: [schedResult.embed] };
+          if (schedResult.buttons) {
+            const { scheduleButtons } = await import("./discord-buttons.js");
+            sendOpts.components = [scheduleButtons()];
+          }
+          await (msg.channel as TextChannel).send(sendOpts);
+        }
       }
       return;
     }
@@ -404,6 +428,28 @@ export function startDiscordBot(): void {
 
     // Legacy config channels: skip agent routing
     if (isConfigChannel(channelName)) return;
+
+    // Thread commands in client channels
+    if (content === "!threads" || content === "/threads") {
+      if ("threads" in msg.channel) {
+        const { listThreads } = await import("./discord-threads.js");
+        const result = await listThreads(msg.channel as TextChannel);
+        await msg.reply(result);
+      } else {
+        await msg.reply("Threads are only available in client channels (#zamora, #kybba).");
+      }
+      return;
+    }
+
+    // Auto-thread creation in client channels ("thread: Event Name")
+    if (content.toLowerCase().startsWith("thread:") || content.toLowerCase().startsWith("new thread:")) {
+      const { maybeCreateThread } = await import("./discord-threads.js");
+      const thread = await maybeCreateThread(msg, channelName);
+      if (thread) {
+        await msg.reply(`Thread created: **${thread.threadName}** -- continue the conversation there.`);
+        return;
+      }
+    }
 
     // Check for manual job triggers (e.g., "run meta sync" in #media-buyer)
     const trigger = matchManualTrigger(channelName, content);
