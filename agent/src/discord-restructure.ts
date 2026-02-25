@@ -28,6 +28,7 @@ export const TARGET_LAYOUT: Record<string, { name: string; topic: string }[]> = 
     { name: "standup", topic: "Async daily updates: what you did, what is blocked" },
   ],
   "Campaigns": [
+    { name: "campaigns-general", topic: "General campaign discussion" },
     { name: "campaign-updates", topic: "Campaign status changes, launches, pauses" },
     { name: "performance-reports", topic: "ROAS, spend, daily performance numbers" },
     { name: "ad-creative", topic: "Creative review, video/image approvals" },
@@ -39,6 +40,7 @@ export const TARGET_LAYOUT: Record<string, { name: string; topic: string }[]> = 
     { name: "client-onboarding", topic: "New client setup checklists and docs" },
   ],
   "Agent & Automation": [
+    { name: "active-jobs", topic: "Live view of running automations -- syncs, think loops, scheduled tasks" },
     { name: "agent-logs", topic: "Think-loop output, sync results, session logs" },
     { name: "agent-alerts", topic: "Critical/warning alerts from the agent" },
     { name: "meta-api", topic: "Meta API issues, token refreshes, debugging" },
