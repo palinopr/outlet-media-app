@@ -1,3 +1,11 @@
+/**
+ * discord.ts -- Thin Discord router.
+ *
+ * discord.js handles the WebSocket connection to receive messages.
+ * Each channel routes to a specialist agent via discord-router.ts.
+ * Claude CLI calls APIs directly (Meta, Discord REST, Supabase) -- no middleman.
+ */
+
 import "dotenv/config";
 import {
   Client,
@@ -8,6 +16,7 @@ import {
 } from "discord.js";
 import { runClaude } from "./runner.js";
 import { state } from "./state.js";
+import { getAgentForChannel, matchManualTrigger } from "./discord-router.js";
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;
@@ -20,7 +29,6 @@ export const discordClient = token
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.DirectMessageTyping,
-        // Server management intents
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildModeration,
         GatewayIntentBits.GuildPresences,
@@ -32,9 +40,8 @@ export const discordClient = token
 
 let agentBusy = false;
 
-// Use shared session map from discord-admin so slash commands and
-// follow-up messages share the same conversation context
-import { channelSessions } from "./discord-admin.js";
+/** Per-channel Claude session IDs for multi-turn context */
+export const channelSessions = new Map<string, string>();
 
 function chunkText(text: string, maxLen: number): string[] {
   const chunks: string[] = [];
@@ -49,38 +56,43 @@ function chunkText(text: string, maxLen: number): string[] {
 /** Convert Telegram HTML + markdown to Discord-compatible markdown */
 function cleanForDiscord(text: string): string {
   return text
-    // HTML bold → Discord bold
     .replace(/<b>([\s\S]*?)<\/b>/g, "**$1**")
-    // HTML italic
     .replace(/<i>([\s\S]*?)<\/i>/g, "*$1*")
-    // HTML code blocks
     .replace(/<pre>([\s\S]*?)<\/pre>/g, "```\n$1\n```")
-    // HTML inline code
     .replace(/<code>([\s\S]*?)<\/code>/g, "`$1`")
-    // HTML entities
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
-    // Strip any remaining HTML tags
     .replace(/<[^>]+>/g, "")
-    // Tables → plain text
     .replace(/^\|[-:| ]+\|$/gm, "")
     .replace(/^\|(.+)\|$/gm, (_m, row: string) =>
-      row.split("|").map((c) => c.trim()).filter(Boolean).join(" · ")
+      row.split("|").map((c) => c.trim()).filter(Boolean).join(" - ")
     )
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
-async function handleMessage(msg: Message, prompt: string) {
+/**
+ * Route a message to the correct agent and handle the response.
+ */
+async function handleMessage(
+  msg: Message,
+  prompt: string,
+  channelName: string,
+) {
   if (agentBusy || state.jobRunning || state.thinkRunning || state.discordAdminRunning) {
     await msg.reply("Agent is busy. Try again in a moment.");
     return;
   }
 
-  agentBusy = true;
+  const agent = getAgentForChannel(channelName);
 
-  // Show typing indicator (only on channels that support it)
+  // Read-only channels don't get agent responses
+  if (agent.readOnly) return;
+
+  agentBusy = true;
+  state.discordAdminRunning = true;
+
   const ch = msg.channel;
   if ("sendTyping" in ch) await (ch as TextChannel).sendTyping().catch(() => {});
   const typingInterval = setInterval(() => {
@@ -95,18 +107,19 @@ async function handleMessage(msg: Message, prompt: string) {
   const chId = msg.channelId;
   const existingSession = channelSessions.get(chId);
 
-  // Use admin prompt in the dedicated admin channel, chat prompt everywhere else
-  const { isAdminChannel, buildAdminPrompt } = await import("./discord-admin.js");
-  const isAdmin = isAdminChannel(chId);
-
   try {
-    // For admin channel: inject live server snapshot into the system prompt
-    const adminSystemPrompt = isAdmin ? await buildAdminPrompt() : undefined;
+    // Build system prompt -- inject server snapshot for admin agent
+    let systemPrompt: string | undefined;
+    if (agent.injectSnapshot) {
+      const { buildAdminPrompt } = await import("./discord-admin.js");
+      systemPrompt = await buildAdminPrompt();
+    }
 
     const result = await runClaude({
       prompt,
-      systemPromptName: isAdmin ? "discord-admin" : "chat",
-      systemPrompt: adminSystemPrompt,
+      systemPromptName: agent.promptFile,
+      systemPrompt,
+      maxTurns: agent.maxTurns,
       resumeSessionId: existingSession,
       onChunk: async (chunk: string) => {
         buffer += chunk;
@@ -122,27 +135,7 @@ async function handleMessage(msg: Message, prompt: string) {
       channelSessions.set(chId, result.sessionId);
     }
 
-    let responseText = result.text || "Done.";
-
-    // In admin channel, parse and execute any action blocks Claude included
-    if (isAdmin && responseText.includes("[ACTION:")) {
-      const { parseActions, executeActions, stripActions, formatResults } =
-        await import("./discord-actions.js");
-      const actions = parseActions(responseText);
-      if (actions.length > 0) {
-        const guild = discordClient?.guilds.cache.first();
-        if (guild) {
-          await working.edit("Executing actions...").catch(() => {});
-          const results = await executeActions(actions, guild);
-          const resultText = formatResults(results);
-          responseText = stripActions(responseText);
-          if (resultText) {
-            responseText += `\n\n**Actions executed:**\n${resultText}`;
-          }
-        }
-      }
-    }
-
+    const responseText = result.text || "Done.";
     const full = cleanForDiscord(responseText);
     const chunks = chunkText(full, 1900);
 
@@ -156,18 +149,18 @@ async function handleMessage(msg: Message, prompt: string) {
   } finally {
     clearInterval(typingInterval);
     agentBusy = false;
+    state.discordAdminRunning = false;
   }
 }
 
 export function startDiscordBot(): void {
   if (!discordClient) {
-    console.warn("[discord] DISCORD_BOT_TOKEN not set — Discord bot disabled");
+    console.warn("[discord] DISCORD_BOT_TOKEN not set -- Discord bot disabled");
     return;
   }
 
   discordClient.once("ready", async (c) => {
     console.log(`Discord bot online: ${c.user.tag}`);
-    // Initialize admin module after client is ready
     const { initDiscordAdmin } = await import("./discord-admin.js");
     await initDiscordAdmin(discordClient);
   });
@@ -183,7 +176,12 @@ export function startDiscordBot(): void {
     const blocked = await checkAutoMod(msg);
     if (blocked) return;
 
-    // Simple commands
+    // Resolve channel name for routing
+    const channelName = "name" in msg.channel
+      ? (msg.channel as TextChannel).name
+      : "";
+
+    // Simple built-in commands
     if (content === "!status" || content === "/status") {
       const busy = agentBusy || state.jobRunning || state.thinkRunning || state.discordAdminRunning;
       await msg.reply(busy ? "Agent is busy running a task." : "Agent is idle and ready.");
@@ -196,16 +194,17 @@ export function startDiscordBot(): void {
       return;
     }
 
-    if (content === "!check" || content === "/check") {
-      await handleMessage(
-        msg,
-        "Check TM One for any updates. Compare against the last saved state and report what changed."
-      );
+    // Check for manual job triggers (e.g., "run meta sync" in #meta-api)
+    const trigger = matchManualTrigger(channelName, content);
+    if (trigger) {
+      const { triggerManualJob } = await import("./scheduler.js");
+      await msg.reply(`Triggering ${trigger}...`);
+      triggerManualJob(trigger);
       return;
     }
 
-    // Any other message → send to agent
-    await handleMessage(msg, content);
+    // Route to the correct agent
+    await handleMessage(msg, content, channelName);
   });
 
   discordClient.login(token).catch((err: unknown) => {
@@ -214,9 +213,8 @@ export function startDiscordBot(): void {
   });
 }
 
-// ─── Channel Router ──────────────────────────────────────────────────────────
+// --- Channel Router (outbound notifications) ---
 
-/** Well-known routing targets. Map target name -> Discord channel name. */
 const CHANNEL_ROUTES: Record<string, string> = {
   "general":       "general",
   "announcements": "announcements",
@@ -235,13 +233,8 @@ const CHANNEL_ROUTES: Record<string, string> = {
   "bot-logs":      "bot-logs",
 };
 
-/** Cache of channel name -> channel ID, populated on first lookup. */
 const channelIdCache = new Map<string, string>();
 
-/**
- * Resolve a channel name to its ID, using cache.
- * Falls back to DISCORD_CHANNEL_ID if channel not found.
- */
 async function resolveChannelId(channelName: string): Promise<string | null> {
   if (channelIdCache.has(channelName)) return channelIdCache.get(channelName)!;
   if (!discordClient) return channelId || null;
@@ -257,16 +250,11 @@ async function resolveChannelId(channelName: string): Promise<string | null> {
     return ch.id;
   }
 
-  // Channel doesn't exist yet -- fall back to default
   return channelId || null;
 }
 
 /**
  * Send a message to a specific channel by route name.
- * Falls back to DISCORD_CHANNEL_ID if the target channel doesn't exist.
- *
- * Usage: notifyChannel("performance", "ROAS dropped below 2.0")
- *        notifyChannel("agent-alerts", "Meta token expires in 3 days")
  */
 export async function notifyChannel(target: string, text: string): Promise<void> {
   if (!discordClient) return;
@@ -289,7 +277,7 @@ export async function notifyChannel(target: string, text: string): Promise<void>
   }
 }
 
-/** Send a proactive notification to the configured Discord channel (legacy). */
+/** Legacy: send to the configured default channel */
 export async function notifyDiscord(text: string): Promise<void> {
   if (!discordClient || !channelId) return;
   try {

@@ -9,28 +9,23 @@ const CHECK_CRON     = process.env.CHECK_CRON ?? "0 */2 * * *"; // every 2 hours
 const META_CRON      = "0 */6 * * *";                            // every 6 hours
 const THINK_CRON     = "*/30 8-22 * * *";                        // every 30 min, 8am-10pm
 const HEARTBEAT_CRON = "*/1 * * * *";                            // every minute
-const DISCORD_REPORT_CRON = "0 9 * * *";                         // daily at 9am UTC
 const DISCORD_HEALTH_CRON = "0 */12 * * *";                      // every 12 hours
 
 const INGEST_URL =
   process.env.INGEST_URL?.replace("/api/ingest", "") ?? "http://localhost:3000";
 
-// Short task descriptions — command.txt provides all the API context
 const TM_TASK = "Run the TM One monitor: log in to https://one.ticketmaster.com, extract all events, compare to session/last-events.json, POST changes to the ingest endpoint. Report what changed.";
 const META_TASK = "Run the Meta Ads sync: pull all active campaigns and last-30-day insights for ad account act_787610255314938, save to session/last-campaigns.json, POST to the ingest endpoint. Report spend and ROAS summary.";
 const THINK_TASK = "Run your proactive self-improvement cycle. Read LEARNINGS.md first to pick which priority to focus on this cycle.";
 
-// Busy flags — prevent overlapping runs
 let tmRunning    = false;
 let metaRunning  = false;
 let thinkRunning = false;
 
 export function startScheduler(): void {
-  // ─── Heartbeat ───────────────────────────────────────────────────────────
   cron.schedule(HEARTBEAT_CRON, () => { pingHeartbeat(); });
   pingHeartbeat();
 
-  // ─── TM One check ────────────────────────────────────────────────────────
   if (!cron.validate(CHECK_CRON)) {
     console.error(`[scheduler] Invalid CHECK_CRON: ${CHECK_CRON}`);
   } else {
@@ -38,27 +33,41 @@ export function startScheduler(): void {
     cron.schedule(CHECK_CRON, () => { runTmCheck(); });
   }
 
-  // ─── Meta sync ───────────────────────────────────────────────────────────
   console.log(`[scheduler] Scheduled Meta syncs: ${META_CRON}`);
   cron.schedule(META_CRON, () => { runMetaSync(); });
 
-  // ─── Proactive think loop ─────────────────────────────────────────────────
   console.log(`[scheduler] Scheduled think loop: ${THINK_CRON}`);
   cron.schedule(THINK_CRON, () => { runThinkCycle(); });
 
-  // ─── Discord server management ───────────────────────────────────────────
-  console.log(`[scheduler] Scheduled Discord daily report: ${DISCORD_REPORT_CRON}`);
-  cron.schedule(DISCORD_REPORT_CRON, () => { runDiscordReport(); });
-
   console.log(`[scheduler] Scheduled Discord health check: ${DISCORD_HEALTH_CRON}`);
   cron.schedule(DISCORD_HEALTH_CRON, () => { runDiscordHealthCheck(); });
+}
+
+/**
+ * Trigger a job manually from a Discord message.
+ * Called from discord.ts when a user types "run meta sync" etc.
+ */
+export function triggerManualJob(jobName: string): void {
+  switch (jobName) {
+    case "meta-sync":
+      runMetaSync();
+      break;
+    case "tm-sync":
+      runTmCheck();
+      break;
+    case "think":
+      runThinkCycle();
+      break;
+    default:
+      console.warn(`[scheduler] Unknown manual trigger: ${jobName}`);
+  }
 }
 
 async function pingHeartbeat() {
   try {
     await fetch(`${INGEST_URL}/api/agents/heartbeat`, { method: "POST" });
   } catch {
-    // silently ignore — network may be down
+    // silently ignore
   }
 }
 
@@ -69,12 +78,12 @@ async function runTmCheck() {
   }
   tmRunning = true;
   console.log("[scheduler] Running scheduled TM One check...");
-  await notifyChannel("active-jobs", "▶ **TM One sync** started").catch(() => {});
+  await notifyChannel("active-jobs", ">> **TM One sync** started").catch(() => {});
 
   try {
     const result = await runClaude({ prompt: TM_TASK, maxTurns: 50 });
     if (result.text?.trim()) {
-      await notifyChannel("active-jobs", "✓ **TM One sync** finished").catch(() => {});
+      await notifyChannel("active-jobs", "ok **TM One sync** finished").catch(() => {});
       await Promise.all([
         notifyOwner(`[TM One]\n\n${result.text}`),
         notifyChannel("tm-data", `**TM One Update**\n\n${result.text}`),
@@ -83,9 +92,9 @@ async function runTmCheck() {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[scheduler] TM check failed:", msg);
-    await notifyChannel("active-jobs", `✗ **TM One sync** failed: ${msg.slice(0, 200)}`).catch(() => {});
+    await notifyChannel("active-jobs", `x **TM One sync** failed: ${msg.slice(0, 200)}`).catch(() => {});
     await Promise.all([
-      notifyOwner(`[TM One — failed]\n${msg}`).catch(() => {}),
+      notifyOwner(`[TM One -- failed]\n${msg}`).catch(() => {}),
       notifyChannel("agent-alerts", `**TM One check failed**\n${msg}`).catch(() => {}),
     ]);
   } finally {
@@ -100,12 +109,12 @@ async function runMetaSync() {
   }
   metaRunning = true;
   console.log("[scheduler] Running scheduled Meta sync...");
-  await notifyChannel("active-jobs", "▶ **Meta Ads sync** started").catch(() => {});
+  await notifyChannel("active-jobs", ">> **Meta Ads sync** started").catch(() => {});
 
   try {
     const result = await runClaude({ prompt: META_TASK, maxTurns: 20 });
     if (result.text?.trim()) {
-      await notifyChannel("active-jobs", "✓ **Meta Ads sync** finished").catch(() => {});
+      await notifyChannel("active-jobs", "ok **Meta Ads sync** finished").catch(() => {});
       await Promise.all([
         notifyOwner(`[Meta Ads]\n\n${result.text}`),
         notifyChannel("performance", `**Meta Ads Sync**\n\n${result.text}`),
@@ -114,23 +123,13 @@ async function runMetaSync() {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[scheduler] Meta sync failed:", msg);
-    await notifyChannel("active-jobs", `✗ **Meta Ads sync** failed: ${msg.slice(0, 200)}`).catch(() => {});
+    await notifyChannel("active-jobs", `x **Meta Ads sync** failed: ${msg.slice(0, 200)}`).catch(() => {});
     await Promise.all([
-      notifyOwner(`[Meta Ads — failed]\n${msg}`).catch(() => {}),
+      notifyOwner(`[Meta Ads -- failed]\n${msg}`).catch(() => {}),
       notifyChannel("agent-alerts", `**Meta sync failed**\n${msg}`).catch(() => {}),
     ]);
   } finally {
     metaRunning = false;
-  }
-}
-
-async function runDiscordReport() {
-  try {
-    const { runDailyServerReport } = await import("./discord-admin.js");
-    await runDailyServerReport();
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("[scheduler] Discord report failed:", msg);
   }
 }
 
@@ -145,16 +144,15 @@ async function runDiscordHealthCheck() {
 }
 
 async function runThinkCycle() {
-  // Don't think while another task is running (would compete for the claude CLI)
   if (thinkRunning || tmRunning || metaRunning || state.jobRunning || state.discordAdminRunning) {
-    console.log("[think] Skipping — another task is running");
+    console.log("[think] Skipping -- another task is running");
     return;
   }
 
   thinkRunning = true;
   state.thinkRunning = true;
   console.log("[think] Starting proactive think cycle...");
-  await notifyChannel("active-jobs", "▶ **Think loop** started").catch(() => {});
+  await notifyChannel("active-jobs", ">> **Think loop** started").catch(() => {});
 
   try {
     const result = await runClaude({
@@ -163,7 +161,6 @@ async function runThinkCycle() {
       maxTurns: 15,
     });
 
-    // Check if the think cycle drafted a proactive message
     const draftPath = "/tmp/outlet-media-proactive.txt";
     if (existsSync(draftPath)) {
       const draft = readFileSync(draftPath, "utf8").trim();
@@ -180,11 +177,11 @@ async function runThinkCycle() {
     if (result.text?.includes("THINK_CYCLE_COMPLETE")) {
       console.log("[think] Cycle complete");
     }
-    await notifyChannel("active-jobs", "✓ **Think loop** finished").catch(() => {});
+    await notifyChannel("active-jobs", "ok **Think loop** finished").catch(() => {});
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[think] Cycle failed:", msg);
-    await notifyChannel("active-jobs", `✗ **Think loop** failed: ${msg.slice(0, 200)}`).catch(() => {});
+    await notifyChannel("active-jobs", `x **Think loop** failed: ${msg.slice(0, 200)}`).catch(() => {});
   } finally {
     thinkRunning = false;
     state.thinkRunning = false;
