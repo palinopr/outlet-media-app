@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Outlet Media Discord Layout</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; }
+  body { background: #1a1a2e; overflow: hidden; width: 100vw; height: 100vh; }
+  #controls { position: fixed; top: 16px; right: 16px; z-index: 10; display: flex; gap: 8px; }
+  #controls button { background: #36393f; color: #dcddde; border: 1px solid #4f545c; border-radius: 6px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
+  #controls button:hover { background: #4f545c; }
+  #hint { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); color: #72767d; font-family: sans-serif; font-size: 13px; z-index: 10; }
+  #canvas { width: 100vw; height: 100vh; cursor: grab; display: flex; justify-content: center; align-items: center; }
+  #canvas.dragging { cursor: grabbing; }
+  #diagram { transform-origin: 0 0; background: #fff; border-radius: 12px; padding: 32px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+</style>
+</head>
+<body>
+
+<div id="controls">
+  <button onclick="zoomIn()">+ Zoom In</button>
+  <button onclick="zoomOut()">- Zoom Out</button>
+  <button onclick="resetView()">Reset</button>
+</div>
+<div id="hint">Scroll to zoom | Drag to pan</div>
+
+<div id="canvas">
+  <div id="diagram" class="mermaid">
+graph LR
+    BOSS["#boss<br/>Supervisor"]
+
+    BOSS -->|"manages all"| CTRL["CONTROL ROOM"]
+
+    subgraph CTRL["CONTROL ROOM"]
+      direction TB
+      CFGMB["#cfg-media-buyer"]
+      CFGTM["#cfg-tm-data"]
+      CFGCR["#cfg-creative"]
+      CFGRP["#cfg-reporting"]
+      CFGDC["#cfg-discord"]
+      CFGCL["#cfg-client-mgr"]
+      CFGCH["#cfg-general"]
+    end
+
+    subgraph MB_FILES["Media Buyer Files"]
+      direction TB
+      MBP["media-buyer.txt<br/>641 lines<br/>Meta API, strategy, curls"]
+      MBM["MEMORY.md<br/>Campaign state, client context"]
+      MBL["LEARNINGS.md<br/>Action journal"]
+      MBS["skills/<br/>Self-created patterns"]
+      MBSESS["session/<br/>last-campaigns.json"]
+    end
+
+    subgraph TM_FILES["TM Data Files"]
+      direction TB
+      TMP["tm-agent.txt<br/>TM One scraping, demographics"]
+      TMM["MEMORY.md<br/>Event state, venue data"]
+      TML["LEARNINGS.md<br/>Scraping journal"]
+      TMS["skills/<br/>Self-created patterns"]
+      TMSESS["session/<br/>last-events.json"]
+    end
+
+    subgraph CR_FILES["Creative Files"]
+      direction TB
+      CRP["creative-agent.txt<br/>Briefs, assets, upload"]
+      CRM["MEMORY.md<br/>Asset library, brand guides"]
+      CRL["LEARNINGS.md"]
+      CRS["skills/"]
+    end
+
+    subgraph RP_FILES["Reporting Files"]
+      direction TB
+      RPP["reporting-agent.txt<br/>Supabase queries, panels"]
+      RPM["MEMORY.md"]
+      RPL["LEARNINGS.md"]
+      RPS["skills/"]
+    end
+
+    subgraph DC_FILES["Discord Agent Files"]
+      direction TB
+      DCP["discord-agent.txt<br/>Discord REST API"]
+      DCM["MEMORY.md"]
+      DCL["LEARNINGS.md"]
+      DCS["skills/"]
+    end
+
+    subgraph CL_FILES["Client Manager Files"]
+      direction TB
+      CLP["client-manager.txt<br/>Client relationships"]
+      CLM["MEMORY.md"]
+      CLL["LEARNINGS.md"]
+      CLS["skills/"]
+    end
+
+    subgraph CH_FILES["General Chat Files"]
+      direction TB
+      CHP["chat.txt<br/>444 lines<br/>Chat rules, Meta reads"]
+      CHM["MEMORY.md"]
+      CHL["LEARNINGS.md"]
+      CHS["skills/"]
+    end
+
+    %% Config channels show + edit agent files
+    CFGMB -->|"shows + edits"| MB_FILES
+    CFGTM -->|"shows + edits"| TM_FILES
+    CFGCR -->|"shows + edits"| CR_FILES
+    CFGRP -->|"shows + edits"| RP_FILES
+    CFGDC -->|"shows + edits"| DC_FILES
+    CFGCL -->|"shows + edits"| CL_FILES
+    CFGCH -->|"shows + edits"| CH_FILES
+
+    %% Work channels USE agent files
+    MB_FILES -->|"powers"| MBWORK["#media-buyer<br/>Work Channel"]
+    TM_FILES -->|"powers"| TMWORK["#tm-data<br/>Work Channel"]
+    CR_FILES -->|"powers"| CRWORK["#creative<br/>Work Channel"]
+    RP_FILES -->|"powers"| RPWORK["#dashboard<br/>Work Channel"]
+    CL_FILES -->|"powers"| CLWORK1["#zamora<br/>Work Channel"]
+    CL_FILES -->|"powers"| CLWORK2["#kybba<br/>Work Channel"]
+    CH_FILES -->|"powers"| CHWORK["#general<br/>Work Channel"]
+
+    classDef boss fill:#FFF3E0,stroke:#FFB74D,color:#F57C00,font-weight:bold
+    classDef ctrlCh fill:#FFF9C4,stroke:#FDD835,color:#F9A825
+    classDef prompt fill:#E8EAF6,stroke:#7986CB,color:#3F51B5
+    classDef memory fill:#F3E5F5,stroke:#BA68C8,color:#8E24AA
+    classDef skill fill:#E0F2F1,stroke:#4DB6AC,color:#00897B
+    classDef session fill:#F1F8E9,stroke:#9CCC65,color:#689F38
+    classDef work fill:#E3F2FD,stroke:#64B5F6,color:#1976D2
+    classDef filegroup fill:#FAFAFA,stroke:#BDBDBD,color:#424242
+
+    class BOSS boss
+    class CFGMB,CFGTM,CFGCR,CFGRP,CFGDC,CFGCL,CFGCH ctrlCh
+    class MBP,TMP,CRP,RPP,DCP,CLP,CHP prompt
+    class MBM,TMM,CRM,RPM,DCM,CLM,CHM memory
+    class MBS,TMS,CRS,RPS,DCS,CLS,CHS skill
+    class MBSESS,TMSESS session
+    class MBL,TML,CRL,RPL,DCL,CLL,CHL memory
+    class MBWORK,TMWORK,CRWORK,RPWORK,CLWORK1,CLWORK2,CHWORK work
+  </div>
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'default',
+  flowchart: { nodeSpacing: 30, rankSpacing: 60, padding: 12 },
+  themeVariables: { fontSize: '14px' }
+});
+
+let scale = 1, panX = 0, panY = 0, dragging = false, startX, startY;
+const canvas = document.getElementById('canvas');
+const diagram = document.getElementById('diagram');
+
+function applyTransform() {
+  diagram.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+}
+
+function zoomIn() { scale = Math.min(scale * 1.25, 5); applyTransform(); }
+function zoomOut() { scale = Math.max(scale * 0.8, 0.2); applyTransform(); }
+function resetView() { scale = 1; panX = 0; panY = 0; applyTransform(); }
+
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  scale = Math.min(Math.max(scale * delta, 0.2), 5);
+  applyTransform();
+}, { passive: false });
+
+canvas.addEventListener('mousedown', (e) => {
+  dragging = true;
+  startX = e.clientX - panX;
+  startY = e.clientY - panY;
+  canvas.classList.add('dragging');
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  panX = e.clientX - startX;
+  panY = e.clientY - startY;
+  applyTransform();
+});
+
+window.addEventListener('mouseup', () => {
+  dragging = false;
+  canvas.classList.remove('dragging');
+});
+</script>
+</body>
+</html>

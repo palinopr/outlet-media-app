@@ -4,11 +4,14 @@
  * Maps Discord channel names to specialist agent configs.
  * Each channel IS the agent -- talk in it, the agent responds.
  *
- * Layout (9 channels, 4 categories):
- *   HQ:      general, dashboard
- *   Agents:  media-buyer, tm-data, creative, boss
- *   Clients: zamora, kybba
- *   Feed:    agent-feed (read-only)
+ * Layout (16 channels, 6 categories):
+ *   Boss:         boss
+ *   HQ:           general, dashboard
+ *   Agents:       media-buyer, tm-data, creative
+ *   Clients:      zamora, kybba
+ *   Control Room: cfg-media-buyer, cfg-tm-data, cfg-creative, cfg-reporting,
+ *                 cfg-discord, cfg-client-mgr, cfg-general
+ *   Feed:         agent-feed (read-only)
  */
 
 export interface AgentConfig {
@@ -127,4 +130,67 @@ export function matchManualTrigger(
   }
 
   return null;
+}
+
+// --- Config Channel Mapping -----------------------------------------------
+
+export interface ConfigChannelInfo {
+  /** The prompt file this config channel manages (without extension) */
+  promptFile: string;
+  /** Human-readable agent name */
+  agentName: string;
+  /** The work channel this agent powers (null if no direct work channel) */
+  workChannel: string | null;
+}
+
+/**
+ * Maps cfg-* channel names to the agent files they manage.
+ * Used by discord-config.ts to post/update agent context.
+ */
+export const CONFIG_CHANNELS: Record<string, ConfigChannelInfo> = {
+  "cfg-media-buyer": {
+    promptFile: "media-buyer",
+    agentName: "Media Buyer",
+    workChannel: "media-buyer",
+  },
+  "cfg-tm-data": {
+    promptFile: "tm-agent",
+    agentName: "TM Data",
+    workChannel: "tm-data",
+  },
+  "cfg-creative": {
+    promptFile: "creative-agent",
+    agentName: "Creative",
+    workChannel: "creative",
+  },
+  "cfg-reporting": {
+    promptFile: "reporting-agent",
+    agentName: "Reporting",
+    workChannel: "dashboard",
+  },
+  "cfg-discord": {
+    promptFile: "discord-agent",
+    agentName: "Discord Agent",
+    workChannel: null,
+  },
+  "cfg-client-mgr": {
+    promptFile: "client-manager",
+    agentName: "Client Manager",
+    workChannel: "zamora",
+  },
+  "cfg-general": {
+    promptFile: "chat",
+    agentName: "General Chat",
+    workChannel: "general",
+  },
+};
+
+/** Check if a channel name is a config channel */
+export function isConfigChannel(channelName: string): boolean {
+  return channelName in CONFIG_CHANNELS;
+}
+
+/** Get config info for a channel name, or null */
+export function getConfigInfo(channelName: string): ConfigChannelInfo | null {
+  return CONFIG_CHANNELS[channelName] ?? null;
 }

@@ -5,7 +5,9 @@
  * and a function that enforces it: creates what's missing, deletes
  * everything that's not on the whitelist.
  *
- * Layout: 9 channels, 4 categories. Agent-centric -- each channel IS the agent.
+ * Layout: 16 channels, 6 categories.
+ * Work channels: each channel IS the agent.
+ * Control Room: each cfg-* channel shows/edits that agent's files.
  */
 
 import {
@@ -23,9 +25,14 @@ import { state } from "./state.js";
  * The ONLY categories and channels that should exist.
  * Everything else gets deleted.
  *
- * 9 channels for a 9-person team. Every channel has a clear agent or purpose.
+ * 16 channels across 6 categories.
+ * Work channels: where you talk to agents.
+ * Control Room: where you see/edit agent files (prompt, memory, skills).
  */
 export const TARGET_LAYOUT: Record<string, { name: string; topic: string }[]> = {
+  "Boss": [
+    { name: "boss", topic: "Talk to the Boss -- big picture, multi-agent tasks, server management" },
+  ],
   "HQ": [
     { name: "general", topic: "Team chat, announcements, day-to-day discussion" },
     { name: "dashboard", topic: "Live campaign dashboard -- bot embeds, edited in-place" },
@@ -34,11 +41,19 @@ export const TARGET_LAYOUT: Record<string, { name: string; topic: string }[]> = 
     { name: "media-buyer", topic: "Talk to the Media Buyer -- Meta Ads, budgets, ROAS, strategy" },
     { name: "tm-data", topic: "Talk to the TM Agent -- events, tickets, demographics, zip codes" },
     { name: "creative", topic: "Talk to the Creative Agent -- ad images, videos, copy review" },
-    { name: "boss", topic: "Talk to the Boss -- big picture, multi-agent tasks, server management" },
   ],
   "Clients": [
     { name: "zamora", topic: "Zamora -- Arjona, Alofoke, Camila campaigns. Use threads per event." },
     { name: "kybba", topic: "KYBBA campaigns. Use threads per city." },
+  ],
+  "Control Room": [
+    { name: "cfg-media-buyer", topic: "Media Buyer config -- prompt, tools, memory, skills" },
+    { name: "cfg-tm-data", topic: "TM Data config -- prompt, tools, memory, skills" },
+    { name: "cfg-creative", topic: "Creative config -- prompt, tools, memory, skills" },
+    { name: "cfg-reporting", topic: "Reporting config -- prompt, tools, memory, skills" },
+    { name: "cfg-discord", topic: "Discord Agent config -- prompt, tools, memory, skills" },
+    { name: "cfg-client-mgr", topic: "Client Manager config -- prompt, tools, memory, skills" },
+    { name: "cfg-general", topic: "General Chat config -- prompt, tools, memory, skills" },
   ],
   "Feed": [
     { name: "agent-feed", topic: "All bot output: syncs, alerts, jobs, reports -- unified log" },

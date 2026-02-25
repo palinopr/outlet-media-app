@@ -16,7 +16,7 @@ import {
 } from "discord.js";
 import { runClaude } from "./runner.js";
 import { state } from "./state.js";
-import { getAgentForChannel, matchManualTrigger } from "./discord-router.js";
+import { getAgentForChannel, matchManualTrigger, isConfigChannel } from "./discord-router.js";
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;
@@ -42,6 +42,24 @@ let agentBusy = false;
 
 /** Per-channel Claude session IDs for multi-turn context */
 export const channelSessions = new Map<string, string>();
+
+/**
+ * Dedup guard: prevent the same message from being processed twice.
+ * This catches edge cases where discord.js fires messageCreate more than once
+ * (e.g., reconnection replay, multiple bot instances, etc.).
+ */
+const processedMessages = new Set<string>();
+const MAX_PROCESSED = 500;
+
+function markProcessed(msgId: string): boolean {
+  if (processedMessages.has(msgId)) return false; // already seen
+  processedMessages.add(msgId);
+  if (processedMessages.size > MAX_PROCESSED) {
+    const first = processedMessages.values().next().value;
+    if (first) processedMessages.delete(first);
+  }
+  return true; // first time seeing this message
+}
 
 function chunkText(text: string, maxLen: number): string[] {
   const chunks: string[] = [];
@@ -229,6 +247,9 @@ export function startDiscordBot(): void {
     const content = msg.content.trim();
     if (!content) return;
 
+    // Dedup: skip if we already processed this message ID
+    if (!markProcessed(msg.id)) return;
+
     // Run auto-moderation first (fast path, no Claude)
     const { checkAutoMod } = await import("./discord-admin.js");
     const blocked = await checkAutoMod(msg);
@@ -265,6 +286,38 @@ export function startDiscordBot(): void {
       return;
     }
 
+    if (content === "!deploy-configs" || content === "/deploy-configs") {
+      if (!discordClient) { await msg.reply("Bot not connected."); return; }
+      await msg.reply("Deploying agent configs to Control Room...");
+      const { deployAllConfigs } = await import("./discord-config.js");
+      const result = await deployAllConfigs(discordClient);
+      const chunks = chunkText(result, 1900);
+      for (const chunk of chunks) {
+        if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
+      }
+      return;
+    }
+
+    if (content === "!refresh-config" || content === "/refresh-config") {
+      if (!discordClient) { await msg.reply("Bot not connected."); return; }
+      // Refresh just this channel's config if we're in a cfg-* channel
+      if (isConfigChannel(channelName)) {
+        const { deploySingleConfig } = await import("./discord-config.js");
+        const result = await deploySingleConfig(discordClient, channelName);
+        await msg.reply(result);
+      } else {
+        await msg.reply("Run this in a #cfg-* channel, or use `!deploy-configs` for all.");
+      }
+      return;
+    }
+
+    // Config channels: skip agent routing, only respond to commands
+    if (isConfigChannel(channelName)) {
+      // Messages in cfg-* channels that aren't commands are ignored by the bot
+      // (Boss/Jaime writes notes there, bot only acts on ! commands)
+      return;
+    }
+
     // Check for manual job triggers (e.g., "run meta sync" in #media-buyer)
     const trigger = matchManualTrigger(channelName, content);
     if (trigger) {
@@ -297,6 +350,15 @@ const CHANNEL_ROUTES: Record<string, string> = {
   "zamora":        "zamora",
   "kybba":         "kybba",
   "agent-feed":    "agent-feed",
+
+  // Control Room config channels
+  "cfg-media-buyer": "cfg-media-buyer",
+  "cfg-tm-data":     "cfg-tm-data",
+  "cfg-creative":    "cfg-creative",
+  "cfg-reporting":   "cfg-reporting",
+  "cfg-discord":     "cfg-discord",
+  "cfg-client-mgr":  "cfg-client-mgr",
+  "cfg-general":     "cfg-general",
 
   // Aliases for scheduler convenience
   "performance":   "dashboard",

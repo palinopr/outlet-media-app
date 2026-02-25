@@ -236,6 +236,166 @@ curl -s -X POST "https://graph.facebook.com/v21.0/{AD_ID}" \
   -d "access_token=$TOKEN&status=PAUSED"
 ```
 
+### Get ad-level insights (single ad)
+```bash
+curl -s "https://graph.facebook.com/v21.0/{AD_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&date_preset=last_30d&access_token=$TOKEN"
+```
+
+### Check ads for delivery issues
+```bash
+curl -s "https://graph.facebook.com/v21.0/{ADSET_ID}/ads?fields=id,name,status,effective_status,issues_info&access_token=$TOKEN"
+```
+Look for `effective_status=WITH_ISSUES` -- this blocks delivery even if `status=ACTIVE`. Read `issues_info` for the specific error.
+
+---
+
+## Ad Creative Creation
+
+Page ID: 175118299508364
+Instagram ID: 17841402356610735
+
+### Create an ad creative
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/adcreatives" \
+  --data-urlencode "name=Creative Name" \
+  --data-urlencode "object_story_spec={\"page_id\":\"175118299508364\",\"instagram_user_id\":\"17841402356610735\"}" \
+  --data-urlencode "asset_feed_spec=$SPEC_JSON" \
+  --data-urlencode "access_token=$TOKEN"
+```
+
+### Create a new ad (under an adset)
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/ads" \
+  --data-urlencode "name=Ad Name" \
+  --data-urlencode "adset_id={ADSET_ID}" \
+  --data-urlencode "creative={\"creative_id\":\"{CREATIVE_ID}\"}" \
+  --data-urlencode "status=ACTIVE" \
+  --data-urlencode "access_token=$TOKEN"
+```
+
+### Get an ad's creative details
+```bash
+curl -s "https://graph.facebook.com/v21.0/{AD_ID}?fields=name,adset_id,creative{asset_feed_spec}&access_token=$TOKEN"
+```
+
+---
+
+## Ad Delivery Error Fixing
+
+### Error code 2490085 -- Deprecated 191x100 image crop key
+
+HARD_ERROR. The ad creative has `"image_crops": {"191x100": [[x,y],[w,h]]}` in `asset_feed_spec.images` -- Meta deprecated this crop key.
+
+**Step 1: Get the broken ad's creative**
+```bash
+curl -s "https://graph.facebook.com/v21.0/{AD_ID}?fields=name,adset_id,creative{asset_feed_spec}&access_token=$TOKEN"
+```
+Find the image entry with `image_crops.191x100`. Note its `hash` and `adlabels`.
+
+**Step 2: Determine whether the broken image hash is duplicated**
+- Scan all other entries in `asset_feed_spec.images`
+- If another entry has the same hash: the 191x100 image was a cropped version of an existing image. Drop it entirely. Update `asset_customization_rules` to point any rules that referenced the broken image's label to the surviving image's label.
+- If the hash is unique: rebuild the creative with the same image minus the `image_crops` field.
+
+**Step 3: Create new creative with fresh label names**
+DO NOT reuse original `placement_asset_HASH_TIMESTAMP` label names -- they belong to the old creative. Use simple new names:
+```json
+{
+  "images": [
+    {"adlabels": [{"name": "fix_img_main"}], "hash": "MAIN_HASH"},
+    {"adlabels": [{"name": "fix_img_stories"}], "hash": "STORIES_HASH"}
+  ],
+  "bodies": [{"adlabels": [{"name": "fix_body"}], "text": "Ad body text"}],
+  "call_to_action_types": ["SHOP_NOW"],
+  "descriptions": [{"text": ""}],
+  "link_urls": [{"adlabels": [{"name": "fix_link"}], "website_url": "https://..."}],
+  "titles": [{"adlabels": [{"name": "fix_title"}], "text": "Shop Now"}],
+  "ad_formats": ["AUTOMATIC_FORMAT"],
+  "asset_customization_rules": [
+    {
+      "customization_spec": {
+        "age_max": 65, "age_min": 13,
+        "publisher_platforms": ["facebook","instagram","audience_network","messenger"],
+        "facebook_positions": ["facebook_reels","story"],
+        "instagram_positions": ["ig_search","profile_reels","story","reels"],
+        "messenger_positions": ["story"],
+        "audience_network_positions": ["classic"]
+      },
+      "image_label": {"name": "fix_img_stories"}, "body_label": {"name": "fix_body"},
+      "link_url_label": {"name": "fix_link"}, "title_label": {"name": "fix_title"}, "priority": 1
+    },
+    {
+      "customization_spec": {"age_max": 65, "age_min": 13},
+      "image_label": {"name": "fix_img_main"}, "body_label": {"name": "fix_body"},
+      "link_url_label": {"name": "fix_link"}, "title_label": {"name": "fix_title"}, "priority": 2
+    }
+  ],
+  "optimization_type": "PLACEMENT",
+  "additional_data": {"multi_share_end_card": false, "is_click_to_message": false}
+}
+```
+
+**Step 4: POST new creative, create new ad, pause old ad**
+```bash
+# Create creative
+curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/adcreatives" \
+  --data-urlencode "name=Ad name fixed" \
+  --data-urlencode "object_story_spec={\"page_id\":\"175118299508364\",\"instagram_user_id\":\"17841402356610735\"}" \
+  --data-urlencode "asset_feed_spec=$SPEC_JSON" \
+  --data-urlencode "access_token=$TOKEN"
+
+# Create new ad (ACTIVE)
+curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/ads" \
+  --data-urlencode "name=asset N" \
+  --data-urlencode "adset_id={ADSET_ID}" \
+  --data-urlencode "creative={\"creative_id\":\"{NEW_CREATIVE_ID}\"}" \
+  --data-urlencode "status=ACTIVE" \
+  --data-urlencode "access_token=$TOKEN"
+
+# Pause old broken ad
+curl -s -X POST "https://graph.facebook.com/v21.0/{OLD_AD_ID}" \
+  -d "access_token=$TOKEN&status=PAUSED"
+```
+
+**Step 5: Verify**
+```bash
+curl -s "https://graph.facebook.com/v21.0/{NEW_AD_ID}?fields=name,status,effective_status,issues_info&access_token=$TOKEN"
+```
+Expect `effective_status=IN_PROCESS` (review) or `ACTIVE`. No `issues_info`.
+
+---
+
+## Adset Advanced Operations
+
+### Read current targeting for an adset
+```bash
+curl -s "https://graph.facebook.com/v21.0/{ADSET_ID}?fields=id,name,targeting&access_token=$TOKEN"
+```
+Targeting includes `geo_locations` (countries, regions, cities, custom_locations), `age_min`, `age_max`, `genders`, `flexible_spec` (interests).
+
+### Get adset-level insights (single adset)
+```bash
+curl -s "https://graph.facebook.com/v21.0/{ADSET_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&date_preset=last_30d&access_token=$TOKEN"
+```
+
+### Bulk targeting updates
+When updating multiple adsets (e.g., expanding radius across all adsets in a campaign):
+1. List all adsets for the campaign
+2. For each adset: GET current targeting -> modify -> POST back
+3. Verify each -- Meta Ads Manager UI may lag but API confirms all updated. Trust the API.
+
+### Adset optimization workflow (KYBBA-style deep dive)
+1. List adsets: `GET /{CAMPAIGN_ID}/adsets?fields=id,name,status&limit=50`
+2. Get per-adset insights: `GET /{CAMPAIGN_ID}/insights?fields=spend,purchase_roas,actions&date_preset=last_30d&level=adset`
+3. Calculate CPA per adset: spend / purchases (from `actions` where `action_type=purchase`)
+4. Kill worst performers (highest CPA), activate best paused options
+5. Verify each change, report lineup to Jaime
+
+### List all pixels in Business Manager
+```bash
+curl -s "https://graph.facebook.com/v21.0/229314527708647/owned_pixels?fields=id,name&access_token=$TOKEN"
+```
+
 ---
 
 ## Business Manager Operations
@@ -347,6 +507,61 @@ curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=sn
 ```
 
 Column naming: campaign name column is `name` (NOT `campaign_name`).
+
+---
+
+## Ingest Endpoint
+
+POSTs data to the dashboard database (Supabase via Next.js app).
+
+```bash
+INGEST_URL=$(grep INGEST_URL .env | cut -d= -f2)
+INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
+```
+
+### POST Meta campaigns to dashboard
+```bash
+curl -s -X POST "$INGEST_URL" \
+  -H "Content-Type: application/json" \
+  -d '{"secret":"'"$INGEST_SECRET"'","source":"meta","data":{"campaigns":[...],"scraped_at":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}}'
+```
+
+### Ingest field mapping (EXACT field names required)
+- `campaign_id`, `name`, `status`, `objective`, `client_slug` -- pass through as-is
+- `daily_budget` -- in CENTS (Meta's native format)
+- `lifetime_budget` -- in CENTS
+- `spend` -- in CENTS. Meta returns dollars, multiply by 100 before sending to ingest
+- `impressions`, `clicks`, `reach` -- pass through as-is (integers)
+- `cpm`, `cpc` -- pass through as-is (dollar values, NOT converted to cents)
+- `ctr` -- pass through as-is (percentage value, e.g. 1.48 means 1.48%). NOT monetary -- do NOT multiply by 100
+- `roas` -- pass through as-is (float, e.g. 8.4)
+- `start_time` -- ISO8601 string from Meta. MUST be included -- pacing calculations depend on it
+
+DO NOT omit `daily_budget`, `start_time`, or `lifetime_budget` from the ingest payload.
+
+### Client slug mapping (campaign name -> client_slug)
+- Contains "arjona" -> "zamora"
+- Contains "alofoke" -> "zamora" (sub-brand)
+- Contains "camila" -> "zamora" (sub-brand)
+- Starts with "KYBBA" -> "kybba"
+- Starts with "Beamina" -> "beamina"
+- Starts with "Happy Paws" -> "happy_paws"
+- Starts with "Zamora" -> "zamora"
+- Otherwise -> "unknown" (log a warning)
+
+---
+
+## Session Cache Format
+
+Files in `session/` are bare JSON arrays. Check file mtime for last sync time.
+
+Each campaign in `last-campaigns.json` should include ALL of these fields:
+- campaign_id, name, status, objective, client_slug
+- daily_budget_cents (from Meta daily_budget, already in cents), lifetime_budget_cents
+- spend (in DOLLARS as received from Meta insights, NOT converted to cents)
+- impressions, clicks, reach, cpm, cpc, ctr, roas
+- purchases (integer from `actions` where `action_type=purchase`. Used for CPA calculations)
+- start_time (ISO8601 string from Meta -- needed for pacing calculations)
 
 ---
 
