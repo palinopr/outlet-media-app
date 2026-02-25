@@ -8,14 +8,15 @@
  *
  * Supported actions:
  *   create_channel   name="x" category="y" topic="z"
+ *   delete_channel   name="x"
  *   archive_channel  name="x"
  *   rename_channel   from="x" to="y"
  *   move_channel     name="x" category="y"
+ *   set_topic        name="x" topic="z"
  *   create_category  name="x"
- *   delete_category  name="x"  (only if empty)
+ *   delete_category  name="x"  (deletes category + all channels inside it)
  *   create_role      name="x" color="hex"
  *   rename_category  from="x" to="y"
- *   restructure      (no params -- runs full server restructure)
  *   restart          (restarts the bot process)
  */
 
@@ -203,6 +204,32 @@ async function executeSingle(
       return ok(command, `Created category: ${name}`);
     }
 
+    case "delete_channel": {
+      const { name } = params;
+      if (!name) return fail(command, "Missing name parameter");
+
+      const ch = g.channels.cache.find(
+        c => c.name === name && c.type === ChannelType.GuildText
+      );
+      if (!ch) return fail(command, `#${name} not found`);
+
+      await ch.delete();
+      return ok(command, `Deleted #${name}`);
+    }
+
+    case "set_topic": {
+      const { name, topic } = params;
+      if (!name || !topic) return fail(command, "Missing name/topic parameters");
+
+      const ch = g.channels.cache.find(
+        c => c.name === name && c.type === ChannelType.GuildText
+      );
+      if (!ch) return fail(command, `#${name} not found`);
+
+      await (ch as TextChannel).setTopic(topic);
+      return ok(command, `Set topic on #${name}`);
+    }
+
     case "delete_category": {
       const { name } = params;
       if (!name) return fail(command, "Missing name parameter");
@@ -212,13 +239,16 @@ async function executeSingle(
       );
       if (!cat) return fail(command, `Category "${name}" not found`);
 
+      // Delete all children first, then the category itself
       const children = g.channels.cache.filter(c => c.parentId === cat.id);
-      if (children.size > 0) {
-        return fail(command, `Category "${name}" has ${children.size} channels -- move them first`);
+      let deleted = 0;
+      for (const [, child] of children) {
+        await child.delete().catch(() => {});
+        deleted++;
       }
 
       await cat.delete();
-      return ok(command, `Deleted empty category: ${name}`);
+      return ok(command, `Deleted category "${name}" and ${deleted} channels inside it`);
     }
 
     case "rename_category": {

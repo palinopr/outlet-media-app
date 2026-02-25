@@ -96,14 +96,17 @@ async function handleMessage(msg: Message, prompt: string) {
   const existingSession = channelSessions.get(chId);
 
   // Use admin prompt in the dedicated admin channel, chat prompt everywhere else
-  const { isAdminChannel } = await import("./discord-admin.js");
+  const { isAdminChannel, buildAdminPrompt } = await import("./discord-admin.js");
   const isAdmin = isAdminChannel(chId);
-  const promptType = isAdmin ? "discord-admin" : "chat";
 
   try {
+    // For admin channel: inject live server snapshot into the system prompt
+    const adminSystemPrompt = isAdmin ? await buildAdminPrompt() : undefined;
+
     const result = await runClaude({
       prompt,
-      systemPromptName: promptType,
+      systemPromptName: isAdmin ? "discord-admin" : "chat",
+      systemPrompt: adminSystemPrompt,
       resumeSessionId: existingSession,
       onChunk: async (chunk: string) => {
         buffer += chunk;

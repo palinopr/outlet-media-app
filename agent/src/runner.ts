@@ -31,6 +31,8 @@ export interface RunnerOptions {
   prompt: string;
   /** Which prompts/*.txt file to use as system prompt. Default: "command" */
   systemPromptName?: string;
+  /** Direct system prompt text. Takes precedence over systemPromptName. */
+  systemPrompt?: string;
   /** Overrides the per-agent maxTurns lookup */
   maxTurns?: number;
   /** Called with each stdout chunk — use for live streaming to Supabase */
@@ -60,6 +62,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
   const {
     prompt,
     systemPromptName = "command",
+    systemPrompt: directSystemPrompt,
     maxTurns = 20,
     onChunk,
     resumeSessionId,
@@ -68,16 +71,21 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
   // When resuming, the system prompt is already baked into the session
   let systemPrompt = "";
   if (!resumeSessionId) {
-    try {
-      systemPrompt = loadPrompt(systemPromptName);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[runner] Prompt file not found: prompts/${systemPromptName}.txt`);
-      return {
-        text: `Error: prompt file '${systemPromptName}.txt' not found.`,
-        success: false,
-        error: msg,
-      };
+    if (directSystemPrompt) {
+      // Caller provided the full system prompt text (e.g. with injected data)
+      systemPrompt = directSystemPrompt;
+    } else {
+      try {
+        systemPrompt = loadPrompt(systemPromptName);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[runner] Prompt file not found: prompts/${systemPromptName}.txt`);
+        return {
+          text: `Error: prompt file '${systemPromptName}.txt' not found.`,
+          success: false,
+          error: msg,
+        };
+      }
     }
   }
 
