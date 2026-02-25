@@ -21,6 +21,7 @@ import { getAgentForChannel, matchManualTrigger, isConfigChannel, isInternalChan
 import { handleScheduleCommand, initScheduleJobs } from "./discord-schedule.js";
 import { handleSuperviseCommand } from "./discord-supervisor.js";
 import { handleDashboardCommand } from "./discord-dashboard.js";
+import { loadAgentMemory } from "./discord-memory.js";
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;
@@ -135,6 +136,26 @@ async function handleMessage(
     if (agent.injectSnapshot) {
       const { buildAdminPrompt } = await import("./discord-admin.js");
       systemPrompt = await buildAdminPrompt(agent.promptFile);
+    }
+
+    // Inject agent memory into system prompt (persisted learnings from past sessions)
+    const memory = await loadAgentMemory(agent.promptFile);
+    if (memory) {
+      if (systemPrompt) {
+        // Already have a custom system prompt (e.g. Boss with snapshot) -- append memory
+        systemPrompt += memory;
+      } else {
+        // No custom prompt yet -- read the prompt file and append memory
+        const fs = await import("node:fs/promises");
+        const path = await import("node:path");
+        try {
+          const promptPath = path.join(process.cwd(), "prompts", `${agent.promptFile}.txt`);
+          const base = await fs.readFile(promptPath, "utf-8");
+          systemPrompt = base + memory;
+        } catch {
+          // Prompt file not found -- let runner handle the fallback
+        }
+      }
     }
 
     const result = await runClaude({
@@ -314,32 +335,39 @@ export function startDiscordBot(): void {
         "`!status` -- check if the agent is idle or busy",
         "`!reset` -- clear conversation context in this channel",
         "",
-        "**Agent channels** -- just type naturally in any agent channel:",
-        "  #boss -- orchestrator, multi-agent tasks, server management",
-        "  #media-buyer -- Meta Ads, budgets, ROAS, strategy",
-        "  #tm-data -- Ticketmaster events, ticket data, demographics",
-        "  #creative -- ad creative review, copy, images",
-        "  #dashboard -- reporting, analytics, campaign trends",
-        "  #zamora / #kybba -- client-specific conversations",
-        "  #general -- general chat",
+        "**Agent channels** -- just type naturally:",
+        "  #boss -- orchestrator, delegation, supervision",
+        "  #media-buyer -- Meta Ads, budgets, ROAS",
+        "  #tm-data -- Ticketmaster events, demographics",
+        "  #creative -- ad creative, copy, images",
+        "  #dashboard -- reporting, analytics, trends",
+        "  #zamora / #kybba -- client conversations",
+        "  #general -- team chat",
         "",
-        "**Manual triggers** (type in the relevant channel):",
-        "  `run meta sync` (in #media-buyer) -- pull Meta campaign data",
-        "  `run tm sync` (in #tm-data) -- scrape TM One",
-        "  `run think` (any channel) -- trigger think loop",
+        "**Manual triggers:**",
+        "  `run meta sync` (in #media-buyer)",
+        "  `run tm sync` (in #tm-data)",
+        "  `run think` (any channel)",
+        "",
+        "**Threads** (in #zamora, #kybba):",
+        "  `thread: Event Name` -- create a thread for a campaign/event",
+        "  `!threads` -- list active threads",
         "",
         "**Admin:**",
         "  `!supervise` -- Boss reviews all agent activity",
-        "  `!dashboard` -- update campaign status embed in #dashboard",
-        "  `!roles` -- create Admin/Team/Bot/Viewer roles",
-        "  `!restructure` -- enforce full server layout (categories + channels + roles)",
-        "  `!deploy-internals` -- sync memory + skills files to Discord channels",
+        "  `!dashboard` -- update campaign status panel",
+        "  `!roles` -- ensure Admin/Team/Bot/Viewer roles",
+        "  `!restructure` -- enforce full server layout",
+        "  `!deploy-internals` -- sync memory + skills to channels",
         "",
-        "**Schedule** (in #schedule only):",
-        "  `!schedule list` -- show all jobs with status",
+        "**Schedule** (in #schedule):",
+        "  `!schedule list` -- show all jobs with status + buttons",
         "  `!enable <job>` / `!disable <job>` -- toggle a job",
-        "  `!enable-all` / `!disable-all` -- toggle all jobs",
+        "  `!enable-all` / `!disable-all` -- toggle all",
         "  Jobs: `meta-sync`, `tm-sync`, `think`, `heartbeat`, `health-check`",
+        "",
+        "**Buttons:** Dashboard and schedule embeds have quick-action buttons.",
+        "**Memory:** Agents auto-learn from conversations and persist to memory files.",
       ].join("\n");
       await msg.reply(helpText);
       return;

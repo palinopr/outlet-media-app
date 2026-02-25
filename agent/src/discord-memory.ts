@@ -125,3 +125,28 @@ async function loadExistingMemory(path: string): Promise<string> {
     return "(could not read)";
   }
 }
+
+/**
+ * Load an agent's memory file for injection into the system prompt.
+ * Returns the memory content formatted for prompt injection, or empty string
+ * if the agent has no memory file or it's empty.
+ *
+ * Called by handleMessage in discord.ts before every Claude call.
+ */
+export async function loadAgentMemory(promptFile: string): Promise<string> {
+  const agentKey = PROMPT_TO_AGENT[promptFile];
+  if (!agentKey) return "";
+
+  const internals = AGENT_INTERNALS[agentKey];
+  if (!internals) return "";
+
+  const content = await loadExistingMemory(internals.memoryFile);
+  if (!content || content === "(empty)" || content === "(could not read)") return "";
+
+  return [
+    "",
+    "--- AGENT MEMORY (persisted across sessions) ---",
+    content,
+    "--- END AGENT MEMORY ---",
+  ].join("\n");
+}
