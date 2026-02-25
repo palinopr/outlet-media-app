@@ -5,9 +5,8 @@
  * and a function that enforces it: creates what's missing, deletes
  * everything that's not on the whitelist.
  *
- * Layout: 16 channels, 6 categories.
- * Work channels: each channel IS the agent.
- * Control Room: each cfg-* channel shows/edits that agent's files.
+ * Layout: 21 channels, 7 categories.
+ * Each agent gets its own category with: work channel, memory, skills.
  */
 
 import {
@@ -25,38 +24,46 @@ import { state } from "./state.js";
  * The ONLY categories and channels that should exist.
  * Everything else gets deleted.
  *
- * 16 channels across 6 categories.
- * Work channels: where you talk to agents.
- * Control Room: where you see/edit agent files (prompt, memory, skills).
+ * 21 channels across 7 categories.
+ * Each agent category has: work channel, memory channel, skills channel.
+ * HQ has: general chat, agent feed, schedule config.
  */
 export const TARGET_LAYOUT: Record<string, { name: string; topic: string }[]> = {
   "Boss": [
     { name: "boss", topic: "Talk to the Boss -- big picture, multi-agent tasks, server management" },
+    { name: "boss-memory", topic: "Boss agent persistent memory -- auto-synced from memory/boss.md" },
+    { name: "boss-skills", topic: "Boss agent skills and capabilities" },
   ],
-  "HQ": [
-    { name: "general", topic: "Team chat, announcements, day-to-day discussion" },
-    { name: "dashboard", topic: "Live campaign dashboard -- bot embeds, edited in-place" },
-  ],
-  "Agents": [
+  "Media Buyer": [
     { name: "media-buyer", topic: "Talk to the Media Buyer -- Meta Ads, budgets, ROAS, strategy" },
+    { name: "mb-memory", topic: "Media Buyer memory -- Meta API patterns, campaign data" },
+    { name: "mb-skills", topic: "Media Buyer skills and learned patterns" },
+  ],
+  "TM Data": [
     { name: "tm-data", topic: "Talk to the TM Agent -- events, tickets, demographics, zip codes" },
+    { name: "tm-memory", topic: "TM Agent memory -- events, scraper state, shows" },
+    { name: "tm-skills", topic: "TM Agent skills and automation patterns" },
+  ],
+  "Creative": [
     { name: "creative", topic: "Talk to the Creative Agent -- ad images, videos, copy review" },
+    { name: "creative-memory", topic: "Creative agent memory -- top performers, strategies" },
+    { name: "creative-skills", topic: "Creative agent skills and creative patterns" },
+  ],
+  "Reporting": [
+    { name: "dashboard", topic: "Talk to the Reporting Agent -- analytics, trends, campaign data" },
+    { name: "reporting-memory", topic: "Reporting agent memory -- Supabase schema, pipeline status" },
+    { name: "reporting-skills", topic: "Reporting agent skills and analytics patterns" },
   ],
   "Clients": [
     { name: "zamora", topic: "Zamora -- Arjona, Alofoke, Camila campaigns. Use threads per event." },
     { name: "kybba", topic: "KYBBA campaigns. Use threads per city." },
+    { name: "clients-memory", topic: "Client Manager memory -- client profiles, budgets, shows" },
+    { name: "clients-skills", topic: "Client Manager skills and relationship patterns" },
   ],
-  "Control Room": [
-    { name: "cfg-media-buyer", topic: "Media Buyer config -- prompt, tools, memory, skills" },
-    { name: "cfg-tm-data", topic: "TM Data config -- prompt, tools, memory, skills" },
-    { name: "cfg-creative", topic: "Creative config -- prompt, tools, memory, skills" },
-    { name: "cfg-reporting", topic: "Reporting config -- prompt, tools, memory, skills" },
-    { name: "cfg-discord", topic: "Discord Agent config -- prompt, tools, memory, skills" },
-    { name: "cfg-client-mgr", topic: "Client Manager config -- prompt, tools, memory, skills" },
-    { name: "cfg-general", topic: "General Chat config -- prompt, tools, memory, skills" },
-  ],
-  "Feed": [
+  "HQ": [
+    { name: "general", topic: "Team chat, announcements, day-to-day discussion" },
     { name: "agent-feed", topic: "All bot output: syncs, alerts, jobs, reports -- unified log" },
+    { name: "schedule", topic: "View and configure scheduled jobs -- nothing runs until enabled here" },
   ],
 };
 
@@ -144,7 +151,6 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
     // --- Phase 2: Delete everything not whitelisted -----
     await g.channels.fetch();
 
-    // Delete ALL non-whitelisted, non-category channels
     const allChannels = g.channels.cache.filter(
       c => c.type !== ChannelType.GuildCategory
     );
@@ -162,7 +168,6 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
       }
     }
 
-    // Delete non-whitelisted categories + any remaining children
     const allCategories = g.channels.cache.filter(
       c => c.type === ChannelType.GuildCategory
     );
@@ -204,7 +209,6 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
       }
     }
 
-    // Delete non-target roles (skip @everyone and integration-managed roles)
     for (const [, role] of g.roles.cache) {
       if (role.name === "@everyone") continue;
       if (role.managed) continue;

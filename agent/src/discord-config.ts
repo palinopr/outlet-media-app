@@ -1,15 +1,14 @@
 /**
- * discord-config.ts -- Control Room: agent config channels.
+ * discord-config.ts -- Agent internals deployment.
  *
- * Each agent has a cfg-* channel in the "Control Room" category.
- * These channels display:
- *   1. Embed overview: agent name, prompt file, line count, sections, skills
- *   2. Prompt file attached as .txt
- *   3. MEMORY.md relevant sections
- *   4. Skills directory listing
+ * Each agent has memory + skills channels in its category.
+ * This module syncs agent memory files and skills directories
+ * to their corresponding Discord channels as rich embeds.
  *
- * When a prompt file changes, the update is posted to the channel.
- * Boss can read these to supervise all agents.
+ * Memory channels show: the agent's memory file content
+ * Skills channels show: prompt overview, skills files, tools list
+ *
+ * Triggered by: !deploy-internals command
  */
 
 import { readFile, readdir, stat } from "node:fs/promises";
@@ -20,25 +19,10 @@ import {
   EmbedBuilder,
   AttachmentBuilder,
 } from "discord.js";
-import { CONFIG_CHANNELS, type ConfigChannelInfo } from "./discord-router.js";
+import { AGENT_INTERNALS, type AgentInternals } from "./discord-router.js";
 
 const AGENT_DIR = resolve(".");
 const PROMPTS_DIR = join(AGENT_DIR, "prompts");
-const SKILLS_DIR = join(AGENT_DIR, "skills");
-const MEMORY_FILE = join(AGENT_DIR, "MEMORY.md");
-const LEARNINGS_FILE = join(AGENT_DIR, "LEARNINGS.md");
-
-// Track file hashes for change detection
-const promptHashes = new Map<string, string>();
-
-/** Simple hash for change detection (not crypto, just comparison) */
-function quickHash(content: string): string {
-  let h = 0;
-  for (let i = 0; i < content.length; i++) {
-    h = ((h << 5) - h + content.charCodeAt(i)) | 0;
-  }
-  return h.toString(36);
-}
 
 /** Read a file safely, return null on error */
 async function safeRead(path: string): Promise<string | null> {
@@ -52,7 +36,8 @@ async function safeRead(path: string): Promise<string | null> {
 /** List files in a directory safely */
 async function safeReaddir(path: string): Promise<string[]> {
   try {
-    return await readdir(path);
+    const entries = await readdir(path);
+    return entries.filter(f => f !== ".gitkeep");
   } catch {
     return [];
   }
@@ -68,245 +53,239 @@ async function fileMtime(path: string): Promise<Date | null> {
   }
 }
 
-/** Extract section headers (## lines) from a prompt file */
-function extractSections(content: string): string[] {
-  return content
-    .split("\n")
-    .filter((line) => /^##\s/.test(line))
-    .map((line) => line.replace(/^##\s+/, "").trim());
-}
-
 /** Count lines in content */
 function lineCount(content: string): number {
   return content.split("\n").length;
 }
 
-/** Find skills files relevant to an agent (by prefix or general) */
-async function findAgentSkills(promptFile: string): Promise<string[]> {
-  const allFiles = await safeReaddir(SKILLS_DIR);
-  return allFiles.filter(
-    (f) =>
-      f.endsWith(".md") &&
-      f !== ".gitkeep" &&
-      (f.startsWith(promptFile) || f.startsWith("general")),
-  );
+/** Extract ## section headers from markdown */
+function extractSections(content: string): string[] {
+  return content
+    .split("\n")
+    .filter(line => /^##\s/.test(line))
+    .map(line => line.replace(/^##\s+/, "").trim());
 }
 
-/**
- * Build the embed + attachments for one agent's config channel.
- */
-async function buildAgentConfig(
-  info: ConfigChannelInfo,
-): Promise<{ embed: EmbedBuilder; files: AttachmentBuilder[] }> {
-  const promptPath = join(PROMPTS_DIR, `${info.promptFile}.txt`);
-  const promptContent = await safeRead(promptPath);
-  const memoryContent = await safeRead(MEMORY_FILE);
-  const learningsContent = await safeRead(LEARNINGS_FILE);
-  const skills = await findAgentSkills(info.promptFile);
-  const promptMtime = await fileMtime(promptPath);
-  const memoryMtime = await fileMtime(MEMORY_FILE);
-
-  const lines = promptContent ? lineCount(promptContent) : 0;
-  const sections = promptContent ? extractSections(promptContent) : [];
-
-  // Build the overview embed
-  const embed = new EmbedBuilder()
-    .setTitle(`${info.agentName} -- Agent Config`)
-    .setColor(0xfdd835)
-    .setDescription(
-      `Work channel: ${info.workChannel ? `#${info.workChannel}` : "none"}\n` +
-        `Prompt: \`prompts/${info.promptFile}.txt\` (${lines} lines)\n` +
-        `Last updated: ${promptMtime ? promptMtime.toISOString().split("T")[0] : "unknown"}`,
-    )
-    .addFields(
-      {
-        name: "Sections",
-        value:
-          sections.length > 0
-            ? sections.map((s) => `- ${s}`).join("\n")
-            : "No sections found",
-        inline: false,
-      },
-      {
-        name: "Skills",
-        value:
-          skills.length > 0
-            ? skills.map((s) => `- \`${s}\``).join("\n")
-            : "No skills yet -- agent will create them as it learns",
-        inline: false,
-      },
-      {
-        name: "Shared Files",
-        value:
-          `- MEMORY.md (${memoryContent ? lineCount(memoryContent) : 0} lines, ` +
-          `updated ${memoryMtime ? memoryMtime.toISOString().split("T")[0] : "never"})\n` +
-          `- LEARNINGS.md (${learningsContent ? lineCount(learningsContent) : 0} lines)`,
-        inline: false,
-      },
-    )
-    .setFooter({
-      text: "Boss can modify this agent by posting instructions here",
-    });
-
-  // Attach the prompt file
-  const files: AttachmentBuilder[] = [];
-  if (promptContent) {
-    files.push(
-      new AttachmentBuilder(Buffer.from(promptContent, "utf-8"), {
-        name: `${info.promptFile}.txt`,
-        description: `${info.agentName} prompt file (${lines} lines)`,
-      }),
-    );
+/** Chunk a long string into Discord-safe pieces */
+function chunkText(text: string, maxLen: number): string[] {
+  const chunks: string[] = [];
+  let i = 0;
+  while (i < text.length) {
+    chunks.push(text.slice(i, i + maxLen));
+    i += maxLen;
   }
-
-  return { embed, files };
+  return chunks;
 }
 
 /**
- * Resolve a config channel by name from the guild.
+ * Find a text channel by name in the guild.
  */
-function resolveConfigChannel(
-  client: Client,
-  channelName: string,
-): TextChannel | null {
+function findChannel(client: Client, channelName: string): TextChannel | null {
   const guild = client.guilds.cache.first();
   if (!guild) return null;
-
   const ch = guild.channels.cache.find(
-    (c) => c.name === channelName && c.isTextBased(),
+    c => c.name === channelName && c.isTextBased()
   );
   return (ch as TextChannel) ?? null;
 }
 
 /**
- * Deploy all agent configs to their Control Room channels.
- * Clears existing messages and posts fresh embed + file.
- *
- * Called by !deploy-configs command.
+ * Clear bot messages from a channel (up to 50).
  */
-export async function deployAllConfigs(client: Client): Promise<string> {
+async function clearBotMessages(channel: TextChannel, botId: string): Promise<void> {
+  const messages = await channel.messages.fetch({ limit: 50 });
+  const botMessages = messages.filter(m => m.author.id === botId);
+  for (const [, msg] of botMessages) {
+    await msg.delete().catch(() => {});
+  }
+}
+
+// --- Memory Channel Deployment -------------------------------------------
+
+/**
+ * Deploy an agent's memory to its memory channel.
+ * Posts the memory file content as an embed + raw .md attachment.
+ */
+async function deployMemory(
+  client: Client,
+  agent: AgentInternals,
+): Promise<string> {
+  const channel = findChannel(client, agent.memoryChannel);
+  if (!channel) return `#${agent.memoryChannel}: not found`;
+
+  const memoryPath = join(AGENT_DIR, agent.memoryFile);
+  const content = await safeRead(memoryPath);
+  const mtime = await fileMtime(memoryPath);
+
+  if (!content) {
+    return `#${agent.memoryChannel}: no memory file (${agent.memoryFile})`;
+  }
+
+  const botId = client.user?.id ?? "";
+  await clearBotMessages(channel, botId);
+
+  const sections = extractSections(content);
+  const lines = lineCount(content);
+
+  const embed = new EmbedBuilder()
+    .setTitle(`${agent.name} -- Memory`)
+    .setColor(0x42a5f5)
+    .setDescription(
+      `Source: \`${agent.memoryFile}\` (${lines} lines)\n` +
+      `Updated: ${mtime ? mtime.toISOString().split("T")[0] : "unknown"}`
+    )
+    .addFields({
+      name: "Sections",
+      value: sections.length > 0
+        ? sections.map(s => `- ${s}`).join("\n")
+        : "No sections",
+      inline: false,
+    });
+
+  // Post the embed
+  await channel.send({ embeds: [embed] });
+
+  // Post the memory content in readable chunks
+  const readable = content.trim();
+  const chunks = chunkText(readable, 1900);
+  for (const chunk of chunks) {
+    await channel.send(`\`\`\`md\n${chunk}\n\`\`\``);
+  }
+
+  // Attach raw file
+  const attachment = new AttachmentBuilder(
+    Buffer.from(content, "utf-8"),
+    { name: agent.memoryFile.split("/").pop() ?? "memory.md" }
+  );
+  await channel.send({ files: [attachment] });
+
+  return `#${agent.memoryChannel}: deployed (${lines} lines)`;
+}
+
+// --- Skills Channel Deployment -------------------------------------------
+
+/**
+ * Deploy an agent's skills + prompt overview to its skills channel.
+ * Shows: prompt summary, tools list, skills files.
+ */
+async function deploySkills(
+  client: Client,
+  agent: AgentInternals,
+): Promise<string> {
+  const channel = findChannel(client, agent.skillsChannel);
+  if (!channel) return `#${agent.skillsChannel}: not found`;
+
+  const botId = client.user?.id ?? "";
+  await clearBotMessages(channel, botId);
+
+  // Read prompt file
+  const promptPath = join(PROMPTS_DIR, `${agent.promptFile}.txt`);
+  const promptContent = await safeRead(promptPath);
+  const promptMtime = await fileMtime(promptPath);
+  const promptLines = promptContent ? lineCount(promptContent) : 0;
+  const promptSections = promptContent ? extractSections(promptContent) : [];
+
+  // Read skills directory
+  const skillsPath = join(AGENT_DIR, agent.skillsDir);
+  const skillFiles = await safeReaddir(skillsPath);
+
+  // Build embed
+  const embed = new EmbedBuilder()
+    .setTitle(`${agent.name} -- Skills & Config`)
+    .setColor(0xab47bc)
+    .setDescription(
+      `Prompt: \`prompts/${agent.promptFile}.txt\` (${promptLines} lines)\n` +
+      `Updated: ${promptMtime ? promptMtime.toISOString().split("T")[0] : "unknown"}\n` +
+      `Skills dir: \`${agent.skillsDir}/\``
+    )
+    .addFields(
+      {
+        name: "Tools",
+        value: agent.tools.length > 0
+          ? agent.tools.map(t => `- ${t}`).join("\n")
+          : "No tools configured",
+        inline: false,
+      },
+      {
+        name: "Prompt Sections",
+        value: promptSections.length > 0
+          ? promptSections.map(s => `- ${s}`).join("\n")
+          : "No sections found",
+        inline: false,
+      },
+      {
+        name: "Learned Skills",
+        value: skillFiles.length > 0
+          ? skillFiles.map(f => `- \`${f}\``).join("\n")
+          : "No skills yet -- agent will create them as it learns",
+        inline: false,
+      },
+    )
+    .setFooter({ text: "Agent can add skills autonomously during operation" });
+
+  await channel.send({ embeds: [embed] });
+
+  // Attach prompt file
+  if (promptContent) {
+    const attachment = new AttachmentBuilder(
+      Buffer.from(promptContent, "utf-8"),
+      {
+        name: `${agent.promptFile}.txt`,
+        description: `${agent.name} prompt (${promptLines} lines)`,
+      }
+    );
+    await channel.send({ files: [attachment] });
+  }
+
+  // Attach each skill file
+  for (const skillFile of skillFiles) {
+    const skillContent = await safeRead(join(skillsPath, skillFile));
+    if (skillContent) {
+      const attachment = new AttachmentBuilder(
+        Buffer.from(skillContent, "utf-8"),
+        { name: skillFile }
+      );
+      await channel.send({ files: [attachment] });
+    }
+  }
+
+  const total = skillFiles.length;
+  return `#${agent.skillsChannel}: deployed (${agent.tools.length} tools, ${total} skills)`;
+}
+
+// --- Public API -----------------------------------------------------------
+
+/**
+ * Deploy all agent internals (memory + skills) to their Discord channels.
+ * Called by !deploy-internals command.
+ */
+export async function deployAllInternals(client: Client): Promise<string> {
   const results: string[] = [];
 
-  for (const [channelName, info] of Object.entries(CONFIG_CHANNELS)) {
-    const channel = resolveConfigChannel(client, channelName);
-    if (!channel) {
-      results.push(`#${channelName}: channel not found (run !restructure first)`);
-      continue;
-    }
-
-    try {
-      // Clear previous config messages from the bot
-      const messages = await channel.messages.fetch({ limit: 50 });
-      const botMessages = messages.filter((m) => m.author.id === client.user?.id);
-      for (const [, msg] of botMessages) {
-        await msg.delete().catch(() => {});
-      }
-
-      // Build and post new config
-      const { embed, files } = await buildAgentConfig(info);
-      await channel.send({ embeds: [embed], files });
-
-      // Store hash for change detection
-      const promptPath = join(PROMPTS_DIR, `${info.promptFile}.txt`);
-      const content = await safeRead(promptPath);
-      if (content) {
-        promptHashes.set(info.promptFile, quickHash(content));
-      }
-
-      results.push(`#${channelName}: deployed`);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      results.push(`#${channelName}: error -- ${msg}`);
-    }
+  for (const [, agent] of Object.entries(AGENT_INTERNALS)) {
+    const memResult = await deployMemory(client, agent);
+    const skillResult = await deploySkills(client, agent);
+    results.push(memResult, skillResult);
   }
 
   return results.join("\n");
 }
 
 /**
- * Deploy config for a single agent to its channel.
+ * Deploy internals for a single agent.
+ * @param agentKey - key from AGENT_INTERNALS (e.g., "boss", "media-buyer")
  */
-export async function deploySingleConfig(
+export async function deploySingleAgentInternals(
   client: Client,
-  channelName: string,
+  agentKey: string,
 ): Promise<string> {
-  const info = CONFIG_CHANNELS[channelName];
-  if (!info) return `Unknown config channel: ${channelName}`;
+  const agent = AGENT_INTERNALS[agentKey];
+  if (!agent) return `Unknown agent: ${agentKey}`;
 
-  const channel = resolveConfigChannel(client, channelName);
-  if (!channel) return `#${channelName}: channel not found`;
-
-  try {
-    const messages = await channel.messages.fetch({ limit: 50 });
-    const botMessages = messages.filter((m) => m.author.id === client.user?.id);
-    for (const [, msg] of botMessages) {
-      await msg.delete().catch(() => {});
-    }
-
-    const { embed, files } = await buildAgentConfig(info);
-    await channel.send({ embeds: [embed], files });
-
-    const promptPath = join(PROMPTS_DIR, `${info.promptFile}.txt`);
-    const content = await safeRead(promptPath);
-    if (content) {
-      promptHashes.set(info.promptFile, quickHash(content));
-    }
-
-    return `#${channelName}: deployed`;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return `#${channelName}: error -- ${msg}`;
-  }
+  const memResult = await deployMemory(client, agent);
+  const skillResult = await deploySkills(client, agent);
+  return `${memResult}\n${skillResult}`;
 }
 
-/**
- * Check all prompt files for changes since last deploy.
- * If changed, post an update notification to the config channel.
- *
- * Called periodically (e.g., every 5 minutes) or after agent self-improvement.
- */
-export async function checkForConfigChanges(client: Client): Promise<void> {
-  for (const [channelName, info] of Object.entries(CONFIG_CHANNELS)) {
-    const promptPath = join(PROMPTS_DIR, `${info.promptFile}.txt`);
-    const content = await safeRead(promptPath);
-    if (!content) continue;
-
-    const currentHash = quickHash(content);
-    const previousHash = promptHashes.get(info.promptFile);
-
-    // Skip if no previous hash (not yet deployed) or unchanged
-    if (!previousHash || currentHash === previousHash) continue;
-
-    // File changed -- post update
-    const channel = resolveConfigChannel(client, channelName);
-    if (!channel) continue;
-
-    const lines = lineCount(content);
-    const sections = extractSections(content);
-    const mtime = await fileMtime(promptPath);
-
-    const updateEmbed = new EmbedBuilder()
-      .setTitle(`${info.agentName} -- Prompt Updated`)
-      .setColor(0x4caf50)
-      .setDescription(
-        `\`prompts/${info.promptFile}.txt\` was modified\n` +
-          `Lines: ${lines}\n` +
-          `Updated: ${mtime ? mtime.toISOString() : "now"}`,
-      )
-      .addFields({
-        name: "Current Sections",
-        value: sections.map((s) => `- ${s}`).join("\n") || "none",
-        inline: false,
-      });
-
-    const attachment = new AttachmentBuilder(Buffer.from(content, "utf-8"), {
-      name: `${info.promptFile}.txt`,
-      description: `Updated prompt (${lines} lines)`,
-    });
-
-    await channel
-      .send({ embeds: [updateEmbed], files: [attachment] })
-      .catch(() => {});
-    promptHashes.set(info.promptFile, currentHash);
-  }
-}
+// --- Legacy exports for backward compatibility ---
+export { deployAllInternals as deployAllConfigs };
