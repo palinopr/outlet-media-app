@@ -108,11 +108,11 @@ async function handleMessage(
   const existingSession = channelSessions.get(chId);
 
   try {
-    // Build system prompt -- inject server snapshot for admin agent
+    // Build system prompt -- inject server snapshot for agents that need it
     let systemPrompt: string | undefined;
     if (agent.injectSnapshot) {
       const { buildAdminPrompt } = await import("./discord-admin.js");
-      systemPrompt = await buildAdminPrompt();
+      systemPrompt = await buildAdminPrompt(agent.promptFile);
     }
 
     const result = await runClaude({
@@ -143,6 +143,9 @@ async function handleMessage(
     for (const chunk of chunks.slice(1)) {
       if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
     }
+
+    // Boss intake: log activity for supervisor review
+    logActivity(channelName, msg.author.username, prompt, agent.description, responseText).catch(() => {});
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     await working.edit(`Something went wrong: ${errMsg}`).catch(() => {});
@@ -151,6 +154,61 @@ async function handleMessage(
     agentBusy = false;
     state.discordAdminRunning = false;
   }
+}
+
+// --- Boss Intake: Activity Logging ----------------------------------------
+
+interface ActivityEntry {
+  ts: string;
+  channel: string;
+  user: string;
+  message: string;
+  agent: string;
+  responseSummary: string;
+}
+
+const ACTIVITY_LOG = "session/activity-log.json";
+const MAX_LOG_ENTRIES = 200;
+
+/**
+ * Log a conversation to the activity log for Boss supervisor review.
+ * The Boss agent reads this file to understand what's happening across all channels.
+ * Fire-and-forget -- errors are swallowed silently.
+ */
+async function logActivity(
+  channel: string,
+  user: string,
+  message: string,
+  agent: string,
+  response: string,
+): Promise<void> {
+  const fs = await import("node:fs/promises");
+
+  const entry: ActivityEntry = {
+    ts: new Date().toISOString(),
+    channel,
+    user,
+    message: message.slice(0, 200),
+    agent,
+    responseSummary: response.slice(0, 300),
+  };
+
+  let log: ActivityEntry[] = [];
+  try {
+    const raw = await fs.readFile(ACTIVITY_LOG, "utf-8");
+    log = JSON.parse(raw);
+  } catch {
+    // File doesn't exist yet or parse error -- start fresh
+  }
+
+  log.push(entry);
+
+  // Keep only the last N entries to prevent unbounded growth
+  if (log.length > MAX_LOG_ENTRIES) {
+    log = log.slice(-MAX_LOG_ENTRIES);
+  }
+
+  await fs.writeFile(ACTIVITY_LOG, JSON.stringify(log, null, 2));
 }
 
 export function startDiscordBot(): void {
@@ -194,7 +252,7 @@ export function startDiscordBot(): void {
       return;
     }
 
-    // Check for manual job triggers (e.g., "run meta sync" in #meta-api)
+    // Check for manual job triggers (e.g., "run meta sync" in #media-buyer)
     const trigger = matchManualTrigger(channelName, content);
     if (trigger) {
       const { triggerManualJob } = await import("./scheduler.js");
@@ -216,21 +274,26 @@ export function startDiscordBot(): void {
 // --- Channel Router (outbound notifications) ---
 
 const CHANNEL_ROUTES: Record<string, string> = {
+  // Direct channel names
   "general":       "general",
-  "announcements": "announcements",
-  "campaigns":     "campaign-updates",
-  "campaigns-general": "campaigns-general",
-  "performance":   "performance-reports",
-  "creative":      "ad-creative",
-  "tm-data":       "tm-one-data",
-  "tm-events":     "event-updates",
-  "agent-logs":    "agent-logs",
-  "active-jobs":   "active-jobs",
-  "agent-alerts":  "agent-alerts",
-  "meta-api":      "meta-api",
-  "dev-logs":      "dev-logs",
-  "billing":       "billing",
-  "bot-logs":      "bot-logs",
+  "dashboard":     "dashboard",
+  "media-buyer":   "media-buyer",
+  "tm-data":       "tm-data",
+  "creative":      "creative",
+  "boss":          "boss",
+  "zamora":        "zamora",
+  "kybba":         "kybba",
+  "agent-feed":    "agent-feed",
+
+  // Aliases for scheduler convenience
+  "performance":   "dashboard",
+  "alerts":        "agent-feed",
+  "logs":          "agent-feed",
+  "active-jobs":   "agent-feed",
+  "agent-alerts":  "agent-feed",
+  "agent-logs":    "agent-feed",
+  "bot-logs":      "agent-feed",
+  "meta-api":      "media-buyer",
 };
 
 const channelIdCache = new Map<string, string>();

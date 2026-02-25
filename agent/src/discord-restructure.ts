@@ -4,6 +4,8 @@
  * Defines the exact target layout (categories + channels + roles)
  * and a function that enforces it: creates what's missing, deletes
  * everything that's not on the whitelist.
+ *
+ * Layout: 9 channels, 4 categories. Agent-centric -- each channel IS the agent.
  */
 
 import {
@@ -15,48 +17,31 @@ import {
 } from "discord.js";
 import { state } from "./state.js";
 
-// ─── Target Layout ──────────────────────────────────────────────────────────
+// --- Target Layout --------------------------------------------------------
 
 /**
  * The ONLY categories and channels that should exist.
  * Everything else gets deleted.
+ *
+ * 9 channels for a 9-person team. Every channel has a clear agent or purpose.
  */
 export const TARGET_LAYOUT: Record<string, { name: string; topic: string }[]> = {
-  "General": [
-    { name: "announcements", topic: "Team announcements -- Jaime posts, team reads" },
-    { name: "general", topic: "Day-to-day team chat" },
-    { name: "standup", topic: "Async daily updates: what you did, what is blocked" },
+  "HQ": [
+    { name: "general", topic: "Team chat, announcements, day-to-day discussion" },
+    { name: "dashboard", topic: "Live campaign dashboard -- bot embeds, edited in-place" },
   ],
-  "Campaigns": [
-    { name: "campaigns-general", topic: "General campaign discussion" },
-    { name: "campaign-updates", topic: "Campaign status changes, launches, pauses" },
-    { name: "performance-reports", topic: "ROAS, spend, daily performance numbers" },
-    { name: "ad-creative", topic: "Creative review, video/image approvals" },
-    { name: "copy-review", topic: "Ad copy drafts, headlines, CTAs" },
+  "Agents": [
+    { name: "media-buyer", topic: "Talk to the Media Buyer -- Meta Ads, budgets, ROAS, strategy" },
+    { name: "tm-data", topic: "Talk to the TM Agent -- events, tickets, demographics, zip codes" },
+    { name: "creative", topic: "Talk to the Creative Agent -- ad images, videos, copy review" },
+    { name: "boss", topic: "Talk to the Boss -- big picture, multi-agent tasks, server management" },
   ],
   "Clients": [
-    { name: "zamora", topic: "Arjona, Alofoke, Camila campaigns" },
-    { name: "kybba", topic: "KYBBA campaigns" },
-    { name: "client-onboarding", topic: "New client setup checklists and docs" },
+    { name: "zamora", topic: "Zamora -- Arjona, Alofoke, Camila campaigns. Use threads per event." },
+    { name: "kybba", topic: "KYBBA campaigns. Use threads per city." },
   ],
-  "Agent & Automation": [
-    { name: "active-jobs", topic: "Live view of running automations -- syncs, think loops, scheduled tasks" },
-    { name: "agent-logs", topic: "Think-loop output, sync results, session logs" },
-    { name: "agent-alerts", topic: "Critical/warning alerts from the agent" },
-    { name: "meta-api", topic: "Meta API issues, token refreshes, debugging" },
-  ],
-  "Ticketmaster": [
-    { name: "tm-one-data", topic: "Event snapshots, ticket metrics from TM One" },
-    { name: "event-updates", topic: "On-sale, off-sale, venue changes" },
-  ],
-  "Ops": [
-    { name: "billing", topic: "Invoices, spend tracking" },
-    { name: "dev-logs", topic: "Deploys, Railway, code changes" },
-    { name: "admin", topic: "Internal ops, access requests" },
-  ],
-  "Bot Admin": [
-    { name: "bot-admin", topic: "Talk to the server admin bot here" },
-    { name: "bot-logs", topic: "Automated moderation logs, reports, bot activity" },
+  "Feed": [
+    { name: "agent-feed", topic: "All bot output: syncs, alerts, jobs, reports -- unified log" },
   ],
 };
 
@@ -86,7 +71,7 @@ const TARGET_ROLES: { name: string; color: number; perms: bigint[] }[] = [
   ]},
 ];
 
-// ─── Restructure Function ───────────────────────────────────────────────────
+// --- Restructure Function ------------------------------------------------
 
 /**
  * Desired-state restructure:
@@ -108,7 +93,7 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
     // Refresh cache so we see current state
     await g.channels.fetch();
 
-    // ─── Phase 1: Create target categories + channels ───
+    // --- Phase 1: Create target categories + channels ---
     for (const [catName, channels] of Object.entries(TARGET_LAYOUT)) {
       let cat = g.channels.cache.find(
         c => c.name === catName && c.type === ChannelType.GuildCategory
@@ -141,10 +126,10 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
       }
     }
 
-    // ─── Phase 2: Delete everything not whitelisted ─────
+    // --- Phase 2: Delete everything not whitelisted -----
     await g.channels.fetch();
 
-    // Delete ALL non-whitelisted, non-category channels (text, voice, forum, etc.)
+    // Delete ALL non-whitelisted, non-category channels
     const allChannels = g.channels.cache.filter(
       c => c.type !== ChannelType.GuildCategory
     );
@@ -189,10 +174,9 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
 
     await g.channels.fetch();
 
-    // ─── Phase 3: Roles ─────────────────────────────────
+    // --- Phase 3: Roles -----------------------------
     const targetRoleNames = new Set(TARGET_ROLES.map(r => r.name));
 
-    // Create missing target roles
     for (const { name, color, perms } of TARGET_ROLES) {
       if (!g.roles.cache.find(r => r.name === name)) {
         await g.roles.create({
@@ -208,7 +192,7 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
     // Delete non-target roles (skip @everyone and integration-managed roles)
     for (const [, role] of g.roles.cache) {
       if (role.name === "@everyone") continue;
-      if (role.managed) continue; // Bot integration roles (e.g. "Outlet Agent")
+      if (role.managed) continue;
       if (targetRoleNames.has(role.name)) continue;
 
       try {
@@ -220,7 +204,7 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
       }
     }
 
-    // ─── Summary ────────────────────────────────────────
+    // --- Summary ------------------------------------
     if (log.length === 0) return "Server matches target layout. No changes needed.";
 
     return (

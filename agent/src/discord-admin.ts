@@ -6,7 +6,7 @@
  * - Auto-moderation: spam detection, banned words, rate limiting, mass mentions
  * - Welcome flow for new members
  * - Server snapshot for agent context injection
- * - buildAdminPrompt() for the server-admin agent
+ * - buildAdminPrompt() for agents that need live server snapshot injection
  *
  * Does NOT handle:
  * - Slash commands (removed -- use channel messages instead)
@@ -98,60 +98,60 @@ export async function initDiscordAdmin(c: Client): Promise<void> {
 }
 
 /**
- * Ensure #bot-logs and #bot-admin channels exist.
+ * Ensure #agent-feed and #boss channels exist.
  */
 async function ensureBotChannels(g: Guild): Promise<void> {
   if (!logChannelId) {
     const existing = g.channels.cache.find(
-      c => c.name === "bot-logs" && c.type === ChannelType.GuildText
+      c => c.name === "agent-feed" && c.type === ChannelType.GuildText
     );
     if (existing) {
       logChannelId = existing.id;
-      console.log(`[discord-admin] Found existing #bot-logs (${logChannelId})`);
+      console.log(`[discord-admin] Found existing #agent-feed (${logChannelId})`);
     } else {
-      let botCategory = g.channels.cache.find(
-        c => c.name === "Bot" && c.type === ChannelType.GuildCategory
+      let feedCategory = g.channels.cache.find(
+        c => c.name === "Feed" && c.type === ChannelType.GuildCategory
       ) as CategoryChannel | undefined;
 
-      if (!botCategory) {
-        botCategory = await g.channels.create({
-          name: "Bot",
+      if (!feedCategory) {
+        feedCategory = await g.channels.create({
+          name: "Feed",
           type: ChannelType.GuildCategory,
         }) as CategoryChannel;
-        console.log("[discord-admin] Created 'Bot' category");
+        console.log("[discord-admin] Created 'Feed' category");
       }
 
       const logCh = await g.channels.create({
-        name: "bot-logs",
+        name: "agent-feed",
         type: ChannelType.GuildText,
-        parent: botCategory.id,
-        topic: "Automated moderation logs, reports, and bot activity",
+        parent: feedCategory.id,
+        topic: "All bot output: syncs, alerts, jobs, reports -- unified log",
       });
       logChannelId = logCh.id;
-      console.log(`[discord-admin] Created #bot-logs (${logChannelId})`);
+      console.log(`[discord-admin] Created #agent-feed (${logChannelId})`);
     }
   }
 
   if (!adminChannelId) {
     const existing = g.channels.cache.find(
-      c => c.name === "bot-admin" && c.type === ChannelType.GuildText
+      c => c.name === "boss" && c.type === ChannelType.GuildText
     );
     if (existing) {
       adminChannelId = existing.id;
-      console.log(`[discord-admin] Found existing #bot-admin (${adminChannelId})`);
+      console.log(`[discord-admin] Found existing #boss (${adminChannelId})`);
     } else {
-      const botCategory = g.channels.cache.find(
-        c => c.name === "Bot" && c.type === ChannelType.GuildCategory
+      const agentsCategory = g.channels.cache.find(
+        c => c.name === "Agents" && c.type === ChannelType.GuildCategory
       ) as CategoryChannel | undefined;
 
       const adminCh = await g.channels.create({
-        name: "bot-admin",
+        name: "boss",
         type: ChannelType.GuildText,
-        parent: botCategory?.id,
-        topic: "Talk to the server admin bot here.",
+        parent: agentsCategory?.id,
+        topic: "Talk to the Boss -- big picture, multi-agent tasks, server management",
       });
       adminChannelId = adminCh.id;
-      console.log(`[discord-admin] Created #bot-admin (${adminChannelId})`);
+      console.log(`[discord-admin] Created #boss (${adminChannelId})`);
     }
   }
 
@@ -355,12 +355,15 @@ export async function getServerSnapshot(): Promise<Record<string, unknown>> {
 }
 
 /**
- * Build the server-admin system prompt with live server snapshot injected.
+ * Build a system prompt with live server snapshot injected.
+ * Replaces {{SERVER_SNAPSHOT}} in the prompt file with live JSON.
+ *
+ * @param promptFile - prompt filename without extension (e.g. "boss", "discord-agent")
  */
-export async function buildAdminPrompt(): Promise<string> {
+export async function buildAdminPrompt(promptFile = "boss"): Promise<string> {
   const fs = await import("node:fs/promises");
   const path = await import("node:path");
-  const promptPath = path.join(process.cwd(), "prompts", "server-admin.txt");
+  const promptPath = path.join(process.cwd(), "prompts", `${promptFile}.txt`);
 
   let template: string;
   try {
