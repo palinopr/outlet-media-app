@@ -97,7 +97,8 @@ async function handleMessage(msg: Message, prompt: string) {
 
   // Use admin prompt in the dedicated admin channel, chat prompt everywhere else
   const { isAdminChannel } = await import("./discord-admin.js");
-  const promptType = isAdminChannel(chId) ? "discord-admin" : "chat";
+  const isAdmin = isAdminChannel(chId);
+  const promptType = isAdmin ? "discord-admin" : "chat";
 
   try {
     const result = await runClaude({
@@ -118,7 +119,28 @@ async function handleMessage(msg: Message, prompt: string) {
       channelSessions.set(chId, result.sessionId);
     }
 
-    const full = cleanForDiscord(result.text || "Done.");
+    let responseText = result.text || "Done.";
+
+    // In admin channel, parse and execute any action blocks Claude included
+    if (isAdmin && responseText.includes("[ACTION:")) {
+      const { parseActions, executeActions, stripActions, formatResults } =
+        await import("./discord-actions.js");
+      const actions = parseActions(responseText);
+      if (actions.length > 0) {
+        const guild = discordClient?.guilds.cache.first();
+        if (guild) {
+          await working.edit("Executing actions...").catch(() => {});
+          const results = await executeActions(actions, guild);
+          const resultText = formatResults(results);
+          responseText = stripActions(responseText);
+          if (resultText) {
+            responseText += `\n\n**Actions executed:**\n${resultText}`;
+          }
+        }
+      }
+    }
+
+    const full = cleanForDiscord(responseText);
     const chunks = chunkText(full, 1900);
 
     await working.edit(chunks[0] || "Done.").catch(() => {});
