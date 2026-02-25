@@ -8,6 +8,8 @@ const CHECK_CRON     = process.env.CHECK_CRON ?? "0 */2 * * *"; // every 2 hours
 const META_CRON      = "0 */6 * * *";                            // every 6 hours
 const THINK_CRON     = "*/30 8-22 * * *";                        // every 30 min, 8am-10pm
 const HEARTBEAT_CRON = "*/1 * * * *";                            // every minute
+const DISCORD_REPORT_CRON = "0 9 * * *";                         // daily at 9am UTC
+const DISCORD_HEALTH_CRON = "0 */12 * * *";                      // every 12 hours
 
 const INGEST_URL =
   process.env.INGEST_URL?.replace("/api/ingest", "") ?? "http://localhost:3000";
@@ -42,6 +44,13 @@ export function startScheduler(): void {
   // ─── Proactive think loop ─────────────────────────────────────────────────
   console.log(`[scheduler] Scheduled think loop: ${THINK_CRON}`);
   cron.schedule(THINK_CRON, () => { runThinkCycle(); });
+
+  // ─── Discord server management ───────────────────────────────────────────
+  console.log(`[scheduler] Scheduled Discord daily report: ${DISCORD_REPORT_CRON}`);
+  cron.schedule(DISCORD_REPORT_CRON, () => { runDiscordReport(); });
+
+  console.log(`[scheduler] Scheduled Discord health check: ${DISCORD_HEALTH_CRON}`);
+  cron.schedule(DISCORD_HEALTH_CRON, () => { runDiscordHealthCheck(); });
 }
 
 async function pingHeartbeat() {
@@ -96,9 +105,29 @@ async function runMetaSync() {
   }
 }
 
+async function runDiscordReport() {
+  try {
+    const { runDailyServerReport } = await import("./discord-admin.js");
+    await runDailyServerReport();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[scheduler] Discord report failed:", msg);
+  }
+}
+
+async function runDiscordHealthCheck() {
+  try {
+    const { runChannelHealthCheck } = await import("./discord-admin.js");
+    await runChannelHealthCheck();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[scheduler] Discord health check failed:", msg);
+  }
+}
+
 async function runThinkCycle() {
   // Don't think while another task is running (would compete for the claude CLI)
-  if (thinkRunning || tmRunning || metaRunning || state.jobRunning) {
+  if (thinkRunning || tmRunning || metaRunning || state.jobRunning || state.discordAdminRunning) {
     console.log("[think] Skipping — another task is running");
     return;
   }

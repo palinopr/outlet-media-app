@@ -65,7 +65,7 @@ bot.on("message:text", async (ctx) => {
 async function handleMessage(ctx: Context, prompt: string) {
   // Block if Telegram is already handling a message OR if a scheduled job/think cycle
   // is running (both would compete for the claude CLI subprocess)
-  if (agentBusy || state.jobRunning || state.thinkRunning) {
+  if (agentBusy || state.jobRunning || state.thinkRunning || state.discordAdminRunning) {
     await ctx.reply("Agent is busy. Try again in a moment.");
     return;
   }

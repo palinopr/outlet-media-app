@@ -20,15 +20,21 @@ export const discordClient = token
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.DirectMessageTyping,
+        // Server management intents
+        GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildModeration,
+        GatewayIntentBits.GuildPresences,
+        GatewayIntentBits.GuildMessageReactions,
       ],
-      partials: [Partials.Channel, Partials.Message],
+      partials: [Partials.Channel, Partials.Message, Partials.GuildMember],
     })
   : null;
 
 let agentBusy = false;
 
-// Per-channel session IDs for multi-turn conversation context
-const channelSessions = new Map<string, string>();
+// Use shared session map from discord-admin so slash commands and
+// follow-up messages share the same conversation context
+import { channelSessions } from "./discord-admin.js";
 
 function chunkText(text: string, maxLen: number): string[] {
   const chunks: string[] = [];
@@ -67,7 +73,7 @@ function cleanForDiscord(text: string): string {
 }
 
 async function handleMessage(msg: Message, prompt: string) {
-  if (agentBusy || state.jobRunning || state.thinkRunning) {
+  if (agentBusy || state.jobRunning || state.thinkRunning || state.discordAdminRunning) {
     await msg.reply("Agent is busy. Try again in a moment.");
     return;
   }
@@ -86,13 +92,17 @@ async function handleMessage(msg: Message, prompt: string) {
   let buffer = "";
   let lastEdit = Date.now();
 
-  const channelId = msg.channelId;
-  const existingSession = channelSessions.get(channelId);
+  const chId = msg.channelId;
+  const existingSession = channelSessions.get(chId);
+
+  // Use admin prompt in the dedicated admin channel, chat prompt everywhere else
+  const { isAdminChannel } = await import("./discord-admin.js");
+  const promptType = isAdminChannel(chId) ? "discord-admin" : "chat";
 
   try {
     const result = await runClaude({
       prompt,
-      systemPromptName: "chat",
+      systemPromptName: promptType,
       resumeSessionId: existingSession,
       onChunk: async (chunk: string) => {
         buffer += chunk;
@@ -105,7 +115,7 @@ async function handleMessage(msg: Message, prompt: string) {
     });
 
     if (result.sessionId) {
-      channelSessions.set(channelId, result.sessionId);
+      channelSessions.set(chId, result.sessionId);
     }
 
     const full = cleanForDiscord(result.text || "Done.");
@@ -130,8 +140,11 @@ export function startDiscordBot(): void {
     return;
   }
 
-  discordClient.once("ready", (c) => {
+  discordClient.once("ready", async (c) => {
     console.log(`Discord bot online: ${c.user.tag}`);
+    // Initialize admin module after client is ready
+    const { initDiscordAdmin } = await import("./discord-admin.js");
+    await initDiscordAdmin(discordClient);
   });
 
   discordClient.on("messageCreate", async (msg) => {
@@ -140,9 +153,14 @@ export function startDiscordBot(): void {
     const content = msg.content.trim();
     if (!content) return;
 
+    // Run auto-moderation first (fast path, no Claude)
+    const { checkAutoMod } = await import("./discord-admin.js");
+    const blocked = await checkAutoMod(msg);
+    if (blocked) return;
+
     // Simple commands
     if (content === "!status" || content === "/status") {
-      const busy = agentBusy || state.jobRunning || state.thinkRunning;
+      const busy = agentBusy || state.jobRunning || state.thinkRunning || state.discordAdminRunning;
       await msg.reply(busy ? "Agent is busy running a task." : "Agent is idle and ready.");
       return;
     }
