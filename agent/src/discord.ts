@@ -252,6 +252,19 @@ export function startDiscordBot(): void {
       return;
     }
 
+    if (content === "!restructure" || content === "/restructure") {
+      const guild = discordClient?.guilds.cache.first();
+      if (!guild) { await msg.reply("No guild found."); return; }
+      await msg.reply("Running server restructure...");
+      const { runServerRestructure } = await import("./discord-restructure.js");
+      const result = await runServerRestructure(guild);
+      const chunks = chunkText(result, 1900);
+      for (const chunk of chunks) {
+        if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
+      }
+      return;
+    }
+
     // Check for manual job triggers (e.g., "run meta sync" in #media-buyer)
     const trigger = matchManualTrigger(channelName, content);
     if (trigger) {
