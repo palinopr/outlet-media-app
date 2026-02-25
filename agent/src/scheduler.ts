@@ -2,6 +2,7 @@ import cron from "node-cron";
 import { readFileSync, existsSync, unlinkSync } from "node:fs";
 import { runClaude } from "./runner.js";
 import { notifyOwner } from "./bot.js";
+import { notifyChannel } from "./discord.js";
 import { state } from "./state.js";
 
 const CHECK_CRON     = process.env.CHECK_CRON ?? "0 */2 * * *"; // every 2 hours
@@ -72,12 +73,18 @@ async function runTmCheck() {
   try {
     const result = await runClaude({ prompt: TM_TASK, maxTurns: 50 });
     if (result.text?.trim()) {
-      await notifyOwner(`[TM One]\n\n${result.text}`);
+      await Promise.all([
+        notifyOwner(`[TM One]\n\n${result.text}`),
+        notifyChannel("tm-data", `**TM One Update**\n\n${result.text}`),
+      ]);
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[scheduler] TM check failed:", msg);
-    await notifyOwner(`[TM One — failed]\n${msg}`).catch(() => {});
+    await Promise.all([
+      notifyOwner(`[TM One — failed]\n${msg}`).catch(() => {}),
+      notifyChannel("agent-alerts", `**TM One check failed**\n${msg}`).catch(() => {}),
+    ]);
   } finally {
     tmRunning = false;
   }
@@ -94,12 +101,18 @@ async function runMetaSync() {
   try {
     const result = await runClaude({ prompt: META_TASK, maxTurns: 20 });
     if (result.text?.trim()) {
-      await notifyOwner(`[Meta Ads]\n\n${result.text}`);
+      await Promise.all([
+        notifyOwner(`[Meta Ads]\n\n${result.text}`),
+        notifyChannel("performance", `**Meta Ads Sync**\n\n${result.text}`),
+      ]);
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[scheduler] Meta sync failed:", msg);
-    await notifyOwner(`[Meta Ads — failed]\n${msg}`).catch(() => {});
+    await Promise.all([
+      notifyOwner(`[Meta Ads — failed]\n${msg}`).catch(() => {}),
+      notifyChannel("agent-alerts", `**Meta sync failed**\n${msg}`).catch(() => {}),
+    ]);
   } finally {
     metaRunning = false;
   }
@@ -148,8 +161,11 @@ async function runThinkCycle() {
     if (existsSync(draftPath)) {
       const draft = readFileSync(draftPath, "utf8").trim();
       if (draft) {
-        console.log("[think] Sending proactive alert to Telegram");
-        await notifyOwner(`[Proactive]\n\n${draft}`);
+        console.log("[think] Sending proactive alert");
+        await Promise.all([
+          notifyOwner(`[Proactive]\n\n${draft}`),
+          notifyChannel("agent-alerts", `**Proactive Alert**\n\n${draft}`),
+        ]);
       }
       unlinkSync(draftPath);
     }

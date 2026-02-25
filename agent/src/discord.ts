@@ -189,7 +189,80 @@ export function startDiscordBot(): void {
   });
 }
 
-/** Send a proactive notification to the configured Discord channel. */
+// ─── Channel Router ──────────────────────────────────────────────────────────
+
+/** Well-known routing targets. Map target name -> Discord channel name. */
+const CHANNEL_ROUTES: Record<string, string> = {
+  "general":       "general",
+  "announcements": "announcements",
+  "campaigns":     "campaign-updates",
+  "performance":   "performance-reports",
+  "creative":      "ad-creative",
+  "tm-data":       "tm-one-data",
+  "tm-events":     "event-updates",
+  "agent-logs":    "agent-logs",
+  "agent-alerts":  "agent-alerts",
+  "meta-api":      "meta-api",
+  "dev-logs":      "dev-logs",
+  "billing":       "billing",
+  "bot-logs":      "bot-logs",
+};
+
+/** Cache of channel name -> channel ID, populated on first lookup. */
+const channelIdCache = new Map<string, string>();
+
+/**
+ * Resolve a channel name to its ID, using cache.
+ * Falls back to DISCORD_CHANNEL_ID if channel not found.
+ */
+async function resolveChannelId(channelName: string): Promise<string | null> {
+  if (channelIdCache.has(channelName)) return channelIdCache.get(channelName)!;
+  if (!discordClient) return channelId || null;
+
+  const guild = discordClient.guilds.cache.first();
+  if (!guild) return channelId || null;
+
+  const ch = guild.channels.cache.find(
+    c => c.name === channelName && c.isTextBased()
+  );
+  if (ch) {
+    channelIdCache.set(channelName, ch.id);
+    return ch.id;
+  }
+
+  // Channel doesn't exist yet -- fall back to default
+  return channelId || null;
+}
+
+/**
+ * Send a message to a specific channel by route name.
+ * Falls back to DISCORD_CHANNEL_ID if the target channel doesn't exist.
+ *
+ * Usage: notifyChannel("performance", "ROAS dropped below 2.0")
+ *        notifyChannel("agent-alerts", "Meta token expires in 3 days")
+ */
+export async function notifyChannel(target: string, text: string): Promise<void> {
+  if (!discordClient) return;
+
+  const channelName = CHANNEL_ROUTES[target] || target;
+  const resolvedId = await resolveChannelId(channelName);
+  if (!resolvedId) return;
+
+  try {
+    const channel = await discordClient.channels.fetch(resolvedId);
+    if (channel && channel.isTextBased()) {
+      const chunks = chunkText(cleanForDiscord(text), 1900);
+      for (const chunk of chunks) {
+        await (channel as TextChannel).send(chunk);
+      }
+    }
+  } catch (err) {
+    const m = err instanceof Error ? err.message : String(err);
+    console.warn(`[discord] Failed to send to #${channelName}:`, m);
+  }
+}
+
+/** Send a proactive notification to the configured Discord channel (legacy). */
 export async function notifyDiscord(text: string): Promise<void> {
   if (!discordClient || !channelId) return;
   try {

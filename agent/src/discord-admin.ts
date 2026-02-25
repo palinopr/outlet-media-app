@@ -713,20 +713,23 @@ async function handleRestructure(
   }
 }
 
-// ─── Server Restructure (full migration) ────────────────────────────────────
+// ─── Server Restructure ─────────────────────────────────────────────────────
 
 /**
- * Execute a full server restructure:
- * - Archive dead artist categories (Don Omar, Tool, Grupo Firme, MAS, Vaqueros)
- * - Archive dead utility categories (Campañas, AI, Amazon)
- * - Archive individual dead channels from Text Channels, Resources, Agentes
- * - Create new Campaigns category with proper channels
- * - Consolidate Agentes category
- * - Rename Text Channels → General, add #announcements
- * - Clean up Resources channel names
- * - Create Team and Bot roles
+ * Target server layout:
  *
- * Idempotent — safe to run multiple times.
+ * GENERAL:              announcements, general, standup
+ * CAMPAIGNS:            campaign-updates, performance-reports, ad-creative, copy-review
+ * CLIENTS:              zamora, kybba, client-onboarding
+ * AGENT & AUTOMATION:   agent-logs, agent-alerts, meta-api
+ * TICKETMASTER:         tm-one-data, event-updates
+ * OPS:                  billing, dev-logs, admin
+ * BOT ADMIN:            bot-admin, bot-logs
+ * ARCHIVE:              (everything else)
+ *
+ * Roles: Admin, Team, Bot, Viewer
+ *
+ * Idempotent -- safe to run multiple times. Skips anything that already exists.
  */
 export async function runServerRestructure(): Promise<string> {
   if (!guild) return "Guild not available.";
@@ -737,7 +740,7 @@ export async function runServerRestructure(): Promise<string> {
   const g = guild;
   const log: string[] = [];
 
-  // ─── Phase 1: Archive category setup ────────────────────
+  // ─── Helpers ──────────────────────────────────────────
   async function findOrCreateCategory(name: string): Promise<CategoryChannel> {
     let cat = g.channels.cache.find(
       c => c.name === name && c.type === ChannelType.GuildCategory
@@ -752,51 +755,63 @@ export async function runServerRestructure(): Promise<string> {
     return cat;
   }
 
+  async function ensureChannel(
+    name: string,
+    parent: CategoryChannel,
+    topic?: string,
+  ): Promise<void> {
+    if (g.channels.cache.find(c => c.name === name)) return;
+    await g.channels.create({
+      name,
+      type: ChannelType.GuildText,
+      parent: parent.id,
+      topic,
+    });
+    log.push(`Created #${name}`);
+  }
+
+  async function moveChannel(
+    currentName: string,
+    newName: string,
+    parent: CategoryChannel,
+  ): Promise<void> {
+    const ch = g.channels.cache.find(
+      c => c.name === currentName && c.type === ChannelType.GuildText
+    );
+    if (!ch) return;
+    if (ch.name !== newName) await (ch as TextChannel).setName(newName);
+    if (ch.parentId !== parent.id) await (ch as TextChannel).setParent(parent.id);
+    log.push(`Moved #${currentName} -> #${newName}`);
+  }
+
   const archiveCat = await findOrCreateCategory("Archive");
-  let archiveCat2: CategoryChannel | null = null;
 
-  function archiveChildCount(): number {
-    let n = g.channels.cache.filter(c => c.parentId === archiveCat.id).size;
-    if (archiveCat2) n += g.channels.cache.filter(c => c.parentId === archiveCat2!.id).size;
-    return n;
-  }
-
-  async function getAvailableArchive(): Promise<CategoryChannel> {
-    const count = g.channels.cache.filter(c => c.parentId === archiveCat.id).size;
-    if (count >= 48) {
-      if (!archiveCat2) archiveCat2 = await findOrCreateCategory("Archive 2");
-      return archiveCat2;
-    }
-    return archiveCat;
-  }
-
-  // Helper: move a text channel into Archive, lock it, optionally prefix its name
   async function archiveChannel(ch: TextChannel, prefix?: string): Promise<void> {
-    // Skip if already in an archive category
     if (ch.parentId === archiveCat.id) return;
-    if (archiveCat2 && ch.parentId === archiveCat2.id) return;
-
-    const target = await getAvailableArchive();
     try {
       const newName = prefix ? `${prefix}-${ch.name}`.slice(0, 100) : ch.name;
       if (prefix && ch.name !== newName) await ch.setName(newName);
-      await ch.setParent(target.id);
-      await ch.permissionOverwrites.create(g.roles.everyone, {
-        SendMessages: false,
-      });
+      await ch.setParent(archiveCat.id);
+      await ch.permissionOverwrites.create(g.roles.everyone, { SendMessages: false });
       log.push(`Archived #${newName}`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      log.push(`✗ Failed to archive #${ch.name}: ${msg}`);
+      log.push(`Failed to archive #${ch.name}: ${msg}`);
     }
   }
 
-  // Helper: delete an empty category
-  async function deleteEmptyCategory(catName: string): Promise<void> {
+  async function archiveCategoryChildren(catName: string, prefix?: string): Promise<void> {
     const cat = g.channels.cache.find(
       c => c.name === catName && c.type === ChannelType.GuildCategory
     );
     if (!cat) return;
+    const children = [...g.channels.cache.filter(c => c.parentId === cat.id).values()];
+    for (const ch of children) {
+      if (ch.type === ChannelType.GuildText) {
+        await archiveChannel(ch as TextChannel, prefix);
+      }
+    }
+    // Delete empty category
     const remaining = g.channels.cache.filter(c => c.parentId === cat.id);
     if (remaining.size === 0) {
       await cat.delete().catch(() => {});
@@ -804,272 +819,166 @@ export async function runServerRestructure(): Promise<string> {
     }
   }
 
-  // ─── Phase 2: Archive dead artist categories ───────────
-  // These all have identical sub-channels (campaña, gastado, optimizacion, ideas, budget)
-  // with zero activity. Prefix with artist abbreviation to avoid name collisions.
-  const deadArtistCategories: Array<{ name: string; prefix: string }> = [
+  // ─── Phase 1: Archive dead categories ─────────────────
+  const deadCategories = [
     { name: "Don Omar", prefix: "do" },
     { name: "Tool", prefix: "tool" },
     { name: "Grupo Firme", prefix: "gf" },
     { name: "Marco antonio solis", prefix: "mas" },
     { name: "Vaqueros", prefix: "vaq" },
+    { name: "Campañas", prefix: "camp" },
+    { name: "AI", prefix: undefined },
+    { name: "Amazon", prefix: undefined },
   ];
-
-  for (const { name: catName, prefix } of deadArtistCategories) {
-    const cat = g.channels.cache.find(
-      c => c.name === catName && c.type === ChannelType.GuildCategory
-    );
-    if (!cat) continue;
-
-    // Collect children before modifying
-    const children = [...g.channels.cache.filter(c => c.parentId === cat.id).values()];
-    for (const ch of children) {
-      if (ch.type === ChannelType.GuildText) {
-        await archiveChannel(ch as TextChannel, prefix);
-      }
-    }
-    await deleteEmptyCategory(catName);
+  for (const { name, prefix } of deadCategories) {
+    await archiveCategoryChildren(name, prefix);
   }
 
-  // ─── Phase 3: Archive other dead categories ────────────
-  // Campañas — has reference channels for old campaigns
-  const campCat = g.channels.cache.find(
-    c => c.name === "Campañas" && c.type === ChannelType.GuildCategory
-  );
-  if (campCat) {
-    const children = [...g.channels.cache.filter(c => c.parentId === campCat.id).values()];
-    for (const ch of children) {
-      if (ch.type === ChannelType.GuildText) {
-        await archiveChannel(ch as TextChannel, "camp");
-      }
-    }
-    await deleteEmptyCategory("Campañas");
-  }
-
-  // AI category — single #reglas channel
-  const aiCat = g.channels.cache.find(
-    c => c.name === "AI" && c.type === ChannelType.GuildCategory
-  );
-  if (aiCat) {
-    const children = [...g.channels.cache.filter(c => c.parentId === aiCat.id).values()];
-    for (const ch of children) {
-      if (ch.type === ChannelType.GuildText) {
-        await archiveChannel(ch as TextChannel);
-      }
-    }
-    await deleteEmptyCategory("AI");
-  }
-
-  // Amazon category — single #agente channel
-  const amazonCat = g.channels.cache.find(
-    c => c.name === "Amazon" && c.type === ChannelType.GuildCategory
-  );
-  if (amazonCat) {
-    const children = [...g.channels.cache.filter(c => c.parentId === amazonCat.id).values()];
-    for (const ch of children) {
-      if (ch.type === ChannelType.GuildText) {
-        await archiveChannel(ch as TextChannel);
-      }
-    }
-    await deleteEmptyCategory("Amazon");
-  }
-
-  // ─── Phase 4: Archive individual dead channels ─────────
+  // ─── Phase 2: Archive individual dead channels ────────
   const channelsToArchive = [
-    // From Text Channels
-    "tuplanta",
-    "n8n-google-sheets-templates",
-    "pdf-general",
-    "optimización",
-    "ideas-y-estrategias",
-    "campañas-en-curso",
-    // From Resources
-    "duars",
-    "loggings",
-    // From Agentes — individual report channels replaced by #agent-reports
-    "reporte-house78",
-    "reporte-duars-sports",
-    "reporte-chente",
-    "reporte-ericduars",
-    "reporte-beamina",
-    "reporte-musicvibe",
-    "agentes-supervisor-de-host-whassap",
-    "ai-outlet-media",
+    "tuplanta", "n8n-google-sheets-templates", "pdf-general",
+    "optimización", "ideas-y-estrategias", "campañas-en-curso",
+    "duars", "loggings",
+    "reporte-house78", "reporte-duars-sports", "reporte-chente",
+    "reporte-ericduars", "reporte-beamina", "reporte-musicvibe",
+    "agentes-supervisor-de-host-whassap", "ai-outlet-media",
+    "links-de-resultados-de-ventas",
   ];
-
   for (const name of channelsToArchive) {
     const ch = g.channels.cache.find(
-      c =>
-        c.name === name &&
-        c.type === ChannelType.GuildText &&
-        c.parentId !== archiveCat.id &&
-        c.parentId !== archiveCat2?.id
+      c => c.name === name && c.type === ChannelType.GuildText && c.parentId !== archiveCat.id
     );
     if (ch) await archiveChannel(ch as TextChannel);
   }
 
-  // ─── Phase 5: Rename "Text Channels" → "General" ──────
+  // ─── Phase 3: Build target structure ──────────────────
+
+  // GENERAL
+  const generalCat = await findOrCreateCategory("General");
+  // Rename "Text Channels" if it exists
   const textCat = g.channels.cache.find(
     c => c.name === "Text Channels" && c.type === ChannelType.GuildCategory
   );
   if (textCat) {
     await (textCat as CategoryChannel).setName("General");
-    log.push('Renamed category "Text Channels" → "General"');
+    log.push('Renamed "Text Channels" -> "General"');
+  }
+  await ensureChannel("announcements", generalCat, "Team announcements -- Jaime posts, team reads");
+  await ensureChannel("general", generalCat, "Day-to-day team chat");
+  await ensureChannel("standup", generalCat, "Async daily updates: what you did, what is blocked");
+
+  // CAMPAIGNS
+  const campaignsCat = await findOrCreateCategory("Campaigns");
+  await ensureChannel("campaign-updates", campaignsCat, "Campaign status changes, launches, pauses");
+  await ensureChannel("performance-reports", campaignsCat, "ROAS, spend, daily performance numbers");
+  await ensureChannel("ad-creative", campaignsCat, "Creative review, video/image approvals");
+  await ensureChannel("copy-review", campaignsCat, "Ad copy drafts, headlines, CTAs");
+  // Move existing channels into Campaigns if they exist
+  await moveChannel("creativos", "ad-creative", campaignsCat);
+  await moveChannel("reportes-y-analytics", "performance-reports", campaignsCat);
+
+  // CLIENTS
+  const clientsCat = await findOrCreateCategory("Clients");
+  await ensureChannel("zamora", clientsCat, "Arjona, Alofoke, Camila campaigns");
+  await ensureChannel("kybba", clientsCat, "KYBBA campaigns");
+  await ensureChannel("client-onboarding", clientsCat, "New client setup checklists and docs");
+
+  // AGENT & AUTOMATION
+  const agentCat = await findOrCreateCategory("Agent & Automation");
+  await ensureChannel("agent-logs", agentCat, "Think-loop output, sync results, session logs");
+  await ensureChannel("agent-alerts", agentCat, "Critical/warning alerts from the agent");
+  await ensureChannel("meta-api", agentCat, "Meta API issues, token refreshes, debugging");
+  // Rename existing agent channels if they exist
+  await moveChannel("agente-de-campañas", "agent-logs", agentCat);
+  // Move existing agent-reports/alerts into this category
+  const existingAlerts = g.channels.cache.find(c => c.name === "agent-alerts");
+  if (existingAlerts && existingAlerts.parentId !== agentCat.id) {
+    await (existingAlerts as TextChannel).setParent(agentCat.id).catch(() => {});
   }
 
-  // Create #announcements in General category
-  const generalCat = g.channels.cache.find(
-    c =>
-      (c.name === "General" || c.name === "Text Channels") &&
-      c.type === ChannelType.GuildCategory
-  );
-  if (generalCat && !g.channels.cache.find(c => c.name === "announcements")) {
-    await g.channels.create({
-      name: "announcements",
-      type: ChannelType.GuildText,
-      parent: generalCat.id,
-      topic: "Team announcements and updates",
-    });
-    log.push("Created #announcements");
+  // TICKETMASTER
+  const tmCat = await findOrCreateCategory("Ticketmaster");
+  await ensureChannel("tm-one-data", tmCat, "Event snapshots, ticket metrics from TM One");
+  await ensureChannel("event-updates", tmCat, "On-sale, off-sale, venue changes");
+
+  // OPS
+  const opsCat = await findOrCreateCategory("Ops");
+  await ensureChannel("billing", opsCat, "Invoices, spend tracking");
+  await ensureChannel("dev-logs", opsCat, "Deploys, Railway, code changes");
+  await ensureChannel("admin", opsCat, "Internal ops, access requests");
+
+  // BOT ADMIN (already exists from initDiscordAdmin, just ensure category)
+  const botCat = await findOrCreateCategory("Bot Admin");
+  const existingBotAdmin = g.channels.cache.find(c => c.name === "bot-admin");
+  if (existingBotAdmin && existingBotAdmin.parentId !== botCat.id) {
+    await (existingBotAdmin as TextChannel).setParent(botCat.id).catch(() => {});
+    log.push("Moved #bot-admin into Bot Admin category");
+  }
+  const existingBotLogs = g.channels.cache.find(c => c.name === "bot-logs");
+  if (existingBotLogs && existingBotLogs.parentId !== botCat.id) {
+    await (existingBotLogs as TextChannel).setParent(botCat.id).catch(() => {});
+    log.push("Moved #bot-logs into Bot Admin category");
   }
 
-  // ─── Phase 6: Create Campaigns category ────────────────
-  let campaignsCat = g.channels.cache.find(
-    c => c.name === "Campaigns" && c.type === ChannelType.GuildCategory
-  ) as CategoryChannel | undefined;
-  if (!campaignsCat) {
-    campaignsCat = (await g.channels.create({
-      name: "Campaigns",
-      type: ChannelType.GuildCategory,
-    })) as CategoryChannel;
-    log.push("Created Campaigns category");
-  }
-
-  const newCampaignChannels = [
-    { name: "campaign-updates", topic: "Active campaign discussion and status updates" },
-    { name: "budgets-and-spend", topic: "Budget tracking and spend reports across all campaigns" },
-    { name: "optimization", topic: "Campaign optimization strategies and A/B test results" },
-  ];
-  for (const { name, topic } of newCampaignChannels) {
-    if (!g.channels.cache.find(c => c.name === name)) {
-      await g.channels.create({
-        name,
-        type: ChannelType.GuildText,
-        parent: campaignsCat.id,
-        topic,
-      });
-      log.push(`Created #${name}`);
-    }
-  }
-
-  // Move + rename #creativos → #creative-assets into Campaigns
-  const creativos = g.channels.cache.find(
-    c => c.name === "creativos" && c.type === ChannelType.GuildText
-  );
-  if (creativos) {
-    await (creativos as TextChannel).setName("creative-assets");
-    await (creativos as TextChannel).setParent(campaignsCat.id);
-    log.push("Moved #creativos → #creative-assets (Campaigns)");
-  }
-
-  // Move + rename #reportes-y-analytics → #performance-reports into Campaigns
-  const reportes = g.channels.cache.find(
-    c => c.name === "reportes-y-analytics" && c.type === ChannelType.GuildText
-  );
-  if (reportes) {
-    await (reportes as TextChannel).setName("performance-reports");
-    await (reportes as TextChannel).setParent(campaignsCat.id);
-    log.push("Moved #reportes-y-analytics → #performance-reports (Campaigns)");
-  }
-
-  // ─── Phase 7: Consolidate Agentes ─────────────────────
-  const agentesCat = g.channels.cache.find(
-    c => c.name === "Agentes" && c.type === ChannelType.GuildCategory
-  );
-  if (agentesCat) {
-    // Create #agent-alerts for proactive notifications
-    if (!g.channels.cache.find(c => c.name === "agent-alerts")) {
-      await g.channels.create({
-        name: "agent-alerts",
-        type: ChannelType.GuildText,
-        parent: agentesCat.id,
-        topic: "Proactive alerts from the AI agent system",
-      });
-      log.push("Created #agent-alerts");
-    }
-
-    // Create #agent-reports to replace 6 per-client report channels
-    if (!g.channels.cache.find(c => c.name === "agent-reports")) {
-      await g.channels.create({
-        name: "agent-reports",
-        type: ChannelType.GuildText,
-        parent: agentesCat.id,
-        topic: "Consolidated reports from all agents (replaces per-client channels)",
-      });
-      log.push("Created #agent-reports");
-    }
-
-    // Rename #agente-de-campañas → #agent-logs
-    const agenteCamp = g.channels.cache.find(
-      c => c.name === "agente-de-campañas" && c.type === ChannelType.GuildText
+  // Clean up old Agentes/Resources categories if empty
+  for (const oldCat of ["Agentes", "Resources"]) {
+    const cat = g.channels.cache.find(
+      c => c.name === oldCat && c.type === ChannelType.GuildCategory
     );
-    if (agenteCamp) {
-      await (agenteCamp as TextChannel).setName("agent-logs");
-      log.push("Renamed #agente-de-campañas → #agent-logs");
+    if (!cat) continue;
+    const remaining = g.channels.cache.filter(c => c.parentId === cat.id);
+    if (remaining.size === 0) {
+      await cat.delete().catch(() => {});
+      log.push(`Deleted empty category: ${oldCat}`);
     }
   }
 
-  // ─── Phase 8: Clean up Resources ──────────────────────
-  const salesLinks = g.channels.cache.find(
-    c => c.name === "links-de-resultados-de-ventas" && c.type === ChannelType.GuildText
-  );
-  if (salesLinks) {
-    await (salesLinks as TextChannel).setName("sales-links");
-    log.push("Renamed #links-de-resultados-de-ventas → #sales-links");
+  // ─── Phase 4: Roles ──────────────────────────────────
+  async function ensureRole(
+    name: string,
+    color: number,
+    perms: bigint[],
+  ): Promise<void> {
+    if (g.roles.cache.find(r => r.name === name)) return;
+    await g.roles.create({
+      name,
+      color,
+      reason: "Server restructure",
+      permissions: perms,
+    });
+    log.push(`Created ${name} role`);
   }
 
-  // ─── Phase 9: Create roles ────────────────────────────
-  if (!g.roles.cache.find(r => r.name === "Team")) {
-    await g.roles.create({
-      name: "Team",
-      color: 0x5865f2, // Discord blurple
-      reason: "Server restructure: team member role",
-      permissions: [
-        PermissionFlagsBits.ViewChannel,
-        PermissionFlagsBits.SendMessages,
-        PermissionFlagsBits.ReadMessageHistory,
-        PermissionFlagsBits.AddReactions,
-        PermissionFlagsBits.AttachFiles,
-        PermissionFlagsBits.EmbedLinks,
-        PermissionFlagsBits.UseExternalEmojis,
-        PermissionFlagsBits.Connect,
-        PermissionFlagsBits.Speak,
-      ],
-    });
-    log.push("Created Team role (blurple)");
-  }
-
-  if (!g.roles.cache.find(r => r.name === "Bot")) {
-    await g.roles.create({
-      name: "Bot",
-      color: 0x99aab5, // Discord grey
-      reason: "Server restructure: bot accounts role",
-      permissions: [
-        PermissionFlagsBits.ViewChannel,
-        PermissionFlagsBits.SendMessages,
-        PermissionFlagsBits.ReadMessageHistory,
-        PermissionFlagsBits.EmbedLinks,
-      ],
-    });
-    log.push("Created Bot role (grey)");
-  }
+  await ensureRole("Admin", 0xe74c3c, [PermissionFlagsBits.Administrator]);
+  await ensureRole("Team", 0x5865f2, [
+    PermissionFlagsBits.ViewChannel,
+    PermissionFlagsBits.SendMessages,
+    PermissionFlagsBits.ReadMessageHistory,
+    PermissionFlagsBits.AddReactions,
+    PermissionFlagsBits.AttachFiles,
+    PermissionFlagsBits.EmbedLinks,
+    PermissionFlagsBits.UseExternalEmojis,
+    PermissionFlagsBits.Connect,
+    PermissionFlagsBits.Speak,
+  ]);
+  await ensureRole("Bot", 0x99aab5, [
+    PermissionFlagsBits.ViewChannel,
+    PermissionFlagsBits.SendMessages,
+    PermissionFlagsBits.ReadMessageHistory,
+    PermissionFlagsBits.EmbedLinks,
+  ]);
+  await ensureRole("Viewer", 0x95a5a6, [
+    PermissionFlagsBits.ViewChannel,
+    PermissionFlagsBits.ReadMessageHistory,
+  ]);
 
   // ─── Summary ──────────────────────────────────────────
-  const archived = archiveChildCount();
+  if (log.length === 0) return "Server already matches target layout. No changes needed.";
+
   const summary =
     `**Server Restructure Complete**\n` +
-    `${log.length} actions · ${archived} channels archived\n\n` +
-    log.map(l => `• ${l}`).join("\n");
+    `${log.length} actions performed\n\n` +
+    log.map(l => `- ${l}`).join("\n");
 
   await logAction(summary);
   return summary;
