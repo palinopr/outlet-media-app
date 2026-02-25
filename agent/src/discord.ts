@@ -10,6 +10,7 @@ import "dotenv/config";
 import {
   Client,
   GatewayIntentBits,
+  MessageFlags,
   Partials,
   type Message,
   type TextChannel,
@@ -469,8 +470,13 @@ async function resolveChannelId(channelName: string): Promise<string | null> {
   return channelId || null;
 }
 
+/** Channels that send silent (no push/desktop notification) */
+const SILENT_CHANNELS = new Set(["agent-feed"]);
+
 /**
  * Send a message to a specific channel by route name.
+ * Messages to #agent-feed are sent with SuppressNotifications so the channel
+ * acts as a quiet log -- visible when you look, but never pings.
  */
 export async function notifyChannel(target: string, text: string): Promise<void> {
   if (!discordClient) return;
@@ -479,12 +485,18 @@ export async function notifyChannel(target: string, text: string): Promise<void>
   const resolvedId = await resolveChannelId(channelName);
   if (!resolvedId) return;
 
+  const silent = SILENT_CHANNELS.has(channelName);
+
   try {
     const channel = await discordClient.channels.fetch(resolvedId);
     if (channel && channel.isTextBased()) {
       const chunks = chunkText(cleanForDiscord(text), 1900);
       for (const chunk of chunks) {
-        await (channel as TextChannel).send(chunk);
+        await (channel as TextChannel).send(
+          silent
+            ? { content: chunk, flags: [MessageFlags.SuppressNotifications] }
+            : chunk
+        );
       }
     }
   } catch (err) {
