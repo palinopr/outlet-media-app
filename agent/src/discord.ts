@@ -230,6 +230,11 @@ async function logActivity(
   }
 
   await fs.writeFile(ACTIVITY_LOG, JSON.stringify(log, null, 2));
+
+  // Post compact notification to #agent-feed
+  const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" });
+  const feedMsg = `\`${timestamp}\` **#${channel}** (${agent}) -- ${user}: "${message.slice(0, 80)}"`;
+  notifyChannel("agent-feed", feedMsg).catch(() => {});
 }
 
 export function startDiscordBot(): void {
@@ -280,6 +285,45 @@ export function startDiscordBot(): void {
     if (content === "!status" || content === "/status") {
       const busy = agentBusy || state.jobRunning || state.thinkRunning || state.discordAdminRunning;
       await msg.reply(busy ? "Agent is busy running a task." : "Agent is idle and ready.");
+      return;
+    }
+
+    if (content === "!help" || content === "/help") {
+      const helpText = [
+        "**META AGENT Commands**",
+        "",
+        "`!help` -- this message",
+        "`!status` -- check if the agent is idle or busy",
+        "`!reset` -- clear conversation context in this channel",
+        "",
+        "**Agent channels** -- just type naturally in any agent channel:",
+        "  #boss -- orchestrator, multi-agent tasks, server management",
+        "  #media-buyer -- Meta Ads, budgets, ROAS, strategy",
+        "  #tm-data -- Ticketmaster events, ticket data, demographics",
+        "  #creative -- ad creative review, copy, images",
+        "  #dashboard -- reporting, analytics, campaign trends",
+        "  #zamora / #kybba -- client-specific conversations",
+        "  #general -- general chat",
+        "",
+        "**Manual triggers** (type in the relevant channel):",
+        "  `run meta sync` (in #media-buyer) -- pull Meta campaign data",
+        "  `run tm sync` (in #tm-data) -- scrape TM One",
+        "  `run think` (any channel) -- trigger think loop",
+        "",
+        "**Admin:**",
+        "  `!supervise` -- Boss reviews all agent activity",
+        "  `!dashboard` -- update campaign status embed in #dashboard",
+        "  `!roles` -- create Admin/Team/Bot/Viewer roles",
+        "  `!restructure` -- enforce full server layout (categories + channels + roles)",
+        "  `!deploy-internals` -- sync memory + skills files to Discord channels",
+        "",
+        "**Schedule** (in #schedule only):",
+        "  `!schedule list` -- show all jobs with status",
+        "  `!enable <job>` / `!disable <job>` -- toggle a job",
+        "  `!enable-all` / `!disable-all` -- toggle all jobs",
+        "  Jobs: `meta-sync`, `tm-sync`, `think`, `heartbeat`, `health-check`",
+      ].join("\n");
+      await msg.reply(helpText);
       return;
     }
 

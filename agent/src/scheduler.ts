@@ -118,6 +118,15 @@ async function runMetaSync() {
         notifyOwner(`[Meta Ads]\n\n${result.text}`),
         notifyChannel("performance", `**Meta Ads Sync**\n\n${result.text}`),
       ]);
+
+      // Auto-refresh dashboard after successful sync
+      try {
+        const { discordClient } = await import("./discord.js");
+        if (discordClient) {
+          const { updateDashboard } = await import("./discord-dashboard.js");
+          await updateDashboard(discordClient);
+        }
+      } catch { /* dashboard update is best-effort */ }
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

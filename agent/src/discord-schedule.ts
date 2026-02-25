@@ -11,6 +11,12 @@
 import cron, { type ScheduledTask } from "node-cron";
 import { EmbedBuilder, type Client, type TextChannel } from "discord.js";
 
+/** Lazy import to avoid circular dependency with discord.ts */
+async function postToFeed(text: string): Promise<void> {
+  const { notifyChannel } = await import("./discord.js");
+  await notifyChannel("agent-feed", text);
+}
+
 // --- Job Definitions ------------------------------------------------------
 
 interface ScheduleJob {
@@ -95,6 +101,7 @@ function enableJob(jobKey: string): string {
     job.lastRun = new Date();
     job.runner();
   });
+  postToFeed(`Schedule: enabled **${job.name}** (${job.cron})`).catch(() => {});
   return `Enabled **${job.name}** (${job.cron})`;
 }
 
@@ -108,6 +115,7 @@ function disableJob(jobKey: string): string {
     job.task.stop();
     job.task = null;
   }
+  postToFeed(`Schedule: disabled **${job.name}**`).catch(() => {});
   return `Disabled **${job.name}**`;
 }
 
