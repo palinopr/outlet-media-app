@@ -26,6 +26,10 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - Unknown campaigns default to slug: "unknown"
 
 ## Infrastructure
+- **Meta Business Manager**: 229314527708647 (Outlet Media LLC)
+  - 7 people in the portfolio (Jaime, Alexandra, Isabel Leal, Antonella, Cinzia, sofia, EL JD)
+  - **User lookup: use `act_{ID}/assigned_users?business=229314527708647` — NOT `/business_users`** (the old endpoint only returns ~2 of 7 users)
+  - Isabel Leal's Business User ID: 122193619442532833
 - **Supabase**: https://dbznwsnteogovicllean.supabase.co
   - Tables: tm_events, meta_campaigns, agent_jobs, campaign_snapshots, event_snapshots, agent_alerts
   - `campaign_snapshots` — daily ROAS/spend snapshot per campaign (UNIQUE campaign_id + snapshot_date)
@@ -40,6 +44,7 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
   - Pixel ID: 879345548404130
   - Page ID: 175118299508364
   - Instagram ID: 17841402356610735
+- **Video uploads**: Use `act_787610255314938/advideos` with `-F "source=@\"$FILE_PATH\""` (escaped quotes required). Commas in filenames cause curl exit code 26 without the quotes. Always verify video status is `ready` before using in ads.
 - **Ingest endpoint**: POST /api/ingest with secret header (`x-ingest-secret` or body `secret`)
 - **Alerts endpoint**: POST /api/alerts `{ secret, message, level }` to create an alert visible in dashboard (no client_slug field)
 - **Local agent**: runs on Jaime's Mac, polls Supabase for jobs, pushes data via ingest
@@ -78,49 +83,51 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - **Snapshot UPSERT is write-once**: `campaign_snapshots` uses ON CONFLICT DO NOTHING — first sync of the day (by UTC date) creates the snapshot, subsequent syncs only update `meta_campaigns`. First sync fires at 00:00 UTC (6 PM CST previous day), so snapshots capture late-afternoon CST data. Good for consistency (same time daily), but live campaign data may differ from snapshot data within the same day.
 - **Meta intraday reporting lag**: Within-day spend deltas from Meta API are unreliable for real-time monitoring. On Feb 23, ACTIVE campaigns showed <3% of expected daily delivery after 12 hours ($0.22-$1.35 on $100/day budgets). This is normal Meta reporting lag — true daily spend finalizes 24-48h after the day ends. Use daily snapshots (midnight-to-midnight) for trend analysis, not intraday deltas.
 
-## Data Pipeline Status (verified 2026-02-23, Cycle #23)
-- `daily_budget` ✅ populated for all 17 campaigns in Supabase
-- `start_time` ✅ populated for all 17 campaigns in Supabase
-- `campaign_snapshots` ✅ 3 snapshot dates: Feb 19 (13 campaigns) + Feb 23 (17 campaigns) + Feb 24 (15 campaigns). Feb 20-22 gap (scheduler downtime, unrecoverable). **Caveat: consecutive-day marginal ROAS unreliable** — Feb 23→24 deltas are $0.22-$1.43 per campaign due to Meta reporting lag. Need 2+ day gaps for meaningful marginal analysis.
-- `event_snapshots` table exists but still EMPTY — TM One scraper captures 25 events, but ingest pipeline for event snapshots not yet wired.
-- **Meta syncs:** ✅ **WORKING** — scheduler cron fires at 00/06/12/18 UTC. Confirmed by snapshot `created_at` of 06:04 UTC matching the 06:00 cron slot. Jaime also ran manual sync at 12:04 UTC. **Note:** cron-triggered runs do NOT create `agent_jobs` entries — only the job poller (dashboard-triggered) does. To verify cron ran, check `campaign_snapshots.created_at` or session file mtime.
-- **TM One events:** ✅ `last-events.json` populated (25 events, scraped Feb 23 14:04 UTC). Events include 20 Arjona tour dates + 4 Camila + 1 Alofoke. Missing: ticket counts, sell-through %, pricing (per-event API returns empty data). TM cron fires at even hours UTC.
-- **Pacing checks (P4):** ✅ RESUMED — fresh data available. New campaigns (Alofoke, Camila) slightly underpacing (64-68%) — normal for 4-day-old ramp-up.
-- **ROAS trend checks (P4):** PARTIALLY UNBLOCKED — 3 snapshot dates exist (Feb 19, 23, 24). Feb 19→23/24 gap useful for 4-5 day marginal ROAS. True 3-day consecutive trend needs Feb 25+ data. Consecutive-day (Feb 23→24) deltas too small due to Meta reporting lag.
+## Data Pipeline Status (verified 2026-02-25, Cycle #51)
+- `daily_budget` ✅ populated for all 18 campaigns in Supabase
+- `start_time` ✅ populated for all 18 campaigns in Supabase
+- `campaign_snapshots` ✅ 4 snapshot dates: Feb 19 (13), Feb 23 (17), Feb 24 (15), Feb 25 (5 ACTIVE only). Feb 20-22 gap (unrecoverable). **Caveat: consecutive-day marginal ROAS unreliable** — need 2+ day gaps. **Live vs snapshot divergence:** use live for current picture, snapshots for trends.
+- `event_snapshots` ✅ **NOW POPULATED** — 72 rows across 3 dates (Feb 23, 24, 25), 24 events per date. Has `tickets_sold` (int), `tickets_available` (null), `gross` (null). Pipeline working since ~Feb 23.
+- **Meta syncs:** ✅ **WORKING** — scheduler cron fires at 00/06/12/18 UTC. Confirmed by snapshot `created_at` patterns. **Note:** cron-triggered runs do NOT create `agent_jobs` entries — only the job poller (dashboard-triggered) does. To verify cron ran, check `campaign_snapshots.created_at` or session file mtime.
+- **TM One events:** ✅ `last-events.json` populated (25 events, last scraped Feb 24 18:02 CST). Events include 20 Arjona tour dates + 4 Camila + 1 Alofoke. Missing: ticket counts, sell-through %, pricing (per-event API returns empty data). TM cron fires at even hours UTC.
+- **Pacing checks (P4):** ✅ Running — Zamora campaigns pacing at 72-76% (normal ramp-up for 5-day-old campaigns). Houston excluded (no spend).
+- **ROAS trend checks (P4):** ✅ WORKING — 4 snapshot dates available (Feb 19, 23, 24, 25). Feb 19→25 gap (6 days) is reliable for marginal ROAS. KYBBA marginal improved from 0.61× to 0.95×. Zamora campaigns all healthy marginals (4.8-23×).
 
-## Known Issues (tracked, ranked by impact — updated Cycle #27)
-1. 🟡 **KYBBA ROAS declining — marginal ROAS 0.61×** — Blended: 2.73× (Feb 19) → 2.46× (Feb 23/24, unchanged). Still above 2.0 threshold. Marginal ROAS on $300 new spend = 0.61× (losing money on incremental dollars). **Budget confirmed $50/day** (reduced from $100 during Feb 23 deep dive). Updated projection (Cycle #36): blended crosses 2.0 ~**Mar 12** at $50/day ($787 additional spend needed). Show date Mar 22 — 10 days buffer after 2.0 crossing. Adset recommendations given to Jaime: kill V9+V1 (worst CPA), scale V12 (best ROAS). **WATCH CLOSELY.**
-2. ✅ **RESOLVED: PAUSED campaigns status sync** — As of 00:00 UTC Feb 24, PAUSED campaigns correctly show `status: PAUSED` in Supabase with fresh `updated_at`. The sync now pushes ALL campaigns (not just ACTIVE). Verified: Arjona Sac V2, Boston ROAS, Boston, Portland V2, Seattle V2 all showing PAUSED.
-3. 🟡 **Campaign snapshots gap Feb 20-22** — 3 days of ROAS history lost (unrecoverable). 3 snapshot dates exist (Feb 19, 23, 24). Consecutive-day deltas too small for marginal ROAS (Meta reporting lag). Need 2+ day gaps or more accumulated dates.
+## Known Issues (tracked, ranked by impact — updated Cycle #49)
+1. 🔴 **Houston $400/day $0 spend** — Campaign "Zamora - Camila - Houston" (120242223711720525) is ACTIVE with $400/day budget but $0 spend since detection (Cycle #47, Feb 25 ~00:30 UTC). Start_time Feb 19 (was likely PAUSED until recently). Feb 25 snapshot confirms $0. Possible delivery issue or Meta ramp-up delay. **Next checkpoint:** 06:00 UTC Feb 25 sync — if still $0, likely a delivery problem (check adset/ad effective_status). **No Houston event in TM One.**
+2. 🟡 **KYBBA ROAS declining — marginal ROAS 0.95×** — Blended: 2.73× (Feb 19) → 2.47× (Feb 25 snapshot). Still above 2.0. Marginal improved from 0.61× (Feb 19→24) to **0.95×** (Feb 19→25). Feb 24→25 single-day marginal was 2.84× (pre-swap, KYBBA's best day: 5 purchases). **Budget: $50/day**. Projection: blended crosses 2.0 ~**Mar 18**. Show Mar 22 — 4 days buffer. **Post-swap evaluation:** Feb 25 snapshot = pre-swap baseline. First post-swap snapshot = Feb 26. First reliable marginal analysis = Feb 28.
+3. 🟡 **Campaign snapshots gap Feb 20-22** — 3 days of ROAS history lost (unrecoverable). Now 4 snapshot dates (Feb 19, 23, 24, 25). Feb 19→25 (6-day gap) is reliable for marginal ROAS.
 4. 🟡 **TM One per-event data incomplete** — Scraper v3 captures 25 events via GraphQL. Per-event API returns empty data (percentSold, ticketsSold null). Sacramento Arjona event missing from GraphQL.
 5. 🟡 **Cron-triggered runs are invisible in agent_jobs** — scheduler cron calls `runClaude()` directly without agent_jobs entries. To verify cron health, check `campaign_snapshots.created_at` or session file mtimes.
 6. 🟢 **`/api/health` returns 404** — endpoint doesn't exist on Railway server. Not critical.
-- ✅ **RESOLVED: Scheduler not auto-firing Meta syncs** — MISDIAGNOSIS corrected Cycle #23. The cron WAS firing all along — snapshot `created_at` of 06:04 UTC matches 06:00 cron slot. We only checked `agent_jobs` which doesn't track cron runs.
-- ✅ **RESOLVED: `/api/alerts` Clerk auth bug** — Fixed as of Cycle #18 (Feb 22). Returns 401 (correct, wrong secret), no Clerk 307 regression.
-- ✅ **RESOLVED: Campaign data staleness** — Auto-sync + manual sync both working. Session cache refreshed regularly.
-- ✅ **RESOLVED: Scheduler down** — Restarted Feb 22 ~19:12 CST. Heartbeats + crons alive.
+- ✅ **RESOLVED: PAUSED campaigns status sync** — Sync pushes ALL campaigns. PAUSED shows correctly.
+- ✅ **RESOLVED: Scheduler not auto-firing Meta syncs** — Cron was firing all along.
+- ✅ **RESOLVED: `/api/alerts` Clerk auth bug** — Fixed Feb 22. Returns 401 (correct).
+- ✅ **RESOLVED: Campaign data staleness** — Auto-sync + manual sync both working.
+- ✅ **RESOLVED: Scheduler down** — Restarted Feb 22. Heartbeats + crons alive.
 
-## Current Campaign Landscape (as of 2026-02-23 18:02 UTC)
-- **17 total campaigns** in Supabase (4 ACTIVE, 13 PAUSED). Session cache has 15 (Beamina V3 + Happy Paws excluded — no last-30d spend).
-- **ACTIVE:** Alofoke (Zamora) — ROAS 3.66×, $272 spend, $100/day budget. Started Feb 19. Boston show Mar 2 (7 days out).
-- **ACTIVE:** Camila Anaheim (Zamora) — ROAS 3.41×, $269 spend, $100/day budget. Started Feb 19. Show Mar 13-14.
-- **ACTIVE:** Camila Sacramento (Zamora) — ROAS 3.65×, $255 spend, $100/day budget. Started Feb 19. Show Mar 14-15.
-- **ACTIVE:** KYBBA Miami — ROAS 2.46×, $2,369 spend, **$50/day budget** (✅ confirmed in both session cache + Supabase as of 00:00 UTC Feb 24). Show date 03/22 (~26 days out). Above 2.0 but declining (was 2.73×). Marginal ROAS 0.61×. Projection: blended crosses 2.0 ~Mar 12 at $50/day. Adset-level recommendations given to Jaime: kill V9+V1, scale V12, monitor V11.
-- **NEWLY PAUSED:** Arjona Sacramento V2 — ROAS 8.91×, $339 spend, $100/day. **Was ACTIVE → PAUSED between 12:04-18:02 UTC Feb 23.** Jaime paused intentionally. (Note: Supabase status still shows ACTIVE due to pipeline gap — see Known Issue #2.)
+## Current Campaign Landscape (as of 2026-02-25 01:30 UTC, verified Cycle #49)
+- **18 total campaigns** in Supabase (5 ACTIVE, 13 PAUSED). Session cache has 5 (ACTIVE only).
+- **⚠️ NEW: Camila Houston** (Zamora) — ACTIVE, **$400/day budget** (highest in portfolio), **$0 spend**. Started Feb 19. **No Houston event in TM One.** Likely just activated from PAUSED — monitor for delivery.
+- **ACTIVE:** Alofoke (Zamora) — **ROAS 8.72×**, $365 spend, 6 purchases, **$250/day budget** (bumped from $100, Feb 24 ~19:30 CST). Started Feb 19. Boston show Mar 2 (**5 days out**). Budget strategy: $250/day × 5 days + $365 ≈ $1,615, under $2K cap. Active adsets (6, CBO): De la Ghetto (51×), Chaval (13.8×), Shadow (12.6×), Perversa (12.0×), Eddie Herrera (9.3×), Boston Countdown (reactivated). Marginal ROAS (Feb 23→25): 23.4× (attribution catch-up).
+- **ACTIVE:** Camila Anaheim (Zamora) — ROAS 3.81×, $379 spend, 6 purchases, $100/day budget. Started Feb 19. Show Mar 13-14. Marginal ROAS (Feb 23→25): 4.76×. Healthy.
+- **ACTIVE:** Camila Sacramento (Zamora) — ROAS 4.42×, $363 spend, 6 purchases, $100/day budget. Started Feb 19. Show Mar 14-15. Marginal ROAS (Feb 23→25): 6.16×. Healthy.
+- **ACTIVE:** KYBBA Miami — ROAS 2.47×, $2,423 spend, 54 purchases, **$50/day budget**. Show date 03/22 (~25 days out). Above 2.0 but declining. Marginal ROAS: **0.95×** (Feb 19→25 snapshot, improved from 0.61×). Projection: blended crosses 2.0 ~**Mar 18** at current rate. **Adset swap executed Feb 24:** PAUSED V9+V1, ACTIVATED V5+Asset1. Post-swap evaluation starts Feb 28.
+- **PAUSED (notable):** Arjona Sacramento V2 — ROAS 8.91×, $339, $100/day. Paused intentionally by Jaime (Feb 23).
 - **PAUSED (notable):** Denver V2 — ROAS 9.82×, $2,240, $750/day. Denver show was Feb 18 (past).
 - **PAUSED:** Denver Retargeting, Seattle V2, Portland V2, All Boston campaigns (4), Camila Dallas, Happy Paws, Beamina V3.
-- **⚠️ Seattle & Portland shows imminent (Feb 25-26) but campaigns PAUSED** — likely intentional.
-- **Clients represented:** Zamora (13 campaigns), KYBBA (1), Beamina (1), Happy Paws (1). Zamora includes Camila + Alofoke sub-brands.
-- **TM One status:** ✅ Scraper v3 WORKING — 25 events captured. Per-event ticket metrics still returning empty.
+- **Seattle (Feb 25, PAST) & Portland (Feb 26, IMMINENT) shows with campaigns PAUSED** — likely intentional.
+- **Clients represented:** Zamora (14 campaigns), KYBBA (1), Beamina (1), Happy Paws (1). Zamora includes Camila + Alofoke sub-brands.
+- **Snapshot dates:** 4 total: Feb 19 (13), Feb 23 (17), Feb 24 (15), Feb 25 (5 ACTIVE). Houston only on Feb 25 ($0).
 
-## Upcoming Shows (from last-events.json, scraped Feb 23 14:04 UTC)
-- **IMMINENT:** Seattle Feb 25 (2 days! Campaign PAUSED), Portland Feb 26 (3 days! Campaign PAUSED), Inglewood Mar 1
-- **Next week:** Alofoke Boston Mar 2 (Campaign ACTIVE), San Jose Mar 6, San Diego Mar 7 (Camila), Phoenix Mar 8 (Camila), Salt Lake City Mar 9
+## Upcoming Shows (from last-events.json, scraped Feb 24 18:02 CST)
+- **PAST:** Seattle Feb 25 (Campaign was PAUSED), Denver Feb 18 (Campaign PAUSED)
+- **IMMINENT:** Portland Feb 26 (TODAY/TOMORROW! Campaign PAUSED), Inglewood Mar 1
+- **This week:** Alofoke Boston Mar 2 (Campaign ACTIVE, **$250/day, scaling — 5 days out**), San Jose Mar 6, San Diego Mar 7 (Camila), Phoenix Mar 8 (Camila), Salt Lake City Mar 9
 - **Mid-March:** Palm Desert Mar 12, Anaheim Mar 14 (Camila, Campaign ACTIVE) + Mar 16 (Arjona), Sacramento Mar 15 (Camila, Campaign ACTIVE) + SF Mar 15 (Arjona), Glendale Mar 21
 - **Late March+:** San Antonio Mar 26, Austin Mar 30, Miami Apr 3-8 (5 shows), Nashville Apr 11, Atlanta Apr 12, DC Apr 14, Reading Apr 17
 - **Artists:** 20 Arjona dates, 4 Camila dates, 1 Alofoke (Boston Mar 2)
-- **Campaign-Event alignment:** Alofoke→Boston ✓, Camila Anaheim→Anaheim ✓, Camila Sacramento→Sacramento ✓, Arjona Sacramento V2→(no TM event, known missing from GraphQL), KYBBA Miami→(not in TM One, different promoter)
-- **Note:** Denver V2 campaign now PAUSED — Denver show was Feb 18 (past)
+- **Campaign-Event alignment:** Alofoke→Boston ✓, Camila Anaheim→Anaheim ✓, Camila Sacramento→Sacramento ✓, Camila Houston→(no TM event), Arjona Sacramento V2→(no TM event, known missing from GraphQL), KYBBA Miami→(not in TM One, different promoter)
 
 ## Ad Delivery Error — 191x100 Deprecated Crop Key (error_code 2490085)
 - Meta deprecated the `191x100` image crop key. Ads using it silently fail with `effective_status=WITH_ISSUES`.
@@ -146,16 +153,17 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - Dashboard admin pages: /admin/dashboard (alert banner, ROAS chart), /admin/agents (job history), /admin/campaigns (client filter dropdown), /admin/clients (multi-client dynamic list)
 - All mock data removed from dashboard — all pages read from Supabase
 - **Scheduler timing:** TM One every 2h, Meta every 6h, Think every 30min (8am-10pm only), Heartbeat every 1min. All cron-based (fixed UTC times, NOT intervals-from-start). Meta fires at 00:00/06:00/12:00/18:00 UTC. TM fires at even hours UTC.
-- **Claude CLI:** v2.1.50 at `/Users/jaimeortiz/.local/bin/claude` (upgraded from v2.1.47 between Cycles #17-22)
+- **Claude CLI:** v2.1.55 at `/Users/jaimeortiz/.local/bin/claude` (upgraded from v2.1.52 between Cycles #49-51)
 
-## Proposals Status (from session/proposals.md, updated Cycle #34)
-**Completed (original proposals):** Fix campaigns page ✅, Client slug validation ✅, Daily pacing alerts ✅, Historical snapshots ✅
+## Proposals Status (from session/proposals.md, updated Cycle #49)
+**Completed:** Fix campaigns page ✅, Client slug validation ✅, Daily pacing alerts ✅, Historical snapshots ✅, PAUSED status sync ✅
 **Active proposals (ranked by priority):**
-- **G (Ad health scan):** ⏳ NEW — Scan ACTIVE ads for `effective_status=WITH_ISSUES` after each sync. Very small effort. Prevents silent budget waste (proven need: 3 ads blocked Feb 23).
-- **D (PAUSED status sync fix):** ⏳ Ready — 1-2 line code change to ingest. Fixes Known Issue #2.
-- **A (Campaign-event auto-linking):** ⏳ UNBLOCKED — Both TM (25 events) and Meta (17 campaigns) data live. Highest strategic value.
-- **C (Marginal ROAS in dashboard):** ⏳ Ready — Needs 2+ snapshots per campaign. KYBBA has them, new campaigns need Feb 24+.
+- **G (Ad health scan):** ⏳ Ready — Scan ACTIVE ads for `effective_status=WITH_ISSUES` after each sync. Very small effort. **Directly relevant to Houston $0 spend diagnosis.**
+- **I (Client budget cap monitor):** ⏳ Ready — Track cumulative spend vs client caps (Alofoke $2K). Alert at 80/95/100%. Very small effort.
+- **A (Campaign-event auto-linking):** ⏳ UNBLOCKED — Both TM (25 events) and Meta (18 campaigns) data live. Highest strategic value.
+- **C (Marginal ROAS in dashboard):** ⏳ Ready — 4 snapshot dates available. KYBBA marginal ROAS already computed in think loop.
+- **J (Campaign change journal):** ⏳ Ready — Record changes (adset swaps, budget changes) + auto-evaluate impact. KYBBA swap evaluation starts Feb 28.
 - **B (Show countdown dashboard):** ⏳ Ready — Best with Proposal A for campaign cross-reference.
-- **H (Post-show reports):** ⏳ NEW — Auto-generate show summaries after show date passes. Needs Proposal A.
+- **H (Post-show reports):** ⏳ Ready — Seattle (Feb 25, past) + Denver (Feb 18, past) = first test cases.
 - **E (Creative-level data):** ⏳ Future — Ad-level Meta API, new table.
 - **F (Budget recommendations):** ⏳ Future — AI-powered action proposals.

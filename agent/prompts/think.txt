@@ -49,11 +49,12 @@ Rotate through them across cycles.
     - Flag if pacing_ratio > 1.3 → "Campaign X is overpacing (+30%)"
     - Flag if pacing_ratio < 0.7 → "Campaign X is underpacing (-30%)"
     - Only flag ACTIVE campaigns (status === "ACTIVE")
-    - **Pacing limitation**: start_time-based pacing is unreliable for campaigns with pause history (e.g., KYBBA was paused Dec-Feb). The formula assumes continuous spending since start_time, so paused periods inflate expected spend. For campaigns with known pause history: SKIP raw pacing and note "skipped — pause history." Preferred alternative (when available): compute daily spend deltas from campaign_snapshots for actual daily run rate.
+    - **Pacing limitation**: start_time-based pacing is unreliable for campaigns with pause history (e.g., KYBBA was paused Dec-Feb). The formula assumes continuous spending since start_time, so paused periods inflate expected spend. For campaigns with known pause history: SKIP raw pacing and note "skipped — pause history." Preferred alternative (when available): compute spend deltas from campaign_snapshots over 3+ day spans for actual run rate (consecutive-day deltas are unreliable due to Meta reporting lag).
   - **ROAS trend check (if snapshots exist):**
     - Query Supabase: GET campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.desc&limit=7
     - **Column naming**: snapshots use `spend` (NOT `spend_cents`) — value is in cents. `roas` is a float. See MEMORY.md for full column listing.
-    - If ROAS is declining for 3+ consecutive days on an ACTIVE campaign, flag it
+    - If ROAS is declining for 3+ consecutive snapshot dates on an ACTIVE campaign, flag it
+    - **Important**: consecutive-day ROAS changes may be noise due to Meta reporting lag. Trend is only meaningful when snapshot dates are 3+ days apart OR when the same direction persists across 3+ snapshot dates regardless of spacing.
     - If no snapshots exist yet, skip this check silently
   - **Marginal ROAS check (requires 2+ snapshots for the same campaign):**
     - For each ACTIVE campaign with 2+ snapshots, calculate incremental return:
@@ -62,7 +63,7 @@ Rotate through them across cycles.
     - Flag if marginal ROAS < 1.0 → "Campaign X losing money on new spend (marginal ROAS = Y×)"
     - Marginal ROAS is MORE actionable than blended ROAS — a campaign can have 3.0× blended but 0.5× marginal, meaning it's coasting on historical performance while current spend is unprofitable
     - If blended ROAS is above 2.0 but marginal is below 1.0, project when blended will cross 2.0: additional_spend = (Revenue - 2.0 × Spend) / (2.0 - marginal_roas). Days to cross = additional_spend / daily_budget
-    - Caveat: multi-day gaps between snapshots make marginal ROAS noisy. Prefer consecutive daily snapshots when available
+    - Caveat: **consecutive-day** snapshot deltas are unreliable due to Meta intraday reporting lag — campaigns show <3% of expected daily spend in next-day deltas (e.g., $0.22-$1.43 on $100/day budgets). **Prefer 3+ day gaps** between snapshots for meaningful marginal analysis. Multi-day calculations (e.g., Feb 19→24) are the most reliable.
 - **Campaign status change detection:**
     - Compare LEARNINGS.md notes from previous cycles against current session cache
     - If a campaign was ACTIVE last cycle but is now PAUSED (or vice versa), note it

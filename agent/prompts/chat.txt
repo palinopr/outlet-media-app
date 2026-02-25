@@ -84,15 +84,22 @@ Meta defaults to 25 results per page. Always include `&limit=100`. There are ~97
 ## Get insights for a campaign (last 30 days)
 
 ```bash
-curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,reach,cpm,cpc,ctr,purchase_roas,actions&date_preset=last_30d&access_token=$TOKEN"
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,reach,frequency,cpm,cpc,ctr,purchase_roas,actions&date_preset=last_30d&access_token=$TOKEN"
 ```
 
 ## Get insights for today only
 
 ```bash
-curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,purchase_roas&date_preset=today&access_token=$TOKEN"
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&date_preset=today&access_token=$TOKEN"
 ```
 Note: `date_preset=today` may return empty `data: []` early in the day or if the campaign hasn't spent yet. If empty, fall back to `last_30d`.
+
+## Get insights for a custom date range
+
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&time_range=%7B%22since%22%3A%222026-02-20%22%2C%22until%22%3A%222026-02-24%22%7D&access_token=$TOKEN"
+```
+The `time_range` parameter is a URL-encoded JSON object: `{"since":"YYYY-MM-DD","until":"YYYY-MM-DD"}`. Use instead of `date_preset` for questions like "how did KYBBA do this week?" or "what happened since the adset swap?"
 
 ### Parsing insights response:
 - `purchase_roas` is an array: get ROAS from `purchase_roas[0].value` (string like "4.2") → convert to float
@@ -102,6 +109,22 @@ Note: `date_preset=today` may return empty `data: []` early in the day or if the
 - `impressions`, `clicks`, `reach` are integer strings → convert to int
 - **Revenue = spend × ROAS** (Meta doesn't return a direct revenue field; calculate it)
 - **CPA = spend / purchases** (get purchases from `actions` array where `action_type` = "purchase")
+- `frequency` = impressions / reach. Above 3-4 = ad fatigue, consider new creative.
+- **Funnel actions** in `actions` array: `landing_page_view` → `add_to_cart` → `initiate_checkout` → `purchase`. High checkout drop-off = landing page/UX issue, not an ad problem.
+
+## Get per-adset insights breakdown
+
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&date_preset=last_30d&level=adset&access_token=$TOKEN"
+```
+Returns one row per adset. Use this for deep-dive analysis (identifying which adsets to kill/scale by CPA). Parse same as campaign-level insights.
+
+## Get per-ad insights breakdown
+
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&date_preset=last_30d&level=ad&access_token=$TOKEN"
+```
+Returns one row per ad across the campaign. More efficient than querying each ad individually. Use for creative performance analysis (which ad/image is converting best).
 
 ## List ad sets in a campaign
 
@@ -214,6 +237,76 @@ curl -s -X POST "https://graph.facebook.com/v21.0/{AD_ID}" \
 
 ---
 
+## Business Manager — User Lookup & Pixel Operations
+
+Business Manager ID: 229314527708647 (Outlet Media LLC)
+
+### Looking up people in the Business Manager
+**CRITICAL: Do NOT use `/business_users` — it only returns a subset of users.** Use `assigned_users` on the ad account instead:
+```bash
+curl -s "https://graph.facebook.com/v21.0/act_787610255314938/assigned_users?fields=id,name,email,tasks&business=229314527708647&access_token=$TOKEN"
+```
+This returns ALL people. Use the `id` field (Business User ID) for pixel/asset assignment calls.
+
+### Create a pixel
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/229314527708647/adspixels" \
+  -d "access_token=$TOKEN" --data-urlencode "name=Pixel Name"
+```
+
+### Assign a user to a pixel
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/{PIXEL_ID}/assigned_users" \
+  -F "user={BUSINESS_USER_ID}" \
+  -F 'tasks=["EDIT","ANALYZE"]' \
+  -F "business=229314527708647" \
+  -F "access_token=$TOKEN"
+```
+
+### Check pixel access
+```bash
+curl -s "https://graph.facebook.com/v21.0/{PIXEL_ID}/assigned_users?fields=id,name,tasks&business=229314527708647&access_token=$TOKEN"
+```
+
+---
+
+## Video Upload Operations
+
+### Upload a video to the ad account
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/advideos" \
+  -F "source=@\"$FILE_PATH\"" \
+  -F "access_token=$TOKEN"
+```
+Returns `{"id": "VIDEO_ID"}`.
+
+**CRITICAL: Always wrap the file path in escaped double quotes** (`source=@\"$FILE_PATH\"`). Without quotes, commas in filenames (e.g. "Sacramento, CA") cause curl exit code 26 and silent failure.
+
+### Safeguards:
+- **Retry** non-zero exit codes up to 2 times with 5-second pause
+- **Timeout**: `--max-time 120` for files over 20MB
+- **Verify**: Check `GET /{VIDEO_ID}?fields=id,status` shows `status.video_status=ready` before using in ads
+- **Sequential**: Upload one file at a time. If one fails after retries, continue with others and report all failures
+
+---
+
+## Diagnosing "why isn't my campaign spending?"
+
+When a campaign shows $0 spend or unexpectedly low delivery:
+1. **Check campaign status**: GET campaign with `fields=id,name,status,effective_status,daily_budget` — is `effective_status` actually ACTIVE?
+2. **Check adsets**: GET `/{CAMPAIGN_ID}/adsets?fields=id,name,status,effective_status&limit=50` — are adsets ACTIVE? CBO campaigns need at least one ACTIVE adset.
+3. **Check ads for delivery issues**:
+   ```bash
+   curl -s "https://graph.facebook.com/v21.0/{ADSET_ID}/ads?fields=id,name,status,effective_status,issues_info&access_token=$TOKEN"
+   ```
+   Look for `effective_status=WITH_ISSUES` — this blocks delivery silently. Read `issues_info` for the specific error.
+4. **Check account-level**: billing issues, spending limit hit, or payment method declined can block all campaigns.
+5. **Fresh activation**: A newly activated campaign (PAUSED→ACTIVE) can take 2-6 hours to start spending. If $0 spend within 6h of activation, check steps 1-4 above. If still $0 after 12h, there's a real problem.
+
+Report findings to Jaime in plain language: "Boss, Houston isn't spending because [reason]" — not raw API output.
+
+---
+
 ## After any write
 
 1. Pull object back to confirm:
@@ -291,6 +384,7 @@ Beyond blended ROAS, check **marginal ROAS** using snapshots:
 - Marginal ROAS = (Revenue_new - Revenue_old) / ((Spend_new - Spend_old) / 100)
 - If marginal ROAS < 1.0, the campaign is LOSING money on new spend — even if blended looks healthy
 - Report both: "KYBBA: blended 2.46× but marginal 0.61× — new spend is losing money"
+- **Snapshot gap note:** Use snapshots 3+ days apart for reliable marginal ROAS. Consecutive-day deltas are noisy due to Meta reporting lag (<3% of expected daily spend shows in next-day deltas).
 
 ---
 
