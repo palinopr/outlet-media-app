@@ -90,8 +90,8 @@ const AGENT_ROUTES: Record<string, AgentConfig> = {
   "schedule": {
     promptFile: "chat",
     maxTurns: 5,
-    description: "read-only",
-    readOnly: true,
+    description: "schedule-control",
+    /** Not readOnly -- handled by discord-schedule.ts command handler */
   },
 };
 

@@ -93,6 +93,37 @@ const TARGET_ROLES: { name: string; color: number; perms: bigint[] }[] = [
   ]},
 ];
 
+// --- Roles-Only Function ------------------------------------------------
+
+/**
+ * Create target roles without touching channels.
+ * Does NOT delete non-whitelisted roles (safe standalone operation).
+ */
+export async function ensureRoles(guild: Guild): Promise<string> {
+  const log: string[] = [];
+  await guild.roles.fetch();
+
+  for (const { name, color, perms } of TARGET_ROLES) {
+    if (!guild.roles.cache.find(r => r.name === name)) {
+      await guild.roles.create({
+        name,
+        color,
+        reason: "Ensure roles",
+        permissions: perms,
+      });
+      log.push(`Created **${name}** role`);
+    } else {
+      log.push(`${name} role already exists`);
+    }
+  }
+
+  if (log.every(l => l.includes("already exists"))) {
+    return "All roles already exist. No changes needed.";
+  }
+
+  return log.join("\n");
+}
+
 // --- Restructure Function ------------------------------------------------
 
 /**

@@ -132,6 +132,20 @@ async function runMetaSync() {
   }
 }
 
+/**
+ * Export runner functions for discord-schedule.ts to wire up cron toggles.
+ * Keys must match the job keys in discord-schedule.ts JOBS record.
+ */
+export function getJobRunners(): Record<string, () => void> {
+  return {
+    "meta-sync": () => { runMetaSync(); },
+    "tm-sync": () => { runTmCheck(); },
+    "think": () => { runThinkCycle(); },
+    "heartbeat": () => { pingHeartbeat(); },
+    "health-check": () => { runDiscordHealthCheck(); },
+  };
+}
+
 async function runDiscordHealthCheck() {
   try {
     const { runChannelHealthCheck } = await import("./discord-admin.js");

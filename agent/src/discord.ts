@@ -17,6 +17,9 @@ import {
 import { runClaude } from "./runner.js";
 import { state } from "./state.js";
 import { getAgentForChannel, matchManualTrigger, isConfigChannel, isInternalChannel } from "./discord-router.js";
+import { handleScheduleCommand, initScheduleJobs } from "./discord-schedule.js";
+import { handleSuperviseCommand } from "./discord-supervisor.js";
+import { handleDashboardCommand } from "./discord-dashboard.js";
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;
@@ -240,6 +243,11 @@ export function startDiscordBot(): void {
     const { initDiscordAdmin } = await import("./discord-admin.js");
     await initDiscordAdmin(discordClient);
 
+    // Wire schedule job runners
+    const { getJobRunners } = await import("./scheduler.js");
+    initScheduleJobs(getJobRunners());
+    console.log("[discord] Schedule job runners initialized");
+
     // Auto-deploy internals on startup (one-time, remove after first deploy)
     if (process.env.DEPLOY_INTERNALS_ON_STARTUP === "1") {
       console.log("[discord] Auto-deploying agent internals...");
@@ -302,6 +310,46 @@ export function startDiscordBot(): void {
       const chunks = chunkText(result, 1900);
       for (const chunk of chunks) {
         if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
+      }
+      return;
+    }
+
+    // Roles command: !roles
+    if (content === "!roles" || content === "/roles") {
+      const guild = discordClient?.guilds.cache.first();
+      if (!guild) { await msg.reply("No guild found."); return; }
+      const { ensureRoles } = await import("./discord-restructure.js");
+      const result = await ensureRoles(guild);
+      await msg.reply(result);
+      return;
+    }
+
+    // Boss command: !supervise
+    if (content === "!supervise" || content === "/supervise") {
+      if (!discordClient) { await msg.reply("Bot not connected."); return; }
+      await msg.reply("Running Boss supervision cycle...");
+      const result = await handleSuperviseCommand(discordClient);
+      if (result.text) await (msg.channel as TextChannel).send(result.text);
+      await (msg.channel as TextChannel).send({ embeds: [result.embed] });
+      return;
+    }
+
+    // Dashboard command: !dashboard
+    if (content === "!dashboard" || content === "/dashboard") {
+      if (!discordClient) { await msg.reply("Bot not connected."); return; }
+      await msg.reply("Updating dashboard...");
+      const result = await handleDashboardCommand(discordClient);
+      if (result.text) await (msg.channel as TextChannel).send(result.text);
+      if (result.embed) await (msg.channel as TextChannel).send({ embeds: [result.embed] });
+      return;
+    }
+
+    // Schedule channel: handle schedule commands (not agent-routed)
+    if (channelName === "schedule") {
+      const schedResult = await handleScheduleCommand(content, discordClient!, channelName);
+      if (schedResult) {
+        if (schedResult.text) await msg.reply(schedResult.text);
+        if (schedResult.embed) await (msg.channel as TextChannel).send({ embeds: [schedResult.embed] });
       }
       return;
     }
