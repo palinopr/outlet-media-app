@@ -28,6 +28,7 @@ export const TARGET_LAYOUT: Record<string, { name: string; topic: string }[]> = 
     { name: "standup", topic: "Async daily updates: what you did, what is blocked" },
   ],
   "Campaigns": [
+    { name: "campaigns-general", topic: "General campaign discussion" },
     { name: "campaign-updates", topic: "Campaign status changes, launches, pauses" },
     { name: "performance-reports", topic: "ROAS, spend, daily performance numbers" },
     { name: "ad-creative", topic: "Creative review, video/image approvals" },
@@ -39,6 +40,7 @@ export const TARGET_LAYOUT: Record<string, { name: string; topic: string }[]> = 
     { name: "client-onboarding", topic: "New client setup checklists and docs" },
   ],
   "Agent & Automation": [
+    { name: "active-jobs", topic: "Live view of running automations -- syncs, think loops, scheduled tasks" },
     { name: "agent-logs", topic: "Think-loop output, sync results, session logs" },
     { name: "agent-alerts", topic: "Critical/warning alerts from the agent" },
     { name: "meta-api", topic: "Meta API issues, token refreshes, debugging" },
@@ -142,16 +144,17 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
     // ─── Phase 2: Delete everything not whitelisted ─────
     await g.channels.fetch();
 
-    // Delete non-whitelisted text channels
-    const allTextChannels = g.channels.cache.filter(
-      c => c.type === ChannelType.GuildText
+    // Delete ALL non-whitelisted, non-category channels (text, voice, forum, etc.)
+    const allChannels = g.channels.cache.filter(
+      c => c.type !== ChannelType.GuildCategory
     );
-    for (const [, ch] of allTextChannels) {
+    for (const [, ch] of allChannels) {
       if (!WHITELISTED_CHANNELS.has(ch.name)) {
         const parent = ch.parent?.name ?? "uncategorized";
+        const typeLabel = ChannelType[ch.type] ?? "unknown";
         try {
           await ch.delete();
-          log.push(`Deleted #${ch.name} (was in ${parent})`);
+          log.push(`Deleted ${typeLabel} #${ch.name} (was in ${parent})`);
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);
           log.push(`Failed to delete #${ch.name}: ${msg}`);
@@ -184,7 +187,12 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
       }
     }
 
+    await g.channels.fetch();
+
     // ─── Phase 3: Roles ─────────────────────────────────
+    const targetRoleNames = new Set(TARGET_ROLES.map(r => r.name));
+
+    // Create missing target roles
     for (const { name, color, perms } of TARGET_ROLES) {
       if (!g.roles.cache.find(r => r.name === name)) {
         await g.roles.create({
@@ -194,6 +202,21 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
           permissions: perms,
         });
         log.push(`Created ${name} role`);
+      }
+    }
+
+    // Delete non-target roles (skip @everyone and integration-managed roles)
+    for (const [, role] of g.roles.cache) {
+      if (role.name === "@everyone") continue;
+      if (role.managed) continue; // Bot integration roles (e.g. "Outlet Agent")
+      if (targetRoleNames.has(role.name)) continue;
+
+      try {
+        await role.delete("Server restructure -- not in target layout");
+        log.push(`Deleted role: ${role.name}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        log.push(`Failed to delete role ${role.name}: ${msg}`);
       }
     }
 

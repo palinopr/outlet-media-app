@@ -69,10 +69,12 @@ async function runTmCheck() {
   }
   tmRunning = true;
   console.log("[scheduler] Running scheduled TM One check...");
+  await notifyChannel("active-jobs", "▶ **TM One sync** started").catch(() => {});
 
   try {
     const result = await runClaude({ prompt: TM_TASK, maxTurns: 50 });
     if (result.text?.trim()) {
+      await notifyChannel("active-jobs", "✓ **TM One sync** finished").catch(() => {});
       await Promise.all([
         notifyOwner(`[TM One]\n\n${result.text}`),
         notifyChannel("tm-data", `**TM One Update**\n\n${result.text}`),
@@ -81,6 +83,7 @@ async function runTmCheck() {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[scheduler] TM check failed:", msg);
+    await notifyChannel("active-jobs", `✗ **TM One sync** failed: ${msg.slice(0, 200)}`).catch(() => {});
     await Promise.all([
       notifyOwner(`[TM One — failed]\n${msg}`).catch(() => {}),
       notifyChannel("agent-alerts", `**TM One check failed**\n${msg}`).catch(() => {}),
@@ -97,10 +100,12 @@ async function runMetaSync() {
   }
   metaRunning = true;
   console.log("[scheduler] Running scheduled Meta sync...");
+  await notifyChannel("active-jobs", "▶ **Meta Ads sync** started").catch(() => {});
 
   try {
     const result = await runClaude({ prompt: META_TASK, maxTurns: 20 });
     if (result.text?.trim()) {
+      await notifyChannel("active-jobs", "✓ **Meta Ads sync** finished").catch(() => {});
       await Promise.all([
         notifyOwner(`[Meta Ads]\n\n${result.text}`),
         notifyChannel("performance", `**Meta Ads Sync**\n\n${result.text}`),
@@ -109,6 +114,7 @@ async function runMetaSync() {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[scheduler] Meta sync failed:", msg);
+    await notifyChannel("active-jobs", `✗ **Meta Ads sync** failed: ${msg.slice(0, 200)}`).catch(() => {});
     await Promise.all([
       notifyOwner(`[Meta Ads — failed]\n${msg}`).catch(() => {}),
       notifyChannel("agent-alerts", `**Meta sync failed**\n${msg}`).catch(() => {}),
@@ -148,6 +154,7 @@ async function runThinkCycle() {
   thinkRunning = true;
   state.thinkRunning = true;
   console.log("[think] Starting proactive think cycle...");
+  await notifyChannel("active-jobs", "▶ **Think loop** started").catch(() => {});
 
   try {
     const result = await runClaude({
@@ -173,9 +180,11 @@ async function runThinkCycle() {
     if (result.text?.includes("THINK_CYCLE_COMPLETE")) {
       console.log("[think] Cycle complete");
     }
+    await notifyChannel("active-jobs", "✓ **Think loop** finished").catch(() => {});
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[think] Cycle failed:", msg);
+    await notifyChannel("active-jobs", `✗ **Think loop** failed: ${msg.slice(0, 200)}`).catch(() => {});
   } finally {
     thinkRunning = false;
     state.thinkRunning = false;

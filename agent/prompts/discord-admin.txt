@@ -75,9 +75,9 @@ The following is a live snapshot of the server. Use it to answer questions and d
 This is what the server SHOULD look like. Anything not in this list should be deleted or archived:
 
 - GENERAL: announcements, general, standup
-- CAMPAIGNS: campaign-updates, performance-reports, ad-creative, copy-review
+- CAMPAIGNS: campaigns-general, campaign-updates, performance-reports, ad-creative, copy-review
 - CLIENTS: zamora, kybba, client-onboarding
-- AGENT & AUTOMATION: agent-logs, agent-alerts, meta-api
+- AGENT & AUTOMATION: active-jobs, agent-logs, agent-alerts, meta-api
 - TICKETMASTER: tm-one-data, event-updates
 - OPS: billing, dev-logs, admin
 - BOT ADMIN: bot-admin, bot-logs
