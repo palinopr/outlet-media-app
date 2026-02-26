@@ -32,8 +32,61 @@ URL: https://one.ticketmaster.com
 Credentials: TM_EMAIL and TM_PASSWORD from environment or .env file.
 Use the Playwright browser -- navigate and interact like a human would.
 
-### Steps:
-1. Open browser, go to https://one.ticketmaster.com, log in with credentials
+### Authentication (Cookie-based with MFA fallback)
+
+**Step 1: Try saved cookies first.**
+Load the storage state file before navigating:
+```
+session/tm1-storage-state.json
+```
+Use Playwright's `browser.newContext({ storageState: 'session/tm1-storage-state.json' })` or equivalent.
+Then navigate to `https://one.ticketmaster.com`. If you land on the dashboard (page title is "TM1" and you see "Welcome, Jamie"), cookies are valid -- skip login.
+
+**Step 2: If cookies expired (redirected to login page), do full login:**
+1. Enter TM_EMAIL in the username field, click Next
+2. Enter TM_PASSWORD in the password field, click Verify
+3. You'll hit an email MFA step ("Get a verification email"). Click "Send me an email"
+4. Click "Enter a verification code instead" to get the code input field
+5. **Read the verification code from Gmail using the Gmail API:**
+   ```bash
+   # Get OAuth access token
+   ACCESS_TOKEN=$(curl -s -X POST https://oauth2.googleapis.com/token \
+     -d "client_id=$(grep GOOGLE_CLIENT_ID .env | cut -d= -f2)" \
+     -d "client_secret=$(grep GOOGLE_CLIENT_SECRET .env | cut -d= -f2)" \
+     -d "refresh_token=$(grep GOOGLE_REFRESH_TOKEN .env | cut -d= -f2)" \
+     -d "grant_type=refresh_token" | python3 -c "import json,sys; print(json.load(sys.stdin)['access_token'])")
+
+   # Search for the latest TM verification email (sent in last hour)
+   MSG_ID=$(curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
+     "https://gmail.googleapis.com/gmail/v1/users/me/messages?q=from:ticketmaster+subject:verification+newer_than:1h&maxResults=1" \
+     | python3 -c "import json,sys; print(json.load(sys.stdin)['messages'][0]['id'])")
+
+   # Extract the 6-digit code from the email body
+   CODE=$(curl -s -H "Authorization: Bearer $ACCESS_TOKEN" \
+     "https://gmail.googleapis.com/gmail/v1/users/me/messages/$MSG_ID?format=full" \
+     | python3 -c "
+   import json,sys,base64,re
+   data=json.load(sys.stdin)
+   body=data['payload'].get('body',{})
+   text=''
+   if body.get('data'): text=base64.urlsafe_b64decode(body['data']).decode('utf-8','replace')
+   for p in data['payload'].get('parts',[]):
+     if p.get('body',{}).get('data'):
+       text=base64.urlsafe_b64decode(p['body']['data']).decode('utf-8','replace')
+       break
+   codes=re.findall(r'\b\d{6}\b',text)
+   print(codes[-1] if codes else 'NONE')")
+   ```
+6. Type the code into the "Enter Code" field and click Verify
+7. Wait for TM1 dashboard to load
+
+**Step 3: After successful login, ALWAYS save the storage state:**
+Use `context.storageState({ path: 'session/tm1-storage-state.json' })` to persist cookies for next time.
+
+**Important:** The Google OAuth credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN) must be in the .env file. The refresh token has `gmail.readonly` scope.
+
+### Scraping Steps:
+1. Authenticate using the flow above
 2. Navigate to the promoter / events dashboard
 3. For each event extract: name, TM1 number, venue, city, date, status, tickets sold, tickets available, gross revenue
 4. Compare to ./session/last-events.json to find what changed

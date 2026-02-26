@@ -114,6 +114,55 @@ function cleanForDiscord(text: string): string {
     .trim();
 }
 
+/** How many recent messages to fetch for conversation context */
+const HISTORY_DEPTH = 10;
+
+/**
+ * Fetch recent channel messages and format as conversation context.
+ * Returns a string like:
+ *   [conversation history]
+ *   palino: What time it ends Camila Houston
+ *   META AGENT: Camila Houston ends today at 6:00 PM EST
+ *   ---
+ *   palino: What's the cap?
+ *
+ * This gives Claude context about what was just discussed so follow-up
+ * questions like "what's the cap?" resolve correctly.
+ */
+async function buildConversationContext(
+  msg: Message,
+  currentPrompt: string,
+): Promise<string> {
+  try {
+    const channel = msg.channel as TextChannel;
+    // Fetch last N+1 messages (includes the current one we're responding to)
+    const fetched = await channel.messages.fetch({ limit: HISTORY_DEPTH + 1 });
+    // Sort oldest-first, skip the current message (it's the prompt already)
+    const history = [...fetched.values()]
+      .reverse()
+      .filter(m => m.id !== msg.id)
+      .slice(-HISTORY_DEPTH);
+
+    if (history.length === 0) return currentPrompt;
+
+    const lines = history.map(m => {
+      const name = m.author.bot ? "META AGENT" : m.author.username;
+      const text = m.content.slice(0, 500);
+      return `${name}: ${text}`;
+    });
+
+    return [
+      "[conversation history -- use this for context on follow-up questions]",
+      ...lines,
+      "---",
+      `${msg.author.username}: ${currentPrompt}`,
+    ].join("\n");
+  } catch {
+    // If fetch fails, just use the raw prompt
+    return currentPrompt;
+  }
+}
+
 /**
  * Route a message to the correct agent and handle the response.
  */
@@ -143,6 +192,9 @@ async function handleMessage(
   }, 8000);
 
   const working = await msg.reply("Working on it...");
+
+  // Build prompt with conversation history for context continuity
+  const contextualPrompt = await buildConversationContext(msg, prompt);
 
   let buffer = "";
   let lastEdit = Date.now();
@@ -177,7 +229,7 @@ async function handleMessage(
 
     const result = await withTimeout(
       runClaude({
-        prompt,
+        prompt: contextualPrompt,
         systemPromptName: agent.promptFile,
         systemPrompt,
         maxTurns: agent.maxTurns,
