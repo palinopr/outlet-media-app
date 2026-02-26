@@ -1,16 +1,65 @@
 import "dotenv/config";
 import { existsSync, mkdirSync } from "node:fs";
+import { execSync } from "node:child_process";
 import { bot } from "./bot.js";
 import { startDiscordBot } from "./discord.js";
 import { startScheduler } from "./scheduler.js";
 import { startJobPoller } from "./jobs.js";
+import { killAllClaude } from "./runner.js";
 
 // Ensure session directory exists for TM One browser state
 const sessionDir = new URL("../session", import.meta.url).pathname;
 if (!existsSync(sessionDir)) mkdirSync(sessionDir, { recursive: true });
 
+// Kill orphaned processes from previous bot runs to prevent double responses.
+// Two sources of ghosts:
+// 1. Claude CLI children that outlive the parent Node process
+// 2. Stale tsx dev-mode instances that stay connected to Discord
+try {
+  const myPid = process.pid;
+
+  // Kill orphaned Claude CLI processes spawned by previous bot runs
+  const staleClaude = execSync(
+    `pgrep -f "claude.*--dangerously-skip-permissions.*--setting-sources local" || true`,
+    { encoding: "utf-8" },
+  ).trim();
+  if (staleClaude) {
+    const pids = staleClaude.split("\n").filter(Boolean);
+    console.log(`[startup] Killing ${pids.length} orphaned Claude CLI process(es): ${pids.join(", ")}`);
+    execSync(`kill ${pids.join(" ")} 2>/dev/null || true`);
+  }
+
+  // Kill stale tsx/node bot instances (from `npm exec tsx src/index.ts`)
+  const staleTsx = execSync(
+    `pgrep -f "tsx.*src/index.ts|node.*src/index.ts" || true`,
+    { encoding: "utf-8" },
+  ).trim();
+  if (staleTsx) {
+    const pids = staleTsx.split("\n").filter(Boolean).filter(p => p !== String(myPid));
+    if (pids.length > 0) {
+      console.log(`[startup] Killing ${pids.length} stale tsx bot instance(s): ${pids.join(", ")}`);
+      execSync(`kill -9 ${pids.join(" ")} 2>/dev/null || true`);
+    }
+  }
+
+  // Kill stale compiled bot instances (from `node dist/index.js`)
+  const staleNode = execSync(
+    `pgrep -f "node dist/index.js" || true`,
+    { encoding: "utf-8" },
+  ).trim();
+  if (staleNode) {
+    const pids = staleNode.split("\n").filter(Boolean).filter(p => p !== String(myPid));
+    if (pids.length > 0) {
+      console.log(`[startup] Killing ${pids.length} stale bot instance(s): ${pids.join(", ")}`);
+      execSync(`kill ${pids.join(" ")} 2>/dev/null || true`);
+    }
+  }
+} catch {
+  // pgrep not found or no matches -- safe to ignore
+}
+
 console.log("=== Outlet Media Agent ===");
-console.log("Powered by Claude Code CLI +  Playwright MCP");
+console.log("Powered by Claude Code CLI + Playwright MCP");
 console.log("");
 
 // Start Discord bot (if token configured)
@@ -38,14 +87,17 @@ startScheduler();
 // Poll Supabase for jobs queued from the web dashboard
 startJobPoller();
 
-// Graceful shutdown
+// Graceful shutdown -- kill child Claude processes to prevent orphaned ghosts
 process.once("SIGINT", () => {
   console.log("\nShutting down...");
+  killAllClaude();
   bot.stop();
   process.exit(0);
 });
 
 process.once("SIGTERM", () => {
+  console.log("SIGTERM received, killing child processes...");
+  killAllClaude();
   bot.stop();
   process.exit(0);
 });

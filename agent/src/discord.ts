@@ -45,6 +45,9 @@ export const discordClient = token
 
 let agentBusy = false;
 
+/** Per-channel processing lock to prevent concurrent agent calls */
+const channelLocks = new Set<string>();
+
 /** Timeout for agent Claude calls -- prevents infinite hangs */
 const AGENT_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -61,7 +64,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   });
 }
 
-/** Per-channel Claude session IDs for multi-turn context */
+/** Per-channel Claude session IDs (kept for !reset command compatibility) */
 export const channelSessions = new Map<string, string>();
 
 /**
@@ -131,6 +134,7 @@ async function handleMessage(
 
   agentBusy = true;
   state.discordAdminRunning = true;
+  channelLocks.add(msg.channelId);
 
   const ch = msg.channel;
   if ("sendTyping" in ch) await (ch as TextChannel).sendTyping().catch(() => {});
@@ -142,9 +146,6 @@ async function handleMessage(
 
   let buffer = "";
   let lastEdit = Date.now();
-
-  const chId = msg.channelId;
-  const existingSession = channelSessions.get(chId);
 
   try {
     // Build system prompt -- inject server snapshot for agents that need it
@@ -180,7 +181,8 @@ async function handleMessage(
         systemPromptName: agent.promptFile,
         systemPrompt,
         maxTurns: agent.maxTurns,
-        resumeSessionId: existingSession,
+        // Session resumption disabled: Claude CLI auto-continues the last
+        // project session when --resume is used, causing double responses.
         onChunk: async (chunk: string) => {
           buffer += chunk;
           if (Date.now() - lastEdit > 1500 && buffer.trim()) {
@@ -192,10 +194,6 @@ async function handleMessage(
       }),
       AGENT_TIMEOUT_MS,
     );
-
-    if (result.sessionId) {
-      channelSessions.set(chId, result.sessionId);
-    }
 
     const responseText = result.text || "Done.";
     const full = cleanForDiscord(responseText);
@@ -230,6 +228,7 @@ async function handleMessage(
     await working.edit(`Something went wrong: ${errMsg}`).catch(() => {});
   } finally {
     clearInterval(typingInterval);
+    channelLocks.delete(msg.channelId);
     agentBusy = false;
     state.discordAdminRunning = false;
   }
@@ -338,7 +337,11 @@ export function startDiscordBot(): void {
     if (!content) return;
 
     // Dedup: skip if we already processed this message ID
-    if (!markProcessed(msg.id)) return;
+    if (!markProcessed(msg.id)) {
+      console.log(`[discord] DEDUP blocked msg ${msg.id} from ${msg.author.username}`);
+      return;
+    }
+    console.log(`[discord] Processing msg ${msg.id} from ${msg.author.username}: ${content.slice(0, 60)}`);
 
     // Run auto-moderation first (fast path, no Claude)
     const { checkAutoMod } = await import("./discord-admin.js");
@@ -515,6 +518,12 @@ export function startDiscordBot(): void {
       const { triggerManualJob } = await import("./scheduler.js");
       await msg.reply(`Triggering ${trigger}...`);
       triggerManualJob(trigger);
+      return;
+    }
+
+    // Per-channel lock: prevent concurrent agent calls to same channel
+    if (channelLocks.has(msg.channelId)) {
+      console.log(`[discord] Channel ${channelName} already processing, skipping msg ${msg.id}`);
       return;
     }
 

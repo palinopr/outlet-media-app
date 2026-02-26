@@ -18,6 +18,26 @@ const PROMPTS_DIR = join(AGENT_DIR, "prompts");
 const CLAUDE_PATH =
   process.env.CLAUDE_PATH ?? "/Users/jaimeortiz/.local/bin/claude";
 
+/**
+ * Track all spawned Claude child processes so we can kill them on shutdown.
+ * Without this, pkill on the Node process leaves orphaned Claude processes
+ * that continue running and produce ghost responses.
+ */
+import type { ChildProcess } from "node:child_process";
+const activeProcs = new Set<ChildProcess>();
+
+/** Kill all active Claude child processes. Call on SIGTERM/SIGINT. */
+export function killAllClaude(): void {
+  for (const proc of activeProcs) {
+    try {
+      proc.kill("SIGTERM");
+    } catch {
+      // Already dead -- ignore
+    }
+  }
+  activeProcs.clear();
+}
+
 // Turns per job type — TM One needs many browser steps, chat needs few
 const MAX_TURNS: Record<string, number> = {
   "assistant":        5,
@@ -119,6 +139,8 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
       }
     );
 
+    activeProcs.add(proc);
+
     let assembledText = "";  // built from assistant events
     let fallbackResult = ""; // from type=result event if no assistant text
     let capturedSessionId: string | undefined;
@@ -171,6 +193,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     });
 
     proc.on("close", (code) => {
+      activeProcs.delete(proc);
       // Flush any remaining buffer content
       if (lineBuffer.trim()) {
         try {
@@ -200,6 +223,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     });
 
     proc.on("error", (err) => {
+      activeProcs.delete(proc);
       console.error("[runner] Failed to spawn claude:", err.message);
       resolve({
         text: `Failed to start claude: ${err.message}`,
