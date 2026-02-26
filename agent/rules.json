@@ -1,0 +1,18 @@
+{
+  "yellow": {
+    "max_budget_change_cents": 5000,
+    "auto_pause_below_roas": 1.0,
+    "auto_resume_above_roas": 2.0,
+    "allow_creative_swap": true,
+    "allow_templated_client_update": true,
+    "allow_agent_delegation": true
+  },
+  "red_always": [
+    "create-campaign",
+    "delete-campaign",
+    "client-freeform-message",
+    "spawn-agent",
+    "modify-agent-prompt",
+    "modify-rules"
+  ]
+}

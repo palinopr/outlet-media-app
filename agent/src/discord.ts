@@ -1,13 +1,32 @@
+/**
+ * discord.ts -- Thin Discord entry point.
+ *
+ * Wires all services on startup:
+ * - Webhooks (agent identities)
+ * - Queue (per-agent slots)
+ * - Approvals (three-tier)
+ * - Buttons, slash commands
+ * - Message routing (delegates to message-handler.ts)
+ */
+
 import "dotenv/config";
 import {
   Client,
   GatewayIntentBits,
+  MessageFlags,
   Partials,
   type Message,
   type TextChannel,
 } from "discord.js";
-import { runClaude } from "./runner.js";
 import { state } from "./state.js";
+import { getAgentForChannel, matchManualTrigger, isConfigChannel, isInternalChannel } from "./discord-router.js";
+import { handleScheduleCommand, initScheduleJobs } from "./discord-schedule.js";
+import { handleSuperviseCommand } from "./discord-supervisor.js";
+import { handleDashboardCommand } from "./discord-dashboard.js";
+import { handleMessage, isChannelLocked, cleanForDiscord, chunkText } from "./events/message-handler.js";
+import { initWebhooks } from "./services/webhook-service.js";
+import { initQueue } from "./services/queue-service.js";
+import { initApprovals } from "./services/approval-service.js";
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;
@@ -20,7 +39,6 @@ export const discordClient = token
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.DirectMessageTyping,
-        // Server management intents
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildModeration,
         GatewayIntentBits.GuildPresences,
@@ -30,146 +48,70 @@ export const discordClient = token
     })
   : null;
 
-let agentBusy = false;
+/** Per-channel Claude session IDs (kept for !reset command compatibility) */
+export const channelSessions = new Map<string, string>();
 
-// Use shared session map from discord-admin so slash commands and
-// follow-up messages share the same conversation context
-import { channelSessions } from "./discord-admin.js";
+/**
+ * Dedup guard: prevent the same message from being processed twice.
+ */
+const processedMessages = new Set<string>();
+const MAX_PROCESSED = 500;
 
-function chunkText(text: string, maxLen: number): string[] {
-  const chunks: string[] = [];
-  let i = 0;
-  while (i < text.length) {
-    chunks.push(text.slice(i, i + maxLen));
-    i += maxLen;
+function markProcessed(msgId: string): boolean {
+  if (processedMessages.has(msgId)) return false;
+  processedMessages.add(msgId);
+  if (processedMessages.size > MAX_PROCESSED) {
+    const first = processedMessages.values().next().value;
+    if (first) processedMessages.delete(first);
   }
-  return chunks;
-}
-
-/** Convert Telegram HTML + markdown to Discord-compatible markdown */
-function cleanForDiscord(text: string): string {
-  return text
-    // HTML bold → Discord bold
-    .replace(/<b>([\s\S]*?)<\/b>/g, "**$1**")
-    // HTML italic
-    .replace(/<i>([\s\S]*?)<\/i>/g, "*$1*")
-    // HTML code blocks
-    .replace(/<pre>([\s\S]*?)<\/pre>/g, "```\n$1\n```")
-    // HTML inline code
-    .replace(/<code>([\s\S]*?)<\/code>/g, "`$1`")
-    // HTML entities
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    // Strip any remaining HTML tags
-    .replace(/<[^>]+>/g, "")
-    // Tables → plain text
-    .replace(/^\|[-:| ]+\|$/gm, "")
-    .replace(/^\|(.+)\|$/gm, (_m, row: string) =>
-      row.split("|").map((c) => c.trim()).filter(Boolean).join(" · ")
-    )
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
-async function handleMessage(msg: Message, prompt: string) {
-  if (agentBusy || state.jobRunning || state.thinkRunning || state.discordAdminRunning) {
-    await msg.reply("Agent is busy. Try again in a moment.");
-    return;
-  }
-
-  agentBusy = true;
-
-  // Show typing indicator (only on channels that support it)
-  const ch = msg.channel;
-  if ("sendTyping" in ch) await (ch as TextChannel).sendTyping().catch(() => {});
-  const typingInterval = setInterval(() => {
-    if ("sendTyping" in ch) (ch as TextChannel).sendTyping().catch(() => {});
-  }, 8000);
-
-  const working = await msg.reply("Working on it...");
-
-  let buffer = "";
-  let lastEdit = Date.now();
-
-  const chId = msg.channelId;
-  const existingSession = channelSessions.get(chId);
-
-  // Use admin prompt in the dedicated admin channel, chat prompt everywhere else
-  const { isAdminChannel, buildAdminPrompt } = await import("./discord-admin.js");
-  const isAdmin = isAdminChannel(chId);
-
-  try {
-    // For admin channel: inject live server snapshot into the system prompt
-    const adminSystemPrompt = isAdmin ? await buildAdminPrompt() : undefined;
-
-    const result = await runClaude({
-      prompt,
-      systemPromptName: isAdmin ? "discord-admin" : "chat",
-      systemPrompt: adminSystemPrompt,
-      resumeSessionId: existingSession,
-      onChunk: async (chunk: string) => {
-        buffer += chunk;
-        if (Date.now() - lastEdit > 1500 && buffer.trim()) {
-          const preview = cleanForDiscord(buffer.slice(-1900));
-          await working.edit(preview || "...").catch(() => {});
-          lastEdit = Date.now();
-        }
-      },
-    });
-
-    if (result.sessionId) {
-      channelSessions.set(chId, result.sessionId);
-    }
-
-    let responseText = result.text || "Done.";
-
-    // In admin channel, parse and execute any action blocks Claude included
-    if (isAdmin && responseText.includes("[ACTION:")) {
-      const { parseActions, executeActions, stripActions, formatResults } =
-        await import("./discord-actions.js");
-      const actions = parseActions(responseText);
-      if (actions.length > 0) {
-        const guild = discordClient?.guilds.cache.first();
-        if (guild) {
-          await working.edit("Executing actions...").catch(() => {});
-          const results = await executeActions(actions, guild);
-          const resultText = formatResults(results);
-          responseText = stripActions(responseText);
-          if (resultText) {
-            responseText += `\n\n**Actions executed:**\n${resultText}`;
-          }
-        }
-      }
-    }
-
-    const full = cleanForDiscord(responseText);
-    const chunks = chunkText(full, 1900);
-
-    await working.edit(chunks[0] || "Done.").catch(() => {});
-    for (const chunk of chunks.slice(1)) {
-      if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
-    }
-  } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
-    await working.edit(`Something went wrong: ${errMsg}`).catch(() => {});
-  } finally {
-    clearInterval(typingInterval);
-    agentBusy = false;
-  }
+  return true;
 }
 
 export function startDiscordBot(): void {
   if (!discordClient) {
-    console.warn("[discord] DISCORD_BOT_TOKEN not set — Discord bot disabled");
+    console.warn("[discord] DISCORD_BOT_TOKEN not set -- Discord bot disabled");
     return;
   }
 
   discordClient.once("ready", async (c) => {
     console.log(`Discord bot online: ${c.user.tag}`);
-    // Initialize admin module after client is ready
+
+    // Initialize core services
+    initQueue();
+    await initWebhooks(discordClient!);
+    await initApprovals(discordClient!);
+    console.log("[discord] Core services initialized (queue, webhooks, approvals)");
+
+    // Initialize event-driven triggers and agent spawner
+    const { initTriggers } = await import("./events/trigger-handler.js");
+    initTriggers();
+    const { initSpawner } = await import("./agents/spawner.js");
+    initSpawner(discordClient!);
+    console.log("[discord] Triggers and spawner initialized");
+
+    // Start bot presence rotation
+    const { initStatus } = await import("./services/status-service.js");
+    initStatus(discordClient!);
+    console.log("[discord] Bot presence rotation started");
+
     const { initDiscordAdmin } = await import("./discord-admin.js");
     await initDiscordAdmin(discordClient);
+
+    // Wire schedule job runners
+    const { getJobRunners } = await import("./scheduler.js");
+    initScheduleJobs(getJobRunners());
+    console.log("[discord] Schedule job runners initialized");
+
+    // Register interactive button handler
+    const { registerButtonHandler } = await import("./discord-buttons.js");
+    registerButtonHandler(discordClient!);
+    console.log("[discord] Button interaction handler registered");
+
+    // Register slash commands (guild-scoped, instant)
+    const { registerSlashCommands, registerSlashHandler } = await import("./discord-slash.js");
+    await registerSlashCommands(token!);
+    registerSlashHandler(discordClient!);
+    console.log("[discord] Slash command handler registered");
   });
 
   discordClient.on("messageCreate", async (msg) => {
@@ -178,15 +120,70 @@ export function startDiscordBot(): void {
     const content = msg.content.trim();
     if (!content) return;
 
+    // Dedup
+    if (!markProcessed(msg.id)) {
+      console.log(`[discord] DEDUP blocked msg ${msg.id} from ${msg.author.username}`);
+      return;
+    }
+    console.log(`[discord] Processing msg ${msg.id} from ${msg.author.username}: ${content.slice(0, 60)}`);
+
     // Run auto-moderation first (fast path, no Claude)
     const { checkAutoMod } = await import("./discord-admin.js");
     const blocked = await checkAutoMod(msg);
     if (blocked) return;
 
-    // Simple commands
+    // Resolve channel name for routing
+    const channelName = "name" in msg.channel
+      ? (msg.channel as TextChannel).name
+      : "";
+
+    // Simple built-in commands
     if (content === "!status" || content === "/status") {
-      const busy = agentBusy || state.jobRunning || state.thinkRunning || state.discordAdminRunning;
+      const busy = state.jobRunning || state.thinkRunning || state.discordAdminRunning;
       await msg.reply(busy ? "Agent is busy running a task." : "Agent is idle and ready.");
+      return;
+    }
+
+    if (content === "!help" || content === "/help") {
+      const helpText = [
+        "**META AGENT Commands** (use `/` or `!`)",
+        "",
+        "`!help` -- this message",
+        "`!status` -- check if the agent is idle or busy",
+        "`!reset` -- clear conversation context in this channel",
+        "",
+        "**Agent channels** -- just type naturally:",
+        "  #boss -- orchestrator, delegation, supervision",
+        "  #media-buyer -- Meta Ads, budgets, ROAS",
+        "  #tm-data -- Ticketmaster events, demographics",
+        "  #creative -- ad creative, copy, images",
+        "  #dashboard -- reporting, analytics, trends",
+        "  #zamora / #kybba -- client forums",
+        "  #general -- team chat",
+        "",
+        "**Manual triggers:**",
+        "  `run meta sync` (in #media-buyer)",
+        "  `run tm sync` (in #tm-data)",
+        "  `run think` (any channel)",
+        "",
+        "**Inspect** (in #agent-internals):",
+        "  `inspect all` -- list all agents",
+        "  `inspect <agent> memory|skills|prompt` -- view agent internals",
+        "",
+        "**Admin:**",
+        "  `!supervise` -- Boss reviews all agent activity",
+        "  `!dashboard` -- update campaign status panel",
+        "  `!roles` -- ensure Admin/Team/Bot/Viewer roles",
+        "  `!restructure` -- enforce full server layout",
+        "",
+        "**Schedule** (in #schedule):",
+        "  `!schedule list` -- show all jobs with status + buttons",
+        "  `!enable <job>` / `!disable <job>` -- toggle a job",
+        "",
+        "**Agents respond via webhooks with unique identities.**",
+        "**Three-tier approval: Green (auto), Yellow (Boss checks), Red (you approve).**",
+      ].join("\n");
+      await msg.reply(helpText);
       return;
     }
 
@@ -196,16 +193,124 @@ export function startDiscordBot(): void {
       return;
     }
 
-    if (content === "!check" || content === "/check") {
-      await handleMessage(
-        msg,
-        "Check TM One for any updates. Compare against the last saved state and report what changed."
-      );
+    if (content === "!restructure" || content === "/restructure") {
+      const guild = discordClient?.guilds.cache.first();
+      if (!guild) { await msg.reply("No guild found."); return; }
+      await msg.reply("Running server restructure...");
+      const { runServerRestructure } = await import("./discord-restructure.js");
+      const result = await runServerRestructure(guild);
+      const chunks2 = chunkText(result, 1900);
+      for (const chunk of chunks2) {
+        if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
+      }
       return;
     }
 
-    // Any other message → send to agent
-    await handleMessage(msg, content);
+    if (content === "!deploy-internals" || content === "!deploy-configs") {
+      if (!discordClient) { await msg.reply("Bot not connected."); return; }
+      await msg.reply("Deploying agent memory + skills to all channels...");
+      const { deployAllInternals } = await import("./discord-config.js");
+      const result = await deployAllInternals(discordClient);
+      const chunks2 = chunkText(result, 1900);
+      for (const chunk of chunks2) {
+        if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
+      }
+      return;
+    }
+
+    if (content === "!roles" || content === "/roles") {
+      const guild = discordClient?.guilds.cache.first();
+      if (!guild) { await msg.reply("No guild found."); return; }
+      const { ensureRoles } = await import("./discord-restructure.js");
+      const result = await ensureRoles(guild);
+      await msg.reply(result);
+      return;
+    }
+
+    if (content === "!supervise" || content === "/supervise") {
+      if (!discordClient) { await msg.reply("Bot not connected."); return; }
+      await msg.reply("Running Boss supervision cycle...");
+      const result = await handleSuperviseCommand(discordClient);
+      if (result.text) await (msg.channel as TextChannel).send(result.text);
+      await (msg.channel as TextChannel).send({ embeds: [result.embed] });
+      return;
+    }
+
+    if (content === "!dashboard" || content === "/dashboard") {
+      if (!discordClient) { await msg.reply("Bot not connected."); return; }
+      await msg.reply("Updating dashboard...");
+      const result = await handleDashboardCommand(discordClient);
+      if (result.text) await (msg.channel as TextChannel).send(result.text);
+      if (result.embed) await (msg.channel as TextChannel).send({ embeds: [result.embed] });
+      return;
+    }
+
+    // Schedule channel
+    if (channelName === "schedule") {
+      const schedResult = await handleScheduleCommand(content, discordClient!, channelName);
+      if (schedResult) {
+        if (schedResult.text) await msg.reply(schedResult.text);
+        if (schedResult.embed) {
+          const sendOpts: Record<string, unknown> = { embeds: [schedResult.embed] };
+          if (schedResult.buttons) {
+            const { scheduleButtons } = await import("./discord-buttons.js");
+            sendOpts.components = [scheduleButtons()];
+          }
+          await (msg.channel as TextChannel).send(sendOpts);
+        }
+      }
+      return;
+    }
+
+    // Agent internals channel: inspect commands
+    if (channelName === "agent-internals") {
+      const { handleInspectCommand } = await import("./events/inspect-handler.js");
+      const handled = await handleInspectCommand(msg, content);
+      if (handled) return;
+    }
+
+    // Internal channels (memory/skills): bot-managed, skip
+    if (isInternalChannel(channelName)) return;
+    if (isConfigChannel(channelName)) return;
+
+    // Thread commands
+    if (content === "!threads" || content === "/threads") {
+      if ("threads" in msg.channel) {
+        const { listThreads } = await import("./discord-threads.js");
+        const result = await listThreads(msg.channel as TextChannel);
+        await msg.reply(result);
+      } else {
+        await msg.reply("Threads are only available in client channels (#zamora, #kybba).");
+      }
+      return;
+    }
+
+    if (content.toLowerCase().startsWith("thread:") || content.toLowerCase().startsWith("new thread:")) {
+      const { maybeCreateThread } = await import("./discord-threads.js");
+      const thread = await maybeCreateThread(msg, channelName);
+      if (thread) {
+        await msg.reply(`Thread created: **${thread.threadName}** -- continue the conversation there.`);
+        return;
+      }
+    }
+
+    // Manual job triggers
+    const trigger = matchManualTrigger(channelName, content);
+    if (trigger) {
+      const { triggerManualJob } = await import("./scheduler.js");
+      await msg.reply(`Triggering ${trigger}...`);
+      triggerManualJob(trigger);
+      return;
+    }
+
+    // Per-channel lock
+    if (isChannelLocked(msg.channelId)) {
+      console.log(`[discord] Channel ${channelName} already processing, skipping msg ${msg.id}`);
+      return;
+    }
+
+    // Route to the correct agent
+    await handleMessage(msg, content, channelName, discordClient);
   });
 
   discordClient.login(token).catch((err: unknown) => {
@@ -214,34 +319,38 @@ export function startDiscordBot(): void {
   });
 }
 
-// ─── Channel Router ──────────────────────────────────────────────────────────
+// --- Channel Router (outbound notifications) ---
 
-/** Well-known routing targets. Map target name -> Discord channel name. */
 const CHANNEL_ROUTES: Record<string, string> = {
   "general":       "general",
-  "announcements": "announcements",
-  "campaigns":     "campaign-updates",
-  "campaigns-general": "campaigns-general",
-  "active-jobs":   "active-jobs",
-  "performance":   "performance-reports",
-  "creative":      "ad-creative",
-  "tm-data":       "tm-one-data",
-  "tm-events":     "event-updates",
-  "agent-logs":    "agent-logs",
-  "agent-alerts":  "agent-alerts",
-  "meta-api":      "meta-api",
-  "dev-logs":      "dev-logs",
-  "billing":       "billing",
-  "bot-logs":      "bot-logs",
+  "dashboard":     "dashboard",
+  "media-buyer":   "media-buyer",
+  "tm-data":       "tm-data",
+  "creative":      "creative",
+  "boss":          "boss",
+  "zamora":        "zamora",
+  "kybba":         "kybba",
+  "agent-feed":    "agent-feed",
+  "schedule":      "schedule",
+  "morning-briefing": "morning-briefing",
+  "approvals":     "approvals",
+  "war-room":      "war-room",
+  "ops":           "ops",
+  "audit-log":     "audit-log",
+
+  // Aliases
+  "performance":   "dashboard",
+  "alerts":        "agent-feed",
+  "logs":          "agent-feed",
+  "active-jobs":   "agent-feed",
+  "agent-alerts":  "agent-feed",
+  "agent-logs":    "agent-feed",
+  "bot-logs":      "agent-feed",
+  "meta-api":      "media-buyer",
 };
 
-/** Cache of channel name -> channel ID, populated on first lookup. */
 const channelIdCache = new Map<string, string>();
 
-/**
- * Resolve a channel name to its ID, using cache.
- * Falls back to DISCORD_CHANNEL_ID if channel not found.
- */
 async function resolveChannelId(channelName: string): Promise<string | null> {
   if (channelIdCache.has(channelName)) return channelIdCache.get(channelName)!;
   if (!discordClient) return channelId || null;
@@ -257,16 +366,14 @@ async function resolveChannelId(channelName: string): Promise<string | null> {
     return ch.id;
   }
 
-  // Channel doesn't exist yet -- fall back to default
   return channelId || null;
 }
 
+/** Channels that send silent (no push/desktop notification) */
+const SILENT_CHANNELS = new Set(["agent-feed", "audit-log"]);
+
 /**
  * Send a message to a specific channel by route name.
- * Falls back to DISCORD_CHANNEL_ID if the target channel doesn't exist.
- *
- * Usage: notifyChannel("performance", "ROAS dropped below 2.0")
- *        notifyChannel("agent-alerts", "Meta token expires in 3 days")
  */
 export async function notifyChannel(target: string, text: string): Promise<void> {
   if (!discordClient) return;
@@ -275,12 +382,18 @@ export async function notifyChannel(target: string, text: string): Promise<void>
   const resolvedId = await resolveChannelId(channelName);
   if (!resolvedId) return;
 
+  const silent = SILENT_CHANNELS.has(channelName);
+
   try {
     const channel = await discordClient.channels.fetch(resolvedId);
     if (channel && channel.isTextBased()) {
       const chunks = chunkText(cleanForDiscord(text), 1900);
       for (const chunk of chunks) {
-        await (channel as TextChannel).send(chunk);
+        await (channel as TextChannel).send(
+          silent
+            ? { content: chunk, flags: [MessageFlags.SuppressNotifications] }
+            : chunk
+        );
       }
     }
   } catch (err) {
@@ -289,7 +402,7 @@ export async function notifyChannel(target: string, text: string): Promise<void>
   }
 }
 
-/** Send a proactive notification to the configured Discord channel (legacy). */
+/** Legacy: send to the configured default channel */
 export async function notifyDiscord(text: string): Promise<void> {
   if (!discordClient || !channelId) return;
   try {

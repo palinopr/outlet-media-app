@@ -18,6 +18,26 @@ const PROMPTS_DIR = join(AGENT_DIR, "prompts");
 const CLAUDE_PATH =
   process.env.CLAUDE_PATH ?? "/Users/jaimeortiz/.local/bin/claude";
 
+/**
+ * Track all spawned Claude child processes so we can kill them on shutdown.
+ * Without this, pkill on the Node process leaves orphaned Claude processes
+ * that continue running and produce ghost responses.
+ */
+import type { ChildProcess } from "node:child_process";
+const activeProcs = new Set<ChildProcess>();
+
+/** Kill all active Claude child processes. Call on SIGTERM/SIGINT. */
+export function killAllClaude(): void {
+  for (const proc of activeProcs) {
+    try {
+      proc.kill("SIGTERM");
+    } catch {
+      // Already dead -- ignore
+    }
+  }
+  activeProcs.clear();
+}
+
 // Turns per job type — TM One needs many browser steps, chat needs few
 const MAX_TURNS: Record<string, number> = {
   "assistant":        5,
@@ -31,6 +51,8 @@ export interface RunnerOptions {
   prompt: string;
   /** Which prompts/*.txt file to use as system prompt. Default: "command" */
   systemPromptName?: string;
+  /** Direct system prompt text. Takes precedence over systemPromptName. */
+  systemPrompt?: string;
   /** Overrides the per-agent maxTurns lookup */
   maxTurns?: number;
   /** Called with each stdout chunk — use for live streaming to Supabase */
@@ -60,6 +82,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
   const {
     prompt,
     systemPromptName = "command",
+    systemPrompt: directSystemPrompt,
     maxTurns = 20,
     onChunk,
     resumeSessionId,
@@ -68,16 +91,21 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
   // When resuming, the system prompt is already baked into the session
   let systemPrompt = "";
   if (!resumeSessionId) {
-    try {
-      systemPrompt = loadPrompt(systemPromptName);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[runner] Prompt file not found: prompts/${systemPromptName}.txt`);
-      return {
-        text: `Error: prompt file '${systemPromptName}.txt' not found.`,
-        success: false,
-        error: msg,
-      };
+    if (directSystemPrompt) {
+      // Caller provided the full system prompt text (e.g. with injected data)
+      systemPrompt = directSystemPrompt;
+    } else {
+      try {
+        systemPrompt = loadPrompt(systemPromptName);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error(`[runner] Prompt file not found: prompts/${systemPromptName}.txt`);
+        return {
+          text: `Error: prompt file '${systemPromptName}.txt' not found.`,
+          success: false,
+          error: msg,
+        };
+      }
     }
   }
 
@@ -110,6 +138,8 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
         stdio: ["ignore", "pipe", "pipe"],
       }
     );
+
+    activeProcs.add(proc);
 
     let assembledText = "";  // built from assistant events
     let fallbackResult = ""; // from type=result event if no assistant text
@@ -163,6 +193,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     });
 
     proc.on("close", (code) => {
+      activeProcs.delete(proc);
       // Flush any remaining buffer content
       if (lineBuffer.trim()) {
         try {
@@ -192,6 +223,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     });
 
     proc.on("error", (err) => {
+      activeProcs.delete(proc);
       console.error("[runner] Failed to spawn claude:", err.message);
       resolve({
         text: `Failed to start claude: ${err.message}`,

@@ -9,4 +9,5 @@
 export const state = {
   jobRunning: false,
   thinkRunning: false,
+  discordAdminRunning: false,
 };

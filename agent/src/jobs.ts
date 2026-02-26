@@ -46,8 +46,8 @@ async function pollOnce() {
   if (!jobs || jobs.length === 0) return;
 
   // Don't start a job while the think cycle is running (both use the claude CLI)
-  if (state.thinkRunning) {
-    console.log("[jobs] Skipping — think cycle is running");
+  if (state.thinkRunning || state.discordAdminRunning) {
+    console.log("[jobs] Skipping — another task is running");
     return;
   }
 
