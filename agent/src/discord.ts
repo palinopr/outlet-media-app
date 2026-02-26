@@ -45,6 +45,22 @@ export const discordClient = token
 
 let agentBusy = false;
 
+/** Timeout for agent Claude calls -- prevents infinite hangs */
+const AGENT_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`Agent timed out after ${Math.round(ms / 1000)}s`)),
+      ms,
+    );
+    promise.then(
+      (val) => { clearTimeout(timer); resolve(val); },
+      (err) => { clearTimeout(timer); reject(err as Error); },
+    );
+  });
+}
+
 /** Per-channel Claude session IDs for multi-turn context */
 export const channelSessions = new Map<string, string>();
 
@@ -158,21 +174,24 @@ async function handleMessage(
       }
     }
 
-    const result = await runClaude({
-      prompt,
-      systemPromptName: agent.promptFile,
-      systemPrompt,
-      maxTurns: agent.maxTurns,
-      resumeSessionId: existingSession,
-      onChunk: async (chunk: string) => {
-        buffer += chunk;
-        if (Date.now() - lastEdit > 1500 && buffer.trim()) {
-          const preview = cleanForDiscord(buffer.slice(-1900));
-          await working.edit(preview || "...").catch(() => {});
-          lastEdit = Date.now();
-        }
-      },
-    });
+    const result = await withTimeout(
+      runClaude({
+        prompt,
+        systemPromptName: agent.promptFile,
+        systemPrompt,
+        maxTurns: agent.maxTurns,
+        resumeSessionId: existingSession,
+        onChunk: async (chunk: string) => {
+          buffer += chunk;
+          if (Date.now() - lastEdit > 1500 && buffer.trim()) {
+            const preview = cleanForDiscord(buffer.slice(-1900));
+            await working.edit(preview || "...").catch(() => {});
+            lastEdit = Date.now();
+          }
+        },
+      }),
+      AGENT_TIMEOUT_MS,
+    );
 
     if (result.sessionId) {
       channelSessions.set(chId, result.sessionId);
@@ -195,10 +214,15 @@ async function handleMessage(
       .then(({ maybeUpdateMemory }) => maybeUpdateMemory(agent.promptFile, prompt, responseText))
       .catch(() => {});
 
-    // Boss delegation: if Boss response contains @agent directives, execute them
-    if (channelName === "boss" && discordClient && responseText.includes("@")) {
+    // Agent skill self-creation (fire-and-forget, checks for reusable patterns)
+    import("./discord-skills.js")
+      .then(({ maybeCreateSkill }) => maybeCreateSkill(agent.promptFile, prompt, responseText))
+      .catch(() => {});
+
+    // Agent-to-agent delegation: any named agent can delegate with @agent-name
+    if (discordClient && responseText.includes("@") && agent.promptFile !== "chat") {
       import("./discord-delegate.js")
-        .then(({ processDelegations }) => processDelegations(discordClient!, responseText))
+        .then(({ processDelegations }) => processDelegations(discordClient!, responseText, channelName))
         .catch(() => {});
     }
   } catch (err) {
@@ -292,6 +316,12 @@ export function startDiscordBot(): void {
     registerButtonHandler(discordClient!);
     console.log("[discord] Button interaction handler registered");
 
+    // Register slash commands (guild-scoped, instant)
+    const { registerSlashCommands, registerSlashHandler } = await import("./discord-slash.js");
+    await registerSlashCommands(token!);
+    registerSlashHandler(discordClient!);
+    console.log("[discord] Slash command handler registered");
+
     // Auto-deploy internals on startup (one-time, remove after first deploy)
     if (process.env.DEPLOY_INTERNALS_ON_STARTUP === "1") {
       console.log("[discord] Auto-deploying agent internals...");
@@ -329,7 +359,7 @@ export function startDiscordBot(): void {
 
     if (content === "!help" || content === "/help") {
       const helpText = [
-        "**META AGENT Commands**",
+        "**META AGENT Commands** (use `/` or `!`)",
         "",
         "`!help` -- this message",
         "`!status` -- check if the agent is idle or busy",

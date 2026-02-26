@@ -102,44 +102,66 @@ async function executeDelegation(
   return responseText;
 }
 
+/** Prevent cascading delegations (agent A -> B -> C) */
+let delegationActive = false;
+
+/** Max delegations per response to prevent runaway chains */
+const MAX_DELEGATIONS_PER_RESPONSE = 3;
+
 /**
- * Process delegations from a Boss response.
- * Called after Boss responds in #boss.
+ * Process delegations from any agent response.
+ * Any named agent can delegate to another with @agent-name.
  * Fire-and-forget -- runs delegations sequentially to avoid overload.
+ *
+ * @param sourceChannel - the channel where the delegating agent responded
  */
 export async function processDelegations(
   client: Client,
-  bossResponse: string,
+  agentResponse: string,
+  sourceChannel: string = "boss",
 ): Promise<void> {
-  const delegations = parseDelegations(bossResponse);
+  // Prevent cascading: if we're already inside a delegation, don't start another
+  if (delegationActive) return;
+
+  // Filter out self-delegation and cap count
+  const delegations = parseDelegations(agentResponse)
+    .filter(d => d.channelName !== sourceChannel)
+    .slice(0, MAX_DELEGATIONS_PER_RESPONSE);
+
   if (delegations.length === 0) return;
 
   // Lazy import to avoid circular dependency
   const { notifyChannel } = await import("./discord.js");
 
+  const sourceLabel = sourceChannel === "boss" ? "Boss" : `#${sourceChannel}`;
   await notifyChannel(
     "agent-feed",
-    `Boss delegating ${delegations.length} task(s): ${delegations.map(d => `@${d.target}`).join(", ")}`,
+    `${sourceLabel} delegating ${delegations.length} task(s): ${delegations.map(d => `@${d.target}`).join(", ")}`,
   );
 
-  for (const delegation of delegations) {
-    if (state.jobRunning || state.thinkRunning) {
-      await notifyChannel("boss", `Skipped delegation to @${delegation.target} -- agent is busy.`);
-      continue;
-    }
+  delegationActive = true;
+  try {
+    for (const delegation of delegations) {
+      if (state.jobRunning || state.thinkRunning) {
+        await notifyChannel(sourceChannel, `Skipped delegation to @${delegation.target} -- agent is busy.`);
+        continue;
+      }
 
-    state.jobRunning = true;
-    try {
-      const result = await executeDelegation(client, delegation);
+      state.jobRunning = true;
+      try {
+        const result = await executeDelegation(client, delegation);
 
-      // Report back to #boss
-      const summary = result.slice(0, 500);
-      await notifyChannel("boss", `**@${delegation.target} completed:**\n${summary}`);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      await notifyChannel("boss", `Delegation to @${delegation.target} failed: ${msg}`);
-    } finally {
-      state.jobRunning = false;
+        // Report back to the source channel (not always #boss)
+        const summary = result.slice(0, 500);
+        await notifyChannel(sourceChannel, `**@${delegation.target} completed:**\n${summary}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        await notifyChannel(sourceChannel, `Delegation to @${delegation.target} failed: ${msg}`);
+      } finally {
+        state.jobRunning = false;
+      }
     }
+  } finally {
+    delegationActive = false;
   }
 }

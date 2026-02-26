@@ -15,6 +15,34 @@ import { existsSync } from "node:fs";
 import { AGENT_INTERNALS } from "./discord-router.js";
 import { runClaude } from "./runner.js";
 
+/** Per-agent cooldown to prevent memory updates on every response */
+const lastMemoryUpdate = new Map<string, number>();
+const MEMORY_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between updates per agent
+
+/** Messages too trivial to extract memory from */
+const TRIVIAL = /^(ok|thanks|ty|got it|cool|nice|yes|no|yep|nope|k|thx|sure|alright|lol|haha)[\s.!?]*$/i;
+
+/** Debounced memory channel syncs -- batch Discord embed updates */
+const pendingSyncs = new Map<string, ReturnType<typeof setTimeout>>();
+const SYNC_DEBOUNCE_MS = 30_000; // 30 seconds
+
+function queueMemorySync(agentKey: string): void {
+  const existing = pendingSyncs.get(agentKey);
+  if (existing) clearTimeout(existing);
+
+  pendingSyncs.set(agentKey, setTimeout(async () => {
+    pendingSyncs.delete(agentKey);
+    try {
+      const { discordClient } = await import("./discord.js");
+      if (!discordClient) return;
+      const { deploySingleAgentInternals } = await import("./discord-config.js");
+      await deploySingleAgentInternals(discordClient, agentKey);
+    } catch {
+      // Best-effort sync
+    }
+  }, SYNC_DEBOUNCE_MS));
+}
+
 /** Map promptFile names to AGENT_INTERNALS keys */
 const PROMPT_TO_AGENT: Record<string, string> = {
   "boss": "boss",
@@ -62,10 +90,18 @@ export async function maybeUpdateMemory(
   const internals = AGENT_INTERNALS[agentKey];
   if (!internals) return;
 
+  // Skip trivial user messages
+  if (TRIVIAL.test(userMessage.trim())) return;
+
   // Skip short or error responses
   if (agentResponse.length < 100) return;
   if (agentResponse.startsWith("Something went wrong")) return;
   if (agentResponse.startsWith("Agent is busy")) return;
+
+  // Per-agent cooldown
+  const now = Date.now();
+  const last = lastMemoryUpdate.get(promptFile) ?? 0;
+  if (now - last < MEMORY_COOLDOWN_MS) return;
 
   const extractPrompt = [
     EXTRACT_PROMPT,
@@ -83,7 +119,7 @@ export async function maybeUpdateMemory(
   try {
     const result = await runClaude({
       prompt: extractPrompt,
-      systemPromptName: "chat",
+      systemPrompt: "You are a concise memory extraction filter. Follow the instructions exactly.",
       maxTurns: 1,
     });
 
@@ -103,6 +139,12 @@ export async function maybeUpdateMemory(
     const block = `\n\n<!-- auto-learned ${timestamp} -->\n${bullets.join("\n")}`;
 
     await appendFile(internals.memoryFile, block);
+
+    // Record cooldown timestamp
+    lastMemoryUpdate.set(promptFile, Date.now());
+
+    // Queue debounced sync of memory channel embed in Discord
+    queueMemorySync(agentKey);
 
     // Lazy import to avoid circular dependency
     const { notifyChannel } = await import("./discord.js");
