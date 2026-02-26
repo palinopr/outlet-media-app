@@ -4,6 +4,7 @@ import { runClaude } from "./runner.js";
 import { notifyOwner } from "./bot.js";
 import { notifyChannel } from "./discord.js";
 import { state } from "./state.js";
+import { getRoutineRunners } from "./discord-routines.js";
 
 const CHECK_CRON     = process.env.CHECK_CRON ?? "0 */2 * * *"; // every 2 hours
 const META_CRON      = "0 */6 * * *";                            // every 6 hours
@@ -45,6 +46,7 @@ export function startScheduler(): void {
 /**
  * Trigger a job manually from a Discord message.
  * Called from discord.ts when a user types "run meta sync" etc.
+ * Supports both the original infra jobs and the new autonomous routines.
  */
 export function triggerManualJob(jobName: string): void {
   switch (jobName) {
@@ -57,8 +59,16 @@ export function triggerManualJob(jobName: string): void {
     case "think":
       runThinkCycle();
       break;
-    default:
-      console.warn(`[scheduler] Unknown manual trigger: ${jobName}`);
+    default: {
+      // Try autonomous routines
+      const routines = getRoutineRunners();
+      if (routines[jobName]) {
+        routines[jobName]();
+      } else {
+        console.warn(`[scheduler] Unknown manual trigger: ${jobName}`);
+      }
+      break;
+    }
   }
 }
 
@@ -144,14 +154,17 @@ async function runMetaSync() {
 /**
  * Export runner functions for discord-schedule.ts to wire up cron toggles.
  * Keys must match the job keys in discord-schedule.ts JOBS record.
+ * Includes both the original infra jobs and the new autonomous routines.
  */
 export function getJobRunners(): Record<string, () => void> {
+  const routines = getRoutineRunners();
   return {
     "meta-sync": () => { runMetaSync(); },
     "tm-sync": () => { runTmCheck(); },
     "think": () => { runThinkCycle(); },
     "heartbeat": () => { pingHeartbeat(); },
     "health-check": () => { runDiscordHealthCheck(); },
+    ...routines,
   };
 }
 

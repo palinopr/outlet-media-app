@@ -76,6 +76,71 @@ const JOBS: Record<string, ScheduleJob> = {
     lastRun: null,
     runner: () => {},
   },
+
+  // --- Autonomous Routines (from discord-routines.ts) ---
+  "morning-briefing": {
+    name: "Morning Briefing",
+    description: "Daily summary: shows, campaigns, action items -> #boss (8am CST)",
+    cron: "0 13 * * *",  // 8am CST = 1pm UTC
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
+  "show-day-check": {
+    name: "Show-Day Automation",
+    description: "Max budgets + urgency creative for today's shows (9am CST)",
+    cron: "0 14 * * *",  // 9am CST = 2pm UTC
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
+  "show-day-monitor": {
+    name: "Show-Day Monitor",
+    description: "Check spend pace on show-day campaigns (every 2h, show days only)",
+    cron: "0 */2 * * *",
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
+  "post-show-recap": {
+    name: "Post-Show Recap",
+    description: "Final spend, tickets, ROAS for yesterday's shows + pause campaigns (9am CST)",
+    cron: "0 14 * * *",  // 9am CST = 2pm UTC
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
+  "weekly-report": {
+    name: "Weekly Report",
+    description: "Per-client weekly performance summary (Monday 9am CST)",
+    cron: "0 14 * * 1",  // Monday 9am CST = 2pm UTC
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
+  "creative-fatigue": {
+    name: "Creative Fatigue Check",
+    description: "CTR/frequency trends on active ads, flag refresh needs (every 6h)",
+    cron: "0 */6 * * *",
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
+  "budget-pacing": {
+    name: "Budget Pacing",
+    description: "Daily spend vs budget for active campaigns, flag under/overpacing (every 4h)",
+    cron: "0 */4 * * *",
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
 };
 
 /**
