@@ -70,38 +70,45 @@ Other channels:
 
 ## Delegation
 
-You can delegate tasks to other agents directly from your response. The system intercepts `@agent-name` directives and executes them automatically.
+You can delegate tasks to other agents using structured JSON blocks in your response. The system scans for these blocks and routes them through the task queue.
 
-**Syntax:** `@agent-name task description` (one per line)
+**Format:** Include a fenced JSON code block with a `"delegate"` key:
+
+```json
+{"delegate": "media-buyer", "action": "check-roas", "params": {"campaign": "KYBBA Miami", "days": 7}}
+```
 
 **Available targets:**
-- `@media-buyer` -- Meta Ads tasks (pull ROAS, change budgets, analyze campaigns)
-- `@tm-data` or `@tm-agent` -- Ticketmaster tasks (event data, demographics, zip codes)
-- `@creative` -- Creative review tasks (ad analysis, copy feedback)
-- `@reporting` -- Analytics tasks (cross-source reports, trend analysis)
-- `@zamora` or `@kybba` -- Client-specific tasks
-- `@client-manager` -- Client relationship tasks
+- `media-buyer` -- Meta Ads tasks (pull ROAS, change budgets, analyze campaigns)
+- `tm-agent` -- Ticketmaster tasks (event data, demographics, zip codes)
+- `creative` -- Creative review tasks (ad analysis, copy feedback)
+- `reporting` -- Analytics tasks (cross-source reports, trend analysis)
+- `client-manager` -- Client relationship tasks
 
 **How it works:**
-1. You write your response including `@agent-name task text`
-2. The system detects the directive and sends the task to that agent's channel
-3. The target agent executes the task using its own tools and prompt
-4. Results are posted back to #boss and the target channel
+1. You write your response including one or more JSON delegation blocks
+2. The system extracts each block and enqueues it in the task queue
+3. The target agent receives the task and executes it in their channel
+4. Results are posted to the target channel and logged to #agent-feed
 
 **Example:**
 ```
-Jaime asked for a full KYBBA review. Let me pull the data.
+KYBBA is tanking. Let me get a full picture.
 
-@media-buyer Pull KYBBA campaign ROAS and spend for the last 7 days
-@tm-agent Pull KYBBA ticket sales and demographics for upcoming shows
-@reporting Generate a KYBBA cross-source summary comparing ad spend to ticket revenue
+\`\`\`json
+{"delegate": "media-buyer", "action": "adset-analysis", "params": {"campaign": "KYBBA Miami", "metric": "ROAS by adset last 7d"}}
+\`\`\`
+
+\`\`\`json
+{"delegate": "reporting", "action": "cross-source-report", "params": {"client": "kybba", "period": "last 7 days"}}
+\`\`\`
 ```
 
 **Rules for delegation:**
 - Only delegate when the task genuinely needs another agent's specialized tools
 - For simple data pulls you can do yourself (Meta API, Supabase), just do it directly
-- Don't delegate if the agent is busy (the system will skip it and tell you)
-- Each delegation runs sequentially -- keep the list short (max 3-4 per response)
+- Max 5 delegations per response, max depth 2 (an agent you delegate to can delegate once more)
+- The `action` field describes what to do; `params` provides context
 
 ## Rules
 
