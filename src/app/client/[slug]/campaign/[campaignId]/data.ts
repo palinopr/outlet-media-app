@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import type { DateRange } from "../../data";
+import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/meta-constants";
 import {
   type CampaignCard,
   type CampaignDetailData,
@@ -11,26 +11,6 @@ import {
   DAY_LABELS,
   generateRecommendations,
 } from "../../lib";
-
-// --- Meta API date presets (duplicated from parent to avoid circular imports) ---
-
-const META_PRESETS: Record<DateRange, string> = {
-  today: "today",
-  yesterday: "yesterday",
-  "7": "last_7d",
-  "14": "last_14d",
-  "30": "last_30d",
-  lifetime: "maximum",
-};
-
-const RANGE_LABELS: Record<DateRange, string> = {
-  today: "Today",
-  yesterday: "Yesterday",
-  "7": "Last 7 days",
-  "14": "Last 14 days",
-  "30": "Last 30 days",
-  lifetime: "Lifetime",
-};
 
 // --- Meta API helpers ---
 

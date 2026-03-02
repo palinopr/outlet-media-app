@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/meta-constants";
 import {
   type TmEvent,
   type DemographicsRow,
@@ -9,9 +10,8 @@ import {
   buildAudienceProfile,
 } from "./lib";
 
-// --- Public types ---
+export type { DateRange };
 
-export type DateRange = "today" | "yesterday" | "7" | "14" | "30" | "lifetime";
 
 export interface ClientData {
   heroStats: HeroStats;
@@ -39,26 +39,6 @@ const EMPTY: ClientData = {
   audience: null,
   dataSource: "supabase",
   rangeLabel: "Last 7 days",
-};
-
-// --- Meta Graph API date presets ---
-
-const META_PRESETS: Record<DateRange, string> = {
-  today: "today",
-  yesterday: "yesterday",
-  "7": "last_7d",
-  "14": "last_14d",
-  "30": "last_30d",
-  lifetime: "maximum",
-};
-
-const RANGE_LABELS: Record<DateRange, string> = {
-  today: "Today",
-  yesterday: "Yesterday",
-  "7": "Last 7 days",
-  "14": "Last 14 days",
-  "30": "Last 30 days",
-  lifetime: "Lifetime",
 };
 
 // --- Meta Graph API types ---
