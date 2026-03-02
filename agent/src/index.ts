@@ -83,11 +83,6 @@ bot.start({
 // Start autonomous scheduler
 startScheduler();
 
-// Job poller disabled -- spams TypeError: fetch failed every 5s when
-// the Supabase agent_jobs table is unreachable or misconfigured.
-// Re-enable once the dashboard job queue is wired up properly.
-// startJobPoller();
-
 // Graceful shutdown -- kill child Claude processes to prevent orphaned ghosts
 process.once("SIGINT", () => {
   console.log("\nShutting down...");

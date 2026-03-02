@@ -14,7 +14,6 @@
     "dotenv": "^16.5.0",
     "grammy": "^1.36.1",
     "node-cron": "^3.0.3",
-    "playwright": "^1.58.2",
     "zod": "^4.0.0"
   },
   "devDependencies": {
