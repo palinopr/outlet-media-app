@@ -1,6 +1,6 @@
 /**
- * Shared formatting helpers used across admin and client pages.
- * Single source of truth — do NOT duplicate these in page files.
+ * Shared utility module extracted from duplicated helpers across admin and client pages.
+ * This is the single source of truth for formatting logic — do NOT duplicate these in page files.
  */
 
 // ─── Number / Currency ─────────────────────────────────────────────────────

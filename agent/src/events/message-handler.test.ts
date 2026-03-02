@@ -9,6 +9,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // --------------- mocks (must be before import) ---------------
 
+// discord.js isn't installed in the root node_modules — stub it so Vitest
+// can transform the source files that import from it.
+vi.mock("discord.js", () => ({
+  ChannelType: {},
+  WebhookClient: vi.fn(),
+}));
+
 vi.mock("../runner.js", () => ({
   runClaude: vi.fn().mockResolvedValue({ text: "agent response" }),
 }));
