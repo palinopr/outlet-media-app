@@ -42,7 +42,7 @@ import {
   type HourlyRow,
   type DailyRow,
   type DayOfWeekRow,
-} from "@/components/client/campaign-charts";
+} from "@/components/client/charts";
 import { AdsPreview, type AdPreview } from "@/components/client/ads-preview";
 import {
   RecommendationsList,
