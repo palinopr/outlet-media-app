@@ -5,9 +5,8 @@ import {
   Eye,
   MousePointer,
   Target,
-  Users,
   BarChart3,
-  Image,
+  Image as ImageIcon,
   Clock,
   Shield,
   Sparkles,
@@ -21,7 +20,6 @@ import {
   fmtUsd,
   fmtNum,
   fmtDate,
-  roasColor,
   roasLabel,
   getCampaignStatusCfg,
   AGE_BRACKETS,
@@ -422,7 +420,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       {ads.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <Image className="h-3.5 w-3.5 text-white/30" />
+            <ImageIcon className="h-3.5 w-3.5 text-white/30" />
             <span className="section-label">Ad Creatives</span>
             <span className="text-[10px] text-white/20 ml-auto">{ads.length} ads</span>
           </div>

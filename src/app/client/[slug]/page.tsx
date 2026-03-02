@@ -29,7 +29,6 @@ import {
   fmtUsd,
   fmtDate,
   fmtNum,
-  fmtPct,
   roasColor,
   roasLabel,
   getCampaignStatusCfg,

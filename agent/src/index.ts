@@ -4,7 +4,6 @@ import { execSync } from "node:child_process";
 import { bot } from "./bot.js";
 import { startDiscordBot } from "./discord.js";
 import { startScheduler } from "./scheduler.js";
-import { startJobPoller } from "./jobs.js";
 import { killAllClaude } from "./runner.js";
 
 // Ensure session directory exists for TM One browser state

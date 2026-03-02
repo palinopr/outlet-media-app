@@ -8,14 +8,12 @@
  * Triggered by `!supervise` command in #boss.
  */
 
-import { EmbedBuilder, type Client, type TextChannel } from "discord.js";
+import { EmbedBuilder, type Client } from "discord.js";
 import { readFile } from "node:fs/promises";
 import { runClaude } from "./runner.js";
 import { state } from "./state.js";
 
 const ACTIVITY_LOG = "session/activity-log.json";
-const GUILD_ID = "1340092028280770693";
-const BOSS_CHANNEL_NAME = "boss";
 
 interface ActivityEntry {
   ts: string;
@@ -116,7 +114,7 @@ function buildSupervisionEmbed(report: string): EmbedBuilder {
  * Handle the !supervise command. Posts supervision report to #boss.
  */
 export async function handleSuperviseCommand(
-  client: Client,
+  _client: Client,
 ): Promise<{ text: string; embed: EmbedBuilder }> {
   if (state.jobRunning || state.thinkRunning || state.discordAdminRunning) {
     return {

@@ -15,11 +15,10 @@ import {
   GatewayIntentBits,
   MessageFlags,
   Partials,
-  type Message,
   type TextChannel,
 } from "discord.js";
 import { state } from "./state.js";
-import { getAgentForChannel, matchManualTrigger, isConfigChannel, isInternalChannel } from "./discord-router.js";
+import { matchManualTrigger, isConfigChannel, isInternalChannel } from "./discord-router.js";
 import { handleScheduleCommand, initScheduleJobs } from "./discord-schedule.js";
 import { handleSuperviseCommand } from "./discord-supervisor.js";
 import { handleDashboardCommand } from "./discord-dashboard.js";

@@ -24,7 +24,6 @@ import {
   ChannelType,
   EmbedBuilder,
 } from "discord.js";
-import { state } from "./state.js";
 
 // --- Config ---
 

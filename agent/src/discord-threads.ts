@@ -13,7 +13,7 @@
  * - If a thread with that name already exists and is active, route to it
  */
 
-import { type Message, type TextChannel, ChannelType } from "discord.js";
+import { type Message, type TextChannel } from "discord.js";
 
 /** Channels that support auto-threading */
 const THREAD_CHANNELS = new Set(["zamora", "kybba"]);

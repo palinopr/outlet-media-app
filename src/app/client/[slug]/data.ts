@@ -338,7 +338,7 @@ export async function getData(
   }
 
   // Step 3: Fetch TM events for this client (optional enrichment)
-  const [eventsRes, demosRes] = await Promise.all([
+  const [eventsRes] = await Promise.all([
     supabaseAdmin
       .from("tm_events")
       .select("*")

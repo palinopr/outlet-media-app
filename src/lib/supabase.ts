@@ -14,7 +14,6 @@ if (!url || !anonKey) {
 // No Database generic here - Supabase v2 resolves Insert types as `never` when
 // the generic is applied to the admin client with circular Omit definitions.
 // Payloads are typed explicitly at each call site.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const supabaseAdmin = url && serviceKey
   ? createClient(url, serviceKey)
   : null;

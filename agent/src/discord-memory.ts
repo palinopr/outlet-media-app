@@ -10,7 +10,7 @@
  * Fire-and-forget -- never blocks the main response flow.
  */
 
-import { readFile, writeFile, appendFile } from "node:fs/promises";
+import { readFile, appendFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { AGENT_INTERNALS } from "./discord-router.js";
 import { runClaude } from "./runner.js";
