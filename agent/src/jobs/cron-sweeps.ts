@@ -8,11 +8,12 @@
  * All jobs start OFF by default. Enable via !enable <job> in #schedule.
  */
 
-import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import { state } from "../state.js";
 import { runClaude } from "../runner.js";
 import { enqueueTask, completeTask, failTask } from "../services/queue-service.js";
+import { todayCST, yesterdayCST } from "../utils/date-helpers.js";
+import { loadEvents, loadCampaigns, categorizeEvents } from "../utils/session-loader.js";
+import { campaignsSummary, eventsSummary } from "../utils/prompt-formatters.js";
 
 // Lazy imports to avoid circular deps
 async function postToChannel(target: string, text: string): Promise<void> {
@@ -24,141 +25,8 @@ async function postToFeed(text: string): Promise<void> {
   await postToChannel("agent-feed", text);
 }
 
-// --- Data Loaders ---
-
-interface EventData {
-  name: string;
-  date: string;
-  venue?: string;
-  city?: string;
-  artist?: string;
-  tickets_sold?: number;
-  tickets_total?: number;
-  status?: string;
-}
-
-interface CampaignData {
-  name: string;
-  status?: string;
-  effective_status?: string;
-  daily_budget?: string;
-  daily_budget_cents?: number;
-  spend?: string;
-  roas?: string;
-  purchase_roas?: string;
-}
-
-async function loadEvents(): Promise<EventData[]> {
-  const path = "session/last-events.json";
-  if (!existsSync(path)) return [];
-  try {
-    const raw = await readFile(path, "utf-8");
-    const parsed: unknown = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as EventData[];
-    if (
-      parsed &&
-      typeof parsed === "object" &&
-      "data" in parsed &&
-      Array.isArray((parsed as { data: unknown }).data)
-    ) {
-      return (parsed as { data: EventData[] }).data;
-    }
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-async function loadCampaigns(): Promise<CampaignData[]> {
-  const path = "session/last-campaigns.json";
-  if (!existsSync(path)) return [];
-  try {
-    const raw = await readFile(path, "utf-8");
-    const parsed: unknown = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed as CampaignData[];
-    if (
-      parsed &&
-      typeof parsed === "object" &&
-      "data" in parsed &&
-      Array.isArray((parsed as { data: unknown }).data)
-    ) {
-      return (parsed as { data: CampaignData[] }).data;
-    }
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-function todayCST(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
-}
-
-function yesterdayCST(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
-}
-
-function tomorrowCST(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
-}
-
-function categorizeEvents(events: EventData[]) {
-  const t = todayCST();
-  const y = yesterdayCST();
-  const tm = tomorrowCST();
-
-  const today: EventData[] = [];
-  const tomorrow: EventData[] = [];
-  const yesterday: EventData[] = [];
-  const upcoming: EventData[] = [];
-
-  for (const ev of events) {
-    const d = ev.date?.slice(0, 10);
-    if (d === t) today.push(ev);
-    else if (d === tm) tomorrow.push(ev);
-    else if (d === y) yesterday.push(ev);
-    else if (d && d > t) upcoming.push(ev);
-  }
-
-  return { today, tomorrow, yesterday, upcoming };
-}
-
 function canRun(): boolean {
   return !state.jobRunning && !state.thinkRunning && !state.discordAdminRunning;
-}
-
-function campaignsSummary(campaigns: CampaignData[]): string {
-  if (campaigns.length === 0) return "No campaign data available.";
-  return campaigns
-    .map((c) => {
-      const status = c.effective_status || c.status || "unknown";
-      const spend = c.spend ? `$${parseFloat(c.spend).toFixed(2)}` : "--";
-      const budget = c.daily_budget
-        ? `$${(parseFloat(c.daily_budget) / 100).toFixed(2)}/day`
-        : c.daily_budget_cents
-          ? `$${(c.daily_budget_cents / 100).toFixed(2)}/day`
-          : "--";
-      const roas = c.purchase_roas || c.roas || "--";
-      return `- ${c.name}: ${status} | spend=${spend} budget=${budget} roas=${roas}`;
-    })
-    .join("\n");
-}
-
-function eventsSummary(events: EventData[], label: string): string {
-  if (events.length === 0) return `No ${label} events.`;
-  return events
-    .map((ev) => {
-      const tickets =
-        ev.tickets_sold != null && ev.tickets_total != null
-          ? ` | ${ev.tickets_sold}/${ev.tickets_total} tickets`
-          : "";
-      return `- ${ev.name} @ ${ev.venue || "TBD"}, ${ev.city || ""}${tickets}`;
-    })
-    .join("\n");
 }
 
 // --- Routine Lock ---

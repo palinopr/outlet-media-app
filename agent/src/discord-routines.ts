@@ -15,10 +15,11 @@
  *   - Jobs start OFF by default, enabled via `!enable <job>` in #schedule.
  */
 
-import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import { state } from "./state.js";
 import { runClaude } from "./runner.js";
+import { todayCST, yesterdayCST } from "./utils/date-helpers.js";
+import { loadEvents, loadCampaigns, categorizeEvents } from "./utils/session-loader.js";
+import { campaignsSummary, eventsSummary } from "./utils/prompt-formatters.js";
 
 // Lazy imports to avoid circular deps with discord.ts
 async function postToChannel(target: string, text: string): Promise<void> {
@@ -30,163 +31,8 @@ async function postToFeed(text: string): Promise<void> {
   await postToChannel("agent-feed", text);
 }
 
-// --- Shared Utilities -------------------------------------------------------
-
-interface EventData {
-  name: string;
-  date: string;       // ISO date string or "YYYY-MM-DD"
-  venue?: string;
-  city?: string;
-  artist?: string;
-  tickets_sold?: number;
-  tickets_total?: number;
-  status?: string;
-  tm1_id?: string;
-}
-
-interface CampaignData {
-  id?: string;
-  name: string;
-  status?: string;
-  effective_status?: string;
-  daily_budget?: string;
-  daily_budget_cents?: number;
-  lifetime_budget?: string;
-  spend?: string;
-  impressions?: string;
-  clicks?: string;
-  ctr?: string;
-  cpc?: string;
-  roas?: string;
-  purchase_roas?: string;
-  reach?: string;
-}
-
-/**
- * Load events from session cache. Returns empty array if file missing.
- */
-async function loadEvents(): Promise<EventData[]> {
-  const path = "session/last-events.json";
-  if (!existsSync(path)) return [];
-  try {
-    const raw = await readFile(path, "utf-8");
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed.data && Array.isArray(parsed.data)) return parsed.data;
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Load campaigns from session cache. Returns empty array if file missing.
- */
-async function loadCampaigns(): Promise<CampaignData[]> {
-  const path = "session/last-campaigns.json";
-  if (!existsSync(path)) return [];
-  try {
-    const raw = await readFile(path, "utf-8");
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed.data && Array.isArray(parsed.data)) return parsed.data;
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Get today's date in CST (Central Time).
- * Returns YYYY-MM-DD string.
- */
-function todayCST(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
-}
-
-/**
- * Get yesterday's date in CST.
- */
-function yesterdayCST(): string {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return d.toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
-}
-
-/**
- * Get tomorrow's date in CST.
- */
-function tomorrowCST(): string {
-  const d = new Date();
-  d.setDate(d.getDate() + 1);
-  return d.toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
-}
-
-/**
- * Categorize events by date relative to today (CST).
- */
-function categorizeEvents(events: EventData[]): {
-  today: EventData[];
-  tomorrow: EventData[];
-  yesterday: EventData[];
-  upcoming: EventData[];
-} {
-  const t = todayCST();
-  const y = yesterdayCST();
-  const tm = tomorrowCST();
-
-  const today: EventData[] = [];
-  const tomorrow: EventData[] = [];
-  const yesterday: EventData[] = [];
-  const upcoming: EventData[] = [];
-
-  for (const ev of events) {
-    const d = ev.date?.slice(0, 10);
-    if (d === t) today.push(ev);
-    else if (d === tm) tomorrow.push(ev);
-    else if (d === y) yesterday.push(ev);
-    else if (d && d > t) upcoming.push(ev);
-  }
-
-  return { today, tomorrow, yesterday, upcoming };
-}
-
-/**
- * Check if another task is running. Returns true if safe to proceed.
- */
 function canRun(): boolean {
   return !state.jobRunning && !state.thinkRunning && !state.discordAdminRunning;
-}
-
-/**
- * Format campaign data as a concise text block for injection into prompts.
- */
-function campaignsSummary(campaigns: CampaignData[]): string {
-  if (campaigns.length === 0) return "No campaign data available.";
-  return campaigns.map(c => {
-    const status = c.effective_status || c.status || "unknown";
-    const spend = c.spend ? `$${parseFloat(c.spend).toFixed(2)}` : "--";
-    const budget = c.daily_budget
-      ? `$${(parseFloat(c.daily_budget) / 100).toFixed(2)}/day`
-      : c.daily_budget_cents
-        ? `$${(c.daily_budget_cents / 100).toFixed(2)}/day`
-        : "--";
-    const roas = c.purchase_roas || c.roas || "--";
-    return `- ${c.name}: ${status} | spend=${spend} budget=${budget} roas=${roas}`;
-  }).join("\n");
-}
-
-/**
- * Format event data as a text block for prompts.
- */
-function eventsSummary(events: EventData[], label: string): string {
-  if (events.length === 0) return `No ${label} events.`;
-  return events.map(ev => {
-    const tickets = ev.tickets_sold != null && ev.tickets_total != null
-      ? ` | ${ev.tickets_sold}/${ev.tickets_total} tickets`
-      : "";
-    return `- ${ev.name} @ ${ev.venue || "TBD"}, ${ev.city || ""}${tickets}`;
-  }).join("\n");
 }
 
 // --- Routine Lock -----------------------------------------------------------
