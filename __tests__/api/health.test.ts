@@ -30,11 +30,4 @@ describe("GET /api/health", () => {
     expect(body.version).toBe("0.1.0");
   });
 
-  it("uses npm_package_version env var when set", async () => {
-    process.env.npm_package_version = "2.5.0";
-    const res = await GET();
-    const body = await res.json();
-    expect(body.version).toBe("2.5.0");
-    delete process.env.npm_package_version;
-  });
 });

@@ -1,33 +1,32 @@
-import { describe, it } from "node:test";
-import assert from "node:assert/strict";
-import { toSlug } from "./to-slug.js";
+import { describe, it, expect } from "vitest";
+import { toSlug } from "./to-slug";
 
 describe("toSlug", () => {
   it("converts a simple name to lowercase underscore slug", () => {
-    assert.equal(toSlug("Zamora Presents"), "zamora_presents");
+    expect(toSlug("Zamora Presents")).toBe("zamora_presents");
   });
 
   it("handles multiple spaces and special characters", () => {
-    assert.equal(toSlug("Happy   Paws!!"), "happy_paws");
+    expect(toSlug("Happy   Paws!!")).toBe("happy_paws");
   });
 
   it("strips leading and trailing underscores", () => {
-    assert.equal(toSlug("  --Hello World--  "), "hello_world");
+    expect(toSlug("  --Hello World--  ")).toBe("hello_world");
   });
 
   it("returns empty string for empty input", () => {
-    assert.equal(toSlug(""), "");
+    expect(toSlug("")).toBe("");
   });
 
   it("preserves numbers", () => {
-    assert.equal(toSlug("Studio 54 Live"), "studio_54_live");
+    expect(toSlug("Studio 54 Live")).toBe("studio_54_live");
   });
 
   it("handles single word", () => {
-    assert.equal(toSlug("Kybba"), "kybba");
+    expect(toSlug("Kybba")).toBe("kybba");
   });
 
   it("collapses consecutive separators into one underscore", () => {
-    assert.equal(toSlug("one---two___three"), "one_two_three");
+    expect(toSlug("one---two___three")).toBe("one_two_three");
   });
 });
