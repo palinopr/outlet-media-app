@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { AlertPostSchema, AlertPatchSchema } from "@/lib/api-schemas";
 
-// POST — agent writes an alert (requires INGEST_SECRET)
+// POST -- agent writes an alert (requires INGEST_SECRET)
 export async function POST(request: Request) {
-  const body = await request.json() as { secret: string; message: string; level?: string };
+  const raw = await request.json();
+  const parsed = AlertPostSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
+  }
+  const body = parsed.data;
 
-  if (body.secret !== process.env.INGEST_SECRET) {
+  if (!process.env.INGEST_SECRET || body.secret !== process.env.INGEST_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (!supabaseAdmin) {
     return NextResponse.json({ error: "DB not configured" }, { status: 500 });
-  }
-  if (!body.message?.trim()) {
-    return NextResponse.json({ error: "message required" }, { status: 400 });
   }
 
   const { error } = await supabaseAdmin.from("agent_alerts").insert({
@@ -28,10 +34,15 @@ export async function POST(request: Request) {
   return NextResponse.json({ ok: true });
 }
 
-// PATCH — mark all alerts read
+// PATCH -- mark all alerts read
 export async function PATCH(request: Request) {
-  const body = await request.json() as { secret: string };
-  if (body.secret !== process.env.INGEST_SECRET) {
+  const raw = await request.json();
+  const parsed = AlertPatchSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+  }
+  const body = parsed.data;
+  if (!process.env.INGEST_SECRET || body.secret !== process.env.INGEST_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   if (!supabaseAdmin) return NextResponse.json({ error: "DB not configured" }, { status: 500 });

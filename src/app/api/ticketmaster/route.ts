@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 
 export async function GET(request: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
-  const keyword = searchParams.get("keyword");
+  const keyword = searchParams.get("keyword")?.slice(0, 200) ?? null;
 
   if (!process.env.TICKETMASTER_API_KEY) {
     return NextResponse.json({ error: "TICKETMASTER_API_KEY not configured" }, { status: 500 });

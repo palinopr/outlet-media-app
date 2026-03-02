@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
+import { InviteSchema } from "@/lib/api-schemas";
 
 // POST /api/admin/invite
 // Body: { email: string, client_slug?: string, role?: "admin" }
@@ -18,15 +19,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = (await request.json()) as {
-    email: string;
-    client_slug?: string;
-    role?: string;
-  };
-
-  if (!body.email) {
-    return NextResponse.json({ error: "email is required" }, { status: 400 });
+  const raw = await request.json();
+  const parsed = InviteSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
   }
+  const body = parsed.data;
 
   const publicMetadata: Record<string, string> = {};
   if (body.client_slug) publicMetadata.client_slug = body.client_slug;

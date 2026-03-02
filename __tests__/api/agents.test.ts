@@ -16,7 +16,7 @@ describe("POST /api/agents", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns error message for unknown agent", async () => {
+  it("returns error message for unknown agent (Zod validation)", async () => {
     const { POST } = await import("@/app/api/agents/route");
     const req = new Request("http://localhost/api/agents", {
       method: "POST",
@@ -24,7 +24,7 @@ describe("POST /api/agents", () => {
     });
     const res = await POST(req);
     const body = await res.json();
-    expect(body.error).toBe("Unknown agent");
+    expect(body.error).toBe("Invalid payload");
   });
 
   it("accepts tm-monitor as valid agent", async () => {

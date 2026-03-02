@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 export interface AdPreview {
@@ -48,8 +49,14 @@ function AdCardUI({ ad }: { ad: AdPreview }) {
       {/* Thumbnail */}
       {ad.thumbnailUrl && (
         <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-3 bg-white/[0.03]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={ad.thumbnailUrl} alt={ad.name} className="object-cover w-full h-full" />
+          <Image
+            src={ad.thumbnailUrl}
+            alt={ad.name}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover"
+            unoptimized={!ad.thumbnailUrl.includes("fbcdn.net")}
+          />
         </div>
       )}
       {!ad.thumbnailUrl && (

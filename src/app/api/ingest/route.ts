@@ -1,105 +1,21 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-
-// ─── TM Demographics types ─────────────────────────────────────────────────
-
-interface TmDemographics {
-  tm_id: string;
-  fans_total?: number;
-  fans_female_pct?: number;
-  fans_male_pct?: number;
-  fans_married_pct?: number;
-  fans_with_children_pct?: number;
-  age_18_24_pct?: number;
-  age_25_34_pct?: number;
-  age_35_44_pct?: number;
-  age_45_54_pct?: number;
-  age_over_54_pct?: number;
-  income_0_30k_pct?: number;
-  income_30_60k_pct?: number;
-  income_60_90k_pct?: number;
-  income_90_125k_pct?: number;
-  income_over_125k_pct?: number;
-  education_high_school_pct?: number;
-  education_college_pct?: number;
-  education_grad_school_pct?: number;
-  payment_visa_pct?: number;
-  payment_mc_pct?: number;
-  payment_amex_pct?: number;
-  payment_discover_pct?: number;
-  fetched_at: string;
-}
-
-// ─── TM One types ──────────────────────────────────────────────────────────
-
-interface TmEvent {
-  tm_id: string;
-  tm1_number: string;
-  name: string;
-  artist: string;
-  venue: string;
-  city: string;
-  date: string;
-  status: string;
-  tickets_sold?: number;
-  tickets_available?: number;
-  gross?: number;
-  avg_ticket_price?: number;
-  channel_mobile_pct?: number;
-  channel_internet_pct?: number;
-  channel_box_pct?: number;
-  channel_phone_pct?: number;
-  edp_total_views?: number;
-  edp_avg_daily_views?: number;
-  conversion_rate?: number;
-  url: string;
-  scraped_at: string;
-  client_slug?: string;
-}
-
-// ─── Meta types ────────────────────────────────────────────────────────────
-
-interface MetaCampaign {
-  campaign_id: string;
-  name: string;
-  status: string;
-  objective?: string;
-  daily_budget?: number;
-  lifetime_budget?: number;
-  spend?: number;
-  impressions?: number;
-  clicks?: number;
-  reach?: number;
-  cpm?: number;
-  cpc?: number;
-  ctr?: number;
-  roas?: number;
-  client_slug?: string;
-  start_time?: string;
-}
-
-// ─── Payload ───────────────────────────────────────────────────────────────
-
-interface IngestPayload {
-  secret: string;
-  source: "ticketmaster_one" | "meta" | "tm_demographics";
-  data: {
-    // TM One
-    events?: TmEvent[];
-    // Meta
-    campaigns?: MetaCampaign[];
-    // TM Demographics
-    demographics?: TmDemographics[];
-    scraped_at: string;
-  };
-}
+import { IngestPayloadSchema, type IngestPayload } from "@/lib/api-schemas";
 
 // ─── Handler ───────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  const body = await request.json() as IngestPayload;
+  const raw = await request.json();
+  const parsed = IngestPayloadSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
+  }
+  const body: IngestPayload = parsed.data;
 
-  if (body.secret !== process.env.INGEST_SECRET) {
+  if (!process.env.INGEST_SECRET || body.secret !== process.env.INGEST_SECRET) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

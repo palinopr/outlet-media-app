@@ -95,17 +95,28 @@ const AGENT_TYPES = [
 
 // ─── API key display entries ───────────────────────────────────────────────
 
-const API_KEYS = [
-  { label: "META_ACCESS_TOKEN", masked: "EAALi...****", source: ".env.local" },
-  { label: "TICKETMASTER_KEY", masked: "tm1_...****", source: ".env" },
-  { label: "CLERK_SECRET_KEY", masked: "sk_live_...****", source: ".env.local" },
-  { label: "NEXT_PUBLIC_SUPABASE_URL", masked: "https://...supabase.co", source: ".env.local" },
-  { label: "SUPABASE_SERVICE_ROLE_KEY", masked: "eyJhbG...****", source: ".env" },
-];
+function getApiKeyStatus() {
+  const keys = [
+    { label: "META_ACCESS_TOKEN", envVar: "META_ACCESS_TOKEN", source: ".env.local" },
+    { label: "TICKETMASTER_KEY", envVar: "TICKETMASTER_API_KEY", source: ".env" },
+    { label: "CLERK_SECRET_KEY", envVar: "CLERK_SECRET_KEY", source: ".env.local" },
+    { label: "NEXT_PUBLIC_SUPABASE_URL", envVar: "NEXT_PUBLIC_SUPABASE_URL", source: ".env.local" },
+    { label: "SUPABASE_SERVICE_ROLE_KEY", envVar: "SUPABASE_SERVICE_ROLE_KEY", source: ".env" },
+    { label: "INGEST_SECRET", envVar: "INGEST_SECRET", source: ".env" },
+  ];
+  return keys.map((k) => {
+    const value = process.env[k.envVar];
+    const configured = !!value && value.length > 0;
+    // Show first 4 chars + **** if configured, never show more
+    const masked = configured ? `${value.slice(0, 4)}...****` : "not set";
+    return { ...k, masked, configured };
+  });
+}
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
+  const apiKeys = getApiKeyStatus();
   return (
     <div className="space-y-8">
 
@@ -189,18 +200,23 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {API_KEYS.map(({ label, masked, source }) => (
+              {apiKeys.map(({ label, masked, source, configured }) => (
                 <div
                   key={label}
                   className="flex items-center justify-between rounded-md border border-border/40 bg-white/[0.02] px-4 py-3"
                 >
                   <div className="min-w-0">
                     <p className="text-xs font-medium font-mono">{label}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">{masked}</p>
+                    <p className={`text-[11px] mt-0.5 font-mono ${configured ? "text-muted-foreground" : "text-red-400"}`}>
+                      {masked}
+                    </p>
                   </div>
-                  <span className="text-[10px] text-muted-foreground/60 bg-white/[0.04] px-2 py-0.5 rounded shrink-0">
-                    {source}
-                  </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`h-2 w-2 rounded-full ${configured ? "bg-emerald-400" : "bg-red-400"}`} />
+                    <span className="text-[10px] text-muted-foreground/60 bg-white/[0.04] px-2 py-0.5 rounded">
+                      {source}
+                    </span>
+                  </div>
                 </div>
               ))}
             </div>

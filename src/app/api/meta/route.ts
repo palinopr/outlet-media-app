@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { sanitizeId } from "@/lib/api-schemas";
 
 export async function GET(request: Request) {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
-  const rawId = searchParams.get("account_id") ?? process.env.META_AD_ACCOUNT_ID;
+  const rawId = sanitizeId(searchParams.get("account_id")) ?? process.env.META_AD_ACCOUNT_ID;
 
   if (!process.env.META_ACCESS_TOKEN || !rawId) {
     return NextResponse.json({ error: "Meta API credentials not configured" }, { status: 500 });

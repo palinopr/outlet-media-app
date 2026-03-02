@@ -23,13 +23,15 @@ export function ClientOnboardForm() {
 
     setStatus("submitting");
     try {
-      // Wire to POST /api/admin/invite when endpoint exists
-      console.log("Onboard client:", { name: name.trim(), slug, email: email.trim() });
-      // await fetch("/api/admin/invite", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ name: name.trim(), slug, email: email.trim() }),
-      // });
+      const res = await fetch("/api/admin/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), client_slug: slug || undefined }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || `HTTP ${res.status}`);
+      }
       setStatus("done");
       setTimeout(() => {
         setStatus("idle");

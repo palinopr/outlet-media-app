@@ -338,24 +338,12 @@ export async function getData(
   }
 
   // Step 3: Fetch TM events for this client (optional enrichment)
-  const [eventsRes] = await Promise.all([
-    supabaseAdmin
-      .from("tm_events")
-      .select("*")
-      .eq("client_slug", slug)
-      .order("date", { ascending: true })
-      .limit(50),
-    supabaseAdmin
-      .from("tm_event_demographics")
-      .select("*")
-      .in(
-        "tm_id",
-        // We need tm_ids, but we don't have them yet. Query events first.
-        // This is a workaround: we fetch events, then demographics in sequence.
-        // For now, pass empty array -- we'll handle below.
-        [],
-      ),
-  ]);
+  const eventsRes = await supabaseAdmin
+    .from("tm_events")
+    .select("*")
+    .eq("client_slug", slug)
+    .order("date", { ascending: true })
+    .limit(50);
 
   const tmEvents = (eventsRes.data ?? []) as TmEvent[];
   const events = buildEventCards(tmEvents);

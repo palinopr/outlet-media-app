@@ -4,8 +4,10 @@ import { vi } from "vitest";
 // Every route imports supabaseAdmin. We provide a chainable mock that tests
 // can override per-case via `mockSupabaseAdmin`.
 
+type ChainableQuery = ((...args: unknown[]) => ChainableQuery) & Record<string, unknown>;
+
 export function createChainableQuery(resolvedValue: { data?: unknown; error?: unknown }) {
-  const proxy = (): typeof proxy => proxy as unknown as typeof proxy;
+  const proxy: ChainableQuery = ((): ChainableQuery => proxy) as ChainableQuery;
 
   // Terminal methods
   Object.assign(proxy, {
@@ -38,3 +40,5 @@ export const mockSupabaseAdmin: Record<string, unknown> = {
 vi.mock("@/lib/supabase", () => ({
   supabaseAdmin: mockSupabaseAdmin,
 }));
+
+

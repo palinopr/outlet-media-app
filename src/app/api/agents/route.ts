@@ -1,18 +1,25 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
-
-const VALID_AGENTS = ["tm-monitor", "meta-ads", "campaign-monitor", "assistant"] as const;
-type AgentId = (typeof VALID_AGENTS)[number];
+import { AgentPostSchema, VALID_AGENTS } from "@/lib/api-schemas";
 
 // ─── POST /api/agents ─ queue a job ──────────────────────────────────────────
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as { agent: string; prompt?: string };
-  const { agent, prompt } = body;
-
-  if (!VALID_AGENTS.includes(agent as AgentId)) {
-    return NextResponse.json({ error: "Unknown agent" }, { status: 400 });
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
   }
+
+  const raw = await request.json();
+  const parsed = AgentPostSchema.safeParse(raw);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
+      { status: 400 }
+    );
+  }
+  const { agent, prompt } = parsed.data;
 
   if (!supabaseAdmin) {
     // Supabase not connected yet - return a clear message instead of crashing
@@ -39,6 +46,11 @@ export async function POST(request: Request) {
 // ─── GET /api/agents ─ latest status per agent ──────────────────────────────
 
 export async function GET() {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+  }
+
   if (!supabaseAdmin) {
     // Return idle stubs when DB not connected
     return NextResponse.json({

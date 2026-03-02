@@ -1,8 +1,14 @@
 import { NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // Returns the last 30 jobs (excluding heartbeats) for the chat panel refresh
 export async function GET() {
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+  }
+
   if (!supabaseAdmin) {
     return NextResponse.json({ jobs: [] });
   }

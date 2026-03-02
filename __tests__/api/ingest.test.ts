@@ -26,10 +26,10 @@ describe("POST /api/ingest — auth", () => {
     expect(res.status).toBe(401);
   });
 
-  it("returns 401 when secret is missing", async () => {
+  it("returns 400 when secret is missing (Zod validation)", async () => {
     const { POST } = await import("@/app/api/ingest/route");
     const res = await POST(makeRequest({ source: "meta", data: { scraped_at: "" } }));
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(400);
   });
 
   it("returns 400 for unknown source", async () => {
@@ -40,13 +40,13 @@ describe("POST /api/ingest — auth", () => {
     expect(res.status).toBe(400);
   });
 
-  it("returns error message for unknown source", async () => {
+  it("returns error message for unknown source (Zod validation)", async () => {
     const { POST } = await import("@/app/api/ingest/route");
     const res = await POST(
       makeRequest({ secret: "test-secret", source: "spotify", data: { scraped_at: "" } })
     );
     const body = await res.json();
-    expect(body.error).toBe("Unknown source");
+    expect(body.error).toBe("Invalid payload");
   });
 });
 
