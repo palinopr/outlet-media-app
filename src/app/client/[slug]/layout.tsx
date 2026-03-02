@@ -69,6 +69,13 @@ export default async function ClientLayout({ children, params }: Props) {
             <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
             Overview
           </a>
+          <a
+            href={`/client/${slug}/campaigns`}
+            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 bg-white/[0.06] border border-white/[0.04] transition-all"
+          >
+            <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
+            Campaigns
+          </a>
         </nav>
         <div className="px-5 py-4">
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent mb-4" />
@@ -90,6 +97,7 @@ export default async function ClientLayout({ children, params }: Props) {
         </div>
         <div className="flex items-center gap-3">
           <a href={`/client/${slug}`} className="text-xs text-white/50 hover:text-white transition-colors">Overview</a>
+          <a href={`/client/${slug}/campaigns`} className="text-xs text-white/50 hover:text-white transition-colors">Campaigns</a>
         </div>
       </div>
       <main className="flex-1 overflow-auto lg:pt-0 pt-14">
