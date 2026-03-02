@@ -61,8 +61,9 @@ export function parseDelegationBlocks(text: string): { blocks: DelegationBlock[]
 
   while ((match = fencedPattern.exec(text)) !== null) {
     try {
-      const parsed = JSON.parse(match[1]) as DelegationBlock;
-      if (parsed.delegate && parsed.action) {
+      const raw: unknown = JSON.parse(match[1]);
+      if (raw && typeof raw === "object" && "delegate" in raw && "action" in raw) {
+        const parsed = raw as DelegationBlock;
         blocks.push(parsed);
         cleanText = cleanText.replace(match[0], "").trim();
       }
@@ -77,10 +78,13 @@ export function parseDelegationBlocks(text: string): { blocks: DelegationBlock[]
     // Skip if already captured by fenced pattern
     if (blocks.some(b => JSON.stringify(b) === match![1])) continue;
     try {
-      const parsed = JSON.parse(match[0]) as DelegationBlock;
-      if (parsed.delegate && parsed.action && !blocks.some(b => b.delegate === parsed.delegate && b.action === parsed.action)) {
-        blocks.push(parsed);
-        cleanText = cleanText.replace(match[0], "").trim();
+      const raw: unknown = JSON.parse(match[0]);
+      if (raw && typeof raw === "object" && "delegate" in raw && "action" in raw) {
+        const parsed = raw as DelegationBlock;
+        if (!blocks.some(b => b.delegate === parsed.delegate && b.action === parsed.action)) {
+          blocks.push(parsed);
+          cleanText = cleanText.replace(match[0], "").trim();
+        }
       }
     } catch {
       // Invalid JSON, skip

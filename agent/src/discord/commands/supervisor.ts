@@ -30,7 +30,8 @@ interface ActivityEntry {
 async function loadActivitySummary(): Promise<string> {
   try {
     const raw = await readFile(ACTIVITY_LOG, "utf-8");
-    const entries: ActivityEntry[] = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
+    const entries = Array.isArray(parsed) ? (parsed as ActivityEntry[]) : [];
 
     if (entries.length === 0) return "No activity recorded yet.";
 

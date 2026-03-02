@@ -90,7 +90,10 @@ export async function initApprovals(c: Client): Promise<void> {
 async function loadRules(): Promise<void> {
   try {
     const raw = await readFile(RULES_PATH, "utf-8");
-    rules = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      rules = parsed as Rules;
+    }
     console.log("[approvals] Rules loaded from rules.json");
   } catch {
     console.warn("[approvals] rules.json not found -- using defaults");

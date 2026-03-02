@@ -147,7 +147,8 @@ async function logActivity(
   let log: ActivityEntry[] = [];
   try {
     const raw = await fs.readFile(ACTIVITY_LOG, "utf-8");
-    log = JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) log = parsed as ActivityEntry[];
   } catch {
     // File doesn't exist yet
   }

@@ -45,10 +45,16 @@ interface DashboardState {
 async function loadCampaigns(): Promise<CampaignData[]> {
   try {
     const raw = await readFile(CAMPAIGNS_FILE, "utf-8");
-    const parsed = JSON.parse(raw);
-    // Handle both array format and {data: [...]} format
-    if (Array.isArray(parsed)) return parsed;
-    if (parsed.data && Array.isArray(parsed.data)) return parsed.data;
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed as CampaignData[];
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      "data" in parsed &&
+      Array.isArray((parsed as { data: unknown }).data)
+    ) {
+      return (parsed as { data: CampaignData[] }).data;
+    }
     return [];
   } catch {
     return [];
@@ -58,7 +64,11 @@ async function loadCampaigns(): Promise<CampaignData[]> {
 async function loadDashboardState(): Promise<DashboardState> {
   try {
     const raw = await readFile(DASHBOARD_STATE_FILE, "utf-8");
-    return JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && "messageId" in parsed) {
+      return parsed as DashboardState;
+    }
+    return { messageId: null, lastUpdated: "" };
   } catch {
     return { messageId: null, lastUpdated: "" };
   }
