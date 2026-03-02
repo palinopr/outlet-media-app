@@ -1,5 +1,5 @@
 /**
- * Shared formatting helpers used across admin and client pages.
+ * Shared utility module extracted from duplicated helpers across admin and client pages.
  * Single source of truth — do NOT duplicate these in page files.
  */
 

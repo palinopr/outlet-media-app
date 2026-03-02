@@ -7,6 +7,10 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
+      // discord.js lives in agent/node_modules, not the root.  Vite's
+      // import-analysis still resolves transitive imports of vi.mock()-ed
+      // modules, so we point it at a lightweight stub.
+      "discord.js": path.resolve(__dirname, "__mocks__/discord.ts"),
     },
   },
   test: {
