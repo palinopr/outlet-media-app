@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import type { TrendPoint } from "@/app/client/[slug]/_lib/helpers";
+import type { TrendPoint } from "@/app/client/[slug]/lib";
 
 interface TooltipPayload {
   value: number;
