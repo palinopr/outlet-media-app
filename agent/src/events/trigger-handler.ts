@@ -14,8 +14,6 @@ import { sendAsAgent } from "../services/webhook-service.js";
 /** ROAS threshold for auto-alert */
 const ROAS_ALERT_THRESHOLD = 1.5;
 
-/** Ticket capacity percentage for alert */
-const TICKET_CAPACITY_ALERT = 0.8;
 
 /**
  * Initialize event-driven triggers.

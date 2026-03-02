@@ -15,7 +15,6 @@ import {
   type Client,
   type ChatInputCommandInteraction,
   type TextChannel,
-  MessageFlags,
 } from "discord.js";
 
 const CLIENT_ID = "1475595538329244011";

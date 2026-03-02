@@ -155,20 +155,25 @@ function daysUntil(dateStr: string | null): number | null {
   return Math.ceil(diff / 86_400_000);
 }
 
+/** Filter events to those occurring in the next 30 days. */
+function getUpcomingShows(events: TmEvent[], limit: number) {
+  const nowMs = Date.now();
+  return events
+    .filter(e => {
+      if (!e.date) return false;
+      const d = new Date(e.date).getTime();
+      return d >= nowMs && d <= nowMs + 30 * 86_400_000;
+    })
+    .slice(0, limit);
+}
+
 // --- Page ---
 
 export default async function AdminDashboard() {
   const { events, campaigns, allCampaigns, agentRuns, alerts, trendData, velocityData, snapshotsByCampaign, fromDb } = await getData();
 
   // Upcoming shows: next 30 days, sorted by date
-  const nowMs = Date.now();
-  const upcomingShows = events
-    .filter(e => {
-      if (!e.date) return false;
-      const d = new Date(e.date).getTime();
-      return d >= nowMs && d <= nowMs + 30 * 86_400_000;
-    })
-    .slice(0, 8);
+  const upcomingShows = getUpcomingShows(events, 8);
 
   const totalSold  = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
   const totalCap   = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);

@@ -12,7 +12,6 @@ import {
   type Client,
   type Message,
   type TextChannel,
-  MessageFlags,
 } from "discord.js";
 import { runClaude } from "../runner.js";
 import { getAgentForChannel } from "../discord-router.js";

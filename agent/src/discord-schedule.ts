@@ -9,8 +9,7 @@
  */
 
 import cron, { type ScheduledTask } from "node-cron";
-import { EmbedBuilder, type Client, type TextChannel } from "discord.js";
-import { scheduleButtons } from "./discord-buttons.js";
+import { EmbedBuilder, type Client } from "discord.js";
 
 /** Lazy import to avoid circular dependency with discord.ts */
 async function postToFeed(text: string): Promise<void> {

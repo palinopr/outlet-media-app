@@ -13,7 +13,7 @@
  */
 
 import { type Client, EmbedBuilder, type TextChannel, ChannelType } from "discord.js";
-import { enqueueTask, type AgentTask, taskEvents } from "../services/queue-service.js";
+import { enqueueTask, type AgentTask } from "../services/queue-service.js";
 import { evaluateTier } from "../services/approval-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { runClaude } from "../runner.js";

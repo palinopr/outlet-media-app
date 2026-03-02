@@ -47,7 +47,7 @@ import { handleMessage, isChannelLocked, cleanForDiscord, chunkText } from "./me
 import { isAgentFree } from "../services/queue-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { runClaude } from "../runner.js";
-import type { Client, Message, TextChannel } from "discord.js";
+import type { Message } from "discord.js";
 
 // --------------- helpers ---------------
 

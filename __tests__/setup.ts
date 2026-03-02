@@ -5,7 +5,6 @@ import { vi } from "vitest";
 // can override per-case via `mockSupabaseAdmin`.
 
 export function createChainableQuery(resolvedValue: { data?: unknown; error?: unknown }) {
-  const chain: Record<string, unknown> = {};
   const proxy = (): typeof proxy => proxy as unknown as typeof proxy;
 
   // Terminal methods

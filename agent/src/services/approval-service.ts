@@ -21,7 +21,6 @@ import {
   type AgentTask,
   approveTask,
   rejectTask,
-  escalateTask,
   taskEvents,
 } from "./queue-service.js";
 

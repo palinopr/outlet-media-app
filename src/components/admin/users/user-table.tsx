@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Check, Loader2 } from "lucide-react";
 
 const KNOWN_CLIENTS = ["zamora", "kybba", "beamina", "happy_paws"] as const;
-type ClientSlug = (typeof KNOWN_CLIENTS)[number];
 
 interface UserRow {
   id: string;
