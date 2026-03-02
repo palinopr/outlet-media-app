@@ -10,6 +10,7 @@ import {
   Bot,
   Users,
   UserCog,
+  Settings,
 } from "lucide-react";
 
 const nav = [
@@ -19,6 +20,7 @@ const nav = [
   { href: "/admin/agents", label: "Agents", icon: Bot },
   { href: "/admin/clients", label: "Clients", icon: Users },
   { href: "/admin/users", label: "Users", icon: UserCog },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export function NavLinks() {

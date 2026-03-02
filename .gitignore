@@ -49,3 +49,11 @@ next-env.d.ts
 # agent - browser session + credentials
 agent/.env
 agent/session/
+# Added by minion
+__pycache__/
+*.pyc
+.pytest_cache/
+node_modules/
+*.egg-info/
+dist/
+build/
