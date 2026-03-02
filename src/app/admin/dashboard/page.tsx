@@ -25,7 +25,7 @@ import type { Database } from "@/lib/database.types";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { TicketVelocityChart } from "@/components/charts/ticket-velocity-chart";
 import { matchedCampaigns } from "@/lib/campaign-event-match";
-import { centsToUsd, fmtUsd, fmtDate, fmtNum, statusBadge } from "@/lib/formatters";
+import { centsToUsd, fmtUsd, fmtDate, fmtNum, statusBadge, fmtObjective, computeMarginalRoas } from "@/lib/formatters";
 
 type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
@@ -132,23 +132,6 @@ async function getData() {
 // --- Helpers ---
 
 function fmt(n: number) { return n.toLocaleString("en-US"); }
-function fmtObjective(raw: string | null) {
-  if (!raw) return null;
-  return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function computeMarginalRoas(points: SnapshotRow[]): number | null {
-  if (points.length < 2) return null;
-  const sorted = [...points].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
-  const first = sorted[0], last = sorted[sorted.length - 1];
-  if (first.spend == null || last.spend == null || first.roas == null || last.roas == null) return null;
-  const deltaSpend = (last.spend - first.spend) / 100;
-  if (deltaSpend <= 0) return null;
-  const revFirst = (first.spend / 100) * first.roas;
-  const revLast = (last.spend / 100) * last.roas;
-  return (revLast - revFirst) / deltaSpend;
-}
-
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null;
   const diff = new Date(dateStr).getTime() - Date.now();

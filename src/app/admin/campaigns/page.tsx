@@ -12,7 +12,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { Suspense } from "react";
-import { fmtUsd, fmtNum, centsToUsd, statusBadge, slugToLabel } from "@/lib/formatters";
+import { fmtUsd, fmtNum, centsToUsd, statusBadge, slugToLabel, fmtObjective, computeMarginalRoas } from "@/lib/formatters";
 
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 type SnapshotPoint = { snapshot_date: string; roas: number | null; spend: number | null };
@@ -101,24 +101,6 @@ function RoasBadge({ roas }: { roas: number | null }) {
   if (roas == null) return <span className="text-sm text-muted-foreground">—</span>;
   const color = roas >= 4 ? "text-emerald-400" : roas >= 2.5 ? "text-blue-400" : "text-amber-400";
   return <span className={`text-sm font-semibold tabular-nums ${color}`}>{roas.toFixed(1)}×</span>;
-}
-
-function fmtObjective(raw: string | null) {
-  if (!raw) return null;
-  return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function computeMarginalRoas(points: SnapshotPoint[]): number | null {
-  if (points.length < 2) return null;
-  const sorted = [...points].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
-  const first = sorted[0];
-  const last = sorted[sorted.length - 1];
-  if (first.spend == null || last.spend == null || first.roas == null || last.roas == null) return null;
-  const deltaSpend = (last.spend - first.spend) / 100;
-  if (deltaSpend <= 0) return null;
-  const revFirst = (first.spend / 100) * first.roas;
-  const revLast = (last.spend / 100) * last.roas;
-  return (revLast - revFirst) / deltaSpend;
 }
 
 function RoasSparkline({ points }: { points: SnapshotPoint[] }) {

@@ -11,7 +11,7 @@ import { DollarSign, Megaphone, TrendingUp, MousePointerClick } from "lucide-rea
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
-import { centsToUsd, fmtUsd, fmtNum } from "@/lib/formatters";
+import { centsToUsd, fmtUsd, fmtNum, fmtObjective } from "@/lib/formatters";
 
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
@@ -68,11 +68,6 @@ function buildTrendData(snapshots: Array<{ snapshot_date: string; roas: number |
 }
 
 // --- Helpers ---
-
-function fmtObjective(raw: string | null) {
-  if (!raw) return null;
-  return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 function statusDot(s: string) {
   const colors: Record<string, string> = {

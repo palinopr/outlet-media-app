@@ -83,6 +83,35 @@ const FALLBACK_BADGE: BadgeEntry = {
  * Input is normalised to lowercase with underscores stripped so that
  * "ACTIVE", "active", "on_sale", and "onsale" all resolve correctly.
  */
+// ─── Campaign helpers ────────────────────────────────────────────────────
+
+/** Format a Meta campaign objective enum into a human-readable label. */
+export function fmtObjective(raw: string | null): string | null {
+  if (!raw) return null;
+  return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+interface SnapshotPoint {
+  snapshot_date: string;
+  roas: number | null;
+  spend: number | null;
+}
+
+/** Compute marginal ROAS from a series of snapshot points (spend in cents). */
+export function computeMarginalRoas(points: SnapshotPoint[]): number | null {
+  if (points.length < 2) return null;
+  const sorted = [...points].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+  const first = sorted[0], last = sorted[sorted.length - 1];
+  if (first.spend == null || last.spend == null || first.roas == null || last.roas == null) return null;
+  const deltaSpend = (last.spend - first.spend) / 100;
+  if (deltaSpend <= 0) return null;
+  const revFirst = (first.spend / 100) * first.roas;
+  const revLast = (last.spend / 100) * last.roas;
+  return (revLast - revFirst) / deltaSpend;
+}
+
+// ─── Status badges ──────────────────────────────────────────────────────
+
 export function statusBadge(s: string) {
   const normalised = (s ?? "").toLowerCase().replace(/_/g, "");
   const entry = STATUS_MAP[normalised] ?? { ...FALLBACK_BADGE, label: s };
