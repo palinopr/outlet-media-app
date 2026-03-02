@@ -25,6 +25,7 @@ import type { Database } from "@/lib/database.types";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { TicketVelocityChart } from "@/components/charts/ticket-velocity-chart";
 import { matchedCampaigns } from "@/lib/campaign-event-match";
+import { centsToUsd, fmtUsd, fmtDate, fmtNum, statusBadge } from "@/lib/formatters";
 
 type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
@@ -130,22 +131,10 @@ async function getData() {
 
 // --- Helpers ---
 
-function centsToUsd(cents: number | null) { return cents == null ? null : cents / 100; }
 function fmt(n: number) { return n.toLocaleString("en-US"); }
-function fmtUsd(n: number | null) { return n == null ? "---" : "$" + Math.round(n).toLocaleString("en-US"); }
 function fmtObjective(raw: string | null) {
   if (!raw) return null;
   return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-function fmtDate(d: string | null) {
-  if (!d) return "---";
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-function fmtNum(n: number | null) {
-  if (n == null) return "---";
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
-  return String(n);
 }
 
 function computeMarginalRoas(points: SnapshotRow[]): number | null {
@@ -164,24 +153,6 @@ function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null;
   const diff = new Date(dateStr).getTime() - Date.now();
   return Math.ceil(diff / 86_400_000);
-}
-
-function eventStatusBadge(s: string) {
-  const key = (s ?? "").toLowerCase().replace(/_/g, "");
-  const map: Record<string, { label: string; classes: string }> = {
-    onsale:    { label: "On Sale",   classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-    presale:   { label: "Presale",   classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-    soldout:   { label: "Sold Out",  classes: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
-    offsale:   { label: "Off Sale",  classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" },
-    cancelled: { label: "Cancelled", classes: "bg-red-500/10 text-red-400 border-red-500/20" },
-    published: { label: "Published", classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  };
-  const { label, classes } = map[key] ?? { label: s, classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}>
-      {label}
-    </span>
-  );
 }
 
 // --- Page ---
@@ -387,7 +358,7 @@ export default async function AdminDashboard() {
                     <TableCell className="text-right">
                       <p className="text-sm font-medium tabular-nums">{fmtUsd(e.gross)}</p>
                     </TableCell>
-                    <TableCell>{eventStatusBadge(e.status)}</TableCell>
+                    <TableCell>{statusBadge(e.status)}</TableCell>
                   </TableRow>
                 );
               })}
