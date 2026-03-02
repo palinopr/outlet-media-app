@@ -1,6 +1,9 @@
 /**
- * Shared formatting helpers used across admin and client pages.
- * Single source of truth — do NOT duplicate these in page files.
+ * Shared utility module extracted from duplicated helpers across admin and client pages.
+ *
+ * These formatters (currency, numbers, dates, labels, status badges) were originally
+ * copy-pasted in individual page files. They now live here as the single source of
+ * truth — do NOT duplicate them back into page files.
  */
 
 // ─── Number / Currency ─────────────────────────────────────────────────────

@@ -41,6 +41,10 @@ vi.mock("../discord-admin.js", () => ({ buildAdminPrompt: vi.fn() }));
 vi.mock("../discord-skills.js", () => ({ maybeCreateSkill: vi.fn() }));
 vi.mock("../agents/delegate.js", () => ({ processDelegations: vi.fn() }));
 
+// discord.js is only installed in agent/node_modules; mock it so Vite's
+// import analysis doesn't fail when resolving transitive imports.
+vi.mock("discord.js", () => ({}));
+
 // --------------- imports ---------------
 
 import { handleMessage, isChannelLocked, cleanForDiscord, chunkText } from "./message-handler.js";
