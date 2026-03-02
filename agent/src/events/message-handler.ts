@@ -183,26 +183,27 @@ export async function handleMessage(
   // Check per-agent slot availability
   const agentKey = agent.promptFile;
   if (!isAgentFree(agentKey)) {
-    await msg.reply("This agent is currently busy. Your message is queued.");
+    await msg.reply("This agent is currently busy — please try again in a moment.");
     return;
   }
 
   channelLocks.add(msg.channelId);
-
-  const ch = msg.channel;
-  if ("sendTyping" in ch) await (ch as TextChannel).sendTyping().catch(() => {});
-  const typingInterval = setInterval(() => {
-    if ("sendTyping" in ch) (ch as TextChannel).sendTyping().catch(() => {});
-  }, 8000);
-
-  const working = await msg.reply("Working on it...");
-
-  const contextualPrompt = await buildConversationContext(msg, prompt);
-
-  let buffer = "";
-  let lastEdit = Date.now();
+  let typingInterval: ReturnType<typeof setInterval> | undefined;
+  let working: Message | undefined;
 
   try {
+    const ch = msg.channel;
+    if ("sendTyping" in ch) await (ch as TextChannel).sendTyping().catch(() => {});
+    typingInterval = setInterval(() => {
+      if ("sendTyping" in ch) (ch as TextChannel).sendTyping().catch(() => {});
+    }, 8000);
+
+    working = await msg.reply("Working on it...");
+
+    const contextualPrompt = await buildConversationContext(msg, prompt);
+
+    let buffer = "";
+    let lastEdit = Date.now();
     // Build system prompt with optional snapshot and memory
     let systemPrompt: string | undefined;
     if (agent.injectSnapshot) {
@@ -251,8 +252,8 @@ export async function handleMessage(
 
     // Try to send via webhook (agent identity), fall back to edit
     try {
-      await working.delete().catch(() => {});
       await sendAsAgent(agentKey, channelName, chunks[0] || "Done.");
+      await working.delete().catch(() => {});
       for (const chunk of chunks.slice(1)) {
         await sendAsAgent(agentKey, channelName, chunk);
       }
@@ -283,9 +284,11 @@ export async function handleMessage(
     }
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
-    await working.edit(`Something went wrong: ${errMsg}`).catch(() => {});
+    if (working) {
+      await working.edit(`Something went wrong: ${errMsg}`).catch(() => {});
+    }
   } finally {
-    clearInterval(typingInterval);
+    if (typingInterval) clearInterval(typingInterval);
     channelLocks.delete(msg.channelId);
   }
 }
