@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { CopyButton } from "@/components/admin/copy-button";
 import { supabaseAdmin } from "@/lib/supabase";
+import { fmtUsd, statusBadge } from "@/lib/formatters";
 import {
   Users,
   DollarSign,
@@ -95,35 +96,6 @@ async function getClientSummaries(): Promise<ClientSummary[]> {
       roas,
     };
   });
-}
-
-// ─── Helpers ───────────────────────────────────────────────────────────────
-
-function fmtUsd(n: number) {
-  return "$" + Math.round(n).toLocaleString("en-US");
-}
-
-function statusBadge(s: string) {
-  const map: Record<string, { label: string; classes: string }> = {
-    active: {
-      label: "Active",
-      classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    },
-    paused: {
-      label: "Paused",
-      classes: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    },
-    inactive: {
-      label: "Inactive",
-      classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-    },
-  };
-  const { label, classes } = map[s] ?? map.inactive;
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}>
-      {label}
-    </span>
-  );
 }
 
 // ─── Page ──────────────────────────────────────────────────────────────────

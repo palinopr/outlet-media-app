@@ -14,6 +14,7 @@ import type { Database } from "@/lib/database.types";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { matchedCampaigns } from "@/lib/campaign-event-match";
 import { Suspense } from "react";
+import { fmtDate, fmtUsd, slugToLabel, statusBadge } from "@/lib/formatters";
 
 type TmEventRow = Database["public"]["Tables"]["tm_events"]["Row"];
 type DemoRow = Database["public"]["Tables"]["tm_event_demographics"]["Row"];
@@ -70,39 +71,6 @@ async function getEvents(clientSlug: string | null): Promise<{
 
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
-
-function fmtDate(d: string | null) {
-  if (!d) return "—";
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function fmtUsd(n: number | null) {
-  if (n == null) return "—";
-  return "$" + n.toLocaleString("en-US");
-}
-
-function slugToLabel(slug: string | null) {
-  if (!slug) return "—";
-  return slug.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-}
-
-function statusBadge(s: string) {
-  const key = (s ?? "").toLowerCase().replace(/_/g, "");
-  const map: Record<string, { label: string; classes: string }> = {
-    onsale:    { label: "On Sale",   classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-    presale:   { label: "Presale",   classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-    soldout:   { label: "Sold Out",  classes: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
-    offsale:   { label: "Off Sale",  classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" },
-    cancelled: { label: "Cancelled", classes: "bg-red-500/10 text-red-400 border-red-500/20" },
-    published: { label: "Published", classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  };
-  const { label, classes } = map[key] ?? { label: s, classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${classes}`}>
-      {label}
-    </span>
-  );
-}
 
 function SellBar({ sold, available }: { sold: number | null; available: number | null }) {
   if (sold == null) return <span className="text-muted-foreground">—</span>;

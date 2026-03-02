@@ -12,6 +12,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import type { Database } from "@/lib/database.types";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { Suspense } from "react";
+import { fmtUsd, fmtNum, centsToUsd, statusBadge, slugToLabel } from "@/lib/formatters";
 
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 type SnapshotPoint = { snapshot_date: string; roas: number | null; spend: number | null };
@@ -76,33 +77,6 @@ async function getCampaigns(clientSlug: string | null): Promise<{
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function fmtUsd(n: number | null) {
-  if (n == null) return "—";
-  return "$" + Math.round(n).toLocaleString("en-US");
-}
-function fmtNum(n: number | null) {
-  if (n == null) return "—";
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(0) + "K";
-  return String(n);
-}
-function centsToUsd(n: number | null) { return n == null ? null : n / 100; }
-
-function statusBadge(s: string) {
-  const map: Record<string, { label: string; classes: string }> = {
-    ACTIVE:   { label: "Active",   classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-    PAUSED:   { label: "Paused",   classes: "bg-amber-500/10  text-amber-400  border-amber-500/20" },
-    ARCHIVED: { label: "Archived", classes: "bg-zinc-500/10   text-zinc-400   border-zinc-500/20" },
-    DELETED:  { label: "Deleted",  classes: "bg-red-500/10    text-red-400    border-red-500/20" },
-  };
-  const entry = map[s.toUpperCase()] ?? { label: s, classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" };
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${entry.classes}`}>
-      {entry.label}
-    </span>
-  );
-}
-
 function BudgetBar({ spend, budget }: { spend: number | null; budget: number | null }) {
   if (spend == null || budget == null) {
     return <span className="text-xs text-muted-foreground tabular-nums">{fmtUsd(spend)}</span>;
@@ -132,11 +106,6 @@ function RoasBadge({ roas }: { roas: number | null }) {
 function fmtObjective(raw: string | null) {
   if (!raw) return null;
   return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function slugToLabel(slug: string | null) {
-  if (!slug) return "—";
-  return slug.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 }
 
 function computeMarginalRoas(points: SnapshotPoint[]): number | null {

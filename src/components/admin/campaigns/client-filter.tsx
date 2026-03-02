@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { slugToLabel } from "@/lib/formatters";
 
 interface Props {
   clients: string[];

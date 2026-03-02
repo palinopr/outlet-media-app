@@ -1,5 +1,9 @@
 import type { Database } from "@/lib/database.types";
 
+// Re-export shared formatters so existing consumers (page.tsx, data.ts, etc.)
+// that import from "./lib" keep working.
+export { fmtUsd, fmtDate, fmtNum } from "@/lib/formatters";
+
 // --- Database row types ---
 
 export type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
@@ -161,29 +165,6 @@ export const AGE_BRACKETS = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"]
 export const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
 
 // --- Formatting ---
-
-export function fmtUsd(n: number | null): string {
-  if (n == null) return "--";
-  if (Math.abs(n) >= 1_000_000) return "$" + (n / 1_000_000).toFixed(1) + "M";
-  if (Math.abs(n) >= 1_000) return "$" + (n / 1_000).toFixed(1) + "K";
-  return "$" + Math.round(n).toLocaleString("en-US");
-}
-
-export function fmtDate(d: string | null): string {
-  if (!d) return "--";
-  return new Date(d).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
-
-export function fmtNum(n: number | null): string {
-  if (n == null) return "--";
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return n.toLocaleString("en-US");
-}
 
 export function fmtPct(n: number | null): string {
   if (n == null) return "--";
