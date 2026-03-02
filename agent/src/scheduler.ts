@@ -4,7 +4,6 @@ import { runClaude } from "./runner.js";
 import { notifyOwner } from "./bot.js";
 import { notifyChannel } from "./discord.js";
 import { state } from "./state.js";
-import { getRoutineRunners } from "./discord-routines.js";
 import { getSweepRunners } from "./jobs/cron-sweeps.js";
 
 const CHECK_CRON     = process.env.CHECK_CRON ?? "0 */2 * * *"; // every 2 hours
@@ -57,10 +56,9 @@ export function triggerManualJob(jobName: string): void {
       runThinkCycle();
       break;
     default: {
-      // Try autonomous routines
-      const routines = getRoutineRunners();
-      if (routines[jobName]) {
-        routines[jobName]();
+      const sweeps = getSweepRunners();
+      if (sweeps[jobName]) {
+        sweeps[jobName]();
       } else {
         console.warn(`[scheduler] Unknown manual trigger: ${jobName}`);
       }
@@ -154,7 +152,6 @@ async function runMetaSync() {
  * Includes both the original infra jobs and the new autonomous routines.
  */
 export function getJobRunners(): Record<string, () => void> {
-  const routines = getRoutineRunners();
   const sweeps = getSweepRunners();
   return {
     "meta-sync": () => { runMetaSync(); },
@@ -162,7 +159,6 @@ export function getJobRunners(): Record<string, () => void> {
     "think": () => { runThinkCycle(); },
     "heartbeat": () => { pingHeartbeat(); },
     "health-check": () => { runDiscordHealthCheck(); },
-    ...routines,
     ...sweeps,
   };
 }
