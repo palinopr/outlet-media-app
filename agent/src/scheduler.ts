@@ -27,21 +27,17 @@ let thinkRunning = false;
 /**
  * Start the scheduler.
  *
- * ALL CRON JOBS ARE DISABLED by owner request.
- * Jobs can still be triggered manually from Discord channels
+ * Jobs can also be triggered manually from Discord channels
  * via triggerManualJob() (e.g. "run meta sync" in #media-buyer).
- *
- * When ready to re-enable, uncomment the cron.schedule() calls below.
  */
 export function startScheduler(): void {
-  console.log("[scheduler] All scheduled jobs DISABLED (manual triggers only)");
+  cron.schedule(HEARTBEAT_CRON, () => { pingHeartbeat(); });
+  cron.schedule(CHECK_CRON, () => { runTmCheck(); });
+  cron.schedule(META_CRON, () => { runMetaSync(); });
+  cron.schedule(THINK_CRON, () => { runThinkCycle(); });
+  cron.schedule(DISCORD_HEALTH_CRON, () => { runDiscordHealthCheck(); });
 
-  // --- DISABLED: Do not auto-run anything ---
-  // cron.schedule(HEARTBEAT_CRON, () => { pingHeartbeat(); });
-  // cron.schedule(CHECK_CRON, () => { runTmCheck(); });
-  // cron.schedule(META_CRON, () => { runMetaSync(); });
-  // cron.schedule(THINK_CRON, () => { runThinkCycle(); });
-  // cron.schedule(DISCORD_HEALTH_CRON, () => { runDiscordHealthCheck(); });
+  console.log("[scheduler] All scheduled jobs started");
 }
 
 /**
