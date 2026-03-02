@@ -2,7 +2,7 @@ import cron from "node-cron";
 import { readFileSync, existsSync, unlinkSync } from "node:fs";
 import { runClaude } from "./runner.js";
 import { notifyOwner } from "./bot.js";
-import { notifyChannel } from "./discord.js";
+import { notifyChannel } from "./discord/core/entry.js";
 import { state } from "./state.js";
 import { getSweepRunners } from "./jobs/cron-sweeps.js";
 
@@ -126,9 +126,9 @@ async function runMetaSync() {
 
       // Auto-refresh dashboard after successful sync
       try {
-        const { discordClient } = await import("./discord.js");
+        const { discordClient } = await import("./discord/core/entry.js");
         if (discordClient) {
-          const { updateDashboard } = await import("./discord-dashboard.js");
+          const { updateDashboard } = await import("./discord/commands/dashboard.js");
           await updateDashboard(discordClient);
         }
       } catch { /* dashboard update is best-effort */ }
@@ -165,7 +165,7 @@ export function getJobRunners(): Record<string, () => void> {
 
 async function runDiscordHealthCheck() {
   try {
-    const { runChannelHealthCheck } = await import("./discord-admin.js");
+    const { runChannelHealthCheck } = await import("./discord/commands/admin.js");
     await runChannelHealthCheck();
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { authGuard, apiError } from "@/lib/api-helpers";
 
 export async function GET(
   _req: Request,
@@ -8,13 +8,11 @@ export async function GET(
 ) {
   const { id } = await params;
 
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
-  }
+  const { error: authErr } = await authGuard();
+  if (authErr) return authErr;
 
   if (!supabaseAdmin) {
-    return NextResponse.json({ error: "DB not configured" }, { status: 503 });
+    return apiError("DB not configured", 503);
   }
 
   const { data, error } = await supabaseAdmin
@@ -24,7 +22,7 @@ export async function GET(
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 404 });
+    return apiError(error.message, 404);
   }
 
   return NextResponse.json({ job: data });

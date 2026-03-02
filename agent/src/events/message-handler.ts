@@ -14,10 +14,10 @@ import {
   type TextChannel,
 } from "discord.js";
 import { runClaude } from "../runner.js";
-import { getAgentForChannel } from "../discord-router.js";
+import { getAgentForChannel } from "../discord/core/router.js";
 import { isAgentFree } from "../services/queue-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
-import { loadAgentMemory } from "../discord-memory.js";
+import { loadAgentMemory } from "../discord/features/memory.js";
 
 /** Per-channel processing lock to prevent concurrent agent calls */
 const channelLocks = new Set<string>();
@@ -133,7 +133,7 @@ async function logActivity(
   response: string,
 ): Promise<void> {
   const fs = await import("node:fs/promises");
-  const { notifyChannel } = await import("../discord.js");
+  const { notifyChannel } = await import("../discord/core/entry.js");
 
   const entry: ActivityEntry = {
     ts: new Date().toISOString(),
@@ -206,7 +206,7 @@ export async function handleMessage(
     // Build system prompt with optional snapshot and memory
     let systemPrompt: string | undefined;
     if (agent.injectSnapshot) {
-      const { buildAdminPrompt } = await import("../discord-admin.js");
+      const { buildAdminPrompt } = await import("../discord/commands/admin.js");
       systemPrompt = await buildAdminPrompt(agent.promptFile);
     }
 
@@ -267,11 +267,11 @@ export async function handleMessage(
     // Fire-and-forget post-processing
     logActivity(channelName, msg.author.username, prompt, agent.description, responseText).catch(() => {});
 
-    import("../discord-memory.js")
+    import("../discord/features/memory.js")
       .then(({ maybeUpdateMemory }) => maybeUpdateMemory(agent.promptFile, prompt, responseText))
       .catch(() => {});
 
-    import("../discord-skills.js")
+    import("../discord/features/skills.js")
       .then(({ maybeCreateSkill }) => maybeCreateSkill(agent.promptFile, prompt, responseText))
       .catch(() => {});
 

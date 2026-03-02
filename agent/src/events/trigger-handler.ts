@@ -49,7 +49,7 @@ export function initTriggers(): void {
  * Dispatches follow-up tasks based on the completed task's action.
  */
 async function handleTaskCompletion(task: AgentTask): Promise<void> {
-  const { notifyChannel } = await import("../discord.js");
+  const { notifyChannel } = await import("../discord/core/entry.js");
 
   switch (task.action) {
     case "meta-sync": {
@@ -112,7 +112,7 @@ async function handleTaskCompletion(task: AgentTask): Promise<void> {
  * Boss evaluates whether to retry or escalate.
  */
 async function handleTaskFailure(task: AgentTask): Promise<void> {
-  const { notifyChannel } = await import("../discord.js");
+  const { notifyChannel } = await import("../discord/core/entry.js");
 
   await notifyChannel("audit-log",
     `Task FAILED: **${task.action}** (${task.from} -> ${task.to}) -- ${task.error?.slice(0, 200) ?? "unknown error"} [${task.id}]`
@@ -146,7 +146,7 @@ async function handleTaskFailure(task: AgentTask): Promise<void> {
  * Posts to #ops for visibility.
  */
 async function handleEscalation(task: AgentTask): Promise<void> {
-  const { notifyChannel } = await import("../discord.js");
+  const { notifyChannel } = await import("../discord/core/entry.js");
 
   await notifyChannel("ops",
     `**Escalation**: Task ${task.action} (${task.from} -> ${task.to}) escalated to RED tier.\nDetails: ${JSON.stringify(task.params).slice(0, 500)}\nTask ID: ${task.id}`

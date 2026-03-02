@@ -10,7 +10,7 @@
 
 import { EmbedBuilder, type Client, type TextChannel } from "discord.js";
 import { readFile, writeFile } from "node:fs/promises";
-import { dashboardButtons } from "./discord-buttons.js";
+import { dashboardButtons } from "../features/buttons.js";
 
 const CAMPAIGNS_FILE = "session/last-campaigns.json";
 const DASHBOARD_STATE_FILE = "session/dashboard-state.json";

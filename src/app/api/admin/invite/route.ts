@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
+import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { InviteSchema } from "@/lib/api-schemas";
+import { authGuard, apiError } from "@/lib/api-helpers";
 
 // POST /api/admin/invite
 // Body: { email: string, client_slug?: string, role?: "admin" }
@@ -8,15 +9,13 @@ import { InviteSchema } from "@/lib/api-schemas";
 // the metadata pre-applied (client_slug or role).
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
-  }
+  const { error: authErr } = await authGuard();
+  if (authErr) return authErr;
 
   const caller = await currentUser();
   const callerMeta = (caller?.publicMetadata ?? {}) as { role?: string };
   if (callerMeta.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return apiError("Forbidden", 403);
   }
 
   const raw = await request.json();

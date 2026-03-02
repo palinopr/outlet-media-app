@@ -15,8 +15,8 @@
 import { writeFile, readdir } from "node:fs/promises";
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { AGENT_INTERNALS } from "./discord-router.js";
-import { runClaude } from "./runner.js";
+import { AGENT_INTERNALS } from "../core/router.js";
+import { runClaude } from "../../runner.js";
 
 /** Map promptFile names to AGENT_INTERNALS keys */
 const PROMPT_TO_AGENT: Record<string, string> = {
@@ -150,7 +150,7 @@ export async function maybeCreateSkill(
     await writeFile(skillPath, fileContent, "utf-8");
 
     // Notify agent-feed
-    const { notifyChannel } = await import("./discord.js");
+    const { notifyChannel } = await import("../core/entry.js");
     await notifyChannel(
       "agent-feed",
       `New skill for **${internals.name}**: \`${skillName}.md\``,

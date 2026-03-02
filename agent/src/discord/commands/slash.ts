@@ -89,7 +89,7 @@ export function registerSlashHandler(client: Client): void {
     try {
       switch (cmd.commandName) {
         case "status": {
-          const { state } = await import("./state.js");
+          const { state } = await import("../../state.js");
           const busy = state.jobRunning || state.thinkRunning || state.discordAdminRunning;
           await cmd.reply({
             content: busy ? "Agent is busy running a task." : "Agent is idle and ready.",
@@ -104,7 +104,7 @@ export function registerSlashHandler(client: Client): void {
         }
 
         case "reset": {
-          const { channelSessions } = await import("./discord.js");
+          const { channelSessions } = await import("../core/entry.js");
           channelSessions.delete(cmd.channelId);
           await cmd.reply({ content: "Conversation reset. Starting fresh.", ephemeral: true });
           break;
@@ -112,7 +112,7 @@ export function registerSlashHandler(client: Client): void {
 
         case "supervise": {
           await cmd.deferReply();
-          const { handleSuperviseCommand } = await import("./discord-supervisor.js");
+          const { handleSuperviseCommand } = await import("./supervisor.js");
           const result = await handleSuperviseCommand(client);
           const opts: Record<string, unknown> = { embeds: [result.embed] };
           if (result.text) opts.content = result.text;
@@ -122,7 +122,7 @@ export function registerSlashHandler(client: Client): void {
 
         case "dashboard": {
           await cmd.deferReply();
-          const { handleDashboardCommand } = await import("./discord-dashboard.js");
+          const { handleDashboardCommand } = await import("./dashboard.js");
           const result = await handleDashboardCommand(client);
           const opts: Record<string, unknown> = {};
           if (result.text) opts.content = result.text;
@@ -133,10 +133,10 @@ export function registerSlashHandler(client: Client): void {
 
         case "schedule": {
           await cmd.deferReply();
-          const { handleScheduleCommand } = await import("./discord-schedule.js");
+          const { handleScheduleCommand } = await import("./schedule.js");
           const result = await handleScheduleCommand("!schedule list", client, "schedule");
           if (result?.embed) {
-            const { scheduleButtons } = await import("./discord-buttons.js");
+            const { scheduleButtons } = await import("../features/buttons.js");
             await cmd.editReply({ embeds: [result.embed], components: [scheduleButtons()] });
           } else {
             await cmd.editReply("No schedule data available.");
@@ -148,7 +148,7 @@ export function registerSlashHandler(client: Client): void {
           await cmd.deferReply();
           const guild = client.guilds.cache.first();
           if (!guild) { await cmd.editReply("No guild found."); break; }
-          const { ensureRoles } = await import("./discord-restructure.js");
+          const { ensureRoles } = await import("../features/restructure.js");
           const result = await ensureRoles(guild);
           await cmd.editReply(result);
           break;
@@ -156,7 +156,7 @@ export function registerSlashHandler(client: Client): void {
 
         case "deploy-internals": {
           await cmd.deferReply();
-          const { deployAllInternals } = await import("./discord-config.js");
+          const { deployAllInternals } = await import("../core/config.js");
           const result = await deployAllInternals(client);
           await cmd.editReply(result.length > 1900 ? result.slice(0, 1900) : result);
           break;
@@ -165,7 +165,7 @@ export function registerSlashHandler(client: Client): void {
         case "threads": {
           const ch = cmd.channel;
           if (ch && "threads" in ch) {
-            const { listThreads } = await import("./discord-threads.js");
+            const { listThreads } = await import("../features/threads.js");
             const result = await listThreads(ch as TextChannel);
             await cmd.reply({ content: result, ephemeral: true });
           } else {

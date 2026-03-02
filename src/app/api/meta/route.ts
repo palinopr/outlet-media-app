@@ -1,18 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { sanitizeId } from "@/lib/api-schemas";
+import { authGuard, apiError } from "@/lib/api-helpers";
 
 export async function GET(request: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
-  }
+  const { error } = await authGuard();
+  if (error) return error;
 
   const { searchParams } = new URL(request.url);
   const rawId = sanitizeId(searchParams.get("account_id")) ?? process.env.META_AD_ACCOUNT_ID;
 
   if (!process.env.META_ACCESS_TOKEN || !rawId) {
-    return NextResponse.json({ error: "Meta API credentials not configured" }, { status: 500 });
+    return apiError("Meta API credentials not configured");
   }
 
   // Strip act_ prefix if present -- the URL template adds it

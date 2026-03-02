@@ -13,7 +13,7 @@ vi.mock("../runner.js", () => ({
   runClaude: vi.fn().mockResolvedValue({ text: "agent response" }),
 }));
 
-vi.mock("../discord-router.js", () => ({
+vi.mock("../discord/core/router.js", () => ({
   getAgentForChannel: vi.fn().mockReturnValue({
     promptFile: "test-agent",
     maxTurns: 5,
@@ -31,14 +31,14 @@ vi.mock("../services/webhook-service.js", () => ({
   sendAsAgent: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("../discord-memory.js", () => ({
+vi.mock("../discord/features/memory.js", () => ({
   loadAgentMemory: vi.fn().mockResolvedValue(null),
 }));
 
 // Prevent fire-and-forget imports from loading real modules
-vi.mock("../discord.js", () => ({ notifyChannel: vi.fn() }));
-vi.mock("../discord-admin.js", () => ({ buildAdminPrompt: vi.fn() }));
-vi.mock("../discord-skills.js", () => ({ maybeCreateSkill: vi.fn() }));
+vi.mock("../discord/core/entry.js", () => ({ notifyChannel: vi.fn() }));
+vi.mock("../discord/commands/admin.js", () => ({ buildAdminPrompt: vi.fn() }));
+vi.mock("../discord/features/skills.js", () => ({ maybeCreateSkill: vi.fn() }));
 vi.mock("../agents/delegate.js", () => ({ processDelegations: vi.fn() }));
 
 // --------------- imports ---------------

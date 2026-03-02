@@ -20,7 +20,7 @@ import {
   type Message,
   type TextChannel,
 } from "discord.js";
-import { AGENT_INTERNALS } from "../discord-router.js";
+import { AGENT_INTERNALS } from "../discord/core/router.js";
 
 const AGENT_DIR = process.cwd();
 const INTERNALS_CHANNEL = "agent-internals";

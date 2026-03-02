@@ -17,15 +17,15 @@ import {
   Partials,
   type TextChannel,
 } from "discord.js";
-import { state } from "./state.js";
-import { matchManualTrigger, isConfigChannel, isInternalChannel } from "./discord-router.js";
-import { handleScheduleCommand, initScheduleJobs } from "./discord-schedule.js";
-import { handleSuperviseCommand } from "./discord-supervisor.js";
-import { handleDashboardCommand } from "./discord-dashboard.js";
-import { handleMessage, isChannelLocked, cleanForDiscord, chunkText } from "./events/message-handler.js";
-import { initWebhooks } from "./services/webhook-service.js";
-import { initQueue } from "./services/queue-service.js";
-import { initApprovals } from "./services/approval-service.js";
+import { state } from "../../state.js";
+import { matchManualTrigger, isConfigChannel, isInternalChannel } from "./router.js";
+import { handleScheduleCommand, initScheduleJobs } from "../commands/schedule.js";
+import { handleSuperviseCommand } from "../commands/supervisor.js";
+import { handleDashboardCommand } from "../commands/dashboard.js";
+import { handleMessage, isChannelLocked, cleanForDiscord, chunkText } from "../../events/message-handler.js";
+import { initWebhooks } from "../../services/webhook-service.js";
+import { initQueue } from "../../services/queue-service.js";
+import { initApprovals } from "../../services/approval-service.js";
 
 const token = process.env.DISCORD_BOT_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;
@@ -82,32 +82,32 @@ export function startDiscordBot(): void {
     console.log("[discord] Core services initialized (queue, webhooks, approvals)");
 
     // Initialize event-driven triggers and agent spawner
-    const { initTriggers } = await import("./events/trigger-handler.js");
+    const { initTriggers } = await import("../../events/trigger-handler.js");
     initTriggers();
-    const { initSpawner } = await import("./agents/spawner.js");
+    const { initSpawner } = await import("../../agents/spawner.js");
     initSpawner(discordClient!);
     console.log("[discord] Triggers and spawner initialized");
 
     // Start bot presence rotation
-    const { initStatus } = await import("./services/status-service.js");
+    const { initStatus } = await import("../../services/status-service.js");
     initStatus(discordClient!);
     console.log("[discord] Bot presence rotation started");
 
-    const { initDiscordAdmin } = await import("./discord-admin.js");
+    const { initDiscordAdmin } = await import("../commands/admin.js");
     await initDiscordAdmin(discordClient);
 
     // Wire schedule job runners
-    const { getJobRunners } = await import("./scheduler.js");
+    const { getJobRunners } = await import("../../scheduler.js");
     initScheduleJobs(getJobRunners());
     console.log("[discord] Schedule job runners initialized");
 
     // Register interactive button handler
-    const { registerButtonHandler } = await import("./discord-buttons.js");
+    const { registerButtonHandler } = await import("../features/buttons.js");
     registerButtonHandler(discordClient!);
     console.log("[discord] Button interaction handler registered");
 
     // Register slash commands (guild-scoped, instant)
-    const { registerSlashCommands, registerSlashHandler } = await import("./discord-slash.js");
+    const { registerSlashCommands, registerSlashHandler } = await import("../commands/slash.js");
     await registerSlashCommands(token!);
     registerSlashHandler(discordClient!);
     console.log("[discord] Slash command handler registered");
@@ -127,7 +127,7 @@ export function startDiscordBot(): void {
     console.log(`[discord] Processing msg ${msg.id} from ${msg.author.username}: ${content.slice(0, 60)}`);
 
     // Run auto-moderation first (fast path, no Claude)
-    const { checkAutoMod } = await import("./discord-admin.js");
+    const { checkAutoMod } = await import("../commands/admin.js");
     const blocked = await checkAutoMod(msg);
     if (blocked) return;
 
@@ -196,7 +196,7 @@ export function startDiscordBot(): void {
       const guild = discordClient?.guilds.cache.first();
       if (!guild) { await msg.reply("No guild found."); return; }
       await msg.reply("Running server restructure...");
-      const { runServerRestructure } = await import("./discord-restructure.js");
+      const { runServerRestructure } = await import("../features/restructure.js");
       const result = await runServerRestructure(guild);
       const chunks2 = chunkText(result, 1900);
       for (const chunk of chunks2) {
@@ -208,7 +208,7 @@ export function startDiscordBot(): void {
     if (content === "!deploy-internals" || content === "!deploy-configs") {
       if (!discordClient) { await msg.reply("Bot not connected."); return; }
       await msg.reply("Deploying agent memory + skills to all channels...");
-      const { deployAllInternals } = await import("./discord-config.js");
+      const { deployAllInternals } = await import("./config.js");
       const result = await deployAllInternals(discordClient);
       const chunks2 = chunkText(result, 1900);
       for (const chunk of chunks2) {
@@ -220,7 +220,7 @@ export function startDiscordBot(): void {
     if (content === "!roles" || content === "/roles") {
       const guild = discordClient?.guilds.cache.first();
       if (!guild) { await msg.reply("No guild found."); return; }
-      const { ensureRoles } = await import("./discord-restructure.js");
+      const { ensureRoles } = await import("../features/restructure.js");
       const result = await ensureRoles(guild);
       await msg.reply(result);
       return;
@@ -252,7 +252,7 @@ export function startDiscordBot(): void {
         if (schedResult.embed) {
           const sendOpts: Record<string, unknown> = { embeds: [schedResult.embed] };
           if (schedResult.buttons) {
-            const { scheduleButtons } = await import("./discord-buttons.js");
+            const { scheduleButtons } = await import("../features/buttons.js");
             sendOpts.components = [scheduleButtons()];
           }
           await (msg.channel as TextChannel).send(sendOpts);
@@ -263,7 +263,7 @@ export function startDiscordBot(): void {
 
     // Agent internals channel: inspect commands
     if (channelName === "agent-internals") {
-      const { handleInspectCommand } = await import("./events/inspect-handler.js");
+      const { handleInspectCommand } = await import("../../events/inspect-handler.js");
       const handled = await handleInspectCommand(msg, content);
       if (handled) return;
     }
@@ -275,7 +275,7 @@ export function startDiscordBot(): void {
     // Thread commands
     if (content === "!threads" || content === "/threads") {
       if ("threads" in msg.channel) {
-        const { listThreads } = await import("./discord-threads.js");
+        const { listThreads } = await import("../features/threads.js");
         const result = await listThreads(msg.channel as TextChannel);
         await msg.reply(result);
       } else {
@@ -285,7 +285,7 @@ export function startDiscordBot(): void {
     }
 
     if (content.toLowerCase().startsWith("thread:") || content.toLowerCase().startsWith("new thread:")) {
-      const { maybeCreateThread } = await import("./discord-threads.js");
+      const { maybeCreateThread } = await import("../features/threads.js");
       const thread = await maybeCreateThread(msg, channelName);
       if (thread) {
         await msg.reply(`Thread created: **${thread.threadName}** -- continue the conversation there.`);
@@ -296,7 +296,7 @@ export function startDiscordBot(): void {
     // Manual job triggers
     const trigger = matchManualTrigger(channelName, content);
     if (trigger) {
-      const { triggerManualJob } = await import("./scheduler.js");
+      const { triggerManualJob } = await import("../../scheduler.js");
       await msg.reply(`Triggering ${trigger}...`);
       triggerManualJob(trigger);
       return;

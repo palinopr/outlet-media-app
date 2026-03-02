@@ -66,7 +66,7 @@ export function initSpawner(client: Client): void {
  * Spawn a new agent. Creates all required files and Discord resources.
  */
 export async function spawnAgent(spec: SpawnSpec): Promise<void> {
-  const { notifyChannel } = await import("../discord.js");
+  const { notifyChannel } = await import("../discord/core/entry.js");
   const log: string[] = [];
 
   try {

@@ -17,7 +17,7 @@ import { enqueueTask, type AgentTask } from "../services/queue-service.js";
 import { evaluateTier } from "../services/approval-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { runClaude } from "../runner.js";
-import { getAgentForChannel } from "../discord-router.js";
+import { getAgentForChannel } from "../discord/core/router.js";
 
 /** Max delegations per response to prevent runaway chains */
 const MAX_DELEGATIONS_PER_RESPONSE = 5;
@@ -175,7 +175,7 @@ export async function processDelegations(
   }
 
   // Notify agent-feed
-  const { notifyChannel } = await import("../discord.js");
+  const { notifyChannel } = await import("../discord/core/entry.js");
   const targets = blocks.map(b => b.delegate).join(", ");
   await notifyChannel("agent-feed", `**${fromAgent}** delegated ${blocks.length} task(s) to: ${targets}`).catch(() => {});
 
@@ -192,7 +192,7 @@ async function executeDelegatedTask(
   depth: number,
 ): Promise<void> {
   const { completeTask, failTask } = await import("../services/queue-service.js");
-  const { notifyChannel } = await import("../discord.js");
+  const { notifyChannel } = await import("../discord/core/entry.js");
 
   const targetChannel = DELEGATE_TARGETS[task.to];
   if (!targetChannel) {

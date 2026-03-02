@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
+import { clerkClient, currentUser } from "@clerk/nextjs/server";
+import { authGuard, apiError } from "@/lib/api-helpers";
 
 // PATCH /api/admin/users/[userId]
 // Body: { client_slug?: string | null, role?: "admin" | null }
@@ -9,15 +10,13 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ userId: string }> }
 ) {
-  const { userId: callerId } = await auth();
-  if (!callerId) {
-    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
-  }
+  const { error: authErr } = await authGuard();
+  if (authErr) return authErr;
 
   const caller = await currentUser();
   const callerMeta = (caller?.publicMetadata ?? {}) as { role?: string };
   if (callerMeta.role !== "admin") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return apiError("Forbidden", 403);
   }
 
   const { userId } = await params;

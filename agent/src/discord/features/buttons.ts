@@ -81,7 +81,7 @@ export function registerButtonHandler(client: Client): void {
       switch (customId) {
         case "btn_dashboard_refresh": {
           await btn.deferReply({ ephemeral: true });
-          const { updateDashboard } = await import("./discord-dashboard.js");
+          const { updateDashboard } = await import("../commands/dashboard.js");
           const result = await updateDashboard(client);
           await btn.editReply(result);
           break;
@@ -89,7 +89,7 @@ export function registerButtonHandler(client: Client): void {
 
         case "btn_meta_sync": {
           await btn.deferReply({ ephemeral: true });
-          const { triggerManualJob } = await import("./scheduler.js");
+          const { triggerManualJob } = await import("../../scheduler.js");
           triggerManualJob("meta-sync");
           await btn.editReply("Meta sync triggered. Results will appear in #media-buyer and #dashboard.");
           break;
@@ -97,7 +97,7 @@ export function registerButtonHandler(client: Client): void {
 
         case "btn_enable_all": {
           await btn.deferReply({ ephemeral: true });
-          const { handleScheduleCommand } = await import("./discord-schedule.js");
+          const { handleScheduleCommand } = await import("../commands/schedule.js");
           const result = await handleScheduleCommand("!enable-all", client, "schedule");
           await btn.editReply(result?.text || "All jobs enabled.");
           break;
@@ -105,7 +105,7 @@ export function registerButtonHandler(client: Client): void {
 
         case "btn_disable_all": {
           await btn.deferReply({ ephemeral: true });
-          const { handleScheduleCommand } = await import("./discord-schedule.js");
+          const { handleScheduleCommand } = await import("../commands/schedule.js");
           const result = await handleScheduleCommand("!disable-all", client, "schedule");
           await btn.editReply(result?.text || "All jobs disabled.");
           break;
@@ -113,7 +113,7 @@ export function registerButtonHandler(client: Client): void {
 
         case "btn_schedule_list": {
           await btn.deferReply({ ephemeral: true });
-          const { handleScheduleCommand } = await import("./discord-schedule.js");
+          const { handleScheduleCommand } = await import("../commands/schedule.js");
           const result = await handleScheduleCommand("!schedule list", client, "schedule");
           if (result?.embed) {
             await btn.editReply({ embeds: [result.embed] });
@@ -125,7 +125,7 @@ export function registerButtonHandler(client: Client): void {
 
         case "btn_supervise": {
           await btn.deferReply({ ephemeral: true });
-          const { handleSuperviseCommand } = await import("./discord-supervisor.js");
+          const { handleSuperviseCommand } = await import("../commands/supervisor.js");
           const result = await handleSuperviseCommand(client);
           await btn.editReply({ embeds: [result.embed] });
           break;

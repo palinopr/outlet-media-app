@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AgentPostSchema, VALID_AGENTS } from "@/lib/api-schemas";
+import { authGuard, apiError } from "@/lib/api-helpers";
 
 // ─── POST /api/agents ─ queue a job ──────────────────────────────────────────
 
 export async function POST(request: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
-  }
+  const { error: authErr } = await authGuard();
+  if (authErr) return authErr;
 
   const raw = await request.json();
   const parsed = AgentPostSchema.safeParse(raw);
@@ -22,11 +20,7 @@ export async function POST(request: Request) {
   const { agent, prompt } = parsed.data;
 
   if (!supabaseAdmin) {
-    // Supabase not connected yet - return a clear message instead of crashing
-    return NextResponse.json(
-      { error: "Supabase not connected. Set SUPABASE_* env vars and redeploy." },
-      { status: 503 }
-    );
+    return apiError("Supabase not connected. Set SUPABASE_* env vars and redeploy.", 503);
   }
 
   const { data, error } = await supabaseAdmin
@@ -37,7 +31,7 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("[api/agents] insert failed:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiError(error.message);
   }
 
   return NextResponse.json({ job: data });
@@ -46,10 +40,8 @@ export async function POST(request: Request) {
 // ─── GET /api/agents ─ latest status per agent ──────────────────────────────
 
 export async function GET() {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
-  }
+  const { error: authErr } = await authGuard();
+  if (authErr) return authErr;
 
   if (!supabaseAdmin) {
     // Return idle stubs when DB not connected
@@ -72,7 +64,7 @@ export async function GET() {
 
   if (error) {
     console.error("[api/agents] fetch failed:", error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiError(error.message);
   }
 
   // Pick latest row per agent

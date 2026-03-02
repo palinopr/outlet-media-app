@@ -10,8 +10,8 @@
 
 import { EmbedBuilder, type Client } from "discord.js";
 import { readFile } from "node:fs/promises";
-import { runClaude } from "./runner.js";
-import { state } from "./state.js";
+import { runClaude } from "../../runner.js";
+import { state } from "../../state.js";
 
 const ACTIVITY_LOG = "session/activity-log.json";
 

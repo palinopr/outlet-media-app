@@ -13,7 +13,7 @@ import { EmbedBuilder, type Client } from "discord.js";
 
 /** Lazy import to avoid circular dependency with discord.ts */
 async function postToFeed(text: string): Promise<void> {
-  const { notifyChannel } = await import("./discord.js");
+  const { notifyChannel } = await import("../core/entry.js");
   await notifyChannel("agent-feed", text);
 }
 

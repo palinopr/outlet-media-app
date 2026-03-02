@@ -2,7 +2,7 @@ import "dotenv/config";
 import { existsSync, mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { bot } from "./bot.js";
-import { startDiscordBot } from "./discord.js";
+import { startDiscordBot } from "./discord/core/entry.js";
 import { startScheduler } from "./scheduler.js";
 import { killAllClaude } from "./runner.js";
 

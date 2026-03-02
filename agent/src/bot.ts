@@ -151,7 +151,7 @@ function chunkText(text: string, maxLen: number): string[] {
  * Send a proactive message to all configured channels (Telegram + Discord).
  */
 export async function notifyOwner(text: string): Promise<void> {
-  const { notifyDiscord } = await import("./discord.js");
+  const { notifyDiscord } = await import("./discord/core/entry.js");
   const chatId = process.env.TELEGRAM_CHAT_ID;
 
   const results = await Promise.allSettled([

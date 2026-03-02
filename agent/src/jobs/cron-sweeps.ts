@@ -17,7 +17,7 @@ import { campaignsSummary, eventsSummary } from "../utils/prompt-formatters.js";
 
 // Lazy imports to avoid circular deps
 async function postToChannel(target: string, text: string): Promise<void> {
-  const { notifyChannel } = await import("../discord.js");
+  const { notifyChannel } = await import("../discord/core/entry.js");
   await notifyChannel(target, text);
 }
 

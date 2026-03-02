@@ -12,8 +12,8 @@
 
 import { readFile, appendFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { AGENT_INTERNALS } from "./discord-router.js";
-import { runClaude } from "./runner.js";
+import { AGENT_INTERNALS } from "../core/router.js";
+import { runClaude } from "../../runner.js";
 
 /** Per-agent cooldown to prevent memory updates on every response */
 const lastMemoryUpdate = new Map<string, number>();
@@ -33,9 +33,9 @@ function queueMemorySync(agentKey: string): void {
   pendingSyncs.set(agentKey, setTimeout(async () => {
     pendingSyncs.delete(agentKey);
     try {
-      const { discordClient } = await import("./discord.js");
+      const { discordClient } = await import("../core/entry.js");
       if (!discordClient) return;
-      const { deploySingleAgentInternals } = await import("./discord-config.js");
+      const { deploySingleAgentInternals } = await import("../core/config.js");
       await deploySingleAgentInternals(discordClient, agentKey);
     } catch {
       // Best-effort sync
@@ -147,7 +147,7 @@ export async function maybeUpdateMemory(
     queueMemorySync(agentKey);
 
     // Lazy import to avoid circular dependency
-    const { notifyChannel } = await import("./discord.js");
+    const { notifyChannel } = await import("../core/entry.js");
     await notifyChannel(
       "agent-feed",
       `Memory updated for **${internals.name}**: ${bullets.length} new item(s)`,

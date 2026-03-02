@@ -389,7 +389,7 @@ export async function buildAdminPrompt(promptFile = "boss"): Promise<string> {
 
 export async function runServerRestructure(): Promise<string> {
   if (!guild) return "Guild not available.";
-  const { runServerRestructure: _run } = await import("./discord-restructure.js");
+  const { runServerRestructure: _run } = await import("../features/restructure.js");
   const result = await _run(guild);
   if (result.startsWith("**Server Restructure Complete**")) {
     await logAction(result);

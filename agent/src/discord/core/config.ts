@@ -19,7 +19,7 @@ import {
   EmbedBuilder,
   AttachmentBuilder,
 } from "discord.js";
-import { AGENT_INTERNALS, type AgentInternals } from "./discord-router.js";
+import { AGENT_INTERNALS, type AgentInternals } from "./router.js";
 
 const AGENT_DIR = resolve(".");
 const PROMPTS_DIR = join(AGENT_DIR, "prompts");
