@@ -3,16 +3,13 @@
 import {
   fmtUsd,
   roasColor,
-  slugToLabel,
-  type SnapshotPoint,
 } from "@/lib/formatters";
+import type { DailyInsight } from "@/lib/meta-campaigns";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { syncCampaignToMeta } from "@/app/admin/actions/campaigns";
 import { toast } from "sonner";
 import { Loader2, RefreshCw } from "lucide-react";
 import { useState } from "react";
-
-export type { SnapshotPoint };
 
 export function BudgetBar({ spend, dailyBudget, lifetimeBudget }: { spend: number | null; dailyBudget: number | null; lifetimeBudget: number | null }) {
   if (spend == null) {
@@ -51,7 +48,7 @@ export function RoasBadge({ roas }: { roas: number | null }) {
   return <span className={`text-sm font-semibold tabular-nums ${roasColor(roas)}`}>{roas.toFixed(1)}x</span>;
 }
 
-export function RoasSparkline({ points }: { points: SnapshotPoint[] }) {
+export function RoasSparkline({ points }: { points: DailyInsight[] }) {
   const vals = points.map((p) => p.roas).filter((v): v is number => v != null);
   if (vals.length < 2) return null;
 
@@ -126,36 +123,5 @@ export function SyncButton({ campaignId, status, dailyBudget }: { campaignId: st
         }
       }}
     />
-  );
-}
-
-export function ClientSelect({ value, clients, onSave }: { value: string; clients: string[]; onSave: (slug: string) => Promise<void> }) {
-  const [saving, setSaving] = useState(false);
-
-  async function handleChange(newValue: string) {
-    if (newValue === value) return;
-    setSaving(true);
-    try {
-      await onSave(newValue);
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div className="flex items-center gap-1.5">
-      <select
-        value={value}
-        onChange={(e) => handleChange(e.target.value)}
-        disabled={saving}
-        className="h-7 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-      >
-        <option value="">Unassigned</option>
-        {clients.map((slug) => (
-          <option key={slug} value={slug}>{slugToLabel(slug)}</option>
-        ))}
-      </select>
-      {saving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-    </div>
   );
 }

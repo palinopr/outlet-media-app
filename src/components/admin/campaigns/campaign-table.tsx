@@ -2,19 +2,18 @@
 
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { getCampaignColumns } from "./columns";
-import type { MetaCampaign } from "@/app/admin/campaigns/data";
-import type { SnapshotPoint } from "@/lib/formatters";
+import type { MetaCampaignCard, DailyInsight } from "@/lib/meta-campaigns";
 
 interface CampaignTableProps {
-  campaigns: MetaCampaign[];
-  snapshotsByCampaign: Record<string, SnapshotPoint[]>;
+  campaigns: MetaCampaignCard[];
+  dailyInsightsByCampaign: Record<string, DailyInsight[]>;
   clients: string[];
   metaAdAccountId: string | null;
-  fromDb: boolean;
+  hasData: boolean;
 }
 
-export function CampaignTable({ campaigns, snapshotsByCampaign, clients, metaAdAccountId, fromDb }: CampaignTableProps) {
-  const columns = getCampaignColumns({ snapshotsByCampaign, clients, metaAdAccountId });
+export function CampaignTable({ campaigns, dailyInsightsByCampaign, clients, metaAdAccountId, hasData }: CampaignTableProps) {
+  const columns = getCampaignColumns({ dailyInsightsByCampaign, clients, metaAdAccountId });
 
   return (
     <DataTable
@@ -22,7 +21,7 @@ export function CampaignTable({ campaigns, snapshotsByCampaign, clients, metaAdA
       data={campaigns}
       searchColumn="name"
       searchPlaceholder="Search campaigns..."
-      emptyMessage={fromDb ? "No campaigns match this filter" : "No campaign data -- run the Meta sync agent to pull live data"}
+      emptyMessage={hasData ? "No campaigns match this filter" : "No campaign data -- run the Meta sync agent to pull live data"}
     />
   );
 }

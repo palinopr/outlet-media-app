@@ -7,24 +7,17 @@ import { StatusSelect } from "@/components/admin/status-select";
 import {
   fmtNum,
   fmtObjective,
-  centsToUsd,
   slugToLabel,
-  computeMarginalRoas,
   roasColor,
-  type SnapshotPoint,
 } from "@/lib/formatters";
-import {
-  updateCampaignStatus,
-  assignCampaignClient,
-} from "@/app/admin/actions/campaigns";
+import { updateCampaignStatus } from "@/app/admin/actions/campaigns";
 import { toast } from "sonner";
-import type { MetaCampaign } from "@/app/admin/campaigns/data";
+import type { MetaCampaignCard, DailyInsight } from "@/lib/meta-campaigns";
 import {
   BudgetBar,
   RoasBadge,
   RoasSparkline,
   SyncButton,
-  ClientSelect,
 } from "./campaign-cells";
 
 const STATUS_OPTIONS = [
@@ -33,13 +26,25 @@ const STATUS_OPTIONS = [
 ];
 
 interface CampaignColumnsOptions {
-  snapshotsByCampaign: Record<string, SnapshotPoint[]>;
+  dailyInsightsByCampaign: Record<string, DailyInsight[]>;
   clients: string[];
   metaAdAccountId: string | null;
 }
 
-export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<MetaCampaign>[] {
-  const { snapshotsByCampaign, clients, metaAdAccountId } = opts;
+function computeMarginalFromInsights(points: DailyInsight[]): number | null {
+  if (points.length < 2) return null;
+  const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
+  const first = sorted[0], last = sorted[sorted.length - 1];
+  if (first.spend == null || last.spend == null || first.roas == null || last.roas == null) return null;
+  const deltaSpend = last.spend - first.spend;
+  if (deltaSpend <= 0) return null;
+  const revFirst = first.spend * first.roas;
+  const revLast = last.spend * last.roas;
+  return (revLast - revFirst) / deltaSpend;
+}
+
+export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<MetaCampaignCard>[] {
+  const { dailyInsightsByCampaign, metaAdAccountId } = opts;
 
   return [
     {
@@ -63,7 +68,7 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
           options={STATUS_OPTIONS}
           onSave={async (newStatus) => {
             try {
-              await updateCampaignStatus({ campaignId: row.original.campaign_id, status: newStatus });
+              await updateCampaignStatus({ campaignId: row.original.campaignId, status: newStatus });
               toast.success(`Status updated to ${newStatus}`);
             } catch (err) {
               toast.error(err instanceof Error ? err.message : "Failed to update status");
@@ -73,21 +78,12 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
       ),
     },
     {
-      accessorKey: "client_slug",
+      accessorKey: "clientSlug",
       header: ({ column }) => <ColumnHeader column={column} title="Client" />,
       cell: ({ row }) => (
-        <ClientSelect
-          value={row.original.client_slug ?? ""}
-          clients={clients}
-          onSave={async (slug) => {
-            try {
-              await assignCampaignClient({ campaignId: row.original.campaign_id, clientSlug: slug });
-              toast.success(slug ? `Assigned to ${slugToLabel(slug)}` : "Client unassigned");
-            } catch (err) {
-              toast.error(err instanceof Error ? err.message : "Failed to assign client");
-            }
-          }}
-        />
+        <span className="text-sm text-muted-foreground">
+          {slugToLabel(row.original.clientSlug)}
+        </span>
       ),
     },
     {
@@ -96,9 +92,9 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
       header: ({ column }) => <ColumnHeader column={column} title="Budget spent" />,
       cell: ({ row }) => (
         <BudgetBar
-          spend={centsToUsd(row.original.spend)}
-          dailyBudget={centsToUsd(row.original.daily_budget)}
-          lifetimeBudget={centsToUsd(row.original.lifetime_budget)}
+          spend={row.original.spend}
+          dailyBudget={row.original.dailyBudget}
+          lifetimeBudget={null}
         />
       ),
     },
@@ -116,15 +112,15 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
       enableSorting: false,
       header: () => <span className="text-xs font-medium text-muted-foreground">Trend</span>,
       cell: ({ row }) => (
-        <RoasSparkline points={snapshotsByCampaign[row.original.campaign_id] ?? []} />
+        <RoasSparkline points={dailyInsightsByCampaign[row.original.campaignId] ?? []} />
       ),
     },
     {
       id: "marginal",
-      accessorFn: (row) => computeMarginalRoas(snapshotsByCampaign[row.campaign_id] ?? []),
+      accessorFn: (row) => computeMarginalFromInsights(dailyInsightsByCampaign[row.campaignId] ?? []),
       header: ({ column }) => <ColumnHeader column={column} title="Marginal" className="justify-end" />,
       cell: ({ row }) => {
-        const m = computeMarginalRoas(snapshotsByCampaign[row.original.campaign_id] ?? []);
+        const m = computeMarginalFromInsights(dailyInsightsByCampaign[row.original.campaignId] ?? []);
         if (m == null) return <div className="text-right"><span className="text-muted-foreground text-sm">--</span></div>;
         return <div className="text-right"><span className={`text-sm font-semibold tabular-nums ${roasColor(m)}`}>{m.toFixed(1)}x</span></div>;
       },
@@ -162,13 +158,13 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
       cell: ({ row }) => (
         <div className="flex items-center gap-1.5">
           <SyncButton
-            campaignId={row.original.campaign_id}
+            campaignId={row.original.campaignId}
             status={row.original.status}
-            dailyBudget={row.original.daily_budget}
+            dailyBudget={row.original.dailyBudget != null ? Math.round(row.original.dailyBudget * 100) : null}
           />
           {metaAdAccountId ? (
             <a
-              href={`https://www.facebook.com/adsmanager/manage/campaigns?act=${metaAdAccountId}&selected_campaign_ids=${row.original.campaign_id}`}
+              href={`https://www.facebook.com/adsmanager/manage/campaigns?act=${metaAdAccountId}&selected_campaign_ids=${row.original.campaignId}`}
               target="_blank"
               rel="noreferrer"
               className="text-muted-foreground hover:text-foreground transition-colors"

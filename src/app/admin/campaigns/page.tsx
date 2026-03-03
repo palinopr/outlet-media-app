@@ -1,32 +1,46 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, DollarSign, TrendingUp, Eye, MousePointerClick } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
-import { getCampaigns } from "./data";
+import { getCampaigns, type DateRange } from "./data";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
+import { DateRangeFilter } from "@/components/admin/campaigns/date-range-filter";
 import { CampaignTable } from "@/components/admin/campaigns/campaign-table";
 import { Suspense } from "react";
-import { fmtUsd, fmtNum, centsToUsd, slugToLabel } from "@/lib/formatters";
+import { fmtUsd, fmtNum, slugToLabel } from "@/lib/formatters";
+import type { DailyInsight } from "@/lib/meta-campaigns";
 
-// ---- Page ----
+const VALID_RANGES = new Set<DateRange>(["today", "yesterday", "7", "14", "30", "lifetime"]);
 
 interface Props {
-  searchParams: Promise<{ client?: string }>;
+  searchParams: Promise<{ client?: string; range?: string }>;
 }
 
 export default async function CampaignsPage({ searchParams }: Props) {
-  const { client } = await searchParams;
+  const { client, range: rawRange } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
+  const range: DateRange = rawRange && VALID_RANGES.has(rawRange as DateRange)
+    ? (rawRange as DateRange)
+    : "lifetime";
 
-  const { campaigns, clients, snapshotsByCampaign, fromDb } = await getCampaigns(clientSlug);
+  const { campaigns, clients, dailyInsights, error } = await getCampaigns(clientSlug, range);
 
-  const totalSpend = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0), 0);
-  const totalImpressions = campaigns.reduce((s, c) => s + (c.impressions ?? 0), 0);
-  const totalClicks = campaigns.reduce((s, c) => s + (c.clicks ?? 0), 0);
-  const totalRevenue = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
+  const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
+  const totalImpressions = campaigns.reduce((s, c) => s + c.impressions, 0);
+  const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0);
+  const totalRevenue = campaigns.reduce((s, c) => s + (c.revenue ?? 0), 0);
   const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
   const overallCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
 
   const metaAdAccountId = process.env.META_AD_ACCOUNT_ID ?? null;
+  const hasData = campaigns.length > 0;
+
+  const dailyInsightsByCampaign: Record<string, DailyInsight[]> = {};
+  for (const d of dailyInsights) {
+    if (!dailyInsightsByCampaign[d.campaignId]) {
+      dailyInsightsByCampaign[d.campaignId] = [];
+    }
+    dailyInsightsByCampaign[d.campaignId].push(d);
+  }
 
   return (
     <div className="space-y-6">
@@ -40,10 +54,10 @@ export default async function CampaignsPage({ searchParams }: Props) {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {fromDb ? (
+          {hasData ? (
             <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 rounded">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              Live from Supabase
+              Live from Meta
             </span>
           ) : (
             <span className="text-xs text-amber-400 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded">
@@ -52,6 +66,13 @@ export default async function CampaignsPage({ searchParams }: Props) {
           )}
         </div>
       </div>
+
+      {/* Error banner */}
+      {error && (
+        <div className="rounded border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+          {error}
+        </div>
+      )}
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -72,20 +93,25 @@ export default async function CampaignsPage({ searchParams }: Props) {
             {clientSlug ? slugToLabel(clientSlug) : "All clients"}
             <span className="text-muted-foreground font-normal ml-1.5">({campaigns.length})</span>
           </p>
-          <Suspense>
-            <ClientFilter clients={clients} selected={clientSlug ?? "all"} />
-          </Suspense>
+          <div className="flex items-center gap-2">
+            <Suspense>
+              <DateRangeFilter selected={range} />
+            </Suspense>
+            <Suspense>
+              <ClientFilter clients={clients} selected={clientSlug ?? "all"} />
+            </Suspense>
+          </div>
         </div>
         <CampaignTable
           campaigns={campaigns}
-          snapshotsByCampaign={snapshotsByCampaign}
+          dailyInsightsByCampaign={dailyInsightsByCampaign}
           clients={clients}
           metaAdAccountId={metaAdAccountId}
-          fromDb={fromDb}
+          hasData={hasData}
         />
       </Card>
 
-      {!fromDb && (
+      {!hasData && !error && (
         <Card className="border-border/60 border-dashed">
           <CardContent className="py-6">
             <div className="flex items-center justify-between">
