@@ -47,6 +47,7 @@ export async function POST(request: Request) {
     await client.invitations.createInvitation({
       emailAddress: body.email,
       publicMetadata,
+      ignoreExisting: true,
     });
   } catch (err: unknown) {
     // Clerk errors carry an `errors` array with detailed messages

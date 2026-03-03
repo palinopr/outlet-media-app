@@ -42,7 +42,15 @@ export async function getUsers(): Promise<UserRow[]> {
   let inviteRows: UserRow[] = [];
   try {
     const result = await client.invitations.getInvitationList();
-    const invitations = result.data.filter((i) => i.status === "pending" || i.status === "expired");
+    const existingEmails = new Set(userRows.map((u) => u.email.toLowerCase()));
+    // Show pending/expired invites, plus "accepted" invites where the user
+    // never finished sign-up (no matching user account exists)
+    const invitations = result.data.filter(
+      (i) =>
+        i.status === "pending" ||
+        i.status === "expired" ||
+        (i.status === "accepted" && !existingEmails.has(i.emailAddress.toLowerCase()))
+    );
     inviteRows = invitations.map((inv) => {
       const meta = (inv.publicMetadata ?? {}) as {
         role?: string;
