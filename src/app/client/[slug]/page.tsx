@@ -11,7 +11,7 @@ import {
   Target,
   Ticket,
 } from "lucide-react";
-import { getData, getLastSyncedAt, type DateRange } from "./data";
+import { getData, type DateRange } from "./data";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { roasLabel, generateInsights, DATE_OPTIONS } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
@@ -42,7 +42,6 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const validRanges: DateRange[] = ["today", "yesterday", "7", "14", "30", "lifetime"];
   const range: DateRange = validRanges.includes(rangeParam as DateRange) ? (rangeParam as DateRange) : "lifetime";
   const data = await getData(slug, range);
-  const lastSyncedAt = await getLastSyncedAt(slug);
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = data;
 
   const insights = generateInsights(heroStats, campaigns, events, audience);
@@ -240,7 +239,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       )}
 
       {/* -- Footer -- */}
-      <ClientPortalFooter dataSource={dataSource} lastSyncedAt={lastSyncedAt} />
+      <ClientPortalFooter dataSource={dataSource} />
 
     </div>
   );
