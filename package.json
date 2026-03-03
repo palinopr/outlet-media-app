@@ -14,6 +14,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.37.5",
     "@supabase/supabase-js": "^2.96.0",
+    "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.34.5",
