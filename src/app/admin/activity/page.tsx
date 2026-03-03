@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Activity, Users, AlertTriangle, Eye } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
@@ -5,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { getActivity } from "./data";
 import { ActivityFilters } from "@/components/admin/activity/activity-filters";
 import { ActivityTable } from "@/components/admin/activity/activity-table";
+
+export const metadata: Metadata = { title: "Activity" };
 
 interface Props {
   searchParams: Promise<{ user?: string; type?: string; range?: string }>;

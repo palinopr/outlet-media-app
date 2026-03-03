@@ -3,6 +3,7 @@ import { z } from "zod";
 import { adminGuard, parseJsonBody } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 
+// "action" events go through logActivity() server action, not this API
 const ActivitySchema = z.object({
   event_type: z.enum(["page_view", "error", "session_start"]),
   page: z.string().nullable().optional(),
