@@ -20,6 +20,7 @@ import {
   AttachmentBuilder,
 } from "discord.js";
 import { AGENT_INTERNALS, type AgentInternals } from "./router.js";
+import { chunkText } from "../../events/message-handler.js";
 
 const AGENT_DIR = resolve(".");
 const PROMPTS_DIR = join(AGENT_DIR, "prompts");
@@ -64,17 +65,6 @@ function extractSections(content: string): string[] {
     .split("\n")
     .filter(line => /^##\s/.test(line))
     .map(line => line.replace(/^##\s+/, "").trim());
-}
-
-/** Chunk a long string into Discord-safe pieces */
-function chunkText(text: string, maxLen: number): string[] {
-  const chunks: string[] = [];
-  let i = 0;
-  while (i < text.length) {
-    chunks.push(text.slice(i, i + maxLen));
-    i += maxLen;
-  }
-  return chunks;
 }
 
 /**
@@ -286,6 +276,3 @@ export async function deploySingleAgentInternals(
   const skillResult = await deploySkills(client, agent);
   return `${memResult}\n${skillResult}`;
 }
-
-// --- Legacy exports for backward compatibility ---
-export { deployAllInternals as deployAllConfigs };

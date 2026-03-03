@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { fmtNum, roasColor } from "@/lib/formatters";
+import { getCampaignStatusCfg } from "@/app/client/[slug]/lib";
 
 export interface AdPreview {
   adId: string;
@@ -18,32 +20,8 @@ export interface AdPreview {
   roas: number | null;
 }
 
-function fmtNum(n: number | null): string {
-  if (n == null) return "--";
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return n.toLocaleString("en-US");
-}
-
-function roasColor(roas: number | null): string {
-  if (roas == null) return "text-white/40";
-  if (roas >= 3) return "text-emerald-400";
-  if (roas >= 2) return "text-amber-400";
-  return "text-red-400";
-}
-
-function statusCfg(status: string) {
-  const map: Record<string, { label: string; text: string; bg: string; dot: string }> = {
-    ACTIVE: { label: "Active", text: "text-emerald-400", bg: "bg-emerald-400/10", dot: "bg-emerald-400" },
-    PAUSED: { label: "Paused", text: "text-amber-400", bg: "bg-amber-400/10", dot: "bg-amber-400" },
-    DELETED: { label: "Deleted", text: "text-red-400", bg: "bg-red-400/10", dot: "bg-red-400" },
-    ARCHIVED: { label: "Archived", text: "text-zinc-400", bg: "bg-zinc-400/10", dot: "bg-zinc-400" },
-  };
-  return map[status.toUpperCase()] ?? { label: status, text: "text-white/40", bg: "bg-white/5", dot: "bg-white/40" };
-}
-
 function AdCardUI({ ad }: { ad: AdPreview }) {
-  const cfg = statusCfg(ad.status);
+  const cfg = getCampaignStatusCfg(ad.status);
   return (
     <div className="glass-card p-4 flex flex-col">
       {/* Thumbnail */}

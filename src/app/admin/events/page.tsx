@@ -9,66 +9,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CalendarDays, ExternalLink, Bot, Ticket, DollarSign, TrendingUp, Users } from "lucide-react";
-import { supabaseAdmin } from "@/lib/supabase";
-import type { Database } from "@/lib/database.types";
+import { StatCard } from "@/components/admin/stat-card";
+import { getEvents } from "./data";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { matchedCampaigns } from "@/lib/campaign-event-match";
 import { Suspense } from "react";
 import { fmtDate, fmtUsd, slugToLabel, statusBadge } from "@/lib/formatters";
-
-type TmEventRow = Database["public"]["Tables"]["tm_events"]["Row"];
-type DemoRow = Database["public"]["Tables"]["tm_event_demographics"]["Row"];
-type CampaignRow = { name: string; status: string; spend: number | null; roas: number | null };
-
-// ─── Data fetching ─────────────────────────────────────────────────────────
-
-async function getEvents(clientSlug: string | null): Promise<{
-  events: TmEventRow[];
-  clients: string[];
-  demoMap: Record<string, DemoRow>;
-  campaigns: CampaignRow[];
-  fromDb: boolean;
-}> {
-  if (!supabaseAdmin) return { events: [], clients: [], demoMap: {}, campaigns: [], fromDb: false };
-
-  // Distinct client list for the filter dropdown
-  const clientsRes = await supabaseAdmin
-    .from("tm_events")
-    .select("client_slug")
-    .not("client_slug", "is", null);
-
-  const clients = [...new Set((clientsRes.data ?? []).map((r) => r.client_slug as string))].sort();
-
-  const query = supabaseAdmin
-    .from("tm_events")
-    .select("*")
-    .order("date", { ascending: true })
-    .limit(200);
-
-  if (clientSlug) query.eq("client_slug", clientSlug);
-
-  const [{ data, error }, demosRes, campaignsRes] = await Promise.all([
-    query,
-    supabaseAdmin.from("tm_event_demographics").select("tm_id, fans_total, fans_female_pct, fans_male_pct, age_25_34_pct, age_35_44_pct"),
-    supabaseAdmin.from("meta_campaigns").select("name, status, spend, roas").not("client_slug", "is", null),
-  ]);
-
-  if (error) return { events: [], clients, demoMap: {}, campaigns: [], fromDb: false };
-
-  const demoMap: Record<string, DemoRow> = {};
-  for (const d of (demosRes.data ?? []) as DemoRow[]) {
-    demoMap[d.tm_id] = d;
-  }
-
-  return {
-    events: (data ?? []) as TmEventRow[],
-    clients,
-    demoMap,
-    campaigns: (campaignsRes.data ?? []) as CampaignRow[],
-    fromDb: Boolean(data?.length),
-  };
-}
-
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -162,19 +108,8 @@ export default async function EventsPage({ searchParams }: Props) {
           { label: "Sell-through", value: capTotal > 0 ? `${avgSellPct}%` : "---",    icon: TrendingUp,   accent: "from-emerald-500/20 to-teal-500/20",  iconColor: "text-emerald-400" },
           { label: "Total Gross",  value: fmtUsd(totalGross > 0 ? totalGross : null),  icon: DollarSign,   accent: "from-rose-500/20 to-pink-500/20",     iconColor: "text-rose-400" },
           { label: "Total Fans",   value: totalFans > 0 ? totalFans.toLocaleString() : "---", icon: Users, accent: "from-orange-500/20 to-amber-500/20", iconColor: "text-orange-400" },
-        ].map(({ label, value, icon: Icon, accent, iconColor }) => (
-          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-4 transition-all duration-200 hover:border-border/80 hover:shadow-lg hover:shadow-black/20">
-            <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-                <div className={`h-7 w-7 rounded-lg bg-white/[0.06] flex items-center justify-center ${iconColor}`}>
-                  <Icon className="h-3.5 w-3.5" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold tracking-tight">{value}</p>
-            </div>
-          </div>
+        ].map((s) => (
+          <StatCard key={s.label} {...s} />
         ))}
       </div>
 

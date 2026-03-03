@@ -8,47 +8,16 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Megaphone, TrendingUp, MousePointerClick } from "lucide-react";
-import { supabaseAdmin } from "@/lib/supabase";
-import type { Database } from "@/lib/database.types";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
-import { centsToUsd, fmtUsd, fmtNum, fmtObjective } from "@/lib/formatters";
-
-type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
+import { fmtUsd, fmtNum, slugToLabel } from "@/lib/formatters";
+import { getCampaignStatusCfg } from "../lib";
+import { getCampaignsPageData } from "../data";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// --- Data fetching ---
-
-async function getCampaigns(slug: string) {
-  if (!supabaseAdmin) return { campaigns: [], snapshots: [], fromDb: false };
-
-  const [campaignsRes] = await Promise.all([
-    supabaseAdmin
-      .from("meta_campaigns")
-      .select("*")
-      .eq("client_slug", slug)
-      .order("spend", { ascending: false })
-      .limit(50),
-  ]);
-
-  const campaigns = (campaignsRes.data ?? []) as MetaCampaign[];
-  const campaignIds = campaigns.map((c) => c.campaign_id);
-
-  let snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null; campaign_id: string }> = [];
-  if (campaignIds.length > 0) {
-    const { data } = await supabaseAdmin
-      .from("campaign_snapshots")
-      .select("snapshot_date, roas, spend, campaign_id")
-      .in("campaign_id", campaignIds)
-      .order("snapshot_date", { ascending: true })
-      .limit(500);
-    snapshots = data ?? [];
-  }
-
-  return { campaigns, snapshots, fromDb: Boolean(campaigns.length) };
-}
+// --- Helpers ---
 
 function buildTrendData(snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null }>) {
   const byDate: Record<string, { roasSum: number; roasCount: number; spendSum: number }> = {};
@@ -67,43 +36,20 @@ function buildTrendData(snapshots: Array<{ snapshot_date: string; roas: number |
     }));
 }
 
-// --- Helpers ---
-
-function statusDot(s: string) {
-  const colors: Record<string, string> = {
-    ACTIVE: "bg-emerald-400", active: "bg-emerald-400",
-    PAUSED: "bg-amber-400", paused: "bg-amber-400",
-    ARCHIVED: "bg-zinc-500",
-  };
-  return colors[s] ?? "bg-zinc-500";
-}
-
-function statusLabel(s: string) {
-  const map: Record<string, string> = {
-    ACTIVE: "Active", active: "Active",
-    PAUSED: "Paused", paused: "Paused",
-    ARCHIVED: "Archived",
-  };
-  return map[s] ?? s;
-}
-
-function slugToName(slug: string) {
-  return slug.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-}
-
 // --- Page ---
 
 export default async function ClientCampaigns({ params }: Props) {
   const { slug } = await params;
-  const clientName = slugToName(slug);
+  const clientName = slugToLabel(slug);
 
-  const { campaigns, snapshots, fromDb } = await getCampaigns(slug);
+  const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug);
   const trendData = buildTrendData(snapshots);
 
-  const totalSpend       = campaigns.reduce((a, c) => a + (centsToUsd(c.spend) ?? 0), 0);
-  const totalRevenue     = campaigns.reduce((a, c) => a + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
-  const totalImpressions = campaigns.reduce((a, c) => a + (c.impressions ?? 0), 0);
+  const totalSpend       = campaigns.reduce((a, c) => a + c.spend, 0);
+  const totalRevenue     = campaigns.reduce((a, c) => a + (c.revenue ?? 0), 0);
+  const totalImpressions = campaigns.reduce((a, c) => a + c.impressions, 0);
   const blendedRoas      = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+  const hasData          = campaigns.length > 0;
 
   const now = new Date().toLocaleDateString("en-US", {
     weekday: "long", month: "long", day: "numeric",
@@ -161,10 +107,12 @@ export default async function ClientCampaigns({ params }: Props) {
             Back to overview
           </a>
           <div className="flex items-center gap-2">
-            {fromDb ? (
+            {hasData ? (
               <>
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
-                <span className="text-xs text-muted-foreground">Live data</span>
+                <span className="text-xs text-muted-foreground">
+                  {dataSource === "meta_api" ? "Live from Meta" : "From database"}
+                </span>
               </>
             ) : (
               <>
@@ -196,7 +144,7 @@ export default async function ClientCampaigns({ params }: Props) {
       </div>
 
       {/* Trend charts */}
-      {fromDb && trendData.length > 1 && (
+      {hasData && trendData.length > 1 && (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 mb-8">
           <Card className="border-border/60 bg-card">
             <CardHeader className="pb-2">
@@ -233,7 +181,7 @@ export default async function ClientCampaigns({ params }: Props) {
               <Megaphone className="h-5 w-5 text-muted-foreground" />
             </div>
             <p className="text-sm text-muted-foreground">No campaign data yet</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Syncs automatically every 6 hours</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Data refreshes on page load</p>
           </div>
         ) : (
           <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
@@ -250,42 +198,38 @@ export default async function ClientCampaigns({ params }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {campaigns.map((c) => {
-                  const spend = centsToUsd(c.spend);
-                  const revenue = spend != null && c.roas != null ? spend * c.roas : null;
-                  return (
-                    <TableRow key={c.id} className="border-border/40">
-                      <TableCell>
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusDot(c.status)}`} />
-                          <div>
-                            <p className="text-sm font-medium">{c.name}</p>
-                            <p className="text-xs text-muted-foreground">{statusLabel(c.status)}{fmtObjective(c.objective) ? ` · ${fmtObjective(c.objective)}` : ""}</p>
-                          </div>
+                {campaigns.map((c) => (
+                  <TableRow key={c.campaignId} className="border-border/40">
+                    <TableCell>
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${getCampaignStatusCfg(c.status).dot}`} />
+                        <div>
+                          <p className="text-sm font-medium">{c.name}</p>
+                          <p className="text-xs text-muted-foreground">{getCampaignStatusCfg(c.status).label}</p>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right text-sm font-medium tabular-nums">{fmtUsd(spend)}</TableCell>
-                      <TableCell className="text-right text-sm font-medium tabular-nums">{fmtUsd(revenue)}</TableCell>
-                      <TableCell className="text-right">
-                        <span className={`text-sm font-semibold tabular-nums ${
-                          (c.roas ?? 0) >= 4 ? "text-emerald-400"
-                          : (c.roas ?? 0) >= 2 ? "text-amber-400"
-                          : c.roas != null ? "text-red-400"
-                          : "text-muted-foreground"
-                        }`}>
-                          {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-muted-foreground">{fmtNum(c.impressions)}</TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-                        {c.ctr != null ? c.ctr.toFixed(2) + "%" : "--"}
-                      </TableCell>
-                      <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-                        {c.cpc != null ? "$" + c.cpc.toFixed(2) : "--"}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right text-sm font-medium tabular-nums">{fmtUsd(c.spend)}</TableCell>
+                    <TableCell className="text-right text-sm font-medium tabular-nums">{fmtUsd(c.revenue)}</TableCell>
+                    <TableCell className="text-right">
+                      <span className={`text-sm font-semibold tabular-nums ${
+                        (c.roas ?? 0) >= 4 ? "text-emerald-400"
+                        : (c.roas ?? 0) >= 2 ? "text-amber-400"
+                        : c.roas != null ? "text-red-400"
+                        : "text-muted-foreground"
+                      }`}>
+                        {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums text-muted-foreground">{fmtNum(c.impressions)}</TableCell>
+                    <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+                      {c.ctr != null ? c.ctr.toFixed(2) + "%" : "--"}
+                    </TableCell>
+                    <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
+                      {c.cpc != null ? "$" + c.cpc.toFixed(2) : "--"}
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
@@ -295,7 +239,7 @@ export default async function ClientCampaigns({ params }: Props) {
       {/* Footer */}
       <div className="border-t border-border/40 pt-6 flex items-center justify-between text-xs text-muted-foreground">
         <span>Powered by Outlet Media</span>
-        <span>Data syncs every 6 hours</span>
+        <span>Data from Meta Ads</span>
       </div>
     </>
   );

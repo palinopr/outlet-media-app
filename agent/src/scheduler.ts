@@ -12,8 +12,7 @@ const THINK_CRON     = "*/30 8-22 * * *";                        // every 30 min
 const HEARTBEAT_CRON = "*/1 * * * *";                            // every minute
 const DISCORD_HEALTH_CRON = "0 */12 * * *";                      // every 12 hours
 
-const INGEST_URL =
-  process.env.INGEST_URL?.replace("/api/ingest", "") ?? "http://localhost:3000";
+const INGEST_URL = process.env.INGEST_URL?.replace("/api/ingest", "");
 
 const TM_TASK = "Run the TM One monitor: log in to https://one.ticketmaster.com, extract all events, compare to session/last-events.json, POST changes to the ingest endpoint. Report what changed.";
 const META_TASK = "Run the Meta Ads sync: pull all active campaigns and last-30-day insights for ad account act_787610255314938, save to session/last-campaigns.json, POST to the ingest endpoint. Report spend and ROAS summary.";
@@ -68,8 +67,16 @@ export function triggerManualJob(jobName: string): void {
 }
 
 async function pingHeartbeat() {
+  if (!INGEST_URL) {
+    console.error("[scheduler] INGEST_URL not set, skipping heartbeat");
+    return;
+  }
   try {
-    await fetch(`${INGEST_URL}/api/agents/heartbeat`, { method: "POST" });
+    await fetch(`${INGEST_URL}/api/agents/heartbeat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ secret: process.env.INGEST_SECRET }),
+    });
   } catch {
     // silently ignore
   }

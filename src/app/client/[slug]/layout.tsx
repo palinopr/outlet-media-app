@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { ClientNav } from "./components/client-nav";
 
 interface Props {
   children: ReactNode;
@@ -61,22 +62,7 @@ export default async function ClientLayout({ children, params }: Props) {
           </div>
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
         </div>
-        <nav className="flex-1 px-3 py-1 space-y-1">
-          <a
-            href={`/client/${slug}`}
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 bg-white/[0.06] border border-white/[0.04] transition-all"
-          >
-            <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-            Overview
-          </a>
-          <a
-            href={`/client/${slug}/campaigns`}
-            className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-white/90 bg-white/[0.06] border border-white/[0.04] transition-all"
-          >
-            <div className="h-1.5 w-1.5 rounded-full bg-cyan-400" />
-            Campaigns
-          </a>
-        </nav>
+        <ClientNav slug={slug} />
         <div className="px-5 py-4">
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent mb-4" />
           <div className="flex items-center gap-2">

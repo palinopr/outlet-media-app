@@ -9,9 +9,10 @@ vi.mock("@clerk/nextjs/server", () => ({
   }),
 }));
 
-// Mock Next.js redirect
+// Mock Next.js navigation (redirect for server component, usePathname for ClientNav)
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
+  usePathname: vi.fn().mockReturnValue("/client/acme"),
 }));
 
 import ClientLayout from "./layout";

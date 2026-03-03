@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AgentPostSchema, VALID_AGENTS } from "@/lib/api-schemas";
-import { authGuard, apiError } from "@/lib/api-helpers";
+import { authGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
 
 // ─── POST /api/agents ─ queue a job ──────────────────────────────────────────
 
@@ -9,7 +9,9 @@ export async function POST(request: Request) {
   const { error: authErr } = await authGuard();
   if (authErr) return authErr;
 
-  const raw = await request.json();
+  const raw = await parseJsonBody<unknown>(request);
+  if (raw instanceof Response) return raw;
+
   const parsed = AgentPostSchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(

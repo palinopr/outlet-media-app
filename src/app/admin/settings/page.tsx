@@ -1,97 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Settings,
-  Bot,
-  Key,
-  UserPlus,
-  Megaphone,
-  Ticket,
-  Palette,
-  BarChart3,
-  Users,
-  MessageSquare,
-  Calendar,
-  Radar,
-  Cpu,
-  Eye,
-} from "lucide-react";
+import { Settings, Bot, Key, UserPlus } from "lucide-react";
 import { ClientOnboardForm } from "@/components/admin/client-onboard-form";
-
-// ─── Agent type definitions ────────────────────────────────────────────────
-
-const AGENT_TYPES = [
-  {
-    key: "boss",
-    name: "Boss",
-    description: "Orchestrator that delegates tasks, approves spawns, and supervises all agents",
-    icon: Cpu,
-    accent: "text-cyan-400",
-  },
-  {
-    key: "media-buyer",
-    name: "Media Buyer",
-    description: "Meta Ads analysis and execution -- pulls campaigns, insights, and syncs spend data",
-    icon: Megaphone,
-    accent: "text-violet-400",
-  },
-  {
-    key: "tm-agent",
-    name: "TM Data",
-    description: "Ticketmaster One scraper -- extracts events, ticket counts, and demographics",
-    icon: Ticket,
-    accent: "text-emerald-400",
-  },
-  {
-    key: "creative",
-    name: "Creative",
-    description: "Ad creative review and copy generation for Meta campaigns",
-    icon: Palette,
-    accent: "text-rose-400",
-  },
-  {
-    key: "reporting",
-    name: "Reporting",
-    description: "Cross-references Meta spend against TM1 ticket sales and generates ROAS reports",
-    icon: BarChart3,
-    accent: "text-amber-400",
-  },
-  {
-    key: "client-manager",
-    name: "Client Manager",
-    description: "Handles per-client communication channels and portal data",
-    icon: Users,
-    accent: "text-blue-400",
-  },
-  {
-    key: "general-chat",
-    name: "General Chat",
-    description: "Default conversational agent for unrouted channels",
-    icon: MessageSquare,
-    accent: "text-zinc-400",
-  },
-  {
-    key: "schedule-control",
-    name: "Schedule Control",
-    description: "Manages cron schedules and manual job triggers",
-    icon: Calendar,
-    accent: "text-teal-400",
-  },
-  {
-    key: "campaign-monitor",
-    name: "Campaign Monitor",
-    description: "Cross-references Meta spend against TM1 ticket sales, flags low-ROAS campaigns",
-    icon: Radar,
-    accent: "text-orange-400",
-  },
-  {
-    key: "tm-demographics",
-    name: "TM Demographics",
-    description: "Fetches demographic breakdowns from TM One for all active events",
-    icon: Eye,
-    accent: "text-pink-400",
-  },
-];
+import { AGENT_CONFIG, AGENT_TYPE_KEYS } from "@/components/admin/agents/constants";
 
 // ─── API key display entries ───────────────────────────────────────────────
 
@@ -151,22 +62,15 @@ export default function SettingsPage() {
                   All cron jobs are currently disabled. Jobs run via manual triggers only.
                 </p>
               </div>
-              {/* Toggle placeholder -- wire to scheduler state when ready */}
-              <button
-                type="button"
-                disabled
-                className="relative h-6 w-11 rounded-full bg-zinc-700 border border-border/60 cursor-not-allowed opacity-70 transition-colors"
-                title="Scheduler toggle (disabled)"
-              >
-                <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-zinc-400 transition-transform" />
-              </button>
             </div>
           </CardContent>
         </Card>
 
         {/* Agent types grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {AGENT_TYPES.map(({ key, name, description, icon: Icon, accent }) => (
+          {AGENT_TYPE_KEYS.map((key) => {
+            const { name, description, icon: Icon, accent } = AGENT_CONFIG[key];
+            return (
             <div
               key={key}
               className="flex items-start gap-3 rounded-lg border border-border/60 bg-card p-4 transition-all duration-150 hover:border-border/80"
@@ -180,7 +84,8 @@ export default function SettingsPage() {
                 <code className="text-[10px] text-muted-foreground/60 mt-1 block">{key}</code>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 

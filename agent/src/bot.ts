@@ -2,6 +2,7 @@ import "dotenv/config";
 import { Bot, type Context } from "grammy";
 import { runClaude } from "./runner.js";
 import { state } from "./state.js";
+import { chunkText } from "./events/message-handler.js";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN not set in .env");
@@ -134,17 +135,6 @@ async function handleMessage(ctx: Context, prompt: string) {
     clearInterval(typingInterval);
     agentBusy = false;
   }
-}
-
-/** Split long text into Telegram-safe chunks */
-function chunkText(text: string, maxLen: number): string[] {
-  const chunks: string[] = [];
-  let i = 0;
-  while (i < text.length) {
-    chunks.push(text.slice(i, i + maxLen));
-    i += maxLen;
-  }
-  return chunks;
 }
 
 /**

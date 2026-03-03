@@ -2,10 +2,9 @@
 
 import {
   Treemap,
-  Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { tooltipStyle, type PlacementRow } from "./types";
+import { type PlacementRow } from "./types";
 
 // --- Treemap ---
 

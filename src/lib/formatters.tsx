@@ -50,6 +50,28 @@ export function slugToLabel(slug: string | null): string {
     .join(" ");
 }
 
+// ─── Time ───────────────────────────────────────────────────────────────────
+
+/** Human-readable time distance from an ISO timestamp. Returns "never" for null. */
+export function timeAgo(iso: string | null): string {
+  if (!iso) return "never";
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60)    return `${diff}s ago`;
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
+}
+
+// ─── ROAS ────────────────────────────────────────────────────────────────────
+
+/** Tailwind color class for a ROAS value. Thresholds: >=4 green, >=2 amber, else red. */
+export function roasColor(roas: number | null): string {
+  if (roas == null) return "text-white/40";
+  if (roas >= 4) return "text-emerald-400";
+  if (roas >= 2) return "text-amber-400";
+  return "text-red-400";
+}
+
 // ─── Status badges ──────────────────────────────────────────────────────────
 
 interface BadgeEntry {
@@ -91,7 +113,7 @@ export function fmtObjective(raw: string | null): string | null {
   return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-interface SnapshotPoint {
+export interface SnapshotPoint {
   snapshot_date: string;
   roas: number | null;
   spend: number | null;

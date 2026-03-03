@@ -161,19 +161,6 @@ export function failTask(taskId: string, error: string): void {
 }
 
 /**
- * Escalate a task (Yellow -> Red, or mark for manual review).
- */
-export function escalateTask(taskId: string): void {
-  const task = taskRegistry.get(taskId);
-  if (!task) return;
-
-  task.status = "escalated";
-  task.tier = "red";
-  persistTask(task).catch(() => {});
-  taskEvents.emit("escalated", task);
-}
-
-/**
  * Approve a task (from #approvals).
  */
 export function approveTask(taskId: string, approvedBy: string): void {
@@ -214,13 +201,6 @@ function processNextForAgent(agentKey: string): void {
 
   const next = queue.shift()!;
   startTask(next);
-}
-
-/**
- * Get a task by ID.
- */
-export function getTask(id: string): AgentTask | undefined {
-  return taskRegistry.get(id);
 }
 
 /**

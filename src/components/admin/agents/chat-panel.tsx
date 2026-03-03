@@ -2,36 +2,12 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Send, Loader2, Bot, User, CalendarDays, Megaphone, BarChart3, RefreshCw } from "lucide-react";
+import { Send, Loader2, Bot, User, RefreshCw } from "lucide-react";
+import { timeAgo } from "@/lib/formatters";
+import { AgentJob } from "@/app/admin/agents/data";
+import { AGENT_CONFIG } from "./constants";
 
-type JobStatus = "pending" | "running" | "done" | "error";
-
-interface Job {
-  id: string;
-  agent_id: string;
-  status: JobStatus;
-  prompt: string | null;
-  result: string | null;
-  error: string | null;
-  created_at: string;
-  finished_at: string | null;
-}
-
-const AGENT_LABELS: Record<string, { label: string; icon: React.ElementType }> = {
-  "tm-monitor":       { label: "TM One Monitor",   icon: CalendarDays },
-  "meta-ads":         { label: "Meta Ads",          icon: Megaphone    },
-  "campaign-monitor": { label: "Campaign Monitor",  icon: BarChart3    },
-};
-
-function timeAgo(iso: string): string {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60)   return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
-  return `${Math.floor(diff / 86400)}d ago`;
-}
-
-function StatusBadge({ status }: { status: JobStatus }) {
+function StatusBadge({ status }: { status: AgentJob["status"] }) {
   const map = {
     pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
     running: "bg-blue-500/10 text-blue-400 border-blue-500/20",
@@ -66,8 +42,9 @@ function ResultText({ text }: { text: string }) {
   );
 }
 
-function JobBubble({ job }: { job: Job }) {
-  const meta = AGENT_LABELS[job.agent_id] ?? { label: job.agent_id, icon: Bot };
+function JobBubble({ job }: { job: AgentJob }) {
+  const config = AGENT_CONFIG[job.agent_id];
+  const meta = config ? { label: config.name, icon: config.icon } : { label: job.agent_id, icon: Bot };
   const Icon = meta.icon;
   const hasPrompt = job.prompt && job.prompt.trim();
 
@@ -125,14 +102,14 @@ function JobBubble({ job }: { job: Job }) {
 }
 
 interface ChatPanelProps {
-  initialJobs: Job[];
+  initialJobs: AgentJob[];
 }
 
 const POLL_MS = 1000;
 const REFRESH_MS = 30_000;
 
 export function ChatPanel({ initialJobs }: ChatPanelProps) {
-  const [jobs, setJobs] = useState<Job[]>(initialJobs);
+  const [jobs, setJobs] = useState<AgentJob[]>(initialJobs);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
@@ -152,7 +129,7 @@ export function ChatPanel({ initialJobs }: ChatPanelProps) {
       const res = await fetch(`/api/agents/job/${activeJobId}`);
       if (!res.ok) return;
 
-      const { job } = await res.json() as { job: Job };
+      const { job } = await res.json() as { job: AgentJob };
       setJobs((prev) =>
         prev.map((j) => (j.id === activeJobId ? job : j))
       );
@@ -170,7 +147,7 @@ export function ChatPanel({ initialJobs }: ChatPanelProps) {
   const refreshJobs = useCallback(async () => {
     const res = await fetch("/api/agents/jobs");
     if (!res.ok) return;
-    const { jobs: fresh } = await res.json() as { jobs: Job[] };
+    const { jobs: fresh } = await res.json() as { jobs: AgentJob[] };
     setJobs(fresh);
   }, []);
 
@@ -195,7 +172,7 @@ export function ChatPanel({ initialJobs }: ChatPanelProps) {
     setSending(false);
 
     if (!res.ok) return;
-    const { job } = await res.json() as { job: Job };
+    const { job } = await res.json() as { job: AgentJob };
 
     // Optimistic add
     setJobs((prev) => [...prev, job]);

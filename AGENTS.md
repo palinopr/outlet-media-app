@@ -1,6 +1,6 @@
 # Global Instructions
 
-> Skills and reference docs are in `.opencode/skills/`, commands in `.opencode/commands/`, agents in `.opencode/agents/`.
+> Project instructions for Claude Code. Agent patterns in `.opencode/agents/`.
 
 ## Communication
 
@@ -70,7 +70,6 @@
 - Descriptive test names. Arrange-Act-Assert pattern. Table-driven tests for multiple cases
 - One assertion per test where practical. Test edge cases and error paths
 - Mock external dependencies. Group tests in `test/` or `tests/`
-- See `.opencode/skills/testing-anti-patterns.md` for common mistakes to avoid
 </TESTING>
 
 ## Language Preferences
@@ -103,7 +102,6 @@
 - Use purpose-built tools over manual approaches (e.g. search tools for documentation rather than guessing)
 - If stuck, use available tools to look up documentation or search the web - don't make things up
 - Use MCP tools (dev-tools, github, playwright, memory, n8n) effectively
-- When stuck on persistent problems, follow the systematic debugging methodology in `.opencode/skills/systematic-debugging.md`
 </TOOLS>
 
 ## Diagramming
@@ -129,29 +127,7 @@ classDef error fill:#FFCDD2,stroke:#EF5350,color:#C62828
 
 ## Self-Review Protocol
 
-After implementing a list of changes, perform a critical self-review pass before reporting completion, fixing any issues you find. See `.opencode/commands/self-review.md` for the full protocol.
-
-## Learning Protocol
-
-**When you solve a novel problem, discover a reusable pattern, or establish a domain insight**, capture it so the next session can use it immediately without re-deriving it.
-
-**Create a skill** in `.opencode/skills/<name>.md` when:
-- A technique or workflow took meaningful effort to figure out and will recur
-- A third-party API, service, or tool has non-obvious behaviour worth documenting
-- A domain rule (business logic, data shape, integration quirk) was discovered during the task
-
-**Create an agent** in `.opencode/agents/<name>.md` when:
-- A multi-step task type repeats across sessions (e.g. "audit the DB schema", "review a PR")
-- A subagent pattern emerges that could be delegated as its own autonomous unit
-
-**Create a command** in `.opencode/commands/<name>.md` when:
-- A prompt template is used more than once across sessions
-
-**After creating any of the above**:
-1. Add it to the relevant table in this file (Skills, Commands, or Agents section below)
-2. Commit it with the session's other changes so it persists to the next session
-
-This is the equivalent of Codex's "mulch: update expertise" commits - durable knowledge that survives context resets.
+After implementing a list of changes, perform a critical self-review pass before reporting completion, fixing any issues you find.
 
 ## Deployment
 
@@ -183,7 +159,6 @@ cd /Users/jaimeortiz/outlet-media-app && railway up --detach
 - **You must not state something is fixed unless you have confirmed it by testing, measuring output, or building the application**
 - Edit only what's necessary - make precise, minimal changes unless instructed otherwise
 - Implement requirements in full or discuss with the user why you can't - don't defer work
-- If stuck on a persistent problem after multiple attempts, follow the systematic debugging methodology in `.opencode/skills/systematic-debugging.md`
 - When contributing to open source: match existing code style, read CONTRIBUTING.md first, no placeholder comments
 </RULES>
 
@@ -209,62 +184,6 @@ cd /Users/jaimeortiz/outlet-media-app && railway up --detach
 - GitHub issues are the source of truth for remaining work, not chat history.
 - Memory MCP observations should be facts, not summaries of conversation.
 
-## Available Skills Reference
-
-The following skill documents are available in `.opencode/skills/` for reference during tasks:
-
-| Skill | When to Use |
-|-------|-------------|
-| `systematic-debugging.md` | Persistent bugs after multiple failed fix attempts |
-| `creating-development-plans.md` | Creating structured dev plans with phased task breakdowns |
-| `code-simplification.md` | Reviewing and refactoring code for simplicity |
-| `code-review.md` | Self-review after completing complex tasks |
-| `critical-thinking.md` | Analysing written content, arguments, and claims |
-| `prompt-enhancer.md` | Improving prompt quality for AI systems |
-| `testing-anti-patterns.md` | Writing or changing tests, avoiding common test mistakes |
-| `analyse-design.md` | Reverse-engineering UI design systems from code |
-| `frontend-design.md` | Building distinctive, production-grade web UIs and components |
-| `mcp-builder.md` | Creating MCP servers in TypeScript or Python |
-| `pdf-processing.md` | Reading, creating, merging, splitting, or OCR-ing PDF files |
-| `xlsx-processing.md` | Creating, editing, or analysing Excel/spreadsheet files |
-| `docx-processing.md` | Creating, editing, or manipulating Word documents |
-| `webapp-testing.md` | Testing local web applications with Playwright |
-| `doc-coauthoring.md` | Structured workflow for collaborative document creation |
-| `canvas-design.md` | Creating visual art/posters as PDF or PNG using design philosophy |
-| `skill-creator.md` | Creating or updating instruction documents for repeatable tasks |
-| `pptx-processing.md` | Creating, editing, or styling PowerPoint presentations |
-| `algorithmic-art.md` | Generative art with p5.js, seeded randomness, interactive controls |
-| `slack-gif-creator.md` | Creating animated GIFs optimised for Slack |
-| `web-artifacts-builder.md` | Building complex React + Tailwind + shadcn/ui web applications |
-| `agent-skills-spec.md` | Reference spec for the Agent Skills format |
-| `authoring-agents-md.md` | Creating and maintaining AGENTS.md project memory files effectively |
-| `diataxis-documentation.md` | Applying the Diataxis framework to create or improve technical documentation |
-| `shell-scripting.md` | Writing reliable, maintainable bash scripts with defensive programming |
-| `go-testing.md` | Applying current Go testing best practices |
-| `swift-best-practices.md` | Modern Swift 6+ for iOS/macOS: async/await, actors, MainActor, Sendable |
-| `deepeval.md` | Testing LLM applications with the DeepEval pytest-based framework |
-| `extract-wisdom.md` | Extracting insights and actionable takeaways from YouTube, articles, or text files |
-| `excalidraw-diagrams.md` | Creating Excalidraw diagrams as files or inline previews |
-| `aws-strands-agentcore.md` | AWS Strands Agents SDK and Amazon Bedrock AgentCore architecture and patterns |
-| `agent-sdk-patterns.md` | Feedback loop architecture, tool selection, and verification patterns for AI agents |
-
-## Available Command Templates
-
-Templates in `.opencode/commands/`:
-
-| Command | Purpose |
-|---------|---------|
-| `create-development-plan.md` | Full prompt template for creating tiered dev plans |
-| `self-review.md` | Quick self-review checklist |
-| `review-pr.md` | Review an open pull request and optionally post the review to GitHub |
-| `review-pr-ci.md` | Review a pull request and post the review automatically (CI/automated use) |
-| `review-issue.md` | Review and respond to a GitHub issue |
-| `link-review.md` | Check links in changed files for quality and security issues |
-| `review-development-plan.md` | Review a development plan for quality, structure, and completeness |
-| `create-skill.md` | Guided assistant for creating new skill files |
-| `create-command.md` | Create a new custom command file with proper structure |
-| `go-unit-testing.md` | Go unit testing best practices reference (2024-2025) |
-
 ## Available Agent Patterns
 
 Reference patterns in `.opencode/agents/`:
@@ -286,15 +205,13 @@ Reference patterns in `.opencode/agents/`:
 
 ---
 
-## AI Team Configuration (autogenerated 2026-02-18)
-
-**Important: YOU MUST USE subagents when available for the task.**
+## AI Team Configuration
 
 **Detected Stack:**
 - Frontend: Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui
 - Backend: Next.js API Routes (Server Actions)
 - External APIs: Ticketmaster API, Meta Marketing API
-- AI: OpenCode agents for autonomous campaign management
+- AI: Claude Code agents for autonomous campaign management
 
 | Task | Agent | Notes |
 |------|-------|-------|

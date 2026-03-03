@@ -1,14 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/meta-constants";
-import {
-  type TmEvent,
-  type DemographicsRow,
-  type CampaignCard,
-  type EventCard,
-  type HeroStats,
-  type AudienceProfile,
-  buildAudienceProfile,
-} from "./lib";
+import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
+import { META_API_VERSION } from "@/lib/constants";
+import type { TmEvent, DemographicsRow, CampaignCard, EventCard, HeroStats, AudienceProfile } from "./types";
+import { buildAudienceProfile } from "./lib";
 
 export type { DateRange };
 
@@ -81,7 +75,7 @@ async function fetchMetaInsights(
   ]);
 
   const insightsUrl = new URL(
-    `https://graph.facebook.com/v21.0/act_${accountId}/insights`,
+    `https://graph.facebook.com/${META_API_VERSION}/act_${accountId}/insights`,
   );
   insightsUrl.searchParams.set("access_token", token);
   insightsUrl.searchParams.set("level", "campaign");
@@ -94,7 +88,7 @@ async function fetchMetaInsights(
   insightsUrl.searchParams.set("limit", "500");
 
   const campaignsUrl = new URL(
-    `https://graph.facebook.com/v21.0/act_${accountId}/campaigns`,
+    `https://graph.facebook.com/${META_API_VERSION}/act_${accountId}/campaigns`,
   );
   campaignsUrl.searchParams.set("access_token", token);
   campaignsUrl.searchParams.set("fields", "id,name,status,daily_budget,start_time");
@@ -257,6 +251,77 @@ function buildEventCards(events: TmEvent[]): EventCard[] {
       gross: e.gross,
     };
   });
+}
+
+// --- Campaigns page data (Meta API first, Supabase fallback + snapshots) ---
+
+export async function getCampaignsPageData(slug: string): Promise<{
+  campaigns: CampaignCard[];
+  snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null; campaign_id: string }>;
+  dataSource: "meta_api" | "supabase";
+}> {
+  const empty = { campaigns: [], snapshots: [], dataSource: "supabase" as const };
+  if (!supabaseAdmin) return empty;
+
+  const { data: campaignRows } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select("campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time")
+    .eq("client_slug", slug);
+
+  if (!campaignRows || campaignRows.length === 0) return empty;
+
+  const campaignIds = campaignRows.map((c) => c.campaign_id);
+
+  let campaigns: CampaignCard[];
+  let dataSource: "meta_api" | "supabase";
+
+  const metaResult = await fetchMetaInsights(campaignIds, "30");
+
+  if (metaResult && metaResult.insights.length > 0) {
+    campaigns = buildFromMeta(metaResult.insights, metaResult.campaigns);
+    dataSource = "meta_api";
+  } else if (metaResult && metaResult.campaigns.length > 0 && metaResult.insights.length === 0) {
+    const statusMap = new Map(metaResult.campaigns.map((c) => [c.id, c]));
+    campaigns = campaignRows.map((r) => {
+      const meta = statusMap.get(r.campaign_id);
+      return {
+        campaignId: r.campaign_id,
+        name: meta?.name ?? r.name ?? "Unknown Campaign",
+        status: meta?.status ?? r.status ?? "UNKNOWN",
+        spend: 0,
+        roas: null,
+        revenue: null,
+        impressions: 0,
+        clicks: 0,
+        ctr: null,
+        cpc: null,
+        cpm: null,
+        dailyBudget: meta?.daily_budget
+          ? parseInt(meta.daily_budget) / 100
+          : r.daily_budget != null
+            ? r.daily_budget / 100
+            : null,
+        startTime: meta?.start_time ?? r.start_time,
+      };
+    });
+    dataSource = "meta_api";
+  } else {
+    campaigns = buildFromSupabase(campaignRows);
+    dataSource = "supabase";
+  }
+
+  campaigns.sort((a, b) => b.spend - a.spend);
+
+  let snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null; campaign_id: string }> = [];
+  const { data } = await supabaseAdmin
+    .from("campaign_snapshots")
+    .select("snapshot_date, roas, spend, campaign_id")
+    .in("campaign_id", campaignIds)
+    .order("snapshot_date", { ascending: true })
+    .limit(500);
+  snapshots = data ?? [];
+
+  return { campaigns, snapshots, dataSource };
 }
 
 // --- Main data function ---

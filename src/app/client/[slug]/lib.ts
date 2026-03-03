@@ -1,23 +1,3 @@
-// Re-export all types and constants from types.ts for backward compatibility
-export type {
-  TmEvent,
-  DemographicsRow,
-  TrendPoint,
-  CampaignCard,
-  HeroStats,
-  EventCard,
-  AudienceProfile,
-  Insight,
-  AgeGenderBreakdown,
-  PlacementBreakdown,
-  AdCard,
-  HourlyBreakdown,
-  DailyPoint,
-  Recommendation,
-  CampaignDetailData,
-} from "./types";
-export { AGE_BRACKETS, DAY_LABELS } from "./types";
-
 import type {
   DemographicsRow,
   AudienceProfile,
@@ -34,22 +14,18 @@ import type {
 } from "./types";
 import { DAY_LABELS } from "./types";
 
-// Re-export shared formatters so existing consumers keep working
-export { fmtUsd, fmtDate, fmtNum } from "@/lib/formatters";
+import { type DateRange } from "@/lib/constants";
+
+export const DATE_OPTIONS: { value: DateRange; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "yesterday", label: "Yesterday" },
+  { value: "7", label: "7d" },
+  { value: "14", label: "14d" },
+  { value: "30", label: "30d" },
+  { value: "lifetime", label: "Lifetime" },
+];
 
 // --- Formatting ---
-
-export function fmtPct(n: number | null): string {
-  if (n == null) return "--";
-  return n.toFixed(1) + "%";
-}
-
-export function roasColor(roas: number | null): string {
-  if (roas == null) return "text-white/40";
-  if (roas >= 3) return "text-emerald-400";
-  if (roas >= 2) return "text-amber-400";
-  return "text-red-400";
-}
 
 export function roasLabel(roas: number | null): string {
   if (roas == null) return "No data";

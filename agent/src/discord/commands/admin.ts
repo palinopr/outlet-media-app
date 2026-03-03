@@ -24,6 +24,7 @@ import {
   ChannelType,
   EmbedBuilder,
 } from "discord.js";
+import { chunkText } from "../../events/message-handler.js";
 
 // --- Config ---
 
@@ -385,18 +386,6 @@ export async function buildAdminPrompt(promptFile = "boss"): Promise<string> {
   return template.replace("{{SERVER_SNAPSHOT}}", snapshotText);
 }
 
-// --- Server Restructure ---
-
-export async function runServerRestructure(): Promise<string> {
-  if (!guild) return "Guild not available.";
-  const { runServerRestructure: _run } = await import("../features/restructure.js");
-  const result = await _run(guild);
-  if (result.startsWith("**Server Restructure Complete**")) {
-    await logAction(result);
-  }
-  return result;
-}
-
 // --- Channel Health Check (called from scheduler) ---
 
 export async function runChannelHealthCheck(): Promise<void> {
@@ -444,12 +433,3 @@ async function logAction(text: string): Promise<void> {
   }
 }
 
-function chunkText(text: string, maxLen: number): string[] {
-  const chunks: string[] = [];
-  let i = 0;
-  while (i < text.length) {
-    chunks.push(text.slice(i, i + maxLen));
-    i += maxLen;
-  }
-  return chunks;
-}

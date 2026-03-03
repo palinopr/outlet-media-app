@@ -197,6 +197,21 @@ describe("PATCH /api/alerts", () => {
 describe("GET /api/alerts", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.INGEST_SECRET = "test-secret";
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  function makeGetRequest() {
+    return new Request("http://localhost/api/alerts?secret=test-secret");
+  }
+
+  it("returns 401 when secret is wrong", async () => {
+    const { GET } = await import("@/app/api/alerts/route");
+    const res = await GET(new Request("http://localhost/api/alerts?secret=wrong"));
+    expect(res.status).toBe(401);
   });
 
   it("returns alerts array on success", async () => {
@@ -215,7 +230,7 @@ describe("GET /api/alerts", () => {
     });
 
     const { GET } = await import("@/app/api/alerts/route");
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
 
     expect(body.alerts).toEqual(alertRows);
@@ -233,7 +248,7 @@ describe("GET /api/alerts", () => {
     });
 
     const { GET } = await import("@/app/api/alerts/route");
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
 
     expect(body.alerts).toEqual([]);
@@ -252,19 +267,27 @@ describe("GET /api/alerts", () => {
     });
 
     const { GET } = await import("@/app/api/alerts/route");
-    await GET();
+    await GET(makeGetRequest());
 
     expect(mockLimit).toHaveBeenCalledWith(10);
   });
 });
 
 describe("GET /api/alerts — supabase unavailable", () => {
+  beforeEach(() => {
+    process.env.INGEST_SECRET = "test-secret";
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
   it("returns empty alerts array when supabaseAdmin is null", async () => {
     vi.resetModules();
     vi.doMock("@/lib/supabase", () => ({ supabaseAdmin: null }));
 
     const { GET } = await import("@/app/api/alerts/route");
-    const res = await GET();
+    const res = await GET(new Request("http://localhost/api/alerts?secret=test-secret"));
     const body = await res.json();
 
     expect(body.alerts).toEqual([]);

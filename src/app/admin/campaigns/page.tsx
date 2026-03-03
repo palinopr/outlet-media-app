@@ -8,72 +8,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Megaphone, ExternalLink, DollarSign, TrendingUp, Eye, MousePointerClick } from "lucide-react";
-import { supabaseAdmin } from "@/lib/supabase";
-import type { Database } from "@/lib/database.types";
+import { StatCard } from "@/components/admin/stat-card";
+import { getCampaigns, type SnapshotPoint } from "./data";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { Suspense } from "react";
-import { fmtUsd, fmtNum, centsToUsd, statusBadge, slugToLabel, fmtObjective, computeMarginalRoas } from "@/lib/formatters";
-
-type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
-type SnapshotPoint = { snapshot_date: string; roas: number | null; spend: number | null };
-
-// ─── Data fetching ─────────────────────────────────────────────────────────
-
-async function getCampaigns(clientSlug: string | null): Promise<{
-  campaigns: MetaCampaign[];
-  clients: string[];
-  snapshotsByCampaign: Record<string, SnapshotPoint[]>;
-  fromDb: boolean;
-}> {
-  if (!supabaseAdmin) return { campaigns: [], clients: [], snapshotsByCampaign: {}, fromDb: false };
-
-  // Always fetch the distinct client list for the filter dropdown
-  const allRes = await supabaseAdmin
-    .from("meta_campaigns")
-    .select("client_slug")
-    .not("client_slug", "is", null);
-
-  const clients = [...new Set((allRes.data ?? []).map((r) => r.client_slug as string))].sort();
-
-  const query = supabaseAdmin
-    .from("meta_campaigns")
-    .select("*")
-    .order("spend", { ascending: false })
-    .limit(100);
-
-  if (clientSlug) query.eq("client_slug", clientSlug);
-
-  const cutoff = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
-
-  const [{ data, error }, { data: snapData }] = await Promise.all([
-    query,
-    supabaseAdmin
-      .from("campaign_snapshots")
-      .select("campaign_id, snapshot_date, roas, spend")
-      .gte("snapshot_date", cutoff)
-      .order("snapshot_date", { ascending: true }),
-  ]);
-
-  if (error) return { campaigns: [], clients, snapshotsByCampaign: {}, fromDb: false };
-
-  // Group snapshots by campaign_id
-  const snapshotsByCampaign: Record<string, SnapshotPoint[]> = {};
-  for (const row of (snapData ?? [])) {
-    const id = row.campaign_id;
-    (snapshotsByCampaign[id] ??= []).push({
-      snapshot_date: row.snapshot_date,
-      roas: row.roas,
-      spend: row.spend,
-    });
-  }
-
-  return {
-    campaigns: (data ?? []) as MetaCampaign[],
-    clients,
-    snapshotsByCampaign,
-    fromDb: Boolean(data?.length),
-  };
-}
+import { fmtUsd, fmtNum, centsToUsd, statusBadge, slugToLabel, fmtObjective, computeMarginalRoas, roasColor } from "@/lib/formatters";
+import { META_AD_ACCOUNT_ID } from "@/lib/constants";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -99,8 +39,7 @@ function BudgetBar({ spend, budget }: { spend: number | null; budget: number | n
 
 function RoasBadge({ roas }: { roas: number | null }) {
   if (roas == null) return <span className="text-sm text-muted-foreground">—</span>;
-  const color = roas >= 4 ? "text-emerald-400" : roas >= 2.5 ? "text-blue-400" : "text-amber-400";
-  return <span className={`text-sm font-semibold tabular-nums ${color}`}>{roas.toFixed(1)}×</span>;
+  return <span className={`text-sm font-semibold tabular-nums ${roasColor(roas)}`}>{roas.toFixed(1)}×</span>;
 }
 
 function RoasSparkline({ points }: { points: SnapshotPoint[] }) {
@@ -194,19 +133,8 @@ export default async function CampaignsPage({ searchParams }: Props) {
           { label: "Avg. ROAS",    value: avgRoas > 0 ? avgRoas.toFixed(1) + "x" : "---", icon: TrendingUp, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
           { label: "Impressions",  value: fmtNum(totalImpressions),  icon: Eye, accent: "from-blue-500/20 to-indigo-500/20", iconColor: "text-blue-400" },
           { label: "Clicks / CTR", value: fmtNum(totalClicks) + (overallCtr > 0 ? ` (${overallCtr.toFixed(1)}%)` : ""), icon: MousePointerClick, accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
-        ].map(({ label, value, icon: Icon, accent, iconColor }) => (
-          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-4 transition-all duration-200 hover:border-border/80 hover:shadow-lg hover:shadow-black/20">
-            <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-                <div className={`h-7 w-7 rounded-lg bg-white/[0.06] flex items-center justify-center ${iconColor}`}>
-                  <Icon className="h-3.5 w-3.5" />
-                </div>
-              </div>
-              <p className="text-2xl font-bold tracking-tight">{value}</p>
-            </div>
-          </div>
+        ].map((s) => (
+          <StatCard key={s.label} {...s} />
         ))}
       </div>
 
@@ -288,7 +216,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
                   </TableCell>
                   <TableCell>
                     <a
-                      href="https://www.facebook.com/adsmanager"
+                      href={`https://www.facebook.com/adsmanager/manage/campaigns?act=${META_AD_ACCOUNT_ID}&selected_campaign_ids=${c.campaign_id}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-muted-foreground hover:text-foreground transition-colors"

@@ -9,8 +9,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CopyButton } from "@/components/admin/copy-button";
-import { supabaseAdmin } from "@/lib/supabase";
+import { getClientSummaries } from "./data";
 import { fmtUsd, statusBadge } from "@/lib/formatters";
+import { StatCard } from "@/components/admin/stat-card";
 import {
   Users,
   DollarSign,
@@ -18,85 +19,6 @@ import {
   TrendingUp,
   ExternalLink,
 } from "lucide-react";
-
-// ─── Types ─────────────────────────────────────────────────────────────────
-
-interface ClientSummary {
-  id: string;
-  name: string;
-  slug: string;
-  type: string;
-  status: string;
-  joinedAt: string;
-  activeShows: number;
-  activeCampaigns: number;
-  totalSpend: number;
-  totalRevenue: number;
-  roas: number;
-}
-
-// Derive a display name from a slug (e.g. "happy_paws" → "Happy Paws")
-function slugToName(slug: string) {
-  return slug
-    .split("_")
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
-}
-
-// ─── Data fetching ─────────────────────────────────────────────────────────
-
-async function getClientSummaries(): Promise<ClientSummary[]> {
-  if (!supabaseAdmin) return [];
-
-  const [campaignsRes, eventsRes] = await Promise.all([
-    supabaseAdmin.from("meta_campaigns").select("client_slug, status, spend, roas, start_time"),
-    supabaseAdmin.from("tm_events").select("client_slug").not("client_slug", "is", null),
-  ]);
-
-  if (!campaignsRes.data?.length) return [];
-
-  // Count events per client
-  const showsBySlug: Record<string, number> = {};
-  for (const e of (eventsRes.data ?? [])) {
-    const slug = e.client_slug as string;
-    showsBySlug[slug] = (showsBySlug[slug] ?? 0) + 1;
-  }
-
-  // Group campaigns by slug
-  const bySlug: Record<string, typeof campaignsRes.data> = {};
-  for (const c of campaignsRes.data) {
-    const slug = c.client_slug ?? "unknown";
-    (bySlug[slug] ??= []).push(c);
-  }
-
-  return Object.entries(bySlug).map(([slug, rows]) => {
-    const totalSpend = rows.reduce((s, c) => s + ((c.spend ?? 0) / 100), 0);
-    const totalRevenue = rows.reduce((s, c) => s + ((c.spend ?? 0) / 100) * (c.roas ?? 0), 0);
-    const activeCampaigns = rows.filter((c) => c.status === "ACTIVE").length;
-    const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
-
-    // Use earliest campaign start_time as "joined" date
-    const startTimes = rows.map((c) => c.start_time).filter(Boolean) as string[];
-    const earliest = startTimes.length > 0 ? startTimes.sort()[0] : null;
-    const joinedAt = earliest
-      ? new Date(earliest).toLocaleDateString("en-US", { month: "short", year: "numeric" })
-      : "—";
-
-    return {
-      id: slug,
-      name: slugToName(slug),
-      slug,
-      type: "Music Promoter",
-      status: activeCampaigns > 0 ? "active" : "paused",
-      joinedAt,
-      activeShows: showsBySlug[slug] ?? 0,
-      activeCampaigns,
-      totalSpend,
-      totalRevenue,
-      roas,
-    };
-  });
-}
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 
@@ -140,20 +62,8 @@ export default async function ClientsPage() {
           { ...stats[1], accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
           { ...stats[2], accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
           { ...stats[3], accent: "from-rose-500/20 to-pink-500/20", iconColor: "text-rose-400" },
-        ].map(({ label, value, sub, icon: Icon, accent, iconColor }) => (
-          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border/80 hover:shadow-lg hover:shadow-black/20">
-            <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-                <div className={`h-7 w-7 rounded-lg bg-white/[0.06] flex items-center justify-center ${iconColor}`}>
-                  <Icon className="h-3.5 w-3.5" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold tracking-tight">{value}</p>
-              <p className="text-[11px] text-muted-foreground mt-1">{sub}</p>
-            </div>
-          </div>
+        ].map((s) => (
+          <StatCard key={s.label} {...s} size="lg" />
         ))}
       </div>
 

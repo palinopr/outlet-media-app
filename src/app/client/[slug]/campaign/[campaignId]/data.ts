@@ -1,16 +1,9 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/meta-constants";
-import {
-  type CampaignCard,
-  type CampaignDetailData,
-  type AgeGenderBreakdown,
-  type PlacementBreakdown,
-  type AdCard,
-  type HourlyBreakdown,
-  type DailyPoint,
-  DAY_LABELS,
-  generateRecommendations,
-} from "../../lib";
+import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
+import { META_API_VERSION } from "@/lib/constants";
+import type { CampaignCard, CampaignDetailData, AgeGenderBreakdown, PlacementBreakdown, AdCard, HourlyBreakdown, DailyPoint } from "../../types";
+import { DAY_LABELS } from "../../types";
+import { generateRecommendations } from "../../lib";
 
 // --- Meta API helpers ---
 
@@ -70,12 +63,12 @@ async function fetchCampaignOverview(
   creds: { token: string; accountId: string },
 ): Promise<{ info: MetaCampaignInfo | null; insights: MetaInsightRow | null }> {
   // Campaign info
-  const infoUrl = new URL(`https://graph.facebook.com/v21.0/${campaignId}`);
+  const infoUrl = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}`);
   infoUrl.searchParams.set("access_token", creds.token);
   infoUrl.searchParams.set("fields", "id,name,status,daily_budget,start_time");
 
   // Campaign insights
-  const insightsUrl = new URL(`https://graph.facebook.com/v21.0/${campaignId}/insights`);
+  const insightsUrl = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
   insightsUrl.searchParams.set("access_token", creds.token);
   insightsUrl.searchParams.set(
     "fields",
@@ -113,7 +106,7 @@ async function fetchAgeGender(
   range: DateRange,
   creds: { token: string; accountId: string },
 ): Promise<AgeGenderBreakdown[]> {
-  const url = new URL(`https://graph.facebook.com/v21.0/${campaignId}/insights`);
+  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
   url.searchParams.set("access_token", creds.token);
   url.searchParams.set("fields", "impressions,clicks,ctr,spend");
   url.searchParams.set("breakdowns", "age,gender");
@@ -151,7 +144,7 @@ async function fetchPlacements(
   range: DateRange,
   creds: { token: string; accountId: string },
 ): Promise<PlacementBreakdown[]> {
-  const url = new URL(`https://graph.facebook.com/v21.0/${campaignId}/insights`);
+  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
   url.searchParams.set("access_token", creds.token);
   url.searchParams.set("fields", "impressions,clicks,ctr,spend");
   url.searchParams.set("breakdowns", "publisher_platform,platform_position");
@@ -201,7 +194,7 @@ async function fetchHourly(
   range: DateRange,
   creds: { token: string; accountId: string },
 ): Promise<HourlyBreakdown[]> {
-  const url = new URL(`https://graph.facebook.com/v21.0/${campaignId}/insights`);
+  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
   url.searchParams.set("access_token", creds.token);
   url.searchParams.set("fields", "impressions,clicks,ctr");
   url.searchParams.set("breakdowns", "hourly_stats_aggregated_by_advertiser_time_zone");
@@ -235,7 +228,7 @@ async function fetchDaily(
   creds: { token: string; accountId: string },
 ): Promise<DailyPoint[]> {
   // time_increment=1 gives day-by-day breakdown
-  const url = new URL(`https://graph.facebook.com/v21.0/${campaignId}/insights`);
+  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
   url.searchParams.set("access_token", creds.token);
   url.searchParams.set("fields", "impressions,clicks,ctr");
   url.searchParams.set("time_increment", "1");
@@ -287,7 +280,7 @@ async function fetchAds(
   range: DateRange,
   creds: { token: string; accountId: string },
 ): Promise<AdCard[]> {
-  const url = new URL(`https://graph.facebook.com/v21.0/${campaignId}/ads`);
+  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/ads`);
   url.searchParams.set("access_token", creds.token);
   url.searchParams.set(
     "fields",

@@ -115,6 +115,11 @@ export const InviteSchema = z.object({
   role: z.string().optional(),
 });
 
+export const UserUpdateSchema = z.object({
+  client_slug: z.string().min(1).nullable().optional(),
+  role: z.string().min(1).nullable().optional(),
+});
+
 // ─── Query param sanitizers ─────────────────────────────────────────────────
 
 /** Strip anything except alphanumeric, underscore, dash from an ID param */

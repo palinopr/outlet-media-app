@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  let displayName = "Admin";
 
   if (clerkEnabled) {
     const { userId } = await auth();
@@ -25,17 +26,22 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         </div>
       );
     }
+
+    if (user) {
+      const full = [user.firstName, user.lastName].filter(Boolean).join(" ");
+      displayName = full || user.username || "Admin";
+    }
   }
 
   return (
     <div className="dark flex min-h-screen bg-background text-foreground">
       {/* Sidebar */}
       <aside className="hidden lg:flex w-60 flex-col border-r border-border/50 shrink-0">
-        <SidebarContent clerkEnabled={clerkEnabled} />
+        <SidebarContent clerkEnabled={clerkEnabled} displayName={displayName} />
       </aside>
 
       {/* Mobile sidebar */}
-      <MobileSidebar clerkEnabled={clerkEnabled} />
+      <MobileSidebar clerkEnabled={clerkEnabled} displayName={displayName} />
 
       {/* Main content */}
       <main className="flex-1 overflow-auto min-w-0">

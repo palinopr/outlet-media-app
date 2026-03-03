@@ -7,9 +7,10 @@ import { SidebarContent } from "./sidebar-content";
 
 interface MobileSidebarProps {
   clerkEnabled: boolean;
+  displayName?: string;
 }
 
-export function MobileSidebar({ clerkEnabled }: MobileSidebarProps) {
+export function MobileSidebar({ clerkEnabled, displayName }: MobileSidebarProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -44,7 +45,7 @@ export function MobileSidebar({ clerkEnabled }: MobileSidebarProps) {
               <X className="h-4 w-4" />
             </button>
           </div>
-          <SidebarContent clerkEnabled={clerkEnabled} />
+          <SidebarContent clerkEnabled={clerkEnabled} displayName={displayName} />
         </SheetContent>
       </Sheet>
     </>

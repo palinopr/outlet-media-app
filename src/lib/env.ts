@@ -30,9 +30,6 @@ const publicSchema = z.object({
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1, "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is required"),
 });
 
-export type ServerEnv = z.infer<typeof serverSchema>;
-export type PublicEnv = z.infer<typeof publicSchema>;
-
 function validateEnv() {
   // Public vars are always available
   const publicResult = publicSchema.safeParse({
@@ -43,7 +40,7 @@ function validateEnv() {
 
   if (!publicResult.success) {
     const missing = publicResult.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`);
-    console.error(`[env] Missing public environment variables:\n${missing.join("\n")}`);
+    throw new Error(`[env] Missing public environment variables:\n${missing.join("\n")}`);
   }
 
   // Server vars are only available at runtime, not during build
@@ -60,7 +57,7 @@ function validateEnv() {
 
   if (!serverResult.success) {
     const missing = serverResult.error.issues.map((i) => `  - ${i.path.join(".")}: ${i.message}`);
-    console.error(`[env] Missing server environment variables:\n${missing.join("\n")}`);
+    throw new Error(`[env] Missing server environment variables:\n${missing.join("\n")}`);
   }
 }
 

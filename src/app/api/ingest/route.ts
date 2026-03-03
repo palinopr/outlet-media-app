@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { IngestPayloadSchema, type IngestPayload } from "@/lib/api-schemas";
+import { apiError, secretGuard, parseJsonBody } from "@/lib/api-helpers";
 
 // ─── Handler ───────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  const raw = await request.json();
+  const raw = await parseJsonBody<unknown>(request);
+  if (raw instanceof Response) return raw;
+
   const parsed = IngestPayloadSchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(
@@ -15,15 +18,11 @@ export async function POST(request: Request) {
   }
   const body: IngestPayload = parsed.data;
 
-  if (!process.env.INGEST_SECRET || body.secret !== process.env.INGEST_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const secretErr = secretGuard(body.secret);
+  if (secretErr) return secretErr;
 
   if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: "Database not configured. Set SUPABASE_SERVICE_ROLE_KEY." },
-      { status: 500 }
-    );
+    return apiError("Database not configured. Set SUPABASE_SERVICE_ROLE_KEY.", 500);
   }
 
   if (body.source === "ticketmaster_one") {
@@ -38,7 +37,7 @@ export async function POST(request: Request) {
     return ingestTmDemographics(body);
   }
 
-  return NextResponse.json({ error: "Unknown source" }, { status: 400 });
+  return apiError("Unknown source", 400);
 }
 
 async function ingestTmEvents(body: IngestPayload) {
@@ -86,7 +85,7 @@ async function ingestTmEvents(body: IngestPayload) {
 
   if (error) {
     console.error("Supabase upsert error (tm_events):", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiError(error.message, 500);
   }
 
   // Write daily snapshots — one row per event per day (ignore conflicts = already snapshotted today)
@@ -172,7 +171,7 @@ async function ingestMetaCampaigns(body: IngestPayload) {
 
   if (error) {
     console.error("Supabase upsert error (meta_campaigns):", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiError(error.message, 500);
   }
 
   // Write daily snapshots — one row per campaign per day (ignore conflicts = already snapshotted today)
@@ -238,14 +237,17 @@ async function ingestTmDemographics(body: IngestPayload) {
 
   if (error) {
     console.error("Supabase upsert error (tm_event_demographics):", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiError(error.message, 500);
   }
 
   console.log(`Ingest: upserted ${rows.length} TM demographics rows`);
   return NextResponse.json({ ok: true, inserted: rows.length });
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const secretErr = secretGuard(searchParams.get("secret"));
+  if (secretErr) return secretErr;
   return NextResponse.json({
     ok: true,
     message: "Ingest endpoint ready. POST scraped data here.",

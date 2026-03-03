@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { clerkClient, currentUser } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import { InviteSchema } from "@/lib/api-schemas";
-import { authGuard, apiError } from "@/lib/api-helpers";
+import { adminGuard, parseJsonBody } from "@/lib/api-helpers";
 
 // POST /api/admin/invite
 // Body: { email: string, client_slug?: string, role?: "admin" }
@@ -9,16 +9,11 @@ import { authGuard, apiError } from "@/lib/api-helpers";
 // the metadata pre-applied (client_slug or role).
 
 export async function POST(request: Request) {
-  const { error: authErr } = await authGuard();
-  if (authErr) return authErr;
+  const adminErr = await adminGuard();
+  if (adminErr) return adminErr;
 
-  const caller = await currentUser();
-  const callerMeta = (caller?.publicMetadata ?? {}) as { role?: string };
-  if (callerMeta.role !== "admin") {
-    return apiError("Forbidden", 403);
-  }
-
-  const raw = await request.json();
+  const raw = await parseJsonBody<unknown>(request);
+  if (raw instanceof Response) return raw;
   const parsed = InviteSchema.safeParse(raw);
   if (!parsed.success) {
     return NextResponse.json(

@@ -54,16 +54,6 @@ export function scheduleButtons(): ActionRowBuilder<ButtonBuilder> {
   );
 }
 
-export function superviseButton(): ActionRowBuilder<ButtonBuilder> {
-  return new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId("btn_supervise")
-      .setLabel("Run Supervision")
-      .setStyle(ButtonStyle.Primary)
-      .setEmoji("👀"),
-  );
-}
-
 // --- Interaction Handler --------------------------------------------------
 
 /**

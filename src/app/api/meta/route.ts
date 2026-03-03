@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sanitizeId } from "@/lib/api-schemas";
 import { authGuard, apiError } from "@/lib/api-helpers";
+import { META_API_VERSION } from "@/lib/constants";
 
 export async function GET(request: Request) {
   const { error } = await authGuard();
@@ -16,7 +17,7 @@ export async function GET(request: Request) {
   // Strip act_ prefix if present -- the URL template adds it
   const adAccountId = rawId.replace(/^act_/, "");
 
-  const url = new URL(`https://graph.facebook.com/v21.0/act_${adAccountId}/campaigns`);
+  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/act_${adAccountId}/campaigns`);
   url.searchParams.set("access_token", process.env.META_ACCESS_TOKEN);
   url.searchParams.set("fields", "id,name,status,objective,daily_budget,lifetime_budget");
 

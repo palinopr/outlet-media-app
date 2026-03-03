@@ -1,35 +1,9 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { getInitialData } from "./data";
 import { ChatPanel } from "@/components/admin/agents/chat-panel";
 import { AgentSidebar } from "@/components/admin/agents/agent-sidebar";
 import { JobHistory } from "@/components/admin/agents/job-history";
 
 export const dynamic = "force-dynamic";
-
-async function getInitialData() {
-  if (!supabaseAdmin) return { jobs: [], isOnline: false, lastSeen: null };
-
-  const { data: jobs } = await supabaseAdmin
-    .from("agent_jobs")
-    .select("id, agent_id, status, prompt, result, error, created_at, started_at, finished_at")
-    .neq("agent_id", "heartbeat")
-    .order("created_at", { ascending: false })
-    .limit(80);
-
-  const { data: hb } = await supabaseAdmin
-    .from("agent_jobs")
-    .select("created_at")
-    .eq("agent_id", "heartbeat")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const lastSeen = hb?.created_at ?? null;
-  const isOnline = lastSeen
-    ? Date.now() - new Date(lastSeen).getTime() < 2 * 60 * 1000
-    : false;
-
-  return { jobs: jobs ?? [], isOnline, lastSeen };
-}
 
 export default async function AgentsPage() {
   const { jobs, isOnline, lastSeen } = await getInitialData();

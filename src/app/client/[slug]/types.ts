@@ -6,12 +6,6 @@ export type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 export type DemographicsRow =
   Database["public"]["Tables"]["tm_event_demographics"]["Row"];
 
-export interface TrendPoint {
-  date: string;
-  spend: number;
-  roas: number;
-}
-
 // --- Campaign types ---
 
 export interface CampaignCard {

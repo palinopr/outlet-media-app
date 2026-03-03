@@ -14,7 +14,6 @@ import {
   Megaphone,
   Ticket,
   TrendingUp,
-  Bot,
   Clock,
   AlertTriangle,
   Info,
@@ -23,12 +22,13 @@ import {
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { TicketVelocityChart } from "@/components/charts/ticket-velocity-chart";
 import { matchedCampaigns } from "@/lib/campaign-event-match";
-import { centsToUsd, fmtUsd, fmtDate, fmtNum, statusBadge, fmtObjective, computeMarginalRoas } from "@/lib/formatters";
+import { centsToUsd, fmtUsd, fmtDate, fmtNum, statusBadge, fmtObjective, computeMarginalRoas, roasColor } from "@/lib/formatters";
+import { StatCard } from "@/components/admin/stat-card";
+import { AGENT_CONFIG, DASHBOARD_AGENTS } from "@/components/admin/agents/constants";
 import { getData, type TmEvent } from "./data";
 
 // --- Helpers ---
 
-function fmt(n: number) { return n.toLocaleString("en-US"); }
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null;
   const diff = new Date(dateStr).getTime() - Date.now();
@@ -72,8 +72,8 @@ export default async function AdminDashboard() {
   ];
 
   const secondaryStats = [
-    { label: "Active Shows",  value: String(events.length),  sub: `${fmt(totalCap)} capacity`, icon: CalendarDays },
-    { label: "Tickets Sold",  value: fmt(totalSold),         sub: `of ${fmt(totalCap)}`,       icon: Ticket },
+    { label: "Active Shows",  value: String(events.length),  sub: `${fmtNum(totalCap)} capacity`, icon: CalendarDays },
+    { label: "Tickets Sold",  value: fmtNum(totalSold),      sub: `of ${fmtNum(totalCap)}`,       icon: Ticket },
     { label: "Total Gross",   value: fmtUsd(totalGross),     sub: "box office revenue",        icon: DollarSign },
   ];
 
@@ -125,19 +125,8 @@ export default async function AdminDashboard() {
 
       {/* Hero stat cards */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {heroStats.map(({ label, value, icon: Icon, accent, iconColor }) => (
-          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border/80 hover:shadow-lg hover:shadow-black/20">
-            <div className={`absolute inset-0 bg-gradient-to-br ${accent} opacity-50`} />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-                <div className={`h-8 w-8 rounded-lg bg-white/[0.06] flex items-center justify-center ${iconColor}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-              </div>
-              <p className="text-3xl font-bold tracking-tight">{value}</p>
-            </div>
-          </div>
+        {heroStats.map((s) => (
+          <StatCard key={s.label} {...s} size="lg" />
         ))}
       </div>
 
@@ -237,8 +226,8 @@ export default async function AdminDashboard() {
                     <TableCell className="text-sm text-muted-foreground">{e.city}</TableCell>
                     <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{fmtDate(e.date)}</TableCell>
                     <TableCell className="text-right">
-                      <p className="text-sm font-medium tabular-nums">{fmt(e.tickets_sold ?? 0)}</p>
-                      <p className="text-xs text-muted-foreground">{pct}% of {fmt(cap)}</p>
+                      <p className="text-sm font-medium tabular-nums">{fmtNum(e.tickets_sold ?? 0)}</p>
+                      <p className="text-xs text-muted-foreground">{pct}% of {fmtNum(cap)}</p>
                     </TableCell>
                     <TableCell className="text-right">
                       <p className="text-sm font-medium tabular-nums">{fmtUsd(e.gross)}</p>
@@ -347,7 +336,7 @@ export default async function AdminDashboard() {
                         </div>
                         <div>
                           <p className="text-[11px] text-muted-foreground">ROAS</p>
-                          <p className={`text-sm font-semibold tabular-nums ${(c.roas ?? 0) >= 4 ? "text-emerald-400" : (c.roas ?? 0) >= 2 ? "text-amber-400" : "text-red-400"}`}>
+                          <p className={`text-sm font-semibold tabular-nums ${roasColor(c.roas)}`}>
                             {c.roas != null ? c.roas.toFixed(1) + "x" : "---"}
                           </p>
                         </div>
@@ -388,13 +377,10 @@ export default async function AdminDashboard() {
             </a>
           </div>
           <div className="space-y-3">
-            {(
-              [
-                { agentId: "tm-monitor",       label: "TM One Monitor",   icon: Bot      },
-                { agentId: "meta-ads",          label: "Meta Ads Manager", icon: Megaphone },
-                { agentId: "campaign-monitor",  label: "Campaign Monitor", icon: TrendingUp },
-              ] as const
-            ).map(({ agentId, label, icon: Icon }) => {
+            {DASHBOARD_AGENTS.map((agentId) => {
+              const agent = AGENT_CONFIG[agentId];
+              const Icon = agent.icon;
+              const label = agent.name;
               const run = agentRuns.find((r) => r.agentId === agentId);
               const lastRun = run?.finishedAt
                 ? new Date(run.finishedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
@@ -434,3 +420,4 @@ export default async function AdminDashboard() {
     </div>
   );
 }
+

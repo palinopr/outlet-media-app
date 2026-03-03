@@ -371,9 +371,28 @@ describe("POST /api/ingest — tm_demographics source", () => {
 });
 
 describe("GET /api/ingest", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    process.env.INGEST_SECRET = "test-secret";
+  });
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  function makeGetRequest() {
+    return new Request("http://localhost/api/ingest?secret=test-secret");
+  }
+
+  it("returns 401 when secret is wrong", async () => {
+    const { GET } = await import("@/app/api/ingest/route");
+    const res = await GET(new Request("http://localhost/api/ingest?secret=wrong"));
+    expect(res.status).toBe(401);
+  });
+
   it("returns status info about the ingest endpoint", async () => {
     const { GET } = await import("@/app/api/ingest/route");
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
 
     expect(body.ok).toBe(true);
@@ -382,7 +401,7 @@ describe("GET /api/ingest", () => {
 
   it("reports supabase connection status", async () => {
     const { GET } = await import("@/app/api/ingest/route");
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
 
     expect(body).toHaveProperty("supabase_connected");
@@ -390,7 +409,7 @@ describe("GET /api/ingest", () => {
 
   it("lists supported sources", async () => {
     const { GET } = await import("@/app/api/ingest/route");
-    const res = await GET();
+    const res = await GET(makeGetRequest());
     const body = await res.json();
 
     expect(body.sources).toContain("ticketmaster_one");

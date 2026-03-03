@@ -11,9 +11,6 @@
 import { taskEvents, type AgentTask, enqueueTask } from "../services/queue-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 
-/** ROAS threshold for auto-alert */
-const ROAS_ALERT_THRESHOLD = 1.5;
-
 
 /**
  * Initialize event-driven triggers.
@@ -52,48 +49,6 @@ async function handleTaskCompletion(task: AgentTask): Promise<void> {
   const { notifyChannel } = await import("../discord/core/entry.js");
 
   switch (task.action) {
-    case "meta-sync": {
-      // After Meta sync, check for ROAS drops
-      const result = task.result as { text?: string } | null;
-      if (result?.text && result.text.toLowerCase().includes("roas")) {
-        const roasMatch = result.text.match(/roas[:\s]*(\d+\.?\d*)/gi);
-        if (roasMatch) {
-          for (const match of roasMatch) {
-            const value = parseFloat(match.replace(/roas[:\s]*/i, ""));
-            if (value < ROAS_ALERT_THRESHOLD && value > 0) {
-              enqueueTask("trigger", "media-buyer", "roas-alert", {
-                threshold: ROAS_ALERT_THRESHOLD,
-                detected: value,
-                source_task: task.id,
-              }, "yellow");
-
-              await sendAsAgent("boss", "boss",
-                `**ROAS Alert**: Detected ROAS of ${value.toFixed(2)}x (below ${ROAS_ALERT_THRESHOLD}x threshold) after Meta sync.`
-              ).catch(() => {});
-              break;
-            }
-          }
-        }
-      }
-      break;
-    }
-
-    case "tm-sync": {
-      // After TM sync, check for ticket velocity
-      const result = task.result as { text?: string } | null;
-      if (result?.text) {
-        if (result.text.includes("80%") || result.text.includes("90%") || result.text.includes("sold out")) {
-          enqueueTask("trigger", "boss", "capacity-alert", {
-            source_task: task.id,
-            details: result.text.slice(0, 500),
-          }, "green");
-
-          await notifyChannel("boss", `**Capacity Alert**: High ticket sales detected after TM sync. Check #tm-data.`).catch(() => {});
-        }
-      }
-      break;
-    }
-
     case "morning-briefing": {
       await notifyChannel("general", `Morning briefing posted to #morning-briefing.`).catch(() => {});
       break;

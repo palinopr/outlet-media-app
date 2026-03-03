@@ -11,42 +11,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ChevronDown, ChevronRight } from "lucide-react";
-
-interface Job {
-  id: string;
-  agent_id: string;
-  status: string;
-  result: string | null;
-  error: string | null;
-  created_at: string;
-  started_at: string | null;
-  finished_at: string | null;
-}
+import { AgentJob } from "@/app/admin/agents/data";
+import { fmtDate } from "@/lib/formatters";
+import { agentName } from "./constants";
 
 interface Props {
-  jobs: Job[];
+  jobs: AgentJob[];
 }
-
-const LABEL: Record<string, string> = {
-  "meta-ads": "Meta Ads",
-  "tm-monitor": "TM Monitor",
-  "campaign-monitor": "Campaign Monitor",
-  "think": "Think Cycle",
-  "assistant": "Chat",
-};
 
 function duration(started: string | null, finished: string | null) {
   if (!started || !finished) return "—";
   const ms = new Date(finished).getTime() - new Date(started).getTime();
   if (ms < 60000) return `${Math.round(ms / 1000)}s`;
   return `${Math.round(ms / 60000)}m`;
-}
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleString("en-US", {
-    month: "short", day: "numeric",
-    hour: "numeric", minute: "2-digit",
-  });
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -63,7 +40,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ExpandableRow({ job }: { job: Job }) {
+function ExpandableRow({ job }: { job: AgentJob }) {
   const [open, setOpen] = useState(false);
   const output = job.error || job.result;
   const preview = output ? output.slice(0, 120).replace(/\n/g, " ") : null;
@@ -83,7 +60,7 @@ function ExpandableRow({ job }: { job: Job }) {
           {fmtDate(job.created_at)}
         </TableCell>
         <TableCell className="text-xs font-medium">
-          {LABEL[job.agent_id] ?? job.agent_id}
+          {agentName(job.agent_id)}
         </TableCell>
         <TableCell><StatusBadge status={job.status} /></TableCell>
         <TableCell className="text-xs text-muted-foreground tabular-nums">

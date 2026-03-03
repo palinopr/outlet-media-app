@@ -77,6 +77,57 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_tasks: {
+        Row: {
+          action: string
+          approved_by: string | null
+          completed_at: string | null
+          created_at: string | null
+          discord_message_id: string | null
+          error: string | null
+          from_agent: string
+          id: string
+          params: Json | null
+          result: Json | null
+          started_at: string | null
+          status: string
+          tier: string
+          to_agent: string
+        }
+        Insert: {
+          action: string
+          approved_by?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          discord_message_id?: string | null
+          error?: string | null
+          from_agent: string
+          id?: string
+          params?: Json | null
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          tier?: string
+          to_agent: string
+        }
+        Update: {
+          action?: string
+          approved_by?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          discord_message_id?: string | null
+          error?: string | null
+          from_agent?: string
+          id?: string
+          params?: Json | null
+          result?: Json | null
+          started_at?: string | null
+          status?: string
+          tier?: string
+          to_agent?: string
+        }
+        Relationships: []
+      }
       call_transcript_turns: {
         Row: {
           call_id: string

@@ -12,17 +12,9 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Check, Loader2 } from "lucide-react";
+import { UserRow } from "@/app/admin/users/data";
 
 const KNOWN_CLIENTS = ["zamora", "kybba", "beamina", "happy_paws"] as const;
-
-interface UserRow {
-  id: string;
-  name: string;
-  email: string;
-  role: string | null;
-  client_slug: string | null;
-  created_at: string;
-}
 
 interface Props {
   users: UserRow[];

@@ -3,9 +3,11 @@ import { UserAvatar } from "./user-avatar";
 
 interface SidebarContentProps {
   clerkEnabled: boolean;
+  displayName?: string;
 }
 
-export function SidebarContent({ clerkEnabled }: SidebarContentProps) {
+export function SidebarContent({ clerkEnabled, displayName = "Admin" }: SidebarContentProps) {
+
   return (
     <div className="flex flex-col h-full bg-[oklch(0.16_0_0)]">
       {/* Logo */}
@@ -29,7 +31,7 @@ export function SidebarContent({ clerkEnabled }: SidebarContentProps) {
       <div className="px-4 py-4 flex items-center gap-3">
         <UserAvatar clerkEnabled={clerkEnabled} />
         <div className="min-w-0">
-          <p className="text-xs font-medium truncate text-white/90">Jaime Ortiz</p>
+          <p className="text-xs font-medium truncate text-white/90">{displayName}</p>
           <p className="text-[11px] text-white/40">Admin</p>
         </div>
       </div>

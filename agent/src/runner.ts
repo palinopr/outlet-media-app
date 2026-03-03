@@ -16,7 +16,7 @@ const AGENT_DIR = join(__dirname, "..");
 const PROMPTS_DIR = join(AGENT_DIR, "prompts");
 
 const CLAUDE_PATH =
-  process.env.CLAUDE_PATH ?? "/Users/jaimeortiz/.local/bin/claude";
+  process.env.CLAUDE_PATH ?? (() => { throw new Error("CLAUDE_PATH env var is required"); })();
 
 /**
  * Track all spawned Claude child processes so we can kill them on shutdown.
@@ -37,15 +37,6 @@ export function killAllClaude(): void {
   }
   activeProcs.clear();
 }
-
-// Turns per job type — TM One needs many browser steps, chat needs few
-const MAX_TURNS: Record<string, number> = {
-  "assistant":        5,
-  "meta-ads":         20,
-  "campaign-monitor": 15,
-  "tm-monitor":       50,
-  "think":            15,
-};
 
 export interface RunnerOptions {
   prompt: string;
@@ -72,10 +63,6 @@ export interface RunnerResult {
 function loadPrompt(name: string): string {
   const path = join(PROMPTS_DIR, `${name}.txt`);
   return readFileSync(path, "utf-8");
-}
-
-export function turnsForAgent(agentId: string): number {
-  return MAX_TURNS[agentId] ?? 20;
 }
 
 export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {

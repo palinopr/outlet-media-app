@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { slugToLabel } from "@/lib/formatters";
 
 interface Props {
   clients: string[];
@@ -20,10 +21,6 @@ export function ClientFilter({ clients, selected }: Props) {
       params.set("client", value);
     }
     router.push(`${pathname}?${params.toString()}`);
-  }
-
-  function slugToLabel(slug: string) {
-    return slug.split("_").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
   }
 
   return (
