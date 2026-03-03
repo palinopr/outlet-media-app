@@ -20,7 +20,7 @@ export function DataTablePagination<TData>({ table }: PaginationProps<TData>) {
           onChange={(e) => table.setPageSize(Number(e.target.value))}
           className="h-7 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
         >
-          {[10, 20, 50].map((size) => (
+          {[10, 20, 50, 100].map((size) => (
             <option key={size} value={size}>
               {size} / page
             </option>
