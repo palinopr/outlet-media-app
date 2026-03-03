@@ -8,9 +8,9 @@ interface Props {
 
 export function ClientNav({ slug }: Props) {
   const pathname = usePathname();
+  // Campaigns nav hidden -- enable when white-label self-serve is ready
   const links = [
     { href: `/client/${slug}`, label: "Overview" },
-    { href: `/client/${slug}/campaigns`, label: "Campaigns" },
     { href: `/client/${slug}/settings`, label: "Settings" },
   ];
 

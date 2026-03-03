@@ -123,7 +123,7 @@ export default async function ClientLayout({ children, params }: Props) {
         </div>
         <div className="flex items-center gap-3">
           <a href={`/client/${slug}`} className="text-xs text-white/50 hover:text-white transition-colors">Overview</a>
-          <a href={`/client/${slug}/campaigns`} className="text-xs text-white/50 hover:text-white transition-colors">Campaigns</a>
+          <a href={`/client/${slug}/settings`} className="text-xs text-white/50 hover:text-white transition-colors">Settings</a>
         </div>
       </div>
       <main className="flex-1 overflow-auto lg:pt-0 pt-14">
