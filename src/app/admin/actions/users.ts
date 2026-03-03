@@ -57,8 +57,23 @@ export async function revokeInvitation(formData: { invitationId: string }) {
   const parsed = RevokeInvitationSchema.parse(formData);
   const client = await clerkClient();
 
-  await client.invitations.revokeInvitation(parsed.invitationId);
+  // Get the email from the target invitation, then revoke ALL non-revoked
+  // invitations for that email so old accepted/pending ones don't linger.
+  const { data: allInvitations } = await client.invitations.getInvitationList({
+    query: parsed.invitationId,
+  });
+  const target = allInvitations.find((i) => i.id === parsed.invitationId);
+  const email = target?.emailAddress;
 
-  await logAudit("invitation", parsed.invitationId, "revoke", null, null);
+  if (email) {
+    const { data: byEmail } = await client.invitations.getInvitationList({ query: email });
+    const toRevoke = byEmail.filter((i) => i.status !== "revoked");
+    await Promise.all(toRevoke.map((i) => client.invitations.revokeInvitation(i.id)));
+    await logAudit("invitation", parsed.invitationId, "revoke_all", { email, count: toRevoke.length }, null);
+  } else {
+    await client.invitations.revokeInvitation(parsed.invitationId);
+    await logAudit("invitation", parsed.invitationId, "revoke", null, null);
+  }
+
   revalidatePath("/admin/users");
 }
