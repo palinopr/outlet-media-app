@@ -98,9 +98,8 @@ async function loadClientOverrides(): Promise<Map<string, string>> {
   const overrides = new Map<string, string>();
   if (!supabaseAdmin) return overrides;
   const { data } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select("campaign_id, client_slug")
-    .not("client_slug", "is", null);
+    .from("campaign_client_overrides")
+    .select("campaign_id, client_slug");
   if (data) {
     for (const row of data) {
       if (row.client_slug) overrides.set(row.campaign_id, row.client_slug);

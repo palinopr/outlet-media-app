@@ -106,7 +106,6 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
   const parsed = BulkAssignSchema.parse(formData);
   if (!supabaseAdmin) throw new Error("DB not configured");
 
-  // Upsert rows into meta_campaigns with just the client_slug
   const now = new Date().toISOString();
   const rows = parsed.campaignIds.map((id) => ({
     campaign_id: id,
@@ -115,9 +114,10 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
   }));
 
   for (const row of rows) {
-    await supabaseAdmin
-      .from("meta_campaigns")
+    const { error: upsertErr } = await supabaseAdmin
+      .from("campaign_client_overrides")
       .upsert(row, { onConflict: "campaign_id" });
+    if (upsertErr) throw new Error(upsertErr.message);
   }
 
   await logAudit("campaign", "bulk", "bulk_assign_client", null, {
