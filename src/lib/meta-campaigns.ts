@@ -1,5 +1,6 @@
 import { META_API_VERSION, type DateRange, META_PRESETS } from "./constants";
 import { guessClientSlug } from "./client-slug";
+import { supabaseAdmin } from "./supabase";
 
 export interface MetaCampaignCard {
   campaignId: string;
@@ -93,6 +94,21 @@ interface RawDailyInsight extends RawInsight {
   date_start: string;
 }
 
+async function loadClientOverrides(): Promise<Map<string, string>> {
+  const overrides = new Map<string, string>();
+  if (!supabaseAdmin) return overrides;
+  const { data } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select("campaign_id, client_slug")
+    .not("client_slug", "is", null);
+  if (data) {
+    for (const row of data) {
+      if (row.client_slug) overrides.set(row.campaign_id, row.client_slug);
+    }
+  }
+  return overrides;
+}
+
 function buildCampaignFilter(ids: string[]): string {
   return JSON.stringify([
     { field: "campaign.id", operator: "IN", value: ids },
@@ -147,15 +163,15 @@ export async function fetchAllCampaigns(
   campaignsUrl.searchParams.set("limit", "500");
 
   try {
-    const rawCampaigns = await fetchAllPages<RawCampaign>(
-      campaignsUrl.toString(),
-      "campaigns",
-    );
+    const [rawCampaigns, overrides] = await Promise.all([
+      fetchAllPages<RawCampaign>(campaignsUrl.toString(), "campaigns"),
+      loadClientOverrides(),
+    ]);
 
-    // Derive client slugs and build clients list from all campaigns
+    // Derive client slugs: Supabase override > guessClientSlug fallback
     const campaignSlugs = new Map<string, string>();
     for (const c of rawCampaigns) {
-      campaignSlugs.set(c.id, guessClientSlug(c.name));
+      campaignSlugs.set(c.id, overrides.get(c.id) ?? guessClientSlug(c.name));
     }
     const clients = [...new Set(campaignSlugs.values())]
       .filter((s) => s !== "unknown")

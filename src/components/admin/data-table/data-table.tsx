@@ -2,6 +2,7 @@
 
 import {
   ColumnDef,
+  RowSelectionState,
   SortingState,
   ColumnFiltersState,
   VisibilityState,
@@ -32,6 +33,9 @@ interface DataTableProps<TData, TValue> {
   searchPlaceholder?: string;
   emptyMessage?: string;
   toolbar?: React.ReactNode;
+  selectionToolbar?: (selectedRows: TData[]) => React.ReactNode;
+  enableRowSelection?: boolean;
+  getRowId?: (row: TData) => string;
   pageSize?: number;
 }
 
@@ -42,25 +46,34 @@ export function DataTable<TData, TValue>({
   searchPlaceholder,
   emptyMessage = "No results.",
   toolbar,
+  selectionToolbar,
+  enableRowSelection = false,
+  getRowId,
   pageSize = 20,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, columnFilters, columnVisibility },
+    state: { sorting, columnFilters, columnVisibility, rowSelection },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    enableRowSelection,
+    getRowId,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize } },
   });
+
+  const selectedRows = table.getFilteredSelectedRowModel().rows.map((r) => r.original);
 
   return (
     <div>
@@ -70,7 +83,9 @@ export function DataTable<TData, TValue>({
           searchColumn={searchColumn}
           searchPlaceholder={searchPlaceholder}
         >
-          {toolbar}
+          {selectedRows.length > 0 && selectionToolbar
+            ? selectionToolbar(selectedRows)
+            : toolbar}
         </DataTableToolbar>
         <Table>
           <TableHeader>

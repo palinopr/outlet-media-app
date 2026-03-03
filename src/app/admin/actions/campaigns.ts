@@ -94,6 +94,41 @@ export async function assignCampaignClient(formData: { campaignId: string; clien
   revalidatePath("/admin/campaigns");
 }
 
+const BulkAssignSchema = z.object({
+  campaignIds: z.array(z.string().min(1)).min(1),
+  clientSlug: z.string().min(1),
+});
+
+export async function bulkAssignClient(formData: { campaignIds: string[]; clientSlug: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+
+  const parsed = BulkAssignSchema.parse(formData);
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  // Upsert rows into meta_campaigns with just the client_slug
+  const now = new Date().toISOString();
+  const rows = parsed.campaignIds.map((id) => ({
+    campaign_id: id,
+    client_slug: parsed.clientSlug,
+    updated_at: now,
+  }));
+
+  for (const row of rows) {
+    await supabaseAdmin
+      .from("meta_campaigns")
+      .upsert(row, { onConflict: "campaign_id" });
+  }
+
+  await logAudit("campaign", "bulk", "bulk_assign_client", null, {
+    count: parsed.campaignIds.length,
+    client_slug: parsed.clientSlug,
+  });
+
+  revalidatePath("/admin/campaigns");
+  return parsed.campaignIds.length;
+}
+
 export async function syncCampaignToMeta(campaignId: string, changes: { status?: string; dailyBudgetCents?: number }) {
   const err = await adminGuard();
   if (err) throw new Error("Forbidden");
