@@ -12,7 +12,7 @@
  * Fire-and-forget -- never blocks the main response flow.
  */
 
-import { writeFile, readdir } from "node:fs/promises";
+import { writeFile, readdir, stat, unlink } from "node:fs/promises";
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { AGENT_INTERNALS, PROMPT_TO_AGENT } from "../core/router.js";
@@ -87,8 +87,27 @@ export async function maybeCreateSkill(
   const skillsDir = join(process.cwd(), internals.skillsDir);
   if (!existsSync(skillsDir)) mkdirSync(skillsDir, { recursive: true });
 
-  const existingSkills = await safeReaddir(skillsDir);
-  if (existingSkills.length >= MAX_SKILLS_PER_AGENT) return;
+  let existingSkills = await safeReaddir(skillsDir);
+
+  // LRU eviction: when at capacity, remove the oldest skill file (by mtime)
+  if (existingSkills.length >= MAX_SKILLS_PER_AGENT) {
+    try {
+      const withMtime = await Promise.all(
+        existingSkills.map(async (f) => {
+          const filePath = join(skillsDir, f);
+          const s = await stat(filePath);
+          return { file: f, mtime: s.mtimeMs };
+        })
+      );
+      withMtime.sort((a, b) => a.mtime - b.mtime);
+      const oldest = withMtime[0];
+      await unlink(join(skillsDir, oldest.file));
+      existingSkills = existingSkills.filter(f => f !== oldest.file);
+    } catch (err) {
+      console.error("[skills] LRU eviction failed:", err);
+      return;
+    }
+  }
 
   const existingList = existingSkills.length > 0
     ? `Existing skills: ${existingSkills.join(", ")}`

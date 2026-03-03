@@ -110,17 +110,17 @@ function shutdown(): void {
   discordClient?.destroy();
 }
 
-process.once("SIGINT", () => {
-  console.log("\nShutting down...");
+function gracefulExit(signal: string): void {
+  console.log(`${signal} received, shutting down...`);
+  // Force exit after 10s if cleanup stalls
+  setTimeout(() => process.exit(1), 10_000).unref();
   shutdown();
   process.exit(0);
-});
+}
 
-process.once("SIGTERM", () => {
-  console.log("SIGTERM received, shutting down...");
-  shutdown();
-  process.exit(0);
-});
+process.once("SIGINT", () => gracefulExit("SIGINT"));
+process.once("SIGTERM", () => gracefulExit("SIGTERM"));
+process.once("SIGHUP", () => gracefulExit("SIGHUP"));
 
 // Suppress unhandled Discord WS close errors on shutdown
 process.on("unhandledRejection", (reason) => {

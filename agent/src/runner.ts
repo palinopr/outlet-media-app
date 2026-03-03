@@ -182,6 +182,15 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
                 }
               }
             }
+          } else if (event.type === "error") {
+            // Claude CLI streamed an error event — capture it
+            const errMsg = (event.error as Record<string, unknown>)?.message
+              ?? event.message
+              ?? "unknown error";
+            const errStr = typeof errMsg === "string" ? errMsg : JSON.stringify(errMsg);
+            console.error(`[runner] Claude CLI error event: ${errStr}`);
+            errorText += errStr;
+            assembledText += `\n[error] ${errStr}`;
           } else if (event.type === "result") {
             // Final event — use result field as fallback if we got no assistant text
             const result = event.result as string | undefined;

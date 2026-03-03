@@ -36,11 +36,6 @@ export function isAnyAgentBusy(): boolean {
   return busyAgents.size > 0;
 }
 
-/** Returns a list of currently-busy agent IDs (for diagnostics). */
-export function getBusyAgents(): string[] {
-  return [...busyAgents];
-}
-
 /** Default max lock age: 1 hour */
 const DEFAULT_MAX_AGE_MS = 3_600_000;
 

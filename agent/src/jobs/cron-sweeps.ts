@@ -246,7 +246,7 @@ CACHED CAMPAIGNS:
 ${campaignsSummary(campaigns)}
 
 CACHED EVENTS:
-${events.length > 0 ? events.map((e) => `- ${e.name} on ${e.date}`).join("\n") : "No event data cached."}
+${events.length > 0 ? events.map((e) => `- ${e.name} on ${e.date ?? "unknown"}`).join("\n") : "No event data cached."}
 
 Format as a polished Discord message.`;
 
@@ -404,7 +404,7 @@ CAMPAIGNS:
 ${campaignsSummary(campaigns)}
 
 EVENTS:
-${events.length > 0 ? events.slice(0, 15).map((e) => `- ${e.name} on ${e.date}`).join("\n") : "No events cached."}
+${events.length > 0 ? events.slice(0, 15).map((e) => `- ${e.name} on ${e.date ?? "unknown"}`).join("\n") : "No events cached."}
 
 Tasks:
 1. For each client (Zamora, Kybba), summarize: active campaigns, upcoming shows, any concerns

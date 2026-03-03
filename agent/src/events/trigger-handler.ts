@@ -1,11 +1,10 @@
 /**
  * trigger-handler.ts -- Event-driven reaction handler.
  *
- * Watches for data changes and triggers agent tasks:
- * - After Meta sync: check for ROAS drops below threshold
- * - After TM sync: check for new events, ticket velocity changes
- * - After task completion: check if follow-up tasks are needed
- * - Agent task failures: Boss evaluates and decides retry or escalate
+ * Watches for task lifecycle events and triggers reactions:
+ * - After task completion: log to audit, notify channels
+ * - Agent task failures: notify ops, auto-retry transient errors
+ * - Task escalations: post to #ops for visibility
  */
 
 import { taskEvents, type AgentTask, enqueueTask } from "../services/queue-service.js";

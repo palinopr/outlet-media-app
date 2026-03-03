@@ -92,6 +92,7 @@ const TARGET_ROLES: { name: string; color: number; perms: bigint[] }[] = [
   { name: "Bot", color: 0x99aab5, perms: [
     PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages,
     PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.EmbedLinks,
+    PermissionFlagsBits.AddReactions,
   ]},
   { name: "Viewer", color: 0x95a5a6, perms: [
     PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory,
@@ -213,6 +214,16 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
         if (existing) {
           if (existing.parentId !== cat.id) {
             await (existing as TextChannel).setParent(cat.id).catch(() => {});
+            if (isOps && opsOverwrites) {
+              await (existing as TextChannel).permissionOverwrites.set(
+                opsOverwrites.map(o => ({
+                  id: o.id,
+                  type: o.type,
+                  allow: o.allow,
+                  deny: o.deny,
+                }))
+              ).catch(() => {});
+            }
             log.push(`Moved #${ch.name} -> ${catName}`);
           }
         } else {

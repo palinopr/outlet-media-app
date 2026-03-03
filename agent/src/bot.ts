@@ -14,13 +14,19 @@ function mdToHtml(text: string): string {
     .replace(/```[\w]*\n?([\s\S]*?)```/g, "<pre>$1</pre>")
     // Escape bare & < > that aren't already part of HTML tags
     .replace(/&(?!amp;|lt;|gt;|quot;)/g, "&amp;")
-    // **bold** or __bold__ → <b>bold</b>
+    // **bold** or __bold__ → <b>bold</b>  (must run before single * italic)
     .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
     .replace(/__(.+?)__/g, "<b>$1</b>")
+    // *italic* → <i>italic</i>  (only matches single *, after ** already consumed)
+    .replace(/\*(.+?)\*/g, "<i>$1</i>")
+    // [text](url) → <a href="url">text</a>
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
     // `code` → <code>code</code>
     .replace(/`([^`]+?)`/g, "<code>$1</code>")
     // ## headers → just bold the text
-    .replace(/^#{1,3}\s+(.+)$/gm, "<b>$1</b>");
+    .replace(/^#{1,3}\s+(.+)$/gm, "<b>$1</b>")
+    // - item → bullet item
+    .replace(/^- (.+)$/gm, "\u2022 $1");
 
   // Strip markdown tables — Telegram can't render them
   // Convert "|col1|col2|" rows to "col1 · col2" and drop separator lines

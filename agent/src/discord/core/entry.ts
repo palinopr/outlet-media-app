@@ -39,9 +39,6 @@ export const discordClient = token
         GatewayIntentBits.DirectMessages,
         GatewayIntentBits.DirectMessageTyping,
         GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildModeration,
-        GatewayIntentBits.GuildPresences,
-        GatewayIntentBits.GuildMessageReactions,
       ],
       partials: [Partials.Channel, Partials.Message, Partials.GuildMember],
     })

@@ -43,7 +43,7 @@ export const taskEvents = new EventEmitter();
 
 let supabase: SupabaseClient | null = null;
 
-export function initQueue(): void {
+export async function initQueue(): Promise<void> {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (url && key) {
@@ -51,6 +51,15 @@ export function initQueue(): void {
     console.log("[queue] Supabase ledger connected");
   } else {
     console.warn("[queue] Supabase not configured -- tasks will not be persisted");
+  }
+
+  // Recover orphaned running tasks from previous crash
+  if (supabase) {
+    const { data } = await supabase.from("agent_tasks").select("id").eq("status", "running");
+    if (data?.length) {
+      await supabase.from("agent_tasks").update({ status: "failed", error: "recovered after bot restart" }).eq("status", "running");
+      console.log(`[queue] Recovered ${data.length} orphaned running task(s)`);
+    }
   }
 }
 
@@ -187,8 +196,11 @@ export function rejectTask(taskId: string): void {
 
   task.status = "rejected";
   task.completedAt = new Date();
+  activeSlots.set(task.to, null);
   persistTask(task).catch(() => {});
   taskEvents.emit("rejected", task);
+
+  processNextForAgent(task.to);
 }
 
 /**

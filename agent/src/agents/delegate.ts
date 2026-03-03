@@ -48,6 +48,34 @@ const DELEGATE_TARGETS: Record<string, string> = {
 };
 
 /**
+ * Find inline JSON objects containing "delegate" and "action" keys using
+ * balanced-braces walking. Handles nested objects that a flat regex cannot.
+ */
+function findInlineJsonBlocks(text: string): { match: string; index: number }[] {
+  const results: { match: string; index: number }[] = [];
+  let i = 0;
+  while (i < text.length) {
+    if (text[i] === "{") {
+      let depth = 1;
+      let j = i + 1;
+      while (j < text.length && depth > 0) {
+        if (text[j] === "{") depth++;
+        else if (text[j] === "}") depth--;
+        j++;
+      }
+      if (depth === 0) {
+        const candidate = text.slice(i, j);
+        if (candidate.includes('"delegate"') && candidate.includes('"action"')) {
+          results.push({ match: candidate, index: i });
+        }
+      }
+    }
+    i++;
+  }
+  return results;
+}
+
+/**
  * Parse JSON delegation blocks from Claude output.
  * Looks for ```json blocks containing a "delegate" key.
  */
@@ -72,16 +100,15 @@ export function parseDelegationBlocks(text: string): { blocks: DelegationBlock[]
     }
   }
 
-  // Also match inline JSON (no fences) as fallback
-  const inlinePattern = /\{[^{}]*?"delegate"\s*:\s*"[^"]+?"[^{}]*?"action"\s*:\s*"[^"]+?"[^{}]*?\}/g;
-  while ((match = inlinePattern.exec(text)) !== null) {
+  // Also match inline JSON (no fences) as fallback, using balanced-braces walker
+  for (const hit of findInlineJsonBlocks(text)) {
     try {
-      const raw: unknown = JSON.parse(match[0]);
+      const raw: unknown = JSON.parse(hit.match);
       if (raw && typeof raw === "object" && "delegate" in raw && "action" in raw) {
         const parsed = raw as DelegationBlock;
         if (!blocks.some(b => b.delegate === parsed.delegate && b.action === parsed.action)) {
           blocks.push(parsed);
-          cleanText = cleanText.replace(match[0], "").trim();
+          cleanText = cleanText.replace(hit.match, "").trim();
         }
       }
     } catch {

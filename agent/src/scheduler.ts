@@ -43,7 +43,7 @@ export function startScheduler(): void {
   cron.schedule(HEARTBEAT_CRON, () => { pingHeartbeat(); });
   cron.schedule(CHECK_CRON, () => { runTmCheck(); });
   cron.schedule(META_CRON, () => { runMetaSync(); });
-  cron.schedule(THINK_CRON, () => { runThinkCycle(); });
+  cron.schedule(THINK_CRON, () => { runThinkCycle(); }, { timezone: "America/Los_Angeles" });
   cron.schedule(DISCORD_HEALTH_CRON, () => { runDiscordHealthCheck(); });
 
   console.log("[scheduler] 5 core cron jobs started (heartbeat, tm, meta, think, health-check)");

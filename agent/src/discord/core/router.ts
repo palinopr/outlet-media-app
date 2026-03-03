@@ -102,6 +102,13 @@ export function getAgentForChannel(channelName: string): AgentConfig {
 }
 
 /**
+ * Register a new route at runtime (used by spawner for dynamically created agents).
+ */
+export function registerRoute(channelName: string, config: AgentConfig): void {
+  AGENT_ROUTES[channelName] = config;
+}
+
+/**
  * Check if a channel triggers a manual job instead of a conversation.
  * Returns the job name if the message matches a trigger pattern, null otherwise.
  */

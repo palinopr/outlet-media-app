@@ -154,8 +154,14 @@ function buildDashboardEmbed(campaigns: CampaignData[]): EmbedBuilder {
       `Impressions: ${formatNumber(c.impressions)} | Clicks: ${formatNumber(c.clicks)}`,
     ];
 
-    if (roas) lines.push(`ROAS: **${parseFloat(roas).toFixed(2)}x**`);
-    if (c.ctr) lines.push(`CTR: ${parseFloat(c.ctr).toFixed(2)}% | CPC: ${formatCurrency(c.cpc)}`);
+    if (roas) {
+      const roasVal = parseFloat(roas);
+      if (!isNaN(roasVal)) lines.push(`ROAS: **${roasVal.toFixed(2)}x**`);
+    }
+    if (c.ctr) {
+      const ctrVal = parseFloat(c.ctr);
+      if (!isNaN(ctrVal)) lines.push(`CTR: ${ctrVal.toFixed(2)}% | CPC: ${formatCurrency(c.cpc)}`);
+    }
 
     embed.addFields({
       name: c.name || `Campaign ${c.id}`,

@@ -82,11 +82,17 @@ export async function runSupervision(): Promise<string> {
     "--- END LOG ---",
   ].join("\n");
 
-  const result = await runClaude({
-    prompt: supervisePrompt,
-    systemPromptName: "boss",
-    maxTurns: 5,
-  });
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("Supervisor timed out after 3 minutes")), 180_000)
+  );
+  const result = await Promise.race([
+    runClaude({
+      prompt: supervisePrompt,
+      systemPromptName: "boss",
+      maxTurns: 5,
+    }),
+    timeout,
+  ]);
 
   return result.text || "Supervision cycle completed with no output.";
 }

@@ -19,6 +19,7 @@ import {
 import { taskEvents, type AgentTask } from "../services/queue-service.js";
 import { registerAgentWebhook } from "../services/webhook-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
+import { registerRoute, type AgentConfig } from "../discord/core/router.js";
 
 const AGENT_DIR = process.cwd();
 
@@ -108,6 +109,14 @@ export async function spawnAgent(spec: SpawnSpec): Promise<void> {
         try {
           await registerAgentWebhook(spec.key, spec.name, avatar, [spec.key]);
           log.push(`Registered webhook for ${spec.name}`);
+
+          const routeConfig: AgentConfig = {
+            promptFile: spec.key,
+            maxTurns: 15,
+            description: spec.key,
+          };
+          registerRoute(spec.key, routeConfig);
+          log.push(`Registered route: ${spec.key}`);
         } catch (whErr) {
           const whMsg = whErr instanceof Error ? whErr.message : String(whErr);
           console.warn(`[spawner] Webhook registration failed for ${spec.key}: ${whMsg}`);
