@@ -165,3 +165,11 @@ export const CampaignCreateSchema = z.object({
 });
 
 export type CampaignCreatePayload = z.infer<typeof CampaignCreateSchema>;
+
+// ─── Contact form ────────────────────────────────────────────────────────────
+
+export const ContactFormSchema = z.object({
+  name: z.string().min(1).max(200),
+  email: z.string().email().max(320),
+  message: z.string().min(1).max(5000),
+});

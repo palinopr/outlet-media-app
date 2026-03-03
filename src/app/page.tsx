@@ -11,7 +11,7 @@ export default async function RootPage() {
   const { userId } = await auth();
 
   if (!userId) {
-    redirect("/sign-in");
+    redirect("/landing");
   }
 
   const user = await currentUser();
