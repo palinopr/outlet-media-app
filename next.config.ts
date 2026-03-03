@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import path from "node:path";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   turbopack: {
     // Silence the "multiple lockfiles" workspace root warning
     root: path.resolve(__dirname),
