@@ -19,6 +19,19 @@ import { runClaude } from "../../runner.js";
 const lastMemoryUpdate = new Map<string, number>();
 const MEMORY_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between updates per agent
 
+/** Per-file write lock: serializes concurrent appendFile calls to the same path */
+const writeLocks = new Map<string, Promise<void>>();
+
+async function serializedAppend(path: string, data: string): Promise<void> {
+  const prev = writeLocks.get(path) ?? Promise.resolve();
+  const next = prev.then(
+    () => appendFile(path, data),
+    () => appendFile(path, data), // proceed even if previous write failed
+  );
+  writeLocks.set(path, next);
+  await next;
+}
+
 /** Messages too trivial to extract memory from */
 const TRIVIAL = /^(ok|thanks|ty|got it|cool|nice|yes|no|yep|nope|k|thx|sure|alright|lol|haha)[\s.!?]*$/i;
 
@@ -107,7 +120,7 @@ export async function maybeUpdateMemory(
     const timestamp = new Date().toISOString().slice(0, 10);
     const block = `\n\n<!-- auto-learned ${timestamp} -->\n${bullets.join("\n")}`;
 
-    await appendFile(internals.memoryFile, block);
+    await serializedAppend(internals.memoryFile, block);
 
     // Record cooldown timestamp
     lastMemoryUpdate.set(promptFile, Date.now());

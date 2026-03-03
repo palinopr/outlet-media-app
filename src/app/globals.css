@@ -166,28 +166,6 @@
   animation: shimmer 3s ease infinite;
 }
 
-.campaign-card {
-  position: relative;
-  overflow: hidden;
-}
-
-.campaign-card::before {
-  content: "";
-  position: absolute;
-  top: 12px;
-  left: 0;
-  bottom: 12px;
-  width: 3px;
-  border-radius: 0 9999px 9999px 0;
-  background: linear-gradient(180deg, #06b6d4, #8b5cf6);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.campaign-card:hover::before {
-  opacity: 1;
-}
-
 .stat-glow {
   box-shadow: 0 0 40px oklch(0.6 0.15 260 / 6%), 0 0 80px oklch(0.6 0.15 200 / 3%);
 }
@@ -232,7 +210,6 @@
     box-shadow: none !important;
   }
   .hero-stat-card::before,
-  .campaign-card::before,
   .gradient-bar::after {
     display: none !important;
   }

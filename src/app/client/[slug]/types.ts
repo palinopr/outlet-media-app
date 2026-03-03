@@ -33,7 +33,6 @@ export interface HeroStats {
   activeCampaigns: number;
   totalCampaigns: number;
   spendDelta: number | null;
-  revenueDelta: number | null;
 }
 
 // --- Event types (for TM clients) ---

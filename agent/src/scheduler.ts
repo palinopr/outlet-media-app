@@ -3,7 +3,7 @@ import { readFileSync, existsSync, unlinkSync } from "node:fs";
 import { runClaude } from "./runner.js";
 import { notifyOwner } from "./bot.js";
 import { notifyChannel } from "./discord/core/entry.js";
-import { state } from "./state.js";
+import { isAgentBusy, setAgentBusy, clearAgentBusy, resetStaleLocks } from "./state.js";
 import { getSweepRunners } from "./jobs/cron-sweeps.js";
 
 const CHECK_CRON     = process.env.CHECK_CRON ?? "0 */2 * * *"; // every 2 hours
@@ -94,11 +94,11 @@ async function pingHeartbeat() {
 }
 
 async function runTmCheck() {
-  if (state.tmRunning) {
+  if (isAgentBusy("tm-sync")) {
     console.log("[scheduler] TM check already running, skipping");
     return;
   }
-  state.tmRunning = true;
+  setAgentBusy("tm-sync");
   console.log("[scheduler] Running scheduled TM One check...");
   await notifyChannel("active-jobs", ">> **TM One sync** started").catch(() => {});
 
@@ -120,16 +120,16 @@ async function runTmCheck() {
       notifyChannel("agent-alerts", `**TM One check failed**\n${msg}`).catch(() => {}),
     ]);
   } finally {
-    state.tmRunning = false;
+    clearAgentBusy("tm-sync");
   }
 }
 
 async function runMetaSync() {
-  if (state.metaRunning) {
+  if (isAgentBusy("meta-sync")) {
     console.log("[scheduler] Meta sync already running, skipping");
     return;
   }
-  state.metaRunning = true;
+  setAgentBusy("meta-sync");
   console.log("[scheduler] Running scheduled Meta sync...");
   await notifyChannel("active-jobs", ">> **Meta Ads sync** started").catch(() => {});
 
@@ -160,7 +160,7 @@ async function runMetaSync() {
       notifyChannel("agent-alerts", `**Meta sync failed**\n${msg}`).catch(() => {}),
     ]);
   } finally {
-    state.metaRunning = false;
+    clearAgentBusy("meta-sync");
   }
 }
 
@@ -182,6 +182,8 @@ export function getJobRunners(): Record<string, () => void> {
 }
 
 async function runDiscordHealthCheck() {
+  resetStaleLocks();
+
   try {
     const { runChannelHealthCheck } = await import("./discord/commands/admin.js");
     await runChannelHealthCheck();
@@ -192,13 +194,12 @@ async function runDiscordHealthCheck() {
 }
 
 async function runThinkCycle() {
-  if (state.thinkRunning || state.tmRunning || state.metaRunning || state.jobRunning || state.discordAdminRunning) {
-    const blocker = state.thinkRunning ? "think" : state.tmRunning ? "tm" : state.metaRunning ? "meta" : state.jobRunning ? "job" : "discordAdmin";
-    console.log(`[think] Skipping -- blocked by: ${blocker}`);
+  if (isAgentBusy("think")) {
+    console.log("[think] Skipping -- already running");
     return;
   }
 
-  state.thinkRunning = true;
+  setAgentBusy("think");
   console.log("[think] Starting proactive think cycle...");
   await notifyChannel("active-jobs", ">> **Think loop** started").catch(() => {});
 
@@ -235,6 +236,6 @@ async function runThinkCycle() {
     console.error("[think] Cycle failed:", msg);
     await notifyChannel("active-jobs", `x **Think loop** failed: ${msg.slice(0, 200)}`).catch(() => {});
   } finally {
-    state.thinkRunning = false;
+    clearAgentBusy("think");
   }
 }

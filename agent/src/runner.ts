@@ -65,6 +65,8 @@ function loadPrompt(name: string): string {
   return readFileSync(path, "utf-8");
 }
 
+const SUBPROCESS_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+
 export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
   const {
     prompt,
@@ -128,6 +130,22 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
 
     activeProcs.add(proc);
 
+    // Kill subprocess if it exceeds the timeout
+    const timeoutHandle = setTimeout(() => {
+      console.error(`[runner] Subprocess timed out after ${SUBPROCESS_TIMEOUT_MS / 1000}s -- killing`);
+      try {
+        proc.kill("SIGTERM");
+      } catch {
+        // Already dead
+      }
+      // Give SIGTERM 3s to take effect, then SIGKILL
+      setTimeout(() => {
+        try { proc.kill("SIGKILL"); } catch { /* already dead */ }
+      }, 3000);
+    }, SUBPROCESS_TIMEOUT_MS);
+
+    let timedOut = false;
+
     let assembledText = "";  // built from assistant events
     let fallbackResult = ""; // from type=result event if no assistant text
     let capturedSessionId: string | undefined;
@@ -179,8 +197,15 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
       errorText += chunk.toString();
     });
 
-    proc.on("close", (code) => {
+    proc.on("close", (code, signal) => {
+      clearTimeout(timeoutHandle);
       activeProcs.delete(proc);
+
+      // Detect timeout: SIGTERM from our timeout handler
+      if (signal === "SIGTERM" || signal === "SIGKILL") {
+        timedOut = true;
+      }
+
       // Flush any remaining buffer content
       if (lineBuffer.trim()) {
         try {
@@ -193,7 +218,15 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
 
       const text = (assembledText.trim() || fallbackResult.trim() || "Done.").trim();
 
-      if (code === 0) {
+      if (timedOut) {
+        console.error(`[runner] claude killed after ${SUBPROCESS_TIMEOUT_MS / 1000}s timeout`);
+        resolve({
+          text: text || "Subprocess timed out",
+          success: false,
+          error: `Subprocess timed out after ${SUBPROCESS_TIMEOUT_MS / 1000}s`,
+          sessionId: capturedSessionId,
+        });
+      } else if (code === 0) {
         console.log(`[runner] Done (${text.length} chars, session=${capturedSessionId?.slice(0, 8) ?? "none"})`);
         resolve({ text, success: true, sessionId: capturedSessionId });
       } else {
@@ -210,6 +243,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     });
 
     proc.on("error", (err) => {
+      clearTimeout(timeoutHandle);
       activeProcs.delete(proc);
       console.error("[runner] Failed to spawn claude:", err.message);
       resolve({

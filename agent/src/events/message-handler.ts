@@ -238,7 +238,7 @@ export async function handleMessage(
           buffer += chunk;
           if (Date.now() - lastEdit > 1500 && buffer.trim()) {
             const preview = cleanForDiscord(buffer.slice(-1900));
-            await working.edit(preview || "...").catch(() => {});
+            await working?.edit(preview || "...").catch(() => {});
             lastEdit = Date.now();
           }
         },

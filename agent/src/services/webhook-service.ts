@@ -14,12 +14,15 @@ import {
   ChannelType,
 } from "discord.js";
 
+const WEBHOOK_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+
 interface AgentWebhook {
   id: string;
   token: string;
   client: WebhookClient;
   name: string;
   avatarURL: string;
+  cachedAt: number;
 }
 
 /** Agent display config: name, avatar, primary channel */
@@ -103,6 +106,7 @@ async function ensureWebhook(
       client: new WebhookClient({ id, token }),
       name,
       avatarURL,
+      cachedAt: Date.now(),
     };
 
     // Cache by channel
@@ -129,7 +133,13 @@ export async function sendAsAgent(
   options: string | WebhookMessageCreateOptions,
 ): Promise<void> {
   const channelWebhooks = webhookCache.get(channelName);
-  const wh = channelWebhooks?.get(agentKey);
+  let wh = channelWebhooks?.get(agentKey) ?? null;
+
+  // Evict stale cache entries (older than 1 hour)
+  if (wh && Date.now() - wh.cachedAt > WEBHOOK_CACHE_TTL_MS) {
+    channelWebhooks?.delete(agentKey);
+    wh = null;
+  }
 
   const content: WebhookMessageCreateOptions = typeof options === "string"
     ? { content: options }

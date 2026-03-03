@@ -96,18 +96,38 @@ export async function spawnAgent(spec: SpawnSpec): Promise<void> {
       log.push(`Created skills dir: skills/${spec.key}/`);
     }
 
-    // 4. Create Discord channel
+    // 4. Create Discord channel + register webhook (with cleanup on failure)
     if (discordClient) {
       const guild = discordClient.guilds.cache.first();
       if (guild) {
+        const channelExistedBefore = guild.channels.cache.some(c => c.name === spec.key);
         await createAgentChannel(guild, spec, log);
+
+        // 5. Register webhook -- if this fails, clean up the newly created channel
+        const avatar = spec.avatar || DEFAULT_AVATAR;
+        try {
+          await registerAgentWebhook(spec.key, spec.name, avatar, [spec.key]);
+          log.push(`Registered webhook for ${spec.name}`);
+        } catch (whErr) {
+          const whMsg = whErr instanceof Error ? whErr.message : String(whErr);
+          console.warn(`[spawner] Webhook registration failed for ${spec.key}: ${whMsg}`);
+          log.push(`WARNING: Webhook registration failed: ${whMsg}`);
+
+          // Only delete the channel if we just created it (don't nuke pre-existing channels)
+          if (!channelExistedBefore) {
+            const created = guild.channels.cache.find(c => c.name === spec.key);
+            if (created) {
+              await created.delete(`Cleanup: webhook registration failed for ${spec.key}`).catch((delErr: unknown) => {
+                const delMsg = delErr instanceof Error ? delErr.message : String(delErr);
+                console.error(`[spawner] Failed to cleanup channel #${spec.key}: ${delMsg}`);
+                log.push(`ERROR: Channel #${spec.key} exists but has no webhook and cleanup failed`);
+              });
+              log.push(`Cleaned up channel #${spec.key} after webhook failure`);
+            }
+          }
+        }
       }
     }
-
-    // 5. Register webhook
-    const avatar = spec.avatar || DEFAULT_AVATAR;
-    await registerAgentWebhook(spec.key, spec.name, avatar, [spec.key]);
-    log.push(`Registered webhook for ${spec.name}`);
 
     // 6. Post introduction to #agent-feed
     const intro = new EmbedBuilder()

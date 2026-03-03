@@ -43,8 +43,8 @@ interface Rules {
 let rules: Rules | null = null;
 let client: Client | null = null;
 
-/** Pending approval tasks (task ID -> timeout handle) */
-const pendingApprovals = new Map<string, ReturnType<typeof setTimeout>>();
+/** Pending approval tasks: task ID -> { timeout handle, created timestamp } */
+const pendingApprovals = new Map<string, { timeout: ReturnType<typeof setTimeout>; createdAt: number }>();
 
 export async function initApprovals(c: Client): Promise<void> {
   client = c;
@@ -73,6 +73,8 @@ export async function initApprovals(c: Client): Promise<void> {
         content: `Approved by ${interaction.user.username}`,
         components: [],
       });
+      const entry = pendingApprovals.get(taskId);
+      if (entry) clearTimeout(entry.timeout);
       pendingApprovals.delete(taskId);
     } else if (value === "reject") {
       rejectTask(taskId);
@@ -80,9 +82,14 @@ export async function initApprovals(c: Client): Promise<void> {
         content: `Rejected by ${interaction.user.username}`,
         components: [],
       });
+      const entry = pendingApprovals.get(taskId);
+      if (entry) clearTimeout(entry.timeout);
       pendingApprovals.delete(taskId);
     }
   });
+
+  // Sweep stale approvals every hour (catches orphans from bot restarts)
+  setInterval(sweepExpiredApprovals, 60 * 60 * 1000);
 
   console.log("[approvals] Approval service initialized");
 }
@@ -210,7 +217,7 @@ async function postApprovalRequest(task: AgentTask): Promise<void> {
   const msg = await channel.send({ embeds: [embed], components: [row] });
   task.discordMessageId = msg.id;
 
-  // Set expiry timeout
+  // Set expiry timeout -- auto-reject if no response in 24h
   const timeout = setTimeout(() => {
     rejectTask(task.id);
     msg.edit({
@@ -218,7 +225,25 @@ async function postApprovalRequest(task: AgentTask): Promise<void> {
       components: [],
     }).catch(() => {});
     pendingApprovals.delete(task.id);
+    console.log(`[approvals] Task ${task.id} auto-expired after 24h`);
   }, APPROVAL_EXPIRY_MS);
 
-  pendingApprovals.set(task.id, timeout);
+  pendingApprovals.set(task.id, { timeout, createdAt: Date.now() });
+}
+
+/**
+ * Sweep pending approvals and expire any older than 24h.
+ * Catches approvals that survived a bot restart (their setTimeout was lost).
+ * Called periodically from a setInterval in initApprovals.
+ */
+function sweepExpiredApprovals(): void {
+  const now = Date.now();
+  for (const [taskId, entry] of pendingApprovals) {
+    if (now - entry.createdAt > APPROVAL_EXPIRY_MS) {
+      clearTimeout(entry.timeout);
+      rejectTask(taskId);
+      pendingApprovals.delete(taskId);
+      console.log(`[approvals] Swept expired approval: ${taskId}`);
+    }
+  }
 }

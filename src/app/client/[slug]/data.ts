@@ -26,7 +26,6 @@ const EMPTY: ClientData = {
     activeCampaigns: 0,
     totalCampaigns: 0,
     spendDelta: null,
-    revenueDelta: null,
   },
   campaigns: [],
   events: [],
@@ -223,7 +222,6 @@ function buildHeroStats(campaigns: CampaignCard[]): HeroStats {
     activeCampaigns: active,
     totalCampaigns: campaigns.length,
     spendDelta: null,
-    revenueDelta: null,
   };
 }
 

@@ -114,18 +114,37 @@ async function handleEscalation(task: AgentTask): Promise<void> {
 
 /**
  * Check if an error is transient (network timeout, rate limit, etc.)
+ * Checks both error message strings and HTTP status codes.
  */
 function isTransientError(error: string): boolean {
   const transientPatterns = [
     "timeout",
     "etimedout",
     "econnreset",
-    "rate limit",
-    "429",
-    "503",
-    "502",
+    "econnrefused",
     "enotfound",
+    "epipe",
+    "ehostunreach",
+    "enetunreach",
+    "rate limit",
+    "too many requests",
+    "service unavailable",
+    "bad gateway",
+    "gateway timeout",
+    "socket hang up",
+    "network error",
+    "fetch failed",
   ];
   const lower = error.toLowerCase();
-  return transientPatterns.some(p => lower.includes(p));
+  if (transientPatterns.some(p => lower.includes(p))) return true;
+
+  // Check for HTTP status codes commonly indicating transient failures
+  const transientStatusCodes = [429, 502, 503, 504];
+  const statusMatch = error.match(/\bstatus[:\s]*(\d{3})\b/i) ?? error.match(/\b(4\d{2}|5\d{2})\b/);
+  if (statusMatch) {
+    const code = parseInt(statusMatch[1], 10);
+    if (transientStatusCodes.includes(code)) return true;
+  }
+
+  return false;
 }

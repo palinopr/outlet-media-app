@@ -17,7 +17,7 @@ import {
   Partials,
   type TextChannel,
 } from "discord.js";
-import { state } from "../../state.js";
+import { isAnyAgentBusy } from "../../state.js";
 import { matchManualTrigger, isConfigChannel, isInternalChannel } from "./router.js";
 import { handleScheduleCommand, initScheduleJobs } from "../commands/schedule.js";
 import { handleSuperviseCommand } from "../commands/supervisor.js";
@@ -49,6 +49,17 @@ export const discordClient = token
 
 /** Per-channel Claude session IDs (kept for !reset command compatibility) */
 export const channelSessions = new Map<string, string>();
+const MAX_CHANNEL_SESSIONS = 100;
+
+/** Evict the oldest entry when channelSessions exceeds its size limit.
+ *  Call after any channelSessions.set() to cap memory usage. */
+export function trimChannelSessions(): void {
+  while (channelSessions.size > MAX_CHANNEL_SESSIONS) {
+    const oldest = channelSessions.keys().next().value;
+    if (oldest) channelSessions.delete(oldest);
+    else break;
+  }
+}
 
 /**
  * Per-channel lock timestamps. Tracks when each channel lock was acquired
@@ -178,7 +189,7 @@ export function startDiscordBot(): void {
 
     // Simple built-in commands
     if (content === "!status" || content === "/status") {
-      const busy = state.jobRunning || state.thinkRunning || state.discordAdminRunning;
+      const busy = isAnyAgentBusy();
       await msg.reply(busy ? "Agent is busy running a task." : "Agent is idle and ready.");
       return;
     }

@@ -75,8 +75,6 @@ export function parseDelegationBlocks(text: string): { blocks: DelegationBlock[]
   // Also match inline JSON (no fences) as fallback
   const inlinePattern = /\{[^{}]*?"delegate"\s*:\s*"[^"]+?"[^{}]*?"action"\s*:\s*"[^"]+?"[^{}]*?\}/g;
   while ((match = inlinePattern.exec(text)) !== null) {
-    // Skip if already captured by fenced pattern
-    if (blocks.some(b => JSON.stringify(b) === match![1])) continue;
     try {
       const raw: unknown = JSON.parse(match[0]);
       if (raw && typeof raw === "object" && "delegate" in raw && "action" in raw) {

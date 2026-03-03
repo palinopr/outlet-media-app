@@ -52,8 +52,22 @@ const BANNED_WORDS = (process.env.DISCORD_BANNED_WORDS ?? "").split(",").filter(
 const RATE_LIMIT_MAX = 5;
 const RATE_LIMIT_WINDOW_MS = 10_000;
 
+/**
+ * Per-USER rate limiter: tracks message count within a sliding window.
+ * Used by checkAutoMod() to detect spam from a single user (>5 msgs in 10s).
+ * Keyed by user ID.
+ */
 const messageRates = new Map<string, { count: number; firstAt: number }>();
+
+/**
+ * Per-CHANNEL activity tracker: counts total messages and last-active timestamp.
+ * NOT a rate limiter -- used by getServerSnapshot() and runChannelHealthCheck()
+ * to identify stale channels. Keyed by channel ID.
+ * These serve different purposes: messageRates enforces spam limits,
+ * channelActivity provides analytics data for health checks.
+ */
 const channelActivity = new Map<string, { messages: number; lastActive: number }>();
+
 const userWarnings = new Map<string, number>();
 
 /** The admin channel ID (auto-detected or from env) */
