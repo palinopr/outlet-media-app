@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
@@ -9,7 +12,12 @@ const NAV_LINKS = [
 
 export function LandingNav() {
   return (
-    <nav className="sticky top-0 z-50 glass-card rounded-none border-x-0 border-t-0">
+    <motion.nav
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: "easeOut" }}
+      className="sticky top-0 z-50 glass-card rounded-none border-x-0 border-t-0"
+    >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
         <Link href="/landing" className="text-lg font-bold tracking-tight">
           Outlet Media
@@ -29,6 +37,6 @@ export function LandingNav() {
           </Button>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

@@ -1,3 +1,7 @@
+"use client";
+
+import { motion } from "framer-motion";
+
 const STEPS = [
   {
     number: "01",
@@ -19,16 +23,39 @@ const STEPS = [
   },
 ] as const;
 
+const container = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.15 } },
+};
+
+const item = {
+  hidden: { opacity: 0, x: -20 },
+  show: { opacity: 1, x: 0, transition: { duration: 0.5, ease: "easeOut" as const } },
+};
+
 export function LandingHowItWorks() {
   return (
-    <section id="how-it-works" className="mx-auto max-w-4xl px-6 py-24">
-      <p className="section-label text-center">How It Works</p>
-      <h2 className="mt-2 text-center text-3xl font-bold tracking-tight">
-        Three steps to better ads
-      </h2>
-      <div className="mt-14 space-y-10">
+    <section id="how-it-works" className="mx-auto max-w-4xl px-6 py-28">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.5 }}
+      >
+        <p className="section-label text-center">How It Works</p>
+        <h2 className="mt-2 text-center text-3xl font-bold tracking-tight sm:text-4xl">
+          Three steps to better ads
+        </h2>
+      </motion.div>
+      <motion.div
+        variants={container}
+        initial="hidden"
+        whileInView="show"
+        viewport={{ once: true, margin: "-60px" }}
+        className="mt-14 space-y-10"
+      >
         {STEPS.map((step) => (
-          <div key={step.number} className="flex gap-6">
+          <motion.div key={step.number} variants={item} className="flex gap-6">
             <span className="flex size-12 shrink-0 items-center justify-center rounded-full bg-cyan-400/10 text-lg font-bold text-cyan-400">
               {step.number}
             </span>
@@ -38,9 +65,9 @@ export function LandingHowItWorks() {
                 {step.description}
               </p>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

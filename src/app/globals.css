@@ -196,6 +196,32 @@
   color: oklch(0.65 0 0);
 }
 
+/* --- Landing page animations --- */
+
+@keyframes drift {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  100% { transform: translate(80px, -60px) rotate(45deg); }
+}
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.glow-cta {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(oklch(0.145 0 0), oklch(0.145 0 0)) padding-box,
+    conic-gradient(from var(--angle), #8b5cf6, #ec4899, #3b82f6, #8b5cf6) border-box;
+  animation: rotate-border 4s linear infinite;
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+@keyframes rotate-border {
+  to { --angle: 360deg; }
+}
+
 /* --- Print styles for export --- */
 
 @media print {
