@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { CopyButton } from "@/components/admin/copy-button";
 import { getClientSummaries } from "./data";
-import { fmtUsd, statusBadge } from "@/lib/formatters";
+import { fmtUsd, statusBadge, roasColor } from "@/lib/formatters";
 import { StatCard } from "@/components/admin/stat-card";
 import {
   Users,
@@ -113,15 +113,7 @@ export default async function ClientsPage() {
                       {fmtUsd(c.totalRevenue)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <span
-                        className={`text-sm font-semibold tabular-nums ${
-                          c.roas >= 4
-                            ? "text-emerald-400"
-                            : c.roas >= 2
-                            ? "text-amber-400"
-                            : "text-red-400"
-                        }`}
-                      >
+                      <span className={`text-sm font-semibold tabular-nums ${roasColor(c.roas)}`}>
                         {c.roas > 0 ? c.roas.toFixed(1) + "x" : "—"}
                       </span>
                     </TableCell>

@@ -2,9 +2,10 @@ import "dotenv/config";
 import { existsSync, mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { bot } from "./bot.js";
-import { startDiscordBot } from "./discord/core/entry.js";
+import { discordClient, startDiscordBot } from "./discord/core/entry.js";
 import { startScheduler } from "./scheduler.js";
 import { killAllClaude } from "./runner.js";
+import { stopStatus } from "./services/status-service.js";
 
 // Ensure session directory exists for TM One browser state
 const sessionDir = new URL("../session", import.meta.url).pathname;
@@ -57,6 +58,24 @@ try {
   // pgrep not found or no matches -- safe to ignore
 }
 
+// Validate required env vars -- fail fast with a clear error
+function validateEnv(): void {
+  const required = [
+    "DISCORD_TOKEN",
+    "SUPABASE_URL",
+    "SUPABASE_SERVICE_ROLE_KEY",
+    "TELEGRAM_BOT_TOKEN",
+    "CLAUDE_PATH",
+  ];
+  const missing = required.filter((k) => !process.env[k]);
+  if (missing.length > 0) {
+    console.error(`[startup] Missing required env vars: ${missing.join(", ")}`);
+    process.exit(1);
+  }
+}
+
+validateEnv();
+
 console.log("=== Outlet Media Agent ===");
 console.log("Powered by Claude Code CLI + Playwright MCP");
 console.log("");
@@ -84,17 +103,22 @@ bot.start({
 startScheduler();
 
 // Graceful shutdown -- kill child Claude processes to prevent orphaned ghosts
+function shutdown(): void {
+  killAllClaude();
+  stopStatus();
+  bot.stop();
+  discordClient?.destroy();
+}
+
 process.once("SIGINT", () => {
   console.log("\nShutting down...");
-  killAllClaude();
-  bot.stop();
+  shutdown();
   process.exit(0);
 });
 
 process.once("SIGTERM", () => {
-  console.log("SIGTERM received, killing child processes...");
-  killAllClaude();
-  bot.stop();
+  console.log("SIGTERM received, shutting down...");
+  shutdown();
   process.exit(0);
 });
 

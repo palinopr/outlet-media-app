@@ -14,7 +14,7 @@ import { dashboardButtons } from "../features/buttons.js";
 
 const CAMPAIGNS_FILE = "session/last-campaigns.json";
 const DASHBOARD_STATE_FILE = "session/dashboard-state.json";
-const GUILD_ID = "1340092028280770693";
+const GUILD_ID = process.env.DISCORD_GUILD_ID;
 const DASHBOARD_CHANNEL_NAME = "dashboard";
 
 interface CampaignData {
@@ -179,6 +179,10 @@ function buildDashboardEmbed(campaigns: CampaignData[]): EmbedBuilder {
  * Find the #dashboard channel in the guild.
  */
 async function findDashboardChannel(client: Client): Promise<TextChannel | null> {
+  if (!GUILD_ID) {
+    console.warn("[dashboard] DISCORD_GUILD_ID not set -- cannot find dashboard channel");
+    return null;
+  }
   const guild = client.guilds.cache.get(GUILD_ID);
   if (!guild) return null;
 

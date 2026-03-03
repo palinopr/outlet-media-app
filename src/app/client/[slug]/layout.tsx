@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { slugToLabel } from "@/lib/formatters";
 import { ClientNav } from "./components/client-nav";
 
 interface Props {
@@ -43,7 +44,7 @@ export default async function ClientLayout({ children, params }: Props) {
     }
   }
 
-  const clientName = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/_/g, " ");
+  const clientName = slugToLabel(slug);
 
   return (
     <div className="dark flex min-h-screen bg-background text-foreground">

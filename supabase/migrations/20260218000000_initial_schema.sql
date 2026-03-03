@@ -1,4 +1,6 @@
 -- Outlet Media x Zamora - Supabase Schema
+-- These migration files are the source of truth for the database schema.
+-- There is no standalone schema.sql -- run migrations in order or use `supabase db dump`.
 -- Run this in the Supabase SQL Editor: https://supabase.com/dashboard/project/_/sql
 
 -- ============================================================

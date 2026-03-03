@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { fmtNum, roasColor } from "@/lib/formatters";
-import { getCampaignStatusCfg } from "@/app/client/[slug]/lib";
+import { getCampaignStatusCfg } from "@/lib/status";
 
 export interface AdPreview {
   adId: string;

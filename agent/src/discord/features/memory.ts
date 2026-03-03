@@ -12,7 +12,7 @@
 
 import { readFile, appendFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { AGENT_INTERNALS } from "../core/router.js";
+import { AGENT_INTERNALS, PROMPT_TO_AGENT } from "../core/router.js";
 import { runClaude } from "../../runner.js";
 
 /** Per-agent cooldown to prevent memory updates on every response */
@@ -42,16 +42,6 @@ function queueMemorySync(agentKey: string): void {
     }
   }, SYNC_DEBOUNCE_MS));
 }
-
-/** Map promptFile names to AGENT_INTERNALS keys */
-const PROMPT_TO_AGENT: Record<string, string> = {
-  "boss": "boss",
-  "media-buyer": "media-buyer",
-  "tm-agent": "tm-agent",
-  "creative-agent": "creative",
-  "client-manager": "client-manager",
-  "reporting-agent": "reporting",
-};
 
 const EXTRACT_PROMPT = [
   "You are a memory extraction filter. Given a conversation between a user and an agent,",

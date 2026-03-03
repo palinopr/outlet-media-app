@@ -15,18 +15,8 @@
 import { writeFile, readdir } from "node:fs/promises";
 import { existsSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
-import { AGENT_INTERNALS } from "../core/router.js";
+import { AGENT_INTERNALS, PROMPT_TO_AGENT } from "../core/router.js";
 import { runClaude } from "../../runner.js";
-
-/** Map promptFile names to AGENT_INTERNALS keys */
-const PROMPT_TO_AGENT: Record<string, string> = {
-  "boss": "boss",
-  "media-buyer": "media-buyer",
-  "tm-agent": "tm-agent",
-  "creative-agent": "creative",
-  "client-manager": "client-manager",
-  "reporting-agent": "reporting",
-};
 
 /** Per-agent cooldown -- skill checks are expensive, limit frequency */
 const lastSkillCheck = new Map<string, number>();

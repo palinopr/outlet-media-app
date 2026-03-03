@@ -1,5 +1,4 @@
 export const META_API_VERSION = "v21.0";
-export const META_AD_ACCOUNT_ID = "787610255314938";
 
 export type DateRange = "today" | "yesterday" | "7" | "14" | "30" | "lifetime";
 

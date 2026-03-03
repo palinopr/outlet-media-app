@@ -9,7 +9,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Megaphone, TrendingUp, MousePointerClick } from "lucide-react";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
-import { fmtUsd, fmtNum, slugToLabel } from "@/lib/formatters";
+import { fmtUsd, fmtNum, slugToLabel, roasColor } from "@/lib/formatters";
 import { getCampaignStatusCfg } from "../lib";
 import { getCampaignsPageData } from "../data";
 
@@ -212,12 +212,7 @@ export default async function ClientCampaigns({ params }: Props) {
                     <TableCell className="text-right text-sm font-medium tabular-nums">{fmtUsd(c.spend)}</TableCell>
                     <TableCell className="text-right text-sm font-medium tabular-nums">{fmtUsd(c.revenue)}</TableCell>
                     <TableCell className="text-right">
-                      <span className={`text-sm font-semibold tabular-nums ${
-                        (c.roas ?? 0) >= 4 ? "text-emerald-400"
-                        : (c.roas ?? 0) >= 2 ? "text-amber-400"
-                        : c.roas != null ? "text-red-400"
-                        : "text-muted-foreground"
-                      }`}>
+                      <span className={`text-sm font-semibold tabular-nums ${roasColor(c.roas)}`}>
                         {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
                       </span>
                     </TableCell>

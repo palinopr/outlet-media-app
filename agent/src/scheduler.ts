@@ -18,9 +18,6 @@ const TM_TASK = "Run the TM One monitor: log in to https://one.ticketmaster.com,
 const META_TASK = "Run the Meta Ads sync: pull all active campaigns and last-30-day insights for ad account act_787610255314938, save to session/last-campaigns.json, POST to the ingest endpoint. Report spend and ROAS summary.";
 const THINK_TASK = "Run your proactive self-improvement cycle. Read LEARNINGS.md first to pick which priority to focus on this cycle.";
 
-let tmRunning    = false;
-let metaRunning  = false;
-let thinkRunning = false;
 
 /**
  * Start the scheduler.
@@ -83,11 +80,11 @@ async function pingHeartbeat() {
 }
 
 async function runTmCheck() {
-  if (tmRunning) {
+  if (state.tmRunning) {
     console.log("[scheduler] TM check already running, skipping");
     return;
   }
-  tmRunning = true;
+  state.tmRunning = true;
   console.log("[scheduler] Running scheduled TM One check...");
   await notifyChannel("active-jobs", ">> **TM One sync** started").catch(() => {});
 
@@ -109,16 +106,16 @@ async function runTmCheck() {
       notifyChannel("agent-alerts", `**TM One check failed**\n${msg}`).catch(() => {}),
     ]);
   } finally {
-    tmRunning = false;
+    state.tmRunning = false;
   }
 }
 
 async function runMetaSync() {
-  if (metaRunning) {
+  if (state.metaRunning) {
     console.log("[scheduler] Meta sync already running, skipping");
     return;
   }
-  metaRunning = true;
+  state.metaRunning = true;
   console.log("[scheduler] Running scheduled Meta sync...");
   await notifyChannel("active-jobs", ">> **Meta Ads sync** started").catch(() => {});
 
@@ -149,7 +146,7 @@ async function runMetaSync() {
       notifyChannel("agent-alerts", `**Meta sync failed**\n${msg}`).catch(() => {}),
     ]);
   } finally {
-    metaRunning = false;
+    state.metaRunning = false;
   }
 }
 
@@ -181,12 +178,11 @@ async function runDiscordHealthCheck() {
 }
 
 async function runThinkCycle() {
-  if (thinkRunning || tmRunning || metaRunning || state.jobRunning || state.discordAdminRunning) {
+  if (state.thinkRunning || state.tmRunning || state.metaRunning || state.jobRunning || state.discordAdminRunning) {
     console.log("[think] Skipping -- another task is running");
     return;
   }
 
-  thinkRunning = true;
   state.thinkRunning = true;
   console.log("[think] Starting proactive think cycle...");
   await notifyChannel("active-jobs", ">> **Think loop** started").catch(() => {});
@@ -220,7 +216,6 @@ async function runThinkCycle() {
     console.error("[think] Cycle failed:", msg);
     await notifyChannel("active-jobs", `x **Think loop** failed: ${msg.slice(0, 200)}`).catch(() => {});
   } finally {
-    thinkRunning = false;
     state.thinkRunning = false;
   }
 }

@@ -22,7 +22,17 @@ export async function GET(request: Request) {
   url.searchParams.set("fields", "id,name,status,objective,daily_budget,lifetime_budget");
 
   const res = await fetch(url.toString());
-  const data = await res.json();
+
+  if (!res.ok) {
+    return apiError(`Meta API returned ${res.status}`, res.status);
+  }
+
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    return apiError("Meta API returned invalid JSON", 502);
+  }
 
   return NextResponse.json(data);
 }

@@ -6,21 +6,7 @@ import { Send, Loader2, Bot, User, RefreshCw } from "lucide-react";
 import { timeAgo } from "@/lib/formatters";
 import { AgentJob } from "@/app/admin/agents/data";
 import { AGENT_CONFIG } from "./constants";
-
-function StatusBadge({ status }: { status: AgentJob["status"] }) {
-  const map = {
-    pending: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-    running: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    done:    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    error:   "bg-red-500/10 text-red-400 border-red-500/20",
-  };
-  return (
-    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${map[status]}`}>
-      {status === "running" && <Loader2 className="h-2.5 w-2.5 mr-1 animate-spin" />}
-      {status}
-    </span>
-  );
-}
+import { StatusBadge } from "./status-badge";
 
 function ResultText({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);

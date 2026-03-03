@@ -253,36 +253,54 @@ function buildEventCards(events: TmEvent[]): EventCard[] {
   });
 }
 
-// --- Campaigns page data (Meta API first, Supabase fallback + snapshots) ---
+// --- Shared campaign fetch: Supabase rows + Meta API resolution ---
 
-export async function getCampaignsPageData(slug: string): Promise<{
+type SupabaseCampaignRow = {
+  campaign_id: string;
+  name: string | null;
+  status: string | null;
+  spend: number | null;
+  roas: number | null;
+  impressions: number | null;
+  clicks: number | null;
+  ctr: number | null;
+  cpc: number | null;
+  cpm: number | null;
+  daily_budget: number | null;
+  start_time: string | null;
+};
+
+async function fetchClientCampaigns(
+  slug: string,
+  range: DateRange,
+): Promise<{
   campaigns: CampaignCard[];
-  snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null; campaign_id: string }>;
+  campaignIds: string[];
   dataSource: "meta_api" | "supabase";
-}> {
-  const empty = { campaigns: [], snapshots: [], dataSource: "supabase" as const };
-  if (!supabaseAdmin) return empty;
+} | null> {
+  if (!supabaseAdmin) return null;
 
   const { data: campaignRows } = await supabaseAdmin
     .from("meta_campaigns")
     .select("campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time")
     .eq("client_slug", slug);
 
-  if (!campaignRows || campaignRows.length === 0) return empty;
+  if (!campaignRows || campaignRows.length === 0) return null;
 
-  const campaignIds = campaignRows.map((c) => c.campaign_id);
+  const rows = campaignRows as SupabaseCampaignRow[];
+  const campaignIds = rows.map((c) => c.campaign_id);
+
+  const metaResult = await fetchMetaInsights(campaignIds, range);
 
   let campaigns: CampaignCard[];
   let dataSource: "meta_api" | "supabase";
-
-  const metaResult = await fetchMetaInsights(campaignIds, "30");
 
   if (metaResult && metaResult.insights.length > 0) {
     campaigns = buildFromMeta(metaResult.insights, metaResult.campaigns);
     dataSource = "meta_api";
   } else if (metaResult && metaResult.campaigns.length > 0 && metaResult.insights.length === 0) {
     const statusMap = new Map(metaResult.campaigns.map((c) => [c.id, c]));
-    campaigns = campaignRows.map((r) => {
+    campaigns = rows.map((r) => {
       const meta = statusMap.get(r.campaign_id);
       return {
         campaignId: r.campaign_id,
@@ -306,22 +324,37 @@ export async function getCampaignsPageData(slug: string): Promise<{
     });
     dataSource = "meta_api";
   } else {
-    campaigns = buildFromSupabase(campaignRows);
+    campaigns = buildFromSupabase(rows);
     dataSource = "supabase";
   }
 
-  campaigns.sort((a, b) => b.spend - a.spend);
+  return { campaigns, campaignIds, dataSource };
+}
+
+// --- Campaigns page data (Meta API first, Supabase fallback + snapshots) ---
+
+export async function getCampaignsPageData(slug: string): Promise<{
+  campaigns: CampaignCard[];
+  snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null; campaign_id: string }>;
+  dataSource: "meta_api" | "supabase";
+}> {
+  const empty = { campaigns: [], snapshots: [], dataSource: "supabase" as const };
+
+  const result = await fetchClientCampaigns(slug, "30");
+  if (!result) return empty;
+
+  result.campaigns.sort((a, b) => b.spend - a.spend);
 
   let snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null; campaign_id: string }> = [];
-  const { data } = await supabaseAdmin
+  const { data } = await supabaseAdmin!
     .from("campaign_snapshots")
     .select("snapshot_date, roas, spend, campaign_id")
-    .in("campaign_id", campaignIds)
+    .in("campaign_id", result.campaignIds)
     .order("snapshot_date", { ascending: true })
     .limit(500);
   snapshots = data ?? [];
 
-  return { campaigns, snapshots, dataSource };
+  return { campaigns: result.campaigns, snapshots, dataSource: result.dataSource };
 }
 
 // --- Main data function ---
@@ -330,60 +363,13 @@ export async function getData(
   slug: string,
   range: DateRange,
 ): Promise<ClientData> {
-  if (!supabaseAdmin) return EMPTY;
+  const result = await fetchClientCampaigns(slug, range);
+  if (!result) return EMPTY;
 
-  // Step 1: Get campaign IDs for this client from Supabase
-  const { data: campaignRows } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select(
-      "campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time",
-    )
-    .eq("client_slug", slug);
+  const { campaigns, dataSource } = result;
 
-  if (!campaignRows || campaignRows.length === 0) return EMPTY;
-
-  const campaignIds = campaignRows.map((c) => c.campaign_id);
-
-  // Step 2: Try Meta Graph API for fresh date-range-specific data
-  let campaigns: CampaignCard[];
-  let dataSource: "meta_api" | "supabase";
-
-  const metaResult = await fetchMetaInsights(campaignIds, range);
-
-  if (metaResult && metaResult.insights.length > 0) {
-    campaigns = buildFromMeta(metaResult.insights, metaResult.campaigns);
-    dataSource = "meta_api";
-  } else if (metaResult && metaResult.campaigns.length > 0 && metaResult.insights.length === 0) {
-    // Meta API connected but no insights for this date range (e.g., no spend today).
-    // Show campaigns with zero metrics for the period, but use Meta status.
-    const statusMap = new Map(metaResult.campaigns.map((c) => [c.id, c]));
-    campaigns = campaignRows.map((r) => {
-      const meta = statusMap.get(r.campaign_id);
-      return {
-        campaignId: r.campaign_id,
-        name: meta?.name ?? r.name ?? "Unknown Campaign",
-        status: meta?.status ?? r.status ?? "UNKNOWN",
-        spend: 0,
-        roas: null,
-        revenue: null,
-        impressions: 0,
-        clicks: 0,
-        ctr: null,
-        cpc: null,
-        cpm: null,
-        dailyBudget: meta?.daily_budget ? parseInt(meta.daily_budget) / 100 : (r.daily_budget != null ? r.daily_budget / 100 : null),
-        startTime: meta?.start_time ?? r.start_time,
-      };
-    });
-    dataSource = "meta_api";
-  } else {
-    // Fallback: use Supabase data (lifetime totals from last agent sync)
-    campaigns = buildFromSupabase(campaignRows);
-    dataSource = "supabase";
-  }
-
-  // Step 3: Fetch TM events for this client (optional enrichment)
-  const eventsRes = await supabaseAdmin
+  // Fetch TM events for this client (optional enrichment)
+  const eventsRes = await supabaseAdmin!
     .from("tm_events")
     .select("*")
     .eq("client_slug", slug)
@@ -397,7 +383,7 @@ export async function getData(
   let audience: AudienceProfile | null = null;
   if (tmEvents.length > 0) {
     const tmIds = tmEvents.map((e) => e.tm_id);
-    const { data: demoRows } = await supabaseAdmin
+    const { data: demoRows } = await supabaseAdmin!
       .from("tm_event_demographics")
       .select("*")
       .in("tm_id", tmIds);

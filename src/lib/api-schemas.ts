@@ -120,6 +120,12 @@ export const UserUpdateSchema = z.object({
   role: z.string().min(1).nullable().optional(),
 });
 
+// ─── Heartbeat schema ───────────────────────────────────────────────────────
+
+export const HeartbeatPayloadSchema = z.object({
+  secret: z.string().min(1),
+});
+
 // ─── Query param sanitizers ─────────────────────────────────────────────────
 
 /** Strip anything except alphanumeric, underscore, dash from an ID param */

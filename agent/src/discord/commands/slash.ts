@@ -17,8 +17,8 @@ import {
   type TextChannel,
 } from "discord.js";
 
-const CLIENT_ID = "1475595538329244011";
-const GUILD_ID = "1340092028280770693";
+const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
+const GUILD_ID = process.env.DISCORD_GUILD_ID;
 
 // --- Command Definitions --------------------------------------------------
 
@@ -59,6 +59,11 @@ const commands = [
  * Guild-scoped for instant availability (no 1-hour global cache).
  */
 export async function registerSlashCommands(token: string): Promise<void> {
+  if (!CLIENT_ID || !GUILD_ID) {
+    console.warn("[slash] DISCORD_CLIENT_ID or DISCORD_GUILD_ID not set -- skipping slash command registration");
+    return;
+  }
+
   const rest = new REST({ version: "10" }).setToken(token);
 
   try {

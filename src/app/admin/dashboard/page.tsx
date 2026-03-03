@@ -132,20 +132,8 @@ export default async function AdminDashboard() {
 
       {/* Secondary stats */}
       <div className="grid grid-cols-3 gap-4">
-        {secondaryStats.map(({ label, value, sub, icon: Icon }) => (
-          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border/80 hover:shadow-md hover:shadow-black/10">
-            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.02] to-transparent pointer-events-none" />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-                <div className="h-7 w-7 rounded-lg bg-white/[0.06] flex items-center justify-center">
-                  <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                </div>
-              </div>
-              <p className="text-xl font-bold tracking-tight">{value}</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>
-            </div>
-          </div>
+        {secondaryStats.map((s) => (
+          <StatCard key={s.label} {...s} />
         ))}
       </div>
 

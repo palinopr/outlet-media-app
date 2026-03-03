@@ -1,14 +1,20 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { secretGuard, parseJsonBody } from "@/lib/api-helpers";
+import { HeartbeatPayloadSchema } from "@/lib/api-schemas";
+import { secretGuard, parseJsonBody, apiError } from "@/lib/api-helpers";
 
 // Agent calls this every 30s to signal it's alive.
 // Stored as a special job row so no schema changes needed.
 export async function POST(request: Request) {
-  const raw = await parseJsonBody<{ secret?: string }>(request);
+  const raw = await parseJsonBody<unknown>(request);
   if (raw instanceof Response) return raw;
 
-  const secretErr = secretGuard(raw.secret);
+  const parsed = HeartbeatPayloadSchema.safeParse(raw);
+  if (!parsed.success) {
+    return apiError("Invalid heartbeat payload", 400);
+  }
+
+  const secretErr = secretGuard(parsed.data.secret);
   if (secretErr) return secretErr;
 
   if (!supabaseAdmin) {

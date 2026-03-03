@@ -228,3 +228,13 @@ export function isInternalChannel(channelName: string): boolean {
 export function isConfigChannel(channelName: string): boolean {
   return channelName.startsWith("cfg-");
 }
+
+/** Map promptFile names to AGENT_INTERNALS keys (shared by memory.ts and skills.ts) */
+export const PROMPT_TO_AGENT: Record<string, string> = {
+  "boss": "boss",
+  "media-buyer": "media-buyer",
+  "tm-agent": "tm-agent",
+  "creative-agent": "creative",
+  "client-manager": "client-manager",
+  "reporting-agent": "reporting",
+};

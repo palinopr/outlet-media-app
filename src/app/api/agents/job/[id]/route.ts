@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { sanitizeId } from "@/lib/api-schemas";
 import { authGuard, apiError } from "@/lib/api-helpers";
 
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params;
+  const { id: rawId } = await params;
 
   const { error: authErr } = await authGuard();
   if (authErr) return authErr;
+
+  const id = sanitizeId(rawId);
+  if (!id) {
+    return apiError("Invalid job ID", 400);
+  }
 
   if (!supabaseAdmin) {
     return apiError("DB not configured", 503);

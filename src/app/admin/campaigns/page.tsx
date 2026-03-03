@@ -13,7 +13,6 @@ import { getCampaigns, type SnapshotPoint } from "./data";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { Suspense } from "react";
 import { fmtUsd, fmtNum, centsToUsd, statusBadge, slugToLabel, fmtObjective, computeMarginalRoas, roasColor } from "@/lib/formatters";
-import { META_AD_ACCOUNT_ID } from "@/lib/constants";
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
@@ -216,7 +215,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
                   </TableCell>
                   <TableCell>
                     <a
-                      href={`https://www.facebook.com/adsmanager/manage/campaigns?act=${META_AD_ACCOUNT_ID}&selected_campaign_ids=${c.campaign_id}`}
+                      href={`https://www.facebook.com/adsmanager/manage/campaigns?act=${process.env.META_AD_ACCOUNT_ID}&selected_campaign_ids=${c.campaign_id}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-muted-foreground hover:text-foreground transition-colors"

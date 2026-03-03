@@ -19,7 +19,17 @@ export async function GET(request: Request) {
   url.searchParams.set("size", "20");
 
   const res = await fetch(url.toString());
-  const data = await res.json();
+
+  if (!res.ok) {
+    return apiError(`Ticketmaster API returned ${res.status}`, res.status);
+  }
+
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch {
+    return apiError("Ticketmaster API returned invalid JSON", 502);
+  }
 
   return NextResponse.json(data);
 }

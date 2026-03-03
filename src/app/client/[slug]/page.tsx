@@ -12,7 +12,7 @@ import {
   Ticket,
 } from "lucide-react";
 import { getData, type DateRange } from "./data";
-import { fmtUsd, fmtNum, roasColor } from "@/lib/formatters";
+import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { roasLabel, generateInsights, DATE_OPTIONS } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
 import { ClientPortalFooter } from "./components/client-portal-footer";
@@ -45,7 +45,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = data;
 
   const insights = generateInsights(heroStats, campaigns, events, audience);
-  const clientName = slug.charAt(0).toUpperCase() + slug.slice(1).replace(/_/g, " ");
+  const clientName = slugToLabel(slug);
   const now = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
   return (

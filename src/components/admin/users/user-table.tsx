@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { UserPlus, Check, Loader2 } from "lucide-react";
 import { UserRow } from "@/app/admin/users/data";
+import { fmtDate } from "@/lib/formatters";
 
 const KNOWN_CLIENTS = ["zamora", "kybba", "beamina", "happy_paws"] as const;
 
@@ -165,14 +166,6 @@ function AssignCell({ user }: { user: UserRow }) {
 
 export function UserTable({ users }: Props) {
   const [showInvite, setShowInvite] = useState(false);
-
-  function fmtDate(s: string) {
-    return new Date(s).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  }
 
   return (
     <div className="space-y-4">
