@@ -29,7 +29,7 @@ export function DataTableToolbar<TData>({
   const column = searchColumn ? table.getColumn(searchColumn) : null;
 
   return (
-    <div className="flex items-center justify-between gap-2 py-2">
+    <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border/60">
       <div className="flex items-center gap-2 flex-1">
         {column && (
           <div className="relative max-w-xs">

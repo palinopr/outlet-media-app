@@ -64,14 +64,14 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <DataTableToolbar
-        table={table}
-        searchColumn={searchColumn}
-        searchPlaceholder={searchPlaceholder}
-      >
-        {toolbar}
-      </DataTableToolbar>
       <Card className="border-border/60">
+        <DataTableToolbar
+          table={table}
+          searchColumn={searchColumn}
+          searchPlaceholder={searchPlaceholder}
+        >
+          {toolbar}
+        </DataTableToolbar>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
