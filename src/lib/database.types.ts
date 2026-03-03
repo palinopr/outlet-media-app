@@ -286,6 +286,57 @@ export type Database = {
         }
         Relationships: []
       }
+      client_accounts: {
+        Row: {
+          id: string
+          clerk_user_id: string
+          client_slug: string
+          meta_user_id: string
+          ad_account_id: string
+          ad_account_name: string | null
+          access_token_encrypted: string
+          token_expires_at: string
+          scopes: string[]
+          status: string
+          connected_at: string
+          last_used_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          clerk_user_id: string
+          client_slug: string
+          meta_user_id: string
+          ad_account_id: string
+          ad_account_name?: string | null
+          access_token_encrypted: string
+          token_expires_at: string
+          scopes?: string[]
+          status?: string
+          connected_at?: string
+          last_used_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          clerk_user_id?: string
+          client_slug?: string
+          meta_user_id?: string
+          ad_account_id?: string
+          ad_account_name?: string | null
+          access_token_encrypted?: string
+          token_expires_at?: string
+          scopes?: string[]
+          status?: string
+          connected_at?: string
+          last_used_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       compliance_logs: {
         Row: {
           call_id: string
