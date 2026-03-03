@@ -106,17 +106,33 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
   const parsed = BulkAssignSchema.parse(formData);
   if (!supabaseAdmin) throw new Error("DB not configured");
 
-  const now = new Date().toISOString();
-  const rows = parsed.campaignIds.map((id) => ({
-    campaign_id: id,
-    client_slug: parsed.clientSlug,
-    updated_at: now,
-  }));
+  // Auto-create client in clients table if it doesn't exist
+  const { data: existing } = await supabaseAdmin
+    .from("clients")
+    .select("id")
+    .eq("slug", parsed.clientSlug)
+    .maybeSingle();
 
-  for (const row of rows) {
+  if (!existing) {
+    const name = parsed.clientSlug
+      .split("_")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+    const { error: clientErr } = await supabaseAdmin
+      .from("clients")
+      .insert({ name, slug: parsed.clientSlug, status: "active" });
+    if (clientErr) throw new Error(clientErr.message);
+  }
+
+  // Save campaign -> client overrides
+  const now = new Date().toISOString();
+  for (const campaignId of parsed.campaignIds) {
     const { error: upsertErr } = await supabaseAdmin
       .from("campaign_client_overrides")
-      .upsert(row, { onConflict: "campaign_id" });
+      .upsert(
+        { campaign_id: campaignId, client_slug: parsed.clientSlug, updated_at: now },
+        { onConflict: "campaign_id" },
+      );
     if (upsertErr) throw new Error(upsertErr.message);
   }
 
@@ -126,6 +142,7 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
   });
 
   revalidatePath("/admin/campaigns");
+  revalidatePath("/admin/clients");
   return parsed.campaignIds.length;
 }
 
