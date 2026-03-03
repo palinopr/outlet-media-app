@@ -46,15 +46,24 @@ interface MetaPagedResponse<T> {
   paging?: { next?: string };
 }
 
-async function fetchAllPages<T>(url: string): Promise<T[]> {
+async function fetchAllPages<T>(url: string, label?: string): Promise<T[]> {
   const all: T[] = [];
   let nextUrl: string | null = url;
   while (nextUrl) {
     const res = await fetch(nextUrl, { next: { revalidate: 300 } });
-    if (!res.ok) return all;
-    const json: MetaPagedResponse<T> = await res.json();
-    if (json.data) all.push(...json.data);
-    nextUrl = json.paging?.next ?? null;
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error(`[meta-campaigns] ${label ?? "fetch"} failed (${res.status}): ${body.slice(0, 500)}`);
+      return all;
+    }
+    const json = await res.json();
+    if (json.error) {
+      console.error(`[meta-campaigns] ${label ?? "fetch"} API error:`, json.error.message ?? json.error);
+      return all;
+    }
+    const paged = json as MetaPagedResponse<T>;
+    if (paged.data) all.push(...paged.data);
+    nextUrl = paged.paging?.next ?? null;
   }
   return all;
 }
@@ -134,10 +143,12 @@ export async function fetchAllCampaigns(
 
   try {
     const [rawCampaigns, rawInsights, rawDaily] = await Promise.all([
-      fetchAllPages<RawCampaign>(campaignsUrl.toString()),
-      fetchAllPages<RawInsight>(insightsUrl.toString()),
-      fetchAllPages<RawDailyInsight>(dailyUrl.toString()),
+      fetchAllPages<RawCampaign>(campaignsUrl.toString(), "campaigns"),
+      fetchAllPages<RawInsight>(insightsUrl.toString(), "insights"),
+      fetchAllPages<RawDailyInsight>(dailyUrl.toString(), "daily"),
     ]);
+
+    console.log(`[meta-campaigns] Fetched ${rawCampaigns.length} campaigns, ${rawInsights.length} insights, ${rawDaily.length} daily rows`);
 
     const insightMap = new Map<string, RawInsight>();
     for (const row of rawInsights) {
