@@ -93,6 +93,14 @@ interface RawDailyInsight extends RawInsight {
   date_start: string;
 }
 
+function buildCampaignFilter(ids: string[]): string {
+  return JSON.stringify([
+    { field: "campaign.id", operator: "IN", value: ids },
+  ]);
+}
+
+const BATCH_SIZE = 100;
+
 export async function fetchAllCampaigns(
   range: DateRange,
 ): Promise<MetaCampaignsResult> {
@@ -108,10 +116,10 @@ export async function fetchAllCampaigns(
 
   const { token, accountId } = creds;
   const preset = META_PRESETS[range];
+  const base = `https://graph.facebook.com/${META_API_VERSION}/act_${accountId}`;
 
-  const campaignsUrl = new URL(
-    `https://graph.facebook.com/${META_API_VERSION}/act_${accountId}/campaigns`,
-  );
+  // Phase 1: fetch all campaign objects
+  const campaignsUrl = new URL(`${base}/campaigns`);
   campaignsUrl.searchParams.set("access_token", token);
   campaignsUrl.searchParams.set(
     "fields",
@@ -119,36 +127,58 @@ export async function fetchAllCampaigns(
   );
   campaignsUrl.searchParams.set("limit", "500");
 
-  const insightsUrl = new URL(
-    `https://graph.facebook.com/${META_API_VERSION}/act_${accountId}/insights`,
-  );
-  insightsUrl.searchParams.set("access_token", token);
-  insightsUrl.searchParams.set("level", "campaign");
-  insightsUrl.searchParams.set(
-    "fields",
-    "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,purchase_roas",
-  );
-  insightsUrl.searchParams.set("date_preset", preset);
-  insightsUrl.searchParams.set("limit", "500");
-
-  const dailyUrl = new URL(
-    `https://graph.facebook.com/${META_API_VERSION}/act_${accountId}/insights`,
-  );
-  dailyUrl.searchParams.set("access_token", token);
-  dailyUrl.searchParams.set("level", "campaign");
-  dailyUrl.searchParams.set("fields", "campaign_id,spend,purchase_roas");
-  dailyUrl.searchParams.set("date_preset", preset);
-  dailyUrl.searchParams.set("time_increment", "1");
-  dailyUrl.searchParams.set("limit", "5000");
-
   try {
-    const [rawCampaigns, rawInsights, rawDaily] = await Promise.all([
-      fetchAllPages<RawCampaign>(campaignsUrl.toString(), "campaigns"),
-      fetchAllPages<RawInsight>(insightsUrl.toString(), "insights"),
-      fetchAllPages<RawDailyInsight>(dailyUrl.toString(), "daily"),
-    ]);
+    const rawCampaigns = await fetchAllPages<RawCampaign>(
+      campaignsUrl.toString(),
+      "campaigns",
+    );
 
-    console.log(`[meta-campaigns] Fetched ${rawCampaigns.length} campaigns, ${rawInsights.length} insights, ${rawDaily.length} daily rows`);
+    // Phase 2: fetch insights in batches with campaign ID filtering
+    const allIds = rawCampaigns.map((c) => c.id);
+    const batches: string[][] = [];
+    for (let i = 0; i < allIds.length; i += BATCH_SIZE) {
+      batches.push(allIds.slice(i, i + BATCH_SIZE));
+    }
+
+    const insightPromises: Promise<RawInsight[]>[] = [];
+    const dailyPromises: Promise<RawDailyInsight[]>[] = [];
+
+    for (const batch of batches) {
+      const filter = buildCampaignFilter(batch);
+
+      const insightsUrl = new URL(`${base}/insights`);
+      insightsUrl.searchParams.set("access_token", token);
+      insightsUrl.searchParams.set("level", "campaign");
+      insightsUrl.searchParams.set(
+        "fields",
+        "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,purchase_roas",
+      );
+      insightsUrl.searchParams.set("date_preset", preset);
+      insightsUrl.searchParams.set("filtering", filter);
+      insightsUrl.searchParams.set("limit", "500");
+      insightPromises.push(
+        fetchAllPages<RawInsight>(insightsUrl.toString(), "insights"),
+      );
+
+      const dailyUrl = new URL(`${base}/insights`);
+      dailyUrl.searchParams.set("access_token", token);
+      dailyUrl.searchParams.set("level", "campaign");
+      dailyUrl.searchParams.set("fields", "campaign_id,spend,purchase_roas");
+      dailyUrl.searchParams.set("date_preset", preset);
+      dailyUrl.searchParams.set("time_increment", "1");
+      dailyUrl.searchParams.set("filtering", filter);
+      dailyUrl.searchParams.set("limit", "5000");
+      dailyPromises.push(
+        fetchAllPages<RawDailyInsight>(dailyUrl.toString(), "daily"),
+      );
+    }
+
+    const insightBatches = await Promise.all(insightPromises);
+    const dailyBatches = await Promise.all(dailyPromises);
+    const rawInsights = insightBatches.flat();
+    const rawDaily = dailyBatches.flat();
+
+    console.log(`[meta-campaigns] Fetched ${rawCampaigns.length} campaigns, ${rawInsights.length} insights, ${rawDaily.length} daily rows (${batches.length} batches)`);
 
     const insightMap = new Map<string, RawInsight>();
     for (const row of rawInsights) {
