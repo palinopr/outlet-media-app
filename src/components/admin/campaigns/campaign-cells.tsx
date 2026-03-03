@@ -6,7 +6,6 @@ import {
   slugToLabel,
   type SnapshotPoint,
 } from "@/lib/formatters";
-import { StatusSelect } from "@/components/admin/status-select";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { syncCampaignToMeta } from "@/app/admin/actions/campaigns";
 import { toast } from "sonner";
