@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
 import { META_API_VERSION } from "@/lib/constants";
+import { getClientToken, getActiveAccountsForSlug } from "@/lib/client-token";
 import type { TmEvent, DemographicsRow, CampaignCard, EventCard, HeroStats, AudienceProfile } from "./types";
 import { buildAudienceProfile } from "./lib";
 
@@ -61,11 +62,9 @@ interface MetaCampaignRow {
 async function fetchMetaInsights(
   campaignIds: string[],
   range: DateRange,
+  token: string,
+  rawAccountId: string,
 ): Promise<{ insights: MetaInsightRow[]; campaigns: MetaCampaignRow[] } | null> {
-  const token = process.env.META_ACCESS_TOKEN;
-  const rawAccountId = process.env.META_AD_ACCOUNT_ID;
-  if (!token || !rawAccountId) return null;
-
   // Strip act_ prefix if present -- the URL template adds it
   const accountId = rawAccountId.replace(/^act_/, "");
 
@@ -288,7 +287,27 @@ async function fetchClientCampaigns(
   const rows = campaignRows as SupabaseCampaignRow[];
   const campaignIds = rows.map((c) => c.campaign_id);
 
-  const metaResult = await fetchMetaInsights(campaignIds, range);
+  // Resolve per-client token, fall back to global env var
+  const clientAccounts = await getActiveAccountsForSlug(slug);
+
+  let metaToken: string | null = null;
+  let adAccountId: string | null = null;
+
+  if (clientAccounts.length > 0) {
+    const account = clientAccounts[0];
+    adAccountId = account.ad_account_id;
+    metaToken = await getClientToken(slug, account.ad_account_id);
+  }
+
+  if (!metaToken) {
+    metaToken = process.env.META_ACCESS_TOKEN ?? null;
+    adAccountId = process.env.META_AD_ACCOUNT_ID ?? null;
+  }
+
+  const metaResult =
+    metaToken && adAccountId
+      ? await fetchMetaInsights(campaignIds, range, metaToken, adAccountId)
+      : null;
 
   let campaigns: CampaignCard[];
   let dataSource: "meta_api" | "supabase";
@@ -324,6 +343,15 @@ async function fetchClientCampaigns(
   } else {
     campaigns = buildFromSupabase(rows);
     dataSource = "supabase";
+  }
+
+  // Update last_used_at when a per-client token was used successfully
+  if (dataSource === "meta_api" && clientAccounts.length > 0 && supabaseAdmin && adAccountId) {
+    supabaseAdmin
+      .from("client_accounts")
+      .update({ last_used_at: new Date().toISOString() })
+      .eq("ad_account_id", adAccountId)
+      .then(() => {}, () => {});
   }
 
   return { campaigns, campaignIds, dataSource };
