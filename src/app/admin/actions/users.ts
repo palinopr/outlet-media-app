@@ -57,19 +57,19 @@ export async function revokeInvitation(formData: { invitationId: string }) {
   const parsed = RevokeInvitationSchema.parse(formData);
   const client = await clerkClient();
 
-  // Get the email from the target invitation, then revoke ALL non-revoked
-  // invitations for that email so old accepted/pending ones don't linger.
-  const { data: allInvitations } = await client.invitations.getInvitationList({
-    query: parsed.invitationId,
-  });
+  // Find the target invitation's email, then revoke all revocable
+  // invitations for that address so old pending/expired ones don't linger.
+  // Only "pending" and "expired" can be revoked -- "accepted" cannot.
+  const { data: allInvitations } = await client.invitations.getInvitationList();
   const target = allInvitations.find((i) => i.id === parsed.invitationId);
   const email = target?.emailAddress;
 
   if (email) {
-    const { data: byEmail } = await client.invitations.getInvitationList({ query: email });
-    const toRevoke = byEmail.filter((i) => i.status !== "revoked");
-    await Promise.all(toRevoke.map((i) => client.invitations.revokeInvitation(i.id)));
-    await logAudit("invitation", parsed.invitationId, "revoke_all", { email, count: toRevoke.length }, null);
+    const revocable = allInvitations.filter(
+      (i) => i.emailAddress.toLowerCase() === email.toLowerCase() && (i.status === "pending" || i.status === "expired")
+    );
+    await Promise.all(revocable.map((i) => client.invitations.revokeInvitation(i.id)));
+    await logAudit("invitation", parsed.invitationId, "revoke_all", { email, count: revocable.length }, null);
   } else {
     await client.invitations.revokeInvitation(parsed.invitationId);
     await logAudit("invitation", parsed.invitationId, "revoke", null, null);

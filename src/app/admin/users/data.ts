@@ -43,18 +43,16 @@ export async function getUsers(): Promise<UserRow[]> {
   try {
     const result = await client.invitations.getInvitationList();
     const existingEmails = new Set(userRows.map((u) => u.email.toLowerCase()));
-    // Show pending/expired invites, plus "accepted" invites where the user
-    // never finished sign-up (no matching user account exists)
-    // Prefer pending > expired > accepted (incomplete sign-up).
-    // Deduplicate by email -- keep the most actionable invitation per address.
+    // Only show pending/expired invitations -- these are actionable (revocable).
+    // Accepted invitations without a user account are stale; admin can re-invite
+    // with ignoreExisting. Deduplicate by email, preferring pending over expired.
     const bestByEmail = new Map<string, (typeof result.data)[number]>();
-    const priority: Record<string, number> = { pending: 3, expired: 2, accepted: 1 };
     for (const inv of result.data) {
       const email = inv.emailAddress.toLowerCase();
-      if (existingEmails.has(email)) continue; // user already signed up
-      if (inv.status === "revoked") continue;
+      if (existingEmails.has(email)) continue;
+      if (inv.status !== "pending" && inv.status !== "expired") continue;
       const existing = bestByEmail.get(email);
-      if (!existing || (priority[inv.status] ?? 0) > (priority[existing.status] ?? 0)) {
+      if (!existing || (inv.status === "pending" && existing.status !== "pending")) {
         bestByEmail.set(email, inv);
       }
     }
