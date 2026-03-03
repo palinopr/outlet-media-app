@@ -41,7 +41,9 @@ export async function getUsers(): Promise<UserRow[]> {
 
   let inviteRows: UserRow[] = [];
   try {
-    const { data: invitations } = await client.invitations.getInvitationList({ status: "pending" });
+    const result = await client.invitations.getInvitationList({ status: "pending" });
+    const invitations = result.data;
+    console.log("[users/data] invitation fetch OK, count:", invitations.length);
     inviteRows = invitations.map((inv) => {
       const meta = (inv.publicMetadata ?? {}) as {
         role?: string;
@@ -58,8 +60,10 @@ export async function getUsers(): Promise<UserRow[]> {
       };
     });
   } catch (err) {
-    console.error("Failed to fetch invitations from Clerk:", err);
+    console.error("[users/data] Failed to fetch invitations from Clerk:", err);
   }
+
+  console.log("[users/data] returning", userRows.length, "users +", inviteRows.length, "invites");
 
   return [...userRows, ...inviteRows];
 }
