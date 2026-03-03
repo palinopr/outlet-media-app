@@ -49,18 +49,23 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
   return [
     {
       id: "select",
-      header: ({ table }) => (
-        <input
-          type="checkbox"
-          className="h-3.5 w-3.5 rounded border-border accent-primary"
-          checked={table.getIsAllPageRowsSelected()}
-          onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
-        />
-      ),
+      header: ({ table }) => {
+        const checked = table.getIsAllPageRowsSelected();
+        const indeterminate = table.getIsSomePageRowsSelected();
+        return (
+          <input
+            type="checkbox"
+            className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
+            checked={checked}
+            ref={(el) => { if (el) el.indeterminate = indeterminate && !checked; }}
+            onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
+          />
+        );
+      },
       cell: ({ row }) => (
         <input
           type="checkbox"
-          className="h-3.5 w-3.5 rounded border-border accent-primary"
+          className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
           checked={row.getIsSelected()}
           onChange={(e) => row.toggleSelected(e.target.checked)}
         />

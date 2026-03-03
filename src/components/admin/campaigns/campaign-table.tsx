@@ -23,9 +23,13 @@ function AssignToolbar({
   selectedRows: MetaCampaignCard[];
   clients: string[];
 }) {
-  const [slug, setSlug] = useState("");
+  const [mode, setMode] = useState<"select" | "new">("select");
+  const [selectedClient, setSelectedClient] = useState("");
+  const [newSlug, setNewSlug] = useState("");
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
+
+  const slug = mode === "select" ? selectedClient : newSlug;
 
   function handleAssign() {
     const target = slug.trim();
@@ -43,33 +47,47 @@ function AssignToolbar({
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground whitespace-nowrap">
+    <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded px-3 py-1.5">
+      <span className="text-xs font-medium whitespace-nowrap">
         {selectedRows.length} selected
       </span>
+      <span className="text-xs text-muted-foreground">|</span>
       <select
-        value={slug}
-        onChange={(e) => setSlug(e.target.value)}
+        value={mode === "select" ? selectedClient : "__new__"}
+        onChange={(e) => {
+          if (e.target.value === "__new__") {
+            setMode("new");
+            setSelectedClient("");
+          } else {
+            setMode("select");
+            setSelectedClient(e.target.value);
+            setNewSlug("");
+          }
+        }}
         className="h-7 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
       >
         <option value="">Assign to...</option>
         {clients.map((c) => (
           <option key={c} value={c}>{c}</option>
         ))}
+        <option value="__new__">+ New client...</option>
       </select>
-      <input
-        type="text"
-        value={clients.includes(slug) ? "" : slug}
-        onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g, "_"))}
-        placeholder="or new slug"
-        className="h-7 w-28 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-      />
+      {mode === "new" && (
+        <input
+          type="text"
+          value={newSlug}
+          onChange={(e) => setNewSlug(e.target.value.toLowerCase().replace(/\s+/g, "_"))}
+          placeholder="new_client_slug"
+          className="h-7 w-32 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+          autoFocus
+        />
+      )}
       <button
         onClick={handleAssign}
         disabled={!slug.trim() || isPending}
         className="h-7 rounded bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
       >
-        {isPending ? "Assigning..." : "Assign"}
+        {isPending ? "Saving..." : "Assign"}
       </button>
     </div>
   );
