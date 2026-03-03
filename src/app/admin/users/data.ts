@@ -15,14 +15,12 @@ export async function getUsers(): Promise<UserRow[]> {
   const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   if (!clerkEnabled) return [];
 
-  try {
-    const client = await clerkClient();
-    const [{ data: users }, { data: invitations }] = await Promise.all([
-      client.users.getUserList({ limit: 100 }),
-      client.invitations.getInvitationList({ status: "pending" }),
-    ]);
+  const client = await clerkClient();
 
-    const userRows: UserRow[] = users.map((u) => {
+  let userRows: UserRow[] = [];
+  try {
+    const { data: users } = await client.users.getUserList({ limit: 100 });
+    userRows = users.map((u) => {
       const meta = (u.publicMetadata ?? {}) as {
         role?: string;
         client_slug?: string;
@@ -37,8 +35,14 @@ export async function getUsers(): Promise<UserRow[]> {
         status: "active" as const,
       };
     });
+  } catch (err) {
+    console.error("Failed to fetch users from Clerk:", err);
+  }
 
-    const inviteRows: UserRow[] = invitations.map((inv) => {
+  let inviteRows: UserRow[] = [];
+  try {
+    const { data: invitations } = await client.invitations.getInvitationList({ status: "pending" });
+    inviteRows = invitations.map((inv) => {
       const meta = (inv.publicMetadata ?? {}) as {
         role?: string;
         client_slug?: string;
@@ -53,9 +57,9 @@ export async function getUsers(): Promise<UserRow[]> {
         status: "invited" as const,
       };
     });
-
-    return [...userRows, ...inviteRows];
-  } catch {
-    return [];
+  } catch (err) {
+    console.error("Failed to fetch invitations from Clerk:", err);
   }
+
+  return [...userRows, ...inviteRows];
 }
