@@ -11,6 +11,7 @@ export function ClientNav({ slug }: Props) {
   const links = [
     { href: `/client/${slug}`, label: "Overview" },
     { href: `/client/${slug}/campaigns`, label: "Campaigns" },
+    { href: `/client/${slug}/settings`, label: "Settings" },
   ];
 
   return (
