@@ -4,6 +4,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { SidebarContent } from "@/components/admin/sidebar-content";
 import { MobileSidebar } from "@/components/admin/mobile-sidebar";
+import { ActivityTracker } from "@/components/admin/activity-tracker";
 
 export const dynamic = "force-dynamic";
 
@@ -17,12 +18,16 @@ export const metadata: Metadata = {
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   let displayName = "Admin";
+  let activityUserId = "";
+  let activityUserEmail = "";
 
   if (clerkEnabled) {
     const { userId } = await auth();
     if (!userId) redirect("/sign-in");
 
     const user = await currentUser();
+    activityUserId = user?.id ?? "";
+    activityUserEmail = user?.emailAddresses[0]?.emailAddress ?? "";
     const role = (user?.publicMetadata as { role?: string })?.role;
     if (role !== "admin") {
       return (
@@ -43,6 +48,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
   return (
     <div className="dark flex min-h-screen bg-background text-foreground">
+      {activityUserId && <ActivityTracker userId={activityUserId} userEmail={activityUserEmail} />}
       {/* Sidebar */}
       <aside className="hidden lg:flex w-60 flex-col border-r border-border/50 shrink-0">
         <SidebarContent clerkEnabled={clerkEnabled} displayName={displayName} />
