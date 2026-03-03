@@ -10,6 +10,7 @@ import {
   Bot,
   Users,
   UserCog,
+  Activity,
   Settings,
 } from "lucide-react";
 
@@ -20,6 +21,7 @@ const nav = [
   { href: "/admin/agents", label: "Agents", icon: Bot },
   { href: "/admin/clients", label: "Clients", icon: Users },
   { href: "/admin/users", label: "Users", icon: UserCog },
+  { href: "/admin/activity", label: "Activity", icon: Activity },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
