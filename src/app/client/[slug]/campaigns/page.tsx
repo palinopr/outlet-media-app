@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import {
   Table,
   TableBody,
@@ -8,6 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { DollarSign, Megaphone, TrendingUp, MousePointerClick } from "lucide-react";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 import { fmtUsd, fmtNum, slugToLabel, roasColor } from "@/lib/formatters";
@@ -113,6 +115,9 @@ export default async function ClientCampaigns({ params }: Props) {
           <p className="text-sm text-muted-foreground mt-1">{now}</p>
         </div>
         <div className="flex items-center gap-4">
+          <Link href={`/client/${slug}/campaigns/new`}>
+            <Button size="sm">Create Campaign</Button>
+          </Link>
           <a href={`/client/${slug}`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
             Back to overview
           </a>
