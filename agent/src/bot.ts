@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { Bot, type Context } from "grammy";
 import { runClaude } from "./runner.js";
-import { state } from "./state.js";
+import { isAnyAgentBusy } from "./state.js";
 import { chunkText } from "./events/message-handler.js";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -66,7 +66,7 @@ bot.on("message:text", async (ctx) => {
 async function handleMessage(ctx: Context, prompt: string) {
   // Block if Telegram is already handling a message OR if a scheduled job/think cycle
   // is running (both would compete for the claude CLI subprocess)
-  if (agentBusy || state.jobRunning || state.thinkRunning || state.discordAdminRunning) {
+  if (agentBusy || isAnyAgentBusy()) {
     await ctx.reply("Agent is busy. Try again in a moment.");
     return;
   }

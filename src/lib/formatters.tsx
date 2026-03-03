@@ -4,6 +4,8 @@
  * single source of truth — do NOT duplicate these in page files.
  */
 
+import { getCampaignStatusCfg, getEventStatusCfg } from "./status";
+
 // ─── Number / Currency ─────────────────────────────────────────────────────
 
 /** Convert a cent-denominated value to USD (or null → null). */
@@ -55,7 +57,9 @@ export function slugToLabel(slug: string | null): string {
 /** Human-readable time distance from an ISO timestamp. Returns "never" for null. */
 export function timeAgo(iso: string | null): string {
   if (!iso) return "never";
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  const date = new Date(iso);
+  if (isNaN(date.getTime())) return "unknown";
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
   if (diff < 60)    return `${diff}s ago`;
   if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
@@ -72,39 +76,6 @@ export function roasColor(roas: number | null): string {
   return "text-red-400";
 }
 
-// ─── Status badges ──────────────────────────────────────────────────────────
-
-interface BadgeEntry {
-  label: string;
-  classes: string;
-}
-
-const STATUS_MAP: Record<string, BadgeEntry> = {
-  // Campaign / client statuses
-  active:    { label: "Active",    classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-  paused:    { label: "Paused",    classes: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
-  inactive:  { label: "Inactive",  classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" },
-  archived:  { label: "Archived",  classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" },
-  deleted:   { label: "Deleted",   classes: "bg-red-500/10 text-red-400 border-red-500/20" },
-  // Event statuses
-  onsale:    { label: "On Sale",   classes: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-  presale:   { label: "Presale",   classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  soldout:   { label: "Sold Out",  classes: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
-  offsale:   { label: "Off Sale",  classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20" },
-  cancelled: { label: "Cancelled", classes: "bg-red-500/10 text-red-400 border-red-500/20" },
-  published: { label: "Published", classes: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-};
-
-const FALLBACK_BADGE: BadgeEntry = {
-  label: "",
-  classes: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-};
-
-/**
- * Render a coloured status badge for any entity (campaign, client, event).
- * Input is normalised to lowercase with underscores stripped so that
- * "ACTIVE", "active", "on_sale", and "onsale" all resolve correctly.
- */
 // ─── Campaign helpers ────────────────────────────────────────────────────
 
 /** Format a Meta campaign objective enum into a human-readable label. */
@@ -134,14 +105,23 @@ export function computeMarginalRoas(points: SnapshotPoint[]): number | null {
 
 // ─── Status badges ──────────────────────────────────────────────────────
 
+const CAMPAIGN_STATUSES = new Set(["active", "paused", "deleted", "archived"]);
+
+/**
+ * Render a coloured status badge for any entity (campaign, client, event).
+ * Delegates to getCampaignStatusCfg / getEventStatusCfg from status.ts.
+ */
 export function statusBadge(s: string) {
   const normalised = (s ?? "").toLowerCase().replace(/_/g, "");
-  const entry = STATUS_MAP[normalised] ?? { ...FALLBACK_BADGE, label: s };
+  const cfg = CAMPAIGN_STATUSES.has(normalised)
+    ? getCampaignStatusCfg(s)
+    : getEventStatusCfg(s);
+  const border = cfg.bg.replace("/10", "/20").replace("bg-", "border-");
   return (
     <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${entry.classes}`}
+      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${cfg.text} ${cfg.bg} ${border}`}
     >
-      {entry.label}
+      {cfg.label}
     </span>
   );
 }

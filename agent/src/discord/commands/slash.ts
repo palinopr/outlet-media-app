@@ -91,8 +91,8 @@ export function registerSlashHandler(client: Client): void {
     try {
       switch (cmd.commandName) {
         case "status": {
-          const { state } = await import("../../state.js");
-          const busy = state.jobRunning || state.thinkRunning || state.discordAdminRunning;
+          const { isAnyAgentBusy } = await import("../../state.js");
+          const busy = isAnyAgentBusy();
           await cmd.reply({
             content: busy ? "Agent is busy running a task." : "Agent is idle and ready.",
             ephemeral: true,

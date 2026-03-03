@@ -5,37 +5,8 @@ import {
   AlertPatchSchema,
   AgentPostSchema,
   InviteSchema,
-  sanitizeId,
   VALID_AGENTS,
 } from "@/lib/api-schemas";
-
-// ─── sanitizeId ─────────────────────────────────────────────────────────────
-
-describe("sanitizeId", () => {
-  it("returns null for null input", () => {
-    expect(sanitizeId(null)).toBeNull();
-  });
-
-  it("returns null for empty string", () => {
-    expect(sanitizeId("")).toBeNull();
-  });
-
-  it("passes through alphanumeric IDs", () => {
-    expect(sanitizeId("abc123")).toBe("abc123");
-  });
-
-  it("allows underscores and dashes", () => {
-    expect(sanitizeId("act_123-test")).toBe("act_123-test");
-  });
-
-  it("strips special characters", () => {
-    expect(sanitizeId("abc;DROP TABLE--")).toBe("abcDROPTABLE--");
-  });
-
-  it("strips spaces", () => {
-    expect(sanitizeId("act 123")).toBe("act123");
-  });
-});
 
 // ─── IngestPayloadSchema ────────────────────────────────────────────────────
 

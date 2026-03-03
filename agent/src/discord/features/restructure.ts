@@ -19,7 +19,7 @@ import {
   OverwriteType,
   PermissionFlagsBits,
 } from "discord.js";
-import { state } from "../../state.js";
+import { isAgentBusy, setAgentBusy, clearAgentBusy } from "../../state.js";
 
 // --- Target Layout --------------------------------------------------------
 
@@ -180,9 +180,9 @@ function buildOpsOverwrites(guild: Guild) {
  * Idempotent -- safe to run multiple times.
  */
 export async function runServerRestructure(guild: Guild): Promise<string> {
-  if (state.discordAdminRunning) return "Another admin task is already running.";
+  if (isAgentBusy("discord-admin")) return "Another admin task is already running.";
 
-  state.discordAdminRunning = true;
+  setAgentBusy("discord-admin");
   try {
     const g = guild;
     const log: string[] = [];
@@ -313,6 +313,6 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
       log.map(l => `- ${l}`).join("\n")
     );
   } finally {
-    state.discordAdminRunning = false;
+    clearAgentBusy("discord-admin");
   }
 }

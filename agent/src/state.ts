@@ -1,49 +1,63 @@
 /**
- * state.ts — shared runtime flags for the agent.
+ * state.ts -- per-agent lock system.
  *
- * Both jobs.ts and scheduler.ts import from here to avoid circular dependencies
- * and to ensure symmetric blocking: neither think nor a job starts while the
- * other is already running.
+ * Instead of global booleans (jobRunning, thinkRunning, etc.) that block
+ * unrelated agents, we track busy agents by ID in a Set. Each agent
+ * acquires/releases its own lock independently.
+ *
+ * Callers that need "is anything busy?" use isAnyAgentBusy().
  */
 
-export const state = {
-  jobRunning: false,
-  thinkRunning: false,
-  discordAdminRunning: false,
-  tmRunning: false,
-  metaRunning: false,
+/** Currently-busy agent IDs (e.g. "think", "tm-sync", "meta-sync", "sweep", "discord-admin"). */
+const busyAgents = new Set<string>();
 
-  /** Epoch ms when jobRunning was last set to true, or null if idle */
-  jobStartedAt: null as number | null,
-};
+/** Epoch ms when each agent lock was acquired, for stale-lock detection. */
+const lockTimestamps = new Map<string, number>();
+
+/** Returns true if the given agent is currently busy. */
+export function isAgentBusy(agentId: string): boolean {
+  return busyAgents.has(agentId);
+}
+
+/** Mark an agent as busy. */
+export function setAgentBusy(agentId: string): void {
+  busyAgents.add(agentId);
+  lockTimestamps.set(agentId, Date.now());
+}
+
+/** Release an agent's lock. */
+export function clearAgentBusy(agentId: string): void {
+  busyAgents.delete(agentId);
+  lockTimestamps.delete(agentId);
+}
+
+/** Returns true if any agent is currently busy. */
+export function isAnyAgentBusy(): boolean {
+  return busyAgents.size > 0;
+}
+
+/** Returns a list of currently-busy agent IDs (for diagnostics). */
+export function getBusyAgents(): string[] {
+  return [...busyAgents];
+}
 
 /** Default max lock age: 1 hour */
 const DEFAULT_MAX_AGE_MS = 3_600_000;
 
 /**
- * Returns true if jobRunning is true and the lock has been held longer than maxAgeMs.
- */
-export function isLockStale(maxAgeMs: number = DEFAULT_MAX_AGE_MS): boolean {
-  if (!state.jobRunning || state.jobStartedAt === null) return false;
-  return Date.now() - state.jobStartedAt > maxAgeMs;
-}
-
-/**
- * Checks jobRunning/agentBusy flags and resets them if the lock is stale.
- * Logs a warning when a stale lock is force-released.
+ * Check all held locks and force-release any older than maxAgeMs.
+ * Logs a warning for each stale lock released.
  */
 export function resetStaleLocks(maxAgeMs: number = DEFAULT_MAX_AGE_MS): void {
-  if (!isLockStale(maxAgeMs)) return;
-
-  const heldFor = state.jobStartedAt !== null
-    ? Math.round((Date.now() - state.jobStartedAt) / 1000)
-    : 0;
-
-  console.warn(
-    `[state] Stale lock detected -- jobRunning held for ${heldFor}s (max ${Math.round(maxAgeMs / 1000)}s). Force-releasing.`,
-  );
-
-  state.jobRunning = false;
-  state.thinkRunning = false;
-  state.jobStartedAt = null;
+  const now = Date.now();
+  for (const [agentId, acquiredAt] of lockTimestamps) {
+    const heldMs = now - acquiredAt;
+    if (heldMs > maxAgeMs) {
+      const heldSec = Math.round(heldMs / 1000);
+      console.warn(
+        `[state] Stale lock on "${agentId}" -- held for ${heldSec}s (max ${Math.round(maxAgeMs / 1000)}s). Force-releasing.`,
+      );
+      clearAgentBusy(agentId);
+    }
+  }
 }

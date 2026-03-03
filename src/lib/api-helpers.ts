@@ -31,8 +31,15 @@ export async function adminGuard(): Promise<Response | null> {
   if (error) return error;
 
   const caller = await currentUser();
-  const meta = (caller?.publicMetadata ?? {}) as { role?: string };
-  if (meta.role !== "admin") {
+  const meta = caller?.publicMetadata ?? {};
+  const role =
+    typeof meta === "object" &&
+    meta !== null &&
+    "role" in meta &&
+    typeof (meta as Record<string, unknown>).role === "string"
+      ? ((meta as Record<string, unknown>).role as string)
+      : undefined;
+  if (role !== "admin") {
     return apiError("Forbidden", 403);
   }
   return null;

@@ -8,7 +8,7 @@
  * All jobs start OFF by default. Enable via !enable <job> in #schedule.
  */
 
-import { state } from "../state.js";
+import { isAgentBusy, setAgentBusy, clearAgentBusy } from "../state.js";
 import { runClaude } from "../runner.js";
 import { enqueueTask, completeTask, failTask } from "../services/queue-service.js";
 import { todayCST, yesterdayCST } from "../utils/date-helpers.js";
@@ -25,25 +25,19 @@ async function postToFeed(text: string): Promise<void> {
   await postToChannel("agent-feed", text);
 }
 
-function canRun(): boolean {
-  return !state.jobRunning && !state.thinkRunning && !state.discordAdminRunning;
-}
-
 // --- Routine Lock ---
-
-let routineRunning = false;
 
 async function withRoutineLock(
   name: string,
   agentKey: string,
   fn: () => Promise<string>,
 ): Promise<void> {
-  if (routineRunning || !canRun()) {
-    console.log(`[sweeps] Skipping ${name} -- another task is running`);
+  const lockId = `sweep:${agentKey}`;
+  if (isAgentBusy(lockId)) {
+    console.log(`[sweeps] Skipping ${name} -- ${lockId} is already running`);
     return;
   }
-  routineRunning = true;
-  state.jobRunning = true;
+  setAgentBusy(lockId);
 
   const task = enqueueTask("scheduler", agentKey, name, {}, "green");
 
@@ -60,8 +54,7 @@ async function withRoutineLock(
     console.error(`[sweeps] ${name} failed:`, msg);
     await postToFeed(`x **${name}** failed: ${msg.slice(0, 200)}`).catch(() => {});
   } finally {
-    routineRunning = false;
-    state.jobRunning = false;
+    clearAgentBusy(lockId);
   }
 }
 

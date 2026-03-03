@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Send, Loader2, Bot, User, RefreshCw } from "lucide-react";
 import { timeAgo } from "@/lib/formatters";
 import { AgentJob } from "@/app/admin/agents/data";
-import { AGENT_CONFIG } from "./constants";
+import { AGENT_CONFIG, agentName } from "./constants";
 import { StatusBadge } from "./status-badge";
 
 function ResultText({ text }: { text: string }) {
@@ -29,9 +29,8 @@ function ResultText({ text }: { text: string }) {
 }
 
 function JobBubble({ job }: { job: AgentJob }) {
-  const config = AGENT_CONFIG[job.agent_id];
-  const meta = config ? { label: config.name, icon: config.icon } : { label: job.agent_id, icon: Bot };
-  const Icon = meta.icon;
+  const Icon = AGENT_CONFIG[job.agent_id]?.icon ?? Bot;
+  const label = agentName(job.agent_id);
   const hasPrompt = job.prompt && job.prompt.trim();
 
   return (
@@ -55,7 +54,7 @@ function JobBubble({ job }: { job: AgentJob }) {
         </div>
         <div className="max-w-[85%] space-y-1.5">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-medium">{meta.label}</span>
+            <span className="text-xs font-medium">{label}</span>
             <StatusBadge status={job.status} />
             <span className="text-xs text-muted-foreground">{timeAgo(job.created_at)}</span>
           </div>

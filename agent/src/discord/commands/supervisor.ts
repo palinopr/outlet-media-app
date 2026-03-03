@@ -11,7 +11,7 @@
 import { EmbedBuilder, type Client } from "discord.js";
 import { readFile } from "node:fs/promises";
 import { runClaude } from "../../runner.js";
-import { state } from "../../state.js";
+import { isAgentBusy, setAgentBusy, clearAgentBusy } from "../../state.js";
 
 const ACTIVITY_LOG = "session/activity-log.json";
 
@@ -117,22 +117,22 @@ function buildSupervisionEmbed(report: string): EmbedBuilder {
 export async function handleSuperviseCommand(
   _client: Client,
 ): Promise<{ text: string; embed: EmbedBuilder }> {
-  if (state.jobRunning || state.thinkRunning || state.discordAdminRunning) {
+  if (isAgentBusy("discord-admin")) {
     return {
-      text: "Agent is busy with another task. Try again shortly.",
+      text: "Another admin task is already running. Try again shortly.",
       embed: new EmbedBuilder()
         .setTitle("Supervision Skipped")
         .setColor(0x9e9e9e)
-        .setDescription("Another task is running. Retry in a moment."),
+        .setDescription("Another admin task is running. Retry in a moment."),
     };
   }
 
-  state.discordAdminRunning = true;
+  setAgentBusy("discord-admin");
   try {
     const report = await runSupervision();
     const embed = buildSupervisionEmbed(report);
     return { text: "", embed };
   } finally {
-    state.discordAdminRunning = false;
+    clearAgentBusy("discord-admin");
   }
 }

@@ -183,9 +183,17 @@ export function initScheduleJobs(runners: Record<string, () => void>): void {
 
 // --- Job Control ----------------------------------------------------------
 
+/** Core jobs started unconditionally by scheduler.ts -- cannot be toggled via the schedule UI. */
+const CORE_JOB_KEYS = new Set(["heartbeat", "tm-sync", "meta-sync", "think", "health-check"]);
+
+function isCoreJob(jobKey: string): boolean {
+  return CORE_JOB_KEYS.has(jobKey);
+}
+
 function enableJob(jobKey: string): string {
   const job = JOBS[jobKey];
   if (!job) return `Unknown job: ${jobKey}`;
+  if (isCoreJob(jobKey)) return `**${job.name}** is a core job that runs automatically and cannot be toggled.`;
   if (job.enabled) return `${job.name} is already enabled.`;
 
   job.enabled = true;
@@ -200,6 +208,7 @@ function enableJob(jobKey: string): string {
 function disableJob(jobKey: string): string {
   const job = JOBS[jobKey];
   if (!job) return `Unknown job: ${jobKey}`;
+  if (isCoreJob(jobKey)) return `**${job.name}** is a core job that runs automatically and cannot be toggled.`;
   if (!job.enabled) return `${job.name} is already disabled.`;
 
   job.enabled = false;
@@ -214,7 +223,7 @@ function disableJob(jobKey: string): string {
 function enableAll(): string {
   const results: string[] = [];
   for (const key of Object.keys(JOBS)) {
-    results.push(enableJob(key));
+    if (!isCoreJob(key)) results.push(enableJob(key));
   }
   return results.join("\n");
 }
@@ -222,7 +231,7 @@ function enableAll(): string {
 function disableAll(): string {
   const results: string[] = [];
   for (const key of Object.keys(JOBS)) {
-    results.push(disableJob(key));
+    if (!isCoreJob(key)) results.push(disableJob(key));
   }
   return results.join("\n");
 }

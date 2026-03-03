@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { sanitizeId } from "@/lib/api-schemas";
 import { authGuard, apiError } from "@/lib/api-helpers";
 
 export async function GET(
@@ -12,7 +11,7 @@ export async function GET(
   const { error: authErr } = await authGuard();
   if (authErr) return authErr;
 
-  const id = sanitizeId(rawId);
+  const id = rawId.replace(/[^a-zA-Z0-9_-]/g, "");
   if (!id) {
     return apiError("Invalid job ID", 400);
   }

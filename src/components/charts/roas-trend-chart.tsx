@@ -34,6 +34,45 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
   );
 }
 
+export function SpendTrendChart({ data }: Props) {
+  if (data.length < 2) {
+    return (
+      <div className="h-32 flex items-center justify-center text-xs text-muted-foreground">
+        Spend data available after 2+ days of syncing
+      </div>
+    );
+  }
+
+  return (
+    <ResponsiveContainer width="100%" height={120}>
+      <LineChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
+        <XAxis
+          dataKey="date"
+          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+          axisLine={false}
+          tickLine={false}
+        />
+        <YAxis
+          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+          axisLine={false}
+          tickLine={false}
+          tickFormatter={(v: number) => `$${Math.round(v).toLocaleString()}`}
+        />
+        <Tooltip content={<CustomTooltip />} />
+        <Line
+          type="monotone"
+          dataKey="spend"
+          stroke="hsl(263, 70%, 58%)"
+          strokeWidth={2}
+          dot={{ r: 3, fill: "hsl(263, 70%, 58%)" }}
+          activeDot={{ r: 4 }}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
 export function RoasTrendChart({ data }: Props) {
   if (data.length < 2) {
     return (

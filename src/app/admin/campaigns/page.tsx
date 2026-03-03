@@ -200,8 +200,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
                     {(() => {
                       const m = computeMarginalRoas(snapshotsByCampaign[c.campaign_id] ?? []);
                       if (m == null) return <span className="text-muted-foreground text-sm">—</span>;
-                      const color = m >= 2 ? "text-emerald-400" : m >= 1 ? "text-blue-400" : "text-red-400";
-                      return <span className={`text-sm font-semibold tabular-nums ${color}`}>{m.toFixed(1)}×</span>;
+                      return <span className={`text-sm font-semibold tabular-nums ${roasColor(m)}`}>{m.toFixed(1)}×</span>;
                     })()}
                   </TableCell>
                   <TableCell className="text-right text-sm text-muted-foreground tabular-nums">

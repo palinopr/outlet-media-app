@@ -120,11 +120,3 @@ export const InviteSchema = z.object({
 export const HeartbeatPayloadSchema = z.object({
   secret: z.string().min(1),
 });
-
-// ─── Query param sanitizers ─────────────────────────────────────────────────
-
-/** Strip anything except alphanumeric, underscore, dash from an ID param */
-export function sanitizeId(raw: string | null): string | null {
-  if (!raw) return null;
-  return raw.replace(/[^a-zA-Z0-9_-]/g, "");
-}

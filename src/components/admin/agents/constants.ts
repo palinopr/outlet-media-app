@@ -59,7 +59,3 @@ export function agentName(key: string): string {
   return AGENT_CONFIG[key]?.name ?? key;
 }
 
-/** Look up agent icon, falling back to Bot. */
-export function agentIcon(key: string): LucideIcon {
-  return AGENT_CONFIG[key]?.icon ?? Bot;
-}

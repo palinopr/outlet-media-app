@@ -13,9 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { UserPlus, Check, Loader2 } from "lucide-react";
 import { UserRow } from "@/app/admin/users/data";
-import { fmtDate } from "@/lib/formatters";
-
-const KNOWN_CLIENTS = ["zamora", "kybba", "beamina", "happy_paws"] as const;
+import { fmtDate, slugToLabel } from "@/lib/formatters";
+import { CLIENT_SLUGS } from "@/lib/constants";
 
 interface Props {
   users: UserRow[];
@@ -95,9 +94,9 @@ function InviteForm({ onDone }: { onDone: () => void }) {
           className="h-8 rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
         >
           <option value="">— Select client —</option>
-          {KNOWN_CLIENTS.map((s) => (
+          {CLIENT_SLUGS.map((s) => (
             <option key={s} value={s}>
-              {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+              {slugToLabel(s)}
             </option>
           ))}
           <option value="__admin__">Admin (Outlet Media team)</option>
@@ -150,9 +149,9 @@ function AssignCell({ user }: { user: UserRow }) {
         className="h-7 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
       >
         <option value="">— Unassigned —</option>
-        {KNOWN_CLIENTS.map((s) => (
+        {CLIENT_SLUGS.map((s) => (
           <option key={s} value={s}>
-            {s.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
+            {slugToLabel(s)}
           </option>
         ))}
       </select>
