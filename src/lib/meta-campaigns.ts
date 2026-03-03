@@ -99,10 +99,29 @@ function buildCampaignFilter(ids: string[]): string {
   ]);
 }
 
-const BATCH_SIZE = 100;
+function buildInsightsUrl(
+  base: string,
+  token: string,
+  preset: string,
+  filter: string,
+  fields: string,
+  limit: string,
+  timeIncrement?: string,
+): string {
+  const url = new URL(`${base}/insights`);
+  url.searchParams.set("access_token", token);
+  url.searchParams.set("level", "campaign");
+  url.searchParams.set("fields", fields);
+  url.searchParams.set("date_preset", preset);
+  url.searchParams.set("filtering", filter);
+  url.searchParams.set("limit", limit);
+  if (timeIncrement) url.searchParams.set("time_increment", timeIncrement);
+  return url.toString();
+}
 
 export async function fetchAllCampaigns(
   range: DateRange,
+  clientSlug?: string | null,
 ): Promise<MetaCampaignsResult> {
   const creds = getCredentials();
   if (!creds) {
@@ -118,7 +137,7 @@ export async function fetchAllCampaigns(
   const preset = META_PRESETS[range];
   const base = `https://graph.facebook.com/${META_API_VERSION}/act_${accountId}`;
 
-  // Phase 1: fetch all campaign objects
+  // Phase 1: fetch campaign list (lightweight -- no insights data)
   const campaignsUrl = new URL(`${base}/campaigns`);
   campaignsUrl.searchParams.set("access_token", token);
   campaignsUrl.searchParams.set(
@@ -133,59 +152,52 @@ export async function fetchAllCampaigns(
       "campaigns",
     );
 
-    // Phase 2: fetch insights in batches with campaign ID filtering
-    const allIds = rawCampaigns.map((c) => c.id);
-    const batches: string[][] = [];
-    for (let i = 0; i < allIds.length; i += BATCH_SIZE) {
-      batches.push(allIds.slice(i, i + BATCH_SIZE));
+    // Derive client slugs and build clients list from all campaigns
+    const campaignSlugs = new Map<string, string>();
+    for (const c of rawCampaigns) {
+      campaignSlugs.set(c.id, guessClientSlug(c.name));
+    }
+    const clients = [...new Set(campaignSlugs.values())]
+      .filter((s) => s !== "unknown")
+      .sort();
+
+    // Phase 2: filter campaigns before fetching insights
+    const filtered = clientSlug
+      ? rawCampaigns.filter((c) => campaignSlugs.get(c.id) === clientSlug)
+      : rawCampaigns;
+
+    const insightIds = filtered.map((c) => c.id);
+
+    // Fetch insights only for the campaigns we need (single request)
+    let rawInsights: RawInsight[] = [];
+    let rawDaily: RawDailyInsight[] = [];
+
+    if (insightIds.length > 0) {
+      const filter = buildCampaignFilter(insightIds);
+      const insightsFields = "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,purchase_roas";
+
+      const [insights, daily] = await Promise.all([
+        fetchAllPages<RawInsight>(
+          buildInsightsUrl(base, token, preset, filter, insightsFields, "500"),
+          "insights",
+        ),
+        fetchAllPages<RawDailyInsight>(
+          buildInsightsUrl(base, token, preset, filter, "campaign_id,spend,purchase_roas", "5000", "1"),
+          "daily",
+        ),
+      ]);
+      rawInsights = insights;
+      rawDaily = daily;
     }
 
-    const insightPromises: Promise<RawInsight[]>[] = [];
-    const dailyPromises: Promise<RawDailyInsight[]>[] = [];
-
-    for (const batch of batches) {
-      const filter = buildCampaignFilter(batch);
-
-      const insightsUrl = new URL(`${base}/insights`);
-      insightsUrl.searchParams.set("access_token", token);
-      insightsUrl.searchParams.set("level", "campaign");
-      insightsUrl.searchParams.set(
-        "fields",
-        "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,purchase_roas",
-      );
-      insightsUrl.searchParams.set("date_preset", preset);
-      insightsUrl.searchParams.set("filtering", filter);
-      insightsUrl.searchParams.set("limit", "500");
-      insightPromises.push(
-        fetchAllPages<RawInsight>(insightsUrl.toString(), "insights"),
-      );
-
-      const dailyUrl = new URL(`${base}/insights`);
-      dailyUrl.searchParams.set("access_token", token);
-      dailyUrl.searchParams.set("level", "campaign");
-      dailyUrl.searchParams.set("fields", "campaign_id,spend,purchase_roas");
-      dailyUrl.searchParams.set("date_preset", preset);
-      dailyUrl.searchParams.set("time_increment", "1");
-      dailyUrl.searchParams.set("filtering", filter);
-      dailyUrl.searchParams.set("limit", "5000");
-      dailyPromises.push(
-        fetchAllPages<RawDailyInsight>(dailyUrl.toString(), "daily"),
-      );
-    }
-
-    const insightBatches = await Promise.all(insightPromises);
-    const dailyBatches = await Promise.all(dailyPromises);
-    const rawInsights = insightBatches.flat();
-    const rawDaily = dailyBatches.flat();
-
-    console.log(`[meta-campaigns] Fetched ${rawCampaigns.length} campaigns, ${rawInsights.length} insights, ${rawDaily.length} daily rows (${batches.length} batches)`);
+    console.log(`[meta-campaigns] ${filtered.length}/${rawCampaigns.length} campaigns, ${rawInsights.length} insights, ${rawDaily.length} daily rows`);
 
     const insightMap = new Map<string, RawInsight>();
     for (const row of rawInsights) {
       insightMap.set(row.campaign_id, row);
     }
 
-    const campaigns: MetaCampaignCard[] = rawCampaigns.map((c) => {
+    const campaigns: MetaCampaignCard[] = filtered.map((c) => {
       const insight = insightMap.get(c.id);
       const spend = insight ? parseFloat(insight.spend) || 0 : 0;
       const roasVal = insight?.purchase_roas?.find(
@@ -198,7 +210,7 @@ export async function fetchAllCampaigns(
         name: c.name,
         status: c.status,
         objective: c.objective ?? "",
-        clientSlug: guessClientSlug(c.name),
+        clientSlug: campaignSlugs.get(c.id) ?? "unknown",
         spend,
         roas,
         revenue: roas != null ? spend * roas : null,
@@ -223,10 +235,6 @@ export async function fetchAllCampaigns(
         roas: roasVal ? parseFloat(roasVal) : null,
       };
     });
-
-    const clients = [...new Set(campaigns.map((c) => c.clientSlug))]
-      .filter((s) => s !== "unknown")
-      .sort();
 
     return { campaigns, dailyInsights, clients, error: null };
   } catch (err) {

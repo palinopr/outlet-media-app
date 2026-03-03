@@ -14,15 +14,10 @@ export async function getCampaigns(
   clientSlug: string | null,
   range: DateRange,
 ): Promise<CampaignsData> {
-  const result = await fetchAllCampaigns(range);
-
-  let campaigns = result.campaigns;
-  if (clientSlug) {
-    campaigns = campaigns.filter((c) => c.clientSlug === clientSlug);
-  }
+  const result = await fetchAllCampaigns(range, clientSlug);
 
   return {
-    campaigns,
+    campaigns: result.campaigns,
     clients: result.clients,
     dailyInsights: result.dailyInsights,
     error: result.error,

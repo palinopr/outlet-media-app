@@ -123,10 +123,9 @@ export async function getCampaignsPageData(slug: string): Promise<{
   snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null; campaign_id: string }>;
   dataSource: "meta_api" | "supabase";
 }> {
-  const result = await fetchAllCampaigns("30");
+  const result = await fetchAllCampaigns("30", slug);
 
   const campaigns = result.campaigns
-    .filter((c) => c.clientSlug === slug)
     .map(toCampaignCard)
     .sort((a, b) => {
       const aTime = a.startTime ? new Date(a.startTime).getTime() : 0;
@@ -157,10 +156,9 @@ export async function getData(
   slug: string,
   range: DateRange,
 ): Promise<ClientData> {
-  const result = await fetchAllCampaigns(range);
+  const result = await fetchAllCampaigns(range, slug);
 
   const campaigns = result.campaigns
-    .filter((c) => c.clientSlug === slug)
     .map(toCampaignCard);
 
   if (campaigns.length === 0 && result.error) return EMPTY;
