@@ -42,11 +42,17 @@ export async function POST(request: Request) {
   if (body.client_role) publicMetadata.client_role = body.client_role;
   if (body.role) publicMetadata.role = body.role;
 
-  const client = await clerkClient();
-  await client.invitations.createInvitation({
-    emailAddress: body.email,
-    publicMetadata,
-  });
+  try {
+    const client = await clerkClient();
+    await client.invitations.createInvitation({
+      emailAddress: body.email,
+      publicMetadata,
+    });
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Failed to create invitation";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true });
 }

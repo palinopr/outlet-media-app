@@ -40,8 +40,10 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
         }),
       });
       if (!res.ok) {
-        const d = await res.json() as { error?: string };
-        throw new Error(d.error ?? "Failed to send invite");
+        const text = await res.text();
+        let msg = "Failed to send invite";
+        try { msg = (JSON.parse(text) as { error?: string }).error ?? msg; } catch { /* non-JSON */ }
+        throw new Error(msg);
       }
       setSent(true);
       toast.success("Invite sent to " + email);

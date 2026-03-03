@@ -121,15 +121,15 @@ export function PlacementTable({ data }: { data: PlacementRow[] }) {
     <div className="glass-card p-5">
       <p className="text-xs font-semibold text-white/60 mb-4">Placement Breakdown</p>
       <div className="overflow-x-auto">
-        <table className="w-full text-xs">
+        <table className="w-full text-xs" style={{ minWidth: 540 }}>
           <thead>
             <tr className="text-white/30 text-left border-b border-white/[0.06]">
-              <th className="pb-2 font-medium">Platform</th>
-              <th className="pb-2 font-medium">Position</th>
-              <th className="pb-2 font-medium text-right">Impressions</th>
-              <th className="pb-2 font-medium text-right">Clicks</th>
-              <th className="pb-2 font-medium text-right">CTR</th>
-              <th className="pb-2 font-medium text-right">Share</th>
+              <th className="pb-2 pr-3 font-medium whitespace-nowrap">Platform</th>
+              <th className="pb-2 pr-3 font-medium whitespace-nowrap">Position</th>
+              <th className="pb-2 pl-3 font-medium text-right whitespace-nowrap">Impressions</th>
+              <th className="pb-2 pl-3 font-medium text-right whitespace-nowrap">Clicks</th>
+              <th className="pb-2 pl-3 font-medium text-right whitespace-nowrap">CTR</th>
+              <th className="pb-2 pl-3 font-medium text-right whitespace-nowrap">Share</th>
             </tr>
           </thead>
           <tbody>
@@ -138,23 +138,23 @@ export function PlacementTable({ data }: { data: PlacementRow[] }) {
               const dot = platformDot[row.platform] ?? "bg-white/30";
               return (
                 <tr key={i} className="border-b border-white/[0.03] last:border-0">
-                  <td className="py-2.5">
+                  <td className="py-2.5 pr-3 whitespace-nowrap">
                     <div className="flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full ${dot}`} />
+                      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dot}`} />
                       <span className="text-white/70">{row.platform}</span>
                     </div>
                   </td>
-                  <td className="py-2.5 text-white/50">{row.position}</td>
-                  <td className="py-2.5 text-white/60 text-right font-medium">
+                  <td className="py-2.5 pr-3 text-white/50 whitespace-nowrap">{row.position}</td>
+                  <td className="py-2.5 pl-3 text-white/60 text-right font-medium whitespace-nowrap">
                     {row.impressions.toLocaleString()}
                   </td>
-                  <td className="py-2.5 text-white/50 text-right">
+                  <td className="py-2.5 pl-3 text-white/50 text-right whitespace-nowrap">
                     {row.clicks.toLocaleString()}
                   </td>
-                  <td className="py-2.5 text-white/50 text-right">
+                  <td className="py-2.5 pl-3 text-white/50 text-right whitespace-nowrap">
                     {row.ctr != null ? `${row.ctr.toFixed(2)}%` : "--"}
                   </td>
-                  <td className="py-2.5 text-white/60 text-right font-medium">
+                  <td className="py-2.5 pl-3 text-white/60 text-right font-medium whitespace-nowrap">
                     {pct.toFixed(0)}%
                   </td>
                 </tr>
