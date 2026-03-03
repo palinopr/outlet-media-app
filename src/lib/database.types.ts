@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_activity: {
+        Row: {
+          id: number
+          created_at: string
+          user_id: string
+          user_email: string
+          event_type: string
+          page: string | null
+          detail: string | null
+          metadata: Json | null
+        }
+        Insert: {
+          id?: number
+          created_at?: string
+          user_id: string
+          user_email: string
+          event_type: string
+          page?: string | null
+          detail?: string | null
+          metadata?: Json | null
+        }
+        Update: {
+          id?: number
+          created_at?: string
+          user_id?: string
+          user_email?: string
+          event_type?: string
+          page?: string | null
+          detail?: string | null
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       agent_alerts: {
         Row: {
           created_at: string
