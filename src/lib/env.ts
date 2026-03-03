@@ -22,12 +22,18 @@ const serverSchema = z.object({
   META_ACCESS_TOKEN: z.string().optional(),
   META_AD_ACCOUNT_ID: z.string().optional(),
   TICKETMASTER_API_KEY: z.string().optional(),
+
+  // Meta OAuth (optional until OAuth flow is enabled)
+  META_APP_ID: z.string().optional(),
+  META_APP_SECRET: z.string().optional(),
+  TOKEN_ENCRYPTION_KEY: z.string().min(32).optional(),
 });
 
 const publicSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url("NEXT_PUBLIC_SUPABASE_URL must be a valid URL"),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1, "NEXT_PUBLIC_SUPABASE_ANON_KEY is required"),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1, "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY is required"),
+  NEXT_PUBLIC_APP_URL: z.string().url().optional(),
 });
 
 function validateEnv() {
@@ -36,6 +42,7 @@ function validateEnv() {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   });
 
   if (!publicResult.success) {
@@ -53,6 +60,9 @@ function validateEnv() {
     META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN,
     META_AD_ACCOUNT_ID: process.env.META_AD_ACCOUNT_ID,
     TICKETMASTER_API_KEY: process.env.TICKETMASTER_API_KEY,
+    META_APP_ID: process.env.META_APP_ID,
+    META_APP_SECRET: process.env.META_APP_SECRET,
+    TOKEN_ENCRYPTION_KEY: process.env.TOKEN_ENCRYPTION_KEY,
   });
 
   if (!serverResult.success) {
