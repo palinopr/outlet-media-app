@@ -183,26 +183,28 @@ export async function fetchAllCampaigns(
 
     const insightIds = filtered.map((c) => c.id);
 
-    // Fetch insights only for the campaigns we need (single request)
+    // Fetch insights in batches (Meta API has URL length limits)
+    const BATCH = 50;
     let rawInsights: RawInsight[] = [];
     let rawDaily: RawDailyInsight[] = [];
+    const insightsFields = "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,purchase_roas";
 
-    if (insightIds.length > 0) {
-      const filter = buildCampaignFilter(insightIds);
-      const insightsFields = "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,purchase_roas";
+    for (let i = 0; i < insightIds.length; i += BATCH) {
+      const batch = insightIds.slice(i, i + BATCH);
+      const filter = buildCampaignFilter(batch);
 
       const [insights, daily] = await Promise.all([
         fetchAllPages<RawInsight>(
           buildInsightsUrl(base, token, preset, filter, insightsFields, "500"),
-          "insights",
+          `insights-${i}`,
         ),
         fetchAllPages<RawDailyInsight>(
           buildInsightsUrl(base, token, preset, filter, "campaign_id,spend,purchase_roas", "5000", "1"),
-          "daily",
+          `daily-${i}`,
         ),
       ]);
-      rawInsights = insights;
-      rawDaily = daily;
+      rawInsights.push(...insights);
+      rawDaily.push(...daily);
     }
 
     console.log(`[meta-campaigns] ${filtered.length}/${rawCampaigns.length} campaigns, ${rawInsights.length} insights, ${rawDaily.length} daily rows`);
