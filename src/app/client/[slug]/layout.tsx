@@ -40,6 +40,7 @@ export default async function ClientLayout({ children, params }: Props) {
     const meta = (user?.publicMetadata ?? {}) as {
       role?: string;
       client_slug?: string;
+      client_role?: string;
     };
 
     const isAdmin = meta.role === "admin";
@@ -71,10 +72,11 @@ export default async function ClientLayout({ children, params }: Props) {
         .single();
 
       if (clientRow) {
+        const enrollRole = meta.client_role === "owner" ? "owner" : "member";
         await supabaseAdmin
           .from("client_members")
           .upsert(
-            { client_id: clientRow.id, clerk_user_id: userId, role: "member" },
+            { client_id: clientRow.id, clerk_user_id: userId, role: enrollRole },
             { onConflict: "client_id,clerk_user_id" }
           );
       }

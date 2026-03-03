@@ -112,6 +112,7 @@ export const AgentPostSchema = z.object({
 export const InviteSchema = z.object({
   email: z.string().email(),
   client_slug: z.string().optional(),
+  client_role: z.enum(["owner", "member"]).optional(),
   role: z.string().optional(),
 });
 

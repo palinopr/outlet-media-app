@@ -39,6 +39,7 @@ export async function POST(request: Request) {
 
   const publicMetadata: Record<string, string> = {};
   if (body.client_slug) publicMetadata.client_slug = body.client_slug;
+  if (body.client_role) publicMetadata.client_role = body.client_role;
   if (body.role) publicMetadata.role = body.role;
 
   const client = await clerkClient();

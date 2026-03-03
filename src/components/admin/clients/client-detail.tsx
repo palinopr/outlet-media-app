@@ -128,6 +128,7 @@ function InviteMemberForm({
   onDone: () => void;
 }) {
   const [email, setEmail] = useState("");
+  const [clientRole, setClientRole] = useState<"owner" | "member">("member");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -138,7 +139,7 @@ function InviteMemberForm({
       const res = await fetch("/api/admin/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, client_slug: clientSlug }),
+        body: JSON.stringify({ email, client_slug: clientSlug, client_role: clientRole }),
       });
       if (!res.ok) {
         const d = (await res.json()) as { error?: string };
@@ -178,6 +179,17 @@ function InviteMemberForm({
           placeholder="member@example.com"
           className="h-8 w-52 text-sm"
         />
+      </div>
+      <div className="flex flex-col gap-1">
+        <label className="text-xs text-muted-foreground">Role</label>
+        <select
+          value={clientRole}
+          onChange={(e) => setClientRole(e.target.value as "owner" | "member")}
+          className="h-8 rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+        >
+          <option value="owner">Owner</option>
+          <option value="member">Member</option>
+        </select>
       </div>
       <Button type="submit" size="sm" disabled={loading} className="h-8">
         {loading ? (

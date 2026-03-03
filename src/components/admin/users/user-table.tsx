@@ -35,6 +35,7 @@ interface Props {
 function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOption[] }) {
   const [email, setEmail] = useState("");
   const [clientSlug, setClientSlug] = useState<string>("");
+  const [clientRole, setClientRole] = useState<"owner" | "member">("member");
   const [asAdmin, setAsAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,6 +52,7 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
         body: JSON.stringify({
           email,
           client_slug: asAdmin ? undefined : clientSlug || undefined,
+          client_role: asAdmin ? undefined : clientRole,
           role: asAdmin ? "admin" : undefined,
         }),
       });
@@ -114,6 +116,19 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
           <option value="__admin__">Admin (Outlet Media team)</option>
         </select>
       </div>
+      {!asAdmin && clientSlug && (
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-muted-foreground">Role</label>
+          <select
+            value={clientRole}
+            onChange={(e) => setClientRole(e.target.value as "owner" | "member")}
+            className="h-8 rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          >
+            <option value="owner">Owner</option>
+            <option value="member">Member</option>
+          </select>
+        </div>
+      )}
       {error && <p className="text-xs text-red-400 self-end pb-1">{error}</p>}
       <Button type="submit" size="sm" disabled={loading} className="h-8">
         {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Send Invite"}
