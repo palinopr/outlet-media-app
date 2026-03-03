@@ -399,3 +399,15 @@ export async function getData(
     rangeLabel: RANGE_LABELS[range],
   };
 }
+
+export async function getLastSyncedAt(slug: string): Promise<string | null> {
+  if (!supabaseAdmin) return null;
+  const { data } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select("synced_at")
+    .eq("client_slug", slug)
+    .order("synced_at", { ascending: false })
+    .limit(1)
+    .single();
+  return data?.synced_at ?? null;
+}

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   Table,
   TableBody,
@@ -15,6 +16,15 @@ import { getCampaignsPageData } from "../data";
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const clientName = slugToLabel(slug);
+  return {
+    title: `${clientName} Campaigns`,
+    description: `Campaign performance data for ${clientName}`,
+  };
 }
 
 // --- Helpers ---

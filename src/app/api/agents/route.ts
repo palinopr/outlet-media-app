@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AgentPostSchema, VALID_AGENTS } from "@/lib/api-schemas";
-import { authGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
+import { adminGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
 
 // ─── POST /api/agents ─ queue a job ──────────────────────────────────────────
 
 export async function POST(request: Request) {
-  const { error: authErr } = await authGuard();
-  if (authErr) return authErr;
+  const adminErr = await adminGuard();
+  if (adminErr) return adminErr;
 
   const raw = await parseJsonBody<unknown>(request);
   if (raw instanceof Response) return raw;
@@ -42,8 +42,8 @@ export async function POST(request: Request) {
 // ─── GET /api/agents ─ latest status per agent ──────────────────────────────
 
 export async function GET() {
-  const { error: authErr } = await authGuard();
-  if (authErr) return authErr;
+  const adminErr = await adminGuard();
+  if (adminErr) return adminErr;
 
   if (!supabaseAdmin) {
     // Return idle stubs when DB not connected

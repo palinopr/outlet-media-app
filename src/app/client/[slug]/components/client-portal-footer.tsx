@@ -1,12 +1,14 @@
 import { Shield, Eye, Clock } from "lucide-react";
+import { timeAgo } from "@/lib/formatters";
 
 interface Props {
   dataSource: string;
   /** Use the Clock icon instead of Eye for the sync indicator (campaign detail pages). */
   showClock?: boolean;
+  lastSyncedAt?: string | null;
 }
 
-export function ClientPortalFooter({ dataSource, showClock = false }: Props) {
+export function ClientPortalFooter({ dataSource, showClock = false, lastSyncedAt }: Props) {
   const SyncIcon = showClock ? Clock : Eye;
   return (
     <footer className="pt-4 print:hidden">
@@ -25,7 +27,7 @@ export function ClientPortalFooter({ dataSource, showClock = false }: Props) {
           </div>
           <div className="flex items-center gap-1.5 text-[11px] text-white/20">
             <SyncIcon className="h-3 w-3" />
-            <span>{dataSource === "meta_api" ? "Live from Meta" : "Last sync"}</span>
+            <span>{dataSource === "meta_api" ? "Live from Meta" : lastSyncedAt ? `Synced ${timeAgo(lastSyncedAt)}` : "Last sync"}</span>
           </div>
         </div>
       </div>

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { authGuard, apiError } from "@/lib/api-helpers";
+import { adminGuard, apiError } from "@/lib/api-helpers";
 
 // Returns the last 30 jobs (excluding heartbeats) for the chat panel refresh
 export async function GET() {
-  const { error: authErr } = await authGuard();
-  if (authErr) return authErr;
+  const adminErr = await adminGuard();
+  if (adminErr) return adminErr;
 
   if (!supabaseAdmin) {
     return NextResponse.json({ jobs: [] });

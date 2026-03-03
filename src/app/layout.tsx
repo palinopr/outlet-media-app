@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -14,8 +15,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Outlet Media",
-  description: "Autonomous ad agency platform",
+  metadataBase: new URL("https://outlet-media-app-production.up.railway.app"),
+  title: {
+    default: "Outlet Media",
+    template: "%s | Outlet Media",
+  },
+  description: "Autonomous ad agency platform for music promoters",
+  openGraph: {
+    type: "website",
+    siteName: "Outlet Media",
+    title: "Outlet Media",
+    description: "Autonomous ad agency platform for music promoters",
+  },
+  twitter: {
+    card: "summary",
+  },
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({
@@ -28,6 +46,7 @@ export default function RootLayout({
   const content = (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <Toaster theme="dark" richColors />
         {children}
       </body>
     </html>

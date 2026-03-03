@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Send, Loader2, Bot, User, RefreshCw } from "lucide-react";
 import { timeAgo } from "@/lib/formatters";
+import { toast } from "sonner";
 import { AgentJob } from "@/app/admin/agents/data";
 import { AGENT_CONFIG, agentName } from "./constants";
 import { StatusBadge } from "./status-badge";
@@ -156,12 +157,16 @@ export function ChatPanel({ initialJobs }: ChatPanelProps) {
 
     setSending(false);
 
-    if (!res.ok) return;
+    if (!res.ok) {
+      toast.error("Failed to send message");
+      return;
+    }
     const { job } = await res.json() as { job: AgentJob };
 
     // Optimistic add
     setJobs((prev) => [...prev, job]);
     setActiveJobId(job.id);
+    toast.success("Message sent");
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {

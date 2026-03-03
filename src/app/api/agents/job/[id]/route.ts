@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { authGuard, apiError } from "@/lib/api-helpers";
+import { adminGuard, apiError } from "@/lib/api-helpers";
 
 export async function GET(
   _req: Request,
@@ -8,8 +8,8 @@ export async function GET(
 ) {
   const { id: rawId } = await params;
 
-  const { error: authErr } = await authGuard();
-  if (authErr) return authErr;
+  const adminErr = await adminGuard();
+  if (adminErr) return adminErr;
 
   const id = rawId.replace(/[^a-zA-Z0-9_-]/g, "");
   if (!id) {

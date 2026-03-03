@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { slugToLabel } from "@/lib/formatters";
@@ -7,6 +8,23 @@ import { ClientNav } from "./components/client-nav";
 interface Props {
   children: ReactNode;
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const clientName = slugToLabel(slug);
+  return {
+    title: `${clientName} Portal`,
+    description: `${clientName} campaign performance dashboard powered by Outlet Media`,
+    openGraph: {
+      title: `${clientName} | Outlet Media`,
+      description: `${clientName} campaign performance dashboard`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary",
+    },
+  };
 }
 
 export default async function ClientLayout({ children, params }: Props) {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, Check } from "lucide-react";
+import { toast } from "sonner";
 import { toSlug } from "@/lib/to-slug";
 
 export function ClientOnboardForm() {
@@ -33,6 +34,7 @@ export function ClientOnboardForm() {
         throw new Error(data.error || `HTTP ${res.status}`);
       }
       setStatus("done");
+      toast.success("Invite sent successfully");
       setTimeout(() => {
         setStatus("idle");
         setName("");
@@ -41,6 +43,7 @@ export function ClientOnboardForm() {
       }, 2000);
     } catch {
       setStatus("error");
+      toast.error("Failed to send invite");
       setTimeout(() => setStatus("idle"), 3000);
     }
   }

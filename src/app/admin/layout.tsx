@@ -1,10 +1,18 @@
 import type { ReactNode } from "react";
+import type { Metadata } from "next";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { SidebarContent } from "@/components/admin/sidebar-content";
 import { MobileSidebar } from "@/components/admin/mobile-sidebar";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: {
+    default: "Admin",
+    template: "%s | Admin | Outlet Media",
+  },
+};
 
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;

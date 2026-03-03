@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Check, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { UserRow } from "@/app/admin/users/data";
 import { fmtDate, slugToLabel } from "@/lib/formatters";
 import { CLIENT_SLUGS } from "@/lib/constants";
@@ -49,9 +50,11 @@ function InviteForm({ onDone }: { onDone: () => void }) {
         throw new Error(d.error ?? "Failed to send invite");
       }
       setSent(true);
+      toast.success("Invite sent to " + email);
       setTimeout(() => { onDone(); }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");
+      toast.error(err instanceof Error ? err.message : "Failed to send invite");
     } finally {
       setLoading(false);
     }
@@ -135,7 +138,10 @@ function AssignCell({ user }: { user: UserRow }) {
         body: JSON.stringify({ client_slug: newVal || null }),
       });
       setSaved(true);
+      toast.success("Client access updated");
       setTimeout(() => setSaved(false), 2000);
+    } catch {
+      toast.error("Failed to update client access");
     } finally {
       setSaving(false);
     }
