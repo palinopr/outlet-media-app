@@ -40,7 +40,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const { slug } = await params;
   const { range: rangeParam } = await searchParams;
   const validRanges: DateRange[] = ["today", "yesterday", "7", "14", "30", "lifetime"];
-  const range: DateRange = validRanges.includes(rangeParam as DateRange) ? (rangeParam as DateRange) : "lifetime";
+  const range: DateRange = validRanges.includes(rangeParam as DateRange) ? (rangeParam as DateRange) : "today";
   const data = await getData(slug, range);
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = data;
 

@@ -31,7 +31,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const validRanges: DateRange[] = ["today", "yesterday", "7", "14", "30", "lifetime"];
   const range: DateRange = validRanges.includes(rangeParam as DateRange)
     ? (rangeParam as DateRange)
-    : "lifetime";
+    : "today";
 
   const data = await getCampaignDetail(slug, campaignId, range);
 
@@ -87,13 +87,15 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 
       {/* -- Key Metrics -- */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-        <StatCard
-          icon={TrendingUp}
-          iconColor="bg-violet-500/10 ring-1 ring-violet-500/20 text-violet-400"
-          label="ROAS"
-          value={c.roas != null ? `${c.roas.toFixed(1)}x` : "--"}
-          sub={roasLabel(c.roas)}
-        />
+        <div className="col-span-2 lg:col-span-1">
+          <StatCard
+            icon={TrendingUp}
+            iconColor="bg-violet-500/10 ring-1 ring-violet-500/20 text-violet-400"
+            label="ROAS"
+            value={c.roas != null ? `${c.roas.toFixed(1)}x` : "--"}
+            sub={roasLabel(c.roas)}
+          />
+        </div>
         <StatCard
           icon={Target}
           iconColor="bg-emerald-500/10 ring-1 ring-emerald-500/20 text-emerald-400"

@@ -20,7 +20,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
   const clientSlug = client && client !== "all" ? client : null;
   const range: DateRange = rawRange && VALID_RANGES.has(rawRange as DateRange)
     ? (rawRange as DateRange)
-    : "lifetime";
+    : "today";
 
   const { campaigns, clients, dailyInsights, error } = await getCampaigns(clientSlug, range);
 
