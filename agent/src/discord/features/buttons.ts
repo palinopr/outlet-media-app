@@ -113,14 +113,6 @@ export function registerButtonHandler(client: Client): void {
           break;
         }
 
-        case "btn_supervise": {
-          await btn.deferReply({ ephemeral: true });
-          const { handleSuperviseCommand } = await import("../commands/supervisor.js");
-          const result = await handleSuperviseCommand(client);
-          await btn.editReply({ embeds: [result.embed] });
-          break;
-        }
-
         default:
           await btn.reply({ content: "Unknown button.", ephemeral: true });
       }

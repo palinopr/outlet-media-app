@@ -22,17 +22,31 @@ const THINK_TASK = "Run your proactive self-improvement cycle. Read LEARNINGS.md
 /**
  * Start the scheduler.
  *
+ * IMPORTANT: These 5 core cron jobs start unconditionally on process startup
+ * and are NOT managed by the Discord schedule UI (schedule.ts). The schedule
+ * UI lists them with enabled: false, but that reflects the UI's toggle state,
+ * not whether the jobs are actually running. Enabling a job in the schedule UI
+ * will create a SECOND cron instance for the same job.
+ *
+ * The 10 sweep jobs in cron-sweeps.ts are the opposite: they start OFF and
+ * are only activated through the schedule UI (!enable <job>).
+ *
+ * To unify these, startScheduler() would need to be removed and all 15 jobs
+ * managed through schedule.ts exclusively. That requires ensuring schedule.ts
+ * initializes early enough and auto-enables the 5 core jobs on startup.
+ *
  * Jobs can also be triggered manually from Discord channels
  * via triggerManualJob() (e.g. "run meta sync" in #media-buyer).
  */
 export function startScheduler(): void {
+  // Core infra jobs -- always on, not toggled by schedule UI
   cron.schedule(HEARTBEAT_CRON, () => { pingHeartbeat(); });
   cron.schedule(CHECK_CRON, () => { runTmCheck(); });
   cron.schedule(META_CRON, () => { runMetaSync(); });
   cron.schedule(THINK_CRON, () => { runThinkCycle(); });
   cron.schedule(DISCORD_HEALTH_CRON, () => { runDiscordHealthCheck(); });
 
-  console.log("[scheduler] All scheduled jobs started");
+  console.log("[scheduler] 5 core cron jobs started (heartbeat, tm, meta, think, health-check)");
 }
 
 /**
@@ -179,7 +193,8 @@ async function runDiscordHealthCheck() {
 
 async function runThinkCycle() {
   if (state.thinkRunning || state.tmRunning || state.metaRunning || state.jobRunning || state.discordAdminRunning) {
-    console.log("[think] Skipping -- another task is running");
+    const blocker = state.thinkRunning ? "think" : state.tmRunning ? "tm" : state.metaRunning ? "meta" : state.jobRunning ? "job" : "discordAdmin";
+    console.log(`[think] Skipping -- blocked by: ${blocker}`);
     return;
   }
 
@@ -194,6 +209,10 @@ async function runThinkCycle() {
       maxTurns: 15,
     });
 
+    // Signal file: the think cycle's Claude subprocess writes proactive alerts
+    // to this path. We read + delete it here to forward the alert to Discord/Telegram.
+    // Fragile (relies on a temp file convention), but changing it requires reworking
+    // the runner<->scheduler communication boundary.
     const draftPath = "/tmp/outlet-media-proactive.txt";
     if (existsSync(draftPath)) {
       const draft = readFileSync(draftPath, "utf8").trim();

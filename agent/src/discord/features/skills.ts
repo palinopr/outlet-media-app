@@ -52,7 +52,8 @@ async function safeReaddir(path: string): Promise<string[]> {
   try {
     const entries = await readdir(path);
     return entries.filter(f => f !== ".gitkeep");
-  } catch {
+  } catch (err) {
+    console.error("[skills] failed to read skills directory:", err);
     return [];
   }
 }
@@ -145,7 +146,7 @@ export async function maybeCreateSkill(
       "agent-feed",
       `New skill for **${internals.name}**: \`${skillName}.md\``,
     );
-  } catch {
-    // Skill creation is best-effort
+  } catch (err) {
+    console.error("[skills] skill creation failed:", err);
   }
 }

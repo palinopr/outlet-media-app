@@ -56,7 +56,7 @@ describe("scheduler – startScheduler() cron jobs are enabled", () => {
 
   it("logs the correct startup message", () => {
     expect(schedulerSrc).toContain(
-      '[scheduler] All scheduled jobs started'
+      '[scheduler] 5 core cron jobs started'
     );
   });
 

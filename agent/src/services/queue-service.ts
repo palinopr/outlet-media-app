@@ -138,7 +138,7 @@ export function completeTask(taskId: string, result: unknown): void {
   // Process next in queue
   processNextForAgent(task.to);
 
-  if (taskRegistry.size > 500) pruneTaskRegistry();
+  if (taskRegistry.size > 200) pruneTaskRegistry();
 }
 
 /**
@@ -157,7 +157,7 @@ export function failTask(taskId: string, error: string): void {
 
   processNextForAgent(task.to);
 
-  if (taskRegistry.size > 500) pruneTaskRegistry();
+  if (taskRegistry.size > 200) pruneTaskRegistry();
 }
 
 /**
@@ -251,24 +251,51 @@ async function persistTask(task: AgentTask): Promise<void> {
     approved_by: task.approvedBy ?? null,
   };
 
-  await supabase
+  const { error } = await supabase
     .from("agent_tasks")
-    .upsert(row, { onConflict: "id" })
-    .then(
-      () => {},
-      (err) => console.warn("[queue] Persist failed:", err.message),
-    );
+    .upsert(row, { onConflict: "id" });
+
+  if (error) {
+    console.warn("[queue] persist retry after:", error.message);
+    const { error: retryError } = await supabase
+      .from("agent_tasks")
+      .upsert(row, { onConflict: "id" });
+    if (retryError) {
+      console.error("[queue] persist failed permanently:", retryError.message);
+    }
+  }
 }
 
 /**
- * Clean old tasks from memory (keep last 500).
+ * Remove completed/failed tasks beyond the last 200, and anything older than 24 hours.
+ * Called after every completeTask/failTask when registry exceeds 200 entries.
  */
 export function pruneTaskRegistry(): void {
-  if (taskRegistry.size <= 500) return;
-  const entries = [...taskRegistry.entries()]
-    .sort((a, b) => b[1].createdAt.getTime() - a[1].createdAt.getTime());
-  const toDelete = entries.slice(500);
-  for (const [id] of toDelete) {
-    taskRegistry.delete(id);
+  const now = Date.now();
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const terminalStatuses = new Set(["completed", "failed", "rejected", "expired"]);
+  let pruned = 0;
+
+  // Pass 1: remove terminal tasks older than 24 hours
+  for (const [id, task] of taskRegistry) {
+    if (terminalStatuses.has(task.status) && now - task.createdAt.getTime() > DAY_MS) {
+      taskRegistry.delete(id);
+      pruned++;
+    }
+  }
+
+  // Pass 2: if still over 200, keep only the 200 most recent
+  if (taskRegistry.size > 200) {
+    const entries = [...taskRegistry.entries()]
+      .sort((a, b) => b[1].createdAt.getTime() - a[1].createdAt.getTime());
+    const toDelete = entries.slice(200);
+    for (const [id] of toDelete) {
+      taskRegistry.delete(id);
+      pruned++;
+    }
+  }
+
+  if (pruned > 0) {
+    console.log(`[queue] GC: pruned ${pruned} old tasks`);
   }
 }

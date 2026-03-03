@@ -22,27 +22,6 @@ const MEMORY_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes between updates per agent
 /** Messages too trivial to extract memory from */
 const TRIVIAL = /^(ok|thanks|ty|got it|cool|nice|yes|no|yep|nope|k|thx|sure|alright|lol|haha)[\s.!?]*$/i;
 
-/** Debounced memory channel syncs -- batch Discord embed updates */
-const pendingSyncs = new Map<string, ReturnType<typeof setTimeout>>();
-const SYNC_DEBOUNCE_MS = 30_000; // 30 seconds
-
-function queueMemorySync(agentKey: string): void {
-  const existing = pendingSyncs.get(agentKey);
-  if (existing) clearTimeout(existing);
-
-  pendingSyncs.set(agentKey, setTimeout(async () => {
-    pendingSyncs.delete(agentKey);
-    try {
-      const { discordClient } = await import("../core/entry.js");
-      if (!discordClient) return;
-      const { deploySingleAgentInternals } = await import("../core/config.js");
-      await deploySingleAgentInternals(discordClient, agentKey);
-    } catch {
-      // Best-effort sync
-    }
-  }, SYNC_DEBOUNCE_MS));
-}
-
 const EXTRACT_PROMPT = [
   "You are a memory extraction filter. Given a conversation between a user and an agent,",
   "extract ONLY facts worth remembering for future sessions. Output ONLY bullet points.",
@@ -133,17 +112,14 @@ export async function maybeUpdateMemory(
     // Record cooldown timestamp
     lastMemoryUpdate.set(promptFile, Date.now());
 
-    // Queue debounced sync of memory channel embed in Discord
-    queueMemorySync(agentKey);
-
     // Lazy import to avoid circular dependency
     const { notifyChannel } = await import("../core/entry.js");
     await notifyChannel(
       "agent-feed",
       `Memory updated for **${internals.name}**: ${bullets.length} new item(s)`,
     );
-  } catch {
-    // Memory update is best-effort -- never fail the main flow
+  } catch (err) {
+    console.error("[memory] memory update failed:", err);
   }
 }
 
@@ -153,7 +129,8 @@ async function loadExistingMemory(path: string): Promise<string> {
     const content = await readFile(path, "utf-8");
     // Return last 2000 chars to keep context reasonable
     return content.slice(-2000);
-  } catch {
+  } catch (err) {
+    console.error("[memory] failed to read memory file:", err);
     return "(could not read)";
   }
 }

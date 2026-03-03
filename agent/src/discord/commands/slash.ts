@@ -45,9 +45,6 @@ const commands = [
     .setName("roles")
     .setDescription("Ensure all server roles are configured"),
   new SlashCommandBuilder()
-    .setName("deploy-internals")
-    .setDescription("Sync agent memory and skills to Discord channels"),
-  new SlashCommandBuilder()
     .setName("threads")
     .setDescription("List active threads in client channels"),
 ];
@@ -159,14 +156,6 @@ export function registerSlashHandler(client: Client): void {
           break;
         }
 
-        case "deploy-internals": {
-          await cmd.deferReply();
-          const { deployAllInternals } = await import("../core/config.js");
-          const result = await deployAllInternals(client);
-          await cmd.editReply(result.length > 1900 ? result.slice(0, 1900) : result);
-          break;
-        }
-
         case "threads": {
           const ch = cmd.channel;
           if (ch && "threads" in ch) {
@@ -204,7 +193,6 @@ function buildHelpText(): string {
     "`/dashboard` -- update campaign status panel",
     "`/schedule` -- show scheduled jobs panel",
     "`/roles` -- ensure Admin/Team/Bot/Viewer roles",
-    "`/deploy-internals` -- sync memory + skills to channels",
     "`/threads` -- list active threads (client channels only)",
     "",
     "**Agent channels** -- just type naturally:",

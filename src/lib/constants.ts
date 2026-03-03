@@ -14,8 +14,8 @@ export const META_PRESETS: Record<DateRange, string> = {
 export const RANGE_LABELS: Record<DateRange, string> = {
   today: "Today",
   yesterday: "Yesterday",
-  "7": "Last 7 days",
-  "14": "Last 14 days",
-  "30": "Last 30 days",
+  "7": "Last 7 Days",
+  "14": "Last 14 Days",
+  "30": "Last 30 Days",
   lifetime: "Lifetime",
 };

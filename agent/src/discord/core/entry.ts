@@ -51,6 +51,46 @@ export const discordClient = token
 export const channelSessions = new Map<string, string>();
 
 /**
+ * Per-channel lock timestamps. Tracks when each channel lock was acquired
+ * so we can detect and force-release stale locks (e.g. Claude hangs > 5 min).
+ */
+const channelLockTimestamps = new Map<string, number>();
+const CHANNEL_LOCK_MAX_AGE_MS = 300_000; // 5 minutes
+
+/**
+ * Check if a channel lock is stale and force-release it if so.
+ * Returns true if a stale lock was detected and released.
+ */
+function checkAndReleaseStaleLock(channelId: string): boolean {
+  const acquiredAt = channelLockTimestamps.get(channelId);
+  if (acquiredAt === undefined) return false;
+
+  const heldMs = Date.now() - acquiredAt;
+  if (heldMs <= CHANNEL_LOCK_MAX_AGE_MS) return false;
+
+  const heldSec = Math.round(heldMs / 1000);
+  console.warn(
+    `[discord] Stale channel lock on ${channelId} -- held for ${heldSec}s (max ${CHANNEL_LOCK_MAX_AGE_MS / 1000}s). Force-releasing.`,
+  );
+  channelLockTimestamps.delete(channelId);
+  return true;
+}
+
+/**
+ * Record when a channel lock is acquired. Called before handleMessage.
+ */
+export function markChannelLockAcquired(channelId: string): void {
+  channelLockTimestamps.set(channelId, Date.now());
+}
+
+/**
+ * Clear a channel lock timestamp. Called when handleMessage completes.
+ */
+export function markChannelLockReleased(channelId: string): void {
+  channelLockTimestamps.delete(channelId);
+}
+
+/**
  * Dedup guard: prevent the same message from being processed twice.
  */
 const processedMessages = new Set<string>();
@@ -205,18 +245,6 @@ export function startDiscordBot(): void {
       return;
     }
 
-    if (content === "!deploy-internals" || content === "!deploy-configs") {
-      if (!discordClient) { await msg.reply("Bot not connected."); return; }
-      await msg.reply("Deploying agent memory + skills to all channels...");
-      const { deployAllInternals } = await import("./config.js");
-      const result = await deployAllInternals(discordClient);
-      const chunks2 = chunkText(result, 1900);
-      for (const chunk of chunks2) {
-        if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
-      }
-      return;
-    }
-
     if (content === "!roles" || content === "/roles") {
       const guild = discordClient?.guilds.cache.first();
       if (!guild) { await msg.reply("No guild found."); return; }
@@ -302,14 +330,23 @@ export function startDiscordBot(): void {
       return;
     }
 
-    // Per-channel lock
+    // Per-channel lock with stale lock detection
     if (isChannelLocked(msg.channelId)) {
-      console.log(`[discord] Channel ${channelName} already processing, skipping msg ${msg.id}`);
-      return;
+      const wasStale = checkAndReleaseStaleLock(msg.channelId);
+      if (!wasStale) {
+        console.log(`[discord] Channel ${channelName} already processing, skipping msg ${msg.id}`);
+        return;
+      }
+      // Stale lock was force-released, proceed with this message
     }
 
-    // Route to the correct agent
-    await handleMessage(msg, content, channelName, discordClient);
+    // Track lock acquisition time and route to the correct agent
+    markChannelLockAcquired(msg.channelId);
+    try {
+      await handleMessage(msg, content, channelName, discordClient);
+    } finally {
+      markChannelLockReleased(msg.channelId);
+    }
   });
 
   discordClient.login(token).catch((err: unknown) => {

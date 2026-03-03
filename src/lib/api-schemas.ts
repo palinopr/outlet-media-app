@@ -115,11 +115,6 @@ export const InviteSchema = z.object({
   role: z.string().optional(),
 });
 
-export const UserUpdateSchema = z.object({
-  client_slug: z.string().min(1).nullable().optional(),
-  role: z.string().min(1).nullable().optional(),
-});
-
 // ─── Heartbeat schema ───────────────────────────────────────────────────────
 
 export const HeartbeatPayloadSchema = z.object({
