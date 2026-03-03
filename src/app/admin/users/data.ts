@@ -45,12 +45,20 @@ export async function getUsers(): Promise<UserRow[]> {
     const existingEmails = new Set(userRows.map((u) => u.email.toLowerCase()));
     // Show pending/expired invites, plus "accepted" invites where the user
     // never finished sign-up (no matching user account exists)
-    const invitations = result.data.filter(
-      (i) =>
-        i.status === "pending" ||
-        i.status === "expired" ||
-        (i.status === "accepted" && !existingEmails.has(i.emailAddress.toLowerCase()))
-    );
+    // Prefer pending > expired > accepted (incomplete sign-up).
+    // Deduplicate by email -- keep the most actionable invitation per address.
+    const bestByEmail = new Map<string, (typeof result.data)[number]>();
+    const priority: Record<string, number> = { pending: 3, expired: 2, accepted: 1 };
+    for (const inv of result.data) {
+      const email = inv.emailAddress.toLowerCase();
+      if (existingEmails.has(email)) continue; // user already signed up
+      if (inv.status === "revoked") continue;
+      const existing = bestByEmail.get(email);
+      if (!existing || (priority[inv.status] ?? 0) > (priority[existing.status] ?? 0)) {
+        bestByEmail.set(email, inv);
+      }
+    }
+    const invitations = [...bestByEmail.values()];
     inviteRows = invitations.map((inv) => {
       const meta = (inv.publicMetadata ?? {}) as {
         role?: string;
