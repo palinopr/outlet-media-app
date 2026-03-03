@@ -120,3 +120,48 @@ export const InviteSchema = z.object({
 export const HeartbeatPayloadSchema = z.object({
   secret: z.string().min(1),
 });
+
+// ─── Campaign creation schema ──────────────────────────────────────────────
+
+export const CampaignCreateSchema = z.object({
+  ad_account_id: z.string().min(1),
+  client_slug: z.string().min(1),
+  name: z.string().min(1).max(400),
+  objective: z.enum([
+    "OUTCOME_AWARENESS",
+    "OUTCOME_TRAFFIC",
+    "OUTCOME_ENGAGEMENT",
+    "OUTCOME_SALES",
+  ]),
+  daily_budget: z.number().int().min(100),
+  targeting: z.object({
+    geo_locations: z.object({
+      countries: z.array(z.string()).optional(),
+      cities: z.array(z.object({ key: z.string() })).optional(),
+    }),
+    age_min: z.number().int().min(18).max(65).optional(),
+    age_max: z.number().int().min(18).max(65).optional(),
+    genders: z.array(z.number().int().min(0).max(2)).optional(),
+    flexible_spec: z
+      .array(z.object({ interests: z.array(z.object({ id: z.string(), name: z.string() })) }))
+      .optional(),
+  }),
+  placements: z
+    .object({
+      publisher_platforms: z.array(z.string()).optional(),
+      facebook_positions: z.array(z.string()).optional(),
+      instagram_positions: z.array(z.string()).optional(),
+    })
+    .optional(),
+  creative: z.object({
+    primary_text: z.string().min(1),
+    headline: z.string().optional(),
+    description: z.string().optional(),
+    call_to_action: z.string().optional(),
+    image_hash: z.string().optional(),
+    video_id: z.string().optional(),
+    link_url: z.string().url().optional(),
+  }),
+});
+
+export type CampaignCreatePayload = z.infer<typeof CampaignCreateSchema>;
