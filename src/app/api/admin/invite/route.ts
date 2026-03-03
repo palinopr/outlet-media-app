@@ -48,10 +48,12 @@ export async function POST(request: Request) {
       emailAddress: body.email,
       publicMetadata,
     });
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Failed to create invitation";
-    return NextResponse.json({ error: message }, { status: 500 });
+  } catch (err: unknown) {
+    // Clerk errors carry an `errors` array with detailed messages
+    const clerkErr = err as { errors?: { message: string }[]; message?: string; status?: number };
+    const detail = clerkErr.errors?.[0]?.message ?? clerkErr.message ?? "Failed to create invitation";
+    const status = clerkErr.status ?? 500;
+    return NextResponse.json({ error: detail }, { status });
   }
 
   return NextResponse.json({ ok: true });
