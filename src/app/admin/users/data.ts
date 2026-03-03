@@ -41,12 +41,8 @@ export async function getUsers(): Promise<UserRow[]> {
 
   let inviteRows: UserRow[] = [];
   try {
-    // Fetch all non-accepted invitations (pending, expired, revoked still block re-invite)
     const result = await client.invitations.getInvitationList();
-    const allInvitations = result.data;
-    console.log("[users/data] all invitations:", allInvitations.map((i) => ({ email: i.emailAddress, status: i.status })));
-    const invitations = allInvitations.filter((i) => i.status === "pending" || i.status === "expired");
-    console.log("[users/data] showing invitations count:", invitations.length);
+    const invitations = result.data.filter((i) => i.status === "pending" || i.status === "expired");
     inviteRows = invitations.map((inv) => {
       const meta = (inv.publicMetadata ?? {}) as {
         role?: string;
@@ -65,8 +61,6 @@ export async function getUsers(): Promise<UserRow[]> {
   } catch (err) {
     console.error("[users/data] Failed to fetch invitations from Clerk:", err);
   }
-
-  console.log("[users/data] returning", userRows.length, "users +", inviteRows.length, "invites");
 
   return [...userRows, ...inviteRows];
 }
