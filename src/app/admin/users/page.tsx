@@ -9,9 +9,13 @@ export const dynamic = "force-dynamic";
 export default async function UsersPage() {
   const [users, clients] = await Promise.all([getUsers(), getClientSummaries()]);
 
-  const adminCount = users.filter((u) => u.role === "admin").length;
-  const clientCount = users.filter((u) => u.role !== "admin").length;
-  const pendingCount = users.filter((u) => u.role !== "admin" && !u.client_slug).length;
+  const activeUsers = users.filter((u) => u.status === "active");
+  const invitedCount = users.filter((u) => u.status === "invited").length;
+  const adminCount = activeUsers.filter((u) => u.role === "admin").length;
+  const clientCount = activeUsers.filter((u) => u.role !== "admin").length;
+  const pendingCount =
+    activeUsers.filter((u) => u.role !== "admin" && !u.client_slug).length +
+    invitedCount;
 
   const stats = [
     { label: "Total Users", value: String(users.length), icon: Users, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },

@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Trash2, Loader2, Check } from "lucide-react";
+import { Trash2, Loader2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ColumnHeader } from "@/components/admin/data-table/column-header";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { StatusSelect } from "@/components/admin/status-select";
 import { fmtDate } from "@/lib/formatters";
-import { changeUserRole, deleteUser } from "@/app/admin/actions/users";
+import { changeUserRole, deleteUser, revokeInvitation } from "@/app/admin/actions/users";
 import { toast } from "sonner";
 import type { UserRow } from "@/app/admin/users/data";
 
@@ -71,6 +71,34 @@ function AssignCell({ user, clients }: { user: UserRow; clients: ClientOption[] 
   );
 }
 
+function RevokeButton({ invitationId, email }: { invitationId: string; email: string }) {
+  return (
+    <ConfirmDialog
+      trigger={
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
+        >
+          <X className="h-3.5 w-3.5" />
+        </Button>
+      }
+      title="Revoke Invitation"
+      description={`This will revoke the pending invitation for ${email}.`}
+      confirmLabel="Revoke"
+      variant="destructive"
+      onConfirm={async () => {
+        try {
+          await revokeInvitation({ invitationId });
+          toast.success(`Invitation revoked for ${email}`);
+        } catch (err) {
+          toast.error(err instanceof Error ? err.message : "Failed to revoke invitation");
+        }
+      }}
+    />
+  );
+}
+
 export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
   const { clients } = opts;
 
@@ -85,11 +113,15 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
             <span className="text-sm font-medium">
               {u.name || <span className="text-muted-foreground italic">No name</span>}
             </span>
-            {u.role !== "admin" && !u.client_slug && (
+            {u.status === "invited" ? (
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                Invited
+              </span>
+            ) : u.role !== "admin" && !u.client_slug ? (
               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
                 Pending
               </span>
-            )}
+            ) : null}
           </div>
         );
       },
@@ -106,6 +138,9 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
       header: ({ column }) => <ColumnHeader column={column} title="Role" />,
       cell: ({ row }) => {
         const u = row.original;
+        if (u.status === "invited") {
+          return <span className="text-xs text-muted-foreground italic">{u.role ?? "client"}</span>;
+        }
         return (
           <StatusSelect
             value={u.role ?? "client"}
@@ -128,7 +163,13 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
     {
       accessorKey: "client_slug",
       header: ({ column }) => <ColumnHeader column={column} title="Client Access" />,
-      cell: ({ row }) => <AssignCell user={row.original} clients={clients} />,
+      cell: ({ row }) => {
+        const u = row.original;
+        if (u.status === "invited") {
+          return <span className="text-xs text-muted-foreground italic">{u.client_slug ?? "unassigned"}</span>;
+        }
+        return <AssignCell user={row.original} clients={clients} />;
+      },
     },
     {
       accessorKey: "created_at",
@@ -142,6 +183,9 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
       enableHiding: false,
       cell: ({ row }) => {
         const u = row.original;
+        if (u.status === "invited") {
+          return <RevokeButton invitationId={u.id} email={u.email} />;
+        }
         return (
           <ConfirmDialog
             trigger={

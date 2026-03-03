@@ -45,3 +45,20 @@ export async function deleteUser(formData: { userId: string }) {
   await logAudit("user", parsed.userId, "delete", { email: user.emailAddresses[0]?.emailAddress }, null);
   revalidatePath("/admin/users");
 }
+
+const RevokeInvitationSchema = z.object({
+  invitationId: z.string().min(1),
+});
+
+export async function revokeInvitation(formData: { invitationId: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+
+  const parsed = RevokeInvitationSchema.parse(formData);
+  const client = await clerkClient();
+
+  await client.invitations.revokeInvitation(parsed.invitationId);
+
+  await logAudit("invitation", parsed.invitationId, "revoke", null, null);
+  revalidatePath("/admin/users");
+}
