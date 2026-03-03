@@ -1,5 +1,3 @@
-export const CLIENT_SLUGS = ["zamora", "kybba", "beamina", "happy_paws"] as const;
-
 export const META_API_VERSION = "v21.0";
 
 export type DateRange = "today" | "yesterday" | "7" | "14" | "30" | "lifetime";

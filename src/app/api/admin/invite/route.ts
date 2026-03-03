@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { InviteSchema } from "@/lib/api-schemas";
 import { adminGuard, parseJsonBody } from "@/lib/api-helpers";
+import { supabaseAdmin } from "@/lib/supabase";
 
 // POST /api/admin/invite
 // Body: { email: string, client_slug?: string, role?: "admin" }
@@ -22,6 +23,19 @@ export async function POST(request: Request) {
     );
   }
   const body = parsed.data;
+
+  // Validate client_slug exists in clients table
+  if (body.client_slug && supabaseAdmin) {
+    const { data: clientRow } = await supabaseAdmin
+      .from("clients")
+      .select("id")
+      .eq("slug", body.client_slug)
+      .single();
+
+    if (!clientRow) {
+      return NextResponse.json({ error: "Client not found" }, { status: 400 });
+    }
+  }
 
   const publicMetadata: Record<string, string> = {};
   if (body.client_slug) publicMetadata.client_slug = body.client_slug;

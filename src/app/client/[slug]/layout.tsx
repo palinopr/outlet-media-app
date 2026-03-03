@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { slugToLabel } from "@/lib/formatters";
+import { supabaseAdmin } from "@/lib/supabase";
 import { ClientNav } from "./components/client-nav";
 
 interface Props {
@@ -59,6 +60,24 @@ export default async function ClientLayout({ children, params }: Props) {
           </div>
         </div>
       );
+    }
+
+    // Auto-enroll: ensure client_members row exists for invited users
+    if (!isAdmin && isOwnPortal && supabaseAdmin) {
+      const { data: clientRow } = await supabaseAdmin
+        .from("clients")
+        .select("id")
+        .eq("slug", slug)
+        .single();
+
+      if (clientRow) {
+        await supabaseAdmin
+          .from("client_members")
+          .upsert(
+            { client_id: clientRow.id, clerk_user_id: userId, role: "member" },
+            { onConflict: "client_id,clerk_user_id" }
+          );
+      }
     }
   }
 

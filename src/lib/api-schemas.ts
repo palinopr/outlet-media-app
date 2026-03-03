@@ -115,6 +115,36 @@ export const InviteSchema = z.object({
   role: z.string().optional(),
 });
 
+// ─── Client management schemas ──────────────────────────────────────────────
+
+export const CreateClientSchema = z.object({
+  name: z.string().min(1).max(200),
+  slug: z.string().min(1).max(100).regex(/^[a-z0-9_]+$/, "Slug must be lowercase alphanumeric with underscores"),
+});
+
+export const UpdateClientSchema = z.object({
+  clientId: z.string().uuid(),
+  name: z.string().min(1).max(200).optional(),
+  slug: z.string().min(1).max(100).regex(/^[a-z0-9_]+$/).optional(),
+  status: z.enum(["active", "inactive"]).optional(),
+});
+
+export const AddClientMemberSchema = z.object({
+  clientId: z.string().uuid(),
+  clerkUserId: z.string().min(1),
+  role: z.enum(["owner", "member"]).default("member"),
+});
+
+export const RemoveClientMemberSchema = z.object({
+  clientId: z.string().uuid(),
+  memberId: z.string().uuid(),
+});
+
+export const ChangeClientMemberRoleSchema = z.object({
+  memberId: z.string().uuid(),
+  role: z.enum(["owner", "member"]),
+});
+
 // ─── Heartbeat schema ───────────────────────────────────────────────────────
 
 export const HeartbeatPayloadSchema = z.object({

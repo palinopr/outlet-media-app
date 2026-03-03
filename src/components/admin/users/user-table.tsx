@@ -14,19 +14,25 @@ import { Button } from "@/components/ui/button";
 import { UserPlus, Check, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { UserRow } from "@/app/admin/users/data";
-import { fmtDate, slugToLabel } from "@/lib/formatters";
-import { CLIENT_SLUGS } from "@/lib/constants";
+import { fmtDate } from "@/lib/formatters";
 import { changeUserRole, deleteUser } from "@/app/admin/actions/users";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { StatusSelect } from "@/components/admin/status-select";
 
+interface ClientOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 interface Props {
   users: UserRow[];
+  clients: ClientOption[];
 }
 
 // ─── Invite form ──────────────────────────────────────────────────────────────
 
-function InviteForm({ onDone }: { onDone: () => void }) {
+function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOption[] }) {
   const [email, setEmail] = useState("");
   const [clientSlug, setClientSlug] = useState<string>("");
   const [asAdmin, setAsAdmin] = useState(false);
@@ -100,9 +106,9 @@ function InviteForm({ onDone }: { onDone: () => void }) {
           className="h-8 rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
         >
           <option value="">— Select client —</option>
-          {CLIENT_SLUGS.map((s) => (
-            <option key={s} value={s}>
-              {slugToLabel(s)}
+          {clients.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.name}
             </option>
           ))}
           <option value="__admin__">Admin (Outlet Media team)</option>
@@ -121,7 +127,7 @@ function InviteForm({ onDone }: { onDone: () => void }) {
 
 // ─── Assignment cell ──────────────────────────────────────────────────────────
 
-function AssignCell({ user }: { user: UserRow }) {
+function AssignCell({ user, clients }: { user: UserRow; clients: ClientOption[] }) {
   const [value, setValue] = useState(user.client_slug ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -158,9 +164,9 @@ function AssignCell({ user }: { user: UserRow }) {
         className="h-7 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
       >
         <option value="">— Unassigned —</option>
-        {CLIENT_SLUGS.map((s) => (
-          <option key={s} value={s}>
-            {slugToLabel(s)}
+        {clients.map((c) => (
+          <option key={c.slug} value={c.slug}>
+            {c.name}
           </option>
         ))}
       </select>
@@ -172,7 +178,7 @@ function AssignCell({ user }: { user: UserRow }) {
 
 // ─── Main table ───────────────────────────────────────────────────────────────
 
-export function UserTable({ users }: Props) {
+export function UserTable({ users, clients }: Props) {
   const [showInvite, setShowInvite] = useState(false);
 
   return (
@@ -180,7 +186,7 @@ export function UserTable({ users }: Props) {
       {/* Invite bar */}
       <div className="flex items-center justify-between">
         {showInvite ? (
-          <InviteForm onDone={() => setShowInvite(false)} />
+          <InviteForm onDone={() => setShowInvite(false)} clients={clients} />
         ) : (
           <Button
             size="sm"
@@ -219,6 +225,9 @@ export function UserTable({ users }: Props) {
                 <TableRow key={u.id} className="border-border/60">
                   <TableCell className="text-sm font-medium">
                     {u.name || <span className="text-muted-foreground italic">No name</span>}
+                    {u.role !== "admin" && !u.client_slug && (
+                      <span className="ml-2 text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">Pending</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
                   <TableCell>
@@ -239,7 +248,7 @@ export function UserTable({ users }: Props) {
                     />
                   </TableCell>
                   <TableCell>
-                    <AssignCell user={u} />
+                    <AssignCell user={u} clients={clients} />
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {fmtDate(u.created_at)}

@@ -337,6 +337,62 @@ export type Database = {
         }
         Relationships: []
       }
+      client_members: {
+        Row: {
+          id: string
+          client_id: string
+          clerk_user_id: string
+          role: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          clerk_user_id: string
+          role?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          client_id?: string
+          clerk_user_id?: string
+          role?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_members_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clients: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          status?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       compliance_logs: {
         Row: {
           call_id: string

@@ -28,16 +28,5 @@ export default async function RootPage() {
     redirect(`/client/${meta.client_slug}`);
   }
 
-  // Logged in but no role or client assigned yet
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
-      <div className="text-center space-y-2 max-w-sm">
-        <p className="text-lg font-semibold">Account not configured</p>
-        <p className="text-sm text-muted-foreground">
-          Your account hasn&apos;t been assigned to a client yet. Contact Outlet
-          Media to get access.
-        </p>
-      </div>
-    </div>
-  );
+  redirect("/client/pending");
 }

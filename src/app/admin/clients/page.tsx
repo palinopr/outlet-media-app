@@ -17,16 +17,17 @@ export default async function ClientsPage() {
   const clients = await getClientSummaries();
 
   const totalSpend = clients.reduce((s, c) => s + c.totalSpend, 0);
-  const totalCampaigns = clients.reduce((s, c) => s + c.activeCampaigns, 0);
+  const totalCampaigns = clients.reduce((s, c) => s + c.totalCampaigns, 0);
+  const activeCampaigns = clients.reduce((s, c) => s + c.activeCampaigns, 0);
   const blendedRoas = totalSpend > 0
     ? clients.reduce((s, c) => s + c.totalRevenue, 0) / totalSpend
     : 0;
 
   const stats = [
-    { label: "Total Clients",    value: String(clients.length),         sub: `${clients.length} active`,        icon: Users      },
-    { label: "Total Ad Spend",   value: fmtUsd(totalSpend),             sub: "across all clients",              icon: DollarSign },
-    { label: "Active Campaigns", value: String(totalCampaigns),         sub: "running now",                     icon: Megaphone  },
-    { label: "Blended ROAS",     value: blendedRoas > 0 ? blendedRoas.toFixed(1) + "x" : "—", sub: "avg return on ad spend", icon: TrendingUp },
+    { label: "Total Clients",    value: String(clients.length),         sub: `${clients.filter((c) => c.status === "active").length} active`, icon: Users      },
+    { label: "Total Ad Spend",   value: fmtUsd(totalSpend),             sub: `${totalCampaigns} campaigns`,                                  icon: DollarSign },
+    { label: "Active Campaigns", value: String(activeCampaigns),        sub: "running now",                                                   icon: Megaphone  },
+    { label: "Blended ROAS",     value: blendedRoas > 0 ? blendedRoas.toFixed(1) + "x" : "\u2014", sub: "avg return on ad spend",            icon: TrendingUp },
   ];
 
   return (
@@ -61,27 +62,13 @@ export default async function ClientsPage() {
       {/* Clients table */}
       <ClientTable clients={clients} />
 
-      {/* Portal info card */}
+      {/* Access note */}
       <Card className="border-border/60 border-dashed">
         <CardContent className="py-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1">
-              <p className="text-sm font-medium">Client Portal Access</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Each client gets a private URL at{" "}
-                <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
-                  /client/[slug]
-                </code>
-                . Share the link — no login required from the client side (Clerk
-                protects admin routes only).
-              </p>
-            </div>
-            <div className="shrink-0">
-              <code className="text-xs bg-muted px-3 py-1.5 rounded block text-center">
-                /client/zamora
-              </code>
-            </div>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Clients get their own Clerk login at <code className="text-xs bg-muted px-1.5 py-0.5 rounded">/sign-up</code>.
+            Admins approve and assign them from the Users page.
+          </p>
         </CardContent>
       </Card>
 

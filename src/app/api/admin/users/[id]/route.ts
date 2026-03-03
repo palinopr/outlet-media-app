@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { adminGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
+import { supabaseAdmin } from "@/lib/supabase";
 
 // PATCH /api/admin/users/[id]
 // Body: { client_slug: string | null }
@@ -58,6 +59,32 @@ export async function PATCH(
   const updated = await client.users.updateUserMetadata(id, {
     publicMetadata,
   });
+
+  // Sync client_members table
+  if (supabaseAdmin) {
+    if (slug) {
+      const { data: clientRow } = await supabaseAdmin
+        .from("clients")
+        .select("id")
+        .eq("slug", slug)
+        .single();
+
+      if (clientRow) {
+        await supabaseAdmin
+          .from("client_members")
+          .upsert(
+            { client_id: clientRow.id, clerk_user_id: id, role: "member" },
+            { onConflict: "client_id,clerk_user_id" }
+          );
+      }
+    } else {
+      // Clearing client_slug -- remove all memberships for this user
+      await supabaseAdmin
+        .from("client_members")
+        .delete()
+        .eq("clerk_user_id", id);
+    }
+  }
 
   return NextResponse.json({ ok: true, user: updated });
 }

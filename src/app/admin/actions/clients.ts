@@ -2,8 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
+import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
+import {
+  CreateClientSchema,
+  UpdateClientSchema,
+  AddClientMemberSchema,
+  RemoveClientMemberSchema,
+  ChangeClientMemberRoleSchema,
+} from "@/lib/api-schemas";
 import { logAudit } from "./audit";
 
 const RenameClientSchema = z.object({
@@ -59,4 +67,167 @@ export async function deactivateClient(formData: { slug: string }) {
   await logAudit("client", parsed.slug, "deactivate", null, { paused_all_campaigns: true });
   revalidatePath("/admin/clients");
   revalidatePath("/admin/campaigns");
+}
+
+// ─── Create client ──────────────────────────────────────────────────────────
+
+export async function createClient(formData: { name: string; slug: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const parsed = CreateClientSchema.parse(formData);
+
+  const { data, error } = await supabaseAdmin
+    .from("clients")
+    .insert({ name: parsed.name, slug: parsed.slug })
+    .select("id, slug")
+    .single();
+
+  if (error) {
+    if (error.code === "23505") throw new Error("A client with this slug already exists");
+    throw new Error(error.message);
+  }
+
+  await logAudit("client", data.id, "create", null, { name: parsed.name, slug: parsed.slug });
+  revalidatePath("/admin/clients");
+  return data;
+}
+
+// ─── Update client ──────────────────────────────────────────────────────────
+
+export async function updateClient(formData: { clientId: string; name?: string; slug?: string; status?: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const parsed = UpdateClientSchema.parse(formData);
+  const { clientId, ...updates } = parsed;
+
+  const { error } = await supabaseAdmin
+    .from("clients")
+    .update(updates)
+    .eq("id", clientId);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit("client", clientId, "update", null, updates);
+  revalidatePath("/admin/clients");
+}
+
+// ─── Add member to client ───────────────────────────────────────────────────
+
+export async function addClientMember(formData: { clientId: string; clerkUserId: string; role?: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const parsed = AddClientMemberSchema.parse(formData);
+
+  // Get the client slug for Clerk metadata
+  const { data: client } = await supabaseAdmin
+    .from("clients")
+    .select("slug")
+    .eq("id", parsed.clientId)
+    .single();
+
+  if (!client) throw new Error("Client not found");
+
+  // Insert member row
+  const { error } = await supabaseAdmin
+    .from("client_members")
+    .insert({
+      client_id: parsed.clientId,
+      clerk_user_id: parsed.clerkUserId,
+      role: parsed.role,
+    });
+
+  if (error) {
+    if (error.code === "23505") throw new Error("User is already a member of this client");
+    throw new Error(error.message);
+  }
+
+  // Set client_slug in Clerk metadata
+  const clerk = await clerkClient();
+  const user = await clerk.users.getUser(parsed.clerkUserId);
+  const existingMeta = (user.publicMetadata ?? {}) as Record<string, unknown>;
+  await clerk.users.updateUserMetadata(parsed.clerkUserId, {
+    publicMetadata: { ...existingMeta, client_slug: client.slug },
+  });
+
+  await logAudit("client_member", parsed.clerkUserId, "add", null, {
+    clientId: parsed.clientId,
+    role: parsed.role,
+  });
+  revalidatePath("/admin/clients");
+  revalidatePath("/admin/users");
+}
+
+// ─── Remove member from client ──────────────────────────────────────────────
+
+export async function removeClientMember(formData: { clientId: string; memberId: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const parsed = RemoveClientMemberSchema.parse(formData);
+
+  // Get member info before deletion (for Clerk cleanup)
+  const { data: member } = await supabaseAdmin
+    .from("client_members")
+    .select("clerk_user_id")
+    .eq("id", parsed.memberId)
+    .eq("client_id", parsed.clientId)
+    .single();
+
+  if (!member) throw new Error("Member not found");
+
+  const { error } = await supabaseAdmin
+    .from("client_members")
+    .delete()
+    .eq("id", parsed.memberId);
+
+  if (error) throw new Error(error.message);
+
+  // Check if user has other client memberships
+  const { data: otherMemberships } = await supabaseAdmin
+    .from("client_members")
+    .select("id")
+    .eq("clerk_user_id", member.clerk_user_id)
+    .limit(1);
+
+  // If no other memberships, clear client_slug from Clerk
+  if (!otherMemberships?.length) {
+    const clerk = await clerkClient();
+    const user = await clerk.users.getUser(member.clerk_user_id);
+    const existingMeta = (user.publicMetadata ?? {}) as Record<string, unknown>;
+    delete existingMeta.client_slug;
+    await clerk.users.updateUserMetadata(member.clerk_user_id, {
+      publicMetadata: existingMeta,
+    });
+  }
+
+  await logAudit("client_member", parsed.memberId, "remove", { clerkUserId: member.clerk_user_id }, null);
+  revalidatePath("/admin/clients");
+  revalidatePath("/admin/users");
+}
+
+// ─── Change member role ─────────────────────────────────────────────────────
+
+export async function changeClientMemberRole(formData: { memberId: string; role: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const parsed = ChangeClientMemberRoleSchema.parse(formData);
+
+  const { error } = await supabaseAdmin
+    .from("client_members")
+    .update({ role: parsed.role })
+    .eq("id", parsed.memberId);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit("client_member", parsed.memberId, "change_role", null, { role: parsed.role });
+  revalidatePath("/admin/clients");
 }

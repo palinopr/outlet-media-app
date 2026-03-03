@@ -1,4 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { auth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
+
+// ─── Connected Accounts ─────────────────────────────────────────────────────
 
 export interface ConnectedAccount {
   id: string;
@@ -31,4 +35,72 @@ export async function getConnectedAccounts(
   }
 
   return (data ?? []) as ConnectedAccount[];
+}
+
+// ─── Team Members ────────────────────────────────────────────────────────────
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  createdAt: string;
+}
+
+export interface SettingsData {
+  clientId: string;
+  clientName: string;
+  slug: string;
+  isOwner: boolean;
+  members: TeamMember[];
+}
+
+export async function getSettingsData(slug: string): Promise<SettingsData | null> {
+  if (!supabaseAdmin) return null;
+
+  const { userId } = await auth();
+  if (!userId) return null;
+
+  const { data: client } = await supabaseAdmin
+    .from("clients")
+    .select("id, name, slug")
+    .eq("slug", slug)
+    .single();
+  if (!client) return null;
+
+  const { data: members } = await supabaseAdmin
+    .from("client_members")
+    .select("id, clerk_user_id, role, created_at")
+    .eq("client_id", client.id)
+    .order("created_at");
+  if (!members) return null;
+
+  const currentMember = members.find((m) => m.clerk_user_id === userId);
+  const isOwner = currentMember?.role === "owner";
+
+  const clerk = await clerkClient();
+  const teamMembers: TeamMember[] = await Promise.all(
+    members.map(async (m) => {
+      try {
+        const user = await clerk.users.getUser(m.clerk_user_id);
+        return {
+          id: m.id,
+          name: [user.firstName, user.lastName].filter(Boolean).join(" ") || "No name",
+          email: user.emailAddresses[0]?.emailAddress ?? "",
+          role: m.role,
+          createdAt: m.created_at,
+        };
+      } catch {
+        return { id: m.id, name: "Unknown", email: "", role: m.role, createdAt: m.created_at };
+      }
+    })
+  );
+
+  return {
+    clientId: client.id,
+    clientName: client.name,
+    slug: client.slug,
+    isOwner,
+    members: teamMembers,
+  };
 }
