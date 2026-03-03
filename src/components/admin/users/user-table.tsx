@@ -11,11 +11,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Check, Loader2 } from "lucide-react";
+import { UserPlus, Check, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { UserRow } from "@/app/admin/users/data";
 import { fmtDate, slugToLabel } from "@/lib/formatters";
 import { CLIENT_SLUGS } from "@/lib/constants";
+import { changeUserRole, deleteUser } from "@/app/admin/actions/users";
+import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { StatusSelect } from "@/components/admin/status-select";
 
 interface Props {
   users: UserRow[];
@@ -201,12 +204,13 @@ export function UserTable({ users }: Props) {
               <TableHead className="text-xs font-medium text-muted-foreground">Role</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">Client Access</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">Joined</TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-10 text-sm text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-10 text-sm text-muted-foreground">
                   No users yet. Invite someone to get started.
                 </TableCell>
               </TableRow>
@@ -218,21 +222,48 @@ export function UserTable({ users }: Props) {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
                   <TableCell>
-                    {u.role === "admin" ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border bg-violet-500/10 text-violet-400 border-violet-500/20">
-                        Admin
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border bg-blue-500/10 text-blue-400 border-blue-500/20">
-                        Client
-                      </span>
-                    )}
+                    <StatusSelect
+                      value={u.role ?? "client"}
+                      options={[
+                        { value: "admin", label: "Admin" },
+                        { value: "client", label: "Client" },
+                      ]}
+                      onSave={async (newRole) => {
+                        try {
+                          await changeUserRole({ userId: u.id, role: newRole });
+                          toast.success(`Role updated to ${newRole}`);
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : "Failed to change role");
+                        }
+                      }}
+                    />
                   </TableCell>
                   <TableCell>
                     <AssignCell user={u} />
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {fmtDate(u.created_at)}
+                  </TableCell>
+                  <TableCell>
+                    <ConfirmDialog
+                      trigger={
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      }
+                      title="Delete User"
+                      description={`This will permanently delete ${u.name || u.email}. This cannot be undone.`}
+                      confirmLabel="Delete"
+                      variant="destructive"
+                      onConfirm={async () => {
+                        try {
+                          await deleteUser({ userId: u.id });
+                          toast.success(`Deleted ${u.name || u.email}`);
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : "Failed to delete user");
+                        }
+                      }}
+                    />
                   </TableCell>
                 </TableRow>
               ))

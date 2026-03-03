@@ -1,23 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { CopyButton } from "@/components/admin/copy-button";
 import { getClientSummaries } from "./data";
-import { fmtUsd, statusBadge, roasColor } from "@/lib/formatters";
+import { fmtUsd } from "@/lib/formatters";
 import { StatCard } from "@/components/admin/stat-card";
+import { ClientTable } from "@/components/admin/clients/client-table";
 import {
   Users,
   DollarSign,
   Megaphone,
   TrendingUp,
-  ExternalLink,
 } from "lucide-react";
 
 // ─── Page ──────────────────────────────────────────────────────────────────
@@ -68,76 +59,7 @@ export default async function ClientsPage() {
       </div>
 
       {/* Clients table */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-semibold">All Clients</h2>
-        </div>
-        <Card className="border-border/60">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border/60 hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-muted-foreground">Client</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground text-right">Shows</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground text-right">Campaigns</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground text-right">Total Spend</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground text-right">Revenue</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground text-right">ROAS</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Portal</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {clients.map((c) => {
-                const portalUrl = `/client/${c.slug}`;
-                return (
-                  <TableRow key={c.id} className="border-border/60">
-                    <TableCell>
-                      <div>
-                        <p className="text-sm font-medium">{c.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {c.type} &middot; joined {c.joinedAt}
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>{statusBadge(c.status)}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {c.activeShows}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums">
-                      {c.activeCampaigns}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-medium tabular-nums">
-                      {fmtUsd(c.totalSpend)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-medium tabular-nums">
-                      {fmtUsd(c.totalRevenue)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className={`text-sm font-semibold tabular-nums ${roasColor(c.roas)}`}>
-                        {c.roas > 0 ? c.roas.toFixed(1) + "x" : "—"}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <a
-                          href={portalUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          Open
-                        </a>
-                        <CopyButton text={`/client/${c.slug}`} />
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </Card>
-      </div>
+      <ClientTable clients={clients} />
 
       {/* Portal info card */}
       <Card className="border-border/60 border-dashed">
