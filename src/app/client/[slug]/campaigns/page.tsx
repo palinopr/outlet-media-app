@@ -199,7 +199,9 @@ export default async function ClientCampaigns({ params }: Props) {
             <p className="text-xs text-muted-foreground/60 mt-1">Data refreshes on page load</p>
           </div>
         ) : (
-          <div className="rounded-xl border border-border/60 bg-card overflow-hidden">
+          <>
+          {/* Desktop table */}
+          <div className="hidden md:block rounded-xl border border-border/60 bg-card overflow-hidden">
             <Table>
               <TableHeader>
                 <TableRow className="border-border/40 hover:bg-transparent">
@@ -243,6 +245,55 @@ export default async function ClientCampaigns({ params }: Props) {
               </TableBody>
             </Table>
           </div>
+
+          {/* Mobile card stack */}
+          <div className="md:hidden rounded-xl border border-border/60 bg-card divide-y divide-border/40 overflow-hidden">
+            {campaigns.map((c) => {
+              const statusCfg = getCampaignStatusCfg(c.status);
+              return (
+                <div key={c.campaignId} className="px-4 py-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusCfg.dot}`} />
+                    <p className="text-sm font-medium truncate">{c.name}</p>
+                    <span className="text-xs text-white/40 ml-auto shrink-0">{statusCfg.label}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-xs text-white/40">Spend</span>
+                      <span className="font-medium tabular-nums">{fmtUsd(c.spend)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-white/40">Revenue</span>
+                      <span className="font-medium tabular-nums">{fmtUsd(c.revenue)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-white/40">ROAS</span>
+                      <span className={`font-semibold tabular-nums ${roasColor(c.roas)}`}>
+                        {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-white/40">CTR</span>
+                      <span className="tabular-nums text-white/70">
+                        {c.ctr != null ? c.ctr.toFixed(2) + "%" : "--"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-white/40">Impressions</span>
+                      <span className="tabular-nums text-white/70">{fmtNum(c.impressions)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-xs text-white/40">CPC</span>
+                      <span className="tabular-nums text-white/70">
+                        {c.cpc != null ? "$" + c.cpc.toFixed(2) : "--"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          </>
         )}
       </div>
 
