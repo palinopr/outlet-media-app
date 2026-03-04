@@ -1,20 +1,26 @@
 import cron from "node-cron";
 import { readFileSync, existsSync, unlinkSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { join } from "node:path";
 import { runClaude } from "./runner.js";
 import { notifyOwner } from "./bot.js";
 import { notifyChannel } from "./discord/core/entry.js";
 import { isAgentBusy, setAgentBusy, clearAgentBusy, resetStaleLocks } from "./state.js";
 import { getSweepRunners } from "./jobs/cron-sweeps.js";
 
+const SESSION_DIR = join(import.meta.dirname ?? ".", "..", "session");
+const TM_SYNC_SCRIPT = join(SESSION_DIR, "tm1-http-sync.mjs");
+const TM_COOKIE_SCRIPT = join(SESSION_DIR, "tm1-cookie-refresh.mjs");
+
 const CHECK_CRON     = process.env.CHECK_CRON ?? "0 */2 * * *"; // every 2 hours
 const META_CRON      = "0 */6 * * *";                            // every 6 hours
 const THINK_CRON     = "*/30 8-22 * * *";                        // every 30 min, 8am-10pm
 const HEARTBEAT_CRON = "*/1 * * * *";                            // every minute
 const DISCORD_HEALTH_CRON = "0 */12 * * *";                      // every 12 hours
+const TM_COOKIE_CRON = "0 */6 * * *";                            // proactive cookie refresh
 
 const INGEST_URL = process.env.INGEST_URL?.replace("/api/ingest", "");
 
-const TM_TASK = "Run the TM One monitor: log in to https://one.ticketmaster.com, extract all events, compare to session/last-events.json, POST changes to the ingest endpoint. Report what changed.";
 const META_TASK = "Run the Meta Ads sync: pull all active campaigns and last-30-day insights for ad account act_787610255314938, save to session/last-campaigns.json, POST to the ingest endpoint. Report spend and ROAS summary.";
 const THINK_TASK = "Run your proactive self-improvement cycle. Read LEARNINGS.md first to pick which priority to focus on this cycle.";
 
@@ -45,8 +51,9 @@ export function startScheduler(): void {
   cron.schedule(META_CRON, () => { runMetaSync(); });
   cron.schedule(THINK_CRON, () => { runThinkCycle(); }, { timezone: "America/Los_Angeles" });
   cron.schedule(DISCORD_HEALTH_CRON, () => { runDiscordHealthCheck(); });
+  cron.schedule(TM_COOKIE_CRON, () => { refreshTmCookies(); });
 
-  console.log("[scheduler] 5 core cron jobs started (heartbeat, tm, meta, think, health-check)");
+  console.log("[scheduler] 6 core cron jobs started (heartbeat, tm, meta, think, health-check, tm-cookie-refresh)");
 }
 
 /**
@@ -64,6 +71,9 @@ export function triggerManualJob(jobName: string): void {
       break;
     case "think":
       runThinkCycle();
+      break;
+    case "tm-cookie-refresh":
+      refreshTmCookies();
       break;
     default: {
       const sweeps = getSweepRunners();
@@ -99,18 +109,51 @@ async function runTmCheck() {
     return;
   }
   setAgentBusy("tm-sync");
-  console.log("[scheduler] Running scheduled TM One check...");
+  console.log("[scheduler] Running TM One HTTP sync...");
   await notifyChannel("active-jobs", ">> **TM One sync** started").catch(() => {});
 
   try {
-    const result = await runClaude({ prompt: TM_TASK, maxTurns: 50 });
-    if (result.text?.trim()) {
-      await notifyChannel("active-jobs", "ok **TM One sync** finished").catch(() => {});
-      await Promise.all([
-        notifyOwner(`[TM One]\n\n${result.text}`),
-        notifyChannel("tm-data", `**TM One Update**\n\n${result.text}`),
-      ]);
+    let output: string;
+    try {
+      output = execFileSync("node", [TM_SYNC_SCRIPT], {
+        timeout: 60_000,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+    } catch (execErr: unknown) {
+      const err = execErr as { status?: number; stdout?: string; stderr?: string };
+      if (err.status === 2) {
+        // Cookies expired -- refresh and retry
+        console.log("[scheduler] TM cookies expired, refreshing...");
+        await notifyChannel("active-jobs", ">> **TM One sync** refreshing cookies...").catch(() => {});
+        await refreshTmCookies();
+        output = execFileSync("node", [TM_SYNC_SCRIPT], {
+          timeout: 60_000,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+      } else {
+        throw new Error(err.stderr || err.stdout || "TM sync script failed");
+      }
     }
+
+    // Parse the JSON summary from the last line of stdout
+    const lines = output.trim().split("\n");
+    const lastLine = lines[lines.length - 1];
+    let summary: Record<string, unknown> = {};
+    try { summary = JSON.parse(lastLine); } catch { /* not JSON */ }
+
+    const evtCount = summary.events_updated ?? 0;
+    const demoCount = summary.demographics_updated ?? 0;
+    const durationMs = summary.duration_ms ?? 0;
+    const msg = `Updated ${evtCount} events, ${demoCount} demographics in ${durationMs}ms`;
+    console.log(`[scheduler] TM sync done: ${msg}`);
+
+    await notifyChannel("active-jobs", "ok **TM One sync** finished").catch(() => {});
+    await Promise.all([
+      notifyOwner(`[TM One]\n\n${msg}`),
+      notifyChannel("tm-data", `**TM One Update**\n\n${msg}`),
+    ]);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error("[scheduler] TM check failed:", msg);
@@ -121,6 +164,22 @@ async function runTmCheck() {
     ]);
   } finally {
     clearAgentBusy("tm-sync");
+  }
+}
+
+async function refreshTmCookies(): Promise<void> {
+  console.log("[scheduler] Refreshing TM One cookies...");
+  try {
+    execFileSync("node", [TM_COOKIE_SCRIPT], {
+      timeout: 120_000,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    console.log("[scheduler] TM cookie refresh complete");
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[scheduler] TM cookie refresh failed:", msg);
+    await notifyChannel("agent-alerts", `**TM cookie refresh failed**\n${msg.slice(0, 200)}`).catch(() => {});
   }
 }
 
@@ -177,6 +236,7 @@ export function getJobRunners(): Record<string, () => void> {
     "think": () => { runThinkCycle(); },
     "heartbeat": () => { pingHeartbeat(); },
     "health-check": () => { runDiscordHealthCheck(); },
+    "tm-cookie-refresh": () => { refreshTmCookies(); },
     ...sweeps,
   };
 }
