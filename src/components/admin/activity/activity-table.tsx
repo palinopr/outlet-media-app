@@ -1,7 +1,10 @@
 "use client";
 
 import { Fragment, useState } from "react";
+import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { ActivityRow } from "@/app/admin/activity/data";
+import { exportToCsv, todayFilename } from "@/lib/export-csv";
 import {
   Table,
   TableBody,
@@ -30,6 +33,14 @@ function formatTime(iso: string): string {
     d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
 }
 
+const activityCsvColumns = [
+  { header: "Timestamp", accessor: (r: Record<string, unknown>) => String(r.created_at ?? "") },
+  { header: "User", accessor: (r: Record<string, unknown>) => String(r.user_email ?? "") },
+  { header: "Type", accessor: (r: Record<string, unknown>) => String(r.event_type ?? "") },
+  { header: "Page", accessor: (r: Record<string, unknown>) => String(r.page ?? "") },
+  { header: "Detail", accessor: (r: Record<string, unknown>) => String(r.detail ?? "") },
+];
+
 export function ActivityTable({ rows }: { rows: ActivityRow[] }) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
@@ -43,6 +54,18 @@ export function ActivityTable({ rows }: { rows: ActivityRow[] }) {
 
   return (
     <>
+      {/* Export button */}
+      <div className="flex justify-end px-4 py-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1"
+          onClick={() => exportToCsv(rows as unknown as Record<string, unknown>[], activityCsvColumns, todayFilename("activity"))}
+        >
+          <Download className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">Export</span>
+        </Button>
+      </div>
       {/* Desktop table */}
       <div className="hidden md:block">
         <Table>

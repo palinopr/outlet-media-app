@@ -11,6 +11,7 @@ import Link from "next/link";
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { clientColumns } from "./columns";
 import { fmtUsd, statusBadge } from "@/lib/formatters";
+import { exportToCsv, todayFilename } from "@/lib/export-csv";
 import type { ClientSummary } from "@/app/admin/clients/data";
 
 interface Props {
@@ -101,6 +102,15 @@ function CreateClientForm({ onDone }: { onDone: () => void }) {
 
 // ─── Main table ──────────────────────────────────────────────────────────────
 
+const clientCsvColumns = [
+  { header: "Name", accessor: (r: Record<string, unknown>) => String(r.name ?? "") },
+  { header: "Slug", accessor: (r: Record<string, unknown>) => String(r.slug ?? "") },
+  { header: "Status", accessor: (r: Record<string, unknown>) => String(r.status ?? "") },
+  { header: "Campaigns", accessor: (r: Record<string, unknown>) => (r.totalCampaigns != null ? String(r.totalCampaigns) : "") },
+  { header: "Total Spend ($)", accessor: (r: Record<string, unknown>) => (r.totalSpend != null ? Number(r.totalSpend).toFixed(2) : "") },
+  { header: "ROAS", accessor: (r: Record<string, unknown>) => (r.roas != null && Number(r.roas) > 0 ? Number(r.roas).toFixed(2) : "") },
+];
+
 export function ClientTable({ clients }: Props) {
   const [showCreate, setShowCreate] = useState(false);
 
@@ -125,6 +135,7 @@ export function ClientTable({ clients }: Props) {
       searchColumn="name"
       searchPlaceholder="Search clients..."
       toolbar={createToolbar}
+      onExport={() => exportToCsv(clients as unknown as Record<string, unknown>[], clientCsvColumns, todayFilename("clients"))}
       mobileCard={(c) => (
         <div>
           <div className="flex items-start justify-between gap-2 mb-2">

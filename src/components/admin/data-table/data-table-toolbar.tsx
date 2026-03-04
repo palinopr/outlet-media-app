@@ -1,7 +1,7 @@
 "use client";
 
 import { Table } from "@tanstack/react-table";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Download, Search, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +18,7 @@ interface ToolbarProps<TData> {
   searchColumn?: string;
   searchPlaceholder?: string;
   children?: React.ReactNode;
+  onExport?: () => void;
 }
 
 export function DataTableToolbar<TData>({
@@ -25,6 +26,7 @@ export function DataTableToolbar<TData>({
   searchColumn,
   searchPlaceholder = "Search...",
   children,
+  onExport,
 }: ToolbarProps<TData>) {
   const column = searchColumn ? table.getColumn(searchColumn) : null;
 
@@ -44,6 +46,12 @@ export function DataTableToolbar<TData>({
         )}
         {children}
       </div>
+      {onExport && (
+        <Button variant="outline" size="sm" className="h-8 gap-1" onClick={onExport}>
+          <Download className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline text-xs">Export</span>
+        </Button>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">

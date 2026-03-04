@@ -8,6 +8,7 @@ import { UserRow } from "@/app/admin/users/data";
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { getUserColumns, ClientOption } from "./columns";
 import { slugToLabel } from "@/lib/formatters";
+import { exportToCsv, formatDate, todayFilename } from "@/lib/export-csv";
 
 interface Props {
   users: UserRow[];
@@ -128,6 +129,14 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
 
 // --- Main table ----------------------------------------------------------------
 
+const userCsvColumns = [
+  { header: "Name", accessor: (r: Record<string, unknown>) => String(r.name ?? "") },
+  { header: "Email", accessor: (r: Record<string, unknown>) => String(r.email ?? "") },
+  { header: "Role", accessor: (r: Record<string, unknown>) => String(r.role ?? "") },
+  { header: "Client", accessor: (r: Record<string, unknown>) => String(r.client_slug ?? "") },
+  { header: "Joined", accessor: (r: Record<string, unknown>) => formatDate(r.created_at as string | null) },
+];
+
 export function UserTable({ users, clients }: Props) {
   const [showInvite, setShowInvite] = useState(false);
   const columns = getUserColumns({ clients });
@@ -140,6 +149,7 @@ export function UserTable({ users, clients }: Props) {
         searchColumn="name"
         searchPlaceholder="Search users..."
         emptyMessage="No users yet. Invite someone to get started."
+        onExport={() => exportToCsv(users as unknown as Record<string, unknown>[], userCsvColumns, todayFilename("users"))}
         toolbar={
           showInvite ? (
             <InviteForm onDone={() => setShowInvite(false)} clients={clients} />

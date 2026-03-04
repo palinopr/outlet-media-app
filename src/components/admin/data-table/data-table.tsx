@@ -38,6 +38,7 @@ interface DataTableProps<TData, TValue> {
   enableRowSelection?: boolean;
   getRowId?: (row: TData) => string;
   pageSize?: number;
+  onExport?: () => void;
 }
 
 export function DataTable<TData, TValue>({
@@ -52,6 +53,7 @@ export function DataTable<TData, TValue>({
   enableRowSelection = false,
   getRowId,
   pageSize = 20,
+  onExport,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -84,6 +86,7 @@ export function DataTable<TData, TValue>({
           table={table}
           searchColumn={searchColumn}
           searchPlaceholder={searchPlaceholder}
+          onExport={onExport}
         >
           {selectedRows.length > 0 && selectionToolbar
             ? selectionToolbar(selectedRows)

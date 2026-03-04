@@ -7,6 +7,7 @@ import { getCampaignColumns } from "./columns";
 import { bulkAssignClient } from "@/app/admin/actions/campaigns";
 import { toast } from "sonner";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
+import { exportToCsv, todayFilename } from "@/lib/export-csv";
 import type { MetaCampaignCard, DailyInsight } from "@/lib/meta-campaigns";
 
 interface CampaignTableProps {
@@ -94,6 +95,16 @@ function AssignToolbar({
   );
 }
 
+const campaignCsvColumns = [
+  { header: "Name", accessor: (r: Record<string, unknown>) => String(r.name ?? "") },
+  { header: "Status", accessor: (r: Record<string, unknown>) => String(r.status ?? "") },
+  { header: "Client", accessor: (r: Record<string, unknown>) => String(r.clientSlug ?? "") },
+  { header: "Spend ($)", accessor: (r: Record<string, unknown>) => (r.spend != null ? Number(r.spend).toFixed(2) : "") },
+  { header: "ROAS", accessor: (r: Record<string, unknown>) => (r.roas != null ? Number(r.roas).toFixed(2) : "") },
+  { header: "Impressions", accessor: (r: Record<string, unknown>) => (r.impressions != null ? String(r.impressions) : "") },
+  { header: "CTR", accessor: (r: Record<string, unknown>) => (r.ctr != null ? `${Number(r.ctr).toFixed(2)}%` : "") },
+];
+
 export function CampaignTable({ campaigns, dailyInsightsByCampaign, clients, metaAdAccountId, hasData }: CampaignTableProps) {
   const columns = getCampaignColumns({ dailyInsightsByCampaign, clients, metaAdAccountId });
 
@@ -106,6 +117,7 @@ export function CampaignTable({ campaigns, dailyInsightsByCampaign, clients, met
       emptyMessage={hasData ? "No campaigns match this filter" : "No campaign data -- run the Meta sync agent to pull live data"}
       enableRowSelection
       getRowId={(row) => row.campaignId}
+      onExport={() => exportToCsv(campaigns as unknown as Record<string, unknown>[], campaignCsvColumns, todayFilename("campaigns"))}
       selectionToolbar={(selectedRows) => (
         <AssignToolbar
           selectedRows={selectedRows as MetaCampaignCard[]}
