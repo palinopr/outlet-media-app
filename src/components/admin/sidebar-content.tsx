@@ -37,27 +37,25 @@ export function SidebarContent({
 
       <div className="h-px bg-white/[0.06] mx-3" />
 
-      {/* User — pinned to bottom */}
-      {!collapsed && (
-        <div className="px-4 py-4 flex items-center gap-3 shrink-0">
-          <UserAvatar clerkEnabled={clerkEnabled} />
-          <div className="min-w-0">
+      {/* User + collapse toggle — single row pinned to bottom */}
+      <div className={collapsed ? "px-2 py-3 flex items-center justify-center shrink-0" : "px-4 py-3 flex items-center gap-3 shrink-0"}>
+        <UserAvatar clerkEnabled={clerkEnabled} />
+        {!collapsed && (
+          <div className="min-w-0 flex-1">
             <p className="text-xs font-medium truncate text-white/90">{displayName}</p>
             <p className="text-[11px] text-white/40">Admin</p>
           </div>
-        </div>
-      )}
-
-      {/* Toggle button */}
-      {onToggle && (
-        <button
-          onClick={onToggle}
-          className="flex items-center justify-center h-10 mx-2 mb-3 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/[0.04] transition-colors duration-150 shrink-0"
-          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        >
-          {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
-        </button>
-      )}
+        )}
+        {onToggle && (
+          <button
+            onClick={onToggle}
+            className="flex items-center justify-center h-8 w-8 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/[0.04] transition-colors duration-150 shrink-0"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
