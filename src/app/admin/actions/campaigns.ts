@@ -36,6 +36,35 @@ export async function updateCampaignStatus(formData: { campaignId: string; statu
   revalidatePath("/admin/campaigns");
 }
 
+const UpdateTypeSchema = z.object({
+  campaignId: z.string().min(1),
+  campaignType: z.enum(["sales", "music", "traffic"]),
+});
+
+export async function updateCampaignType(formData: { campaignId: string; campaignType: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+
+  const parsed = UpdateTypeSchema.parse(formData);
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const { data: old } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select("campaign_type")
+    .eq("campaign_id", parsed.campaignId)
+    .single();
+
+  const { error } = await supabaseAdmin
+    .from("meta_campaigns")
+    .update({ campaign_type: parsed.campaignType, updated_at: new Date().toISOString() })
+    .eq("campaign_id", parsed.campaignId);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit("campaign", parsed.campaignId, "update_type", { campaign_type: old?.campaign_type }, { campaign_type: parsed.campaignType });
+  revalidatePath("/admin/campaigns");
+}
+
 const UpdateBudgetSchema = z.object({
   campaignId: z.string().min(1),
   dailyBudgetCents: z.number().int().positive(),

@@ -10,7 +10,7 @@ import {
   slugToLabel,
   roasColor,
 } from "@/lib/formatters";
-import { updateCampaignStatus } from "@/app/admin/actions/campaigns";
+import { updateCampaignStatus, updateCampaignType } from "@/app/admin/actions/campaigns";
 import { toast } from "sonner";
 import type { MetaCampaignCard, DailyInsight } from "@/lib/meta-campaigns";
 import {
@@ -23,6 +23,12 @@ import {
 const STATUS_OPTIONS = [
   { value: "ACTIVE", label: "Active" },
   { value: "PAUSED", label: "Paused" },
+];
+
+const TYPE_OPTIONS = [
+  { value: "sales", label: "Sales" },
+  { value: "music", label: "Music" },
+  { value: "traffic", label: "Traffic" },
 ];
 
 interface CampaignColumnsOptions {
@@ -104,6 +110,24 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
       ),
     },
     {
+      accessorKey: "campaignType",
+      header: ({ column }) => <ColumnHeader column={column} title="Type" />,
+      cell: ({ row }) => (
+        <StatusSelect
+          value={row.original.campaignType}
+          options={TYPE_OPTIONS}
+          onSave={async (newType) => {
+            try {
+              await updateCampaignType({ campaignId: row.original.campaignId, campaignType: newType });
+              toast.success(`Type updated to ${newType}`);
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Failed to update type");
+            }
+          }}
+        />
+      ),
+    },
+    {
       accessorKey: "clientSlug",
       header: ({ column }) => <ColumnHeader column={column} title="Client" />,
       cell: ({ row }) => (
@@ -127,25 +151,30 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
     {
       accessorKey: "roas",
       header: ({ column }) => <ColumnHeader column={column} title="ROAS" className="justify-end" />,
-      cell: ({ row }) => (
-        <div className="text-right">
-          <RoasBadge roas={row.original.roas} />
-        </div>
-      ),
+      cell: ({ row }) => {
+        if (row.original.campaignType !== "sales") return <div className="text-right"><span className="text-muted-foreground text-sm">--</span></div>;
+        return (
+          <div className="text-right">
+            <RoasBadge roas={row.original.roas} />
+          </div>
+        );
+      },
     },
     {
       id: "trend",
       enableSorting: false,
       header: () => <span className="text-xs font-medium text-muted-foreground">Trend</span>,
-      cell: ({ row }) => (
-        <RoasSparkline points={dailyInsightsByCampaign[row.original.campaignId] ?? []} />
-      ),
+      cell: ({ row }) => {
+        if (row.original.campaignType !== "sales") return <span className="text-muted-foreground text-sm">--</span>;
+        return <RoasSparkline points={dailyInsightsByCampaign[row.original.campaignId] ?? []} />;
+      },
     },
     {
       id: "marginal",
       accessorFn: (row) => computeMarginalFromInsights(dailyInsightsByCampaign[row.campaignId] ?? []),
       header: ({ column }) => <ColumnHeader column={column} title="Marginal" className="justify-end" />,
       cell: ({ row }) => {
+        if (row.original.campaignType !== "sales") return <div className="text-right"><span className="text-muted-foreground text-sm">--</span></div>;
         const m = computeMarginalFromInsights(dailyInsightsByCampaign[row.original.campaignId] ?? []);
         if (m == null) return <div className="text-right"><span className="text-muted-foreground text-sm">--</span></div>;
         return <div className="text-right"><span className={`text-sm font-semibold tabular-nums ${roasColor(m)}`}>{m.toFixed(1)}x</span></div>;

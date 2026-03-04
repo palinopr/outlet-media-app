@@ -615,6 +615,7 @@ export type Database = {
       meta_campaigns: {
         Row: {
           campaign_id: string
+          campaign_type: string
           clicks: number | null
           client_slug: string | null
           cpc: number | null
@@ -638,6 +639,7 @@ export type Database = {
         }
         Insert: {
           campaign_id: string
+          campaign_type?: string
           clicks?: number | null
           client_slug?: string | null
           cpc?: number | null
@@ -661,6 +663,7 @@ export type Database = {
         }
         Update: {
           campaign_id?: string
+          campaign_type?: string
           clicks?: number | null
           client_slug?: string | null
           cpc?: number | null

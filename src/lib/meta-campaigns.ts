@@ -8,6 +8,7 @@ export interface MetaCampaignCard {
   status: string;
   objective: string;
   clientSlug: string;
+  campaignType: string;
   spend: number;
   roas: number | null;
   revenue: number | null;
@@ -94,6 +95,20 @@ interface RawDailyInsight extends RawInsight {
   date_start: string;
 }
 
+async function loadCampaignTypes(): Promise<Map<string, string>> {
+  const types = new Map<string, string>();
+  if (!supabaseAdmin) return types;
+  const { data } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select("campaign_id, campaign_type");
+  if (data) {
+    for (const row of data) {
+      if (row.campaign_type) types.set(row.campaign_id, row.campaign_type);
+    }
+  }
+  return types;
+}
+
 async function loadClientOverrides(): Promise<Map<string, string>> {
   const overrides = new Map<string, string>();
   if (!supabaseAdmin) return overrides;
@@ -170,10 +185,11 @@ export async function fetchAllCampaigns(
   campaignsUrl.searchParams.set("limit", "500");
 
   try {
-    const [rawCampaigns, overrides, dbClientSlugs] = await Promise.all([
+    const [rawCampaigns, overrides, dbClientSlugs, campaignTypes] = await Promise.all([
       fetchAllPages<RawCampaign>(campaignsUrl.toString(), "campaigns"),
       loadClientOverrides(),
       loadAllClientSlugs(),
+      loadCampaignTypes(),
     ]);
 
     // Derive client slugs: Supabase override > guessClientSlug fallback
@@ -239,6 +255,7 @@ export async function fetchAllCampaigns(
         status: c.status,
         objective: c.objective ?? "",
         clientSlug: campaignSlugs.get(c.id) ?? "unknown",
+        campaignType: campaignTypes.get(c.id) ?? "sales",
         spend,
         roas,
         revenue: roas != null ? spend * roas : null,

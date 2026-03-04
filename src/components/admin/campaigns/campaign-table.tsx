@@ -98,6 +98,7 @@ function AssignToolbar({
 const campaignCsvColumns = [
   { header: "Name", accessor: (r: Record<string, unknown>) => String(r.name ?? "") },
   { header: "Status", accessor: (r: Record<string, unknown>) => String(r.status ?? "") },
+  { header: "Type", accessor: (r: Record<string, unknown>) => String(r.campaignType ?? "sales") },
   { header: "Client", accessor: (r: Record<string, unknown>) => String(r.clientSlug ?? "") },
   { header: "Spend ($)", accessor: (r: Record<string, unknown>) => (r.spend != null ? Number(r.spend).toFixed(2) : "") },
   { header: "ROAS", accessor: (r: Record<string, unknown>) => (r.roas != null ? Number(r.roas).toFixed(2) : "") },
@@ -133,18 +134,30 @@ export function CampaignTable({ campaigns, dailyInsightsByCampaign, clients, met
               }`}
             />
             <p className="text-sm font-medium truncate">{c.name}</p>
+            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground capitalize shrink-0">
+              {c.campaignType}
+            </span>
           </div>
           <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
             <div>
               <p className="text-xs text-muted-foreground">Spend</p>
               <p className="text-xs tabular-nums">{fmtUsd(c.spend)}</p>
             </div>
-            <div>
-              <p className="text-xs text-muted-foreground">ROAS</p>
-              <p className={`text-xs tabular-nums font-medium ${roasColor(c.roas)}`}>
-                {c.roas != null ? `${c.roas.toFixed(2)}x` : "--"}
-              </p>
-            </div>
+            {c.campaignType === "sales" ? (
+              <div>
+                <p className="text-xs text-muted-foreground">ROAS</p>
+                <p className={`text-xs tabular-nums font-medium ${roasColor(c.roas)}`}>
+                  {c.roas != null ? `${c.roas.toFixed(2)}x` : "--"}
+                </p>
+              </div>
+            ) : (
+              <div>
+                <p className="text-xs text-muted-foreground">CPC</p>
+                <p className="text-xs tabular-nums">
+                  {c.cpc != null ? `$${c.cpc.toFixed(2)}` : "--"}
+                </p>
+              </div>
+            )}
             <div>
               <p className="text-xs text-muted-foreground">Impressions</p>
               <p className="text-xs tabular-nums">{fmtNum(c.impressions)}</p>
