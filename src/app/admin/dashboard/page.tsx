@@ -16,7 +16,6 @@ import {
   TrendingUp,
   Clock,
   AlertTriangle,
-  Info,
   ArrowRight,
 } from "lucide-react";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
@@ -52,7 +51,7 @@ function getUpcomingShows(events: TmEvent[], limit: number) {
 // --- Page ---
 
 export default async function AdminDashboard() {
-  const { events, campaigns, allCampaigns, agentRuns, alerts, trendData, velocityData, snapshotsByCampaign, fromDb } = await getData();
+  const { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, snapshotsByCampaign, fromDb } = await getData();
 
   // Upcoming shows: next 30 days, sorted by date
   const upcomingShows = getUpcomingShows(events, 8);
@@ -96,30 +95,6 @@ export default async function AdminDashboard() {
         )}
       </AdminPageHeader>
 
-      {/* Agent alerts */}
-      {alerts.length > 0 && (
-        <div className="space-y-2">
-          {alerts.map((a) => {
-            const isCritical = a.level === "critical";
-            const isWarning = a.level === "warning";
-            const Icon = isCritical || isWarning ? AlertTriangle : Info;
-            const classes = isCritical
-              ? "border-red-500/30 bg-red-500/5 text-red-400"
-              : isWarning
-                ? "border-amber-500/30 bg-amber-500/5 text-amber-400"
-                : "border-blue-500/30 bg-blue-500/5 text-blue-400";
-            return (
-              <div key={a.id} className={`flex items-start gap-3 px-4 py-3 rounded-lg border ${classes}`}>
-                <Icon className="h-4 w-4 shrink-0 mt-0.5" />
-                <p className="text-xs leading-relaxed">{a.message}</p>
-                <span className="ml-auto text-xs opacity-60 whitespace-nowrap shrink-0">
-                  {new Date(a.created_at).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* Hero stat cards */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
