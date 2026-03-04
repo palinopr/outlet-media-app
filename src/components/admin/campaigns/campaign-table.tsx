@@ -6,6 +6,7 @@ import { DataTable } from "@/components/admin/data-table/data-table";
 import { getCampaignColumns } from "./columns";
 import { bulkAssignClient } from "@/app/admin/actions/campaigns";
 import { toast } from "sonner";
+import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import type { MetaCampaignCard, DailyInsight } from "@/lib/meta-campaigns";
 
 interface CampaignTableProps {
@@ -110,6 +111,44 @@ export function CampaignTable({ campaigns, dailyInsightsByCampaign, clients, met
           selectedRows={selectedRows as MetaCampaignCard[]}
           clients={clients}
         />
+      )}
+      mobileCard={(c) => (
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span
+              className={`h-2 w-2 rounded-full shrink-0 ${
+                c.status === "ACTIVE" ? "bg-emerald-400" : "bg-zinc-500"
+              }`}
+            />
+            <p className="text-sm font-medium truncate">{c.name}</p>
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+            <div>
+              <p className="text-xs text-muted-foreground">Spend</p>
+              <p className="text-xs tabular-nums">{fmtUsd(c.spend)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">ROAS</p>
+              <p className={`text-xs tabular-nums font-medium ${roasColor(c.roas)}`}>
+                {c.roas != null ? `${c.roas.toFixed(2)}x` : "--"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Impressions</p>
+              <p className="text-xs tabular-nums">{fmtNum(c.impressions)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">CTR</p>
+              <p className="text-xs tabular-nums">
+                {c.ctr != null ? `${c.ctr.toFixed(2)}%` : "--"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Client</p>
+              <p className="text-xs truncate">{slugToLabel(c.clientSlug)}</p>
+            </div>
+          </div>
+        </div>
       )}
     />
   );

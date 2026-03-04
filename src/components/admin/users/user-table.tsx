@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { UserRow } from "@/app/admin/users/data";
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { getUserColumns, ClientOption } from "./columns";
+import { slugToLabel } from "@/lib/formatters";
 
 interface Props {
   users: UserRow[];
@@ -154,6 +155,32 @@ export function UserTable({ users, clients }: Props) {
             </Button>
           )
         }
+        mobileCard={(u) => (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <p className="text-sm font-medium truncate">
+                {u.name || u.email}
+              </p>
+              {u.status === "invited" && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border border-amber-400/20 bg-amber-400/10 text-amber-400">
+                  Invited
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+              <div>
+                <p className="text-xs text-muted-foreground">Role</p>
+                <p className="text-xs">{u.role ?? "--"}</p>
+              </div>
+              {u.client_slug && (
+                <div>
+                  <p className="text-xs text-muted-foreground">Client</p>
+                  <p className="text-xs truncate">{slugToLabel(u.client_slug)}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       />
     </div>
   );

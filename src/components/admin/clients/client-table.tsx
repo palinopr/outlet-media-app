@@ -7,8 +7,10 @@ import { Plus, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/app/admin/actions/clients";
 import { toSlug } from "@/lib/to-slug";
+import Link from "next/link";
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { clientColumns } from "./columns";
+import { fmtUsd, statusBadge } from "@/lib/formatters";
 import type { ClientSummary } from "@/app/admin/clients/data";
 
 interface Props {
@@ -123,6 +125,41 @@ export function ClientTable({ clients }: Props) {
       searchColumn="name"
       searchPlaceholder="Search clients..."
       toolbar={createToolbar}
+      mobileCard={(c) => (
+        <div>
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <Link
+              href={`/admin/clients/${c.id}`}
+              className="text-sm font-medium truncate hover:underline"
+            >
+              {c.name}
+            </Link>
+            {statusBadge(c.status)}
+          </div>
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+            <div>
+              <p className="text-xs text-muted-foreground">Campaigns</p>
+              <p className="text-xs tabular-nums">
+                {c.activeCampaigns} active / {c.totalCampaigns}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Spend</p>
+              <p className="text-xs tabular-nums">{fmtUsd(c.totalSpend)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Revenue</p>
+              <p className="text-xs tabular-nums">{fmtUsd(c.totalRevenue)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">ROAS</p>
+              <p className="text-xs tabular-nums font-medium">
+                {c.roas > 0 ? `${c.roas.toFixed(2)}x` : "--"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     />
   );
 }
