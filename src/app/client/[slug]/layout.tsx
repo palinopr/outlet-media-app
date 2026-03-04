@@ -93,11 +93,11 @@ export default async function ClientLayout({ children, params }: Props) {
   const clientName = slugToLabel(slug);
 
   return (
-    <div className="dark flex min-h-screen bg-background text-foreground">
+    <div className="dark flex h-screen overflow-hidden bg-background text-foreground">
       <aside className="hidden lg:flex w-60 border-r border-white/[0.04] bg-[oklch(0.12_0_0)] flex-col shrink-0 relative">
         {/* Subtle gradient accent on the edge */}
         <div className="absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-cyan-500/20 via-violet-500/10 to-transparent" />
-        <div className="px-5 pt-6 pb-5">
+        <div className="px-5 pt-6 pb-5 shrink-0">
           <div className="flex items-center gap-3 mb-5">
             <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={36} height={36} className="h-9 w-9 shrink-0" />
             <div className="min-w-0">
@@ -107,8 +107,10 @@ export default async function ClientLayout({ children, params }: Props) {
           </div>
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
         </div>
-        <ClientNav slug={slug} />
-        <div className="px-5 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <ClientNav slug={slug} />
+        </div>
+        <div className="px-5 py-4 shrink-0">
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent mb-4" />
           <div className="flex items-center gap-2">
             <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={20} height={20} className="h-5 w-5" />
