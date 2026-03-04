@@ -131,7 +131,7 @@ export default async function AdminDashboard() {
       </div>
 
       {/* Secondary stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {secondaryStats.map((s) => (
           <StatCard key={s.label} {...s} />
         ))}
@@ -176,56 +176,91 @@ export default async function AdminDashboard() {
           </a>
         </div>
         <Card className="border-border/60">
-          <Table>
-            <TableHeader>
-              <TableRow className="border-border/60 hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-muted-foreground w-28">TM1 #</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Event</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">City</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Date</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground text-right">Sold</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground text-right">Gross</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {events.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="py-12 text-center">
-                    <div className="flex flex-col items-center gap-2">
-                      <CalendarDays className="h-8 w-8 text-muted-foreground/30" />
-                      <p className="text-sm text-muted-foreground">No events yet</p>
-                      <p className="text-xs text-muted-foreground/60">TM One credentials needed to sync ticket data</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : events.slice(0, 10).map((e) => {
-                const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
-                const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : 0;
-                return (
-                  <TableRow key={e.id} className="border-border/60">
-                    <TableCell className="font-mono text-xs text-muted-foreground">{e.tm1_number || "---"}</TableCell>
-                    <TableCell>
-                      <div>
-                        <p className="text-sm font-medium">{e.artist}</p>
-                        <p className="text-xs text-muted-foreground">{e.venue}</p>
+          {events.length === 0 ? (
+            <div className="py-12 text-center">
+              <div className="flex flex-col items-center gap-2">
+                <CalendarDays className="h-8 w-8 text-muted-foreground/30" />
+                <p className="text-sm text-muted-foreground">No events yet</p>
+                <p className="text-xs text-muted-foreground/60">TM One credentials needed to sync ticket data</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border/60 hover:bg-transparent">
+                      <TableHead className="text-xs font-medium text-muted-foreground w-28">TM1 #</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground">Event</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground">City</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground">Date</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground text-right">Sold</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground text-right">Gross</TableHead>
+                      <TableHead className="text-xs font-medium text-muted-foreground">Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {events.slice(0, 10).map((e) => {
+                      const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
+                      const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : 0;
+                      return (
+                        <TableRow key={e.id} className="border-border/60">
+                          <TableCell className="font-mono text-xs text-muted-foreground">{e.tm1_number || "---"}</TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="text-sm font-medium">{e.artist}</p>
+                              <p className="text-xs text-muted-foreground">{e.venue}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{e.city}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{fmtDate(e.date)}</TableCell>
+                          <TableCell className="text-right">
+                            <p className="text-sm font-medium tabular-nums">{fmtNum(e.tickets_sold ?? 0)}</p>
+                            <p className="text-xs text-muted-foreground">{pct}% of {fmtNum(cap)}</p>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <p className="text-sm font-medium tabular-nums">{fmtUsd(e.gross)}</p>
+                          </TableCell>
+                          <TableCell>{statusBadge(e.status)}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="md:hidden divide-y divide-border/40">
+                {events.slice(0, 10).map((e) => {
+                  const cap = (e.tickets_sold ?? 0) + (e.tickets_available ?? 0);
+                  const pct = cap > 0 ? Math.round(((e.tickets_sold ?? 0) / cap) * 100) : 0;
+                  return (
+                    <div key={e.id} className="px-4 py-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{e.artist}</p>
+                          <p className="text-xs text-muted-foreground truncate">{e.venue} -- {e.city}</p>
+                        </div>
+                        {statusBadge(e.status)}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{e.city}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">{fmtDate(e.date)}</TableCell>
-                    <TableCell className="text-right">
-                      <p className="text-sm font-medium tabular-nums">{fmtNum(e.tickets_sold ?? 0)}</p>
-                      <p className="text-xs text-muted-foreground">{pct}% of {fmtNum(cap)}</p>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <p className="text-sm font-medium tabular-nums">{fmtUsd(e.gross)}</p>
-                    </TableCell>
-                    <TableCell>{statusBadge(e.status)}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                        <div>
+                          <p className="text-muted-foreground">Date</p>
+                          <p className="font-medium">{fmtDate(e.date)}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Sold</p>
+                          <p className="font-medium tabular-nums">{fmtNum(e.tickets_sold ?? 0)} <span className="text-muted-foreground">({pct}%)</span></p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-muted-foreground">Gross</p>
+                          <p className="font-medium tabular-nums">{fmtUsd(e.gross)}</p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
         </Card>
       </div>
 
@@ -317,7 +352,7 @@ export default async function AdminDashboard() {
                         </div>
                         <p className="text-xs text-muted-foreground">{fmtObjective(c.objective)}</p>
                       </div>
-                      <div className="flex gap-6 shrink-0 text-right">
+                      <div className="flex flex-wrap gap-x-6 gap-y-2 shrink-0 text-right">
                         <div>
                           <p className="text-[11px] text-muted-foreground">Spend</p>
                           <p className="text-sm font-medium tabular-nums">{fmtUsd(centsToUsd(c.spend))}</p>
