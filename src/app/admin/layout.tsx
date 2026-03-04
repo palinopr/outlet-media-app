@@ -2,11 +2,11 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { SidebarContent } from "@/components/admin/sidebar-content";
 import { MobileSidebar } from "@/components/admin/mobile-sidebar";
 import { ActivityTracker } from "@/components/admin/activity-tracker";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { AdminBreadcrumbs } from "@/components/admin/breadcrumbs";
+import { CollapsibleSidebar } from "@/components/admin/collapsible-sidebar";
 
 export const dynamic = "force-dynamic";
 
@@ -58,9 +58,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     <div className="dark flex min-h-screen bg-background text-foreground">
       {activityUserId && <ActivityTracker userId={activityUserId} userEmail={activityUserEmail} />}
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-60 flex-col border-r border-border/50 shrink-0">
-        <SidebarContent clerkEnabled={clerkEnabled} displayName={displayName} />
-      </aside>
+      <CollapsibleSidebar clerkEnabled={clerkEnabled} displayName={displayName} />
 
       {/* Mobile: top bar + main stacked vertically. Desktop: just main (sidebar is beside) */}
       <div className="flex flex-col flex-1 min-w-0">
