@@ -3,7 +3,6 @@ import {
   TrendingUp,
   Users,
   Megaphone,
-  Zap,
   ArrowUp,
   ArrowDown,
   Clock,
@@ -13,10 +12,10 @@ import {
 } from "lucide-react";
 import { getData, type DateRange } from "./data";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
-import { roasLabel, generateInsights, DATE_OPTIONS } from "./lib";
+import { roasLabel, DATE_OPTIONS } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
 import { ClientPortalFooter } from "./components/client-portal-footer";
-import { CampaignCard } from "./components/campaign-card";
+import { CampaignSection } from "./components/campaign-section";
 import { EventCard } from "./components/event-card";
 import { AudienceSection } from "./components/audience-section";
 
@@ -44,7 +43,6 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const data = await getData(slug, range);
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = data;
 
-  const insights = generateInsights(heroStats, campaigns, events, audience);
   const clientName = slugToLabel(slug);
   const now = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
@@ -165,42 +163,14 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         </div>
       </div>
 
-      {/* -- Smart Insights -- */}
-      {insights.length > 0 && (
-        <div className="glass-card p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-cyan-500/20 to-violet-500/20 ring-1 ring-white/[0.08]">
-              <Zap className="h-4 w-4 text-cyan-300" />
-            </div>
-            <span className="text-sm font-semibold text-white/80">Insights</span>
-          </div>
-          <div className="space-y-3">
-            {insights.map((ins, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className={`mt-1 h-1.5 w-1.5 rounded-full shrink-0 ${ins.type === "positive" ? "bg-emerald-400" : ins.type === "warning" ? "bg-amber-400" : "bg-white/30"}`} />
-                <p className="text-sm text-white/50 leading-relaxed">{ins.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* -- Campaign Cards -- */}
+      {/* -- Campaign Cards with Filter -- */}
       {campaigns.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Megaphone className="h-3.5 w-3.5 text-white/30" />
-              <span className="section-label">Your Campaigns</span>
-            </div>
-            <span className="text-[10px] text-white/20">{rangeLabel}</span>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {campaigns.map((c) => (
-              <CampaignCard key={c.campaignId} c={c} slug={slug} range={range} />
-            ))}
-          </div>
-        </section>
+        <CampaignSection
+          campaigns={campaigns}
+          slug={slug}
+          range={range}
+          rangeLabel={rangeLabel}
+        />
       )}
 
       {/* -- Event Cards (Ticketmaster clients only) -- */}
