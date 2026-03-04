@@ -29,6 +29,7 @@ export const clientColumns: ColumnDef<ClientSummary>[] = [
       return (
         <input
           type="checkbox"
+          aria-label="Select all"
           className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
           checked={checked}
           ref={(el) => { if (el) el.indeterminate = indeterminate && !checked; }}
@@ -39,6 +40,7 @@ export const clientColumns: ColumnDef<ClientSummary>[] = [
     cell: ({ row }) => (
       <input
         type="checkbox"
+        aria-label="Select row"
         className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
         checked={row.getIsSelected()}
         onChange={(e) => row.toggleSelected(e.target.checked)}

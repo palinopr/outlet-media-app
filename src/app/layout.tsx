@@ -26,6 +26,7 @@ export const metadata: Metadata = {
     siteName: "Outlet Media",
     title: "Outlet Media",
     description: "Autonomous ad agency platform for music promoters",
+    images: [{ url: "/icon.png", width: 512, height: 512 }],
   },
   twitter: {
     card: "summary",

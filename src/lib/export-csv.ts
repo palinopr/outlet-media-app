@@ -3,6 +3,16 @@ type CsvColumn = {
   accessor: (row: Record<string, unknown>) => string;
 };
 
+function sanitize(val: string): string {
+  if (/^[=+\-@\t\r]/.test(val)) {
+    return `"'${val.replace(/"/g, '""')}"`;
+  }
+  if (/[",\n]/.test(val)) {
+    return `"${val.replace(/"/g, '""')}"`;
+  }
+  return val;
+}
+
 export function exportToCsv(
   rows: Record<string, unknown>[],
   columns: CsvColumn[],
@@ -10,15 +20,9 @@ export function exportToCsv(
 ) {
   if (rows.length === 0) return;
 
-  const headers = columns.map((c) => c.header);
+  const headers = columns.map((c) => sanitize(c.header));
   const csvRows = rows.map((row) =>
-    columns.map((col) => {
-      const val = col.accessor(row);
-      if (/[",\n]/.test(val)) {
-        return `"${val.replace(/"/g, '""')}"`;
-      }
-      return val;
-    })
+    columns.map((col) => sanitize(col.accessor(row)))
   );
 
   const csv = [headers.join(","), ...csvRows.map((r) => r.join(","))].join("\n");

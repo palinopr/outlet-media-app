@@ -4,9 +4,6 @@ import { useQueryState, parseAsString } from "nuqs";
 
 interface Props {
   users: string[];
-  selectedUser: string;
-  selectedType: string;
-  selectedRange: string;
 }
 
 const EVENT_TYPES = [
@@ -23,7 +20,7 @@ const DATE_RANGES = [
   { value: "30d", label: "Last 30 days" },
 ];
 
-export function ActivityFilters({ users, selectedUser, selectedType, selectedRange }: Props) {
+export function ActivityFilters({ users }: Props) {
   const opts = { shallow: false } as const;
 
   const [user, setUser] = useQueryState(
@@ -45,7 +42,7 @@ export function ActivityFilters({ users, selectedUser, selectedType, selectedRan
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <select
-        value={user || selectedUser}
+        value={user}
         onChange={(e) => {
           const v = e.target.value;
           setUser(v === "all" ? null : v);
@@ -61,7 +58,7 @@ export function ActivityFilters({ users, selectedUser, selectedType, selectedRan
       </select>
 
       <select
-        value={type || selectedType}
+        value={type}
         onChange={(e) => {
           const v = e.target.value;
           setType(v === "all" ? null : v);
@@ -76,7 +73,7 @@ export function ActivityFilters({ users, selectedUser, selectedType, selectedRan
       </select>
 
       <select
-        value={range || selectedRange}
+        value={range}
         onChange={(e) => {
           const v = e.target.value;
           setRange(v === "7d" ? null : v);

@@ -52,7 +52,7 @@ export function CampaignDetailHeader({ slug, range, campaign: c, dataSource }: P
                 </span>
               )}
               {dataSource === "meta_api" && (
-                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400/50">
+                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-emerald-400/50">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   Live
                 </span>
@@ -60,20 +60,22 @@ export function CampaignDetailHeader({ slug, range, campaign: c, dataSource }: P
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1 sm:gap-0.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] self-start">
-            {DATE_OPTIONS.map((opt) => (
-              <a
-                key={opt.value}
-                href={`?range=${opt.value}`}
-                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-300 ${
-                  range === opt.value
-                    ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
-                    : "text-white/40 hover:text-white/70 hover:bg-white/[0.06]"
-                }`}
-              >
-                {opt.label}
-              </a>
-            ))}
+          <div className="overflow-x-auto -mx-1 px-1 self-start">
+            <div className="flex items-center gap-0.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08] w-max">
+              {DATE_OPTIONS.map((opt) => (
+                <a
+                  key={opt.value}
+                  href={`?range=${opt.value}`}
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all duration-300 ${
+                    range === opt.value
+                      ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
+                      : "text-white/40 hover:text-white/70 hover:bg-white/[0.06]"
+                  }`}
+                >
+                  {opt.label}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </div>

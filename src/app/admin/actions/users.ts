@@ -40,18 +40,29 @@ export async function bulkUpdateUserRole(formData: { userIds: string[]; role: st
   const parsed = BulkUpdateRoleSchema.parse(formData);
   const clerk = await clerkClient();
 
-  for (const userId of parsed.userIds) {
-    const user = await clerk.users.getUser(userId);
-    await clerk.users.updateUserMetadata(userId, {
-      publicMetadata: { ...user.publicMetadata, role: parsed.role === "client" ? undefined : parsed.role },
-    });
-  }
+  const results = await Promise.allSettled(
+    parsed.userIds.map(async (userId) => {
+      const user = await clerk.users.getUser(userId);
+      await clerk.users.updateUserMetadata(userId, {
+        publicMetadata: { ...user.publicMetadata, role: parsed.role === "client" ? undefined : parsed.role },
+      });
+    }),
+  );
+
+  const failed = results.filter((r) => r.status === "rejected").length;
+  const succeeded = results.length - failed;
 
   await logAudit("user", "bulk", "bulk_update_role", null, {
-    count: parsed.userIds.length,
+    total: parsed.userIds.length,
+    succeeded,
+    failed,
     role: parsed.role,
   });
   revalidatePath("/admin/users");
+
+  if (failed > 0) {
+    return { success: false, message: `${succeeded} updated, ${failed} failed` };
+  }
   return { success: true };
 }
 

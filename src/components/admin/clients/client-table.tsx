@@ -109,6 +109,10 @@ function ClientSelectionToolbar({ selectedRows }: { selectedRows: ClientSummary[
 
   function handleDeactivate() {
     const ids = selectedRows.map((r) => r.id);
+    const confirmed = window.confirm(
+      `Deactivate ${ids.length} client(s)? This will pause all their active campaigns.`,
+    );
+    if (!confirmed) return;
     startTransition(async () => {
       try {
         await bulkDeactivateClients({ clientIds: ids });

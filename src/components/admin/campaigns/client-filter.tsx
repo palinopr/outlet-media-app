@@ -5,16 +5,15 @@ import { slugToLabel } from "@/lib/formatters";
 
 interface Props {
   clients: string[];
-  selected: string;
 }
 
-export function ClientFilter({ clients, selected }: Props) {
+export function ClientFilter({ clients }: Props) {
   const [client, setClient] = useQueryState(
     "client",
     parseAsString.withDefault("all").withOptions({ shallow: false }),
   );
 
-  const value = client || selected;
+  const value = client;
 
   return (
     <select

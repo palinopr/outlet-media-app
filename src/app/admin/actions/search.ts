@@ -16,13 +16,16 @@ export async function fetchSearchableRecords(): Promise<SearchableRecord[]> {
   const [campaignsRes, eventsRes, clientsRes] = await Promise.all([
     supabaseAdmin
       .from("meta_campaigns")
-      .select("campaign_id, name, status, client_slug"),
+      .select("campaign_id, name, status, client_slug")
+      .limit(100),
     supabaseAdmin
       .from("tm_events")
-      .select("id, name, venue_name, city, client_slug"),
+      .select("id, name, venue, city, client_slug")
+      .limit(100),
     supabaseAdmin
       .from("clients")
-      .select("id, name, slug, status"),
+      .select("id, name, slug, status")
+      .limit(100),
   ]);
 
   const campaigns: SearchableRecord[] = (campaignsRes.data ?? []).map((c) => ({
@@ -37,7 +40,7 @@ export async function fetchSearchableRecords(): Promise<SearchableRecord[]> {
     id: e.id,
     type: "event" as const,
     name: e.name ?? "",
-    subtitle: `${e.venue_name ?? ""} \u00b7 ${e.city ?? ""}`,
+    subtitle: `${e.venue ?? ""} \u00b7 ${e.city ?? ""}`,
     href: "/admin/events",
   }));
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { SidebarContent } from "./sidebar-content";
@@ -18,9 +19,7 @@ export function MobileSidebar({ clerkEnabled, displayName }: MobileSidebarProps)
       {/* Mobile top bar */}
       <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-border/50 bg-[oklch(0.16_0_0)]">
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center shrink-0">
-            <span className="text-white text-xs font-bold">O</span>
-          </div>
+          <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={24} height={24} className="h-6 w-6 shrink-0" />
           <p className="text-sm font-semibold text-white/90">Outlet Media</p>
         </div>
         <button

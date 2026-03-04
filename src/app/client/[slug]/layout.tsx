@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { slugToLabel } from "@/lib/formatters";
@@ -36,7 +37,13 @@ export default async function ClientLayout({ children, params }: Props) {
     const { userId } = await auth();
     if (!userId) redirect("/sign-in");
 
-    const user = await currentUser();
+    let user: Awaited<ReturnType<typeof currentUser>> = null;
+    try {
+      user = await currentUser();
+    } catch (err) {
+      console.error("[client/layout] Failed to fetch current user:", err);
+    }
+
     const meta = (user?.publicMetadata ?? {}) as {
       role?: string;
       client_slug?: string;
@@ -92,9 +99,7 @@ export default async function ClientLayout({ children, params }: Props) {
         <div className="absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-cyan-500/20 via-violet-500/10 to-transparent" />
         <div className="px-5 pt-6 pb-5">
           <div className="flex items-center gap-3 mb-5">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center shrink-0 shadow-lg shadow-violet-500/20">
-              <span className="text-white text-sm font-bold">{clientName.charAt(0)}</span>
-            </div>
+            <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={36} height={36} className="h-9 w-9 shrink-0" />
             <div className="min-w-0">
               <p className="text-sm font-bold text-white/90 truncate">{clientName}</p>
               <p className="text-[10px] text-white/30 font-medium tracking-wide">Client Portal</p>
@@ -106,9 +111,7 @@ export default async function ClientLayout({ children, params }: Props) {
         <div className="px-5 py-4">
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent mb-4" />
           <div className="flex items-center gap-2">
-            <div className="h-5 w-5 rounded-md bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center">
-              <span className="text-white text-[8px] font-bold">O</span>
-            </div>
+            <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={20} height={20} className="h-5 w-5" />
             <p className="text-[10px] text-white/25 font-medium">Outlet Media</p>
           </div>
         </div>
@@ -116,9 +119,7 @@ export default async function ClientLayout({ children, params }: Props) {
       {/* Mobile header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 border-b border-border/50 bg-[oklch(0.16_0_0)]">
         <div className="flex items-center gap-2">
-          <div className="h-6 w-6 rounded-md bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center shrink-0">
-            <span className="text-white text-xs font-bold">{clientName.charAt(0)}</span>
-          </div>
+          <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={24} height={24} className="h-6 w-6 shrink-0" />
           <p className="text-sm font-semibold text-white/90">{clientName}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -127,7 +128,7 @@ export default async function ClientLayout({ children, params }: Props) {
         </div>
       </div>
       <main className="flex-1 overflow-auto lg:pt-0 pt-14">
-        <div className="max-w-5xl mx-auto px-6 py-8">{children}</div>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">{children}</div>
       </main>
     </div>
   );

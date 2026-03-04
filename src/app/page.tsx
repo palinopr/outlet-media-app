@@ -14,7 +14,13 @@ export default async function RootPage() {
     redirect("/landing");
   }
 
-  const user = await currentUser();
+  let user: Awaited<ReturnType<typeof currentUser>> = null;
+  try {
+    user = await currentUser();
+  } catch (err) {
+    console.error("[root] Failed to fetch current user:", err);
+  }
+
   const meta = (user?.publicMetadata ?? {}) as {
     role?: string;
     client_slug?: string;

@@ -90,9 +90,6 @@ export default async function ActivityPage({ searchParams }: Props) {
           <Suspense>
             <ActivityFilters
               users={users}
-              selectedUser={selectedUser}
-              selectedType={selectedType}
-              selectedRange={selectedRange}
             />
           </Suspense>
         </div>

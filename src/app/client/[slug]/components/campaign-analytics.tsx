@@ -103,10 +103,12 @@ export function CampaignAnalytics({ ageGender, placements, hourly, daily, rangeL
       clicks: dowMap.get(dow)!.clicks,
     }));
 
+  // Mobile order: timeline (1) -> placements (2) -> demographics (3)
+  // Desktop order: demographics (1) -> placements (2) -> timeline (3)
   return (
-    <>
+    <div className="flex flex-col gap-6">
       {ageGender.length > 0 && (
-        <section>
+        <section className="order-3 md:order-1">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="h-3.5 w-3.5 text-white/30" />
             <span className="section-label">Audience Demographics</span>
@@ -121,7 +123,7 @@ export function CampaignAnalytics({ ageGender, placements, hourly, daily, rangeL
       )}
 
       {placements.length > 0 && (
-        <section>
+        <section className="order-2 md:order-2">
           <div className="flex items-center gap-2 mb-4">
             <Layers className="h-3.5 w-3.5 text-white/30" />
             <span className="section-label">Placements</span>
@@ -135,7 +137,7 @@ export function CampaignAnalytics({ ageGender, placements, hourly, daily, rangeL
       )}
 
       {(hourly.length > 0 || daily.length >= 2) && (
-        <section>
+        <section className="order-1 md:order-3">
           <div className="flex items-center gap-2 mb-4">
             <CalendarDays className="h-3.5 w-3.5 text-white/30" />
             <span className="section-label">Performance Timeline</span>
@@ -150,6 +152,6 @@ export function CampaignAnalytics({ ageGender, placements, hourly, daily, rangeL
           </div>
         </section>
       )}
-    </>
+    </div>
   );
 }

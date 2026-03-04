@@ -1,70 +1,14 @@
-"use client";
-
-import {
-  Treemap,
-  ResponsiveContainer,
-} from "recharts";
 import { type PlacementRow } from "./types";
+import { PlatformIcon } from "../platform-icons";
 
-// --- Treemap ---
+// --- Platform bar list ---
 
-interface TreemapContentProps {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  name: string;
-  pct: number;
-}
-
-const PLATFORM_TREEMAP_COLORS: Record<string, string> = {
-  Facebook: "#3b82f6",
-  Instagram: "#8b5cf6",
-  Messenger: "#22d3ee",
-  "Audience Network": "#f59e0b",
+const PLATFORM_BAR_COLORS: Record<string, string> = {
+  Facebook: "bg-blue-500",
+  Instagram: "bg-violet-500",
+  Messenger: "bg-cyan-500",
+  "Audience Network": "bg-amber-500",
 };
-
-function TreemapContent({ x, y, width, height, name, pct }: TreemapContentProps) {
-  if (width < 40 || height < 30) return null;
-  const color = PLATFORM_TREEMAP_COLORS[name] ?? "#6b7280";
-  return (
-    <g>
-      <rect
-        x={x + 1}
-        y={y + 1}
-        width={width - 2}
-        height={height - 2}
-        rx={8}
-        fill={color}
-        fillOpacity={0.25}
-        stroke={color}
-        strokeOpacity={0.4}
-        strokeWidth={1}
-      />
-      {width > 60 && (
-        <text
-          x={x + width / 2}
-          y={y + height / 2 - 6}
-          textAnchor="middle"
-          fill="rgba(255,255,255,0.7)"
-          fontSize={11}
-          fontWeight={600}
-        >
-          {name}
-        </text>
-      )}
-      <text
-        x={x + width / 2}
-        y={y + height / 2 + 10}
-        textAnchor="middle"
-        fill="rgba(255,255,255,0.4)"
-        fontSize={10}
-      >
-        {pct.toFixed(0)}%
-      </text>
-    </g>
-  );
-}
 
 export function PlacementTreemap({ data }: { data: PlacementRow[] }) {
   if (data.length === 0) return null;
@@ -78,38 +22,47 @@ export function PlacementTreemap({ data }: { data: PlacementRow[] }) {
     });
   }
   const totalImp = data.reduce((s, r) => s + r.impressions, 0);
-  const treemapData = Array.from(byPlatform.entries()).map(([name, vals]) => ({
-    name,
-    value: vals.impressions,
-    pct: totalImp > 0 ? (vals.impressions / totalImp) * 100 : 0,
-    clicks: vals.clicks,
-  }));
+  const platforms = Array.from(byPlatform.entries())
+    .map(([name, vals]) => ({
+      name,
+      impressions: vals.impressions,
+      clicks: vals.clicks,
+      pct: totalImp > 0 ? (vals.impressions / totalImp) * 100 : 0,
+    }))
+    .sort((a, b) => b.impressions - a.impressions);
+
+  const maxPct = platforms[0]?.pct ?? 100;
 
   return (
-    <div className="glass-card p-5">
+    <div className="glass-card p-4 sm:p-5">
       <p className="text-xs font-semibold text-white/60 mb-4">Platform Distribution</p>
-      <div className="h-44">
-        <ResponsiveContainer width="100%" height="100%">
-          <Treemap
-            data={treemapData}
-            dataKey="value"
-            stroke="none"
-            content={<TreemapContent x={0} y={0} width={0} height={0} name="" pct={0} />}
-          />
-        </ResponsiveContainer>
+      <div className="space-y-3">
+        {platforms.map((p) => {
+          const barColor = PLATFORM_BAR_COLORS[p.name] ?? "bg-white/30";
+          return (
+            <div key={p.name}>
+              <div className="flex items-center justify-between mb-1.5">
+                <div className="flex items-center gap-2">
+                  <PlatformIcon platform={p.name} size={14} />
+                  <span className="text-xs text-white/70 font-medium">{p.name}</span>
+                </div>
+                <span className="text-xs text-white/50 font-semibold">{p.pct.toFixed(0)}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
+                <div
+                  className={`h-full rounded-full ${barColor} opacity-60`}
+                  style={{ width: `${(p.pct / maxPct) * 100}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-// --- Table ---
-
-const platformDot: Record<string, string> = {
-  Facebook: "bg-blue-400",
-  Instagram: "bg-violet-400",
-  Messenger: "bg-cyan-400",
-  "Audience Network": "bg-amber-400",
-};
+// --- Table (desktop) + Cards (mobile) ---
 
 export function PlacementTable({ data }: { data: PlacementRow[] }) {
   if (data.length === 0) return null;
@@ -118,10 +71,12 @@ export function PlacementTable({ data }: { data: PlacementRow[] }) {
   const sorted = [...data].sort((a, b) => b.impressions - a.impressions);
 
   return (
-    <div className="glass-card p-5">
+    <div className="glass-card p-4 sm:p-5">
       <p className="text-xs font-semibold text-white/60 mb-4">Placement Breakdown</p>
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs" style={{ minWidth: 540 }}>
+
+      {/* Desktop: table */}
+      <div className="hidden md:block overflow-x-auto">
+        <table className="w-full text-xs">
           <thead>
             <tr className="text-white/30 text-left border-b border-white/[0.06]">
               <th className="pb-2 pr-3 font-medium whitespace-nowrap">Platform</th>
@@ -135,12 +90,11 @@ export function PlacementTable({ data }: { data: PlacementRow[] }) {
           <tbody>
             {sorted.map((row, i) => {
               const pct = totalImp > 0 ? (row.impressions / totalImp) * 100 : 0;
-              const dot = platformDot[row.platform] ?? "bg-white/30";
               return (
                 <tr key={i} className="border-b border-white/[0.03] last:border-0">
                   <td className="py-2.5 pr-3 whitespace-nowrap">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dot}`} />
+                    <div className="flex items-center gap-2">
+                      <PlatformIcon platform={row.platform} size={14} />
                       <span className="text-white/70">{row.platform}</span>
                     </div>
                   </td>
@@ -162,6 +116,43 @@ export function PlacementTable({ data }: { data: PlacementRow[] }) {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile: card stack */}
+      <div className="md:hidden space-y-2">
+        {sorted.map((row, i) => {
+          const pct = totalImp > 0 ? (row.impressions / totalImp) * 100 : 0;
+          return (
+            <div key={i} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <PlatformIcon platform={row.platform} size={16} />
+                  <div>
+                    <p className="text-xs font-medium text-white/70">{row.position}</p>
+                    <p className="text-[10px] text-white/30">{row.platform}</p>
+                  </div>
+                </div>
+                <span className="text-xs font-semibold text-white/50">{pct.toFixed(0)}%</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/[0.04]">
+                <div>
+                  <p className="text-[9px] text-white/25 uppercase">Impressions</p>
+                  <p className="text-xs font-medium text-white/60">{row.impressions.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-white/25 uppercase">Clicks</p>
+                  <p className="text-xs font-medium text-white/60">{row.clicks.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-[9px] text-white/25 uppercase">CTR</p>
+                  <p className="text-xs font-medium text-white/60">
+                    {row.ctr != null ? `${row.ctr.toFixed(2)}%` : "--"}
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

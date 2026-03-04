@@ -98,7 +98,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
               <DateRangeFilter selected={range} />
             </Suspense>
             <Suspense>
-              <ClientFilter clients={clients} selected={clientSlug ?? "all"} />
+              <ClientFilter clients={clients} />
             </Suspense>
           </div>
         </div>

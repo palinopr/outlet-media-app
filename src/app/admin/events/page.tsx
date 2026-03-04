@@ -82,7 +82,7 @@ export default async function EventsPage({ searchParams }: Props) {
           </p>
           {clients.length > 0 && (
             <Suspense>
-              <ClientFilter clients={clients} selected={clientSlug ?? "all"} />
+              <ClientFilter clients={clients} />
             </Suspense>
           )}
         </div>

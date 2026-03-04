@@ -62,10 +62,15 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (open && !loaded) {
-      fetchSearchableRecords().then((data) => {
-        setRecords(data);
-        setLoaded(true);
-      });
+      fetchSearchableRecords()
+        .then((data) => {
+          setRecords(data);
+          setLoaded(true);
+        })
+        .catch((err) => {
+          console.error("Failed to fetch searchable records:", err);
+          setLoaded(true);
+        });
     }
   }, [open, loaded]);
 
