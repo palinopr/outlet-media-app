@@ -108,6 +108,14 @@ async function loadClientOverrides(): Promise<Map<string, string>> {
   return overrides;
 }
 
+async function loadAllClientSlugs(): Promise<string[]> {
+  if (!supabaseAdmin) return [];
+  const { data } = await supabaseAdmin
+    .from("clients")
+    .select("slug");
+  return data?.map((r) => r.slug).filter(Boolean) ?? [];
+}
+
 function buildCampaignFilter(ids: string[]): string {
   return JSON.stringify([
     { field: "campaign.id", operator: "IN", value: ids },
@@ -162,9 +170,10 @@ export async function fetchAllCampaigns(
   campaignsUrl.searchParams.set("limit", "500");
 
   try {
-    const [rawCampaigns, overrides] = await Promise.all([
+    const [rawCampaigns, overrides, dbClientSlugs] = await Promise.all([
       fetchAllPages<RawCampaign>(campaignsUrl.toString(), "campaigns"),
       loadClientOverrides(),
+      loadAllClientSlugs(),
     ]);
 
     // Derive client slugs: Supabase override > guessClientSlug fallback
@@ -172,9 +181,11 @@ export async function fetchAllCampaigns(
     for (const c of rawCampaigns) {
       campaignSlugs.set(c.id, overrides.get(c.id) ?? guessClientSlug(c.name));
     }
-    const clients = [...new Set(campaignSlugs.values())]
-      .filter((s) => s !== "unknown")
-      .sort();
+    // Merge campaign-derived slugs with all clients from the clients table
+    const slugSet = new Set(campaignSlugs.values());
+    for (const s of dbClientSlugs) slugSet.add(s);
+    slugSet.delete("unknown");
+    const clients = [...slugSet].sort();
 
     // Phase 2: filter campaigns before fetching insights
     const filtered = clientSlug
