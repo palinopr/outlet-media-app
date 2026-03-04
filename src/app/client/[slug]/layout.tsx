@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { slugToLabel } from "@/lib/formatters";
 import { supabaseAdmin } from "@/lib/supabase";
 import { ClientNav } from "./components/client-nav";
+import { CompleteProfileModal } from "./components/complete-profile-modal";
 
 interface Props {
   children: ReactNode;
@@ -32,6 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ClientLayout({ children, params }: Props) {
   const { slug } = await params;
   const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  let needsName = false;
 
   if (clerkEnabled) {
     const { userId } = await auth();
@@ -69,6 +71,8 @@ export default async function ClientLayout({ children, params }: Props) {
         </div>
       );
     }
+
+    needsName = !isAdmin && (!user?.firstName || !user?.lastName);
 
     // Auto-enroll: ensure client_members row exists for invited users
     if (!isAdmin && isOwnPortal && supabaseAdmin) {
@@ -132,6 +136,7 @@ export default async function ClientLayout({ children, params }: Props) {
       <main className="flex-1 overflow-auto lg:pt-0 pt-14">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">{children}</div>
       </main>
+      {needsName && <CompleteProfileModal needsName />}
     </div>
   );
 }
