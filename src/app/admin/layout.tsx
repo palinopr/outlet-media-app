@@ -56,7 +56,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   }
 
   return (
-    <div className="dark flex min-h-screen bg-background text-foreground">
+    <div className="dark flex h-screen overflow-hidden bg-background text-foreground">
       {activityUserId && <ActivityTracker userId={activityUserId} userEmail={activityUserEmail} />}
       {/* Desktop sidebar */}
       <CollapsibleSidebar clerkEnabled={clerkEnabled} displayName={displayName} />
