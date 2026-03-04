@@ -26,7 +26,7 @@ export function CampaignDetailHeader({ slug, range, campaign: c, dataSource }: P
       <div className="relative">
         <Link
           href={`/client/${slug}?range=${range}`}
-          className="inline-flex items-center gap-1.5 text-[11px] text-white/30 hover:text-white/60 transition mb-4"
+          className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white/70 transition mb-4"
         >
           <ArrowLeft className="h-3 w-3" />
           Back to dashboard
@@ -36,7 +36,7 @@ export function CampaignDetailHeader({ slug, range, campaign: c, dataSource }: P
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="h-4 w-4 text-cyan-400/70" />
-              <span className="text-[10px] font-semibold tracking-widest uppercase text-cyan-400/70">
+              <span className="text-xs font-semibold tracking-widest uppercase text-cyan-400">
                 Campaign Detail
               </span>
             </div>
@@ -44,15 +44,15 @@ export function CampaignDetailHeader({ slug, range, campaign: c, dataSource }: P
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <CampaignStatusBadge status={c.status} />
               {c.startTime && (
-                <span className="text-[10px] text-white/25">Since {fmtDate(c.startTime)}</span>
+                <span className="text-xs text-white/50">Since {fmtDate(c.startTime)}</span>
               )}
               {c.dailyBudget != null && (
-                <span className="text-[10px] text-white/25">
+                <span className="text-xs text-white/50">
                   {fmtUsd(c.dailyBudget)}/day budget
                 </span>
               )}
               {dataSource === "meta_api" && (
-                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] text-emerald-400/50">
+                <span className="hidden sm:inline-flex items-center gap-1 text-xs text-emerald-400/70">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   Live
                 </span>
@@ -66,10 +66,10 @@ export function CampaignDetailHeader({ slug, range, campaign: c, dataSource }: P
                 <a
                   key={opt.value}
                   href={`?range=${opt.value}`}
-                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all duration-300 ${
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-300 ${
                     range === opt.value
                       ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
-                      : "text-white/40 hover:text-white/70 hover:bg-white/[0.06]"
+                      : "text-white/60 hover:text-white/80 hover:bg-white/[0.06]"
                   }`}
                 >
                   {opt.label}

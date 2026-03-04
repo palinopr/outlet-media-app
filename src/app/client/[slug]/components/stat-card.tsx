@@ -19,12 +19,12 @@ export function StatCard({
         <div className={`flex items-center justify-center h-6 w-6 rounded-lg ${iconColor}`}>
           <Icon className="h-3 w-3" />
         </div>
-        <span className="text-[10px] font-semibold tracking-wider uppercase text-white/40">
+        <span className="text-xs font-semibold tracking-wider uppercase text-white/60">
           {label}
         </span>
       </div>
       <p className="text-xl font-extrabold text-white tracking-tight">{value}</p>
-      {sub && <p className="text-[10px] text-white/25 mt-1">{sub}</p>}
+      {sub && <p className="text-xs text-white/50 mt-1">{sub}</p>}
     </div>
   );
 }

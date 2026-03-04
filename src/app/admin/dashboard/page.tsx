@@ -152,9 +152,9 @@ export default async function AdminDashboard() {
           {events.length === 0 ? (
             <div className="py-12 text-center">
               <div className="flex flex-col items-center gap-2">
-                <CalendarDays className="h-8 w-8 text-muted-foreground/30" />
+                <CalendarDays className="h-8 w-8 text-muted-foreground/60" />
                 <p className="text-sm text-muted-foreground">No events yet</p>
-                <p className="text-xs text-muted-foreground/60">TM One credentials needed to sync ticket data</p>
+                <p className="text-xs text-muted-foreground">TM One credentials needed to sync ticket data</p>
               </div>
             </div>
           ) : (
@@ -306,9 +306,9 @@ export default async function AdminDashboard() {
           {campaigns.length === 0 ? (
             <Card className="border-border/60 border-dashed">
               <CardContent className="py-12 text-center">
-                <Megaphone className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" />
+                <Megaphone className="h-8 w-8 text-muted-foreground/60 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">No active campaigns</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Run the Meta sync agent to pull live data</p>
+                <p className="text-xs text-muted-foreground mt-1">Run the Meta sync agent to pull live data</p>
               </CardContent>
             </Card>
           ) : (
@@ -326,11 +326,11 @@ export default async function AdminDashboard() {
                       </div>
                       <div className="flex flex-wrap gap-x-6 gap-y-2 shrink-0 text-right">
                         <div>
-                          <p className="text-[11px] text-muted-foreground">Spend</p>
+                          <p className="text-xs text-muted-foreground">Spend</p>
                           <p className="text-sm font-medium tabular-nums">{fmtUsd(centsToUsd(c.spend))}</p>
                         </div>
                         <div>
-                          <p className="text-[11px] text-muted-foreground">ROAS</p>
+                          <p className="text-xs text-muted-foreground">ROAS</p>
                           <p className={`text-sm font-semibold tabular-nums ${roasColor(c.roas)}`}>
                             {c.roas != null ? c.roas.toFixed(1) + "x" : "---"}
                           </p>
@@ -341,17 +341,17 @@ export default async function AdminDashboard() {
                           const color = m >= 2 ? "text-emerald-400" : m >= 1 ? "text-blue-400" : "text-red-400";
                           return (
                             <div>
-                              <p className="text-[11px] text-muted-foreground">Marginal</p>
+                              <p className="text-xs text-muted-foreground">Marginal</p>
                               <p className={`text-sm font-semibold tabular-nums ${color}`}>{m.toFixed(1)}×</p>
                             </div>
                           );
                         })()}
                         <div>
-                          <p className="text-[11px] text-muted-foreground">Impressions</p>
+                          <p className="text-xs text-muted-foreground">Impressions</p>
                           <p className="text-sm font-medium tabular-nums">{fmtNum(c.impressions)}</p>
                         </div>
                         <div>
-                          <p className="text-[11px] text-muted-foreground">CTR</p>
+                          <p className="text-xs text-muted-foreground">CTR</p>
                           <p className="text-sm font-medium tabular-nums">{c.ctr != null ? c.ctr.toFixed(2) + "%" : "---"}</p>
                         </div>
                       </div>

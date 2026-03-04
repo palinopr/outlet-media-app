@@ -50,7 +50,7 @@ export function CampaignSection({
     <section>
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <Megaphone className="h-3.5 w-3.5 text-white/30" />
+          <Megaphone className="h-3.5 w-3.5 text-white/50" />
           <span className="section-label">Your Campaigns</span>
         </div>
         <div className="flex items-center gap-2">
@@ -62,10 +62,10 @@ export function CampaignSection({
                 <button
                   key={f.value}
                   onClick={() => setFilter(f.value)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all duration-200 ${
+                  className={`px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-200 ${
                     filter === f.value
                       ? "bg-white text-zinc-900 shadow-sm"
-                      : "text-white/40 hover:text-white/70 hover:bg-white/[0.06]"
+                      : "text-white/60 hover:text-white/80 hover:bg-white/[0.06]"
                   }`}
                 >
                   {f.label} ({count})
@@ -73,7 +73,7 @@ export function CampaignSection({
               );
             })}
           </div>
-          <span className="text-[10px] text-white/20">{rangeLabel}</span>
+          <span className="text-xs text-white/45">{rangeLabel}</span>
         </div>
       </div>
 
@@ -85,7 +85,7 @@ export function CampaignSection({
         </div>
       ) : (
         <div className="glass-card p-8 text-center">
-          <p className="text-sm text-white/40">
+          <p className="text-sm text-white/60">
             No {filter === "all" ? "" : filter} campaigns found.
           </p>
         </div>

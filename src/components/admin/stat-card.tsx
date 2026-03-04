@@ -31,7 +31,7 @@ export function StatCard({
       <div className="relative">
         <div className={`flex items-center justify-between ${isLg ? "mb-3" : "mb-2"}`}>
           <p
-            className={`${isLg ? "text-xs" : "text-[11px]"} font-medium text-muted-foreground uppercase tracking-wide`}
+            className="text-xs font-medium text-muted-foreground uppercase tracking-wide"
           >
             {label}
           </p>
@@ -42,7 +42,7 @@ export function StatCard({
           </div>
         </div>
         <p className={`${isLg ? "text-3xl" : "text-2xl"} font-bold tracking-tight`}>{value}</p>
-        {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
+        {sub && <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>}
       </div>
     </div>
   );

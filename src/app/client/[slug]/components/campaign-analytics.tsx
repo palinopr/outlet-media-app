@@ -110,9 +110,9 @@ export function CampaignAnalytics({ ageGender, placements, hourly, daily, rangeL
       {ageGender.length > 0 && (
         <section className="order-3 md:order-1">
           <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="h-3.5 w-3.5 text-white/30" />
+            <BarChart3 className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Audience Demographics</span>
-            <span className="text-[10px] text-white/20 ml-auto">{rangeLabel}</span>
+            <span className="text-xs text-white/45 ml-auto">{rangeLabel}</span>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
             <AgeDistributionChart data={ageChartData} />
@@ -125,9 +125,9 @@ export function CampaignAnalytics({ ageGender, placements, hourly, daily, rangeL
       {placements.length > 0 && (
         <section className="order-2 md:order-2">
           <div className="flex items-center gap-2 mb-4">
-            <Layers className="h-3.5 w-3.5 text-white/30" />
+            <Layers className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Placements</span>
-            <span className="text-[10px] text-white/20 ml-auto">{rangeLabel}</span>
+            <span className="text-xs text-white/45 ml-auto">{rangeLabel}</span>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <PlacementTreemap data={placementData} />
@@ -139,9 +139,9 @@ export function CampaignAnalytics({ ageGender, placements, hourly, daily, rangeL
       {(hourly.length > 0 || daily.length >= 2) && (
         <section className="order-1 md:order-3">
           <div className="flex items-center gap-2 mb-4">
-            <CalendarDays className="h-3.5 w-3.5 text-white/30" />
+            <CalendarDays className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Performance Timeline</span>
-            <span className="text-[10px] text-white/20 ml-auto">{rangeLabel}</span>
+            <span className="text-xs text-white/45 ml-auto">{rangeLabel}</span>
           </div>
           <div className="grid grid-cols-1 gap-4">
             {daily.length >= 2 && <DailyTrendChart data={dailyData} />}

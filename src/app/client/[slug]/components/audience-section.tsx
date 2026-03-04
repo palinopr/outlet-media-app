@@ -7,7 +7,7 @@ function DemoBar({ label, value, color }: { label: string; value: number | null;
   return (
     <div className="mb-3 last:mb-0">
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs text-white/50">{label}</span>
+        <span className="text-xs text-white/60">{label}</span>
         <span className="text-xs font-semibold text-white/90">{value.toFixed(0)}%</span>
       </div>
       <ProgressBar value={value} color={color} />
@@ -21,13 +21,13 @@ export function AudienceSection({ demo }: { demo: AudienceProfile }) {
       {(demo.femalePct != null || demo.malePct != null) && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Heart className="h-3.5 w-3.5 text-violet-400/60" />
-            <span className="text-xs font-semibold text-white/60">Gender</span>
+            <Heart className="h-3.5 w-3.5 text-violet-400" />
+            <span className="text-xs font-semibold text-white/70">Gender</span>
           </div>
           <DemoBar label="Female" value={demo.femalePct} color="violet" />
           <DemoBar label="Male" value={demo.malePct} color="cyan" />
           {demo.marriedPct != null && (
-            <p className="text-[11px] text-white/30 mt-3 pt-3 border-t border-white/[0.06]">
+            <p className="text-xs text-white/50 mt-3 pt-3 border-t border-white/[0.06]">
               {demo.marriedPct.toFixed(0)}% married
             </p>
           )}
@@ -37,8 +37,8 @@ export function AudienceSection({ demo }: { demo: AudienceProfile }) {
       {demo.age1824 != null && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="h-3.5 w-3.5 text-emerald-400/60" />
-            <span className="text-xs font-semibold text-white/60">Age</span>
+            <Users className="h-3.5 w-3.5 text-emerald-400" />
+            <span className="text-xs font-semibold text-white/70">Age</span>
           </div>
           <DemoBar label="18-24" value={demo.age1824} color="emerald" />
           <DemoBar label="25-34" value={demo.age2534} color="emerald" />
@@ -51,8 +51,8 @@ export function AudienceSection({ demo }: { demo: AudienceProfile }) {
       {demo.income0_30 != null && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <DollarSign className="h-3.5 w-3.5 text-amber-400/60" />
-            <span className="text-xs font-semibold text-white/60">Household Income</span>
+            <DollarSign className="h-3.5 w-3.5 text-amber-400" />
+            <span className="text-xs font-semibold text-white/70">Household Income</span>
           </div>
           <DemoBar label="Under $30k" value={demo.income0_30} color="amber" />
           <DemoBar label="$30-60k" value={demo.income30_60} color="amber" />
@@ -65,8 +65,8 @@ export function AudienceSection({ demo }: { demo: AudienceProfile }) {
       {demo.educationCollege != null && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <GraduationCap className="h-3.5 w-3.5 text-blue-400/60" />
-            <span className="text-xs font-semibold text-white/60">Education</span>
+            <GraduationCap className="h-3.5 w-3.5 text-blue-400" />
+            <span className="text-xs font-semibold text-white/70">Education</span>
           </div>
           <DemoBar label="High School" value={demo.educationHighSchool} color="cyan" />
           <DemoBar label="College" value={demo.educationCollege} color="cyan" />
@@ -77,8 +77,8 @@ export function AudienceSection({ demo }: { demo: AudienceProfile }) {
       {demo.paymentVisa != null && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <CreditCard className="h-3.5 w-3.5 text-cyan-400/60" />
-            <span className="text-xs font-semibold text-white/60">Payment Methods</span>
+            <CreditCard className="h-3.5 w-3.5 text-cyan-400" />
+            <span className="text-xs font-semibold text-white/70">Payment Methods</span>
           </div>
           <DemoBar label="Visa" value={demo.paymentVisa} color="cyan" />
           <DemoBar label="Mastercard" value={demo.paymentMC} color="violet" />
@@ -90,8 +90,8 @@ export function AudienceSection({ demo }: { demo: AudienceProfile }) {
       {demo.childrenPct != null && demo.marriedPct != null && (
         <div className="glass-card p-5">
           <div className="flex items-center gap-2 mb-4">
-            <Baby className="h-3.5 w-3.5 text-rose-400/60" />
-            <span className="text-xs font-semibold text-white/60">Family</span>
+            <Baby className="h-3.5 w-3.5 text-rose-400" />
+            <span className="text-xs font-semibold text-white/70">Family</span>
           </div>
           <DemoBar label="Married" value={demo.marriedPct} color="violet" />
           <DemoBar label="With Children" value={demo.childrenPct} color="emerald" />

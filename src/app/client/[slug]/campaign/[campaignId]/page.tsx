@@ -38,7 +38,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   if (!data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
-        <p className="text-white/40 text-sm">Campaign not found.</p>
+        <p className="text-white/60 text-sm">Campaign not found.</p>
         <Link
           href={`/client/${slug}`}
           className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
@@ -136,7 +136,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       {recsData.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <Lightbulb className="h-3.5 w-3.5 text-white/30" />
+            <Lightbulb className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Insights & Recommendations</span>
           </div>
           <RecommendationsList items={recsData} />
@@ -147,9 +147,9 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       {ads.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
-            <ImageIcon className="h-3.5 w-3.5 text-white/30" />
+            <ImageIcon className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Ad Creatives</span>
-            <span className="text-[10px] text-white/20 ml-auto">{ads.length} ads</span>
+            <span className="text-xs text-white/45 ml-auto">{ads.length} ads</span>
           </div>
           <AdsPreview ads={adsPreviewData} />
         </section>
@@ -158,8 +158,8 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       {/* -- Empty state -- */}
       {dataSource === "supabase" && ageGender.length === 0 && ads.length === 0 && (
         <div className="glass-card p-8 text-center">
-          <p className="text-sm text-white/30 mb-1">Demographics and ad breakdowns unavailable</p>
-          <p className="text-[11px] text-white/15">
+          <p className="text-sm text-white/50 mb-1">Demographics and ad breakdowns unavailable</p>
+          <p className="text-xs text-white/40">
             Live data from Meta is required for detailed breakdowns. Showing cached totals.
           </p>
         </div>
