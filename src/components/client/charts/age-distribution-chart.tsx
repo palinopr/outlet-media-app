@@ -18,7 +18,7 @@ export function AgeDistributionChart({ data }: { data: AgeRow[] }) {
   return (
     <div className="glass-card p-5">
       <p className="text-xs font-semibold text-white/60 mb-4">Reach by Age Group</p>
-      <div className="h-52">
+      <div className="h-40 sm:h-52">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} layout="vertical" margin={{ top: 0, right: 12, bottom: 0, left: 0 }}>
             <XAxis type="number" hide domain={[0, maxImp * 1.15]} />

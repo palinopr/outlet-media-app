@@ -88,7 +88,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
 
       {/* Campaigns table */}
       <Card className="border-border/60">
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 pb-2">
           <p className="text-sm font-semibold">
             {clientSlug ? slugToLabel(clientSlug) : "All clients"}
             <span className="text-muted-foreground font-normal ml-1.5">({campaigns.length})</span>

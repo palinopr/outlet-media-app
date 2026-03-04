@@ -25,7 +25,7 @@ export function AgeGenderHeatmap({ data, ages }: { data: AgeGenderCell[]; ages: 
         <table className="w-full">
           <thead>
             <tr>
-              <th className="pb-2 text-left text-[10px] text-white/25 font-medium w-16" />
+              <th className="pb-2 text-left text-[10px] text-white/25 font-medium w-16 sticky left-0 z-10" />
               {ages.map((age) => (
                 <th key={age} className="pb-2 text-center text-[10px] text-white/30 font-medium px-1">
                   {age}
@@ -36,7 +36,7 @@ export function AgeGenderHeatmap({ data, ages }: { data: AgeGenderCell[]; ages: 
           <tbody>
             {genders.map((gender) => (
               <tr key={gender}>
-                <td className="py-1 text-[10px] text-white/40 font-medium">{gender}</td>
+                <td className="py-1 text-[10px] text-white/40 font-medium sticky left-0 z-10">{gender}</td>
                 {ages.map((age) => {
                   const cell = data.find((d) => d.age === age && d.gender === gender);
                   const pct = cell?.pct ?? 0;

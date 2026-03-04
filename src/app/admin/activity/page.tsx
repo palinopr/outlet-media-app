@@ -82,7 +82,7 @@ export default async function ActivityPage({ searchParams }: Props) {
 
       {/* Feed */}
       <Card className="border-border/60">
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 pb-2">
           <p className="text-sm font-semibold">
             Activity feed
             <span className="text-muted-foreground font-normal ml-1.5">({rows.length})</span>

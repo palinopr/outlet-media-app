@@ -96,7 +96,7 @@ export function DailyTrendChart({ data }: { data: DailyRow[] }) {
   return (
     <div className="glass-card p-5">
       <p className="text-xs font-semibold text-white/60 mb-4">Daily Performance Trend</p>
-      <div className="h-52">
+      <div className="h-40 sm:h-52">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
             <defs>
@@ -171,7 +171,7 @@ export function DayOfWeekChart({ data }: { data: DayOfWeekRow[] }) {
   return (
     <div className="glass-card p-5">
       <p className="text-xs font-semibold text-white/60 mb-4">Performance by Day of Week</p>
-      <div className="h-44">
+      <div className="h-36 sm:h-44">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 0, right: 8, bottom: 0, left: 0 }}>
             <XAxis
