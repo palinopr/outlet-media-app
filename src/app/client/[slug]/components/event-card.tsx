@@ -1,6 +1,6 @@
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, MapPin, RefreshCw } from "lucide-react";
 import type { EventCard as EventCardData } from "../types";
-import { fmtDate, fmtUsd } from "@/lib/formatters";
+import { fmtDate, fmtUsd, timeAgo } from "@/lib/formatters";
 import { getEventStatusCfg } from "../lib";
 import { ProgressBar } from "./progress-bar";
 
@@ -61,6 +61,13 @@ export function EventCard({ e }: { e: EventCardData }) {
       {e.sellThrough != null && (
         <div className="mt-3 pt-3 border-t border-white/[0.06]">
           <ProgressBar value={e.sellThrough} />
+        </div>
+      )}
+
+      {e.updatedAt && (
+        <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-white/[0.06]">
+          <RefreshCw className="h-3 w-3 text-white/30" />
+          <span className="text-[11px] text-white/30">TM updated {timeAgo(e.updatedAt)}</span>
         </div>
       )}
     </div>

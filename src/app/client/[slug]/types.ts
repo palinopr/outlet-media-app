@@ -50,6 +50,7 @@ export interface EventCard {
   avgTicketPrice: number | null;
   potentialRevenue: number | null;
   gross: number | null;
+  updatedAt: string | null;
 }
 
 export interface AudienceProfile {

@@ -112,6 +112,7 @@ function buildEventCards(events: TmEvent[]): EventCard[] {
       avgTicketPrice: e.avg_ticket_price != null ? Number(e.avg_ticket_price) : null,
       potentialRevenue: e.potential_revenue,
       gross: e.gross,
+      updatedAt: e.updated_at ?? null,
     };
   });
 }
