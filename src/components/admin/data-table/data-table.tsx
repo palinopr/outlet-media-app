@@ -34,6 +34,7 @@ interface DataTableProps<TData, TValue> {
   emptyMessage?: string;
   toolbar?: React.ReactNode;
   selectionToolbar?: (selectedRows: TData[]) => React.ReactNode;
+  mobileCard?: (row: TData) => React.ReactNode;
   enableRowSelection?: boolean;
   getRowId?: (row: TData) => string;
   pageSize?: number;
@@ -47,6 +48,7 @@ export function DataTable<TData, TValue>({
   emptyMessage = "No results.",
   toolbar,
   selectionToolbar,
+  mobileCard,
   enableRowSelection = false,
   getRowId,
   pageSize = 20,
@@ -87,40 +89,96 @@ export function DataTable<TData, TValue>({
             ? selectionToolbar(selectedRows)
             : toolbar}
         </DataTableToolbar>
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="border-border/60 hover:bg-transparent">
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="py-12 text-center text-sm text-muted-foreground">
+        {mobileCard ? (
+          <>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id} className="border-border/60 hover:bg-transparent">
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(header.column.columnDef.header, header.getContext())}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="py-12 text-center text-sm text-muted-foreground">
+                        {emptyMessage}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    table.getRowModel().rows.map((row) => (
+                      <TableRow key={row.id} className="border-border/60" data-state={row.getIsSelected() ? "selected" : undefined}>
+                        {row.getVisibleCells().map((cell) => (
+                          <TableCell key={cell.id}>
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </TableCell>
+                        ))}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="md:hidden">
+              {table.getRowModel().rows.length === 0 ? (
+                <p className="py-12 text-center text-sm text-muted-foreground">
                   {emptyMessage}
-                </TableCell>
-              </TableRow>
-            ) : (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="border-border/60" data-state={row.getIsSelected() ? "selected" : undefined}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                    </TableCell>
+                </p>
+              ) : (
+                <div className="divide-y divide-border/40">
+                  {table.getRowModel().rows.map((row) => (
+                    <div key={row.id} className="px-4 py-3">
+                      {mobileCard(row.original)}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id} className="border-border/60 hover:bg-transparent">
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={columns.length} className="py-12 text-center text-sm text-muted-foreground">
+                    {emptyMessage}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id} className="border-border/60" data-state={row.getIsSelected() ? "selected" : undefined}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        )}
       </Card>
       <DataTablePagination table={table} />
     </div>
