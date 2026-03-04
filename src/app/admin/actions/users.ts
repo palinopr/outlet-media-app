@@ -28,6 +28,33 @@ export async function changeUserRole(formData: { userId: string; role: string })
   revalidatePath("/admin/users");
 }
 
+const BulkUpdateRoleSchema = z.object({
+  userIds: z.array(z.string().min(1)).min(1),
+  role: z.enum(["admin", "client"]),
+});
+
+export async function bulkUpdateUserRole(formData: { userIds: string[]; role: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+
+  const parsed = BulkUpdateRoleSchema.parse(formData);
+  const clerk = await clerkClient();
+
+  for (const userId of parsed.userIds) {
+    const user = await clerk.users.getUser(userId);
+    await clerk.users.updateUserMetadata(userId, {
+      publicMetadata: { ...user.publicMetadata, role: parsed.role === "client" ? undefined : parsed.role },
+    });
+  }
+
+  await logAudit("user", "bulk", "bulk_update_role", null, {
+    count: parsed.userIds.length,
+    role: parsed.role,
+  });
+  revalidatePath("/admin/users");
+  return { success: true };
+}
+
 const DeleteUserSchema = z.object({
   userId: z.string().min(1),
 });

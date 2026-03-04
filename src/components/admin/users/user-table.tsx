@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { UserPlus, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { UserRow } from "@/app/admin/users/data";
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { getUserColumns, ClientOption } from "./columns";
+import { bulkUpdateUserRole } from "@/app/admin/actions/users";
 import { slugToLabel } from "@/lib/formatters";
 import { exportToCsv, formatDate, todayFilename } from "@/lib/export-csv";
 
@@ -127,6 +129,59 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
   );
 }
 
+// --- Selection toolbar -----------------------------------------------------------
+
+const ROLE_OPTIONS = [
+  { value: "admin", label: "Admin" },
+  { value: "client", label: "Client" },
+];
+
+function UserSelectionToolbar({ selectedRows }: { selectedRows: UserRow[] }) {
+  const [selectedRole, setSelectedRole] = useState("");
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  function handleUpdateRole() {
+    if (!selectedRole) return;
+    const ids = selectedRows.map((r) => r.id);
+    startTransition(async () => {
+      try {
+        await bulkUpdateUserRole({ userIds: ids, role: selectedRole });
+        toast.success(`Updated ${ids.length} user(s) to ${selectedRole}`);
+        router.refresh();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to update role");
+      }
+    });
+  }
+
+  return (
+    <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded px-3 py-1.5">
+      <span className="text-xs font-medium whitespace-nowrap">
+        {selectedRows.length} selected
+      </span>
+      <span className="text-xs text-muted-foreground">|</span>
+      <select
+        value={selectedRole}
+        onChange={(e) => setSelectedRole(e.target.value)}
+        className="h-7 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+      >
+        <option value="">Set role...</option>
+        {ROLE_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      <button
+        onClick={handleUpdateRole}
+        disabled={!selectedRole || isPending}
+        className="h-7 rounded bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+      >
+        {isPending ? "Saving..." : "Update Role"}
+      </button>
+    </div>
+  );
+}
+
 // --- Main table ----------------------------------------------------------------
 
 const userCsvColumns = [
@@ -148,6 +203,11 @@ export function UserTable({ users, clients }: Props) {
         data={users}
         searchColumn="name"
         searchPlaceholder="Search users..."
+        enableRowSelection
+        getRowId={(row) => row.id}
+        selectionToolbar={(selectedRows) => (
+          <UserSelectionToolbar selectedRows={selectedRows as UserRow[]} />
+        )}
         emptyMessage="No users yet. Invite someone to get started."
         onExport={() => exportToCsv(users as unknown as Record<string, unknown>[], userCsvColumns, todayFilename("users"))}
         toolbar={

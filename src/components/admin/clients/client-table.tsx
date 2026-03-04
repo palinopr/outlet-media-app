@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
-import { createClient } from "@/app/admin/actions/clients";
+import { createClient, bulkDeactivateClients } from "@/app/admin/actions/clients";
 import { toSlug } from "@/lib/to-slug";
 import Link from "next/link";
 import { DataTable } from "@/components/admin/data-table/data-table";
@@ -100,6 +101,42 @@ function CreateClientForm({ onDone }: { onDone: () => void }) {
   );
 }
 
+// ─── Selection toolbar ───────────────────────────────────────────────────────
+
+function ClientSelectionToolbar({ selectedRows }: { selectedRows: ClientSummary[] }) {
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
+  function handleDeactivate() {
+    const ids = selectedRows.map((r) => r.id);
+    startTransition(async () => {
+      try {
+        await bulkDeactivateClients({ clientIds: ids });
+        toast.success(`Deactivated ${ids.length} client(s)`);
+        router.refresh();
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to deactivate clients");
+      }
+    });
+  }
+
+  return (
+    <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded px-3 py-1.5">
+      <span className="text-xs font-medium whitespace-nowrap">
+        {selectedRows.length} selected
+      </span>
+      <span className="text-xs text-muted-foreground">|</span>
+      <button
+        onClick={handleDeactivate}
+        disabled={isPending}
+        className="h-7 rounded bg-red-600 px-3 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+      >
+        {isPending ? "Deactivating..." : "Deactivate"}
+      </button>
+    </div>
+  );
+}
+
 // ─── Main table ──────────────────────────────────────────────────────────────
 
 const clientCsvColumns = [
@@ -134,6 +171,11 @@ export function ClientTable({ clients }: Props) {
       data={clients}
       searchColumn="name"
       searchPlaceholder="Search clients..."
+      enableRowSelection
+      getRowId={(row) => row.id}
+      selectionToolbar={(selectedRows) => (
+        <ClientSelectionToolbar selectedRows={selectedRows as ClientSummary[]} />
+      )}
       toolbar={createToolbar}
       onExport={() => exportToCsv(clients as unknown as Record<string, unknown>[], clientCsvColumns, todayFilename("clients"))}
       mobileCard={(c) => (

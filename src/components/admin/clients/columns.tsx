@@ -22,6 +22,32 @@ import type { ClientSummary } from "@/app/admin/clients/data";
 
 export const clientColumns: ColumnDef<ClientSummary>[] = [
   {
+    id: "select",
+    header: ({ table }) => {
+      const checked = table.getIsAllPageRowsSelected();
+      const indeterminate = table.getIsSomePageRowsSelected();
+      return (
+        <input
+          type="checkbox"
+          className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
+          checked={checked}
+          ref={(el) => { if (el) el.indeterminate = indeterminate && !checked; }}
+          onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
+        />
+      );
+    },
+    cell: ({ row }) => (
+      <input
+        type="checkbox"
+        className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
+        checked={row.getIsSelected()}
+        onChange={(e) => row.toggleSelected(e.target.checked)}
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
     accessorKey: "name",
     header: ({ column }) => <ColumnHeader column={column} title="Client" />,
     cell: ({ row }) => {

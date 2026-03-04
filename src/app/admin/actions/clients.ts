@@ -69,6 +69,33 @@ export async function deactivateClient(formData: { slug: string }) {
   revalidatePath("/admin/campaigns");
 }
 
+// ─── Bulk deactivate clients ─────────────────────────────────────────────────
+
+const BulkDeactivateClientsSchema = z.object({
+  clientIds: z.array(z.string().min(1)).min(1),
+});
+
+export async function bulkDeactivateClients(formData: { clientIds: string[] }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+
+  const parsed = BulkDeactivateClientsSchema.parse(formData);
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const { error } = await supabaseAdmin
+    .from("clients")
+    .update({ status: "inactive" })
+    .in("id", parsed.clientIds);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit("client", "bulk", "bulk_deactivate", null, {
+    count: parsed.clientIds.length,
+  });
+  revalidatePath("/admin/clients");
+  return { success: true };
+}
+
 // ─── Create client ──────────────────────────────────────────────────────────
 
 export async function createClient(formData: { name: string; slug: string }) {

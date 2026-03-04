@@ -62,6 +62,62 @@ const UpdateTicketsSchema = z.object({
   ticketsAvailable: z.number().int().min(0).nullable(),
 });
 
+const BulkAssignEventClientSchema = z.object({
+  eventIds: z.array(z.string().min(1)).min(1),
+  clientSlug: z.string().min(1),
+});
+
+export async function bulkAssignEventClient(formData: { eventIds: string[]; clientSlug: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+
+  const parsed = BulkAssignEventClientSchema.parse(formData);
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const now = new Date().toISOString();
+  const { error } = await supabaseAdmin
+    .from("tm_events")
+    .update({ client_slug: parsed.clientSlug, updated_at: now })
+    .in("id", parsed.eventIds);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit("event", "bulk", "bulk_assign_client", null, {
+    count: parsed.eventIds.length,
+    client_slug: parsed.clientSlug,
+  });
+  revalidatePath("/admin/events");
+  return { success: true };
+}
+
+const BulkUpdateEventStatusSchema = z.object({
+  eventIds: z.array(z.string().min(1)).min(1),
+  status: z.string().min(1),
+});
+
+export async function bulkUpdateEventStatus(formData: { eventIds: string[]; status: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+
+  const parsed = BulkUpdateEventStatusSchema.parse(formData);
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const now = new Date().toISOString();
+  const { error } = await supabaseAdmin
+    .from("tm_events")
+    .update({ status: parsed.status, updated_at: now })
+    .in("id", parsed.eventIds);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit("event", "bulk", "bulk_update_status", null, {
+    count: parsed.eventIds.length,
+    status: parsed.status,
+  });
+  revalidatePath("/admin/events");
+  return { success: true };
+}
+
 export async function updateEventTickets(formData: { eventId: string; ticketsSold: number | null; ticketsAvailable: number | null }) {
   const err = await adminGuard();
   if (err) throw new Error("Forbidden");
