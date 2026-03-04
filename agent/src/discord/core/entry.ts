@@ -27,7 +27,7 @@ import { initWebhooks } from "../../services/webhook-service.js";
 import { initQueue } from "../../services/queue-service.js";
 import { initApprovals } from "../../services/approval-service.js";
 
-const token = process.env.DISCORD_BOT_TOKEN;
+const token = process.env.DISCORD_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;
 
 export const discordClient = token
@@ -116,7 +116,7 @@ function markProcessed(msgId: string): boolean {
 
 export function startDiscordBot(): void {
   if (!discordClient) {
-    console.warn("[discord] DISCORD_BOT_TOKEN not set -- Discord bot disabled");
+    console.warn("[discord] DISCORD_TOKEN not set -- Discord bot disabled");
     return;
   }
 

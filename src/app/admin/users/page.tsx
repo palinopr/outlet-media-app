@@ -4,6 +4,8 @@ import { UserTable } from "@/components/admin/users/user-table";
 import { Users, Shield, UserCheck, Clock } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 
+import { AdminPageHeader } from "@/components/admin/page-header";
+
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
@@ -26,12 +28,10 @@ export default async function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Manage team members and client portal access
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Users"
+        description="Manage team members and client portal access"
+      />
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

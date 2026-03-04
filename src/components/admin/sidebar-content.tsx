@@ -17,7 +17,7 @@ export function SidebarContent({
   onToggle,
 }: SidebarContentProps) {
   return (
-    <div className="flex flex-col h-full bg-[oklch(0.16_0_0)]">
+    <div className="flex flex-col h-full bg-[oklch(0.12_0_0)]">
       {/* Logo */}
       <div className={collapsed ? "px-2 py-5 flex items-center justify-center" : "px-4 py-5 flex items-center gap-2.5"}>
         <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={32} height={32} className="h-8 w-8 shrink-0" />

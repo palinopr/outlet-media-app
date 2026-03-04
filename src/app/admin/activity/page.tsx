@@ -7,6 +7,8 @@ import { getActivity } from "./data";
 import { ActivityFilters } from "@/components/admin/activity/activity-filters";
 import { ActivityTable } from "@/components/admin/activity/activity-table";
 
+import { AdminPageHeader } from "@/components/admin/page-header";
+
 export const metadata: Metadata = { title: "Activity" };
 
 interface Props {
@@ -29,13 +31,10 @@ export default async function ActivityPage({ searchParams }: Props) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Activity</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
-            Admin user activity, actions, and errors
-          </p>
-        </div>
+      <AdminPageHeader
+        title="Activity"
+        description="Admin user activity, actions, and errors"
+      >
         {fromDb ? (
           <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 rounded">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
@@ -46,7 +45,7 @@ export default async function ActivityPage({ searchParams }: Props) {
             No data
           </span>
         )}
-      </div>
+      </AdminPageHeader>
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

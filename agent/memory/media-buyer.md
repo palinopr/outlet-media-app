@@ -77,3 +77,7 @@ Use daily snapshots for trend analysis, not intraday deltas.
 
 <!-- auto-learned 2026-02-26 -->
 - Camila Houston adset "Houston 3" paused; Houston 2 & 5 remain active
+
+<!-- auto-learned 2026-03-04 -->
+- KYBBA spend cap: $5,110, daily budget now $100/day (up from $50)
+- KYBBA spent $4,307.55 of $5,110 cap as of Mar 4; show is Mar 22

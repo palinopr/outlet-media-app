@@ -15,10 +15,12 @@ export function CollapsibleSidebar({ clerkEnabled, displayName }: CollapsibleSid
   return (
     <aside
       className={cn(
-        "hidden lg:flex flex-col border-r border-border/50 shrink-0 transition-all duration-200 overflow-hidden",
+        "hidden lg:flex flex-col border-r border-border/50 shrink-0 transition-all duration-200 overflow-hidden relative",
         hydrated ? (collapsed ? "w-16" : "w-60") : "w-60"
       )}
     >
+      {/* Subtle right-edge gradient accent matching client portal */}
+      <div className="absolute top-0 right-0 bottom-0 w-[2px] bg-gradient-to-b from-cyan-500/20 via-violet-500/10 to-transparent pointer-events-none" />
       <SidebarContent
         clerkEnabled={clerkEnabled}
         displayName={displayName}

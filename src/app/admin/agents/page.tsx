@@ -6,6 +6,8 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from 
 import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import { AdminPageHeader } from "@/components/admin/page-header";
+
 export const dynamic = "force-dynamic";
 
 export default async function AgentsPage() {
@@ -19,12 +21,10 @@ export default async function AgentsPage() {
   return (
     <div className="space-y-6">
 
-      <div>
-        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Agent Command Center</h1>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
-          Talk to the agent, view all runs, trigger tasks manually
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Agent Command Center"
+        description="Talk to the agent, view all runs, trigger tasks manually"
+      />
 
       {/* Desktop: side-by-side layout */}
       <div className="hidden lg:grid grid-cols-[1fr_272px] gap-6 items-start">

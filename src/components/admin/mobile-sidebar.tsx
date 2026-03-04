@@ -17,7 +17,7 @@ export function MobileSidebar({ clerkEnabled, displayName }: MobileSidebarProps)
   return (
     <>
       {/* Mobile top bar */}
-      <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-border/50 bg-[oklch(0.16_0_0)]">
+      <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-border/50 bg-[oklch(0.12_0_0)]">
         <div className="flex items-center gap-2">
           <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={24} height={24} className="h-6 w-6 shrink-0" />
           <p className="text-sm font-semibold text-white/90">Outlet Media</p>
@@ -33,7 +33,7 @@ export function MobileSidebar({ clerkEnabled, displayName }: MobileSidebarProps)
 
       {/* Mobile drawer */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-56 p-0 bg-[oklch(0.16_0_0)] border-border/50">
+        <SheetContent side="left" className="w-56 p-0 bg-[oklch(0.12_0_0)] border-border/50">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <div className="absolute top-3 right-3 z-10">
             <button

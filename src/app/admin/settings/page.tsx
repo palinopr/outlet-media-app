@@ -26,24 +26,23 @@ function getApiKeyStatus() {
 
 // ─── Page ──────────────────────────────────────────────────────────────────
 
+import { AdminPageHeader } from "@/components/admin/page-header";
+
 export default function SettingsPage() {
   const apiKeys = getApiKeyStatus();
   return (
     <div className="space-y-4 sm:space-y-8">
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Settings</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
-            Agent configuration, API keys, and client management
-          </p>
-        </div>
+      <AdminPageHeader
+        title="Settings"
+        description="Agent configuration, API keys, and client management"
+      >
         <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5">
           <Settings className="h-3 w-3" />
           Admin
         </Badge>
-      </div>
+      </AdminPageHeader>
 
       {/* ─── Section 1: Agent Configuration ──────────────────────────────── */}
       <div className="space-y-4">
@@ -71,19 +70,19 @@ export default function SettingsPage() {
           {AGENT_TYPE_KEYS.map((key) => {
             const { name, description, icon: Icon, accent } = AGENT_CONFIG[key];
             return (
-            <div
-              key={key}
-              className="flex items-start gap-3 rounded-lg border border-border/60 bg-card p-4 transition-all duration-150 hover:border-border/80"
-            >
-              <div className={`h-8 w-8 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0 ${accent}`}>
-                <Icon className="h-4 w-4" />
+              <div
+                key={key}
+                className="flex items-start gap-3 rounded-lg border border-border/60 bg-card p-4 transition-all duration-150 hover:border-border/80"
+              >
+                <div className={`h-8 w-8 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0 ${accent}`}>
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">{name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
+                  <code className="text-[10px] text-muted-foreground/60 mt-1 block">{key}</code>
+                </div>
               </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium">{name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
-                <code className="text-[10px] text-muted-foreground/60 mt-1 block">{key}</code>
-              </div>
-            </div>
             );
           })}
         </div>

@@ -9,6 +9,8 @@ import { Suspense } from "react";
 import { fmtUsd, fmtNum, slugToLabel } from "@/lib/formatters";
 import type { DailyInsight } from "@/lib/meta-campaigns";
 
+import { AdminPageHeader } from "@/components/admin/page-header";
+
 const VALID_RANGES = new Set<DateRange>(["today", "yesterday", "7", "14", "30", "lifetime"]);
 
 interface Props {
@@ -46,26 +48,21 @@ export default async function CampaignsPage({ searchParams }: Props) {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Campaigns</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
-            Facebook and Instagram ad campaigns
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {hasData ? (
-            <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 rounded">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              Live from Meta
-            </span>
-          ) : (
-            <span className="text-xs text-amber-400 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded">
-              No data
-            </span>
-          )}
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Campaigns"
+        description="Facebook and Instagram ad campaigns"
+      >
+        {hasData ? (
+          <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 rounded">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            Live from Meta
+          </span>
+        ) : (
+          <span className="text-xs text-amber-400 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded">
+            No data
+          </span>
+        )}
+      </AdminPageHeader>
 
       {/* Error banner */}
       {error && (
@@ -77,9 +74,9 @@ export default async function CampaignsPage({ searchParams }: Props) {
       {/* Summary stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Spend",  value: fmtUsd(totalSpend),        icon: DollarSign, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
-          { label: "Avg. ROAS",    value: avgRoas > 0 ? avgRoas.toFixed(1) + "x" : "---", icon: TrendingUp, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
-          { label: "Impressions",  value: fmtNum(totalImpressions),  icon: Eye, accent: "from-blue-500/20 to-indigo-500/20", iconColor: "text-blue-400" },
+          { label: "Total Spend", value: fmtUsd(totalSpend), icon: DollarSign, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
+          { label: "Avg. ROAS", value: avgRoas > 0 ? avgRoas.toFixed(1) + "x" : "---", icon: TrendingUp, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
+          { label: "Impressions", value: fmtNum(totalImpressions), icon: Eye, accent: "from-blue-500/20 to-indigo-500/20", iconColor: "text-blue-400" },
           { label: "Clicks / CTR", value: fmtNum(totalClicks) + (overallCtr > 0 ? ` (${overallCtr.toFixed(1)}%)` : ""), icon: MousePointerClick, accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
         ].map((s) => (
           <StatCard key={s.label} {...s} />

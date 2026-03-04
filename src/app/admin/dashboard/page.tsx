@@ -27,6 +27,8 @@ import { StatCard } from "@/components/admin/stat-card";
 import { AGENT_CONFIG, DASHBOARD_AGENTS } from "@/components/admin/agents/constants";
 import { getData, type TmEvent } from "./data";
 
+import { AdminPageHeader } from "@/components/admin/page-header";
+
 // --- Helpers ---
 
 function daysUntil(dateStr: string | null): number | null {
@@ -55,8 +57,8 @@ export default async function AdminDashboard() {
   // Upcoming shows: next 30 days, sorted by date
   const upcomingShows = getUpcomingShows(events, 8);
 
-  const totalSold  = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
-  const totalCap   = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
+  const totalSold = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
+  const totalCap = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
   const totalGross = events.reduce((s, e) => s + (e.gross ?? 0), 0);
   const totalSpend = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0), 0);
   const totalRevenue = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0) * (c.roas ?? 0), 0);
@@ -66,26 +68,22 @@ export default async function AdminDashboard() {
 
   // Featured metrics (top row with accent styling)
   const heroStats = [
-    { label: "Ad Spend",         value: fmtUsd(totalSpend),       icon: DollarSign,  accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
-    { label: "Avg. ROAS",        value: avgRoas > 0 ? avgRoas.toFixed(1) + "x" : "---", icon: TrendingUp, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
-    { label: "Active Campaigns", value: String(campaigns.length), icon: Megaphone,   accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
+    { label: "Ad Spend", value: fmtUsd(totalSpend), icon: DollarSign, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
+    { label: "Avg. ROAS", value: avgRoas > 0 ? avgRoas.toFixed(1) + "x" : "---", icon: TrendingUp, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
+    { label: "Active Campaigns", value: String(campaigns.length), icon: Megaphone, accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
   ];
 
   const secondaryStats = [
-    { label: "Active Shows",  value: String(events.length),  sub: `${fmtNum(totalCap)} capacity`, icon: CalendarDays },
-    { label: "Tickets Sold",  value: fmtNum(totalSold),      sub: `of ${fmtNum(totalCap)}`,       icon: Ticket },
-    { label: "Total Gross",   value: fmtUsd(totalGross),     sub: "box office revenue",        icon: DollarSign },
+    { label: "Active Shows", value: String(events.length), sub: `${fmtNum(totalCap)} capacity`, icon: CalendarDays },
+    { label: "Tickets Sold", value: fmtNum(totalSold), sub: `of ${fmtNum(totalCap)}`, icon: Ticket },
+    { label: "Total Gross", value: fmtUsd(totalGross), sub: "box office revenue", icon: DollarSign },
   ];
 
   return (
     <div className="space-y-4 sm:space-y-8">
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">{now}</p>
-        </div>
+      <AdminPageHeader title="Dashboard" description={now}>
         {fromDb ? (
           <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5 text-emerald-400 border-emerald-500/20 bg-emerald-500/10">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
@@ -96,20 +94,20 @@ export default async function AdminDashboard() {
             No live data
           </Badge>
         )}
-      </div>
+      </AdminPageHeader>
 
       {/* Agent alerts */}
       {alerts.length > 0 && (
         <div className="space-y-2">
           {alerts.map((a) => {
             const isCritical = a.level === "critical";
-            const isWarning  = a.level === "warning";
+            const isWarning = a.level === "warning";
             const Icon = isCritical || isWarning ? AlertTriangle : Info;
             const classes = isCritical
               ? "border-red-500/30 bg-red-500/5 text-red-400"
               : isWarning
-              ? "border-amber-500/30 bg-amber-500/5 text-amber-400"
-              : "border-blue-500/30 bg-blue-500/5 text-blue-400";
+                ? "border-amber-500/30 bg-amber-500/5 text-amber-400"
+                : "border-blue-500/30 bg-blue-500/5 text-blue-400";
             return (
               <div key={a.id} className={`flex items-start gap-3 px-4 py-3 rounded-lg border ${classes}`}>
                 <Icon className="h-4 w-4 shrink-0 mt-0.5" />
@@ -290,11 +288,10 @@ export default async function AdminDashboard() {
                       <p className="text-xs text-muted-foreground truncate">{e.city}</p>
                     </div>
                     {days != null && (
-                      <span className={`text-xs font-semibold tabular-nums shrink-0 px-1.5 py-0.5 rounded ${
-                        days <= 3 ? "bg-red-500/15 text-red-400" :
-                        days <= 7 ? "bg-amber-500/15 text-amber-400" :
-                        "bg-zinc-500/10 text-zinc-400"
-                      }`}>
+                      <span className={`text-xs font-semibold tabular-nums shrink-0 px-1.5 py-0.5 rounded ${days <= 3 ? "bg-red-500/15 text-red-400" :
+                          days <= 7 ? "bg-amber-500/15 text-amber-400" :
+                            "bg-zinc-500/10 text-zinc-400"
+                        }`}>
                         {days === 0 ? "Today" : days === 1 ? "Tomorrow" : `${days}d`}
                       </span>
                     )}
@@ -419,12 +416,11 @@ export default async function AdminDashboard() {
                         <span className="text-sm font-medium">{label}</span>
                       </div>
                       <span className={`inline-flex items-center gap-1.5 text-xs ${statusColor}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${
-                          run?.status === "done" ? "bg-emerald-400 animate-pulse"
-                          : run?.status === "error" ? "bg-red-400"
-                          : run?.status === "running" ? "bg-blue-400 animate-pulse"
-                          : "bg-zinc-600"
-                        }`} />
+                        <span className={`h-1.5 w-1.5 rounded-full ${run?.status === "done" ? "bg-emerald-400 animate-pulse"
+                            : run?.status === "error" ? "bg-red-400"
+                              : run?.status === "running" ? "bg-blue-400 animate-pulse"
+                                : "bg-zinc-600"
+                          }`} />
                         {statusLabel}
                       </span>
                     </div>

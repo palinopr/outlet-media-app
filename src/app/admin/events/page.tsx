@@ -8,6 +8,8 @@ import { EventTable } from "@/components/admin/events/event-table";
 import { Suspense } from "react";
 import { fmtUsd, slugToLabel } from "@/lib/formatters";
 
+import { AdminPageHeader } from "@/components/admin/page-header";
+
 // ---- Page ----
 
 interface Props {
@@ -32,42 +34,37 @@ export default async function EventsPage({ searchParams }: Props) {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Events</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
-            Synced from Ticketmaster One promoter portal
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {!fromDb && (
-            <span className="text-xs text-amber-400 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded">
-              No data
-            </span>
-          )}
-          {fromDb && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 rounded">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-              Live from Supabase
-            </span>
-          )}
-          <Button size="sm" variant="outline" className="gap-2 h-8 text-xs" asChild>
-            <a href="/admin/agents">
-              <Bot className="h-3.5 w-3.5" />
-              Run Agent
-            </a>
-          </Button>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Events"
+        description="Synced from Ticketmaster One promoter portal"
+      >
+        {!fromDb && (
+          <span className="text-xs text-amber-400 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded">
+            No data
+          </span>
+        )}
+        {fromDb && (
+          <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 rounded">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+            Live from Supabase
+          </span>
+        )}
+        <Button size="sm" variant="outline" className="gap-2 h-8 text-xs" asChild>
+          <a href="/admin/agents">
+            <Bot className="h-3.5 w-3.5" />
+            Run Agent
+          </a>
+        </Button>
+      </AdminPageHeader>
 
       {/* Summary stats */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: "Total Shows",  value: String(events.length),                       icon: CalendarDays, accent: "from-cyan-500/20 to-blue-500/20",    iconColor: "text-cyan-400" },
-          { label: "Tickets Sold", value: totalSold.toLocaleString(),                  icon: Ticket,       accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
-          { label: "Sell-through", value: capTotal > 0 ? `${avgSellPct}%` : "---",    icon: TrendingUp,   accent: "from-emerald-500/20 to-teal-500/20",  iconColor: "text-emerald-400" },
-          { label: "Total Gross",  value: fmtUsd(totalGross > 0 ? totalGross : null),  icon: DollarSign,   accent: "from-rose-500/20 to-pink-500/20",     iconColor: "text-rose-400" },
-          { label: "Total Fans",   value: totalFans > 0 ? totalFans.toLocaleString() : "---", icon: Users, accent: "from-orange-500/20 to-amber-500/20", iconColor: "text-orange-400" },
+          { label: "Total Shows", value: String(events.length), icon: CalendarDays, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
+          { label: "Tickets Sold", value: totalSold.toLocaleString(), icon: Ticket, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
+          { label: "Sell-through", value: capTotal > 0 ? `${avgSellPct}%` : "---", icon: TrendingUp, accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
+          { label: "Total Gross", value: fmtUsd(totalGross > 0 ? totalGross : null), icon: DollarSign, accent: "from-rose-500/20 to-pink-500/20", iconColor: "text-rose-400" },
+          { label: "Total Fans", value: totalFans > 0 ? totalFans.toLocaleString() : "---", icon: Users, accent: "from-orange-500/20 to-amber-500/20", iconColor: "text-orange-400" },
         ].map((s) => (
           <StatCard key={s.label} {...s} />
         ))}

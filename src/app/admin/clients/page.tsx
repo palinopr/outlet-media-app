@@ -11,6 +11,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 
+import { AdminPageHeader } from "@/components/admin/page-header";
+
 // ─── Page ──────────────────────────────────────────────────────────────────
 
 export default async function ClientsPage() {
@@ -24,28 +26,25 @@ export default async function ClientsPage() {
     : 0;
 
   const stats = [
-    { label: "Total Clients",    value: String(clients.length),         sub: `${clients.filter((c) => c.status === "active").length} active`, icon: Users      },
-    { label: "Total Ad Spend",   value: fmtUsd(totalSpend),             sub: `${totalCampaigns} campaigns`,                                  icon: DollarSign },
-    { label: "Active Campaigns", value: String(activeCampaigns),        sub: "running now",                                                   icon: Megaphone  },
-    { label: "Blended ROAS",     value: blendedRoas > 0 ? blendedRoas.toFixed(1) + "x" : "\u2014", sub: "avg return on ad spend",            icon: TrendingUp },
+    { label: "Total Clients", value: String(clients.length), sub: `${clients.filter((c) => c.status === "active").length} active`, icon: Users },
+    { label: "Total Ad Spend", value: fmtUsd(totalSpend), sub: `${totalCampaigns} campaigns`, icon: DollarSign },
+    { label: "Active Campaigns", value: String(activeCampaigns), sub: "running now", icon: Megaphone },
+    { label: "Blended ROAS", value: blendedRoas > 0 ? blendedRoas.toFixed(1) + "x" : "\u2014", sub: "avg return on ad spend", icon: TrendingUp },
   ];
 
   return (
     <div className="space-y-4 sm:space-y-8">
 
       {/* Header */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Clients</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
-            Manage promoter accounts and their client portal access
-          </p>
-        </div>
+      <AdminPageHeader
+        title="Clients"
+        description="Manage promoter accounts and their client portal access"
+      >
         <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
           {clients.length} active
         </Badge>
-      </div>
+      </AdminPageHeader>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

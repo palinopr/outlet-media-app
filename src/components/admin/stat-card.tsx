@@ -23,7 +23,7 @@ export function StatCard({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl border border-border/60 bg-card ${isLg ? "p-5" : "p-4"} transition-all duration-200 hover:border-border/80 hover:shadow-lg hover:shadow-black/20`}
+      className={`relative overflow-hidden rounded-xl border border-white/[0.04] bg-card ${isLg ? "p-5" : "p-4"} transition-all duration-200 hover:border-white/[0.08] hover:shadow-lg hover:shadow-black/20`}
     >
       <div
         className={`absolute inset-0 bg-gradient-to-br ${accent ?? "from-white/[0.02] to-transparent"} opacity-50`}
