@@ -42,61 +42,96 @@ export function ActivityTable({ rows }: { rows: ActivityRow[] }) {
   }
 
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-[140px]">Time</TableHead>
-          <TableHead className="w-[200px]">User</TableHead>
-          <TableHead className="w-[100px]">Type</TableHead>
-          <TableHead className="w-[160px]">Page</TableHead>
-          <TableHead>Detail</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
+    <>
+      {/* Desktop table */}
+      <div className="hidden md:block">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[140px]">Time</TableHead>
+              <TableHead className="w-[200px]">User</TableHead>
+              <TableHead className="w-[100px]">Type</TableHead>
+              <TableHead className="w-[160px]">Page</TableHead>
+              <TableHead>Detail</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => {
+              const style = TYPE_STYLES[row.event_type] ?? TYPE_STYLES.page_view;
+              const isExpanded = expandedId === row.id;
+              const hasMetadata = row.metadata && Object.keys(row.metadata).length > 0;
+
+              return (
+                <Fragment key={row.id}>
+                  <TableRow
+                    className={hasMetadata ? "cursor-pointer hover:bg-white/[0.02]" : ""}
+                    onClick={() => hasMetadata && setExpandedId(isExpanded ? null : row.id)}
+                  >
+                    <TableCell className="text-xs text-muted-foreground font-mono">
+                      {formatTime(row.created_at)}
+                    </TableCell>
+                    <TableCell className="text-xs truncate max-w-[200px]">
+                      {row.user_email}
+                    </TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${style.classes}`}
+                      >
+                        {style.label}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-xs text-muted-foreground font-mono">
+                      {row.page ?? "--"}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {row.detail ?? "--"}
+                    </TableCell>
+                  </TableRow>
+                  {isExpanded && hasMetadata && (
+                    <TableRow key={`${row.id}-meta`}>
+                      <TableCell colSpan={5} className="bg-white/[0.02] px-6 py-3">
+                        <pre className="text-[11px] text-muted-foreground font-mono whitespace-pre-wrap break-all">
+                          {JSON.stringify(row.metadata, null, 2)}
+                        </pre>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </Fragment>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden divide-y divide-border/40">
         {rows.map((row) => {
           const style = TYPE_STYLES[row.event_type] ?? TYPE_STYLES.page_view;
-          const isExpanded = expandedId === row.id;
-          const hasMetadata = row.metadata && Object.keys(row.metadata).length > 0;
-
           return (
-            <Fragment key={row.id}>
-              <TableRow
-                className={hasMetadata ? "cursor-pointer hover:bg-white/[0.02]" : ""}
-                onClick={() => hasMetadata && setExpandedId(isExpanded ? null : row.id)}
-              >
-                <TableCell className="text-xs text-muted-foreground font-mono">
+            <div key={row.id} className="px-4 py-3 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${style.classes}`}
+                >
+                  {style.label}
+                </span>
+                <span className="text-[11px] text-muted-foreground font-mono">
                   {formatTime(row.created_at)}
-                </TableCell>
-                <TableCell className="text-xs truncate max-w-[200px]">
-                  {row.user_email}
-                </TableCell>
-                <TableCell>
-                  <span
-                    className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${style.classes}`}
-                  >
-                    {style.label}
-                  </span>
-                </TableCell>
-                <TableCell className="text-xs text-muted-foreground font-mono">
-                  {row.page ?? "--"}
-                </TableCell>
-                <TableCell className="text-xs">
-                  {row.detail ?? "--"}
-                </TableCell>
-              </TableRow>
-              {isExpanded && hasMetadata && (
-                <TableRow key={`${row.id}-meta`}>
-                  <TableCell colSpan={5} className="bg-white/[0.02] px-6 py-3">
-                    <pre className="text-[11px] text-muted-foreground font-mono whitespace-pre-wrap break-all">
-                      {JSON.stringify(row.metadata, null, 2)}
-                    </pre>
-                  </TableCell>
-                </TableRow>
+                </span>
+              </div>
+              <p className="text-xs truncate text-foreground">{row.user_email}</p>
+              {row.page && (
+                <p className="text-[11px] text-muted-foreground font-mono truncate">
+                  {row.page}
+                </p>
               )}
-            </Fragment>
+              {row.detail && (
+                <p className="text-xs text-muted-foreground">{row.detail}</p>
+              )}
+            </div>
           );
         })}
-      </TableBody>
-    </Table>
+      </div>
+    </>
   );
 }
