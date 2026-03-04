@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useQueryState, parseAsString } from "nuqs";
 
 const DATE_OPTIONS = [
   { value: "today", label: "Today" },
@@ -12,24 +12,20 @@ const DATE_OPTIONS = [
 ];
 
 export function DateRangeFilter({ selected }: { selected: string }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const [range, setRange] = useQueryState(
+    "range",
+    parseAsString.withDefault("today").withOptions({ shallow: false }),
+  );
 
-  function handleChange(value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value === "lifetime") {
-      params.delete("range");
-    } else {
-      params.set("range", value);
-    }
-    router.push(`${pathname}?${params.toString()}`);
-  }
+  const value = range || selected;
 
   return (
     <select
-      value={selected}
-      onChange={(e) => handleChange(e.target.value)}
+      value={value}
+      onChange={(e) => {
+        const v = e.target.value;
+        setRange(v === "today" ? null : v);
+      }}
       className="h-7 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
     >
       {DATE_OPTIONS.map((opt) => (

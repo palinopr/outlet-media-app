@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { MobileSidebar } from "@/components/admin/mobile-sidebar";
 import { ActivityTracker } from "@/components/admin/activity-tracker";
 import { CommandPalette } from "@/components/admin/command-palette";
@@ -64,10 +65,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <div className="flex flex-col flex-1 min-w-0">
         <MobileSidebar clerkEnabled={clerkEnabled} displayName={displayName} />
         <main className="flex-1 overflow-auto">
-          <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-            <AdminBreadcrumbs />
-            {children}
-          </div>
+          <NuqsAdapter>
+            <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+              <AdminBreadcrumbs />
+              {children}
+            </div>
+          </NuqsAdapter>
         </main>
       </div>
       <CommandPalette />

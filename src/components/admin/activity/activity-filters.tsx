@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useQueryState, parseAsString } from "nuqs";
 
 interface Props {
   users: string[];
@@ -24,19 +24,20 @@ const DATE_RANGES = [
 ];
 
 export function ActivityFilters({ users, selectedUser, selectedType, selectedRange }: Props) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const opts = { shallow: false } as const;
 
-  function setParam(key: string, value: string) {
-    const params = new URLSearchParams(searchParams.toString());
-    if (value === "all" || !value) {
-      params.delete(key);
-    } else {
-      params.set(key, value);
-    }
-    router.push(`${pathname}?${params.toString()}`);
-  }
+  const [user, setUser] = useQueryState(
+    "user",
+    parseAsString.withDefault("all").withOptions(opts),
+  );
+  const [type, setType] = useQueryState(
+    "type",
+    parseAsString.withDefault("all").withOptions(opts),
+  );
+  const [range, setRange] = useQueryState(
+    "range",
+    parseAsString.withDefault("7d").withOptions(opts),
+  );
 
   const selectClass =
     "text-xs bg-background border border-border/60 rounded px-2.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring";
@@ -44,8 +45,11 @@ export function ActivityFilters({ users, selectedUser, selectedType, selectedRan
   return (
     <div className="flex items-center gap-2 flex-wrap">
       <select
-        value={selectedUser}
-        onChange={(e) => setParam("user", e.target.value)}
+        value={user || selectedUser}
+        onChange={(e) => {
+          const v = e.target.value;
+          setUser(v === "all" ? null : v);
+        }}
         className={selectClass}
       >
         <option value="all">All users</option>
@@ -57,8 +61,11 @@ export function ActivityFilters({ users, selectedUser, selectedType, selectedRan
       </select>
 
       <select
-        value={selectedType}
-        onChange={(e) => setParam("type", e.target.value)}
+        value={type || selectedType}
+        onChange={(e) => {
+          const v = e.target.value;
+          setType(v === "all" ? null : v);
+        }}
         className={selectClass}
       >
         {EVENT_TYPES.map((t) => (
@@ -69,8 +76,11 @@ export function ActivityFilters({ users, selectedUser, selectedType, selectedRan
       </select>
 
       <select
-        value={selectedRange}
-        onChange={(e) => setParam("range", e.target.value)}
+        value={range || selectedRange}
+        onChange={(e) => {
+          const v = e.target.value;
+          setRange(v === "7d" ? null : v);
+        }}
         className={selectClass}
       >
         {DATE_RANGES.map((r) => (
