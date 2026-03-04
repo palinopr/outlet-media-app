@@ -41,7 +41,7 @@ export function NavLinks({ collapsed }: NavLinksProps) {
   if (collapsed) {
     return (
       <TooltipProvider delayDuration={0}>
-        <nav className="flex-1 px-2 py-4 space-y-0.5">
+        <nav className="px-2 py-4 space-y-0.5">
           {nav.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
             return (
@@ -76,7 +76,7 @@ export function NavLinks({ collapsed }: NavLinksProps) {
   }
 
   return (
-    <nav className="flex-1 px-2 py-4 space-y-0.5">
+    <nav className="px-2 py-4 space-y-0.5">
       {nav.map(({ href, label, icon: Icon }) => {
         const active = pathname === href || pathname.startsWith(href + "/");
         return (

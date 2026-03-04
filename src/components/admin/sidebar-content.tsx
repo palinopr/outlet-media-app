@@ -30,14 +30,16 @@ export function SidebarContent({
       </div>
       <div className="h-px bg-white/[0.06] mx-3" />
 
-      {/* Nav */}
-      <NavLinks collapsed={collapsed} />
+      {/* Nav (scrollable if content overflows) */}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        <NavLinks collapsed={collapsed} />
+      </div>
 
       <div className="h-px bg-white/[0.06] mx-3" />
 
-      {/* User */}
+      {/* User — pinned to bottom */}
       {!collapsed && (
-        <div className="px-4 py-4 flex items-center gap-3">
+        <div className="px-4 py-4 flex items-center gap-3 shrink-0">
           <UserAvatar clerkEnabled={clerkEnabled} />
           <div className="min-w-0">
             <p className="text-xs font-medium truncate text-white/90">{displayName}</p>
@@ -50,7 +52,7 @@ export function SidebarContent({
       {onToggle && (
         <button
           onClick={onToggle}
-          className="flex items-center justify-center h-10 mx-2 mb-3 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/[0.04] transition-colors duration-150"
+          className="flex items-center justify-center h-10 mx-2 mb-3 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/[0.04] transition-colors duration-150 shrink-0"
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
         >
           {collapsed ? <ChevronsRight className="h-4 w-4" /> : <ChevronsLeft className="h-4 w-4" />}
