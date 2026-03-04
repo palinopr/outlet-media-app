@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { SidebarContent } from "@/components/admin/sidebar-content";
 import { MobileSidebar } from "@/components/admin/mobile-sidebar";
 import { ActivityTracker } from "@/components/admin/activity-tracker";
+import { CommandPalette } from "@/components/admin/command-palette";
+import { AdminBreadcrumbs } from "@/components/admin/breadcrumbs";
 
 export const dynamic = "force-dynamic";
 
@@ -65,10 +67,12 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <MobileSidebar clerkEnabled={clerkEnabled} displayName={displayName} />
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+            <AdminBreadcrumbs />
             {children}
           </div>
         </main>
       </div>
+      <CommandPalette />
     </div>
   );
 }
