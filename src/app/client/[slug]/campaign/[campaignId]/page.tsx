@@ -83,7 +83,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 
   return (
     <div className="space-y-6">
-      <CampaignDetailHeader slug={slug} range={range} campaign={c} dataSource={dataSource} />
+      <CampaignDetailHeader slug={slug} range={range} campaign={c} />
 
       {/* -- Key Metrics -- */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">

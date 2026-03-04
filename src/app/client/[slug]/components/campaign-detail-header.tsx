@@ -14,10 +14,9 @@ interface Props {
     startTime: string | null;
     dailyBudget: number | null;
   };
-  dataSource: "meta_api" | "supabase";
 }
 
-export function CampaignDetailHeader({ slug, range, campaign: c, dataSource }: Props) {
+export function CampaignDetailHeader({ slug, range, campaign: c }: Props) {
   return (
     <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] p-6 sm:p-8">
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.07] via-violet-500/[0.05] to-transparent" />
@@ -49,12 +48,6 @@ export function CampaignDetailHeader({ slug, range, campaign: c, dataSource }: P
               {c.dailyBudget != null && (
                 <span className="text-xs text-white/50">
                   {fmtUsd(c.dailyBudget)}/day budget
-                </span>
-              )}
-              {dataSource === "meta_api" && (
-                <span className="hidden sm:inline-flex items-center gap-1 text-xs text-emerald-400/70">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Live
                 </span>
               )}
             </div>

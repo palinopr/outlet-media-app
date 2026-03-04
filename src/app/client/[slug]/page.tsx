@@ -66,15 +66,6 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
               {now}
               <span className="text-white/30">|</span>
               <span className="text-white/50">{rangeLabel}</span>
-              {dataSource === "meta_api" && (
-                <>
-                  <span className="text-white/30">|</span>
-                  <span className="inline-flex items-center gap-1 text-emerald-400/70">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Live
-                  </span>
-                </>
-              )}
             </p>
           </div>
 
