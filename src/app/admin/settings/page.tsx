@@ -29,13 +29,13 @@ function getApiKeyStatus() {
 export default function SettingsPage() {
   const apiKeys = getApiKeyStatus();
   return (
-    <div className="space-y-8">
+    <div className="space-y-4 sm:space-y-8">
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Settings</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
             Agent configuration, API keys, and client management
           </p>
         </div>

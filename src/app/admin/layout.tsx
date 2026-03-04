@@ -25,7 +25,13 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     const { userId } = await auth();
     if (!userId) redirect("/sign-in");
 
-    const user = await currentUser();
+    let user: Awaited<ReturnType<typeof currentUser>> = null;
+    try {
+      user = await currentUser();
+    } catch (err) {
+      console.error("[admin/layout] Failed to fetch current user:", err);
+    }
+
     activityUserId = user?.id ?? "";
     activityUserEmail = user?.emailAddresses[0]?.emailAddress ?? "";
     const role = (user?.publicMetadata as { role?: string })?.role;
@@ -59,7 +65,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
       {/* Main content */}
       <main className="flex-1 overflow-auto min-w-0">
-        <div className="max-w-7xl mx-auto px-6 py-8 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
           {children}
         </div>
       </main>

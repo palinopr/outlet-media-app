@@ -20,8 +20,8 @@ export default async function AgentsPage() {
     <div className="space-y-6">
 
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Agent Command Center</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Agent Command Center</h1>
+        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
           Talk to the agent, view all runs, trigger tasks manually
         </p>
       </div>

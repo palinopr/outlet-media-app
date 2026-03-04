@@ -32,14 +32,14 @@ export default async function EventsPage({ searchParams }: Props) {
     <div className="space-y-6">
 
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Events</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight">Events</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 hidden sm:block">
             Synced from Ticketmaster One promoter portal
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {!fromDb && (
             <span className="text-xs text-amber-400 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded">
               No data
