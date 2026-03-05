@@ -119,20 +119,25 @@ function buildEventCards(events: TmEvent[]): EventCard[] {
 
 // --- Campaigns page data (Meta API via shared module + daily insights) ---
 
-export async function getCampaignsPageData(slug: string): Promise<{
+export async function getCampaignsPageData(slug: string, scope?: ScopeFilter): Promise<{
   campaigns: CampaignCard[];
   snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null; campaign_id: string }>;
   dataSource: "meta_api" | "supabase";
 }> {
   const result = await fetchAllCampaigns("30", slug);
 
-  const campaigns = result.campaigns
+  let campaigns = result.campaigns
     .map(toCampaignCard)
     .sort((a, b) => {
       const aTime = a.startTime ? new Date(a.startTime).getTime() : 0;
       const bTime = b.startTime ? new Date(b.startTime).getTime() : 0;
       return bTime - aTime;
     });
+
+  if (scope?.allowedCampaignIds) {
+    const allowed = new Set(scope.allowedCampaignIds);
+    campaigns = campaigns.filter((c) => allowed.has(c.campaignId));
+  }
 
   const campaignIds = new Set(campaigns.map((c) => c.campaignId));
   const snapshots = result.dailyInsights
@@ -151,31 +156,48 @@ export async function getCampaignsPageData(slug: string): Promise<{
   };
 }
 
+// --- Scope filter options ---
+
+export interface ScopeFilter {
+  allowedCampaignIds: string[] | null;
+  allowedEventIds: string[] | null;
+}
+
 // --- Main data function ---
 
 export async function getData(
   slug: string,
   range: DateRange,
+  scope?: ScopeFilter,
 ): Promise<ClientData> {
   const result = await fetchAllCampaigns(range, slug);
 
-  const campaigns = result.campaigns
-    .map(toCampaignCard);
+  let campaigns = result.campaigns.map(toCampaignCard);
+
+  // Filter campaigns by scope if assigned
+  if (scope?.allowedCampaignIds) {
+    const allowed = new Set(scope.allowedCampaignIds);
+    campaigns = campaigns.filter((c) => allowed.has(c.campaignId));
+  }
 
   if (campaigns.length === 0 && result.error) return EMPTY;
 
   const dataSource = result.error ? "supabase" : "meta_api";
 
   // TM events (still from Supabase)
-  const eventsRes = supabaseAdmin
-    ? await supabaseAdmin
-        .from("tm_events")
-        .select("*")
-        .eq("client_slug", slug)
-        .order("date", { ascending: true })
-        .limit(50)
-    : { data: null };
+  let eventsQuery = supabaseAdmin
+    ?.from("tm_events")
+    .select("*")
+    .eq("client_slug", slug)
+    .order("date", { ascending: true })
+    .limit(50);
 
+  // Filter events by scope if assigned
+  if (scope?.allowedEventIds && eventsQuery) {
+    eventsQuery = eventsQuery.in("id", scope.allowedEventIds);
+  }
+
+  const eventsRes = eventsQuery ? await eventsQuery : { data: null };
   const tmEvents = (eventsRes.data ?? []) as TmEvent[];
   const events = buildEventCards(tmEvents);
 

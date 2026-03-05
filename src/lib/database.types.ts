@@ -370,12 +370,78 @@ export type Database = {
         }
         Relationships: []
       }
+      client_member_campaigns: {
+        Row: {
+          id: string
+          member_id: string
+          campaign_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          member_id: string
+          campaign_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          member_id?: string
+          campaign_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_member_campaigns_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "client_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_member_events: {
+        Row: {
+          id: string
+          member_id: string
+          event_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          member_id: string
+          event_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          member_id?: string
+          event_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_member_events_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "client_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_member_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "tm_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_members: {
         Row: {
           id: string
           client_id: string
           clerk_user_id: string
           role: string
+          scope: string
           created_at: string
         }
         Insert: {
@@ -383,6 +449,7 @@ export type Database = {
           client_id: string
           clerk_user_id: string
           role?: string
+          scope?: string
           created_at?: string
         }
         Update: {
@@ -390,6 +457,7 @@ export type Database = {
           client_id?: string
           clerk_user_id?: string
           role?: string
+          scope?: string
           created_at?: string
         }
         Relationships: [

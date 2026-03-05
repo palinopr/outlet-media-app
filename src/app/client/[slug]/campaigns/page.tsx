@@ -11,10 +11,12 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Megaphone, TrendingUp, MousePointerClick } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 import { fmtUsd, fmtNum, slugToLabel, roasColor } from "@/lib/formatters";
 import { getCampaignStatusCfg } from "../lib";
 import { getCampaignsPageData } from "../data";
+import { getMemberAccessForSlug } from "@/lib/member-access";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -54,7 +56,20 @@ export default async function ClientCampaigns({ params }: Props) {
   const { slug } = await params;
   const clientName = slugToLabel(slug);
 
-  const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug);
+  // Build scope filter
+  let scope: import("../data").ScopeFilter | undefined;
+  const { userId } = await auth();
+  if (userId) {
+    const access = await getMemberAccessForSlug(userId, slug);
+    if (access?.scope === "assigned") {
+      scope = {
+        allowedCampaignIds: access.allowedCampaignIds,
+        allowedEventIds: access.allowedEventIds,
+      };
+    }
+  }
+
+  const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug, scope);
   const trendData = buildTrendData(snapshots);
 
   const totalSpend       = campaigns.reduce((a, c) => a + c.spend, 0);

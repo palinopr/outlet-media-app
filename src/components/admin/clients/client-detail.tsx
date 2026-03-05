@@ -30,8 +30,11 @@ import { fmtUsd, fmtDate, statusBadge, roasColor } from "@/lib/formatters";
 import {
   removeClientMember,
   changeClientMemberRole,
+  changeClientMemberScope,
+  updateMemberCampaigns,
+  updateMemberEvents,
 } from "@/app/admin/actions/clients";
-import type { ClientDetail } from "@/app/admin/clients/data";
+import type { ClientDetail, ClientMember as ClientMemberType } from "@/app/admin/clients/data";
 
 interface Props {
   client: ClientDetail;
@@ -114,6 +117,228 @@ function RoleSelect({
         <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
       )}
       {saved && <Check className="h-3 w-3 text-emerald-400" />}
+    </div>
+  );
+}
+
+// ─── Scope select ──────────────────────────────────────────────────────────
+
+function ScopeSelect({
+  memberId,
+  currentScope,
+}: {
+  memberId: string;
+  currentScope: string;
+}) {
+  const [value, setValue] = useState(currentScope);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function handleChange(newScope: string) {
+    if (newScope === value) return;
+    setValue(newScope);
+    setSaving(true);
+    setSaved(false);
+    try {
+      await changeClientMemberScope({ memberId, scope: newScope });
+      setSaved(true);
+      toast.success(`Scope updated to ${newScope}`);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to change scope",
+      );
+      setValue(currentScope);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <select
+        value={value}
+        onChange={(e) => handleChange(e.target.value)}
+        className="h-7 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+      >
+        <option value="all">All</option>
+        <option value="assigned">Assigned only</option>
+      </select>
+      {saving && (
+        <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+      )}
+      {saved && <Check className="h-3 w-3 text-emerald-400" />}
+    </div>
+  );
+}
+
+// ─── Assignment manager ────────────────────────────────────────────────────
+
+function AssignmentManager({
+  member,
+  campaigns,
+  events,
+}: {
+  member: ClientMemberType;
+  campaigns: ClientDetail["campaigns"];
+  events: ClientDetail["events"];
+}) {
+  const [open, setOpen] = useState(false);
+  const [selCampaigns, setSelCampaigns] = useState<Set<string>>(
+    new Set(member.assignedCampaignIds),
+  );
+  const [selEvents, setSelEvents] = useState<Set<string>>(
+    new Set(member.assignedEventIds),
+  );
+  const [saving, setSaving] = useState(false);
+
+  if (member.scope !== "assigned") return null;
+
+  function toggleCampaign(id: string) {
+    setSelCampaigns((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function toggleEvent(id: string) {
+    setSelEvents((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      await Promise.all([
+        updateMemberCampaigns({
+          memberId: member.id,
+          campaignIds: [...selCampaigns],
+        }),
+        updateMemberEvents({
+          memberId: member.id,
+          eventIds: [...selEvents],
+        }),
+      ]);
+      toast.success("Assignments saved");
+      setOpen(false);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to save assignments",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const totalAssigned = selCampaigns.size + selEvents.size;
+
+  return (
+    <div>
+      <Button
+        variant="outline"
+        size="sm"
+        className="h-7 text-xs gap-1.5"
+        onClick={() => setOpen(!open)}
+      >
+        {totalAssigned > 0
+          ? `${selCampaigns.size} campaigns, ${selEvents.size} events`
+          : "Assign items"}
+      </Button>
+
+      {open && (
+        <div className="mt-3 rounded-lg border border-border/60 bg-card p-4 space-y-4">
+          {/* Campaigns */}
+          {campaigns.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                Campaigns
+              </p>
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {campaigns.map((c) => (
+                  <label
+                    key={c.id}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white/[0.04] cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selCampaigns.has(c.id)}
+                      onChange={() => toggleCampaign(c.id)}
+                      className="rounded border-border"
+                    />
+                    <span className="text-sm truncate">{c.name}</span>
+                    <span className="text-xs text-muted-foreground ml-auto shrink-0">
+                      {c.status}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Events */}
+          {events.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
+                Events
+              </p>
+              <div className="space-y-1 max-h-48 overflow-y-auto">
+                {events.map((e) => (
+                  <label
+                    key={e.id}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white/[0.04] cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selEvents.has(e.id)}
+                      onChange={() => toggleEvent(e.id)}
+                      className="rounded border-border"
+                    />
+                    <span className="text-sm truncate">{e.name}</span>
+                    <span className="text-xs text-muted-foreground ml-auto shrink-0">
+                      {e.venue}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {campaigns.length === 0 && events.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No campaigns or events for this client yet.
+            </p>
+          )}
+
+          <div className="flex items-center gap-2 pt-1">
+            <Button
+              size="sm"
+              className="h-7 text-xs"
+              onClick={handleSave}
+              disabled={saving}
+            >
+              {saving ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                "Save Assignments"
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -256,6 +481,9 @@ function MembersSection({ client }: { client: ClientDetail }) {
                 Role
               </TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">
+                Visibility
+              </TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">
                 Joined
               </TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">
@@ -267,7 +495,7 @@ function MembersSection({ client }: { client: ClientDetail }) {
             {client.members.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={5}
+                  colSpan={6}
                   className="text-center py-10 text-sm text-muted-foreground"
                 >
                   No team members yet. Invite someone to get started.
@@ -275,7 +503,7 @@ function MembersSection({ client }: { client: ClientDetail }) {
               </TableRow>
             ) : (
               client.members.map((m) => (
-                <TableRow key={m.id} className="border-border/60">
+                <TableRow key={m.id} className="border-border/60 align-top">
                   <TableCell className="text-sm font-medium">
                     {m.name || (
                       <span className="text-muted-foreground italic">
@@ -288,6 +516,19 @@ function MembersSection({ client }: { client: ClientDetail }) {
                   </TableCell>
                   <TableCell>
                     <RoleSelect memberId={m.id} currentRole={m.role} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-2">
+                      <ScopeSelect
+                        memberId={m.id}
+                        currentScope={m.scope}
+                      />
+                      <AssignmentManager
+                        member={m}
+                        campaigns={client.campaigns}
+                        events={client.events}
+                      />
+                    </div>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {fmtDate(m.createdAt)}

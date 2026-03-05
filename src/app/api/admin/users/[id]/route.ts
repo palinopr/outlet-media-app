@@ -78,11 +78,23 @@ export async function PATCH(
           );
       }
     } else {
-      // Clearing client_slug -- remove all memberships for this user
-      await supabaseAdmin
-        .from("client_members")
-        .delete()
-        .eq("clerk_user_id", id);
+      // Clearing client_slug -- only remove the membership that matches the old slug
+      // (preserves other client memberships for multi-client users)
+      const oldSlug = existingMeta.client_slug as string | undefined;
+      if (oldSlug) {
+        const { data: oldClient } = await supabaseAdmin
+          .from("clients")
+          .select("id")
+          .eq("slug", oldSlug)
+          .single();
+        if (oldClient) {
+          await supabaseAdmin
+            .from("client_members")
+            .delete()
+            .eq("clerk_user_id", id)
+            .eq("client_id", oldClient.id);
+        }
+      }
     }
   }
 

@@ -174,13 +174,15 @@ export async function addClientMember(formData: { clientId: string; clerkUserId:
     throw new Error(error.message);
   }
 
-  // Set client_slug in Clerk metadata
+  // Set client_slug in Clerk metadata (only if user has no existing slug)
   const clerk = await clerkClient();
   const user = await clerk.users.getUser(parsed.clerkUserId);
   const existingMeta = (user.publicMetadata ?? {}) as Record<string, unknown>;
-  await clerk.users.updateUserMetadata(parsed.clerkUserId, {
-    publicMetadata: { ...existingMeta, client_slug: client.slug },
-  });
+  if (!existingMeta.client_slug) {
+    await clerk.users.updateUserMetadata(parsed.clerkUserId, {
+      publicMetadata: { ...existingMeta, client_slug: client.slug },
+    });
+  }
 
   await logAudit("client_member", parsed.clerkUserId, "add", null, {
     clientId: parsed.clientId,
@@ -256,5 +258,88 @@ export async function changeClientMemberRole(formData: { memberId: string; role:
   if (error) throw new Error(error.message);
 
   await logAudit("client_member", parsed.memberId, "change_role", null, { role: parsed.role });
+  revalidatePath("/admin/clients");
+}
+
+// ─── Change member scope ────────────────────────────────────────────────────
+
+export async function changeClientMemberScope(formData: { memberId: string; scope: string }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const scope = formData.scope;
+  if (scope !== "all" && scope !== "assigned") throw new Error("Invalid scope");
+
+  const { error } = await supabaseAdmin
+    .from("client_members")
+    .update({ scope })
+    .eq("id", formData.memberId);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit("client_member", formData.memberId, "change_scope", null, { scope });
+  revalidatePath("/admin/clients");
+}
+
+// ─── Update member campaign assignments ─────────────────────────────────────
+
+export async function updateMemberCampaigns(formData: { memberId: string; campaignIds: string[] }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  // Delete existing assignments
+  await supabaseAdmin
+    .from("client_member_campaigns")
+    .delete()
+    .eq("member_id", formData.memberId);
+
+  // Insert new assignments
+  if (formData.campaignIds.length > 0) {
+    const rows = formData.campaignIds.map((campaign_id) => ({
+      member_id: formData.memberId,
+      campaign_id,
+    }));
+    const { error } = await supabaseAdmin
+      .from("client_member_campaigns")
+      .insert(rows);
+    if (error) throw new Error(error.message);
+  }
+
+  await logAudit("client_member", formData.memberId, "update_campaigns", null, {
+    count: formData.campaignIds.length,
+  });
+  revalidatePath("/admin/clients");
+}
+
+// ─── Update member event assignments ────────────────────────────────────────
+
+export async function updateMemberEvents(formData: { memberId: string; eventIds: string[] }) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  // Delete existing assignments
+  await supabaseAdmin
+    .from("client_member_events")
+    .delete()
+    .eq("member_id", formData.memberId);
+
+  // Insert new assignments
+  if (formData.eventIds.length > 0) {
+    const rows = formData.eventIds.map((event_id) => ({
+      member_id: formData.memberId,
+      event_id,
+    }));
+    const { error } = await supabaseAdmin
+      .from("client_member_events")
+      .insert(rows);
+    if (error) throw new Error(error.message);
+  }
+
+  await logAudit("client_member", formData.memberId, "update_events", null, {
+    count: formData.eventIds.length,
+  });
   revalidatePath("/admin/clients");
 }

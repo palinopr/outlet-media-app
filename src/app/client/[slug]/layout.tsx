@@ -5,6 +5,7 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { slugToLabel } from "@/lib/formatters";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getMemberAccessForSlug, getMemberships } from "@/lib/member-access";
 import { ClientNav } from "./components/client-nav";
 import { CompleteProfileModal } from "./components/complete-profile-modal";
 
@@ -53,29 +54,40 @@ export default async function ClientLayout({ children, params }: Props) {
     };
 
     const isAdmin = meta.role === "admin";
-    const isOwnPortal = meta.client_slug === slug;
 
-    if (!isAdmin && !isOwnPortal) {
-      // Redirect to their own portal if they have one, otherwise access denied
-      if (meta.client_slug) {
-        redirect(`/client/${meta.client_slug}`);
-      }
-      return (
-        <div className="dark flex min-h-screen items-center justify-center bg-background text-foreground">
-          <div className="text-center space-y-2">
-            <p className="text-lg font-semibold">Access denied</p>
-            <p className="text-sm text-muted-foreground">
-              You don&apos;t have access to this client portal.
-            </p>
+    if (!isAdmin) {
+      // Check access via client_members table (supports multi-client)
+      const access = await getMemberAccessForSlug(userId, slug);
+
+      if (!access) {
+        // No membership for this slug -- redirect to picker or pending
+        const allMemberships = await getMemberships(userId);
+        if (allMemberships.length === 1) {
+          redirect(`/client/${allMemberships[0].clientSlug}`);
+        } else if (allMemberships.length > 1) {
+          redirect("/client");
+        }
+        // Fallback: check legacy metadata
+        if (meta.client_slug && meta.client_slug !== slug) {
+          redirect(`/client/${meta.client_slug}`);
+        }
+        return (
+          <div className="dark flex min-h-screen items-center justify-center bg-background text-foreground">
+            <div className="text-center space-y-2">
+              <p className="text-lg font-semibold">Access denied</p>
+              <p className="text-sm text-muted-foreground">
+                You don&apos;t have access to this client portal.
+              </p>
+            </div>
           </div>
-        </div>
-      );
+        );
+      }
     }
 
     needsName = !isAdmin && (!user?.firstName || !user?.lastName);
 
     // Auto-enroll: ensure client_members row exists for invited users
-    if (!isAdmin && isOwnPortal && supabaseAdmin) {
+    if (!isAdmin && supabaseAdmin) {
       const { data: clientRow } = await supabaseAdmin
         .from("clients")
         .select("id")

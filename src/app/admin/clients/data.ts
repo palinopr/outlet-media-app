@@ -19,15 +19,27 @@ export interface ClientSummary {
 export interface ClientDetail extends ClientSummary {
   members: ClientMember[];
   campaigns: ClientCampaign[];
+  events: ClientEvent[];
 }
 
 export interface ClientMember {
   id: string;
   clerkUserId: string;
   role: string;
+  scope: string;
   name: string;
   email: string;
   createdAt: string;
+  assignedCampaignIds: string[];
+  assignedEventIds: string[];
+}
+
+export interface ClientEvent {
+  id: string;
+  name: string;
+  venue: string;
+  date: string;
+  status: string;
 }
 
 export interface ClientCampaign {
@@ -123,19 +135,50 @@ export async function getClientDetail(
   const [membersRes, campaignsRes, eventsRes] = await Promise.all([
     supabaseAdmin
       .from("client_members")
-      .select("id, clerk_user_id, role, created_at")
+      .select("id, clerk_user_id, role, scope, created_at")
       .eq("client_id", clientId),
     supabaseAdmin
       .from("meta_campaigns")
-      .select("id, name, status, spend, roas")
+      .select("id, campaign_id, name, status, spend, roas")
       .eq("client_slug", client.slug),
     supabaseAdmin
       .from("tm_events")
-      .select("client_slug")
-      .eq("client_slug", client.slug),
+      .select("id, name, venue, date, status")
+      .eq("client_slug", client.slug)
+      .order("date", { ascending: true }),
   ]);
 
   const memberRows = membersRes.data ?? [];
+
+  // Fetch assignments for all members in parallel
+  const memberIds = memberRows.map((m) => m.id);
+  const [assignedCampaignsRes, assignedEventsRes] = memberIds.length > 0
+    ? await Promise.all([
+        supabaseAdmin
+          .from("client_member_campaigns")
+          .select("member_id, campaign_id")
+          .in("member_id", memberIds),
+        supabaseAdmin
+          .from("client_member_events")
+          .select("member_id, event_id")
+          .in("member_id", memberIds),
+      ])
+    : [{ data: [] }, { data: [] }];
+
+  // Group assignments by member
+  const campaignsByMember = new Map<string, string[]>();
+  for (const row of assignedCampaignsRes.data ?? []) {
+    const list = campaignsByMember.get(row.member_id) ?? [];
+    list.push(row.campaign_id);
+    campaignsByMember.set(row.member_id, list);
+  }
+  const eventsByMember = new Map<string, string[]>();
+  for (const row of assignedEventsRes.data ?? []) {
+    const list = eventsByMember.get(row.member_id) ?? [];
+    list.push(row.event_id);
+    eventsByMember.set(row.member_id, list);
+  }
+
   const clerk = await clerkClient();
   const members: ClientMember[] = await Promise.all(
     memberRows.map(async (m) => {
@@ -154,19 +197,30 @@ export async function getClientDetail(
         id: m.id,
         clerkUserId: m.clerk_user_id,
         role: m.role,
+        scope: m.scope,
         name,
         email,
         createdAt: m.created_at,
+        assignedCampaignIds: campaignsByMember.get(m.id) ?? [],
+        assignedEventIds: eventsByMember.get(m.id) ?? [],
       };
     }),
   );
 
   const campaigns: ClientCampaign[] = (campaignsRes.data ?? []).map((c) => ({
-    id: c.id,
+    id: c.campaign_id ?? c.id,
     name: c.name,
     status: c.status,
     spend: (c.spend ?? 0) / 100,
     roas: c.roas ?? 0,
+  }));
+
+  const events: ClientEvent[] = (eventsRes.data ?? []).map((e) => ({
+    id: e.id,
+    name: e.name,
+    venue: e.venue,
+    date: e.date,
+    status: e.status,
   }));
 
   const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
@@ -184,12 +238,13 @@ export async function getClientDetail(
     memberCount: members.length,
     activeCampaigns,
     totalCampaigns: campaigns.length,
-    activeShows: (eventsRes.data ?? []).length,
+    activeShows: events.length,
     totalSpend,
     totalRevenue,
     roas,
     createdAt: client.created_at,
     members,
     campaigns,
+    events,
   };
 }
