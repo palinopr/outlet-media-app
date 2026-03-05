@@ -15,9 +15,10 @@ import { StatCard } from "@/components/admin/stat-card";
 import { MembersSection } from "./members-section";
 import { CampaignsSection } from "./campaigns-section";
 import { AssetsSection } from "./assets-section";
+import { ServicesSection } from "./services-section";
 import type { ClientDetail } from "@/app/admin/clients/data";
 
-type Tab = "members" | "campaigns" | "assets";
+type Tab = "members" | "campaigns" | "assets" | "services";
 
 interface Props {
   client: ClientDetail;
@@ -31,6 +32,7 @@ export function ClientDetailView({ client }: Props) {
     { id: "members", label: "Members", count: client.memberCount },
     { id: "campaigns", label: "Campaigns", count: client.totalCampaigns },
     { id: "assets", label: "Assets", count: client.assets.length },
+    { id: "services", label: "Services", count: client.services.length },
   ];
 
   return (
@@ -127,6 +129,12 @@ export function ClientDetailView({ client }: Props) {
           clientSlug={client.slug}
           initialAssets={client.assets}
           initialSources={client.assetSources}
+        />
+      )}
+      {activeTab === "services" && (
+        <ServicesSection
+          clientId={client.id}
+          initialServices={client.services}
         />
       )}
     </div>

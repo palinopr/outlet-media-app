@@ -34,12 +34,21 @@ export interface ClientAssetSource {
   fileCount: number;
 }
 
+export interface ClientServiceRow {
+  id: string;
+  clientId: string;
+  serviceKey: string;
+  enabled: boolean;
+  config: Record<string, unknown>;
+}
+
 export interface ClientDetail extends ClientSummary {
   members: ClientMember[];
   campaigns: ClientCampaign[];
   events: ClientEvent[];
   assets: ClientAsset[];
   assetSources: ClientAssetSource[];
+  services: ClientServiceRow[];
 }
 
 export interface ClientMember {

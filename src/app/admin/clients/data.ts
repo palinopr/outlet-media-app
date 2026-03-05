@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { clerkClient } from "@clerk/nextjs/server";
 import { computeBlendedRoas } from "@/lib/formatters";
+import { getClientServices } from "@/lib/client-services";
 
 export type {
   ClientSummary,
@@ -10,6 +11,7 @@ export type {
   ClientEvent,
   ClientAsset,
   ClientAssetSource,
+  ClientServiceRow,
 } from "./types";
 
 import type {
@@ -175,7 +177,7 @@ export async function getClientDetail(
 
   if (!client) return null;
 
-  const [membersRes, campaignsRes, eventsRes, assetsRes, assetSourcesRes] = await Promise.all([
+  const [membersRes, campaignsRes, eventsRes, assetsRes, assetSourcesRes, serviceRows] = await Promise.all([
     supabaseAdmin
       .from("client_members")
       .select("id, clerk_user_id, role, scope, created_at")
@@ -199,6 +201,7 @@ export async function getClientDetail(
       .select("id, provider, folder_url, folder_name, last_synced_at, file_count")
       .eq("client_slug", client.slug)
       .order("created_at", { ascending: false }),
+    getClientServices(clientId),
   ]);
 
   const memberRows = membersRes.data ?? [];
@@ -267,5 +270,6 @@ export async function getClientDetail(
     events,
     assets,
     assetSources,
+    services: serviceRows,
   };
 }

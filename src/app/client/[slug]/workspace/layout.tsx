@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getMemberAccessForSlug } from "@/lib/member-access";
+import { requireService } from "@/lib/service-guard";
 import { getClientPages } from "./data";
 import { PageSidebar } from "@/components/workspace/page-sidebar";
 
@@ -12,6 +13,7 @@ interface Props {
 
 export default async function ClientWorkspaceLayout({ children, params }: Props) {
   const { slug } = await params;
+  await requireService(slug, "workspace");
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 

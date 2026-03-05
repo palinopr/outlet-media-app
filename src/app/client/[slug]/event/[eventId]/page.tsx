@@ -29,6 +29,7 @@ import { StatCard } from "../../components/stat-card";
 import { ProgressBar } from "../../components/progress-bar";
 import { EventStatusBadge } from "../../components/event-status-badge";
 import { AudienceSection } from "../../components/audience-section";
+import { requireService } from "@/lib/service-guard";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import {
   TicketSalesChart,
@@ -71,6 +72,7 @@ function trendColor(trend: SalesVelocity["trend"]): string {
 
 export default async function EventDetailPage({ params }: Props) {
   const { slug, eventId } = await params;
+  await requireService(slug, "ticketmaster", "eata");
   const data = await getEventDetail(slug, eventId);
 
   if (!data) {

@@ -4,10 +4,16 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Loader2, Check } from "lucide-react";
+import { Plus, Loader2, Check, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { createClient, bulkDeactivateClients } from "@/app/admin/actions/clients";
 import { toSlug } from "@/lib/to-slug";
+import {
+  SERVICE_PRESETS,
+  SERVICE_REGISTRY,
+  SERVICE_KEYS,
+  type ServiceKey,
+} from "@/lib/service-registry";
 import Link from "next/link";
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { clientColumns } from "./columns";
@@ -26,17 +32,39 @@ function CreateClientForm({ onDone }: { onDone: () => void }) {
   const [slug, setSlug] = useState("");
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
+  const [presetId, setPresetId] = useState("music_promoter");
+  const [selectedServices, setSelectedServices] = useState<ServiceKey[]>(
+    SERVICE_PRESETS[0].services,
+  );
 
   function handleNameChange(val: string) {
     setName(val);
     setSlug(toSlug(val));
   }
 
+  function handlePresetSelect(id: string) {
+    setPresetId(id);
+    const preset = SERVICE_PRESETS.find((p) => p.id === id);
+    if (preset && id !== "custom") {
+      setSelectedServices(preset.services);
+    }
+  }
+
+  function toggleCustomService(key: ServiceKey) {
+    setSelectedServices((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
-      await createClient({ name: name.trim(), slug });
+      await createClient({
+        name: name.trim(),
+        slug,
+        services: selectedServices,
+      });
       setCreated(true);
       toast.success(`Client "${name.trim()}" created`);
       setTimeout(() => {
@@ -60,43 +88,93 @@ function CreateClientForm({ onDone }: { onDone: () => void }) {
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-wrap items-end gap-3 pt-1">
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-muted-foreground">Name</label>
-        <Input
-          required
-          value={name}
-          onChange={(e) => handleNameChange(e.target.value)}
-          placeholder="Acme Events"
-          className="h-8 w-48 text-sm"
-        />
+    <form onSubmit={submit} className="space-y-3 pt-1">
+      <div className="flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-muted-foreground">Name</label>
+          <Input
+            required
+            value={name}
+            onChange={(e) => handleNameChange(e.target.value)}
+            placeholder="Acme Events"
+            className="h-8 w-48 text-sm"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-muted-foreground">Slug</label>
+          <Input
+            required
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            placeholder="acme_events"
+            className="h-8 w-40 text-sm"
+          />
+        </div>
       </div>
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-muted-foreground">Slug</label>
-        <Input
-          required
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          placeholder="acme_events"
-          className="h-8 w-40 text-sm"
-        />
-      </div>
-      <Button type="submit" size="sm" disabled={loading} className="h-8">
-        {loading ? (
-          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        ) : (
-          "Create"
+
+      <div>
+        <label className="text-xs text-muted-foreground mb-1.5 block">
+          Service Preset
+        </label>
+        <div className="flex flex-wrap gap-2">
+          {SERVICE_PRESETS.map((preset) => (
+            <button
+              key={preset.id}
+              type="button"
+              onClick={() => handlePresetSelect(preset.id)}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
+                presetId === preset.id
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border/60 text-muted-foreground hover:border-border hover:text-foreground"
+              }`}
+            >
+              {preset.name}
+            </button>
+          ))}
+        </div>
+        {presetId === "custom" && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {SERVICE_KEYS.map((key) => {
+              const def = SERVICE_REGISTRY[key];
+              const active = selectedServices.includes(key);
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => toggleCustomService(key)}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs border transition-colors ${
+                    active
+                      ? "border-primary/40 bg-primary/10 text-primary"
+                      : "border-border/60 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {active && <CheckCircle2 className="h-3 w-3" />}
+                  {def.name}
+                </button>
+              );
+            })}
+          </div>
         )}
-      </Button>
-      <Button
-        type="button"
-        size="sm"
-        variant="ghost"
-        className="h-8"
-        onClick={onDone}
-      >
-        Cancel
-      </Button>
+      </div>
+
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" disabled={loading} className="h-8">
+          {loading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            "Create"
+          )}
+        </Button>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="h-8"
+          onClick={onDone}
+        >
+          Cancel
+        </Button>
+      </div>
     </form>
   );
 }

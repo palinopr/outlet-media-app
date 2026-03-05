@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Sparkles, Image as ImageIcon, Video, ArrowLeft } from "lucide-react";
 import { slugToLabel } from "@/lib/formatters";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireService } from "@/lib/service-guard";
 import { AssetGallery } from "./asset-gallery";
 
 interface Props {
@@ -35,6 +36,7 @@ interface AssetRow {
 
 export default async function ClientAssetsPage({ params }: Props) {
   const { slug } = await params;
+  await requireService(slug, "assets");
   const clientName = slugToLabel(slug);
 
   let assets: AssetRow[] = [];

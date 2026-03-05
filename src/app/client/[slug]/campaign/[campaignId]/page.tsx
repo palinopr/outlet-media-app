@@ -15,6 +15,7 @@ import { roasLabel } from "../../lib";
 import { getCampaignDetail } from "./data";
 import { AdsPreview, type AdPreview } from "@/components/client/ads-preview";
 import { RecommendationsList, type RecommendationItem } from "@/components/client/recommendations";
+import { requireService } from "@/lib/service-guard";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { StatCard } from "../../components/stat-card";
 import { CampaignDetailHeader } from "../../components/campaign-detail-header";
@@ -27,6 +28,7 @@ interface Props {
 
 export default async function CampaignDetailPage({ params, searchParams }: Props) {
   const { slug, campaignId } = await params;
+  await requireService(slug, "meta_ads");
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam);
 

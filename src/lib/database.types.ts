@@ -470,6 +470,44 @@ export type Database = {
           },
         ]
       }
+      client_services: {
+        Row: {
+          client_id: string
+          config: Json
+          created_at: string
+          enabled: boolean
+          id: string
+          service_key: string
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          service_key: string
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          config?: Json
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          service_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_services_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           id: string

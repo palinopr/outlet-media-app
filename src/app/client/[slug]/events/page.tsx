@@ -10,6 +10,7 @@ import { auth } from "@clerk/nextjs/server";
 import { getScopeFilter } from "@/lib/member-access";
 import { getEventsPageData } from "../data";
 import { fmtNum, slugToLabel } from "@/lib/formatters";
+import { requireService } from "@/lib/service-guard";
 import { EventsFilter } from "./events-filter";
 
 interface Props {
@@ -28,6 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientEventsPage({ params, searchParams }: Props) {
   const { slug } = await params;
+  await requireService(slug, "ticketmaster", "eata");
   const { status, q } = await searchParams;
 
   const { userId } = await auth();

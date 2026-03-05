@@ -6,6 +6,7 @@ import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { getCampaignsPageData } from "../data";
 import { buildTrendData } from "../lib";
 import { getScopeFilter } from "@/lib/member-access";
+import { requireService } from "@/lib/service-guard";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { CampaignsTable } from "./campaigns-table";
 
@@ -26,6 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientCampaigns({ params }: Props) {
   const { slug } = await params;
+  await requireService(slug, "meta_ads");
   const clientName = slugToLabel(slug);
 
   const { userId } = await auth();

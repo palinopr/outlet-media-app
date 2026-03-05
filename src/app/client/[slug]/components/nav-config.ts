@@ -8,24 +8,50 @@ import {
   Settings,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import type { ServiceKey } from "@/lib/service-registry";
 
 export interface NavLink {
   href: string;
   label: string;
   icon: LucideIcon;
   matchExact?: boolean;
+  requiredService?: ServiceKey | ServiceKey[];
 }
 
-export function getClientNavLinks(slug: string): NavLink[] {
-  return [
-    { href: `/client/${slug}`, label: "Overview", icon: LayoutDashboard, matchExact: true },
-    { href: `/client/${slug}/campaigns`, label: "Campaigns", icon: Megaphone },
-    { href: `/client/${slug}/events`, label: "Events", icon: Ticket },
-    { href: `/client/${slug}/reports`, label: "Reports", icon: BarChart3 },
-    { href: `/client/${slug}/assets`, label: "Assets", icon: ImageIcon },
-    { href: `/client/${slug}/workspace`, label: "Workspace", icon: FileText },
-    { href: `/client/${slug}/settings`, label: "Settings", icon: Settings },
-  ];
+const NAV_LINKS: Omit<NavLink, "href">[] = [
+  { label: "Overview", icon: LayoutDashboard, matchExact: true },
+  { label: "Campaigns", icon: Megaphone, requiredService: "meta_ads" },
+  { label: "Events", icon: Ticket, requiredService: ["ticketmaster", "eata"] },
+  { label: "Reports", icon: BarChart3, requiredService: "meta_ads" },
+  { label: "Assets", icon: ImageIcon, requiredService: "assets" },
+  { label: "Workspace", icon: FileText, requiredService: "workspace" },
+  { label: "Settings", icon: Settings },
+];
+
+function routeSegment(label: string): string {
+  if (label === "Overview") return "";
+  return label.toLowerCase();
+}
+
+export function getClientNavLinks(
+  slug: string,
+  enabledServices?: ServiceKey[] | null,
+): NavLink[] {
+  return NAV_LINKS.filter((link) => {
+    if (!link.requiredService) return true;
+    if (!enabledServices) return true;
+
+    const required = Array.isArray(link.requiredService)
+      ? link.requiredService
+      : [link.requiredService];
+    return required.some((key) => enabledServices.includes(key));
+  }).map((link) => {
+    const segment = routeSegment(link.label);
+    return {
+      ...link,
+      href: segment ? `/client/${slug}/${segment}` : `/client/${slug}`,
+    };
+  });
 }
 
 export function isNavActive(link: NavLink, pathname: string): boolean {

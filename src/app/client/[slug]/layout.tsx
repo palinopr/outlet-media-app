@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { slugToLabel } from "@/lib/formatters";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getMemberAccessForSlug, getMemberships } from "@/lib/member-access";
+import { getEnabledServices } from "@/lib/client-services";
 import { ClientNav } from "./components/client-nav";
 import { MobileNav } from "./components/mobile-nav";
 import { CompleteProfileModal } from "./components/complete-profile-modal";
@@ -111,6 +112,7 @@ export default async function ClientLayout({ children, params }: Props) {
   }
 
   const clientName = slugToLabel(slug);
+  const enabledServices = await getEnabledServices(slug);
 
   return (
     <div className="dark flex h-screen overflow-hidden bg-background text-foreground">
@@ -128,7 +130,7 @@ export default async function ClientLayout({ children, params }: Props) {
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <ClientNav slug={slug} />
+          <ClientNav slug={slug} enabledServices={enabledServices} />
         </div>
         <div className="px-5 py-4 shrink-0">
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent mb-4" />
@@ -139,7 +141,7 @@ export default async function ClientLayout({ children, params }: Props) {
         </div>
       </aside>
       {/* Mobile header */}
-      <MobileNav slug={slug} clientName={clientName} />
+      <MobileNav slug={slug} clientName={clientName} enabledServices={enabledServices} />
       <div className="flex flex-col flex-1 min-w-0">
         <div className="flex items-center justify-end px-4 py-2 lg:px-6">
           {clerkUserId && <NotificationBell userId={clerkUserId} />}

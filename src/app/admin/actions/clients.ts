@@ -12,6 +12,8 @@ import {
   RemoveClientMemberSchema,
   ChangeClientMemberRoleSchema,
 } from "@/lib/api-schemas";
+import { toggleClientService, seedClientServices } from "@/lib/client-services";
+import { SERVICE_KEYS, type ServiceKey } from "@/lib/service-registry";
 import { logAudit } from "./audit";
 
 const RenameClientSchema = z.object({
@@ -98,7 +100,7 @@ export async function bulkDeactivateClients(formData: { clientIds: string[] }) {
 
 // ─── Create client ──────────────────────────────────────────────────────────
 
-export async function createClient(formData: { name: string; slug: string }) {
+export async function createClient(formData: { name: string; slug: string; services?: string[] }) {
   const err = await adminGuard();
   if (err) throw new Error("Forbidden");
   if (!supabaseAdmin) throw new Error("DB not configured");
@@ -116,9 +118,58 @@ export async function createClient(formData: { name: string; slug: string }) {
     throw new Error(error.message);
   }
 
-  await logAudit("client", data.id, "create", null, { name: parsed.name, slug: parsed.slug });
+  // Seed services if provided
+  const serviceKeys = (formData.services ?? []).filter((k): k is ServiceKey =>
+    SERVICE_KEYS.includes(k as ServiceKey),
+  );
+  if (serviceKeys.length > 0) {
+    await seedClientServices(data.id, serviceKeys);
+  }
+
+  await logAudit("client", data.id, "create", null, {
+    name: parsed.name,
+    slug: parsed.slug,
+    services: serviceKeys,
+  });
   revalidatePath("/admin/clients");
   return data;
+}
+
+// --- Toggle service ---
+
+const ToggleServiceSchema = z.object({
+  clientId: z.string().min(1),
+  serviceKey: z.string().min(1),
+  enabled: z.boolean(),
+  config: z.record(z.string(), z.unknown()).optional(),
+});
+
+export async function toggleService(formData: {
+  clientId: string;
+  serviceKey: string;
+  enabled: boolean;
+  config?: Record<string, unknown>;
+}) {
+  const err = await adminGuard();
+  if (err) throw new Error("Forbidden");
+
+  const parsed = ToggleServiceSchema.parse(formData);
+  if (!SERVICE_KEYS.includes(parsed.serviceKey as ServiceKey)) {
+    throw new Error(`Invalid service key: ${parsed.serviceKey}`);
+  }
+
+  await toggleClientService(
+    parsed.clientId,
+    parsed.serviceKey,
+    parsed.enabled,
+    parsed.config,
+  );
+
+  await logAudit("client_service", parsed.clientId, "toggle", null, {
+    serviceKey: parsed.serviceKey,
+    enabled: parsed.enabled,
+  });
+  revalidatePath("/admin/clients");
 }
 
 // ─── Update client ──────────────────────────────────────────────────────────

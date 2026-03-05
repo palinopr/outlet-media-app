@@ -4,10 +4,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Mail } from "lucide-react";
 import { getClientNavLinks, isNavActive } from "./nav-config";
+import type { ServiceKey } from "@/lib/service-registry";
 
-export function ClientNav({ slug }: { slug: string }) {
+interface Props {
+  slug: string;
+  enabledServices?: ServiceKey[] | null;
+}
+
+export function ClientNav({ slug, enabledServices }: Props) {
   const pathname = usePathname();
-  const links = getClientNavLinks(slug);
+  const links = getClientNavLinks(slug, enabledServices);
 
   return (
     <nav className="flex-1 px-3 py-1">
