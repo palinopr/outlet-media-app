@@ -453,6 +453,20 @@ Keep response concise. Only flag actual issues.`;
   });
 }
 
+async function creativeClassify(): Promise<void> {
+  await withRoutineLock("Creative Classify", "creative", async () => {
+    const { runCreativeClassify } = await import("./creative-classify.js");
+    const result = await runCreativeClassify();
+    if (result && !result.includes("No new assets")) {
+      await postToChannel("creative", `**Asset Classification**\n\n${result}`);
+      await postToFeed(`Creative classified assets: ${result.slice(0, 200)}`);
+    } else {
+      await postToFeed("Creative classify: no new assets");
+    }
+    return result;
+  });
+}
+
 // --- Runner Registry ---
 
 export function getSweepRunners(): Record<string, () => void> {
@@ -486,6 +500,9 @@ export function getSweepRunners(): Record<string, () => void> {
     },
     "boss-supervision": () => {
       bossSupervision();
+    },
+    "creative-classify": () => {
+      creativeClassify();
     },
   };
 }

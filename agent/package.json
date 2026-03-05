@@ -8,9 +8,11 @@
     "dev": "node --watch --import tsx/esm src/index.ts"
   },
   "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.2.69",
     "@supabase/supabase-js": "^2.49.2",
     "discord.js": "^14.25.1",
     "dotenv": "^16.5.0",
+    "googleapis": "^171.4.0",
     "grammy": "^1.36.1",
     "node-cron": "^3.0.3"
   },

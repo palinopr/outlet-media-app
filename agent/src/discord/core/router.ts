@@ -134,6 +134,9 @@ export function matchManualTrigger(
   if (channelName === "don-omar-tickets" && /^run\s+eata\s+sync$/i.test(lower)) {
     return "eata-sync";
   }
+  if (channelName === "creative" && /^run\s+creative[\s-]classify$/i.test(lower)) {
+    return "creative-classify";
+  }
   if (/^run\s+think$/i.test(lower)) {
     return "think";
   }

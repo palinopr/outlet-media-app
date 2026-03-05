@@ -10,7 +10,7 @@ import {
 import { uploadToAssetStorage, insertAssetRow } from "@/lib/asset-storage";
 import { classifyAsset } from "@/lib/asset-classifier";
 import { getMemberAccessForSlug } from "@/lib/member-access";
-import { notifyCreative } from "@/lib/notify-creative";
+import { notifyCreative, notifyCreativeNewAssets } from "@/lib/notify-creative";
 
 export const dynamic = "force-dynamic";
 
@@ -172,6 +172,11 @@ export async function POST(req: NextRequest) {
     },
     { onConflict: "client_slug,folder_url" },
   );
+
+  // Notify creative agent about new assets for classification
+  if (imported > 0) {
+    notifyCreativeNewAssets(client_slug, imported);
+  }
 
   return NextResponse.json({
     imported,

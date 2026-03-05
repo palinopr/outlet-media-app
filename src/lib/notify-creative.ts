@@ -66,6 +66,43 @@ async function getOrCreateWebhook(botToken: string, channelId: string): Promise<
   return cachedWebhook;
 }
 
+/**
+ * Notify #creative that new assets were imported and need classification.
+ * The creative agent picks these up on its next sweep.
+ */
+export function notifyCreativeNewAssets(clientSlug: string, count: number): void {
+  const botToken = process.env.DISCORD_TOKEN;
+  if (!botToken) return;
+
+  getChannelId(botToken)
+    .then((channelId) => {
+      if (!channelId) return;
+      return getOrCreateWebhook(botToken, channelId);
+    })
+    .then((webhook) => {
+      if (!webhook) return;
+      return fetch(
+        `https://discord.com/api/v10/webhooks/${webhook.id}/${webhook.token}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            username: AGENT_NAME,
+            avatar_url: AGENT_AVATAR,
+            embeds: [{
+              color: 0x4CAF50,
+              title: `${count} new asset${count !== 1 ? "s" : ""} imported`,
+              description: `**Client:** \`${clientSlug}\`\nReady for classification. Run \`run creative-classify\` or wait for the next sweep.`,
+              footer: { text: "Asset Agent" },
+              timestamp: new Date().toISOString(),
+            }],
+          }),
+        },
+      );
+    })
+    .catch(() => {});
+}
+
 export function notifyCreative(payload: NotifyPayload): void {
   const botToken = process.env.DISCORD_TOKEN;
   if (!botToken) return;
