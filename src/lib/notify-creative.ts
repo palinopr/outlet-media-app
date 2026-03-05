@@ -35,12 +35,14 @@ export function notifyCreative(payload: NotifyPayload): void {
     .then((channelId) => {
       if (!channelId) return;
       const content = [
-        `**Asset Import Failed**`,
+        `**Asset Import Failed -- all methods exhausted**`,
         `Client: \`${payload.clientSlug}\``,
         `Provider: ${payload.provider}`,
         `Folder: ${payload.folderUrl}`,
         `Error: ${payload.error}`,
-        `Time: ${new Date().toISOString()}`,
+        ``,
+        `The system tried all available access methods before failing.`,
+        `To fix: run \`node agent/session/gdrive-token-refresh.mjs\` or check credentials.`,
       ].join("\n");
       return fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
         method: "POST",

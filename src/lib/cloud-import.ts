@@ -2,8 +2,8 @@
  * Cloud storage import helpers for Dropbox and Google Drive shared links.
  *
  * Dropbox: requires DROPBOX_ACCESS_TOKEN env var
- * Google Drive: uses OAuth (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN)
- *   for full access to any folder shared with the authenticated Google account.
+ * Google Drive: tries multiple methods silently (OAuth -> API key -> direct URL)
+ *   so the user never sees an error unless all methods fail.
  */
 
 export interface CloudFile {
@@ -89,20 +89,19 @@ export async function downloadDropboxFile(
   return { buffer, mimeType };
 }
 
-// ─── Google Drive (OAuth) ────────────────────────────────────────────────────
+// ─── Google Drive (multi-method fallback) ────────────────────────────────────
 
 let cachedAccessToken: { token: string; expiresAt: number } | null = null;
 
-async function getGDriveAccessToken(): Promise<string> {
+/** Which method succeeded for listing -- downloads should use the same one. */
+let lastGDriveMethod: "oauth" | "apikey" | null = null;
+
+async function getGDriveAccessToken(): Promise<string | null> {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
   const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN ?? process.env.GOOGLE_REFRESH_TOKEN;
 
-  if (!clientId || !clientSecret || !refreshToken) {
-    throw new Error(
-      "Google Drive OAuth not configured. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, and GOOGLE_DRIVE_REFRESH_TOKEN in .env.local.",
-    );
-  }
+  if (!clientId || !clientSecret || !refreshToken) return null;
 
   if (cachedAccessToken && Date.now() < cachedAccessToken.expiresAt) {
     return cachedAccessToken.token;
@@ -120,8 +119,8 @@ async function getGDriveAccessToken(): Promise<string> {
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Google OAuth token refresh failed (${res.status}): ${err}`);
+    cachedAccessToken = null;
+    return null;
   }
 
   const data = await res.json();
@@ -137,57 +136,101 @@ function extractGDriveFolderId(url: string): string | null {
   return match?.[1] ?? null;
 }
 
-async function listGDriveFolder(folderUrl: string): Promise<CloudFile[]> {
-  const accessToken = await getGDriveAccessToken();
+function parseGDriveFiles(data: { files?: { id: string; name: string; size: string; mimeType: string }[] }): CloudFile[] {
+  const files = data.files ?? [];
+  return files
+    .filter((f) => f.mimeType.startsWith("image/") || f.mimeType.startsWith("video/"))
+    .map((f) => ({
+      name: f.name,
+      downloadUrl: f.id,
+      size: parseInt(f.size || "0", 10),
+      mimeType: f.mimeType,
+    }));
+}
 
-  const folderId = extractGDriveFolderId(folderUrl);
-  if (!folderId) throw new Error("Could not extract folder ID from Google Drive URL");
+/** Try listing with OAuth access token */
+async function listGDriveOAuth(folderId: string): Promise<CloudFile[] | null> {
+  const accessToken = await getGDriveAccessToken();
+  if (!accessToken) return null;
 
   const query = encodeURIComponent(`'${folderId}' in parents and trashed = false`);
   const fields = encodeURIComponent("files(id,name,size,mimeType)");
-  const apiUrl = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&pageSize=200`;
-
-  const res = await fetch(apiUrl, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`Google Drive API error (${res.status}): ${errBody}`);
-  }
-
-  const data = await res.json();
-  const files: { id: string; name: string; size: string; mimeType: string }[] = data.files ?? [];
-
-  const mediaFiles = files.filter((f) =>
-    f.mimeType.startsWith("image/") || f.mimeType.startsWith("video/"),
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&pageSize=200`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
   );
 
-  return mediaFiles.map((f) => ({
-    name: f.name,
-    downloadUrl: f.id,
-    size: parseInt(f.size || "0", 10),
-    mimeType: f.mimeType,
-  }));
+  if (!res.ok) return null;
+  lastGDriveMethod = "oauth";
+  return parseGDriveFiles(await res.json());
+}
+
+/** Try listing with API key (works for publicly shared folders) */
+async function listGDriveApiKey(folderId: string): Promise<CloudFile[] | null> {
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (!apiKey) return null;
+
+  const query = encodeURIComponent(`'${folderId}' in parents and trashed = false`);
+  const fields = encodeURIComponent("files(id,name,size,mimeType)");
+  const res = await fetch(
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&pageSize=200&key=${apiKey}`,
+  );
+
+  if (!res.ok) return null;
+  lastGDriveMethod = "apikey";
+  return parseGDriveFiles(await res.json());
+}
+
+async function listGDriveFolder(folderUrl: string): Promise<CloudFile[]> {
+  const folderId = extractGDriveFolderId(folderUrl);
+  if (!folderId) throw new Error("Could not extract folder ID from Google Drive URL");
+
+  // Try OAuth first (full access), then API key (public folders only)
+  const errors: string[] = [];
+  const oauthResult = await listGDriveOAuth(folderId);
+  if (oauthResult !== null) return oauthResult;
+  errors.push("OAuth failed or not configured");
+
+  const apiKeyResult = await listGDriveApiKey(folderId);
+  if (apiKeyResult !== null) return apiKeyResult;
+  errors.push("API key failed or not configured");
+
+  throw new Error(
+    `Google Drive: all access methods failed for this folder. Tried: ${errors.join(", ")}`,
+  );
 }
 
 export async function downloadGDriveFile(
   fileId: string,
 ): Promise<{ buffer: Buffer; mimeType: string }> {
+  // Try OAuth first
   const accessToken = await getGDriveAccessToken();
-
-  const res = await fetch(
-    `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-    { headers: { Authorization: `Bearer ${accessToken}` } },
-  );
-
-  if (!res.ok) {
-    throw new Error(`Google Drive download failed (${res.status}): ${await res.text()}`);
+  if (accessToken) {
+    const res = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (res.ok) {
+      const buffer = Buffer.from(await res.arrayBuffer());
+      const mimeType = res.headers.get("content-type") ?? "application/octet-stream";
+      return { buffer, mimeType };
+    }
   }
 
-  const buffer = Buffer.from(await res.arrayBuffer());
-  const mimeType = res.headers.get("content-type") ?? "application/octet-stream";
-  return { buffer, mimeType };
+  // Fall back to API key
+  const apiKey = process.env.GOOGLE_API_KEY;
+  if (apiKey) {
+    const res = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`,
+    );
+    if (res.ok) {
+      const buffer = Buffer.from(await res.arrayBuffer());
+      const mimeType = res.headers.get("content-type") ?? "application/octet-stream";
+      return { buffer, mimeType };
+    }
+  }
+
+  throw new Error(`Google Drive download failed: all methods exhausted for file ${fileId}`);
 }
 
 // ─── Public API ──────────────────────────────────────────────────────────────

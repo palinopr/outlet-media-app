@@ -52,32 +52,18 @@ async function processInBatches<T, R>(
   return { successes, errors };
 }
 
-function isProviderError(raw: string): boolean {
-  return (
-    /OAuth token refresh failed/i.test(raw) ||
-    /not configured/i.test(raw) ||
-    /API error \(\d+\)/i.test(raw) ||
-    /download failed/i.test(raw)
-  );
-}
-
-function mapProviderError(raw: string, provider: string): string {
-  if (/OAuth token refresh failed/i.test(raw)) {
-    return "Google Drive access has expired. Our team has been notified and will fix this shortly.";
+/** Only shown to user after ALL fallbacks have been exhausted */
+function userFacingError(raw: string, provider: string): string {
+  if (/all access methods failed/i.test(raw) || /all methods exhausted/i.test(raw)) {
+    return "We couldn't access this folder right now. Our team has been notified and is working on it.";
   }
-  if (/API error \(404\)/i.test(raw) || /API error \(403\)/i.test(raw)) {
-    return "This folder is private or restricted. Make sure it's shared with anyone with the link, or contact Outlet Media support.";
+  if (/not configured/i.test(raw)) {
+    return "We couldn't access this folder right now. Our team has been notified and is working on it.";
   }
-  if (provider === "dropbox" && /not configured/i.test(raw)) {
-    return "Dropbox imports are not configured yet. Contact Outlet Media support.";
+  if (/Could not extract folder ID/i.test(raw)) {
+    return "This doesn't look like a valid folder link. Paste the full URL from your browser.";
   }
-  if (provider === "gdrive" && /not configured/i.test(raw)) {
-    return "Google Drive access is not configured yet. Contact Outlet Media support.";
-  }
-  if (/API error/i.test(raw) || /download failed/i.test(raw)) {
-    return `${provider === "gdrive" ? "Google Drive" : "Dropbox"} returned an error. Our team has been notified.`;
-  }
-  return raw;
+  return "Something went wrong importing this folder. Our team has been notified.";
 }
 
 export async function POST(req: NextRequest) {
@@ -111,16 +97,14 @@ export async function POST(req: NextRequest) {
     listing = await listCloudFolder(folder_url);
   } catch (err) {
     const raw = err instanceof Error ? err.message : "Failed to list folder";
-    const friendly = mapProviderError(raw, provider);
-    if (isProviderError(raw)) {
-      notifyCreative({
-        clientSlug: client_slug,
-        folderUrl: folder_url,
-        provider,
-        error: raw,
-      });
-    }
-    return apiError(friendly, isProviderError(raw) ? 502 : 400);
+    // Always notify creative -- the fallback chain already tried everything
+    notifyCreative({
+      clientSlug: client_slug,
+      folderUrl: folder_url,
+      provider,
+      error: raw,
+    });
+    return apiError(userFacingError(raw, provider), 502);
   }
 
   if (listing.files.length === 0) {
