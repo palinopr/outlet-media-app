@@ -222,7 +222,7 @@ export default async function EventDetailPage({ params }: Props) {
             </span>
           </div>
           <p className="text-xs text-white/50 mb-4 ml-5.5">
-            Demographics for this event
+            Demographics from ticketing data
           </p>
           <AudienceSection demo={audience} />
         </section>

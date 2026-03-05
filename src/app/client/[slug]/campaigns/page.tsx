@@ -1,22 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { DollarSign, Megaphone, TrendingUp, MousePointerClick } from "lucide-react";
+import { DollarSign, Megaphone, TrendingUp, MousePointerClick, Sparkles, Clock } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
-import { fmtUsd, fmtNum, slugToLabel, roasColor } from "@/lib/formatters";
-import { getCampaignStatusCfg } from "../lib";
+import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { getCampaignsPageData } from "../data";
 import { getScopeFilter } from "@/lib/member-access";
+import { ClientPortalFooter } from "../components/client-portal-footer";
+import { CampaignsTable } from "./campaigns-table";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -39,7 +30,7 @@ function buildTrendData(snapshots: Array<{ snapshot_date: string; roas: number |
     const d = s.snapshot_date;
     if (!byDate[d]) byDate[d] = { roasSum: 0, roasCount: 0, spendSum: 0 };
     if (s.roas != null) { byDate[d].roasSum += s.roas; byDate[d].roasCount++; }
-    if (s.spend != null) byDate[d].spendSum += s.spend / 100; // cents to dollars
+    if (s.spend != null) byDate[d].spendSum += s.spend / 100;
   }
   return Object.entries(byDate)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -77,8 +68,8 @@ export default async function ClientCampaigns({ params }: Props) {
       value: fmtUsd(totalSpend),
       sub: "last 30 days",
       icon: DollarSign,
-      gradient: "from-cyan-500/20 via-cyan-500/5 to-transparent",
       iconBg: "bg-cyan-500/10",
+      iconRing: "ring-cyan-500/20",
       iconColor: "text-cyan-400",
     },
     {
@@ -86,17 +77,18 @@ export default async function ClientCampaigns({ params }: Props) {
       value: fmtUsd(totalRevenue),
       sub: "attributed to campaigns",
       icon: TrendingUp,
-      gradient: "from-violet-500/20 via-violet-500/5 to-transparent",
       iconBg: "bg-violet-500/10",
+      iconRing: "ring-violet-500/20",
       iconColor: "text-violet-400",
     },
     {
       label: "Blended ROAS",
       value: blendedRoas > 0 ? blendedRoas.toFixed(1) + "x" : "--",
+      valueColor: roasColor(blendedRoas > 0 ? blendedRoas : null),
       sub: "return on ad spend",
       icon: Megaphone,
-      gradient: "from-emerald-500/20 via-emerald-500/5 to-transparent",
       iconBg: "bg-emerald-500/10",
+      iconRing: "ring-emerald-500/20",
       iconColor: "text-emerald-400",
     },
     {
@@ -104,208 +96,109 @@ export default async function ClientCampaigns({ params }: Props) {
       value: fmtNum(totalImpressions),
       sub: "across all campaigns",
       icon: MousePointerClick,
-      gradient: "from-rose-500/20 via-rose-500/5 to-transparent",
       iconBg: "bg-rose-500/10",
+      iconRing: "ring-rose-500/20",
       iconColor: "text-rose-400",
     },
   ];
 
   return (
-    <>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">{clientName} Campaigns</h1>
-          <p className="text-sm text-muted-foreground mt-1">{now}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <Link href={`/client/${slug}/campaigns/new`}>
-            <Button size="sm">Create Campaign</Button>
-          </Link>
-          <a href={`/client/${slug}`} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-            Back to overview
-          </a>
-          <div className="flex items-center gap-2">
-            {hasData ? (
-              <>
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
-                <span className="text-xs text-muted-foreground">
-                  {dataSource === "meta_api" ? "Live from Meta" : "From database"}
-                </span>
-              </>
-            ) : (
-              <>
-                <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
-                <span className="text-xs text-muted-foreground">No data</span>
-              </>
-            )}
+    <div className="space-y-6">
+
+      {/* -- Header Banner -- */}
+      <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] p-6 sm:p-8">
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.07] via-violet-500/[0.05] to-transparent" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-violet-500/[0.08] to-transparent rounded-full blur-3xl" />
+
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="h-4 w-4 text-cyan-400/70" />
+              <span className="text-xs font-semibold tracking-widest uppercase text-cyan-400">Campaigns</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">{clientName} Campaigns</h1>
+            <p className="text-sm text-white/60 mt-1.5 flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" />
+              {now}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 self-start flex-wrap">
+            <Link
+              href={`/client/${slug}/campaigns/new`}
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-white text-zinc-900 shadow-lg shadow-white/10 hover:bg-white/90 transition-all"
+            >
+              Create Campaign
+            </Link>
+            <a
+              href={`/client/${slug}`}
+              className="text-xs text-white/50 hover:text-white/80 transition-colors"
+            >
+              Back to overview
+            </a>
+            <div className="flex items-center gap-2">
+              {hasData ? (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse inline-block" />
+                  <span className="text-xs text-white/50">
+                    {dataSource === "meta_api" ? "Live from Meta" : "From database"}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400 inline-block" />
+                  <span className="text-xs text-white/50">No data</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Hero stat cards */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4 mb-8">
-        {heroStats.map(({ label, value, sub, icon: Icon, gradient, iconBg, iconColor }) => (
-          <div key={label} className="relative overflow-hidden rounded-xl border border-border/60 bg-card p-5 transition-all duration-200 hover:border-border/80 hover:shadow-lg hover:shadow-black/20">
-            <div className={`absolute inset-0 bg-gradient-to-br ${gradient} pointer-events-none`} />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{label}</p>
-                <div className={`h-8 w-8 rounded-lg ${iconBg} flex items-center justify-center`}>
-                  <Icon className={`h-4 w-4 ${iconColor}`} />
-                </div>
+      {/* -- Hero Stats -- */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {heroStats.map(({ label, value, valueColor, sub, icon: Icon, iconBg, iconRing, iconColor }) => (
+          <div key={label} className="glass-card hero-stat-card stat-glow p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`flex items-center justify-center h-7 w-7 rounded-lg ${iconBg} ring-1 ${iconRing}`}>
+                <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
               </div>
-              <p className="text-3xl font-bold tracking-tight">{value}</p>
-              <p className="text-xs text-muted-foreground mt-1">{sub}</p>
+              <span className="text-xs font-semibold tracking-wider uppercase text-white/60">{label}</span>
             </div>
+            <p className={`text-2xl sm:text-3xl font-extrabold tracking-tighter leading-none ${valueColor ?? "text-white"}`}>
+              {value}
+            </p>
+            <p className="text-xs text-white/45 mt-2">{sub}</p>
           </div>
         ))}
       </div>
 
-      {/* Trend charts */}
+      {/* -- Trend Charts -- */}
       {hasData && trendData.length > 1 && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 mb-8">
-          <Card className="border-border/60 bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                ROAS Trend
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RoasTrendChart data={trendData} />
-            </CardContent>
-          </Card>
-          <Card className="border-border/60 bg-card">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                Daily Spend
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SpendTrendChart data={trendData} />
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="glass-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <TrendingUp className="h-3.5 w-3.5 text-white/50" />
+              <span className="section-label">ROAS Trend</span>
+            </div>
+            <RoasTrendChart data={trendData} />
+          </div>
+          <div className="glass-card p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <DollarSign className="h-3.5 w-3.5 text-white/50" />
+              <span className="section-label">Daily Spend</span>
+            </div>
+            <SpendTrendChart data={trendData} />
+          </div>
         </div>
       )}
 
-      {/* Campaigns table */}
-      <div className="mb-10">
-        <h2 className="text-sm font-semibold mb-3">
-          All Campaigns
-          <span className="text-muted-foreground font-normal ml-2">({campaigns.length})</span>
-        </h2>
-        {campaigns.length === 0 ? (
-          <div className="rounded-xl border border-border/60 bg-card p-12 text-center">
-            <div className="mx-auto h-10 w-10 rounded-full bg-white/[0.06] flex items-center justify-center mb-3">
-              <Megaphone className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <p className="text-sm text-muted-foreground">No campaign data yet</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Data refreshes on page load</p>
-          </div>
-        ) : (
-          <>
-          {/* Desktop table */}
-          <div className="hidden md:block rounded-xl border border-border/60 bg-card overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border/40 hover:bg-transparent">
-                  <TableHead className="text-xs font-medium text-muted-foreground">Campaign</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground text-right">Spend</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground text-right">Revenue</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground text-right">ROAS</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground text-right">Impressions</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground text-right">CTR</TableHead>
-                  <TableHead className="text-xs font-medium text-muted-foreground text-right">CPC</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {campaigns.map((c) => (
-                  <TableRow key={c.campaignId} className="border-border/40">
-                    <TableCell>
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${getCampaignStatusCfg(c.status).dot}`} />
-                        <div>
-                          <p className="text-sm font-medium">{c.name}</p>
-                          <p className="text-xs text-muted-foreground">{getCampaignStatusCfg(c.status).label}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-medium tabular-nums">{fmtUsd(c.spend)}</TableCell>
-                    <TableCell className="text-right text-sm font-medium tabular-nums">{fmtUsd(c.revenue)}</TableCell>
-                    <TableCell className="text-right">
-                      <span className={`text-sm font-semibold tabular-nums ${roasColor(c.roas)}`}>
-                        {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums text-muted-foreground">{fmtNum(c.impressions)}</TableCell>
-                    <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-                      {c.ctr != null ? c.ctr.toFixed(2) + "%" : "--"}
-                    </TableCell>
-                    <TableCell className="text-right text-sm tabular-nums text-muted-foreground">
-                      {c.cpc != null ? "$" + c.cpc.toFixed(2) : "--"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+      {/* -- Campaigns Table with Search -- */}
+      <CampaignsTable campaigns={campaigns} />
 
-          {/* Mobile card stack */}
-          <div className="md:hidden rounded-xl border border-border/60 bg-card divide-y divide-border/40 overflow-hidden">
-            {campaigns.map((c) => {
-              const statusCfg = getCampaignStatusCfg(c.status);
-              return (
-                <div key={c.campaignId} className="px-4 py-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusCfg.dot}`} />
-                    <p className="text-sm font-medium truncate">{c.name}</p>
-                    <span className="text-xs text-white/40 ml-auto shrink-0">{statusCfg.label}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-xs text-white/40">Spend</span>
-                      <span className="font-medium tabular-nums">{fmtUsd(c.spend)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-white/40">Revenue</span>
-                      <span className="font-medium tabular-nums">{fmtUsd(c.revenue)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-white/40">ROAS</span>
-                      <span className={`font-semibold tabular-nums ${roasColor(c.roas)}`}>
-                        {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-white/40">CTR</span>
-                      <span className="tabular-nums text-white/70">
-                        {c.ctr != null ? c.ctr.toFixed(2) + "%" : "--"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-white/40">Impressions</span>
-                      <span className="tabular-nums text-white/70">{fmtNum(c.impressions)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-white/40">CPC</span>
-                      <span className="tabular-nums text-white/70">
-                        {c.cpc != null ? "$" + c.cpc.toFixed(2) : "--"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          </>
-        )}
-      </div>
+      {/* -- Footer -- */}
+      <ClientPortalFooter dataSource={dataSource} />
 
-      {/* Footer */}
-      <div className="border-t border-border/40 pt-6 flex items-center justify-between text-xs text-muted-foreground">
-        <span>Powered by Outlet Media</span>
-        <span>Data from Meta Ads</span>
-      </div>
-    </>
+    </div>
   );
 }

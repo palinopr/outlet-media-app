@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Megaphone } from "lucide-react";
+import { Megaphone, Search } from "lucide-react";
 import { CampaignCard } from "./campaign-card";
 import type { CampaignCard as CampaignCardData } from "../types";
 import type { DateRange } from "@/lib/constants";
@@ -27,14 +27,17 @@ export function CampaignSection({
 }) {
   const hasActive = campaigns.some((c) => c.status === "ACTIVE");
   const [filter, setFilter] = useState<StatusFilter>(hasActive ? "active" : "all");
+  const [search, setSearch] = useState("");
+
+  const searchLower = search.toLowerCase();
 
   const filtered = campaigns.filter((c) => {
-    if (filter === "active") return c.status === "ACTIVE";
-    if (filter === "paused") return c.status === "PAUSED";
+    if (filter === "active" && c.status !== "ACTIVE") return false;
+    if (filter === "paused" && c.status !== "PAUSED") return false;
+    if (searchLower && !c.name.toLowerCase().includes(searchLower)) return false;
     return true;
   });
 
-  // Active campaigns first, then by start time descending
   const sorted = [...filtered].sort((a, b) => {
     if (a.status === "ACTIVE" && b.status !== "ACTIVE") return -1;
     if (a.status !== "ACTIVE" && b.status === "ACTIVE") return 1;
@@ -77,6 +80,19 @@ export function CampaignSection({
         </div>
       </div>
 
+      {campaigns.length > 4 && (
+        <div className="relative mb-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/30" />
+          <input
+            type="text"
+            placeholder="Search campaigns..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-3 py-2 rounded-lg text-sm bg-white/[0.03] border border-white/[0.08] text-white/90 placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 transition-all"
+          />
+        </div>
+      )}
+
       {sorted.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {sorted.map((c) => (
@@ -86,7 +102,7 @@ export function CampaignSection({
       ) : (
         <div className="glass-card p-8 text-center">
           <p className="text-sm text-white/60">
-            No {filter === "all" ? "" : filter} campaigns found.
+            {search ? `No campaigns matching "${search}"` : `No ${filter === "all" ? "" : filter} campaigns found.`}
           </p>
         </div>
       )}

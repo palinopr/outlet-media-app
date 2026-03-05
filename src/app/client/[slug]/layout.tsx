@@ -7,6 +7,7 @@ import { slugToLabel } from "@/lib/formatters";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getMemberAccessForSlug, getMemberships } from "@/lib/member-access";
 import { ClientNav } from "./components/client-nav";
+import { MobileNav } from "./components/mobile-nav";
 import { CompleteProfileModal } from "./components/complete-profile-modal";
 
 interface Props {
@@ -135,16 +136,7 @@ export default async function ClientLayout({ children, params }: Props) {
         </div>
       </aside>
       {/* Mobile header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3 border-b border-border/50 bg-[oklch(0.16_0_0)]">
-        <div className="flex items-center gap-2">
-          <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={24} height={24} className="h-6 w-6 shrink-0" />
-          <p className="text-sm font-semibold text-white/90">{clientName}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <a href={`/client/${slug}`} className="text-xs text-white/50 hover:text-white transition-colors">Overview</a>
-          <a href={`/client/${slug}/settings`} className="text-xs text-white/50 hover:text-white transition-colors">Settings</a>
-        </div>
-      </div>
+      <MobileNav slug={slug} clientName={clientName} />
       <main className="flex-1 overflow-auto lg:pt-0 pt-14">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">{children}</div>
       </main>

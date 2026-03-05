@@ -10,12 +10,13 @@ import {
   Target,
   Ticket,
 } from "lucide-react";
-import { auth } from "@clerk/nextjs/server";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { getData, type DateRange } from "./data";
 import { getScopeFilter } from "@/lib/member-access";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { roasLabel, DATE_OPTIONS } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
+import { DateRangePicker } from "./components/date-range-picker";
 import { ClientPortalFooter } from "./components/client-portal-footer";
 import { CampaignSection } from "./components/campaign-section";
 import { EventCard } from "./components/event-card";
@@ -49,6 +50,12 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = data;
 
   const clientName = slugToLabel(slug);
+
+  let displayName = clientName;
+  try {
+    const user = await currentUser();
+    if (user?.firstName) displayName = user.firstName;
+  } catch { /* Clerk unavailable -- fall back to slug label */ }
   const now = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
   return (
@@ -65,7 +72,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
               <Sparkles className="h-4 w-4 text-cyan-400/70" />
               <span className="text-xs font-semibold tracking-widest uppercase text-cyan-400">Client Portal</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Welcome back, {clientName}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Welcome back, {displayName}</h1>
             <p className="text-sm text-white/60 mt-1.5 flex items-center gap-1.5">
               <Clock className="h-3.5 w-3.5" />
               {now}
@@ -76,20 +83,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
 
           <div className="flex items-center gap-3 self-start flex-wrap">
             <ExportButton />
-            <div className="flex flex-wrap items-center gap-1 sm:gap-0.5 p-1 rounded-xl bg-white/[0.04] border border-white/[0.08]">
-              {DATE_OPTIONS.map((opt) => (
-                <a
-                  key={opt.value}
-                  href={`?range=${opt.value}`}
-                  className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-300 ${range === opt.value
-                    ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
-                    : "text-white/60 hover:text-white/80 hover:bg-white/[0.06]"
-                  }`}
-                >
-                  {opt.label}
-                </a>
-              ))}
-            </div>
+            <DateRangePicker options={DATE_OPTIONS} current={range} />
           </div>
         </div>
       </div>
@@ -198,7 +192,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
             <span className="text-xs text-white/45">{audience.totalFans.toLocaleString()} fans</span>
           </div>
           <p className="text-xs text-white/50 mb-4 ml-5.5">
-            Aggregated from Ticketmaster event data
+            Aggregated from event ticketing data
           </p>
           <AudienceSection demo={audience} />
         </section>

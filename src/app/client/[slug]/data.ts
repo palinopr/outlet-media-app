@@ -190,11 +190,26 @@ export async function getData(
   range: DateRange,
   scope?: ScopeFilter,
 ): Promise<ClientData> {
-  const result = await fetchAllCampaigns(range, slug);
+  // Build events query (independent of Meta API)
+  let eventsQuery = supabaseAdmin
+    ?.from("tm_events")
+    .select("*")
+    .eq("client_slug", slug)
+    .order("date", { ascending: true })
+    .limit(50);
+
+  if (scope?.allowedEventIds && eventsQuery) {
+    eventsQuery = eventsQuery.in("id", scope.allowedEventIds);
+  }
+
+  // Fetch campaigns (Meta API) and events (Supabase) in parallel
+  const [result, eventsRes] = await Promise.all([
+    fetchAllCampaigns(range, slug),
+    eventsQuery ? eventsQuery : Promise.resolve({ data: null }),
+  ]);
 
   let campaigns = result.campaigns.map(toCampaignCard);
 
-  // Filter campaigns by scope if assigned
   if (scope?.allowedCampaignIds) {
     const allowed = new Set(scope.allowedCampaignIds);
     campaigns = campaigns.filter((c) => allowed.has(c.campaignId));
@@ -203,25 +218,10 @@ export async function getData(
   if (campaigns.length === 0 && result.error) return EMPTY;
 
   const dataSource = result.error ? "supabase" : "meta_api";
-
-  // TM events (still from Supabase)
-  let eventsQuery = supabaseAdmin
-    ?.from("tm_events")
-    .select("*")
-    .eq("client_slug", slug)
-    .order("date", { ascending: true })
-    .limit(50);
-
-  // Filter events by scope if assigned
-  if (scope?.allowedEventIds && eventsQuery) {
-    eventsQuery = eventsQuery.in("id", scope.allowedEventIds);
-  }
-
-  const eventsRes = eventsQuery ? await eventsQuery : { data: null };
   const tmEvents = (eventsRes.data ?? []) as TmEvent[];
   const events = buildEventCards(tmEvents);
 
-  // Demographics
+  // Demographics depend on event tm_ids
   let audience: AudienceProfile | null = null;
   if (tmEvents.length > 0 && supabaseAdmin) {
     const tmIds = tmEvents.map((e) => e.tm_id);
