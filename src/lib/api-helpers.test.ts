@@ -6,8 +6,9 @@ vi.mock("@clerk/nextjs/server", () => ({
   currentUser: vi.fn(),
 }));
 
-import { authGuard, apiError, secretGuard, adminGuard, parseJsonBody } from "./api-helpers";
+import { authGuard, apiError, secretGuard, adminGuard, parseJsonBody, validateRequest } from "./api-helpers";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { z } from "zod";
 
 const mockedAuth = vi.mocked(auth);
 const mockedCurrentUser = vi.mocked(currentUser);
@@ -143,5 +144,49 @@ describe("parseJsonBody", () => {
     const result = await parseJsonBody(request);
     expect(result).toBeInstanceOf(Response);
     expect((result as Response).status).toBe(400);
+  });
+});
+
+describe("validateRequest", () => {
+  const TestSchema = z.object({
+    name: z.string().min(1),
+    age: z.number().int(),
+  });
+
+  it("returns data on valid JSON matching schema", async () => {
+    const request = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({ name: "Alice", age: 30 }),
+      headers: { "Content-Type": "application/json" },
+    });
+    const result = await validateRequest(request, TestSchema);
+    expect(result.error).toBeNull();
+    expect(result.data).toEqual({ name: "Alice", age: 30 });
+  });
+
+  it("returns 400 error on schema mismatch", async () => {
+    const request = new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({ name: "", age: "not a number" }),
+      headers: { "Content-Type": "application/json" },
+    });
+    const result = await validateRequest(request, TestSchema);
+    expect(result.data).toBeNull();
+    expect(result.error).not.toBeNull();
+    expect(result.error!.status).toBe(400);
+    const body = await result.error!.json();
+    expect(body.error).toBe("Invalid payload");
+    expect(body.details).toBeDefined();
+  });
+
+  it("returns 400 error on malformed JSON", async () => {
+    const request = new Request("http://localhost", {
+      method: "POST",
+      body: "not json",
+      headers: { "Content-Type": "application/json" },
+    });
+    const result = await validateRequest(request, TestSchema);
+    expect(result.data).toBeNull();
+    expect(result.error!.status).toBe(400);
   });
 });

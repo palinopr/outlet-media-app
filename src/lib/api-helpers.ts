@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import type { ZodType } from "zod";
 
 /** Return a JSON error response. Defaults to 500 if no status provided. */
 export function apiError(message: string, status = 500): NextResponse {
@@ -52,4 +53,28 @@ export async function parseJsonBody<T>(request: Request): Promise<T | Response> 
   } catch {
     return apiError("Malformed JSON body", 400);
   }
+}
+
+/**
+ * Parse + validate a JSON request body against a Zod schema.
+ * Returns `{ data, error: null }` on success, or `{ data: null, error: Response }` on failure.
+ */
+export async function validateRequest<T>(
+  request: Request,
+  schema: ZodType<T>,
+): Promise<{ data: T; error: null } | { data: null; error: NextResponse }> {
+  const raw = await parseJsonBody<unknown>(request);
+  if (raw instanceof Response) return { data: null, error: raw as NextResponse };
+
+  const parsed = schema.safeParse(raw);
+  if (!parsed.success) {
+    return {
+      data: null,
+      error: NextResponse.json(
+        { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
+        { status: 400 },
+      ),
+    };
+  }
+  return { data: parsed.data, error: null };
 }

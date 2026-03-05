@@ -7,7 +7,7 @@ import type {
   LinkedCampaign,
   EventDetailData,
 } from "../../types";
-import { buildAudienceProfile, buildEventCard } from "../../lib";
+import { buildAudienceProfile, buildEventCard, computeDailyDeltas, computeVelocity } from "../../lib";
 
 export async function getEventDetail(
   slug: string,
@@ -82,9 +82,14 @@ export async function getEventDetail(
         }
       : null;
 
+  const dailyDeltas = computeDailyDeltas(snapshots);
+  const velocity = computeVelocity(snapshots, tmEvent.date, event.ticketsSold);
+
   return {
     event,
     snapshots,
+    dailyDeltas,
+    velocity,
     audience,
     linkedCampaigns,
     channelBreakdown,

@@ -12,6 +12,10 @@ import type {
   HourlyBreakdown,
   DailyPoint,
   Recommendation,
+  TicketPlatform,
+  TicketSnapshot,
+  DailyDelta,
+  SalesVelocity,
 } from "./types";
 import { DAY_LABELS } from "./types";
 
@@ -46,6 +50,14 @@ export function buildTrendData(
     }));
 }
 
+// --- Platform detection ---
+
+export function detectPlatform(tmId: string): TicketPlatform {
+  if (tmId.startsWith("eata_")) return "vivaticket";
+  if (tmId.length > 0) return "ticketmaster";
+  return "unknown";
+}
+
 // --- Shared event card builder ---
 
 export function buildEventCard(e: TmEvent): EventCard {
@@ -68,6 +80,108 @@ export function buildEventCard(e: TmEvent): EventCard {
     potentialRevenue: e.potential_revenue,
     gross: e.gross,
     updatedAt: e.updated_at ?? null,
+    ticketPlatform: detectPlatform(e.tm_id),
+    artist: e.artist ?? "",
+    ticketsSoldToday: e.tickets_sold_today ?? null,
+    revenueToday: e.revenue_today ?? null,
+    conversionRate: e.conversion_rate != null ? Number(e.conversion_rate) : null,
+    edpTotalViews: e.edp_total_views != null ? Number(e.edp_total_views) : null,
+    edpAvgDailyViews: e.edp_avg_daily_views != null ? Number(e.edp_avg_daily_views) : null,
+  };
+}
+
+// --- Sales velocity computation ---
+
+export function computeDailyDeltas(snapshots: TicketSnapshot[]): DailyDelta[] {
+  if (snapshots.length < 2) return [];
+  const deltas: DailyDelta[] = [];
+  for (let i = 1; i < snapshots.length; i++) {
+    const prev = snapshots[i - 1];
+    const curr = snapshots[i];
+    const dt = new Date(curr.date + "T12:00:00");
+    deltas.push({
+      date: curr.date,
+      label: dt.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      ticketsDelta: curr.ticketsSold - prev.ticketsSold,
+      revenueDelta: (curr.gross ?? 0) - (prev.gross ?? 0),
+    });
+  }
+  return deltas;
+}
+
+export function computeVelocity(
+  snapshots: TicketSnapshot[],
+  eventDate: string | null,
+  currentSold: number,
+): SalesVelocity | null {
+  if (snapshots.length < 2) return null;
+
+  const first = snapshots[0];
+  const last = snapshots[snapshots.length - 1];
+  const totalDays = Math.max(
+    1,
+    (new Date(last.date).getTime() - new Date(first.date).getTime()) / 86400000,
+  );
+  const totalDelta = last.ticketsSold - first.ticketsSold;
+  const avgDailySales = Math.round(totalDelta / totalDays);
+
+  // Recent velocity: last 3 data points
+  let recentDailySales: number | null = null;
+  let trend: SalesVelocity["trend"] = null;
+  let trendPct: number | null = null;
+
+  if (snapshots.length >= 4) {
+    const mid = Math.floor(snapshots.length / 2);
+    const firstHalf = snapshots.slice(0, mid);
+    const secondHalf = snapshots.slice(mid);
+
+    const firstDays = Math.max(
+      1,
+      (new Date(firstHalf[firstHalf.length - 1].date).getTime() -
+        new Date(firstHalf[0].date).getTime()) /
+        86400000,
+    );
+    const secondDays = Math.max(
+      1,
+      (new Date(secondHalf[secondHalf.length - 1].date).getTime() -
+        new Date(secondHalf[0].date).getTime()) /
+        86400000,
+    );
+
+    const firstRate =
+      (firstHalf[firstHalf.length - 1].ticketsSold - firstHalf[0].ticketsSold) / firstDays;
+    const secondRate =
+      (secondHalf[secondHalf.length - 1].ticketsSold - secondHalf[0].ticketsSold) / secondDays;
+
+    recentDailySales = Math.round(secondRate);
+
+    if (firstRate > 0) {
+      const change = ((secondRate - firstRate) / firstRate) * 100;
+      trendPct = Math.round(change);
+      if (change > 10) trend = "accelerating";
+      else if (change < -10) trend = "decelerating";
+      else trend = "steady";
+    }
+  }
+
+  let daysUntilEvent: number | null = null;
+  let projectedTotalSold: number | null = null;
+  if (eventDate) {
+    const diff = (new Date(eventDate).getTime() - Date.now()) / 86400000;
+    daysUntilEvent = Math.max(0, Math.round(diff));
+    const dailyRate = recentDailySales ?? avgDailySales;
+    if (dailyRate > 0 && daysUntilEvent > 0) {
+      projectedTotalSold = currentSold + dailyRate * daysUntilEvent;
+    }
+  }
+
+  return {
+    avgDailySales,
+    recentDailySales,
+    trend,
+    trendPct,
+    daysUntilEvent,
+    projectedTotalSold,
   };
 }
 

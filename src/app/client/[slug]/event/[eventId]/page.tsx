@@ -14,6 +14,14 @@ import {
   Phone,
   Store,
   RefreshCw,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+  Clock,
+  Eye,
+  MousePointerClick,
+  Zap,
+  Target,
 } from "lucide-react";
 import { fmtUsd, fmtNum, fmtDate, roasColor, timeAgo } from "@/lib/formatters";
 import { getEventDetail } from "./data";
@@ -22,10 +30,44 @@ import { ProgressBar } from "../../components/progress-bar";
 import { EventStatusBadge } from "../../components/event-status-badge";
 import { AudienceSection } from "../../components/audience-section";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
-import { TicketSalesChart, type TicketChartRow } from "@/components/client/charts";
+import {
+  TicketSalesChart,
+  type TicketChartRow,
+  DailySalesChart,
+  type DailySalesRow,
+} from "@/components/client/charts";
+import type { SalesVelocity, TicketPlatform } from "../../types";
 
 interface Props {
   params: Promise<{ slug: string; eventId: string }>;
+}
+
+const PLATFORM_LABELS: Record<TicketPlatform, { name: string; color: string }> = {
+  ticketmaster: { name: "Ticketmaster", color: "bg-blue-500/10 text-blue-400 ring-blue-500/20" },
+  vivaticket: { name: "Vivaticket", color: "bg-orange-500/10 text-orange-400 ring-orange-500/20" },
+  unknown: { name: "Unknown", color: "bg-white/10 text-white/50 ring-white/10" },
+};
+
+function PlatformBadge({ platform }: { platform: TicketPlatform }) {
+  const cfg = PLATFORM_LABELS[platform];
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ring-1 ${cfg.color}`}>
+      <Ticket className="h-2.5 w-2.5" />
+      {cfg.name}
+    </span>
+  );
+}
+
+function TrendIcon({ trend }: { trend: SalesVelocity["trend"] }) {
+  if (trend === "accelerating") return <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />;
+  if (trend === "decelerating") return <TrendingDown className="h-3.5 w-3.5 text-rose-400" />;
+  return <Minus className="h-3.5 w-3.5 text-white/40" />;
+}
+
+function trendColor(trend: SalesVelocity["trend"]): string {
+  if (trend === "accelerating") return "text-emerald-400";
+  if (trend === "decelerating") return "text-rose-400";
+  return "text-white/50";
 }
 
 export default async function EventDetailPage({ params }: Props) {
@@ -46,7 +88,7 @@ export default async function EventDetailPage({ params }: Props) {
     );
   }
 
-  const { event: e, snapshots, audience, linkedCampaigns, channelBreakdown } = data;
+  const { event: e, snapshots, dailyDeltas, velocity, audience, linkedCampaigns, channelBreakdown } = data;
 
   const chartData: TicketChartRow[] = snapshots.map((s) => {
     const dt = new Date(s.date + "T12:00:00");
@@ -57,6 +99,16 @@ export default async function EventDetailPage({ params }: Props) {
       gross: s.gross,
     };
   });
+
+  const dailyChartData: DailySalesRow[] = dailyDeltas.map((d) => ({
+    date: d.date,
+    label: d.label,
+    ticketsDelta: d.ticketsDelta,
+    revenueDelta: d.revenueDelta,
+  }));
+
+  const hasEdpData = e.edpTotalViews != null || e.conversionRate != null;
+  const hasTodayData = e.ticketsSoldToday != null || e.revenueToday != null;
 
   return (
     <div className="space-y-6">
@@ -85,8 +137,12 @@ export default async function EventDetailPage({ params }: Props) {
               <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
                 {e.name}
               </h1>
+              {e.artist && e.artist !== e.name && (
+                <p className="text-sm text-white/50 mt-0.5">{e.artist}</p>
+              )}
               <div className="flex items-center gap-3 mt-2 flex-wrap">
                 <EventStatusBadge status={e.status} />
+                <PlatformBadge platform={e.ticketPlatform} />
                 {e.date && (
                   <span className="text-xs text-white/50 flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
@@ -97,6 +153,12 @@ export default async function EventDetailPage({ params }: Props) {
                   <span className="text-xs text-white/50 flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
                     {e.venue}
+                  </span>
+                )}
+                {velocity?.daysUntilEvent != null && velocity.daysUntilEvent > 0 && (
+                  <span className="text-xs text-amber-400/80 flex items-center gap-1 font-medium">
+                    <Clock className="h-3 w-3" />
+                    {velocity.daysUntilEvent}d until event
                   </span>
                 )}
               </div>
@@ -145,6 +207,86 @@ export default async function EventDetailPage({ params }: Props) {
         />
       </div>
 
+      {/* -- Today's Activity (when available) -- */}
+      {hasTodayData && (
+        <div className="grid grid-cols-2 gap-3">
+          {e.ticketsSoldToday != null && (
+            <StatCard
+              icon={Zap}
+              iconColor="bg-cyan-500/10 ring-1 ring-cyan-500/20 text-cyan-400"
+              label="Sold Today"
+              value={fmtNum(e.ticketsSoldToday)}
+            />
+          )}
+          {e.revenueToday != null && (
+            <StatCard
+              icon={DollarSign}
+              iconColor="bg-emerald-500/10 ring-1 ring-emerald-500/20 text-emerald-400"
+              label="Revenue Today"
+              value={fmtUsd(e.revenueToday)}
+            />
+          )}
+        </div>
+      )}
+
+      {/* -- Sales Momentum -- */}
+      {velocity && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Sales Momentum</span>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="glass-card p-4">
+              <p className="text-[10px] text-white/50 mb-1 uppercase tracking-wider">Avg Daily Sales</p>
+              <p className="text-lg font-bold text-white">
+                {fmtNum(velocity.avgDailySales)}
+              </p>
+              <p className="text-[10px] text-white/40">tickets/day</p>
+            </div>
+
+            {velocity.recentDailySales != null && (
+              <div className="glass-card p-4">
+                <p className="text-[10px] text-white/50 mb-1 uppercase tracking-wider">Recent Pace</p>
+                <div className="flex items-center gap-2">
+                  <p className="text-lg font-bold text-white">
+                    {fmtNum(velocity.recentDailySales)}
+                  </p>
+                  <TrendIcon trend={velocity.trend} />
+                </div>
+                {velocity.trendPct != null && (
+                  <p className={`text-[10px] ${trendColor(velocity.trend)}`}>
+                    {velocity.trendPct > 0 ? "+" : ""}{velocity.trendPct}% vs earlier
+                  </p>
+                )}
+              </div>
+            )}
+
+            {velocity.daysUntilEvent != null && velocity.daysUntilEvent > 0 && (
+              <div className="glass-card p-4">
+                <p className="text-[10px] text-white/50 mb-1 uppercase tracking-wider">Days Until Event</p>
+                <p className="text-lg font-bold text-amber-400">
+                  {velocity.daysUntilEvent}
+                </p>
+                <p className="text-[10px] text-white/40">
+                  {e.date ? fmtDate(e.date) : ""}
+                </p>
+              </div>
+            )}
+
+            {velocity.projectedTotalSold != null && (
+              <div className="glass-card p-4">
+                <p className="text-[10px] text-white/50 mb-1 uppercase tracking-wider">Projected Total</p>
+                <p className="text-lg font-bold text-violet-400">
+                  {fmtNum(velocity.projectedTotalSold)}
+                </p>
+                <p className="text-[10px] text-white/40">at current pace</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
       {/* -- Sell-Through Progress -- */}
       {e.sellThrough != null && (
         <div className="glass-card p-5">
@@ -162,17 +304,79 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* -- Ticket Sales Trend -- */}
-      {chartData.length >= 2 && (
+      {/* -- Daily Sales Activity -- */}
+      {dailyChartData.length >= 2 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Sales Trend</span>
+            <span className="section-label">Daily Sales Activity</span>
+            <span className="text-xs text-white/45 ml-auto">
+              {dailyChartData.length} days
+            </span>
+          </div>
+          <DailySalesChart data={dailyChartData} />
+        </section>
+      )}
+
+      {/* -- Ticket Sales Trend (Cumulative) -- */}
+      {chartData.length >= 2 && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <TrendingUp className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Cumulative Sales</span>
             <span className="text-xs text-white/45 ml-auto">
               {chartData.length} data points
             </span>
           </div>
           <TicketSalesChart data={chartData} />
+        </section>
+      )}
+
+      {/* -- Event Discovery (TM One data) -- */}
+      {hasEdpData && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Eye className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Event Discovery</span>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            {e.edpTotalViews != null && (
+              <div className="glass-card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Eye className="h-3.5 w-3.5 text-cyan-400" />
+                  <span className="text-xs text-white/60">Page Views</span>
+                </div>
+                <p className="text-lg font-bold text-white">
+                  {fmtNum(e.edpTotalViews)}
+                </p>
+                <p className="text-[10px] text-white/40">total event page views</p>
+              </div>
+            )}
+            {e.edpAvgDailyViews != null && (
+              <div className="glass-card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="h-3.5 w-3.5 text-violet-400" />
+                  <span className="text-xs text-white/60">Daily Views</span>
+                </div>
+                <p className="text-lg font-bold text-white">
+                  {fmtNum(e.edpAvgDailyViews)}
+                </p>
+                <p className="text-[10px] text-white/40">avg views/day</p>
+              </div>
+            )}
+            {e.conversionRate != null && (
+              <div className="glass-card p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <MousePointerClick className="h-3.5 w-3.5 text-emerald-400" />
+                  <span className="text-xs text-white/60">Conversion</span>
+                </div>
+                <p className="text-lg font-bold text-white">
+                  {e.conversionRate.toFixed(1)}%
+                </p>
+                <p className="text-[10px] text-white/40">view to purchase</p>
+              </div>
+            )}
+          </div>
         </section>
       )}
 

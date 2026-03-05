@@ -35,6 +35,10 @@ export interface HeroStats {
   spendDelta: number | null;
 }
 
+// --- Ticket platform (derived from tm_id) ---
+
+export type TicketPlatform = "ticketmaster" | "vivaticket" | "unknown";
+
 // --- Event types (for TM clients) ---
 
 export interface EventCard {
@@ -51,6 +55,13 @@ export interface EventCard {
   potentialRevenue: number | null;
   gross: number | null;
   updatedAt: string | null;
+  ticketPlatform: TicketPlatform;
+  artist: string;
+  ticketsSoldToday: number | null;
+  revenueToday: number | null;
+  conversionRate: number | null;
+  edpTotalViews: number | null;
+  edpAvgDailyViews: number | null;
 }
 
 export interface AudienceProfile {
@@ -174,9 +185,27 @@ export interface LinkedCampaign {
   clicks: number | null;
 }
 
+export interface DailyDelta {
+  date: string;
+  label: string;
+  ticketsDelta: number;
+  revenueDelta: number;
+}
+
+export interface SalesVelocity {
+  avgDailySales: number;
+  recentDailySales: number | null;
+  trend: "accelerating" | "steady" | "decelerating" | null;
+  trendPct: number | null;
+  daysUntilEvent: number | null;
+  projectedTotalSold: number | null;
+}
+
 export interface EventDetailData {
   event: EventCard;
   snapshots: TicketSnapshot[];
+  dailyDeltas: DailyDelta[];
+  velocity: SalesVelocity | null;
   audience: AudienceProfile | null;
   linkedCampaigns: LinkedCampaign[];
   channelBreakdown: {

@@ -71,7 +71,7 @@ function AssignCell({ user, clients }: { user: UserRow; clients: ClientOption[] 
           {count === 0 ? (
             <span className="text-muted-foreground">Unassigned</span>
           ) : count === 1 ? (
-            <span>{clients.find((c) => selected.has(c.slug))?.name ?? [...selected][0]}</span>
+            <span>{clients.find((c) => selected.has(c.slug))?.name ?? selected.values().next().value}</span>
           ) : (
             <span>{count} clients</span>
           )}

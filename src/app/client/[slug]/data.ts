@@ -36,7 +36,7 @@ const EMPTY: ClientData = {
 
 // --- Map shared MetaCampaignCard to client portal CampaignCard ---
 
-function toCampaignCard(c: MetaCampaignCard): CampaignCard {
+export function toCampaignCard(c: MetaCampaignCard): CampaignCard {
   return {
     campaignId: c.campaignId,
     name: c.name,

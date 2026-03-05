@@ -99,7 +99,7 @@ export async function PATCH(
     delete publicMetadata.client_slug;
   }
 
-  const updated = await client.users.updateUserMetadata(id, { publicMetadata });
+  await client.users.updateUserMetadata(id, { publicMetadata });
 
-  return NextResponse.json({ ok: true, user: updated, client_slugs: remainingSlugs });
+  return NextResponse.json({ ok: true, client_slugs: remainingSlugs });
 }

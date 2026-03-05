@@ -103,6 +103,26 @@ export function computeMarginalRoas(points: SnapshotPoint[]): number | null {
   return (revLast - revFirst) / deltaSpend;
 }
 
+// ─── Blended ROAS ───────────────────────────────────────────────────────
+
+interface SpendRoasItem {
+  spend: number;
+  roas: number | null;
+}
+
+/** Compute spend-weighted blended ROAS. Returns null if no spend has ROAS. */
+export function computeBlendedRoas(items: SpendRoasItem[]): number | null {
+  let weightedRoas = 0;
+  let spendWithRoas = 0;
+  for (const item of items) {
+    if (item.roas != null && item.spend > 0) {
+      weightedRoas += item.roas * item.spend;
+      spendWithRoas += item.spend;
+    }
+  }
+  return spendWithRoas > 0 ? weightedRoas / spendWithRoas : null;
+}
+
 // ─── Status badges ──────────────────────────────────────────────────────
 
 const CAMPAIGN_STATUSES = new Set(["active", "paused", "deleted", "archived"]);
