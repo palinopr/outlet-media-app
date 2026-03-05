@@ -9,16 +9,10 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { tooltipStyle } from "./types";
+import { tooltipStyle, sharedAxisProps, gridProps, kFormatter, usdKFormatter } from "./types";
+import type { DailyDelta } from "@/app/client/[slug]/types";
 
-export interface DailySalesRow {
-  date: string;
-  label: string;
-  ticketsDelta: number;
-  revenueDelta: number;
-}
-
-export function DailySalesChart({ data }: { data: DailySalesRow[] }) {
+export function DailySalesChart({ data }: { data: DailyDelta[] }) {
   if (data.length < 2) return null;
 
   const hasRevenue = data.some((d) => d.revenueDelta > 0);
@@ -29,35 +23,21 @@ export function DailySalesChart({ data }: { data: DailySalesRow[] }) {
       <div className="h-40 sm:h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-            <XAxis
-              dataKey="label"
-              tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              interval="preserveStartEnd"
-            />
+            <CartesianGrid {...gridProps} />
+            <XAxis dataKey="label" {...sharedAxisProps.x} />
             <YAxis
               yAxisId="tickets"
-              tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
+              {...sharedAxisProps.y}
               width={40}
-              tickFormatter={(v: number) =>
-                v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)
-              }
+              tickFormatter={kFormatter}
             />
             {hasRevenue && (
               <YAxis
                 yAxisId="revenue"
                 orientation="right"
-                tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
+                {...sharedAxisProps.y}
                 width={50}
-                tickFormatter={(v: number) =>
-                  v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v}`
-                }
+                tickFormatter={usdKFormatter}
               />
             )}
             <Tooltip

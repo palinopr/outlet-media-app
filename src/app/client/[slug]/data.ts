@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { type DateRange, RANGE_LABELS } from "@/lib/constants";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
+import { computeBlendedRoas } from "@/lib/formatters";
 import type { TmEvent, DemographicsRow, CampaignCard, EventCard, HeroStats, AudienceProfile } from "./types";
 import { buildAudienceProfile, buildEventCard } from "./lib";
 
@@ -61,26 +62,19 @@ function buildHeroStats(campaigns: CampaignCard[]): HeroStats {
   let totalRevenue = 0;
   let totalImpressions = 0;
   let totalClicks = 0;
-  let weightedRoas = 0;
-  let spendWithRoas = 0;
 
   for (const c of campaigns) {
     totalSpend += c.spend;
     totalRevenue += c.revenue ?? 0;
     totalImpressions += c.impressions;
     totalClicks += c.clicks;
-    if (c.roas != null && c.spend > 0) {
-      weightedRoas += c.roas * c.spend;
-      spendWithRoas += c.spend;
-    }
   }
 
-  const blendedRoas = spendWithRoas > 0 ? weightedRoas / spendWithRoas : null;
   const active = campaigns.filter((c) => c.status === "ACTIVE").length;
 
   return {
     totalSpend,
-    blendedRoas,
+    blendedRoas: computeBlendedRoas(campaigns),
     totalRevenue: totalRevenue > 0 ? totalRevenue : null,
     totalImpressions,
     totalClicks,

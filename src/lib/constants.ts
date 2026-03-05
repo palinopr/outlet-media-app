@@ -20,18 +20,9 @@ export const RANGE_LABELS: Record<DateRange, string> = {
   lifetime: "Lifetime",
 };
 
-export const VALID_RANGES = new Set<DateRange>([
-  "today",
-  "yesterday",
-  "7",
-  "14",
-  "30",
-  "lifetime",
-]);
-
 /** Parse a raw range string, falling back to a default. */
 export function parseRange(raw: string | undefined, fallback: DateRange = "today"): DateRange {
-  return raw && VALID_RANGES.has(raw as DateRange) ? (raw as DateRange) : fallback;
+  return raw && raw in RANGE_LABELS ? (raw as DateRange) : fallback;
 }
 
 export const EVENT_STATUS_OPTIONS = [
@@ -40,4 +31,4 @@ export const EVENT_STATUS_OPTIONS = [
   { value: "cancelled", label: "Cancelled" },
   { value: "postponed", label: "Postponed" },
   { value: "rescheduled", label: "Rescheduled" },
-] as const;
+];

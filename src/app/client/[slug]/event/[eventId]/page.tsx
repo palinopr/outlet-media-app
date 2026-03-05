@@ -34,7 +34,6 @@ import {
   TicketSalesChart,
   type TicketChartRow,
   DailySalesChart,
-  type DailySalesRow,
 } from "@/components/client/charts";
 import type { SalesVelocity, TicketPlatform } from "../../types";
 
@@ -99,13 +98,6 @@ export default async function EventDetailPage({ params }: Props) {
       gross: s.gross,
     };
   });
-
-  const dailyChartData: DailySalesRow[] = dailyDeltas.map((d) => ({
-    date: d.date,
-    label: d.label,
-    ticketsDelta: d.ticketsDelta,
-    revenueDelta: d.revenueDelta,
-  }));
 
   const hasEdpData = e.edpTotalViews != null || e.conversionRate != null;
   const hasTodayData = e.ticketsSoldToday != null || e.revenueToday != null;
@@ -305,16 +297,16 @@ export default async function EventDetailPage({ params }: Props) {
       )}
 
       {/* -- Daily Sales Activity -- */}
-      {dailyChartData.length >= 2 && (
+      {dailyDeltas.length >= 2 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Daily Sales Activity</span>
             <span className="text-xs text-white/45 ml-auto">
-              {dailyChartData.length} days
+              {dailyDeltas.length} days
             </span>
           </div>
-          <DailySalesChart data={dailyChartData} />
+          <DailySalesChart data={dailyDeltas} />
         </section>
       )}
 

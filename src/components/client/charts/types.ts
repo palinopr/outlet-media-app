@@ -61,3 +61,30 @@ export const tooltipStyle = {
   itemStyle: { color: "rgba(255,255,255,0.6)" },
   labelStyle: { color: "rgba(255,255,255,0.4)", marginBottom: "4px" },
 };
+
+export const sharedAxisProps = {
+  x: {
+    tick: { fill: "rgba(255,255,255,0.3)", fontSize: 10 },
+    axisLine: false as const,
+    tickLine: false as const,
+    interval: "preserveStartEnd" as const,
+  },
+  y: {
+    tick: { fill: "rgba(255,255,255,0.25)", fontSize: 10 },
+    axisLine: false as const,
+    tickLine: false as const,
+  },
+};
+
+export const gridProps = {
+  strokeDasharray: "3 3",
+  stroke: "rgba(255,255,255,0.04)",
+};
+
+export function kFormatter(v: number): string {
+  return v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v);
+}
+
+export function usdKFormatter(v: number): string {
+  return v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v}`;
+}

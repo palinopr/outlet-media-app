@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
   CartesianGrid,
 } from "recharts";
-import { tooltipStyle } from "./types";
+import { tooltipStyle, sharedAxisProps, gridProps, kFormatter, usdKFormatter } from "./types";
 
 export interface TicketChartRow {
   date: string;
@@ -41,37 +41,21 @@ export function TicketSalesChart({ data }: { data: TicketChartRow[] }) {
                 </linearGradient>
               )}
             </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-            <XAxis
-              dataKey="label"
-              tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              interval="preserveStartEnd"
-            />
+            <CartesianGrid {...gridProps} />
+            <XAxis dataKey="label" {...sharedAxisProps.x} />
             <YAxis
               yAxisId="tickets"
-              tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
+              {...sharedAxisProps.y}
               width={50}
-              tickFormatter={(v) =>
-                v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)
-              }
+              tickFormatter={kFormatter}
             />
             {hasGross && (
               <YAxis
                 yAxisId="gross"
                 orientation="right"
-                tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
+                {...sharedAxisProps.y}
                 width={55}
-                tickFormatter={(v) =>
-                  v >= 1000
-                    ? `$${(v / 1000).toFixed(0)}K`
-                    : `$${v}`
-                }
+                tickFormatter={usdKFormatter}
               />
             )}
             <Tooltip

@@ -125,7 +125,7 @@ export function computeVelocity(
   const totalDelta = last.ticketsSold - first.ticketsSold;
   const avgDailySales = Math.round(totalDelta / totalDays);
 
-  // Recent velocity: last 3 data points
+  // Compare first-half vs second-half rate to detect trend
   let recentDailySales: number | null = null;
   let trend: SalesVelocity["trend"] = null;
   let trendPct: number | null = null;
