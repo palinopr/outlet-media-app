@@ -9,7 +9,7 @@ export async function getPages(clientSlug?: string): Promise<{
 
   let query = supabaseAdmin
     .from("workspace_pages")
-    .select("*")
+    .select("id, title, icon, parent_page_id, client_slug, created_by, is_archived, position, created_at, updated_at")
     .order("position", { ascending: true })
     .order("created_at", { ascending: true });
 

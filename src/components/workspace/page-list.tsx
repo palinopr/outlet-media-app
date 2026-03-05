@@ -3,21 +3,11 @@
 import { useRouter } from "next/navigation";
 import { FileText } from "lucide-react";
 import type { WorkspacePage } from "@/lib/workspace-types";
+import { timeAgo } from "@/lib/formatters";
 
 interface PageListProps {
   pages: WorkspacePage[];
   basePath: string;
-}
-
-function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
 }
 
 export function PageList({ pages, basePath }: PageListProps) {

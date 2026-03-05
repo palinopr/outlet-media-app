@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CommentThread } from "./comment-thread";
@@ -98,9 +99,7 @@ export function CommentSidebar({ pageId, isOpen, onClose, currentUserId }: Comme
       <div className="flex items-center justify-between border-b px-4 py-3">
         <h3 className="text-sm font-semibold">Comments</h3>
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6L6 18M6 6l12 12" />
-          </svg>
+          <X className="h-3.5 w-3.5" />
         </Button>
       </div>
 

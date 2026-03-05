@@ -31,13 +31,23 @@ export async function createComment(formData: {
 
   if (error) throw new Error(error.message);
 
-  // Notify page owner about new comment
-  const { data: page } = await supabaseAdmin
-    .from("workspace_pages")
-    .select("created_by, title")
-    .eq("id", formData.page_id)
-    .single();
+  // Fetch page + parent comment in parallel for notifications
+  const [{ data: page }, parentResult] = await Promise.all([
+    supabaseAdmin
+      .from("workspace_pages")
+      .select("created_by, title")
+      .eq("id", formData.page_id)
+      .single(),
+    formData.parent_comment_id
+      ? supabaseAdmin
+          .from("workspace_comments")
+          .select("author_id, author_name")
+          .eq("id", formData.parent_comment_id)
+          .single()
+      : Promise.resolve({ data: null }),
+  ]);
 
+  // Notify page owner about new comment
   if (page?.created_by && page.created_by !== userId) {
     await createNotification({
       user_id: page.created_by,
@@ -51,24 +61,17 @@ export async function createComment(formData: {
   }
 
   // If replying, notify the parent comment author
-  if (formData.parent_comment_id) {
-    const { data: parent } = await supabaseAdmin
-      .from("workspace_comments")
-      .select("author_id, author_name")
-      .eq("id", formData.parent_comment_id)
-      .single();
-
-    if (parent?.author_id && parent.author_id !== userId && parent.author_id !== page?.created_by) {
-      await createNotification({
-        user_id: parent.author_id,
-        type: "comment",
-        title: "New reply",
-        message: `${authorName} replied to your comment`,
-        page_id: formData.page_id,
-        from_user_id: userId,
-        from_user_name: authorName,
-      });
-    }
+  const parent = parentResult?.data;
+  if (parent?.author_id && parent.author_id !== userId && parent.author_id !== page?.created_by) {
+    await createNotification({
+      user_id: parent.author_id,
+      type: "comment",
+      title: "New reply",
+      message: `${authorName} replied to your comment`,
+      page_id: formData.page_id,
+      from_user_id: userId,
+      from_user_name: authorName,
+    });
   }
 
   revalidatePath(`/admin/workspace`);

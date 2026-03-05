@@ -38,7 +38,6 @@ export function PageSidebar({ pages, basePath, clientSlug }: PageSidebarProps) {
         const data = await res.json();
         startTransition(() => {
           router.push(`${basePath}/${data.id}`);
-          router.refresh();
         });
       }
     },

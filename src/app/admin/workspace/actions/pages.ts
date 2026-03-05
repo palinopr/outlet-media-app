@@ -5,24 +5,8 @@ import { z } from "zod/v4";
 import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
+import { CreatePageSchema, UpdatePageSchema } from "@/lib/api-schemas";
 import { logAudit } from "../../actions/audit";
-
-const CreatePageInput = z.object({
-  title: z.string().max(500).default("Untitled"),
-  client_slug: z.string().min(1),
-  parent_page_id: z.string().uuid().optional(),
-  icon: z.string().max(10).optional(),
-});
-
-const UpdatePageInput = z.object({
-  pageId: z.string().uuid(),
-  title: z.string().max(500).optional(),
-  icon: z.string().max(10).optional().nullable(),
-  cover_image: z.string().max(2000).optional().nullable(),
-  parent_page_id: z.string().uuid().optional().nullable(),
-  is_archived: z.boolean().optional(),
-  position: z.number().int().min(0).optional(),
-});
 
 const DeletePageInput = z.object({
   pageId: z.string().uuid(),
@@ -38,7 +22,7 @@ export async function createPage(formData: {
   if (err) throw new Error("Forbidden");
   if (!supabaseAdmin) throw new Error("DB not configured");
 
-  const parsed = CreatePageInput.parse(formData);
+  const parsed = CreatePageSchema.parse(formData);
   const user = await currentUser();
   if (!user) throw new Error("Not authenticated");
 
@@ -78,8 +62,9 @@ export async function updatePage(formData: {
   if (err) throw new Error("Forbidden");
   if (!supabaseAdmin) throw new Error("DB not configured");
 
-  const parsed = UpdatePageInput.parse(formData);
-  const { pageId, ...updates } = parsed;
+  const pageId = z.string().uuid().parse(formData.pageId);
+  const { pageId: _, ...rest } = formData;
+  const updates = UpdatePageSchema.parse(rest);
 
   const { error } = await supabaseAdmin
     .from("workspace_pages")
