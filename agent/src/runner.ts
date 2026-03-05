@@ -132,8 +132,9 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     activeProcs.add(proc);
 
     // Inactivity timeout: kill only when Claude goes silent (stuck/error).
-    // Resets every time stdout produces data.
+    // Resets every time stdout or stderr produces data.
     let timedOut = false;
+    let inactivityHandle: ReturnType<typeof setTimeout>;
     const resetInactivityTimer = () => {
       clearTimeout(inactivityHandle);
       inactivityHandle = setTimeout(() => {
@@ -147,7 +148,6 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
         }, 3000);
       }, INACTIVITY_TIMEOUT_MS);
     };
-    let inactivityHandle: ReturnType<typeof setTimeout>;
     resetInactivityTimer();
 
     let assembledText = "";  // built from assistant events
@@ -216,10 +216,8 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
       clearTimeout(inactivityHandle);
       activeProcs.delete(proc);
 
-      // Detect inactivity kill: SIGTERM/SIGKILL from our handler
-      if (signal === "SIGTERM" || signal === "SIGKILL") {
-        timedOut = true;
-      }
+      // timedOut is already set by the timeout callback if we initiated the kill.
+      // External kills (SIGTERM from OS/user) won't have timedOut=true.
 
       // Flush any remaining buffer content
       if (lineBuffer.trim()) {

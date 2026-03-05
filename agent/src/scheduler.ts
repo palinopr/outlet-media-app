@@ -20,8 +20,8 @@ const THINK_CRON     = "*/30 8-22 * * *";                        // every 30 min
 const HEARTBEAT_CRON = "*/1 * * * *";                            // every minute
 const DISCORD_HEALTH_CRON = "0 */12 * * *";                      // every 12 hours
 const TM_COOKIE_CRON = "0 */6 * * *";                            // proactive cookie refresh
-const EATA_CRON      = "0 */2 * * *";                            // EATA sync every 2 hours
-const EATA_COOKIE_CRON = "0 */6 * * *";                          // EATA token refresh
+const EATA_CRON      = "10 */2 * * *";                            // EATA sync every 2 hours (offset 10min from TM)
+const EATA_COOKIE_CRON = "10 */6 * * *";                         // EATA token refresh (offset 10min from TM)
 
 const INGEST_URL = process.env.INGEST_URL?.replace("/api/ingest", "");
 
@@ -32,7 +32,7 @@ const THINK_TASK = "Run your proactive self-improvement cycle. Read LEARNINGS.md
 /**
  * Start the scheduler.
  *
- * IMPORTANT: These 5 core cron jobs start unconditionally on process startup
+ * IMPORTANT: These 8 core cron jobs start unconditionally on process startup
  * and are NOT managed by the Discord schedule UI (schedule.ts). The schedule
  * UI lists them with enabled: false, but that reflects the UI's toggle state,
  * not whether the jobs are actually running. Enabling a job in the schedule UI
@@ -115,161 +115,122 @@ async function pingHeartbeat() {
   }
 }
 
-async function runTmCheck() {
-  if (isAgentBusy("tm-sync")) {
-    console.log("[scheduler] TM check already running, skipping");
+// --- Shared sync helpers ---------------------------------------------------
+
+interface SyncConfig {
+  lockKey: string;
+  label: string;
+  scriptPath: string;
+  refreshFn: () => Promise<void>;
+  notifyChannel: string;
+  formatSummary: (summary: Record<string, unknown>) => string;
+}
+
+async function runExternalSync(cfg: SyncConfig): Promise<void> {
+  if (isAgentBusy(cfg.lockKey)) {
+    console.log(`[scheduler] ${cfg.label} already running, skipping`);
     return;
   }
-  setAgentBusy("tm-sync");
-  console.log("[scheduler] Running TM One HTTP sync...");
-  await notifyChannel("active-jobs", ">> **TM One sync** started").catch(() => {});
+  setAgentBusy(cfg.lockKey);
+  console.log(`[scheduler] Running ${cfg.label}...`);
+  await notifyChannel("active-jobs", `>> **${cfg.label}** started`).catch(() => {});
 
   try {
     let output: string;
     try {
-      output = execFileSync("node", [TM_SYNC_SCRIPT], {
-        timeout: 60_000,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
+      output = execFileSync("node", [cfg.scriptPath], {
+        timeout: 60_000, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
       });
     } catch (execErr: unknown) {
       const err = execErr as { status?: number; stdout?: string; stderr?: string };
       if (err.status === 2) {
-        // Cookies expired -- refresh and retry
-        console.log("[scheduler] TM cookies expired, refreshing...");
-        await notifyChannel("active-jobs", ">> **TM One sync** refreshing cookies...").catch(() => {});
-        await refreshTmCookies();
-        output = execFileSync("node", [TM_SYNC_SCRIPT], {
-          timeout: 60_000,
-          encoding: "utf-8",
-          stdio: ["pipe", "pipe", "pipe"],
+        console.log(`[scheduler] ${cfg.label} auth expired, refreshing...`);
+        await notifyChannel("active-jobs", `>> **${cfg.label}** refreshing auth...`).catch(() => {});
+        await cfg.refreshFn();
+        output = execFileSync("node", [cfg.scriptPath], {
+          timeout: 60_000, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
         });
       } else {
-        throw new Error(err.stderr || err.stdout || "TM sync script failed");
-      }
-    }
-
-    // Parse the JSON summary from the last line of stdout
-    const lines = output.trim().split("\n");
-    const lastLine = lines[lines.length - 1];
-    let summary: Record<string, unknown> = {};
-    try { summary = JSON.parse(lastLine); } catch { /* not JSON */ }
-
-    const evtCount = summary.events_updated ?? 0;
-    const demoCount = summary.demographics_updated ?? 0;
-    const durationMs = summary.duration_ms ?? 0;
-    const msg = `Updated ${evtCount} events, ${demoCount} demographics in ${durationMs}ms`;
-    console.log(`[scheduler] TM sync done: ${msg}`);
-
-    await notifyChannel("active-jobs", "ok **TM One sync** finished").catch(() => {});
-    await Promise.all([
-      notifyOwner(`[TM One]\n\n${msg}`),
-      notifyChannel("tm-data", `**TM One Update**\n\n${msg}`),
-    ]);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("[scheduler] TM check failed:", msg);
-    await notifyChannel("active-jobs", `x **TM One sync** failed: ${msg.slice(0, 200)}`).catch(() => {});
-    await Promise.all([
-      notifyOwner(`[TM One -- failed]\n${msg}`).catch(() => {}),
-      notifyChannel("agent-alerts", `**TM One check failed**\n${msg}`).catch(() => {}),
-    ]);
-  } finally {
-    clearAgentBusy("tm-sync");
-  }
-}
-
-async function refreshTmCookies(): Promise<void> {
-  console.log("[scheduler] Refreshing TM One cookies...");
-  try {
-    execFileSync("node", [TM_COOKIE_SCRIPT], {
-      timeout: 120_000,
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-    console.log("[scheduler] TM cookie refresh complete");
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error("[scheduler] TM cookie refresh failed:", msg);
-    await notifyChannel("agent-alerts", `**TM cookie refresh failed**\n${msg.slice(0, 200)}`).catch(() => {});
-  }
-}
-
-async function runEataSync() {
-  if (isAgentBusy("eata-sync")) {
-    console.log("[scheduler] EATA sync already running, skipping");
-    return;
-  }
-  setAgentBusy("eata-sync");
-  console.log("[scheduler] Running EATA HTTP sync...");
-  await notifyChannel("active-jobs", ">> **EATA sync** started").catch(() => {});
-
-  try {
-    let output: string;
-    try {
-      output = execFileSync("node", [EATA_SYNC_SCRIPT], {
-        timeout: 60_000,
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "pipe"],
-      });
-    } catch (execErr: unknown) {
-      const err = execErr as { status?: number; stdout?: string; stderr?: string };
-      if (err.status === 2) {
-        console.log("[scheduler] EATA token expired, refreshing...");
-        await notifyChannel("active-jobs", ">> **EATA sync** refreshing token...").catch(() => {});
-        await refreshEataCookies();
-        output = execFileSync("node", [EATA_SYNC_SCRIPT], {
-          timeout: 60_000,
-          encoding: "utf-8",
-          stdio: ["pipe", "pipe", "pipe"],
-        });
-      } else {
-        throw new Error(err.stderr || err.stdout || "EATA sync script failed");
+        throw new Error(err.stderr || err.stdout || `${cfg.label} failed`);
       }
     }
 
     const lines = output.trim().split("\n");
-    const lastLine = lines[lines.length - 1];
     let summary: Record<string, unknown> = {};
-    try { summary = JSON.parse(lastLine); } catch { /* not JSON */ }
+    try { summary = JSON.parse(lines[lines.length - 1]); } catch { /* not JSON */ }
 
-    const evtCount = summary.events_updated ?? 0;
-    const durationMs = summary.duration_ms ?? 0;
-    const msg = `Updated ${evtCount} EATA events in ${durationMs}ms`;
-    console.log(`[scheduler] EATA sync done: ${msg}`);
+    const msg = cfg.formatSummary(summary);
+    console.log(`[scheduler] ${cfg.label} done: ${msg}`);
 
-    await notifyChannel("active-jobs", "ok **EATA sync** finished").catch(() => {});
+    await notifyChannel("active-jobs", `ok **${cfg.label}** finished`).catch(() => {});
     await Promise.all([
-      notifyOwner(`[EATA]\n\n${msg}`),
-      notifyChannel("don-omar-tickets", `**EATA Update**\n\n${msg}`),
+      notifyOwner(`[${cfg.label}]\n\n${msg}`),
+      notifyChannel(cfg.notifyChannel, `**${cfg.label} Update**\n\n${msg}`),
     ]);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("[scheduler] EATA sync failed:", msg);
-    await notifyChannel("active-jobs", `x **EATA sync** failed: ${msg.slice(0, 200)}`).catch(() => {});
+    console.error(`[scheduler] ${cfg.label} failed:`, msg);
+    await notifyChannel("active-jobs", `x **${cfg.label}** failed: ${msg.slice(0, 200)}`).catch(() => {});
     await Promise.all([
-      notifyOwner(`[EATA -- failed]\n${msg}`).catch(() => {}),
-      notifyChannel("agent-alerts", `**EATA sync failed**\n${msg}`).catch(() => {}),
+      notifyOwner(`[${cfg.label} -- failed]\n${msg}`).catch(() => {}),
+      notifyChannel("agent-alerts", `**${cfg.label} failed**\n${msg}`).catch(() => {}),
     ]);
   } finally {
-    clearAgentBusy("eata-sync");
+    clearAgentBusy(cfg.lockKey);
   }
 }
 
-async function refreshEataCookies(): Promise<void> {
-  console.log("[scheduler] Refreshing EATA token...");
+async function runTokenRefresh(label: string, scriptPath: string): Promise<void> {
+  console.log(`[scheduler] Refreshing ${label} auth...`);
   try {
-    execFileSync("node", [EATA_COOKIE_SCRIPT], {
-      timeout: 120_000,
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "pipe"],
+    execFileSync("node", [scriptPath], {
+      timeout: 120_000, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
     });
-    console.log("[scheduler] EATA token refresh complete");
+    console.log(`[scheduler] ${label} auth refresh complete`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("[scheduler] EATA token refresh failed:", msg);
-    await notifyChannel("agent-alerts", `**EATA token refresh failed**\n${msg.slice(0, 200)}`).catch(() => {});
+    console.error(`[scheduler] ${label} auth refresh failed:`, msg);
+    await notifyChannel("agent-alerts", `**${label} auth refresh failed**\n${msg.slice(0, 200)}`).catch(() => {});
   }
+}
+
+// --- TM One ----------------------------------------------------------------
+
+function runTmCheck() {
+  return runExternalSync({
+    lockKey: "tm-sync",
+    label: "TM One sync",
+    scriptPath: TM_SYNC_SCRIPT,
+    refreshFn: refreshTmCookies,
+    notifyChannel: "tm-data",
+    formatSummary: (s) => {
+      const evts = s.events_updated ?? 0;
+      const demos = s.demographics_updated ?? 0;
+      return `Updated ${evts} events, ${demos} demographics in ${s.duration_ms ?? 0}ms`;
+    },
+  });
+}
+
+function refreshTmCookies() {
+  return runTokenRefresh("TM One", TM_COOKIE_SCRIPT);
+}
+
+// --- EATA / Don Omar -------------------------------------------------------
+
+function runEataSync() {
+  return runExternalSync({
+    lockKey: "eata-sync",
+    label: "EATA sync",
+    scriptPath: EATA_SYNC_SCRIPT,
+    refreshFn: refreshEataCookies,
+    notifyChannel: "don-omar-tickets",
+    formatSummary: (s) =>
+      `Updated ${s.events_updated ?? 0} EATA events in ${s.duration_ms ?? 0}ms`,
+  });
+}
+
+function refreshEataCookies() {
+  return runTokenRefresh("EATA", EATA_COOKIE_SCRIPT);
 }
 
 async function runMetaSync() {
