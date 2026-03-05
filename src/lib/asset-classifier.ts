@@ -53,6 +53,14 @@ function readJpegDimensions(buf: Buffer): { w: number; h: number } | null {
   return null;
 }
 
+function readGifDimensions(buf: Buffer): { w: number; h: number } | null {
+  // GIF87a / GIF89a: width at bytes 6-7, height at bytes 8-9 (little-endian)
+  if (buf.length < 10) return null;
+  const sig = buf.toString("ascii", 0, 6);
+  if (sig !== "GIF87a" && sig !== "GIF89a") return null;
+  return { w: buf.readUInt16LE(6), h: buf.readUInt16LE(8) };
+}
+
 function readWebpDimensions(buf: Buffer): { w: number; h: number } | null {
   if (buf.length < 30) return null;
   const riff = buf.toString("ascii", 0, 4);
@@ -73,7 +81,8 @@ export function readImageDimensions(
   buf: Buffer,
   mimeType: string,
 ): { w: number; h: number } | null {
-  if (mimeType === "image/png" || mimeType === "image/gif") return readPngDimensions(buf);
+  if (mimeType === "image/png") return readPngDimensions(buf);
+  if (mimeType === "image/gif") return readGifDimensions(buf);
   if (mimeType === "image/jpeg") return readJpegDimensions(buf);
   if (mimeType === "image/webp") return readWebpDimensions(buf);
   return null;

@@ -58,12 +58,13 @@ async function fetchImageAsBase64(
   url: string,
 ): Promise<{ data: string; mediaType: string } | null> {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
     const mediaType = res.headers.get("content-type") ?? "image/png";
     return { data: buf.toString("base64"), mediaType };
-  } catch {
+  } catch (err) {
+    console.log(`[creative-classify] image fetch failed for ${url}: ${err instanceof Error ? err.message : String(err)}`);
     return null;
   }
 }
@@ -240,6 +241,8 @@ Here are the assets:`,
           cwd: AGENT_DIR,
           maxTurns: 10,
           permissionMode: "bypassPermissions" as const,
+          allowDangerouslySkipPermissions: true,
+          settingSources: ["local"],
           systemPrompt: readFileSync(join(AGENT_DIR, "prompts", "creative-agent.txt"), "utf-8"),
           mcpServers: { "creative-tools": creativeTools },
           allowedTools: [
