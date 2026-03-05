@@ -95,8 +95,8 @@ export function CommentSidebar({ pageId, isOpen, onClose, currentUserId }: Comme
   if (!isOpen) return null;
 
   return (
-    <div className="flex h-full w-80 flex-col border-l bg-background">
-      <div className="flex items-center justify-between border-b px-4 py-3">
+    <div className="flex h-full w-80 flex-col border-l bg-[oklch(0.13_0_0)]">
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-3">
         <h3 className="text-sm font-semibold">Comments</h3>
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onClose}>
           <X className="h-3.5 w-3.5" />
@@ -106,10 +106,10 @@ export function CommentSidebar({ pageId, isOpen, onClose, currentUserId }: Comme
       <ScrollArea className="flex-1 overflow-auto">
         <div className="space-y-3 p-4">
           {loading && comments.length === 0 && (
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <p className="text-sm text-white/40">Loading...</p>
           )}
           {!loading && topLevel.length === 0 && (
-            <p className="text-sm text-muted-foreground">No comments yet.</p>
+            <p className="text-sm text-white/40">No comments yet.</p>
           )}
           {topLevel.map((comment) => (
             <CommentThread
@@ -125,9 +125,9 @@ export function CommentSidebar({ pageId, isOpen, onClose, currentUserId }: Comme
         </div>
       </ScrollArea>
 
-      <div className="border-t p-4">
+      <div className="border-t border-white/[0.06] p-4">
         <textarea
-          className="w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+          className="w-full rounded-md border-white/[0.08] bg-[oklch(0.11_0_0)] px-3 py-2 text-sm placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
           placeholder="Add a comment..."
           rows={3}
           value={newComment}

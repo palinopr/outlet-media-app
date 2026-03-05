@@ -11,7 +11,12 @@ import {
   Heading2,
   Heading3,
   Quote,
+  List,
+  ListOrdered,
+  CheckSquare,
 } from "lucide-react";
+import { toggleList } from "@platejs/list";
+import { LinkToolbarButton } from "./link-toolbar-button";
 
 function MarkButton({
   nodeType,
@@ -65,6 +70,31 @@ function BlockButton({
   );
 }
 
+function ListButton({
+  listStyleType,
+  children,
+  tooltip,
+}: {
+  listStyleType: string;
+  children: React.ReactNode;
+  tooltip: string;
+}) {
+  const editor = useEditorRef();
+  return (
+    <button
+      type="button"
+      title={tooltip}
+      className="h-8 w-8 flex items-center justify-center rounded text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors"
+      onMouseDown={(e) => {
+        e.preventDefault();
+        toggleList(editor, { listStyleType });
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
 function Separator() {
   return <div className="w-px h-5 bg-white/[0.08] mx-1" />;
 }
@@ -108,6 +138,22 @@ export function EditorToolbar() {
       <BlockButton blockType="blockquote" tooltip="Quote">
         <Quote className="h-4 w-4" />
       </BlockButton>
+
+      <Separator />
+
+      <ListButton listStyleType="disc" tooltip="Bullet List">
+        <List className="h-4 w-4" />
+      </ListButton>
+      <ListButton listStyleType="decimal" tooltip="Numbered List">
+        <ListOrdered className="h-4 w-4" />
+      </ListButton>
+      <ListButton listStyleType="todo" tooltip="To-do List">
+        <CheckSquare className="h-4 w-4" />
+      </ListButton>
+
+      <Separator />
+
+      <LinkToolbarButton />
     </div>
   );
 }

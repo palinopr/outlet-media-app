@@ -1,6 +1,7 @@
 "use client";
 
 import type { Value } from "platejs";
+import { KEYS } from "platejs";
 import {
   BlockquotePlugin,
   BoldPlugin,
@@ -15,7 +16,12 @@ import {
 } from "@platejs/basic-nodes/react";
 import { CodeBlockPlugin } from "@platejs/code-block/react";
 import { LinkPlugin } from "@platejs/link/react";
+import { IndentPlugin } from "@platejs/indent/react";
 import { ListPlugin } from "@platejs/list/react";
+import { AutoformatPlugin } from "@platejs/autoformat";
+import { toggleList } from "@platejs/list";
+import { MentionPlugin, MentionInputPlugin } from "@platejs/mention/react";
+import { MarkdownPlugin } from "@platejs/markdown";
 import { SlashPlugin, SlashInputPlugin } from "@platejs/slash-command/react";
 import { ParagraphPlugin, usePlateEditor } from "platejs/react";
 import {
@@ -26,8 +32,19 @@ import {
   HrElement,
   ParagraphElement,
   CodeBlockElement,
+  BlockList,
 } from "./editor/block-elements";
 import { SlashInputElement } from "./editor/slash-menu";
+import { MentionElement } from "./editor/mention-element";
+import { MentionInputElement } from "./editor/mention-input-element";
+import { LinkElement } from "./editor/link-element";
+
+const LIST_TARGET_PLUGINS = [
+  ...KEYS.heading,
+  KEYS.p,
+  KEYS.blockquote,
+  KEYS.codeBlock,
+];
 
 const DEFAULT_VALUE: Value = [
   { type: "p", children: [{ text: "" }] },
@@ -55,9 +72,78 @@ export function useCreateEditor(initialContent?: unknown) {
       HorizontalRulePlugin.withComponent(HrElement),
       CodeBlockPlugin.withComponent(CodeBlockElement),
       // Inline elements
-      LinkPlugin,
-      // Lists
-      ListPlugin,
+      LinkPlugin.withComponent(LinkElement),
+      MentionPlugin.configure({
+        options: {
+          trigger: "@",
+          triggerPreviousCharPattern: /^$|^[\s"']$/,
+        },
+      }).withComponent(MentionElement),
+      MentionInputPlugin.withComponent(MentionInputElement),
+      // Indent + Lists
+      IndentPlugin.configure({
+        inject: {
+          targetPlugins: LIST_TARGET_PLUGINS,
+        },
+      }),
+      ListPlugin.configure({
+        inject: {
+          targetPlugins: LIST_TARGET_PLUGINS,
+        },
+        render: {
+          belowNodes: BlockList,
+        },
+      }),
+      // Autoformat
+      AutoformatPlugin.configure({
+        options: {
+          rules: [
+            {
+              match: "- ",
+              mode: "block" as const,
+              type: "list",
+              format: (editor: unknown) => {
+                toggleList(editor as Parameters<typeof toggleList>[0], {
+                  listStyleType: KEYS.ul,
+                });
+              },
+            },
+            {
+              match: "* ",
+              mode: "block" as const,
+              type: "list",
+              format: (editor: unknown) => {
+                toggleList(editor as Parameters<typeof toggleList>[0], {
+                  listStyleType: KEYS.ul,
+                });
+              },
+            },
+            {
+              match: [String.raw`^\d+\.$ `, String.raw`^\d+\)$ `],
+              matchByRegex: true,
+              mode: "block" as const,
+              type: "list",
+              format: (editor: unknown) => {
+                toggleList(editor as Parameters<typeof toggleList>[0], {
+                  listStyleType: KEYS.ol,
+                });
+              },
+            },
+            {
+              match: ["[] ", "[ ] "],
+              mode: "block" as const,
+              type: "list",
+              format: (editor: unknown) => {
+                toggleList(editor as Parameters<typeof toggleList>[0], {
+                  listStyleType: KEYS.listTodo,
+                });
+              },
+            },
+          ],
+        },
+      }),
+      // Markdown paste
+      MarkdownPlugin,
       // Slash commands
       SlashPlugin,
       SlashInputPlugin.withComponent(SlashInputElement),

@@ -66,6 +66,9 @@ export function TaskColumn({ status, tasks, onTaskClick, onAddTask }: TaskColumn
                   />
                 ))}
                 {provided.placeholder}
+                {tasks.length === 0 && (
+                  <p className="text-center text-xs text-white/15 py-8">No tasks yet</p>
+                )}
               </div>
             </ScrollArea>
           </div>

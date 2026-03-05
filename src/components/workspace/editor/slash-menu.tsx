@@ -13,7 +13,12 @@ import {
   Quote,
   Minus,
   Code,
+  List,
+  ListOrdered,
+  CheckSquare,
 } from "lucide-react";
+import { KEYS } from "platejs";
+import { toggleList } from "@platejs/list";
 
 interface SlashItem {
   icon: React.ReactNode;
@@ -83,6 +88,30 @@ const SLASH_ITEMS: SlashItem[] = [
     description: "Horizontal rule",
     action: (editor) => {
       editor.tf.insertNodes({ type: "hr", children: [{ text: "" }] });
+    },
+  },
+  {
+    icon: <List className="h-4 w-4" />,
+    label: "Bullet List",
+    description: "Unordered list",
+    action: (editor) => {
+      toggleList(editor, { listStyleType: KEYS.ul });
+    },
+  },
+  {
+    icon: <ListOrdered className="h-4 w-4" />,
+    label: "Numbered List",
+    description: "Ordered list",
+    action: (editor) => {
+      toggleList(editor, { listStyleType: KEYS.ol });
+    },
+  },
+  {
+    icon: <CheckSquare className="h-4 w-4" />,
+    label: "To-do List",
+    description: "Task checklist",
+    action: (editor) => {
+      toggleList(editor, { listStyleType: KEYS.listTodo });
     },
   },
 ];

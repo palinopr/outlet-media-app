@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface PageCoverProps {
@@ -13,7 +13,27 @@ interface PageCoverProps {
 export function PageCover({ pageId, coverImage, onRemove }: PageCoverProps) {
   const [hover, setHover] = useState(false);
 
-  if (!coverImage) return null;
+  if (!coverImage) {
+    return (
+      <button
+        type="button"
+        className="group flex items-center gap-1.5 text-sm text-white/20 hover:text-white/40 transition-colors mb-2"
+        onClick={async () => {
+          const url = window.prompt("Enter cover image URL:");
+          if (!url?.trim()) return;
+          const res = await fetch(`/api/workspace/pages/${pageId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ cover_image: url.trim() }),
+          });
+          if (res.ok) window.location.reload();
+        }}
+      >
+        <ImageIcon className="h-3.5 w-3.5" />
+        Add cover
+      </button>
+    );
+  }
 
   const handleRemove = async () => {
     await fetch(`/api/workspace/pages/${pageId}`, {

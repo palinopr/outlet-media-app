@@ -46,8 +46,8 @@ export function PageTreeItem({
     <div>
       <div
         className={cn(
-          "group flex items-center gap-1 py-1 px-2 rounded-md cursor-pointer text-sm hover:bg-muted/50 transition-colors",
-          isActive && "bg-muted",
+          "group flex items-center gap-1 py-1 px-2 rounded-md cursor-pointer text-sm hover:bg-white/[0.04] transition-colors",
+          isActive && "bg-white/[0.06]",
         )}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
         onClick={() => router.push(`${basePath}/${node.page.id}`)}
@@ -58,16 +58,16 @@ export function PageTreeItem({
             onToggle(node.page.id);
           }}
           className={cn(
-            "h-5 w-5 flex items-center justify-center rounded hover:bg-muted shrink-0 transition-transform",
+            "h-5 w-5 flex items-center justify-center rounded hover:bg-white/[0.06] shrink-0 transition-transform",
             !hasChildren && "invisible",
             expanded && "rotate-90",
           )}
         >
-          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+          <ChevronRight className="h-3 w-3 text-white/40" />
         </button>
 
         <span className="text-base shrink-0">{node.page.icon || "📄"}</span>
-        <span className="flex-1 truncate text-foreground/80">{node.page.title || "Untitled"}</span>
+        <span className="flex-1 truncate text-white/70">{node.page.title || "Untitled"}</span>
 
         <div className="hidden group-hover:flex items-center gap-0.5">
           {!isArchived && onCreateChild && (
@@ -76,10 +76,10 @@ export function PageTreeItem({
                 e.stopPropagation();
                 onCreateChild(node.page.id);
               }}
-              className="h-5 w-5 flex items-center justify-center rounded hover:bg-muted"
+              className="h-5 w-5 flex items-center justify-center rounded hover:bg-white/[0.06]"
               title="Add child page"
             >
-              <Plus className="h-3 w-3 text-muted-foreground" />
+              <Plus className="h-3 w-3 text-white/40" />
             </button>
           )}
 
@@ -87,9 +87,9 @@ export function PageTreeItem({
             <DropdownMenuTrigger asChild>
               <button
                 onClick={(e) => e.stopPropagation()}
-                className="h-5 w-5 flex items-center justify-center rounded hover:bg-muted"
+                className="h-5 w-5 flex items-center justify-center rounded hover:bg-white/[0.06]"
               >
-                <MoreHorizontal className="h-3 w-3 text-muted-foreground" />
+                <MoreHorizontal className="h-3 w-3 text-white/40" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-40">

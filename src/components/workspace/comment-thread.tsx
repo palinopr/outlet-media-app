@@ -40,7 +40,7 @@ export function CommentThread({
   }
 
   return (
-    <div className={`rounded-lg border p-3 ${comment.resolved ? "opacity-60" : ""}`}>
+    <div className={`rounded-lg border border-white/[0.08] p-3 ${comment.resolved ? "opacity-60" : ""}`}>
       <SingleComment
         comment={comment}
         currentUserId={currentUserId}
@@ -82,7 +82,7 @@ export function CommentThread({
       {replyOpen && (
         <div className="mt-2 ml-4 space-y-2">
           <textarea
-            className="w-full rounded-md border bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            className="w-full rounded-md border-white/[0.08] bg-[oklch(0.11_0_0)] px-3 py-2 text-sm placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
             placeholder="Write a reply..."
             rows={2}
             value={replyText}
@@ -132,11 +132,11 @@ function SingleComment({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{comment.author_name ?? "Unknown"}</span>
-          <span className="text-xs text-muted-foreground">{timeAgo(comment.created_at)}</span>
+          <span className="text-xs text-white/40">{timeAgo(comment.created_at)}</span>
           {comment.author_id === currentUserId && (
             <button
               type="button"
-              className="ml-auto hidden text-xs text-muted-foreground hover:text-destructive group-hover:inline"
+              className="ml-auto hidden text-xs text-white/40 hover:text-red-400 group-hover:inline"
               onClick={() => onDelete(comment.id)}
             >
               Delete
