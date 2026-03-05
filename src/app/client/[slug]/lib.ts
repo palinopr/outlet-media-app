@@ -109,6 +109,40 @@ export function computeDailyDeltas(snapshots: TicketSnapshot[]): DailyDelta[] {
   return deltas;
 }
 
+/** Compute daily sales rate for a slice of snapshots. */
+function sliceRate(snapshots: TicketSnapshot[]): number {
+  const days = Math.max(
+    1,
+    (new Date(snapshots[snapshots.length - 1].date).getTime() -
+      new Date(snapshots[0].date).getTime()) / 86400000,
+  );
+  return (snapshots[snapshots.length - 1].ticketsSold - snapshots[0].ticketsSold) / days;
+}
+
+/** Compare first-half vs second-half rate to detect trend direction. */
+function computeTrendRate(snapshots: TicketSnapshot[]): {
+  recentDailySales: number | null;
+  trend: SalesVelocity["trend"];
+  trendPct: number | null;
+} {
+  if (snapshots.length < 4) return { recentDailySales: null, trend: null, trendPct: null };
+
+  const mid = Math.floor(snapshots.length / 2);
+  const firstRate = sliceRate(snapshots.slice(0, mid));
+  const secondRate = sliceRate(snapshots.slice(mid));
+  const recentDailySales = Math.round(secondRate);
+
+  if (firstRate <= 0) return { recentDailySales, trend: null, trendPct: null };
+
+  const change = ((secondRate - firstRate) / firstRate) * 100;
+  const trendPct = Math.round(change);
+  let trend: SalesVelocity["trend"] = "steady";
+  if (change > 10) trend = "accelerating";
+  else if (change < -10) trend = "decelerating";
+
+  return { recentDailySales, trend, trendPct };
+}
+
 export function computeVelocity(
   snapshots: TicketSnapshot[],
   eventDate: string | null,
@@ -116,53 +150,8 @@ export function computeVelocity(
 ): SalesVelocity | null {
   if (snapshots.length < 2) return null;
 
-  const first = snapshots[0];
-  const last = snapshots[snapshots.length - 1];
-  const totalDays = Math.max(
-    1,
-    (new Date(last.date).getTime() - new Date(first.date).getTime()) / 86400000,
-  );
-  const totalDelta = last.ticketsSold - first.ticketsSold;
-  const avgDailySales = Math.round(totalDelta / totalDays);
-
-  // Compare first-half vs second-half rate to detect trend
-  let recentDailySales: number | null = null;
-  let trend: SalesVelocity["trend"] = null;
-  let trendPct: number | null = null;
-
-  if (snapshots.length >= 4) {
-    const mid = Math.floor(snapshots.length / 2);
-    const firstHalf = snapshots.slice(0, mid);
-    const secondHalf = snapshots.slice(mid);
-
-    const firstDays = Math.max(
-      1,
-      (new Date(firstHalf[firstHalf.length - 1].date).getTime() -
-        new Date(firstHalf[0].date).getTime()) /
-        86400000,
-    );
-    const secondDays = Math.max(
-      1,
-      (new Date(secondHalf[secondHalf.length - 1].date).getTime() -
-        new Date(secondHalf[0].date).getTime()) /
-        86400000,
-    );
-
-    const firstRate =
-      (firstHalf[firstHalf.length - 1].ticketsSold - firstHalf[0].ticketsSold) / firstDays;
-    const secondRate =
-      (secondHalf[secondHalf.length - 1].ticketsSold - secondHalf[0].ticketsSold) / secondDays;
-
-    recentDailySales = Math.round(secondRate);
-
-    if (firstRate > 0) {
-      const change = ((secondRate - firstRate) / firstRate) * 100;
-      trendPct = Math.round(change);
-      if (change > 10) trend = "accelerating";
-      else if (change < -10) trend = "decelerating";
-      else trend = "steady";
-    }
-  }
+  const avgDailySales = Math.round(sliceRate(snapshots));
+  const { recentDailySales, trend, trendPct } = computeTrendRate(snapshots);
 
   let daysUntilEvent: number | null = null;
   let projectedTotalSold: number | null = null;
@@ -175,14 +164,7 @@ export function computeVelocity(
     }
   }
 
-  return {
-    avgDailySales,
-    recentDailySales,
-    trend,
-    trendPct,
-    daysUntilEvent,
-    projectedTotalSold,
-  };
+  return { avgDailySales, recentDailySales, trend, trendPct, daysUntilEvent, projectedTotalSold };
 }
 
 export const DATE_OPTIONS: { value: DateRange; label: string }[] = [
@@ -221,34 +203,27 @@ export function weightedAvg(
   return totalWeight > 0 ? sum / totalWeight : null;
 }
 
-export function buildAudienceProfile(
-  demos: DemographicsRow[],
-): AudienceProfile {
-  const totalFans = demos.reduce((s, d) => s + (d.fans_total ?? 0), 0);
-  return {
-    totalFans,
-    femalePct: weightedAvg(demos, "fans_female_pct"),
-    malePct: weightedAvg(demos, "fans_male_pct"),
-    marriedPct: weightedAvg(demos, "fans_married_pct"),
-    childrenPct: weightedAvg(demos, "fans_with_children_pct"),
-    age1824: weightedAvg(demos, "age_18_24_pct"),
-    age2534: weightedAvg(demos, "age_25_34_pct"),
-    age3544: weightedAvg(demos, "age_35_44_pct"),
-    age4554: weightedAvg(demos, "age_45_54_pct"),
-    ageOver54: weightedAvg(demos, "age_over_54_pct"),
-    income0_30: weightedAvg(demos, "income_0_30k_pct"),
-    income30_60: weightedAvg(demos, "income_30_60k_pct"),
-    income60_90: weightedAvg(demos, "income_60_90k_pct"),
-    income90_125: weightedAvg(demos, "income_90_125k_pct"),
-    incomeOver125: weightedAvg(demos, "income_over_125k_pct"),
-    educationHighSchool: weightedAvg(demos, "education_high_school_pct"),
-    educationCollege: weightedAvg(demos, "education_college_pct"),
-    educationGradSchool: weightedAvg(demos, "education_grad_school_pct"),
-    paymentVisa: weightedAvg(demos, "payment_visa_pct"),
-    paymentMC: weightedAvg(demos, "payment_mc_pct"),
-    paymentAmex: weightedAvg(demos, "payment_amex_pct"),
-    paymentDiscover: weightedAvg(demos, "payment_discover_pct"),
-  };
+const DEMO_FIELD_MAP: [keyof AudienceProfile, keyof DemographicsRow][] = [
+  ["femalePct", "fans_female_pct"], ["malePct", "fans_male_pct"],
+  ["marriedPct", "fans_married_pct"], ["childrenPct", "fans_with_children_pct"],
+  ["age1824", "age_18_24_pct"], ["age2534", "age_25_34_pct"],
+  ["age3544", "age_35_44_pct"], ["age4554", "age_45_54_pct"], ["ageOver54", "age_over_54_pct"],
+  ["income0_30", "income_0_30k_pct"], ["income30_60", "income_30_60k_pct"],
+  ["income60_90", "income_60_90k_pct"], ["income90_125", "income_90_125k_pct"],
+  ["incomeOver125", "income_over_125k_pct"],
+  ["educationHighSchool", "education_high_school_pct"],
+  ["educationCollege", "education_college_pct"],
+  ["educationGradSchool", "education_grad_school_pct"],
+  ["paymentVisa", "payment_visa_pct"], ["paymentMC", "payment_mc_pct"],
+  ["paymentAmex", "payment_amex_pct"], ["paymentDiscover", "payment_discover_pct"],
+];
+
+export function buildAudienceProfile(demos: DemographicsRow[]): AudienceProfile {
+  const profile = { totalFans: demos.reduce((s, d) => s + (d.fans_total ?? 0), 0) } as AudienceProfile;
+  for (const [profileKey, demoKey] of DEMO_FIELD_MAP) {
+    (profile[profileKey] as number | null) = weightedAvg(demos, demoKey);
+  }
+  return profile;
 }
 
 // --- Smart insights ---

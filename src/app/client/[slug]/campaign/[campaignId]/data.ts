@@ -1,7 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
-import { META_API_VERSION } from "@/lib/constants";
-import { metaGet, metaInsightsUrl } from "@/lib/meta-api";
+import { metaGet, metaInsightsUrl, metaUrl } from "@/lib/meta-api";
 import type { CampaignCard, CampaignDetailData, AgeGenderBreakdown, PlacementBreakdown, AdCard, HourlyBreakdown, DailyPoint } from "../../types";
 import { DAY_LABELS } from "../../types";
 import { generateRecommendations } from "../../lib";
@@ -45,9 +44,7 @@ async function fetchCampaignOverview(
   creds: { token: string; accountId: string },
 ): Promise<{ info: MetaCampaignInfo | null; insights: MetaInsightRow | null }> {
   // Campaign info
-  const infoUrl = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}`);
-  infoUrl.searchParams.set("access_token", creds.token);
-  infoUrl.searchParams.set("fields", "id,name,status,daily_budget,start_time");
+  const infoUrl = new URL(metaUrl(campaignId, creds.token, { fields: "id,name,status,daily_budget,start_time" }));
 
   // Campaign insights
   const insightsUrl = metaInsightsUrl(
@@ -256,13 +253,10 @@ async function fetchAds(
   range: DateRange,
   creds: { token: string; accountId: string },
 ): Promise<AdCard[]> {
-  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/ads`);
-  url.searchParams.set("access_token", creds.token);
-  url.searchParams.set(
-    "fields",
-    `id,name,status,creative{thumbnail_url,title,body},insights.date_preset(${META_PRESETS[range]}){spend,impressions,clicks,reach,ctr,cpc,purchase_roas}`,
-  );
-  url.searchParams.set("limit", "50");
+  const url = new URL(metaUrl(`${campaignId}/ads`, creds.token, {
+    fields: `id,name,status,creative{thumbnail_url,title,body},insights.date_preset(${META_PRESETS[range]}){spend,impressions,clicks,reach,ctr,cpc,purchase_roas}`,
+    limit: "50",
+  }));
 
   const res = await metaGet<{ data: MetaAdRow[] }>(url, "ads");
   if (!res?.data) return [];

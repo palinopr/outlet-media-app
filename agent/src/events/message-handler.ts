@@ -14,7 +14,7 @@ import {
   type TextChannel,
 } from "discord.js";
 import { runClaude } from "../runner.js";
-import { getAgentForChannel } from "../discord/core/router.js";
+import { getAgentForChannel, type AgentConfig } from "../discord/core/router.js";
 import { isAgentFree } from "../services/queue-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { loadAgentMemory } from "../discord/features/memory.js";
@@ -150,6 +150,84 @@ async function logActivity(
 }
 
 /**
+ * Build a system prompt with optional server snapshot and agent memory.
+ */
+async function buildSystemPrompt(agent: AgentConfig): Promise<string | undefined> {
+  let systemPrompt: string | undefined;
+  if (agent.injectSnapshot) {
+    const { buildAdminPrompt } = await import("../discord/commands/admin.js");
+    systemPrompt = await buildAdminPrompt(agent.promptFile);
+  }
+
+  const memory = await loadAgentMemory(agent.promptFile);
+  if (memory) {
+    if (systemPrompt) {
+      systemPrompt += memory;
+    } else {
+      const fs = await import("node:fs/promises");
+      const path = await import("node:path");
+      try {
+        const promptPath = path.join(process.cwd(), "prompts", `${agent.promptFile}.txt`);
+        const base = await fs.readFile(promptPath, "utf-8");
+        systemPrompt = base + memory;
+      } catch {
+        // Prompt file not found -- let runner handle the fallback
+      }
+    }
+  }
+  return systemPrompt;
+}
+
+/**
+ * Deliver response chunks via webhook, falling back to message edit.
+ */
+async function deliverResponse(
+  agentKey: string,
+  channelName: string,
+  chunks: string[],
+  working: Message,
+  msg: Message,
+): Promise<void> {
+  try {
+    await sendAsAgent(agentKey, channelName, chunks[0] || "Done.");
+    await working.delete().catch(() => {});
+    for (const chunk of chunks.slice(1)) {
+      await sendAsAgent(agentKey, channelName, chunk);
+    }
+  } catch {
+    await working.edit(chunks[0] || "Done.").catch(() => {});
+    for (const chunk of chunks.slice(1)) {
+      if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
+    }
+  }
+}
+
+/**
+ * Fire-and-forget post-processing: activity log, memory, skills, delegation.
+ */
+function postProcess(
+  agent: AgentConfig,
+  channelName: string,
+  username: string,
+  prompt: string,
+  responseText: string,
+  discordClient: Client | null,
+): void {
+  logActivity(channelName, username, prompt, agent.description, responseText).catch(() => {});
+  import("../discord/features/memory.js")
+    .then(({ maybeUpdateMemory }) => maybeUpdateMemory(agent.promptFile, prompt, responseText))
+    .catch(() => {});
+  import("../discord/features/skills.js")
+    .then(({ maybeCreateSkill }) => maybeCreateSkill(agent.promptFile, prompt, responseText))
+    .catch(() => {});
+  if (discordClient && agent.promptFile !== "chat") {
+    import("../agents/delegate.js")
+      .then(({ processDelegations }) => processDelegations(discordClient!, responseText, channelName))
+      .catch(() => {});
+  }
+}
+
+/**
  * Route a message to the correct agent and handle the response.
  * Uses per-agent slots instead of global agentBusy lock.
  */
@@ -160,11 +238,8 @@ export async function handleMessage(
   discordClient: Client | null,
 ): Promise<void> {
   const agent = getAgentForChannel(channelName);
-
-  // Read-only channels don't get agent responses
   if (agent.readOnly) return;
 
-  // Check per-agent slot availability
   const agentKey = agent.promptFile;
   if (!isAgentFree(agentKey)) {
     await msg.reply("This agent is currently busy — please try again in a moment.");
@@ -183,35 +258,11 @@ export async function handleMessage(
     }, 8000);
 
     working = await msg.reply("Working on it...");
-
     const contextualPrompt = await buildConversationContext(msg, prompt);
+    const systemPrompt = await buildSystemPrompt(agent);
 
     let buffer = "";
     let lastEdit = Date.now();
-    // Build system prompt with optional snapshot and memory
-    let systemPrompt: string | undefined;
-    if (agent.injectSnapshot) {
-      const { buildAdminPrompt } = await import("../discord/commands/admin.js");
-      systemPrompt = await buildAdminPrompt(agent.promptFile);
-    }
-
-    const memory = await loadAgentMemory(agent.promptFile);
-    if (memory) {
-      if (systemPrompt) {
-        systemPrompt += memory;
-      } else {
-        const fs = await import("node:fs/promises");
-        const path = await import("node:path");
-        try {
-          const promptPath = path.join(process.cwd(), "prompts", `${agent.promptFile}.txt`);
-          const base = await fs.readFile(promptPath, "utf-8");
-          systemPrompt = base + memory;
-        } catch {
-          // Prompt file not found -- let runner handle the fallback
-        }
-      }
-    }
-
     const result = await runClaude({
       prompt: contextualPrompt,
       systemPromptName: agent.promptFile,
@@ -228,41 +279,9 @@ export async function handleMessage(
     });
 
     const responseText = result.text || "Done.";
-    const full = cleanForDiscord(responseText);
-    const chunks = chunkText(full, 1900);
-
-    // Try to send via webhook (agent identity), fall back to edit
-    try {
-      await sendAsAgent(agentKey, channelName, chunks[0] || "Done.");
-      await working.delete().catch(() => {});
-      for (const chunk of chunks.slice(1)) {
-        await sendAsAgent(agentKey, channelName, chunk);
-      }
-    } catch {
-      // Fallback: edit the "Working on it..." message
-      await working.edit(chunks[0] || "Done.").catch(() => {});
-      for (const chunk of chunks.slice(1)) {
-        if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
-      }
-    }
-
-    // Fire-and-forget post-processing
-    logActivity(channelName, msg.author.username, prompt, agent.description, responseText).catch(() => {});
-
-    import("../discord/features/memory.js")
-      .then(({ maybeUpdateMemory }) => maybeUpdateMemory(agent.promptFile, prompt, responseText))
-      .catch(() => {});
-
-    import("../discord/features/skills.js")
-      .then(({ maybeCreateSkill }) => maybeCreateSkill(agent.promptFile, prompt, responseText))
-      .catch(() => {});
-
-    // Structured delegation: scan for JSON delegate blocks
-    if (discordClient && agent.promptFile !== "chat") {
-      import("../agents/delegate.js")
-        .then(({ processDelegations }) => processDelegations(discordClient!, responseText, channelName))
-        .catch(() => {});
-    }
+    const chunks = chunkText(cleanForDiscord(responseText), 1900);
+    await deliverResponse(agentKey, channelName, chunks, working, msg);
+    postProcess(agent, channelName, msg.author.username, prompt, responseText, discordClient);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     if (working) {

@@ -84,23 +84,21 @@ export function fmtObjective(raw: string | null): string | null {
   return raw.replace(/^OUTCOME_/, "").replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-export interface SnapshotPoint {
-  snapshot_date: string;
+export interface MarginalRoasPoint {
+  date: string;
   roas: number | null;
   spend: number | null;
 }
 
-/** Compute marginal ROAS from a series of snapshot points (spend in cents). */
-export function computeMarginalRoas(points: SnapshotPoint[]): number | null {
+/** Compute marginal ROAS from a time series. Unit-agnostic (cents or dollars). */
+export function computeMarginalRoas(points: MarginalRoasPoint[]): number | null {
   if (points.length < 2) return null;
-  const sorted = [...points].sort((a, b) => a.snapshot_date.localeCompare(b.snapshot_date));
+  const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
   const first = sorted[0], last = sorted[sorted.length - 1];
   if (first.spend == null || last.spend == null || first.roas == null || last.roas == null) return null;
-  const deltaSpend = (last.spend - first.spend) / 100;
+  const deltaSpend = last.spend - first.spend;
   if (deltaSpend <= 0) return null;
-  const revFirst = (first.spend / 100) * first.roas;
-  const revLast = (last.spend / 100) * last.roas;
-  return (revLast - revFirst) / deltaSpend;
+  return (last.spend * last.roas - first.spend * first.roas) / deltaSpend;
 }
 
 // ─── Blended ROAS ───────────────────────────────────────────────────────

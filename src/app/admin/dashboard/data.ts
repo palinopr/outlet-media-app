@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { computeMarginalRoas } from "@/lib/formatters";
+import { buildTrendData } from "@/app/client/[slug]/lib";
 import type { Database } from "@/lib/database.types";
 
 export type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
@@ -112,21 +113,10 @@ export async function getData(): Promise<DashboardData> {
   }
 
   const snapshotsByCampaign: Record<string, SnapshotRow[]> = {};
-  const byDate: Record<string, { roasSum: number; roasCount: number; spendSum: number }> = {};
   for (const s of snapshots) {
     (snapshotsByCampaign[s.campaign_id] ??= []).push(s);
-    const d = s.snapshot_date;
-    if (!byDate[d]) byDate[d] = { roasSum: 0, roasCount: 0, spendSum: 0 };
-    if (s.roas != null) { byDate[d].roasSum += s.roas; byDate[d].roasCount++; }
-    if (s.spend != null) byDate[d].spendSum += s.spend / 100;
   }
-  const trendData = Object.entries(byDate)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, v]) => ({
-      date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      roas: v.roasCount > 0 ? v.roasSum / v.roasCount : 0,
-      spend: v.spendSum,
-    }));
+  const trendData = buildTrendData(snapshots);
 
   const dailyByDate: Record<string, number> = {};
   for (const row of dailyRows) {
@@ -143,7 +133,8 @@ export async function getData(): Promise<DashboardData> {
 
   const marginalRoasByCampaign: Record<string, number | null> = {};
   for (const c of campaigns) {
-    marginalRoasByCampaign[c.campaign_id] = computeMarginalRoas(snapshotsByCampaign[c.campaign_id] ?? []);
+    const pts = (snapshotsByCampaign[c.campaign_id] ?? []).map(s => ({ date: s.snapshot_date, spend: s.spend, roas: s.roas }));
+    marginalRoasByCampaign[c.campaign_id] = computeMarginalRoas(pts);
   }
 
   return { events, campaigns, allCampaigns, agentRuns, alerts, trendData, velocityData, snapshotsByCampaign, marginalRoasByCampaign, fromDb: Boolean(campaigns.length) };

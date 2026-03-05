@@ -10,6 +10,7 @@ import {
   fmtObjective,
   slugToLabel,
   roasColor,
+  computeMarginalRoas,
 } from "@/lib/formatters";
 import { updateCampaignStatus, updateCampaignType } from "@/app/admin/actions/campaigns";
 import { toast } from "sonner";
@@ -38,17 +39,6 @@ interface CampaignColumnsOptions {
   metaAdAccountId: string | null;
 }
 
-function computeMarginalFromInsights(points: DailyInsight[]): number | null {
-  if (points.length < 2) return null;
-  const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
-  const first = sorted[0], last = sorted[sorted.length - 1];
-  if (first.spend == null || last.spend == null || first.roas == null || last.roas == null) return null;
-  const deltaSpend = last.spend - first.spend;
-  if (deltaSpend <= 0) return null;
-  const revFirst = first.spend * first.roas;
-  const revLast = last.spend * last.roas;
-  return (revLast - revFirst) / deltaSpend;
-}
 
 export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<MetaCampaignCard>[] {
   const { dailyInsightsByCampaign, metaAdAccountId } = opts;
@@ -147,11 +137,11 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
     },
     {
       id: "marginal",
-      accessorFn: (row) => computeMarginalFromInsights(dailyInsightsByCampaign[row.campaignId] ?? []),
+      accessorFn: (row) => computeMarginalRoas(dailyInsightsByCampaign[row.campaignId] ?? []),
       header: ({ column }) => <ColumnHeader column={column} title="Marginal" className="justify-end" />,
       cell: ({ row }) => {
         if (row.original.campaignType !== "sales") return <div className="text-right"><span className="text-muted-foreground text-sm">--</span></div>;
-        const m = computeMarginalFromInsights(dailyInsightsByCampaign[row.original.campaignId] ?? []);
+        const m = computeMarginalRoas(dailyInsightsByCampaign[row.original.campaignId] ?? []);
         if (m == null) return <div className="text-right"><span className="text-muted-foreground text-sm">--</span></div>;
         return <div className="text-right"><span className={`text-sm font-semibold tabular-nums ${roasColor(m)}`}>{m.toFixed(1)}x</span></div>;
       },
