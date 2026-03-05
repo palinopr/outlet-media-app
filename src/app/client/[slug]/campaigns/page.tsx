@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { DollarSign, Megaphone, TrendingUp, MousePointerClick, Sparkles, Clock } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
@@ -106,12 +105,6 @@ export default async function ClientCampaigns({ params }: Props) {
           </div>
 
           <div className="flex items-center gap-3 self-start flex-wrap">
-            <Link
-              href={`/client/${slug}/campaigns/new`}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-white text-zinc-900 shadow-lg shadow-white/10 hover:bg-white/90 transition-all"
-            >
-              Create Campaign
-            </Link>
             <a
               href={`/client/${slug}`}
               className="text-xs text-white/50 hover:text-white/80 transition-colors"
