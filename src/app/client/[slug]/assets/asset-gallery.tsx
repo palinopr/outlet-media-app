@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   Upload,
+  Link2,
   Image as ImageIcon,
   Video,
   ExternalLink,
@@ -46,6 +48,8 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
   const [assets, setAssets] = useState(initialAssets);
   const [previewAsset, setPreviewAsset] = useState<Asset | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [folderUrl, setFolderUrl] = useState("");
+  const [importing, setImporting] = useState(false);
   const [filter, setFilter] = useState<"all" | "image" | "video">("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -112,6 +116,32 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
     [handleUpload],
   );
 
+  const handleImport = useCallback(async () => {
+    if (!folderUrl.trim()) return;
+    setImporting(true);
+
+    const res = await fetch("/api/client/assets/import", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        folder_url: folderUrl.trim(),
+        client_slug: clientSlug,
+      }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      toast.error(data.error ?? "Import failed");
+    } else {
+      toast.success(
+        `Imported ${data.imported} file${data.imported !== 1 ? "s" : ""} (${data.skipped} already existed)`,
+      );
+      setFolderUrl("");
+      await refreshAssets();
+    }
+    setImporting(false);
+  }, [folderUrl, clientSlug, refreshAssets]);
+
   const filtered = filter === "all" ? assets : assets.filter((a) => a.mediaType === filter);
 
   return (
@@ -162,6 +192,34 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
           className="hidden"
           onChange={(e) => e.target.files && handleUpload(e.target.files)}
         />
+      </div>
+
+      {/* Import from cloud folder */}
+      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Link2 className="h-4 w-4 text-white/40" />
+          <span className="text-xs font-medium text-white/60">Import from Dropbox or Google Drive</span>
+        </div>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Paste shared folder link..."
+            value={folderUrl}
+            onChange={(e) => setFolderUrl(e.target.value)}
+            className="text-sm h-8 bg-white/[0.03] border-white/[0.08]"
+          />
+          <Button
+            size="sm"
+            className="h-8 text-xs shrink-0"
+            onClick={handleImport}
+            disabled={importing || !folderUrl.trim()}
+          >
+            {importing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              "Import"
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Grid / Drop zone */}

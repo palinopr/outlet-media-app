@@ -136,20 +136,8 @@ export default async function ClientAssetsPage({ params }: Props) {
         </div>
       </div>
 
-      {/* Asset Gallery */}
-      {mapped.length > 0 ? (
-        <AssetGallery assets={mapped} clientSlug={slug} />
-      ) : (
-        <div className="glass-card p-12 text-center">
-          <div className="mx-auto h-12 w-12 rounded-full bg-white/[0.04] flex items-center justify-center mb-4">
-            <ImageIcon className="h-6 w-6 text-white/30" />
-          </div>
-          <p className="text-sm text-white/60">No assets yet</p>
-          <p className="text-xs text-white/40 mt-1">
-            Your ad creatives will appear here once uploaded
-          </p>
-        </div>
-      )}
+      {/* Asset Gallery (always shown so import input is accessible) */}
+      <AssetGallery assets={mapped} clientSlug={slug} />
     </div>
   );
 }
