@@ -3,6 +3,7 @@ import {
   Megaphone,
   Ticket,
   BarChart3,
+  Image as ImageIcon,
   Settings,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -20,6 +21,7 @@ export function getClientNavLinks(slug: string): NavLink[] {
     { href: `/client/${slug}/campaigns`, label: "Campaigns", icon: Megaphone },
     { href: `/client/${slug}/events`, label: "Events", icon: Ticket },
     { href: `/client/${slug}/reports`, label: "Reports", icon: BarChart3 },
+    { href: `/client/${slug}/assets`, label: "Assets", icon: ImageIcon },
     { href: `/client/${slug}/settings`, label: "Settings", icon: Settings },
   ];
 }
