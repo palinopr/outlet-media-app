@@ -9,7 +9,7 @@ import {
   Activity,
   Lightbulb,
 } from "lucide-react";
-import type { DateRange } from "../../data";
+import { parseRange } from "@/lib/constants";
 import { fmtUsd, fmtNum } from "@/lib/formatters";
 import { roasLabel } from "../../lib";
 import { getCampaignDetail } from "./data";
@@ -28,10 +28,7 @@ interface Props {
 export default async function CampaignDetailPage({ params, searchParams }: Props) {
   const { slug, campaignId } = await params;
   const { range: rangeParam } = await searchParams;
-  const validRanges: DateRange[] = ["today", "yesterday", "7", "14", "30", "lifetime"];
-  const range: DateRange = validRanges.includes(rangeParam as DateRange)
-    ? (rangeParam as DateRange)
-    : "today";
+  const range = parseRange(rangeParam);
 
   const data = await getCampaignDetail(slug, campaignId, range);
 

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { clerkClient } from "@clerk/nextjs/server";
+import { computeBlendedRoas } from "@/lib/formatters";
 
 export interface ClientSummary {
   id: string;
@@ -100,7 +101,7 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     const activeCampaigns = campaigns.filter(
       (c) => c.status === "ACTIVE",
     ).length;
-    const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+    const roas = computeBlendedRoas(campaigns.map(c => ({ spend: (c.spend ?? 0) / 100, roas: c.roas ?? null }))) ?? 0;
 
     return {
       id: client.id,
@@ -228,7 +229,7 @@ export async function getClientDetail(
   const activeCampaigns = campaigns.filter(
     (c) => c.status === "ACTIVE",
   ).length;
-  const roas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+  const roas = computeBlendedRoas(campaigns) ?? 0;
 
   return {
     id: client.id,

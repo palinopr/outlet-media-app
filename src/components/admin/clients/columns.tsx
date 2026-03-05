@@ -1,6 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import { createSelectColumn } from "@/components/admin/data-table/select-column";
 import { Eye, MoreHorizontal, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,34 +22,7 @@ import { toast } from "sonner";
 import type { ClientSummary } from "@/app/admin/clients/data";
 
 export const clientColumns: ColumnDef<ClientSummary>[] = [
-  {
-    id: "select",
-    header: ({ table }) => {
-      const checked = table.getIsAllPageRowsSelected();
-      const indeterminate = table.getIsSomePageRowsSelected();
-      return (
-        <input
-          type="checkbox"
-          aria-label="Select all"
-          className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
-          checked={checked}
-          ref={(el) => { if (el) el.indeterminate = indeterminate && !checked; }}
-          onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
-        />
-      );
-    },
-    cell: ({ row }) => (
-      <input
-        type="checkbox"
-        aria-label="Select row"
-        className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
-        checked={row.getIsSelected()}
-        onChange={(e) => row.toggleSelected(e.target.checked)}
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  createSelectColumn<ClientSummary>(),
   {
     accessorKey: "name",
     header: ({ column }) => <ColumnHeader column={column} title="Client" />,

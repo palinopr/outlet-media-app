@@ -2,25 +2,17 @@ import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabase";
 import { ContactFormSchema } from "@/lib/api-schemas";
-import { apiError, parseJsonBody } from "@/lib/api-helpers";
+import { apiError, validateRequest } from "@/lib/api-helpers";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
 export async function POST(request: Request) {
-  const raw = await parseJsonBody<unknown>(request);
-  if (raw instanceof Response) return raw;
+  const { data, error: valErr } = await validateRequest(request, ContactFormSchema);
+  if (valErr) return valErr;
 
-  const parsed = ContactFormSchema.safeParse(raw);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
-      { status: 400 },
-    );
-  }
-
-  const { name, email, message } = parsed.data;
+  const { name, email, message } = data;
 
   // 1. Store in Supabase
   if (supabaseAdmin) {

@@ -1,7 +1,8 @@
 import type { LucideIcon } from "lucide-react";
+import { StatCard as SharedStatCard } from "@/components/admin/stat-card";
 
 export function StatCard({
-  icon: Icon,
+  icon,
   iconColor,
   label,
   value,
@@ -14,17 +15,13 @@ export function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="glass-card p-3 sm:p-4">
-      <div className="flex items-center gap-2 mb-2">
-        <div className={`flex items-center justify-center h-6 w-6 rounded-lg ${iconColor}`}>
-          <Icon className="h-3 w-3" />
-        </div>
-        <span className="text-xs font-semibold tracking-wider uppercase text-white/60">
-          {label}
-        </span>
-      </div>
-      <p className="text-xl font-extrabold text-white tracking-tight">{value}</p>
-      {sub && <p className="text-xs text-white/50 mt-1">{sub}</p>}
-    </div>
+    <SharedStatCard
+      icon={icon}
+      iconColor={iconColor}
+      label={label}
+      value={value}
+      sub={sub}
+      variant="glass"
+    />
   );
 }

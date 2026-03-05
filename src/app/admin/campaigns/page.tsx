@@ -1,17 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, DollarSign, TrendingUp, Eye, MousePointerClick } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
-import { getCampaigns, type DateRange } from "./data";
+import { getCampaigns } from "./data";
+import { parseRange } from "@/lib/constants";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { DateRangeFilter } from "@/components/admin/campaigns/date-range-filter";
 import { CampaignTable } from "@/components/admin/campaigns/campaign-table";
 import { Suspense } from "react";
-import { fmtUsd, fmtNum, slugToLabel } from "@/lib/formatters";
+import { fmtUsd, fmtNum, slugToLabel, computeBlendedRoas } from "@/lib/formatters";
 import type { DailyInsight } from "@/lib/meta-campaigns";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
-
-const VALID_RANGES = new Set<DateRange>(["today", "yesterday", "7", "14", "30", "lifetime"]);
 
 interface Props {
   searchParams: Promise<{ client?: string; range?: string }>;
@@ -20,17 +19,14 @@ interface Props {
 export default async function CampaignsPage({ searchParams }: Props) {
   const { client, range: rawRange } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
-  const range: DateRange = rawRange && VALID_RANGES.has(rawRange as DateRange)
-    ? (rawRange as DateRange)
-    : "today";
+  const range = parseRange(rawRange);
 
   const { campaigns, clients, dailyInsights, error } = await getCampaigns(clientSlug, range);
 
   const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
   const totalImpressions = campaigns.reduce((s, c) => s + c.impressions, 0);
   const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0);
-  const totalRevenue = campaigns.reduce((s, c) => s + (c.revenue ?? 0), 0);
-  const avgRoas = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+  const avgRoas = computeBlendedRoas(campaigns) ?? 0;
   const overallCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
 
   const metaAdAccountId = process.env.META_AD_ACCOUNT_ID ?? null;

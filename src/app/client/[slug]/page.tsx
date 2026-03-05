@@ -11,7 +11,8 @@ import {
   Ticket,
 } from "lucide-react";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { getData, type DateRange } from "./data";
+import { getData } from "./data";
+import { parseRange } from "@/lib/constants";
 import { getScopeFilter } from "@/lib/member-access";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { roasLabel, DATE_OPTIONS } from "./lib";
@@ -41,8 +42,7 @@ function Delta({ value }: { value: number | null }) {
 export default async function ClientDashboard({ params, searchParams }: Props) {
   const { slug } = await params;
   const { range: rangeParam } = await searchParams;
-  const validRanges: DateRange[] = ["today", "yesterday", "7", "14", "30", "lifetime"];
-  const range: DateRange = validRanges.includes(rangeParam as DateRange) ? (rangeParam as DateRange) : "today";
+  const range = parseRange(rangeParam);
 
   const { userId } = await auth();
   const scope = await getScopeFilter(userId, slug);

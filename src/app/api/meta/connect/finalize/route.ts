@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { fetchAdAccounts } from "@/lib/meta-oauth";
 import { z } from "zod/v4";
-import { apiError, parseJsonBody } from "@/lib/api-helpers";
+import { apiError, validateRequest } from "@/lib/api-helpers";
 
 const FinalizeSchema = z.object({
   ad_account_id: z.string().min(1),
@@ -17,16 +17,8 @@ export async function POST(request: Request) {
   if (!userId) return apiError("Unauthorized", 401);
   if (!supabaseAdmin) return apiError("Database not configured", 500);
 
-  const raw = await parseJsonBody<unknown>(request);
-  if (raw instanceof Response) return raw;
-
-  const parsed = FinalizeSchema.safeParse(raw);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+  const { data, error: valErr } = await validateRequest(request, FinalizeSchema);
+  if (valErr) return valErr;
 
   const cookieStore = await cookies();
   const pendingToken = cookieStore.get("meta_pending_token")?.value;
@@ -41,7 +33,7 @@ export async function POST(request: Request) {
   const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
 
   const adAccounts = await fetchAdAccounts(token);
-  const account = adAccounts.find((a) => a.id === parsed.data.ad_account_id);
+  const account = adAccounts.find((a) => a.id === data.ad_account_id);
   if (!account) {
     return apiError("Ad account not found on your profile", 403);
   }
@@ -49,7 +41,7 @@ export async function POST(request: Request) {
   const { error } = await supabaseAdmin.from("client_accounts").upsert(
     {
       clerk_user_id: userId,
-      client_slug: parsed.data.slug,
+      client_slug: data.slug,
       meta_user_id: "",
       ad_account_id: account.id,
       ad_account_name: account.name,

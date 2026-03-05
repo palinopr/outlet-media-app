@@ -1,22 +1,13 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { IngestPayloadSchema, type IngestPayload } from "@/lib/api-schemas";
-import { apiError, secretGuard, parseJsonBody } from "@/lib/api-helpers";
+import { apiError, secretGuard, validateRequest } from "@/lib/api-helpers";
 
 // ─── Handler ───────────────────────────────────────────────────────────────
 
 export async function POST(request: Request) {
-  const raw = await parseJsonBody<unknown>(request);
-  if (raw instanceof Response) return raw;
-
-  const parsed = IngestPayloadSchema.safeParse(raw);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
-  const body: IngestPayload = parsed.data;
+  const { data: body, error: valErr } = await validateRequest(request, IngestPayloadSchema);
+  if (valErr) return valErr;
 
   const secretErr = secretGuard(body.secret);
   if (secretErr) return secretErr;

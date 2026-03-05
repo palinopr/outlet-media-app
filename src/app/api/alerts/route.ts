@@ -1,21 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AlertPostSchema, AlertPatchSchema } from "@/lib/api-schemas";
-import { apiError, secretGuard, parseJsonBody } from "@/lib/api-helpers";
+import { apiError, secretGuard, validateRequest } from "@/lib/api-helpers";
 
 // POST -- agent writes an alert (requires INGEST_SECRET)
 export async function POST(request: Request) {
-  const raw = await parseJsonBody<unknown>(request);
-  if (raw instanceof Response) return raw;
-
-  const parsed = AlertPostSchema.safeParse(raw);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
-  const body = parsed.data;
+  const { data: body, error: valErr } = await validateRequest(request, AlertPostSchema);
+  if (valErr) return valErr;
 
   const secretErr = secretGuard(body.secret);
   if (secretErr) return secretErr;
@@ -38,14 +29,8 @@ export async function POST(request: Request) {
 
 // PATCH -- mark all alerts read
 export async function PATCH(request: Request) {
-  const raw = await parseJsonBody<unknown>(request);
-  if (raw instanceof Response) return raw;
-
-  const parsed = AlertPatchSchema.safeParse(raw);
-  if (!parsed.success) {
-    return apiError("Invalid payload", 400);
-  }
-  const body = parsed.data;
+  const { data: body, error: valErr } = await validateRequest(request, AlertPatchSchema);
+  if (valErr) return valErr;
   const secretErr = secretGuard(body.secret);
   if (secretErr) return secretErr;
   if (!supabaseAdmin) return apiError("DB not configured", 500);

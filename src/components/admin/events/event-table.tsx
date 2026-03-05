@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { fmtUsd, fmtDate, fmtNum, statusBadge, slugToLabel } from "@/lib/formatters";
 import { exportToCsv, formatDate, todayFilename } from "@/lib/export-csv";
 import type { TmEventRow, DemoRow, CampaignRow } from "@/app/admin/events/data";
+import { EVENT_STATUS_OPTIONS } from "@/lib/constants";
 
 interface EventTableProps {
   events: TmEventRow[];
@@ -17,14 +18,6 @@ interface EventTableProps {
   campaigns: CampaignRow[];
   fromDb: boolean;
 }
-
-const EVENT_STATUS_OPTIONS = [
-  { value: "onsale", label: "On Sale" },
-  { value: "offsale", label: "Off Sale" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "postponed", label: "Postponed" },
-  { value: "rescheduled", label: "Rescheduled" },
-];
 
 function EventSelectionToolbar({
   selectedRows,

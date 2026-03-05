@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { InviteSchema } from "@/lib/api-schemas";
-import { adminGuard, parseJsonBody } from "@/lib/api-helpers";
+import { adminGuard, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // POST /api/admin/invite
@@ -13,16 +13,8 @@ export async function POST(request: Request) {
   const adminErr = await adminGuard();
   if (adminErr) return adminErr;
 
-  const raw = await parseJsonBody<unknown>(request);
-  if (raw instanceof Response) return raw;
-  const parsed = InviteSchema.safeParse(raw);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
-  const body = parsed.data;
+  const { data: body, error: valErr } = await validateRequest(request, InviteSchema);
+  if (valErr) return valErr;
 
   // Validate client_slug exists in clients table
   if (body.client_slug && supabaseAdmin) {

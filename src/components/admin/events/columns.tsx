@@ -1,6 +1,7 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
+import { createSelectColumn } from "@/components/admin/data-table/select-column";
 import { ExternalLink } from "lucide-react";
 import { ColumnHeader } from "@/components/admin/data-table/column-header";
 import { StatusSelect } from "@/components/admin/status-select";
@@ -16,13 +17,7 @@ import { toast } from "sonner";
 import type { TmEventRow, DemoRow, CampaignRow } from "@/app/admin/events/data";
 import { SellBarVisual, ClientSelect } from "./event-cells";
 
-const EVENT_STATUS_OPTIONS = [
-  { value: "onsale", label: "On Sale" },
-  { value: "offsale", label: "Off Sale" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "postponed", label: "Postponed" },
-  { value: "rescheduled", label: "Rescheduled" },
-];
+import { EVENT_STATUS_OPTIONS } from "@/lib/constants";
 
 interface EventColumnsOptions {
   clients: string[];
@@ -34,34 +29,7 @@ export function getEventColumns(opts: EventColumnsOptions): ColumnDef<TmEventRow
   const { clients, demoMap, campaigns } = opts;
 
   return [
-    {
-      id: "select",
-      header: ({ table }) => {
-        const checked = table.getIsAllPageRowsSelected();
-        const indeterminate = table.getIsSomePageRowsSelected();
-        return (
-          <input
-            type="checkbox"
-            aria-label="Select all"
-            className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
-            checked={checked}
-            ref={(el) => { if (el) el.indeterminate = indeterminate && !checked; }}
-            onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
-          />
-        );
-      },
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          aria-label="Select row"
-          className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
-          checked={row.getIsSelected()}
-          onChange={(e) => row.toggleSelected(e.target.checked)}
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
+    createSelectColumn<TmEventRow>(),
     {
       accessorKey: "tm1_number",
       header: ({ column }) => <ColumnHeader column={column} title="TM1 #" />,

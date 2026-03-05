@@ -1,13 +1,15 @@
 import type { LucideIcon } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 
-interface StatCardProps {
+export interface StatCardProps {
   label: string;
   value: string;
-  icon: LucideIcon;
+  icon: LucideIcon | React.ElementType;
   accent?: string;
   iconColor?: string;
   sub?: string;
   size?: "sm" | "lg";
+  variant?: "default" | "glass" | "compact";
 }
 
 export function StatCard({
@@ -18,7 +20,43 @@ export function StatCard({
   iconColor,
   sub,
   size = "sm",
+  variant = "default",
 }: StatCardProps) {
+  if (variant === "glass") {
+    return (
+      <div className="glass-card p-3 sm:p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`flex items-center justify-center h-6 w-6 rounded-lg ${iconColor ?? ""}`}>
+            <Icon className="h-3 w-3" />
+          </div>
+          <span className="text-xs font-semibold tracking-wider uppercase text-white/60">
+            {label}
+          </span>
+        </div>
+        <p className="text-xl font-extrabold text-white tracking-tight">{value}</p>
+        {sub && <p className="text-xs text-white/50 mt-1">{sub}</p>}
+      </div>
+    );
+  }
+
+  if (variant === "compact") {
+    return (
+      <Card className="border-border/60">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-3">
+            <div className={`rounded-lg p-2 ${accent ?? ""}`}>
+              <Icon className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">{label}</p>
+              <p className="text-lg font-semibold tabular-nums">{value}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   const isLg = size === "lg";
 
   return (

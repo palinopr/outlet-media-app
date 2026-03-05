@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
+import { createSelectColumn } from "@/components/admin/data-table/select-column";
 import { Trash2, Loader2, Check, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ColumnHeader } from "@/components/admin/data-table/column-header";
@@ -130,34 +131,7 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
   const { clients } = opts;
 
   return [
-    {
-      id: "select",
-      header: ({ table }) => {
-        const checked = table.getIsAllPageRowsSelected();
-        const indeterminate = table.getIsSomePageRowsSelected();
-        return (
-          <input
-            type="checkbox"
-            aria-label="Select all"
-            className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
-            checked={checked}
-            ref={(el) => { if (el) el.indeterminate = indeterminate && !checked; }}
-            onChange={(e) => table.toggleAllPageRowsSelected(e.target.checked)}
-          />
-        );
-      },
-      cell: ({ row }) => (
-        <input
-          type="checkbox"
-          aria-label="Select row"
-          className="h-3.5 w-3.5 rounded border-border accent-primary cursor-pointer"
-          checked={row.getIsSelected()}
-          onChange={(e) => row.toggleSelected(e.target.checked)}
-        />
-      ),
-      enableSorting: false,
-      enableHiding: false,
-    },
+    createSelectColumn<UserRow>(),
     {
       accessorKey: "name",
       header: ({ column }) => <ColumnHeader column={column} title="Name" />,

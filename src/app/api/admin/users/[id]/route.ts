@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { adminGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
+import { adminGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // PATCH /api/admin/users/[id]
@@ -26,19 +26,11 @@ export async function PATCH(
     return apiError("Invalid user ID", 400);
   }
 
-  const raw = await parseJsonBody<unknown>(request);
-  if (raw instanceof Response) return raw;
-  const parsed = UpdateUserSchema.safeParse(raw);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
+  const { data, error: valErr } = await validateRequest(request, UpdateUserSchema);
+  if (valErr) return valErr;
 
   const client = await clerkClient();
 
-  // Verify user exists
   let existingMeta: Record<string, unknown>;
   try {
     const user = await client.users.getUser(id);
@@ -50,7 +42,7 @@ export async function PATCH(
     return apiError("User not found", 404);
   }
 
-  const { action, client_slug: slug } = parsed.data;
+  const { action, client_slug: slug } = data;
 
   if (!supabaseAdmin) {
     return apiError("Database not configured", 500);

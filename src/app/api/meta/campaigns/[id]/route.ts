@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { authGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
+import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { getClientToken } from "@/lib/client-token";
 import { META_API_VERSION } from "@/lib/constants";
+import { fetchMetaApi, MetaApiError } from "@/lib/meta-api";
 import { z } from "zod/v4";
 
 const UpdateSchema = z.object({
@@ -19,37 +20,22 @@ export async function PATCH(
   if (authErr) return authErr;
 
   const { id: campaignId } = await params;
-  const raw = await parseJsonBody<unknown>(request);
-  if (raw instanceof Response) return raw;
+  const { data, error: valErr } = await validateRequest(request, UpdateSchema);
+  if (valErr) return valErr;
 
-  const parsed = UpdateSchema.safeParse(raw);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
-      { status: 400 }
-    );
-  }
-
-  const token = await getClientToken(parsed.data.client_slug, parsed.data.ad_account_id);
+  const token = await getClientToken(data.client_slug, data.ad_account_id);
   if (!token) return apiError("Ad account not connected", 403);
 
-  const body: Record<string, string> = { access_token: token };
-  if (parsed.data.name) body.name = parsed.data.name;
-  if (parsed.data.daily_budget) body.daily_budget = String(parsed.data.daily_budget);
+  const params2: Record<string, string> = {};
+  if (data.name) params2.name = data.name;
+  if (data.daily_budget) params2.daily_budget = String(data.daily_budget);
 
-  const res = await fetch(
-    `https://graph.facebook.com/${META_API_VERSION}/${campaignId}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams(body),
-    }
-  );
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    return apiError(`Update failed: ${err.error?.message ?? "Unknown"}`, 400);
+  try {
+    const url = `https://graph.facebook.com/${META_API_VERSION}/${campaignId}`;
+    await fetchMetaApi(url, token, "POST", params2);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    if (err instanceof MetaApiError) return apiError(err.message, 400);
+    return apiError("Update failed", 500);
   }
-
-  return NextResponse.json({ ok: true });
 }

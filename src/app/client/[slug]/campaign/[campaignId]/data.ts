@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
 import { META_API_VERSION } from "@/lib/constants";
+import { metaGet, metaInsightsUrl } from "@/lib/meta-api";
 import type { CampaignCard, CampaignDetailData, AgeGenderBreakdown, PlacementBreakdown, AdCard, HourlyBreakdown, DailyPoint } from "../../types";
 import { DAY_LABELS } from "../../types";
 import { generateRecommendations } from "../../lib";
@@ -12,25 +13,6 @@ function getMetaCreds(): { token: string; accountId: string } | null {
   const rawId = process.env.META_AD_ACCOUNT_ID;
   if (!token || !rawId) return null;
   return { token, accountId: rawId.replace(/^act_/, "") };
-}
-
-async function metaGet<T>(url: URL, label?: string): Promise<T | null> {
-  try {
-    const res = await fetch(url.toString(), { next: { revalidate: 300 } });
-    if (!res.ok) {
-      console.error(`[meta:${label ?? "unknown"}] HTTP ${res.status}`);
-      return null;
-    }
-    const json = await res.json();
-    if (json.error) {
-      console.error(`[meta:${label ?? "unknown"}] API error:`, json.error.message ?? json.error);
-      return null;
-    }
-    return json as T;
-  } catch (err) {
-    console.error(`[meta:${label ?? "unknown"}] fetch failed:`, err);
-    return null;
-  }
 }
 
 // --- Fetch campaign overview from Meta (single campaign) ---
@@ -68,13 +50,11 @@ async function fetchCampaignOverview(
   infoUrl.searchParams.set("fields", "id,name,status,daily_budget,start_time");
 
   // Campaign insights
-  const insightsUrl = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
-  insightsUrl.searchParams.set("access_token", creds.token);
-  insightsUrl.searchParams.set(
-    "fields",
+  const insightsUrl = metaInsightsUrl(
+    campaignId, creds.token,
     "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,purchase_roas",
+    { datePreset: META_PRESETS[range] },
   );
-  insightsUrl.searchParams.set("date_preset", META_PRESETS[range]);
 
   const [infoRes, insightsRes] = await Promise.all([
     metaGet<MetaCampaignInfo>(infoUrl, "campaignInfo"),
@@ -106,12 +86,11 @@ async function fetchAgeGender(
   range: DateRange,
   creds: { token: string; accountId: string },
 ): Promise<AgeGenderBreakdown[]> {
-  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
-  url.searchParams.set("access_token", creds.token);
-  url.searchParams.set("fields", "impressions,clicks,ctr,spend");
-  url.searchParams.set("breakdowns", "age,gender");
-  url.searchParams.set("date_preset", META_PRESETS[range]);
-  url.searchParams.set("limit", "100");
+  const url = metaInsightsUrl(campaignId, creds.token, "impressions,clicks,ctr,spend", {
+    datePreset: META_PRESETS[range],
+    breakdowns: "age,gender",
+    limit: 100,
+  });
 
   const res = await metaGet<{ data: MetaAgeGenderRow[] }>(url, "ageGender");
   if (!res?.data) return [];
@@ -144,12 +123,11 @@ async function fetchPlacements(
   range: DateRange,
   creds: { token: string; accountId: string },
 ): Promise<PlacementBreakdown[]> {
-  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
-  url.searchParams.set("access_token", creds.token);
-  url.searchParams.set("fields", "impressions,clicks,ctr,spend");
-  url.searchParams.set("breakdowns", "publisher_platform,platform_position");
-  url.searchParams.set("date_preset", META_PRESETS[range]);
-  url.searchParams.set("limit", "100");
+  const url = metaInsightsUrl(campaignId, creds.token, "impressions,clicks,ctr,spend", {
+    datePreset: META_PRESETS[range],
+    breakdowns: "publisher_platform,platform_position",
+    limit: 100,
+  });
 
   const res = await metaGet<{ data: MetaPlacementRow[] }>(url, "placements");
   if (!res?.data) return [];
@@ -194,12 +172,11 @@ async function fetchHourly(
   range: DateRange,
   creds: { token: string; accountId: string },
 ): Promise<HourlyBreakdown[]> {
-  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
-  url.searchParams.set("access_token", creds.token);
-  url.searchParams.set("fields", "impressions,clicks,ctr");
-  url.searchParams.set("breakdowns", "hourly_stats_aggregated_by_advertiser_time_zone");
-  url.searchParams.set("date_preset", META_PRESETS[range]);
-  url.searchParams.set("limit", "50");
+  const url = metaInsightsUrl(campaignId, creds.token, "impressions,clicks,ctr", {
+    datePreset: META_PRESETS[range],
+    breakdowns: "hourly_stats_aggregated_by_advertiser_time_zone",
+    limit: 50,
+  });
 
   const res = await metaGet<{ data: MetaHourlyRow[] }>(url, "hourly");
   if (!res?.data) return [];
@@ -228,12 +205,11 @@ async function fetchDaily(
   creds: { token: string; accountId: string },
 ): Promise<DailyPoint[]> {
   // time_increment=1 gives day-by-day breakdown
-  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
-  url.searchParams.set("access_token", creds.token);
-  url.searchParams.set("fields", "impressions,clicks,ctr");
-  url.searchParams.set("time_increment", "1");
-  url.searchParams.set("date_preset", META_PRESETS[range]);
-  url.searchParams.set("limit", "90");
+  const url = metaInsightsUrl(campaignId, creds.token, "impressions,clicks,ctr", {
+    datePreset: META_PRESETS[range],
+    timeIncrement: "1",
+    limit: 90,
+  });
 
   const res = await metaGet<{ data: MetaDailyRow[] }>(url, "daily");
   if (!res?.data) return [];

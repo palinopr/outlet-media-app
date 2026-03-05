@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { adminGuard, parseJsonBody } from "@/lib/api-helpers";
+import { adminGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // "action" events go through logActivity() server action, not this API
@@ -17,32 +17,24 @@ export async function POST(request: Request) {
   const adminErr = await adminGuard();
   if (adminErr) return adminErr;
 
-  const raw = await parseJsonBody<unknown>(request);
-  if (raw instanceof Response) return raw;
-
-  const parsed = ActivitySchema.safeParse(raw);
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid payload", details: parsed.error.flatten().fieldErrors },
-      { status: 400 },
-    );
-  }
+  const { data, error: valErr } = await validateRequest(request, ActivitySchema);
+  if (valErr) return valErr;
 
   if (!supabaseAdmin) {
     return NextResponse.json({ error: "Database unavailable" }, { status: 503 });
   }
 
   const { error } = await supabaseAdmin.from("admin_activity").insert({
-    user_id: parsed.data.user_id,
-    user_email: parsed.data.user_email,
-    event_type: parsed.data.event_type,
-    page: parsed.data.page ?? null,
-    detail: parsed.data.detail,
-    metadata: parsed.data.metadata ?? {},
+    user_id: data.user_id,
+    user_email: data.user_email,
+    event_type: data.event_type,
+    page: data.page ?? null,
+    detail: data.detail,
+    metadata: data.metadata ?? {},
   });
 
   if (error) {
-    return NextResponse.json({ error: "Failed to log activity" }, { status: 500 });
+    return apiError("Failed to log activity", 500);
   }
 
   return NextResponse.json({ ok: true });

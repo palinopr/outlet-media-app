@@ -102,6 +102,11 @@ export default async function EventDetailPage({ params }: Props) {
   const hasEdpData = e.edpTotalViews != null || e.conversionRate != null;
   const hasTodayData = e.ticketsSoldToday != null || e.revenueToday != null;
 
+  // Compute days until event even when velocity is null (needs just an event date)
+  const daysUntilEvent = e.date
+    ? Math.max(0, Math.round((new Date(e.date).getTime() - Date.now()) / 86400000))
+    : null;
+
   return (
     <div className="space-y-6">
       {/* -- Header -- */}
@@ -147,10 +152,10 @@ export default async function EventDetailPage({ params }: Props) {
                     {e.venue}
                   </span>
                 )}
-                {velocity?.daysUntilEvent != null && velocity.daysUntilEvent > 0 && (
+                {daysUntilEvent != null && daysUntilEvent > 0 && (
                   <span className="text-xs text-amber-400/80 flex items-center gap-1 font-medium">
                     <Clock className="h-3 w-3" />
-                    {velocity.daysUntilEvent}d until event
+                    {daysUntilEvent}d until event
                   </span>
                 )}
               </div>
@@ -198,6 +203,54 @@ export default async function EventDetailPage({ params }: Props) {
           }
         />
       </div>
+
+      {/* -- Event Overview (always visible) -- */}
+      {(daysUntilEvent != null || (e.gross != null && e.gross > 0)) && (
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Event Overview</span>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            {daysUntilEvent != null && daysUntilEvent > 0 && (
+              <div className="glass-card p-4">
+                <p className="text-[10px] text-white/50 mb-1 uppercase tracking-wider">Countdown</p>
+                <p className="text-2xl font-bold text-amber-400">{daysUntilEvent}</p>
+                <p className="text-[10px] text-white/40">days until show</p>
+              </div>
+            )}
+            {e.gross != null && e.gross > 0 && e.ticketsSold > 0 && (
+              <div className="glass-card p-4">
+                <p className="text-[10px] text-white/50 mb-1 uppercase tracking-wider">Revenue Per Ticket</p>
+                <p className="text-lg font-bold text-emerald-400">
+                  ${(e.gross / e.ticketsSold).toFixed(2)}
+                </p>
+                <p className="text-[10px] text-white/40">avg across all sales</p>
+              </div>
+            )}
+            {e.gross != null && e.gross > 0 && (
+              <div className="glass-card p-4">
+                <p className="text-[10px] text-white/50 mb-1 uppercase tracking-wider">Total Revenue</p>
+                <p className="text-lg font-bold text-white">{fmtUsd(e.gross)}</p>
+                <p className="text-[10px] text-white/40">
+                  {e.ticketPlatform === "vivaticket" ? "EUR" : "USD"} gross
+                </p>
+              </div>
+            )}
+            {snapshots.length > 0 && (
+              <div className="glass-card p-4">
+                <p className="text-[10px] text-white/50 mb-1 uppercase tracking-wider">Data Points</p>
+                <p className="text-lg font-bold text-white">{snapshots.length}</p>
+                <p className="text-[10px] text-white/40">
+                  {snapshots.length === 1
+                    ? "tracking starts today"
+                    : `since ${new Date(snapshots[0].date + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}`}
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* -- Today's Activity (when available) -- */}
       {hasTodayData && (
