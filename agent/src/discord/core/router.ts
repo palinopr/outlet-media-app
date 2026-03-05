@@ -45,6 +45,13 @@ const AGENT_ROUTES: Record<string, AgentConfig> = {
     description: "tm-agent",
   },
 
+  // --- Don Omar Tickets Agent (EATA / Vivaticket) ---
+  "don-omar-tickets": {
+    promptFile: "don-omar-agent",
+    maxTurns: 25,
+    description: "don-omar-agent",
+  },
+
   // --- Creative Agent (ad creative + copy review) ---
   "creative": {
     promptFile: "creative-agent",
@@ -124,6 +131,9 @@ export function matchManualTrigger(
   if (channelName === "tm-data" && /^run\s+tm\s+sync$/i.test(lower)) {
     return "tm-sync";
   }
+  if (channelName === "don-omar-tickets" && /^run\s+eata\s+sync$/i.test(lower)) {
+    return "eata-sync";
+  }
   if (/^run\s+think$/i.test(lower)) {
     return "think";
   }
@@ -189,6 +199,15 @@ export const AGENT_INTERNALS: Record<string, AgentInternals> = {
     skillsChannel: "tm-skills",
     tools: ["Playwright (browser automation)", "curl (Supabase REST)", "curl (Ingest endpoint)"],
   },
+  "don-omar-agent": {
+    name: "Don Omar Tickets",
+    memoryFile: "memory/don-omar-agent.md",
+    skillsDir: "skills/don-omar-agent",
+    promptFile: "don-omar-agent",
+    memoryChannel: "don-omar-memory",
+    skillsChannel: "don-omar-skills",
+    tools: ["curl (EATA/Vivaticket API)", "curl (Supabase REST)", "curl (Ingest endpoint)"],
+  },
   creative: {
     name: "Creative",
     memoryFile: "memory/creative.md",
@@ -241,6 +260,7 @@ export const PROMPT_TO_AGENT: Record<string, string> = {
   "boss": "boss",
   "media-buyer": "media-buyer",
   "tm-agent": "tm-agent",
+  "don-omar-agent": "don-omar-agent",
   "creative-agent": "creative",
   "client-manager": "client-manager",
   "reporting-agent": "reporting",

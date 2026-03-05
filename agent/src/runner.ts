@@ -65,7 +65,8 @@ function loadPrompt(name: string): string {
   return readFileSync(path, "utf-8");
 }
 
-const SUBPROCESS_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+/** Inactivity timeout: kill only if no output (stdout+stderr) for this long. */
+const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes of silence
 
 export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
   const {
@@ -130,21 +131,24 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
 
     activeProcs.add(proc);
 
-    // Kill subprocess if it exceeds the timeout
-    const timeoutHandle = setTimeout(() => {
-      console.error(`[runner] Subprocess timed out after ${SUBPROCESS_TIMEOUT_MS / 1000}s -- killing`);
-      try {
-        proc.kill("SIGTERM");
-      } catch {
-        // Already dead
-      }
-      // Give SIGTERM 3s to take effect, then SIGKILL
-      setTimeout(() => {
-        try { proc.kill("SIGKILL"); } catch { /* already dead */ }
-      }, 3000);
-    }, SUBPROCESS_TIMEOUT_MS);
-
+    // Inactivity timeout: kill only when Claude goes silent (stuck/error).
+    // Resets every time stdout produces data.
     let timedOut = false;
+    const resetInactivityTimer = () => {
+      clearTimeout(inactivityHandle);
+      inactivityHandle = setTimeout(() => {
+        console.error(`[runner] No output for ${INACTIVITY_TIMEOUT_MS / 1000}s -- killing (inactive)`);
+        timedOut = true;
+        try {
+          proc.kill("SIGTERM");
+        } catch { /* already dead */ }
+        setTimeout(() => {
+          try { proc.kill("SIGKILL"); } catch { /* already dead */ }
+        }, 3000);
+      }, INACTIVITY_TIMEOUT_MS);
+    };
+    let inactivityHandle: ReturnType<typeof setTimeout>;
+    resetInactivityTimer();
 
     let assembledText = "";  // built from assistant events
     let fallbackResult = ""; // from type=result event if no assistant text
@@ -153,6 +157,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     let errorText = "";
 
     proc.stdout.on("data", (chunk: Buffer) => {
+      resetInactivityTimer();
       lineBuffer += chunk.toString();
       const lines = lineBuffer.split("\n");
       // Last element is incomplete — keep in buffer
@@ -203,14 +208,15 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     });
 
     proc.stderr.on("data", (chunk: Buffer) => {
+      resetInactivityTimer();
       errorText += chunk.toString();
     });
 
     proc.on("close", (code, signal) => {
-      clearTimeout(timeoutHandle);
+      clearTimeout(inactivityHandle);
       activeProcs.delete(proc);
 
-      // Detect timeout: SIGTERM from our timeout handler
+      // Detect inactivity kill: SIGTERM/SIGKILL from our handler
       if (signal === "SIGTERM" || signal === "SIGKILL") {
         timedOut = true;
       }
@@ -228,11 +234,11 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
       const text = (assembledText.trim() || fallbackResult.trim() || "Done.").trim();
 
       if (timedOut) {
-        console.error(`[runner] claude killed after ${SUBPROCESS_TIMEOUT_MS / 1000}s timeout`);
+        console.error(`[runner] claude killed after ${INACTIVITY_TIMEOUT_MS / 1000}s inactivity`);
         resolve({
-          text: text || "Subprocess timed out",
+          text: text || "Agent went inactive — no output received",
           success: false,
-          error: `Subprocess timed out after ${SUBPROCESS_TIMEOUT_MS / 1000}s`,
+          error: `Agent inactive for ${INACTIVITY_TIMEOUT_MS / 1000}s (no output)`,
           sessionId: capturedSessionId,
         });
       } else if (code === 0) {
@@ -252,7 +258,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     });
 
     proc.on("error", (err) => {
-      clearTimeout(timeoutHandle);
+      clearTimeout(inactivityHandle);
       activeProcs.delete(proc);
       console.error("[runner] Failed to spawn claude:", err.message);
       resolve({

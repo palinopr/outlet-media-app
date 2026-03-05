@@ -451,9 +451,9 @@ POST alerts to the dashboard (shown in the admin alert banner):
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warning"}'
+  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warn"}'
 ```
-Levels: "info", "warning", "critical". Accepts: { secret, message, level } only.
+Levels: "info", "warn", "error" (Zod-validated — "warning" and "critical" will be REJECTED). Accepts: { secret, message, level } only.
 
 ---
 

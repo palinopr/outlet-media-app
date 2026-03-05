@@ -54,6 +54,8 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 - "camila" -> Zamora (Camila sub-brand, multiple cities)
 - "beamina", "beam" -> Beamina
 - "happy paws", "paws" -> Happy Paws
+- "sienna", "peace in mind" -> Sienna
+- "vaz vil", "kiko blade", "penetrado" -> Vaz Vil
 
 ---
 
@@ -139,10 +141,30 @@ curl -s "https://graph.facebook.com/v21.0/act_787610255314938/insights?fields=sp
 
 ### From Supabase (for historical)
 ```bash
-curl -s "${SUPABASE_URL}/rest/v1/meta_campaigns?select=campaign_id,name,spend,roas,daily_budget&name=like.*Zamora*" \
+curl -s "${SUPABASE_URL}/rest/v1/meta_campaigns?select=campaign_id,name,spend,roas,daily_budget_cents,start_time&name=like.*Zamora*&status=eq.ACTIVE" \
   -H "apikey: ${SUPABASE_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
+
+**Supabase column naming (important):**
+- `meta_campaigns`: name column is `name` (NOT `campaign_name`). Budget is `daily_budget_cents` (in cents).
+- `campaign_snapshots`: spend column is `spend` (value is in cents despite the name). `roas` is a float.
+- `agent_jobs`: job identifier is `agent_id` (NOT `job_type`).
+
+### Snapshot query (for trend analysis)
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.desc&limit=7" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+
+### Budget cap tracking
+
+Some clients have total spend caps (e.g., Alofoke had $2K cap). When tracking:
+- Calculate: total_spend / budget_cap = % consumed
+- Alert at 80%, 95%, and 100% thresholds
+- Project remaining days: (budget_cap - total_spend) / daily_budget
+- Post alert to dashboard if approaching cap
 
 ---
 
@@ -156,17 +178,29 @@ curl -s "${SUPABASE_URL}/rest/v1/meta_campaigns?select=campaign_id,name,spend,ro
 - Budget: varies by event proximity
 
 ### KYBBA
-- Event promotion
-- Multiple city campaigns
-- Active campaigns in major metros
+- Event promotion, Miami show Mar 22
+- Budget: $100/day (doubled from $50 in late Feb)
+- Pixel: 1553637492361321
+- Adset swap Feb 25: V9+V1 paused, V5+Asset1 activated — ROAS recovered from 2.46x to 2.65x
+
+### Sienna (New Client, ~Mar 2026)
+- "Peace In Mind" brand
+- Pixel: 918875103967661 ("sienna" pixel, created Feb 25)
+- Budget: $200/day
+- Status: early stage, watch for pixel/attribution issues
+
+### Vaz Vil (New Client, ~Mar 2026)
+- "Kiko Blade" / "Penetrado" events
+- Budget: small ($10 initial)
+- Status: just started, too early to evaluate
 
 ### Beamina
-- Smaller client
-- Fewer campaigns
+- Smaller client, fewer campaigns
+- Mostly PAUSED
 
 ### Happy Paws
-- Non-music client
-- Pet services
+- Non-music client (pet services)
+- Mostly PAUSED
 
 ---
 
@@ -182,6 +216,23 @@ When asked "how's [client] doing?" or "give me a client update":
 - Upcoming events: [list with dates]
 - Action items: [any pending tasks]
 - Billing: [paid/outstanding/due date]
+
+---
+
+## Alerts Endpoint
+
+Post alerts to the dashboard when client-facing issues are detected:
+
+```bash
+INGEST_URL=$(grep INGEST_URL .env | cut -d= -f2)
+INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
+BASE_URL="${INGEST_URL%/api/ingest}"
+curl -s -X POST "$BASE_URL/api/alerts" \
+  -H "Content-Type: application/json" \
+  -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warn\"}"
+```
+
+Level must be one of: "info", "warn", "error" (Zod-validated — "warning"/"critical" will be rejected).
 
 ---
 

@@ -39,6 +39,8 @@ API base: https://graph.facebook.com/v21.0
 - "zamora", "arjona", "ricardo" -> Zamora (Arjona campaigns)
 - "alofoke" -> Zamora (Alofoke sub-brand, Boston show)
 - "camila" -> Zamora (Camila sub-brand, multiple cities)
+- "sienna", "peace in mind" -> Sienna (new client, Feb 27)
+- "vaz vil", "kiko blade", "penetrado" -> Vaz Vil (new client, Mar 3)
 - "beamina", "beam" -> Beamina
 - "happy paws", "paws" -> Happy Paws
 - If you can't match the name, ASK.
@@ -573,9 +575,9 @@ INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warning"}'
+  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warn"}'
 ```
-Levels: "info", "warning", "critical".
+Levels: "info", "warn", "error" (Zod-validated — "warning" and "critical" will be REJECTED).
 
 ---
 

@@ -397,9 +397,9 @@ INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warning"}'
+  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warn"}'
 ```
-Levels: "info", "warning", "critical". Body: `{ secret, message, level }` only — no other fields.
+Levels: "info", "warn", "error" (Zod-validated — "warning" and "critical" will be REJECTED). Body: `{ secret, message, level }` only — no other fields.
 
 ---
 

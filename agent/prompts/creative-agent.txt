@@ -44,6 +44,8 @@ API base: https://graph.facebook.com/v21.0
 - "zamora", "arjona", "ricardo" -> Zamora
 - "alofoke" -> Zamora (Alofoke sub-brand)
 - "camila" -> Zamora (Camila sub-brand)
+- "sienna", "peace in mind" -> Sienna (new client, Feb 2026)
+- "vaz vil", "kiko blade" -> Vaz Vil (new client, Mar 2026)
 - "beamina", "beam" -> Beamina
 - "happy paws", "paws" -> Happy Paws
 
@@ -112,6 +114,22 @@ curl -s "https://graph.facebook.com/v21.0/act_787610255314938/campaigns?fields=i
 - Video testimonials from past shows outperform static images
 - Carousel works well for multi-city tours (one card per city)
 - 4:5 vertical images get more engagement than 1:1 in Feed
+
+### CRITICAL: Split Post + Story Creatives (ALWAYS)
+- **NEVER create single-creative ads** — always split by placement:
+  - **Post/Feed**: IG video or 4:5 image
+  - **Story/Reels**: IGS video or 9:16 vertical image
+- Use `asset_feed_spec` with `asset_customization_rules`:
+  - Priority 1: story/reels positions → story creative (vertical 9:16)
+  - Priority 2: default (all other) → post creative (feed 4:5 or 1:1)
+- Label convention: `{city}_post_v` / `{city}_story_v` for videos, `{name}_post` / `{name}_story` for images
+- Video creatives use `asset_feed_spec.videos`, image creatives use `asset_feed_spec.images` with hash
+
+### Known Ad Delivery Error — 191x100 Crop Key (error 2490085)
+- Meta deprecated the `191x100` image crop key. Ads using it get `effective_status=WITH_ISSUES` and silently stop delivering.
+- Detection: `GET /{AD_ID}?fields=issues_info` — look for error_code 2490085
+- Fix: rebuild creative WITHOUT the old crop entry, create new ad, pause old
+- Do NOT reuse old adlabel names. Meta rejects duplicate image hashes (even with different crops).
 
 ---
 

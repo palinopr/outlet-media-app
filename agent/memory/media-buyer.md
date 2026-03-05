@@ -81,3 +81,27 @@ Use daily snapshots for trend analysis, not intraday deltas.
 <!-- auto-learned 2026-03-04 -->
 - KYBBA spend cap: $5,110, daily budget now $100/day (up from $50)
 - KYBBA spent $4,307.55 of $5,110 cap as of Mar 4; show is Mar 22
+
+<!-- auto-learned 2026-03-04 -->
+- Arjona SLC active $100/day, 10.26x ROAS as of Mar 4
+- Arjona Palm Desert & SF active $50/day each, 0 purchases
+- Camila San Diego active $300/day, 1.00x ROAS, $655 spent
+- Arjona San Diego & Arjona Anaheim campaigns paused
+
+<!-- auto-learned 2026-03-04 -->
+- Arjona Palm Desert & SF: zero interest targeting (broad 50mi, 18-65)
+- Arjona SLC show date: Mar 19
+
+<!-- auto-learned 2026-03-04 -->
+- 2026 YTD (thru Mar 4): $24.8K spend, $132.5K revenue, 5.33x ROAS, 631 purchases
+- Camila Houston now $17.6K revenue/5.90x ROAS (was zero purchases Feb 26)
+- Camila Dallas: $625 spent, $11.9K revenue, 19.02x ROAS
+
+<!-- auto-learned 2026-03-04 -->
+- Camila Phoenix active at $300/day as of Mar 4
+- Sienna "Peace In Mind" campaign active, spending ~$50/day
+- Vaz Vil "Kiko Blade" new campaign ramping as of Mar 4
+
+<!-- auto-learned 2026-03-04 -->
+- Sienna "Peace In Mind": 65+ eats 70% of budget, zero purchases at $289 spent
+- Sienna: no purchase pixel signal yet; Meta chasing cheap 65+ clicks

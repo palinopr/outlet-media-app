@@ -22,24 +22,8 @@ import { loadAgentMemory } from "../discord/features/memory.js";
 /** Per-channel processing lock to prevent concurrent agent calls */
 const channelLocks = new Set<string>();
 
-/** Timeout for agent Claude calls */
-const AGENT_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-
 /** How many recent messages to fetch for conversation context */
 const HISTORY_DEPTH = 10;
-
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(
-      () => reject(new Error(`Agent timed out after ${Math.round(ms / 1000)}s`)),
-      ms,
-    );
-    promise.then(
-      (val) => { clearTimeout(timer); resolve(val); },
-      (err) => { clearTimeout(timer); reject(err as Error); },
-    );
-  });
-}
 
 /** Convert Telegram HTML + markdown to Discord-compatible markdown */
 export function cleanForDiscord(text: string): string {
@@ -228,23 +212,20 @@ export async function handleMessage(
       }
     }
 
-    const result = await withTimeout(
-      runClaude({
-        prompt: contextualPrompt,
-        systemPromptName: agent.promptFile,
-        systemPrompt,
-        maxTurns: agent.maxTurns,
-        onChunk: async (chunk: string) => {
-          buffer += chunk;
-          if (Date.now() - lastEdit > 1500 && buffer.trim()) {
-            const preview = cleanForDiscord(buffer.slice(-1900));
-            await working?.edit(preview || "...").catch(() => {});
-            lastEdit = Date.now();
-          }
-        },
-      }),
-      AGENT_TIMEOUT_MS,
-    );
+    const result = await runClaude({
+      prompt: contextualPrompt,
+      systemPromptName: agent.promptFile,
+      systemPrompt,
+      maxTurns: agent.maxTurns,
+      onChunk: async (chunk: string) => {
+        buffer += chunk;
+        if (Date.now() - lastEdit > 1500 && buffer.trim()) {
+          const preview = cleanForDiscord(buffer.slice(-1900));
+          await working?.edit(preview || "...").catch(() => {});
+          lastEdit = Date.now();
+        }
+      },
+    });
 
     const responseText = result.text || "Done.";
     const full = cleanForDiscord(responseText);

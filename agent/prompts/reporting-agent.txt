@@ -53,6 +53,8 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 - "camila" -> Zamora (Camila sub-brand)
 - "beamina", "beam" -> Beamina
 - "happy paws", "paws" -> Happy Paws
+- "sienna", "peace in mind" -> Sienna
+- "vaz vil", "kiko blade", "penetrado" -> Vaz Vil
 
 ---
 
@@ -85,6 +87,9 @@ curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,pu
 `time_increment=1` returns one row per day.
 
 ### Supabase: Campaign snapshots (for ROAS trends)
+**Column naming**: `spend` column is in CENTS (despite the name — no `_cents` suffix). `roas` is a float.
+Snapshots are **write-once** (ON CONFLICT DO NOTHING) — one row per campaign per day, captured at ~00:00 UTC.
+Known gaps: Feb 20-22, Feb 27-Mar 4 (permanent, not backfillable).
 ```bash
 curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.desc&limit=14" \
   -H "apikey: ${SUPABASE_KEY}" \
@@ -92,13 +97,16 @@ curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=sn
 ```
 
 ### Supabase: All campaigns
+**Column naming**: campaign name column is `name` (NOT `campaign_name`). `spend` and `daily_budget` are in CENTS.
 ```bash
-curl -s "${SUPABASE_URL}/rest/v1/meta_campaigns?select=campaign_id,name,status,spend,roas,daily_budget&order=spend.desc" \
+curl -s "${SUPABASE_URL}/rest/v1/meta_campaigns?select=campaign_id,name,status,spend,roas,daily_budget,start_time&order=spend.desc" \
   -H "apikey: ${SUPABASE_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
+Filter to ACTIVE only: append `&status=eq.ACTIVE`
 
 ### Supabase: TM events (ticket sales)
+**TM One data caveat**: Per-event ticket metrics (tickets_sold, tickets_available, gross) may be frozen/stale due to TM One API account-level permission restrictions. Event snapshots exist but contain identical values across dates. Use ticket data directionally, not as precise real-time counts.
 ```bash
 curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=tm_id,name,artist,venue,city,date,tickets_sold,tickets_available,gross&order=date.asc" \
   -H "apikey: ${SUPABASE_KEY}" \
@@ -202,6 +210,34 @@ To match Meta campaigns to TM events:
 
 Ad cost per TM ticket = Total Meta spend on event campaigns / Total TM tickets sold
 This is different from Meta CPA (which counts attributed purchases only). TM tickets sold includes organic.
+
+---
+
+## Alerts Endpoint
+
+Post anomaly alerts to the dashboard:
+```bash
+INGEST_URL=$(grep INGEST_URL .env | cut -d= -f2)
+INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
+BASE_URL="${INGEST_URL%/api/ingest}"
+curl -s -X POST "$BASE_URL/api/alerts" \
+  -H "Content-Type: application/json" \
+  -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warn\"}"
+```
+Level must be one of: `"info"`, `"warn"`, `"error"` (Zod-validated — other values like "warning"/"critical" will be silently rejected).
+
+---
+
+## Marginal ROAS (Advanced Trend Analysis)
+
+Blended ROAS can mask declining performance. Marginal ROAS measures return on INCREMENTAL spend between two snapshot dates:
+- `spend_dollars = spend_cents / 100` (for each snapshot)
+- `revenue = spend_dollars x roas`
+- `marginal_roas = (revenue_new - revenue_old) / (spend_dollars_new - spend_dollars_old)`
+
+A campaign can have 3.0x blended but 0.5x marginal — meaning it's coasting on historical performance while current spend loses money.
+
+**Reliability**: Use snapshot dates 3+ days apart. Consecutive-day deltas are unreliable due to Meta intraday reporting lag (<3% of expected daily spend shows in next-day snapshots).
 
 ---
 

@@ -47,6 +47,9 @@ export const TARGET_LAYOUT: Record<string, LayoutChannel[]> = {
   "TM Data": [
     { name: "tm-data", topic: "Ticketmaster work (threads per task)" },
   ],
+  "Don Omar": [
+    { name: "don-omar-tickets", topic: "Don Omar BCN ticket sales (EATA/Vivaticket)" },
+  ],
   "Creative": [
     { name: "creative", topic: "Ad creative work (threads per task)" },
   ],

@@ -76,6 +76,26 @@ const JOBS: Record<string, ScheduleJob> = {
     runner: () => {},
   },
 
+  // --- EATA / Don Omar ---
+  "eata-sync": {
+    name: "EATA Sync",
+    description: "Sync Don Omar BCN ticket data from Vivaticket",
+    cron: "0 */2 * * *",
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
+  "eata-cookie-refresh": {
+    name: "EATA Cookie Refresh",
+    description: "Refresh OAuth2 token for Vivaticket API",
+    cron: "0 */6 * * *",
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
+
   // --- Autonomous Routines (from discord-routines.ts) ---
   "morning-briefing": {
     name: "Morning Briefing",
@@ -184,7 +204,7 @@ export function initScheduleJobs(runners: Record<string, () => void>): void {
 // --- Job Control ----------------------------------------------------------
 
 /** Core jobs started unconditionally by scheduler.ts -- cannot be toggled via the schedule UI. */
-const CORE_JOB_KEYS = new Set(["heartbeat", "tm-sync", "meta-sync", "think", "health-check"]);
+const CORE_JOB_KEYS = new Set(["heartbeat", "tm-sync", "meta-sync", "think", "health-check", "eata-sync", "eata-cookie-refresh"]);
 
 function isCoreJob(jobKey: string): boolean {
   return CORE_JOB_KEYS.has(jobKey);

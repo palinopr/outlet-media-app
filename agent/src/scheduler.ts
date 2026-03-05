@@ -11,6 +11,8 @@ import { getSweepRunners } from "./jobs/cron-sweeps.js";
 const SESSION_DIR = join(import.meta.dirname ?? ".", "..", "session");
 const TM_SYNC_SCRIPT = join(SESSION_DIR, "tm1-http-sync.mjs");
 const TM_COOKIE_SCRIPT = join(SESSION_DIR, "tm1-cookie-refresh.mjs");
+const EATA_SYNC_SCRIPT = join(SESSION_DIR, "eata-http-sync.mjs");
+const EATA_COOKIE_SCRIPT = join(SESSION_DIR, "eata-cookie-refresh.mjs");
 
 const CHECK_CRON     = process.env.CHECK_CRON ?? "0 */2 * * *"; // every 2 hours
 const META_CRON      = "0 */6 * * *";                            // every 6 hours
@@ -18,6 +20,8 @@ const THINK_CRON     = "*/30 8-22 * * *";                        // every 30 min
 const HEARTBEAT_CRON = "*/1 * * * *";                            // every minute
 const DISCORD_HEALTH_CRON = "0 */12 * * *";                      // every 12 hours
 const TM_COOKIE_CRON = "0 */6 * * *";                            // proactive cookie refresh
+const EATA_CRON      = "0 */2 * * *";                            // EATA sync every 2 hours
+const EATA_COOKIE_CRON = "0 */6 * * *";                          // EATA token refresh
 
 const INGEST_URL = process.env.INGEST_URL?.replace("/api/ingest", "");
 
@@ -52,8 +56,10 @@ export function startScheduler(): void {
   cron.schedule(THINK_CRON, () => { runThinkCycle(); }, { timezone: "America/Los_Angeles" });
   cron.schedule(DISCORD_HEALTH_CRON, () => { runDiscordHealthCheck(); });
   cron.schedule(TM_COOKIE_CRON, () => { refreshTmCookies(); });
+  cron.schedule(EATA_CRON, () => { runEataSync(); });
+  cron.schedule(EATA_COOKIE_CRON, () => { refreshEataCookies(); });
 
-  console.log("[scheduler] 6 core cron jobs started (heartbeat, tm, meta, think, health-check, tm-cookie-refresh)");
+  console.log("[scheduler] 8 core cron jobs started (heartbeat, tm, meta, think, health-check, tm-cookie, eata, eata-cookie)");
 }
 
 /**
@@ -74,6 +80,12 @@ export function triggerManualJob(jobName: string): void {
       break;
     case "tm-cookie-refresh":
       refreshTmCookies();
+      break;
+    case "eata-sync":
+      runEataSync();
+      break;
+    case "eata-cookie-refresh":
+      refreshEataCookies();
       break;
     default: {
       const sweeps = getSweepRunners();
@@ -183,6 +195,83 @@ async function refreshTmCookies(): Promise<void> {
   }
 }
 
+async function runEataSync() {
+  if (isAgentBusy("eata-sync")) {
+    console.log("[scheduler] EATA sync already running, skipping");
+    return;
+  }
+  setAgentBusy("eata-sync");
+  console.log("[scheduler] Running EATA HTTP sync...");
+  await notifyChannel("active-jobs", ">> **EATA sync** started").catch(() => {});
+
+  try {
+    let output: string;
+    try {
+      output = execFileSync("node", [EATA_SYNC_SCRIPT], {
+        timeout: 60_000,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      });
+    } catch (execErr: unknown) {
+      const err = execErr as { status?: number; stdout?: string; stderr?: string };
+      if (err.status === 2) {
+        console.log("[scheduler] EATA token expired, refreshing...");
+        await notifyChannel("active-jobs", ">> **EATA sync** refreshing token...").catch(() => {});
+        await refreshEataCookies();
+        output = execFileSync("node", [EATA_SYNC_SCRIPT], {
+          timeout: 60_000,
+          encoding: "utf-8",
+          stdio: ["pipe", "pipe", "pipe"],
+        });
+      } else {
+        throw new Error(err.stderr || err.stdout || "EATA sync script failed");
+      }
+    }
+
+    const lines = output.trim().split("\n");
+    const lastLine = lines[lines.length - 1];
+    let summary: Record<string, unknown> = {};
+    try { summary = JSON.parse(lastLine); } catch { /* not JSON */ }
+
+    const evtCount = summary.events_updated ?? 0;
+    const durationMs = summary.duration_ms ?? 0;
+    const msg = `Updated ${evtCount} EATA events in ${durationMs}ms`;
+    console.log(`[scheduler] EATA sync done: ${msg}`);
+
+    await notifyChannel("active-jobs", "ok **EATA sync** finished").catch(() => {});
+    await Promise.all([
+      notifyOwner(`[EATA]\n\n${msg}`),
+      notifyChannel("don-omar-tickets", `**EATA Update**\n\n${msg}`),
+    ]);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[scheduler] EATA sync failed:", msg);
+    await notifyChannel("active-jobs", `x **EATA sync** failed: ${msg.slice(0, 200)}`).catch(() => {});
+    await Promise.all([
+      notifyOwner(`[EATA -- failed]\n${msg}`).catch(() => {}),
+      notifyChannel("agent-alerts", `**EATA sync failed**\n${msg}`).catch(() => {}),
+    ]);
+  } finally {
+    clearAgentBusy("eata-sync");
+  }
+}
+
+async function refreshEataCookies(): Promise<void> {
+  console.log("[scheduler] Refreshing EATA token...");
+  try {
+    execFileSync("node", [EATA_COOKIE_SCRIPT], {
+      timeout: 120_000,
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    console.log("[scheduler] EATA token refresh complete");
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error("[scheduler] EATA token refresh failed:", msg);
+    await notifyChannel("agent-alerts", `**EATA token refresh failed**\n${msg.slice(0, 200)}`).catch(() => {});
+  }
+}
+
 async function runMetaSync() {
   if (isAgentBusy("meta-sync")) {
     console.log("[scheduler] Meta sync already running, skipping");
@@ -237,6 +326,8 @@ export function getJobRunners(): Record<string, () => void> {
     "heartbeat": () => { pingHeartbeat(); },
     "health-check": () => { runDiscordHealthCheck(); },
     "tm-cookie-refresh": () => { refreshTmCookies(); },
+    "eata-sync": () => { runEataSync(); },
+    "eata-cookie-refresh": () => { refreshEataCookies(); },
     ...sweeps,
   };
 }

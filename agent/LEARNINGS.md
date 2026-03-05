@@ -224,292 +224,97 @@ Format:
 - Proposals expanded to 9 (I: Budget Cap Monitor, J: Change Journal). Ranking: G→I→A→C→J→B→H→E→F
 - Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), **#39-45 (#46)**
 
-## 2026-02-24 ~23:30 UTC — Cycle #46 (Memory Maintenance)
-- **Priority chosen:** P3 — Memory Maintenance (rotation-compliant — last was P4 Cycle #45, last P3 was Cycle #39 — most overdue at 6 cycles)
-- **P1 check:** No breakage. Scheduler alive (heartbeats 18:58-19:00 UTC). Endpoints: ingest 401 ✅, alerts 401 ✅. All green.
-- **What I audited or read:**
-  - Session cache (mtime 12:01 CST Feb 24, ~1h old): 4 ACTIVE campaigns, values match Supabase exactly
-  - Supabase meta_campaigns: 4 ACTIVE — KYBBA ($2,423, 2.47×), Alofoke ($365, 8.72×), Camila Sac ($362, 4.43×), Camila Ana ($379, 3.81×)
-  - campaign_snapshots: 3 dates (Feb 19, 23, 24). No Feb 25 yet (00:00 UTC hasn't fired). 15 campaigns on Feb 24.
-  - Feb 23→24 snapshot deltas: $0.22-$1.43 across all campaigns — consecutive-day lag confirmed again
-- **ROAS check:** All ACTIVE above 2.0. KYBBA 2.47× (lowest, declining). Others healthy (3.8-8.7×).
-- **Marginal ROAS (Feb 19→Feb 24 snapshot, 5-day gap):**
-  - **KYBBA: 0.61×** — unchanged from Cycle #25. Still losing on new spend.
-  - Live marginal (vs Feb 19 snapshot): **0.95×** — closer to breakeven with delayed attribution, but still below 1.0.
-  - New campaigns (Alofoke, Camila) only have consecutive-day snapshots — marginal ROAS not calculable (need Feb 19→25+ gap, but they didn't exist on Feb 19). First meaningful marginal: compare Feb 23 snapshot to Feb 26+ snapshots.
-- **KYBBA 2.0× crossing projection (refined):**
-  - Conservative (snapshot marginal 0.61×): ~Mar 11
-  - Live (live marginal 0.95×): ~Mar 17
-  - Range: **Mar 11-17.** Show date Mar 22. Buffer: 5-11 days.
-- **Pacing (ACTIVE):**
-  - Camila Sac: 72.5% ($362/$500 expected over 5 days) — improving from 64-68%
-  - Camila Ana: 75.7% ($379/$500) — improving
-  - Alofoke: ~73% ($365/$500 at pre-bump $100/day rate) — budget just bumped to $250/day, pacing will change rapidly
-  - KYBBA: skipped (pause history)
-- **Status changes:** None. Still 4 ACTIVE, 13 PAUSED. No new campaigns.
-- **🔑 Post-swap timing analysis:**
-  - KYBBA adset swap executed ~19:00 CST Feb 24 = ~01:00 UTC Feb 25
-  - Feb 25 snapshot fires 00:00 UTC Feb 25 — this is 1 hour BEFORE the swap, so will NOT capture swap effects
-  - First snapshot with post-swap data: **Feb 26** (00:00 UTC, captures 6 PM CST Feb 25 = ~17h post-swap)
-  - First reliable post-swap marginal ROAS: **Feb 28** (need 2+ day gap from Feb 26 per established guidance)
-  - Bottom line: don't evaluate swap effectiveness until Feb 28 cycle at earliest
-- **Shows imminent:** Seattle TOMORROW (Feb 25, campaign PAUSED — likely intentional), Portland Feb 26 (PAUSED), Alofoke Boston Mar 2 (ACTIVE, $250/day scaling).
-- **No Telegram draft** — no new anomalies. KYBBA marginal ROAS unchanged. All previously flagged.
-- **Next priority:** P6 — Infrastructure Check (hasn't been done since Cycle #33, 8 cycles ago). Or P2 — Prompt Audit (all 3 completed 3rd pass at Cycle #37, due for 4th). Avoid P4 next per rotation.
+## 2026-02-24/25 — Cycles #46-53 Summary (Houston Detection + Discord Restructuring)
 
-## 2026-02-25 ~00:30 UTC — Cycle #47 (Business Monitoring)
-- **Priority chosen:** P4 — Business Monitoring (rotation-compliant — last was P3 Cycle #46. Feb 25 snapshots just arrived — highest-value P4 cycle)
-- **P1 check:** No breakage. Scheduler alive (heartbeats 00:26-00:30 UTC Feb 25). Endpoints: ingest 401 ✅, alerts 401 ✅ (posted alert successfully). All green.
-- **What I audited or read:**
-  - LEARNINGS.md (full), MEMORY.md (full)
-  - Session cache: campaigns 18:01 UTC Feb 24 (~6h old), events 18:02 UTC (~6h old)
-  - Supabase meta_campaigns: **5 ACTIVE** (was 4) — new campaign detected
-  - Supabase campaign_snapshots: **4 dates now** (Feb 19, 23, 24, 25). 5 campaigns on Feb 25.
-- **🔴 NEW CAMPAIGN DETECTED: "Zamora - Camila - Houston"**
-  - Campaign ID: 120242223711720525
-  - Status: ACTIVE, Budget: **$400/day** (highest in portfolio — 8× KYBBA, 4× Alofoke original)
-  - Spend: **$0**, Impressions: 0, Clicks: 0, ROAS: 0
-  - Start time: Feb 19 (same cohort as other Camila campaigns)
-  - **No Houston event found in TM One data** (checked all 25 events)
-  - Campaign count: 17→18 total (5 ACTIVE, 13 PAUSED)
-  - Assessment: Most likely was PAUSED since creation and Jaime just activated it. $0 spend could be normal if just activated (delivery takes hours) OR indicates a delivery issue. The $400/day budget makes this high-priority — that's $2,800/week if it starts delivering.
-  - **Dashboard alert posted** (warning level) ✅
-  - **Telegram draft saved** ✅
-- **KYBBA Marginal ROAS — Improved to 0.95×:**
-  - Feb 19→25 (6-day gap): Δspend=$353.91, Δrevenue=$336.17, **marginal=0.95×** (was 0.61× at Feb 19→24)
-  - Feb 24→25 (1-day, noisy but plausible): Δspend=$53.60, Δrevenue=$152.06, **marginal=2.84×**
-  - The $53.60 single-day spend delta is realistic for $50/day budget — this may be meaningful, not noise
-  - Feb 24 was KYBBA's best day: 5 purchases, $77, 5.21× (confirmed in session)
-  - **Important:** Feb 25 snapshot is PRE-SWAP (swap was 01:00 UTC, snapshot at 00:00 UTC). So this improvement is from existing adsets before the swap.
-  - 2.0× crossing projection: **~Mar 18** at 0.95× marginal (was Mar 12 at 0.61×). Show Mar 22 = 4 days buffer.
-  - Cautiously optimistic — if pre-swap KYBBA was already improving, post-swap should be even better.
-- **Zamora Campaign Marginals (Feb 23→25, 2-day gap):**
-  - Alofoke: **23.4×** marginal (attribution catch-up — blended jumped 3.67→8.72×). Exceptional but inflated by delayed attribution on a young campaign.
-  - Camila Anaheim: **4.76×** marginal. Blended improved 3.42→3.81×. Healthy.
-  - Camila Sacramento: **6.16×** marginal. Blended improved 3.67→4.42×. Healthy.
-  - All Zamora campaigns strongly profitable on new spend.
-- **ROAS trend (4 snapshot dates):**
-  - KYBBA: 2.73 → 2.46 → 2.46 → 2.47. Slight uptick on Feb 25 — first non-decline in the series!
-  - Alofoke: 3.67 → 3.66 → 8.72. Major attribution catch-up.
-  - Camila Ana: 3.42 → 3.41 → 3.81. Improving.
-  - Camila Sac: 3.67 → 3.65 → 4.42. Improving.
-- **Status changes:** 4→5 ACTIVE (Houston new). No ACTIVE→PAUSED changes. 13 PAUSED unchanged.
-- **Alofoke budget cap:** $365 of $2K spent (18.2%). At $250/day × 5 remaining days = $1,250 + $365 = $1,615 projected (80.8%). Healthy headroom.
-- **Shows:** Seattle TODAY (PAUSED), Portland TOMORROW (PAUSED), Alofoke Boston Mar 2 (5 days, ACTIVE).
-- **MEMORY.md updated:** Campaign landscape (17→18, 4→5 ACTIVE, Houston added), snapshot count (3→4 dates), KYBBA marginal (0.61→0.95×), show dates refreshed, Known Issues updated.
-- **Telegram draft saved** — Houston $400/day $0 spend + KYBBA improvement summary.
-- **Next priority:** P2 — Prompt Audit (4th pass, start with chat.txt — last updated Cycle #42). Or P3 — Memory Maintenance (proposals section stale). Avoid P4 next per rotation.
+> Condensed from 8 entries during Cycle #58 memory maintenance. See git history for originals.
 
-## 2026-02-25 ~01:15 UTC — Cycle #48 (Prompt Audit — chat.txt 4th pass)
-- **Priority chosen:** P2 — Prompt Audit (rotation-compliant — last was P4 Cycle #47, last P2 was Cycle #42 command.txt 4th pass)
-- **P1 check:** ALL GREEN. Scheduler alive (01:00 UTC heartbeats). Endpoints: ingest 401 ✅, alerts 401 ✅. Session cache ~7h old.
-- **What I audited or read:**
-  - LEARNINGS.md (full), MEMORY.md (full)
-  - prompts/chat.txt (361 lines, last updated Cycle #42 — minor frequency/funnel additions)
-  - prompts/command.txt (708 lines, cross-referenced for gap analysis)
-  - session/last-campaigns.json (5 ACTIVE, Houston $0 spend confirmed)
-- **4 gaps found and fixed in chat.txt (+30 lines, 361→391):**
-  1. **Custom date range** (+7 lines) — added `time_range` URL-encoded JSON parameter for arbitrary date windows. Essential for Telegram questions like "how did KYBBA do this week?" Was in command.txt but missing from chat.txt.
-  2. **Per-ad insights (`level=ad`)** (+6 lines) — added `level=ad` breakdown query alongside existing `level=adset`. Proven need from KYBBA deep dive (identifying best/worst individual ads).
-  3. **Delivery diagnosis section** (+14 lines) — full "why isn't my campaign spending?" workflow: check effective_status, check adsets, check ads for WITH_ISSUES, check account-level, fresh activation timing. Directly addresses Houston $0 spend scenario from Cycle #47. Was in command.txt (ad delivery error section) but chat.txt had no diagnostic path at all.
-  4. **`actions` field added to today query** (+1 line) — today insights was missing `actions` field, making purchase/CPA calculations impossible from `date_preset=today`. Minor but impactful.
-- **Cross-check:** Both prompts now consistent on: custom date ranges, level=adset + level=ad, delivery diagnosis, insights fields (including actions on all queries), client slug mappings, Supabase column naming, error codes. API version v21.0 and ad account ID match across all references.
-- **No Telegram draft** — routine prompt improvement, no business anomaly.
-- **Next priority:** P3 — Memory Maintenance (MEMORY.md proposals section stale from Cycle #44 additions, show dates need refresh — Seattle is TODAY/past). Or P4 — Business Monitoring (Feb 25 data is in, Houston delivery status unknown). Avoid P2 next per rotation.
+- **Cycle #46 (P3 — memory):** Condensed #39-45. KYBBA marginal 0.61× (snapshot) / 0.95× (live). KYBBA swap executed ~01:00 UTC Feb 25. Post-swap evaluation starts Feb 28. Shows: Alofoke Boston Mar 2 (ACTIVE $250/day).
+- **Cycle #47 (P4 — monitoring, Feb 25 snapshots):** **🔴 NEW CAMPAIGN: Houston** — $400/day budget, $0 spend, 0 impressions. Alert + Telegram posted. KYBBA marginal improved 0.61→0.95× (Feb 19→25, pre-swap). Zamora marginals all healthy (Alofoke 23.4×, Ana 4.76×, Sac 6.16×). Campaign count 17→18 (5 ACTIVE).
+- **Cycle #48 (P2 — chat.txt 4th pass):** +30 lines: custom date ranges, level=ad breakdowns, delivery diagnosis workflow, actions field on today query. Cross-checked with command.txt for consistency.
+- **Cycle #49 (P3 — memory, retroactive log):** Updated MEMORY.md: pipeline status, known issues, campaign landscape, proposals. Logging gap — reconstructed by Cycle #50.
+- **Cycle #50 (P4 — monitoring):** Houston still $0 after 2-8.5h ACTIVE. All other campaigns stable. KYBBA post-swap evaluation deferred to Feb 28.
+- **Cycle #51 (P3/P6 — retroactive log):** Updated MEMORY.md: event_snapshots populated (72 rows), CLI v2.1.55. Logging gap — reconstructed by Cycle #52.
+- **Cycle #52 (P6 — infra):** ALL GREEN. .env ✅, endpoints ✅, scheduler ✅, CLI ✅, 4 snapshot dates ✅. Houston still $0. Fixed condensation defect (duplicate #41-45 entries). Logging gap pattern identified (sessions ending before writing).
+- **Cycle #53 (P4/P1 — restructuring crisis):** 🔴 .env MISSING, scheduler DOWN, session/ gone — Jaime restructuring agent to multi-agent Discord system. 7 new prompt files (boss, media-buyer, discord-agent, client-manager, creative-agent, reporting-agent, tm-agent). New runner features (resumeSessionId, directSystemPrompt, --setting-sources local). Activity log system. Houston status UNKNOWN.
 
-## 2026-02-25 ~01:45 UTC — Cycle #49 (Memory Maintenance — retroactive log)
-> **Note:** This cycle updated MEMORY.md extensively (Data Pipeline Status, Known Issues, Campaign Landscape, Proposals Status — all marked "Cycle #49") but failed to log itself in LEARNINGS.md. Reconstructed retroactively by Cycle #50.
-- **Priority chosen:** P3 — Memory Maintenance
-- **Action taken:** Updated MEMORY.md sections: Data Pipeline Status (4 snapshot dates, pipeline verified), Known Issues (#1 Houston $0, #2 KYBBA marginal 0.95×), Campaign Landscape (5 ACTIVE/13 PAUSED/18 total, Houston added, all campaigns with current stats), Proposals Status, Upcoming Shows. All verified against Supabase.
-- **Logging gap:** LEARNINGS.md entry was not written. Cause unknown (likely session ended before logging).
+**Key findings preserved from Cycles #46-53:**
+- 🔑 Houston detected at $400/day with $0 spend (later raised to $1,500/day) — critical delivery issue or zero-attribution
+- 🔑 KYBBA marginal improved from 0.61× to 0.95× (pre-swap, Feb 19→25)
+- 🔑 KYBBA adset swap: V9+V1 paused, V5+Asset1 activated (~01:00 UTC Feb 25). First post-swap snapshot Feb 26.
+- 🔑 Agent architecture evolved: single Telegram bot → multi-agent Discord command center (7 specialized agents)
+- 🔑 chat.txt completed 4th pass with delivery diagnosis workflow
+- 🔑 Recurring logging gap pattern (Cycles #49, #51): sessions ending before LEARNINGS.md entry written
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), **#46-53 (#58)**
 
-## 2026-02-25 ~02:32 UTC — Cycle #50 (Business Monitoring)
-- **Priority chosen:** P4 — Business Monitoring (rotation-compliant — last logged was P2 #48, #49 was P3. Houston $0 spend needs follow-up)
-- **P1 check:** ALL GREEN. Scheduler alive (heartbeats 02:27-02:31 UTC Feb 25). Endpoints: ingest 401 ✅, alerts 401 ✅. No Clerk regression. Session cache: campaigns 00:01 UTC (2.5h old), events 02:03 UTC (30min old).
-- **What I audited or read:**
-  - LEARNINGS.md (full), MEMORY.md (full)
-  - Supabase meta_campaigns: 5 ACTIVE (unchanged from Cycle #47)
-  - Supabase campaign_snapshots: 4 dates (Feb 19, 23, 24, 25)
-  - Session cache (matches Supabase exactly — same 00:00 UTC sync)
-  - TM scraper logs: both fast variants healthy, 25 events, no errors
-  - Agent heartbeats: current (02:27-02:31 UTC)
-- **🔴 Houston $0 spend — PERSISTS (2h since detection):**
-  - Campaign 120242223711720525, $400/day budget, 0 impressions, 0 clicks, 0 reach
-  - Session cache (from 00:01 UTC sync) shows ACTIVE with $0 — same as Cycle #47
-  - **Timing refinement:** Houston first appeared in ACTIVE status at 00:00 UTC Feb 25 sync. It was PAUSED (or non-existent in cache) at the prior sync. Activation window: 18:00 UTC Feb 24 → 00:00 UTC Feb 25 (6h window). So Houston has been ACTIVE for 2.5-8.5 hours.
-  - **Assessment:** If activated near the end of the window (e.g., 22:00 UTC), 4.5h of $0 delivery could be normal Meta ramp-up. If activated near the start (18:00 UTC), 8.5h with 0 impressions is a delivery problem.
-  - **Next checkpoint: 06:00 UTC Feb 25 sync** (~3.5h from now). If still $0 after 8-14.5 hours ACTIVE, almost certainly a delivery issue (ads WITH_ISSUES, adset targeting too narrow, or account-level issue).
-  - Dashboard alert already posted (Cycle #47). No new alert needed.
-- **All other campaigns — unchanged from Cycle #47:**
-  - KYBBA: $2,423, 2.47× (marginal 0.95× Feb 19→25). Pre-swap data only.
-  - Alofoke: $365, 8.72× (marginal 23.4× Feb 23→25, attribution catch-up). $2K cap: $1,615 projected (80.7%).
-  - Camila Ana: $379, 3.81× (marginal 4.76×). Pacing ~72%.
-  - Camila Sac: $363, 4.42× (marginal 6.16×). Pacing ~68%.
-  - **No threshold breaches.** All ACTIVE above 2.0.
-- **ROAS trends (4 snapshots):** KYBBA 2.73→2.46→2.46→2.47 (tiny uptick). Alofoke/Camila all improving. No 3-consecutive-decline flags.
-- **Status changes:** None. 5 ACTIVE, 13 PAUSED, 18 total.
-- **Shows:** Seattle Feb 25 (TODAY, PAUSED — intentional), Portland Feb 26 (TOMORROW, PAUSED), Alofoke Boston Mar 2 (5 days, ACTIVE $250/day).
-- **KYBBA post-swap:** Swap at 01:00 UTC Feb 25. Feb 25 snapshot was 00:00 UTC = pre-swap. First post-swap snapshot: Feb 26. First reliable marginal: Feb 28. Do not evaluate before then.
-- **Cycle #49 logging gap fixed** — retroactive entry added above.
-- **No Telegram draft** — Houston already alerted (Cycle #47), no new anomalies. All campaigns tracked.
-- **Next priority:** P6 — Infrastructure Check (last done Cycle #41, 9 cycles ago — most overdue). Or P5 — Knowledge Expansion (last done Cycle #44, 6 cycles ago). Avoid P4 next per rotation.
+## 2026-02-25/03-04 — Cycles #54-56 Summary (Discord Prompts Audit + Snapshot Gap Discovery)
 
-## 2026-02-25 ~03:00 UTC — Cycle #51 (Memory Maintenance/Infra — retroactive log)
-> **Note:** This cycle updated MEMORY.md (Data Pipeline verified, event_snapshots now populated w/ 72 rows, CLI v2.1.55) but failed to log itself in LEARNINGS.md. Reconstructed retroactively by Cycle #52. Third logging gap (after Cycles #49, #51).
-- **Priority chosen:** P3/P6 hybrid (based on MEMORY.md edits referencing "Cycle #51")
-- **Action taken:** Updated MEMORY.md Data Pipeline Status (event_snapshots confirmed populated — 72 rows, 3 dates), Claude CLI v2.1.52 → v2.1.55. All data pipeline items verified.
-- **Logging gap:** LEARNINGS.md entry not written. Cause: likely session ended before logging (same pattern as Cycle #49).
+> Condensed from 3 detailed entries during Cycle #57 memory maintenance. See git history for originals.
 
-## 2026-02-25 ~04:30 UTC — Cycle #52 (Infrastructure Check)
-- **Priority chosen:** P6 — Infrastructure Check (rotation-compliant — last logged P6 was Cycle #41, 11 cycles ago — most overdue priority. Last cycle was P4 #50, #51 was P3/P6 hybrid)
-- **P1 check:** No breakage. Scheduler alive (heartbeats 04:29-04:31 UTC, live). Endpoints: ingest 401 ✅, alerts 401 ✅. No Clerk regression.
-- **What I audited or read:**
-  - LEARNINGS.md (full — 466 lines pre-edit, through Cycle #50)
-  - MEMORY.md (full — 165 lines, references Cycle #51 updates)
-  - .env: 7/7 vars set ✅ (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, INGEST_URL, INGEST_SECRET, TELEGRAM_BOT_TOKEN, TM_EMAIL, TM_PASSWORD)
-  - Claude CLI: **v2.1.55** ✅ (matches MEMORY.md)
-  - Endpoints: ingest POST → 401 ✅ (alive), alerts POST → 401 ✅ (no Clerk 307 regression)
-  - Scheduler heartbeats: **LIVE** at 04:29-04:31 UTC ✅ (1-min intervals, current)
-  - Session cache: campaigns 00:01 UTC Feb 25 (~4.5h old), events 04:08 UTC Feb 25 (~22min old — TM scraper ran recently)
-  - Non-heartbeat jobs: last was tm-demographics Feb 23 01:10 UTC (confirms cron doesn't create agent_jobs)
-  - Campaign snapshots: **4 dates** (Feb 19: 13, Feb 23: 17, Feb 24: 15, Feb 25: 5) ✅
-  - Event snapshots: **3 dates** (Feb 23: 24, Feb 24: 24, Feb 25: 24) ✅ — confirmed populated per Cycle #51 MEMORY.md update
-  - TM scraper logs: fast scraper healthy (25 events via GraphQL ✅), full scraper runs but all per-event API calls return empty (known permissions issue, not critical)
-  - Supabase ACTIVE campaigns: 5 (KYBBA $2,423/2.47×, Alofoke $365/8.72×, Camila Sac $363/4.42×, Camila Ana $379/3.81×, Houston $0/0.00×)
-- **Action taken:**
-  1. **Removed duplicate Cycles #41-45 entries** from LEARNINGS.md (~108 lines). These were detailed entries that should have been deleted during Cycle #46 condensation but were left behind. The condensed summary (lines 205-225) already captures all findings.
-  2. **Added retroactive Cycle #51 entry** — third logging gap fixed (after Cycles #49, #51).
-  3. **Logged this cycle (#52).**
-- **🔴 Houston $0 spend — STILL PERSISTS (4+ hours since detection, 4-10h since activation):**
-  - Campaign 120242223711720525, ACTIVE, $400/day budget, 0 impressions, 0 clicks
-  - At 4+ hours post-detection with zero impressions on $400/day, this is increasingly likely a delivery issue (not just Meta ramp-up)
-  - Dashboard alert was posted Cycle #47 — no duplicate alert needed
-  - **Next checkpoint: 06:00 UTC sync** (~1.5h from now). If still $0 after this sync captures fresh Meta data, Jaime needs to investigate (check adset/ad effective_status for WITH_ISSUES)
-- **Observations:**
-  - bash `source .env` returns exit code 126 (permission denied on macOS). Grep-based extraction works fine. Not critical — scheduler uses Node.js dotenv, not bash source. But future think cycles should use `grep '^VAR=' .env | cut -d= -f2` pattern.
-  - Session cache campaigns file (00:01 UTC) is 4.5h old — next Meta sync at 06:00 UTC. Events file (04:08 UTC) is recent.
-  - LEARNINGS.md had a condensation defect from Cycle #46 — detailed entries #41-45 weren't deleted. Fixed this cycle.
-  - Recurring logging gap pattern (Cycles #49, #51): sessions ending before LEARNINGS.md entry is written. Root cause likely: cycle runs out of turns or context window. No code fix available (agent infra, not think loop).
-- **Infrastructure summary: ALL GREEN** — .env ✅, endpoints ✅, scheduler ✅, CLI ✅, snapshots ✅, TM scrapers ✅. Only active issue is Houston $0 delivery (business, not infra).
-- **No Telegram draft** — Houston already alerted, no new infra issues. All systems operational.
-- **Next priority:** P4 — Business Monitoring (highest value after 06:00 UTC sync — Houston checkpoint + possible new data). Or P2 — Prompt Audit (think.txt 4th pass, last audited Cycle #37). Avoid P6 next per rotation.
+- **Cycle #54 (P2 — Discord prompt audit):** All P1 issues from Cycle #53 resolved (.env restored, scheduler running, session/ exists). Audited all 10 prompt files (7 new Discord + 3 existing). **All cross-consistent**: client aliases, creds, API v21.0, ad account, pixel ID, Supabase patterns. Fixed: reporting-agent.txt missing TM data caveat, tm-agent.txt UUOC. ⚠️ Pixel ID divergence from global project MEMORY.md (agent: 879345548404130, global: 1553637492361321) — needs Jaime clarification. Houston now spending ($242, up from $0) but 0.0× ROAS. KYBBA budget doubled to $100/day.
+- **Cycle #55 (P4 — monitoring, Feb 25):** 5 ACTIVE. Houston 🔴 $242 spent, 0 ROAS, 42K impressions, 1,211 clicks — probable pixel/landing page issue (alert already posted). KYBBA marginal worsened to 0.86× (long-term) but 1.65× (recent 2-day, possibly reflecting adset swap). Blended 2.43×, crosses 2.0 ~Mar 6 (conservative). Alofoke 8.53× (exceptional), Camila Ana 3.11× + Sac 4.85× (healthy). **Event snapshots confirmed STATIC** — 72 rows of identical data across 3 dates (TM One source frozen). ROAS trends: Feb 23→24 snapshot deltas useless (Meta reporting lag), Feb 24→25 deltas match expected spend.
+- **Cycle #56 (P4 — Mar 4, 7-day gap):** 🔴 **Snapshots stopped after Feb 26** — 6 days missing (Feb 27–Mar 4). Scheduler heartbeats running but Meta sync cron NOT producing data. KYBBA projected to cross 2.0× ~Mar 7 (may already be below). Houston budget escalated to $1,500/day (was $400), spend stuck at $242 in stale data. Alofoke show (Boston Mar 2) is PAST but campaign still ACTIVE. Alerts posted. Jaime actively building TM1 scraper (40+ debug files in session/). MEMORY.md updated with current state.
 
-## 2026-02-25 ~22:33 UTC — Cycle #53 (Business Monitoring + P1 Assessment)
-- **Priority chosen:** P4 — Business Monitoring (rotation-compliant — last was P6 #52. Houston checkpoint overdue, new snapshots expected)
-- **P1 check: 🔴 MAJOR — Agent environment disrupted during restructuring**
-  - **`.env` file MISSING from disk** — not just gitignored, genuinely gone. Was present as recently as Cycle #52 (~04:30 UTC today). Blocks all Supabase queries, endpoint checks, and scheduled operations.
-  - **No scheduler process running** — `ps aux` shows no node/tsx agent process. No heartbeats, no syncs, no think cycles running.
-  - **`session/` directory does NOT exist** — index.ts auto-creates it on startup, so this confirms scheduler hasn't run since the restructuring.
-  - **`.env.local` (Meta credentials) still exists** in parent directory ✅
-  - **Assessment:** Jaime has been actively restructuring the agent today (all file timestamps Feb 25 13:25-16:29). This appears to be **work-in-progress**, not accidental breakage. The scheduler hasn't been restarted after the code changes. Likely intentional — Jaime is adding Discord bot integration and hasn't created `.env` from `.env.example` yet.
-  - **Impact:** No monitoring possible this cycle. Can't query Supabase, can't check endpoints, can't check Houston $0 spend status.
-- **What I audited or read:**
-  - LEARNINGS.md (full, 396 lines — through Cycle #52)
-  - MEMORY.md (full, 170 lines)
-  - Agent directory listing (no .env, no session/)
-  - Git log (15 recent commits — major Discord integration)
-  - Git status (6 new prompt files, 8 modified files, discord-admin.txt→discord-agent.txt rename)
-  - New files: scheduler.ts, runner.ts, index.ts, boss.txt, media-buyer.txt, discord-agent.txt
-  - CLAUDE.md (unchanged, still references old file structure)
-- **🔑 MAJOR ARCHITECTURAL SHIFT — Multi-Agent Discord System:**
-  - Agent has evolved from single Telegram bot → **multi-agent Discord command center**
-  - **7 NEW specialized prompt files** (all created today):
-    1. `boss.txt` — COO orchestrator agent. Sits in #boss channel. Reads activity log across all channels, synthesizes briefings, updates MEMORY.md, creates skills.
-    2. `media-buyer.txt` — Meta Ads specialist. Full API access, executes changes. Replaces command.txt for ad operations.
-    3. `discord-agent.txt` — Discord server management. Channels, roles, permissions, auto-moderation. Guild ID: 1340092028280770693.
-    4. `client-manager.txt` — client-facing operations (not fully read this cycle)
-    5. `creative-agent.txt` — ad creative management (not fully read this cycle)
-    6. `reporting-agent.txt` — performance reports (not fully read this cycle)
-    7. `tm-agent.txt` — Ticketmaster data (not fully read this cycle)
-  - **Existing prompts retained:** command.txt, chat.txt, think.txt (all unchanged)
-  - `prompts/discord-admin.txt` DELETED → replaced by `discord-agent.txt`
-  - **New code files:** `discord-admin.ts` (channel management), `discord-router.ts` (message routing), `discord-restructure.ts` (server setup)
-  - **Scheduler changes:** Added Discord health check cron (every 12h), Discord channel notifications (active-jobs, tm-data, performance, agent-alerts), `triggerManualJob()` for Discord-triggered runs
-  - **Runner changes:** Added `resumeSessionId` (multi-turn context), `directSystemPrompt` (runtime injection), `onChunk` (live streaming), `--setting-sources local` (blocks global memory)
-  - **Activity log system:** `session/activity-log.json` — cross-channel coordination file for Boss agent
-  - **Skills directory:** `skills/` created (empty, .gitkeep only)
-  - **New .env vars needed:** DISCORD_BOT_TOKEN, DISCORD_CHANNEL_ID, DISCORD_CLIENT_ID, DISCORD_GUILD_ID, DISCORD_LOG_CHANNEL_ID, DISCORD_WELCOME_CHANNEL_ID, DISCORD_DEFAULT_ROLE_ID, DISCORD_EXEMPT_CHANNELS, DISCORD_BANNED_WORDS, TELEGRAM_CHAT_ID, CLAUDE_PATH, CHECK_CRON
-- **Houston $0 spend — STATUS UNKNOWN:**
-  - Was flagged Cycle #47 (~00:30 UTC Feb 25). Next checkpoint was 06:00 UTC sync (~16h ago).
-  - Cannot check without Supabase access. This is now stale — ~22h since first detection.
-  - Jaime has been actively working on the codebase today, so he's likely aware of campaign status.
-- **MEMORY.md/CLAUDE.md staleness:**
-  - CLAUDE.md still references old file structure (session/last-campaigns.json, prompts/command.txt as primary). Doesn't mention Discord architecture, new prompt files, or multi-agent system. Needs update.
-  - MEMORY.md doesn't reflect the Discord integration, new prompt file inventory, or architectural shift. Needs update, but since `.env` is missing, some entries (like "scheduler alive") are now wrong.
-  - Will defer MEMORY.md updates to next cycle when state is clearer (Jaime may still be mid-restructure).
-- **Observations:**
-  - `index.ts` creates `session/` on startup — confirms dir is runtime-created, not missing from a bug
-  - Think loop still uses `prompts/think.txt` (unchanged). But the new multi-agent system may change how think cycles work in the future.
-  - `discord-agent.txt` hardcodes Guild ID `1340092028280770693` — should be in .env or MEMORY.md
-  - Runner added `--setting-sources local` flag — this blocks global project memory, which is the proper fix for context bleed (previously handled only by warning text in prompts)
-- **No Telegram draft** — Jaime is actively developing. The missing .env and stopped scheduler are expected during restructuring, not an alert-worthy event. Houston status unknown but Jaime is actively at his computer working.
-- **Next priority:** P3 — Memory Maintenance (MEMORY.md needs significant updates for the new architecture once restructuring stabilizes). Or P2 — audit the new prompt files (boss.txt, media-buyer.txt etc.) for consistency with MEMORY.md. Avoid P4 next (can't do monitoring without .env). **Critical dependency: .env must be recreated before monitoring can resume.**
+**Key findings preserved from Cycles #54-56:**
+- 🔴 Campaign snapshots stopped after Feb 26 — 6+ days stale. Scheduler heartbeats alive but Meta sync not writing.
+- 🔴 Houston $242 spent + 0.0× ROAS with $1,500/day budget — delivery and/or attribution issue. Actual current spend UNKNOWN.
+- 🟡 KYBBA marginal 0.86× (long-term) / 1.65× (post-swap short-term). Projected to cross 2.0 ~Mar 7. Show Mar 22.
+- 🟡 Alofoke Boston show PAST (Mar 2) — campaign still marked ACTIVE, should be paused.
+- 🟡 Event snapshots pipeline writes rows but TM One data source is frozen — zero velocity tracking capability.
+- ✅ All 10 Discord prompt files cross-consistent after Cycle #54 audit.
+- ⚠️ Pixel ID divergence between agent (879345548404130) and global project MEMORY.md (1553637492361321) — unresolved.
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), **#54-56 (#57)**
 
-## 2026-02-25 ~23:03 UTC — Cycle #54 (Prompt Audit — New Discord Agent Prompts)
-- **Priority chosen:** P2 — Prompt Audit (rotation-compliant — last was P4/P1 #53. Audited all 7 new Discord prompt files created during restructuring)
-- **P1 check: ✅ RESOLVED** — All P1 issues from Cycle #53 fixed:
-  - `.env` ✅ restored (19 vars, all expected keys present including Discord, TM, Supabase, Ingest)
-  - Scheduler ✅ running (PID 87179, started 4:40 PM CST, heartbeats every minute)
-  - `session/` ✅ exists (empty — expected, no cron has fired yet. First sync ~00:00 UTC = 6 PM CST)
-- **What I audited:** All 10 prompt files: boss.txt, media-buyer.txt, client-manager.txt, creative-agent.txt, reporting-agent.txt, tm-agent.txt (new), plus command.txt, chat.txt, think.txt (existing, unchanged)
-- **Cross-consistency findings:**
-  1. ✅ **Client aliases**: Identical across all 7 agent prompts — zamora, kybba, alofoke, camila, beamina, happy_paws
-  2. ✅ **Credential extraction**: All use `grep X .env | cut -d= -f2` pattern. All reference `../.env.local` for META_ACCESS_TOKEN
-  3. ✅ **API version**: All use v21.0 consistently
-  4. ✅ **Ad account ID**: All use act_787610255314938
-  5. ✅ **Pixel ID**: All use `879345548404130` consistently within agent context
-  6. ✅ **Context bleed warning**: All 7 prompts have it (3 abbreviated, 4 full — acceptable since `--setting-sources local` is now in runner)
-  7. ✅ **Supabase patterns**: All use correct column names (`name` not `campaign_name`)
-  8. ⚠️ **Pixel ID divergence from global project MEMORY.md**: Agent uses `879345548404130`, but global project MEMORY.md (outside agent/) lists `1553637492361321` (purchase optimization) + `918875103967661` (sienna, created Feb 25). Agent context is self-consistent but may be stale if Jaime changed the active pixel. **Need Jaime to clarify.**
-  9. ⚠️ **reporting-agent.txt missing TM data caveat**: Queries `tickets_available` and `gross` but doesn't warn they're null for most events → **FIXED: added data limitation note**
-  10. ⚠️ **tm-agent.txt UUOC**: Used `cat .env | grep` instead of `grep X .env` → **FIXED: removed useless cat**
-- **Prompt quality assessment:**
-  - **boss.txt**: Excellent. Clear COO role, activity log system, team routing table, Discord REST API, self-improvement via skills/. Well-structured.
-  - **media-buyer.txt**: Excellent. Comprehensive read+write operations, safety guardrails (budget min/max, no DELETE, confirmation for activations), marginal ROAS framework, $0 spend diagnosis checklist. Best prompt of the set.
-  - **client-manager.txt**: Good. Onboarding checklist is actionable. Budget tracking section needs Supabase `like` syntax (`*Zamora*` should be `%25Zamora%25` URL-encoded, or use PostgREST `ilike`). Not fixing this cycle — minor.
-  - **creative-agent.txt**: Good. Creative specs are accurate (4:5, 9:16, text limits). Fatigue detection framework solid. Read-only stance (directs to #media-buyer for changes) is correct.
-  - **reporting-agent.txt**: Good. Report templates are actionable. Cross-source matching documented. Fixed TM data caveat.
-  - **tm-agent.txt**: Excellent. All 26 surrogate IDs documented. Demographics endpoint, zip code scraping, ingest payloads all correct. Fixed UUOC.
-- **Business observations (from Supabase query during .env verification):**
-  - 🟢 **Houston NOW SPENDING**: $242.55 spend (up from $0), but **0.00 ROAS** (0 purchases). Feb 25 snapshot captured $0 (before spending started). At $400/day, $242 is ~14 hours of spend. 0 purchases on $242 spend is approaching watch territory but not yet at $50 kill threshold per media-buyer.txt strategy.
-  - 🟡 **KYBBA budget doubled**: Was $50/day (5000 cents), now $100/day (10000 cents). Intentional by Jaime — not flagging.
-  - 🟢 **KYBBA ROAS 2.43×** (live) — still above 2.0 but down from 2.47× (Feb 25 snapshot). Decline continues.
-  - 🟢 **Camila Sacramento improving**: 4.85× ROAS (live) vs 4.42× (Feb 25 snapshot). Positive trend.
-  - 🟢 **Alofoke strong**: 8.53× ROAS, $551 spend. Boston Mar 2 (5 days out). On track.
-- **Files changed this cycle:**
-  - `prompts/reporting-agent.txt`: Added TM data limitation note (tickets_available/gross may be null)
-  - `prompts/tm-agent.txt`: Replaced `cat .env | grep` with `grep X .env` for consistency
-  - `LEARNINGS.md`: This entry
-- **No Telegram draft** — No critical findings. Houston spending is good news. Pixel ID question is for next in-person check.
-- **Next priority:** P3 — Memory Maintenance (MEMORY.md needs updates for new architecture: Discord integration, new prompt file inventory, updated campaign state). Or P4 — full monitoring cycle now that .env and scheduler are back.
+## 2026-03-04/05 — Cycles #57-61 Summary (Data Gap Recovery + Major Landscape Change)
 
-## 2026-02-25 ~23:35 UTC — Cycle #55 (Business Monitoring)
-- **Priority chosen:** P4 — Business Monitoring (rotation-compliant — last was P2 #54. Full monitoring cycle with Supabase queries.)
-- **P1 check: ✅ No breakage** — .env present, scheduler alive (heartbeats every minute through 23:30 UTC), Supabase responding.
-- **Infrastructure notes:**
-  - Session cache files (`last-campaigns.json`, `last-events.json`) do NOT exist post-restructuring. New Discord architecture uses `session/activity-log.json` instead. Monitoring works fine via direct Supabase queries.
-  - First Meta sync after scheduler restart was likely at 00:00 UTC Feb 26 (not yet — scheduler restarted ~22:40 UTC Feb 25, so cron at 00:00 UTC is the first scheduled sync).
-- **Campaign monitoring results (5 ACTIVE, data from 18:00 UTC sync + live Supabase):**
-  1. 🔴 **Houston — STILL $0 ROAS, $242.55 spent** — Critical alert already posted at 20:32 UTC today (by another agent session). At $400/day budget, likely at ~$335-400 total by now. Zero purchases despite 42K impressions and 1,211 clicks (CTR 2.84%). Probable pixel/landing page issue. **No new alert posted — existing critical alert covers it.**
-  2. 🟡 **KYBBA — Marginal ROAS worsened to 0.86×** (from 0.95× last cycle). Budget doubled to $100/day. Long-term marginal (Feb 19→live, 6-day span): 0.86×. But recent marginal (Feb 23→live, 2-day span) shows 1.65× — possibly reflecting adset swap effect (V5+Asset1 activated Feb 24). Blended: 2.43× (down from 2.47 snapshot). Projection: blended crosses 2.0 ~Mar 6 at conservative 0.86× rate, or ~Mar 28 at optimistic 1.65× rate. Show date Mar 22. **Post-swap evaluation starts Feb 28.** Alert already posted.
-  3. 🟢 **Alofoke — Exceptional: 8.53× live, marginal 13.25×.** $551 spend, $250/day budget. Boston Mar 2 (5 days out). On track. No concerns.
-  4. 🟢 **Camila Anaheim — Healthy: 3.11× live, marginal 2.69×.** ROAS dipped from 3.81 (snapshot) to 3.11 (live) — likely intraday attribution lag (per established rule: within-day deltas unreliable). Multi-day marginal is solid.
-  5. 🟢 **Camila Sacramento — Strong: 4.85× live, marginal 6.35×.** Improving trend (up from 4.42 snapshot). Best-performing Camila campaign.
-- **Pacing analysis:**
-  - Anaheim: 77% (6 days elapsed, $463/$600 expected). Normal ramp-up. ✅
-  - Sacramento: 75% (6 days elapsed, $452/$600 expected). Normal ramp-up. ✅
-  - Houston, KYBBA, Alofoke: pacing skipped (budget changes or pause history — formula unreliable).
-- **🟡 EVENT SNAPSHOTS — COMPLETELY STATIC:**
-  - All 24 events show **zero ticket delta** across 3 consecutive snapshot dates (Feb 23, 24, 25). Every single `tickets_sold` value is identical.
-  - This confirms: event_snapshots pipeline works mechanically (writes rows) but the underlying TM One data source is frozen. The original `tickets_sold` values came from an earlier scraper session when the API briefly worked. Current scraper re-captures the same static values.
-  - **Impact:** Event velocity monitoring is impossible until TM One per-event API returns live data. Snapshots are useless for tracking sell-through trends.
-  - Not alerting (known TM One limitation, documented in MEMORY.md). But worth noting that the event_snapshots table now has 72 rows (3 dates × 24 events) of identical data — adds no analytical value.
-- **ROAS trend analysis (4 snapshot dates: Feb 19, 23, 24, 25):**
-  - KYBBA: 2.73 → 2.46 → 2.46 → 2.47. Declining but stabilized. Most recent dip in live data (2.43).
-  - Alofoke: 3.67 → 3.66 → 8.72. Massive jump Feb 24→25 = attribution catch-up. Now 8.53 live.
-  - Anaheim: 3.42 → 3.41 → 3.81. Feb 24→25 was a good day. Live dipped to 3.11.
-  - Sacramento: 3.67 → 3.65 → 4.42. Steady improvement. Now 4.85 live.
-  - **Observation:** Feb 23→24 snapshot deltas confirm Meta reporting lag — near-zero spend changes (KYBBA: $0.22, Alofoke: $0.84 on $100-250/day budgets). Feb 24→25 deltas are much larger (KYBBA: $53.60, Alofoke: $92.39) and match expected 1-day spend. This suggests the Feb 23 snapshot was taken before Meta finalized Feb 22's data, while Feb 25 snapshot captured correctly.
-- **Alerts status:** 5 alerts in dashboard, none read. Houston critical + KYBBA warning from 20:32 UTC today. No new alerts needed.
-- **No Telegram draft** — All critical alerts already posted by earlier session. No new anomalies discovered. KYBBA marginal worsening is incremental, not actionable until post-swap evaluation Feb 28.
-- **Next priority:** P3 — Memory Maintenance. MEMORY.md needs updates for: (1) Discord multi-agent architecture (not yet reflected), (2) updated campaign state (Houston spending but 0 ROAS, KYBBA budget doubled), (3) event snapshot staleness finding, (4) session cache file changes (no more last-campaigns.json/last-events.json). Also: clean up LEARNINGS.md condensed history if it's getting too long (currently 55 cycles).
+> Condensed from 5 detailed entries during Cycle #62 memory maintenance. See git history for originals.
+
+- **Cycle #57 (P3 — memory):** Condensed Cycles #54-56. MEMORY.md verified. 7-day snapshot gap (Feb 27-Mar 4) most critical unresolved issue. Jaime actively building TM1 scraper (40+ session files).
+- **Cycle #58 (P4 — monitoring):** Data still stale (Feb 26). Root cause confirmed: Discord restructuring broke Meta sync cron — only heartbeats survived. Last `meta-ads` job was Feb 18 (14 days). Marginal ROAS from Feb 24→26: KYBBA 1.66×, Alofoke 13.24×, Ana 2.69×, Sac 6.39×, Houston 0.0×.
+- **Cycle #59 (P6 — infra):** ALL endpoints alive. CLI v2.1.68. .env 23 vars ✅. New `assistant` job from Jaime (19:08 UTC) — interacting with agent via Discord. Meta sync still broken.
+- **Cycle #60 (P2 — prompt audit):** **🔴 Alert levels bug found in 3 prompt files** — command.txt, chat.txt, media-buyer.txt all used "warning"/"critical" instead of Zod-validated "warn"/"error". Would silently reject all alert POSTs from those modes. Fixed all 3 files + added explicit Zod warning. think.txt: updated P2 rotation list to all 10 files + added missing Supabase tables.
+- **Cycle #61 (P4 — major landscape change):** **Snapshots RESUMED** (Mar 5, 10 rows). Campaign count 18→25, ACTIVE 5→10. **7 new campaigns** including 2 new clients (Sienna, Vaz Vil). Houston + Alofoke PAUSED. **KYBBA marginal 4.67×** — crisis averted, adset swap confirmed effective. **San Diego 0.95× with $300/day** — alert posted. Sienna 0× with $200/day flagged. Telegram drafted.
+
+**Key findings preserved from Cycles #57-61:**
+- 🔴 Alert levels bug fixed in 3 prompt files (Cycle #60) — was silently blocking all non-think alerts
+- 🔴 San Diego 0.95× ROAS at $300/day — actively losing money (Cycle #61)
+- 🟢 KYBBA marginal recovered: 0.61× → 1.66× → 4.67× — adset swap definitively worked
+- 🟢 Snapshots resumed Mar 5 after 7-day gap. Gap Feb 27-Mar 4 permanent.
+- 🟢 Campaign landscape expanded: 25 campaigns (10 ACTIVE), 2 new clients (Sienna, Vaz Vil)
+- 🟡 Sienna 0× ROAS, $200/day — possible pixel issue
+- Meta sync cron broken since Discord restructuring (~Feb 25), but snapshots resumed via different path
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), **#57-61 (#62)**
+
+## 2026-03-05 — Cycles #63-67 Summary (Monitoring + Prompt Audits + Infra)
+
+> Condensed from 5 detailed entries during Cycle #68 memory maintenance. See git history for originals.
+
+- **Cycle #63 (P4 — monitoring):** 25 campaigns, 10 ACTIVE (unchanged). Marginal ROAS (Feb 26→Mar 5, 7-day gap): KYBBA 4.67× (confirmed recovery), Ana 5.26×, Sac 4.64× — all healthy. Persistent flags: San Diego 0.95×/$300/day, Sienna 0×/$200/day, Phoenix 2.26×/$300/day. SF+Palm Desert 0 purchases. SLC 6.94× (strong). Alert posted.
+- **Cycle #64 (P2 — boss.txt + media-buyer.txt):** 6 fixes across 2 files. boss.txt +40 lines: missing Sienna/Vaz Vil aliases, no alerts endpoint, no Supabase column naming, no marginal ROAS methodology, no snapshot query. media-buyer.txt: +2 lines (aliases). All client aliases now consistent across all 10 prompt files.
+- **Cycle #65 (P4 — monitoring):** Identical data to #63. Houston→PAUSED (0× ROAS, good call), Alofoke→PAUSED (show past). Marginal ROAS unchanged. Same persistent flags. Alert posted.
+- **Cycle #66 (P6 — infra):** ALL GREEN. .env 23 vars ✅, endpoints alive ✅, CLI v2.1.69, heartbeats current, Mar 5 snapshots (10 rows). Old meta-ads cron deprecated (last Feb 18) — snapshots arrive via Discord assistant path. TM1 scraper under heavy development (50 files in session/).
+- **Cycle #67 (P2 — tm-agent.txt + creative-agent.txt):** 9 fixes across 2 files. tm-agent +57 lines: client aliases, alerts endpoint, UUOC fix, Supabase section, TM One limitations, session file list. creative-agent +17 lines: client aliases, split creative rules (post/story), error 2490085 pattern. All 10 prompts cross-consistent.
+
+**Key findings preserved from Cycles #63-67:**
+- All 10 prompt files now have: client aliases (incl. Sienna/Vaz Vil), alerts endpoint, Supabase column naming
+- KYBBA marginal 4.67× confirmed across 3 consecutive monitoring cycles — recovery is real
+- Persistent campaign flags: San Diego 0.95×, Sienna 0×, Phoenix 2.26×, SF+Palm Desert 0×
+- Infrastructure fully operational, old meta-ads cron deprecated, snapshots flow via Discord assistant
+- CLI v2.1.69
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), **#63-67 (#68)**
+
+## 2026-03-04/05 — Cycles #68-72 Summary (Monitoring + Final Prompt Passes)
+
+> Condensed from 5 detailed entries during Cycle #73 memory maintenance. See git history for originals.
+
+- **Cycle #68 (P3 — memory):** Condensed #63-67. MEMORY.md verified (CLI v2.1.69). 6 snapshot dates, 65 rows.
+- **Cycle #69 (P4 — monitoring):** 25 campaigns, 10 ACTIVE. KYBBA 2.65x (marginal 4.67x, crisis averted). San Diego 0.95x/$300/day still #1 concern. Sienna $235/0x. SF+Palm Desert 0x. Phoenix 2.26x. SLC 6.94x.
+- **Cycle #70 (P2 — reporting-agent.txt):** +35 lines: client aliases (Sienna/Vaz Vil), Supabase column naming, snapshot caveats, TM One data caveat, alerts endpoint, marginal ROAS methodology. 232->267 lines.
+- **Cycle #71 (P4 — monitoring):** Same data as #69. Marginal ROAS (Feb 26->Mar 5): KYBBA 4.67x, Ana 5.26x, Sac 4.64x — all strong. Shows imminent: San Jose Mar 6, San Diego Mar 7, Phoenix Mar 8, SLC Mar 9.
+- **Cycle #72 (P2 — client-manager.txt):** +50 lines: client aliases, Supabase naming, client overview (Sienna/Vaz Vil), alerts endpoint, budget cap tracking. 210->260 lines. All 10 prompts now have Sienna/Vaz Vil aliases.
+
+**Key findings preserved from Cycles #68-72:**
+- KYBBA marginal 4.67x confirmed stable across 3 monitoring cycles
+- All 10 prompt files completed latest round of updates (reporting-agent #70, client-manager #72)
+- Persistent flags unchanged: San Diego 0.95x, Sienna 0x, SF+Palm Desert 0x, Phoenix 2.26x
+- Shows imminent Mar 6-9 with mixed campaign health
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), #63-67 (#68), **#68-72 (#73)**

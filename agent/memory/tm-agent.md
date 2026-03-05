@@ -39,3 +39,11 @@ Extracts event listings, ticket counts, and sales metrics.
 - Session file: session/last-events.json (25 events)
 - Supabase table: tm_events
 - Snapshot table: event_snapshots (daily snapshots)
+
+
+<!-- auto-learned 2026-03-04 -->
+- TM_PASSWORD now set in agent/.env (was blank, now populated)
+
+<!-- auto-learned 2026-03-05 -->
+- TM One API requires browser context; raw HTTP with cookies/token returns SPA shell
+- TM cookie refresh must use fresh context, not load expired cookies

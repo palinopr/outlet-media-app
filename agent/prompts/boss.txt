@@ -170,16 +170,39 @@ curl -s "${SUPABASE_URL}/rest/v1/tm_events?order=date.asc" \
   -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
 
+### Supabase: campaign snapshots (for trends/marginal ROAS)
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.desc&limit=7" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+
 ### Discord: list channels
 ```bash
 curl -s "$API/guilds/$GUILD_ID/channels" -H "$AUTH"
 ```
+
+### Dashboard alerts
+```bash
+INGEST_URL=$(grep INGEST_URL .env | cut -d= -f2)
+INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
+BASE_URL="${INGEST_URL%/api/ingest}"
+curl -s -X POST "$BASE_URL/api/alerts" \
+  -H "Content-Type: application/json" \
+  -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warn\"}"
+```
+**Level must be one of: "info", "warn", "error"** (Zod-validated — "warning" and "critical" are REJECTED silently).
 
 ### Parsing Meta data
 - `purchase_roas[0].value` -> ROAS (string -> float)
 - Revenue = spend x ROAS
 - CPA = spend / purchases (actions where action_type = "purchase")
 - Budgets from Meta are in CENTS (divide by 100)
+- **Supabase column naming gotchas:**
+  - `meta_campaigns`: name column is `name` (NOT `campaign_name`)
+  - `campaign_snapshots`: spend column is `spend` — value is in CENTS despite the name (NOT `spend_cents`)
+  - `agent_jobs`: job identifier is `agent_id` (NOT `job_type`). Use `created_at` for ordering.
+  - `agent_alerts`: level must be "info"/"warn"/"error" (Zod-validated)
 
 ---
 
@@ -189,6 +212,8 @@ curl -s "$API/guilds/$GUILD_ID/channels" -H "$AUTH"
 - "zamora", "arjona", "ricardo" -> Zamora (Arjona campaigns)
 - "alofoke" -> Zamora (Alofoke sub-brand, Boston show)
 - "camila" -> Zamora (Camila sub-brand, multiple cities)
+- "sienna", "peace in mind" -> Sienna (new client, Feb 27)
+- "vaz vil", "kiko blade", "penetrado" -> Vaz Vil (new client, Mar 3)
 - "beamina", "beam" -> Beamina
 - "happy paws", "paws" -> Happy Paws
 - If you can't match, ASK.
@@ -268,6 +293,22 @@ Use Discord markdown for all responses:
 - ```code blocks``` for data tables
 - Bullet points for readability
 - Embeds for dashboards and status panels (use curl to post)
+
+---
+
+## Marginal ROAS (for scale/kill decisions)
+
+Blended ROAS can mask declining performance. For any "should I scale?" or "should I kill?" question, compute marginal ROAS from `campaign_snapshots`:
+
+```
+Revenue = (spend_cents / 100) * roas   (for each snapshot date)
+Marginal ROAS = (Revenue_new - Revenue_old) / (Spend_new - Spend_old)
+```
+
+- **Marginal > 2.0x** -> safe to scale
+- **Marginal 1.0-2.0x** -> hold, monitor
+- **Marginal < 1.0x** -> losing money on new spend, recommend pause or restructure
+- Need 3+ day gap between snapshot dates for reliable results (consecutive-day deltas are noise due to Meta reporting lag)
 
 ---
 
