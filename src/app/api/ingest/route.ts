@@ -123,7 +123,6 @@ async function ingestTmEvents(body: IngestPayload) {
       .upsert(snapshots, { onConflict: "tm_id,snapshot_date", ignoreDuplicates: true });
 
     if (snapErr) {
-      // Non-fatal: log and continue
       console.warn("Supabase upsert warning (event_snapshots):", snapErr.message);
     }
   }
