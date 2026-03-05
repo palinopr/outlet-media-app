@@ -25,9 +25,12 @@ interface AssetRow {
   media_type: string;
   placement: string | null;
   format: string | null;
+  folder: string | null;
   labels: string[] | null;
   status: string;
   created_at: string;
+  width: number | null;
+  height: number | null;
 }
 
 export default async function ClientAssetsPage({ params }: Props) {
@@ -38,7 +41,7 @@ export default async function ClientAssetsPage({ params }: Props) {
   if (supabaseAdmin) {
     const { data } = await supabaseAdmin
       .from("ad_assets")
-      .select("id, file_name, public_url, media_type, placement, format, labels, status, created_at")
+      .select("id, file_name, public_url, media_type, placement, format, folder, labels, status, created_at, width, height")
       .eq("client_slug", slug)
       .order("created_at", { ascending: false });
     assets = data ?? [];
@@ -51,9 +54,12 @@ export default async function ClientAssetsPage({ params }: Props) {
     mediaType: a.media_type,
     placement: a.placement,
     format: a.format,
+    folder: a.folder,
     labels: a.labels ?? [],
     status: a.status,
     createdAt: a.created_at,
+    width: a.width,
+    height: a.height,
   }));
 
   const imageCount = mapped.filter((a) => a.mediaType === "image").length;

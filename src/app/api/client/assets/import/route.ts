@@ -8,6 +8,7 @@ import {
   downloadCloudFile,
 } from "@/lib/cloud-import";
 import { uploadToAssetStorage, insertAssetRow } from "@/lib/asset-storage";
+import { classifyAsset } from "@/lib/asset-classifier";
 import { getMemberAccessForSlug } from "@/lib/member-access";
 import { notifyCreative } from "@/lib/notify-creative";
 
@@ -135,6 +136,9 @@ export async function POST(req: NextRequest) {
     const { buffer, mimeType } = await downloadCloudFile(
       provider, folder_url, file.downloadUrl,
     );
+    const classification = await classifyAsset(
+      file.name, buffer, mimeType, client_slug,
+    );
     const { storagePath, publicUrl } = await uploadToAssetStorage(
       client_slug, file.name, buffer, mimeType,
     );
@@ -143,6 +147,11 @@ export async function POST(req: NextRequest) {
         clientSlug: client_slug, fileName: file.name,
         storagePath, publicUrl, mimeType,
         uploadedBy: userId, sourceUrl: sourceKey,
+        placement: classification.placement,
+        folder: classification.folder,
+        labels: classification.labels,
+        width: classification.width,
+        height: classification.height,
       });
     } catch (err) {
       await supabaseAdmin!.storage.from("ad-assets").remove([storagePath]);

@@ -44,6 +44,11 @@ export async function insertAssetRow(params: {
   mimeType: string;
   uploadedBy: string;
   sourceUrl?: string;
+  placement?: string;
+  folder?: string | null;
+  labels?: string[];
+  width?: number | null;
+  height?: number | null;
 }) {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
@@ -58,6 +63,11 @@ export async function insertAssetRow(params: {
       uploaded_by: params.uploadedBy,
       source_url: params.sourceUrl,
       status: "new",
+      ...(params.placement && { placement: params.placement }),
+      ...(params.folder && { folder: params.folder }),
+      ...(params.labels?.length && { labels: params.labels }),
+      ...(params.width != null && { width: params.width }),
+      ...(params.height != null && { height: params.height }),
     })
     .select()
     .single();

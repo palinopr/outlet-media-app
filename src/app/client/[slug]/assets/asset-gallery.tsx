@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,9 @@ import {
   Video,
   ExternalLink,
   Loader2,
+  FolderOpen,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
@@ -29,13 +32,167 @@ interface Asset {
   mediaType: string;
   placement: string | null;
   format: string | null;
+  folder: string | null;
   labels: string[];
   status: string;
   createdAt: string;
+  width: number | null;
+  height: number | null;
 }
 
 function statusColor(status: string): string {
   return ASSET_STATUS_COLORS[status as AssetStatus] ?? "";
+}
+
+interface FolderGroup {
+  path: string;
+  label: string;
+  assets: Asset[];
+}
+
+function groupByFolder(assets: Asset[]): FolderGroup[] {
+  const map = new Map<string, Asset[]>();
+  for (const a of assets) {
+    const key = a.folder ?? "Uncategorized";
+    const list = map.get(key);
+    if (list) list.push(a);
+    else map.set(key, [a]);
+  }
+
+  return Array.from(map.entries())
+    .sort(([a], [b]) => {
+      if (a === "Uncategorized") return 1;
+      if (b === "Uncategorized") return -1;
+      return a.localeCompare(b);
+    })
+    .map(([path, items]) => ({
+      path,
+      label: path,
+      assets: items,
+    }));
+}
+
+function AssetCard({
+  asset,
+  onClick,
+}: {
+  asset: Asset;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="group relative aspect-square rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] transition-all text-left"
+      onClick={onClick}
+    >
+      {asset.mediaType === "video" ? (
+        <div className="flex items-center justify-center h-full">
+          <Video className="h-8 w-8 text-white/20" />
+        </div>
+      ) : asset.publicUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={asset.publicUrl}
+          alt={asset.fileName}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="flex items-center justify-center h-full">
+          <ImageIcon className="h-8 w-8 text-white/20" />
+        </div>
+      )}
+
+      {/* Placement + status badges */}
+      <div className="absolute top-1.5 right-1.5 flex gap-1">
+        {asset.placement && asset.placement !== "both" && (
+          <Badge
+            variant="outline"
+            className="text-[10px] px-1.5 py-0 border border-white/10 bg-black/40 text-white/70"
+          >
+            {asset.placement}
+          </Badge>
+        )}
+        <Badge
+          variant="outline"
+          className={`text-[10px] px-1.5 py-0 border ${statusColor(asset.status)}`}
+        >
+          {asset.status}
+        </Badge>
+      </div>
+
+      {/* Dimensions badge */}
+      {asset.width && asset.height && (
+        <div className="absolute top-1.5 left-1.5">
+          <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/50 text-white/50 font-mono">
+            {asset.width}x{asset.height}
+          </span>
+        </div>
+      )}
+
+      {/* Filename on hover */}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <p className="text-[11px] text-white truncate">{asset.fileName}</p>
+      </div>
+    </button>
+  );
+}
+
+function FolderSection({
+  group,
+  onSelect,
+  defaultOpen,
+}: {
+  group: FolderGroup;
+  onSelect: (a: Asset) => void;
+  defaultOpen: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const parts = group.path.split("/");
+  const isNested = parts.length > 1;
+
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-2 px-4 py-3 hover:bg-white/[0.03] transition-colors text-left"
+      >
+        {open ? (
+          <ChevronDown className="h-3.5 w-3.5 text-white/40 shrink-0" />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5 text-white/40 shrink-0" />
+        )}
+        <FolderOpen className="h-4 w-4 text-amber-400/70 shrink-0" />
+        <div className="flex items-center gap-1.5 min-w-0">
+          {isNested ? (
+            <>
+              <span className="text-sm text-white/50 truncate">{parts[0]}</span>
+              <span className="text-white/20">/</span>
+              <span className="text-sm font-medium text-white/80">{parts[1]}</span>
+            </>
+          ) : (
+            <span className="text-sm font-medium text-white/80">{group.label}</span>
+          )}
+        </div>
+        <span className="ml-auto text-xs text-white/30 shrink-0">
+          {group.assets.length}
+        </span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            {group.assets.map((asset) => (
+              <AssetCard
+                key={asset.id}
+                asset={asset}
+                onClick={() => onSelect(asset)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 interface Props {
@@ -51,6 +208,7 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
   const [folderUrl, setFolderUrl] = useState("");
   const [importing, setImporting] = useState(false);
   const [filter, setFilter] = useState<"all" | "image" | "video">("all");
+  const [viewMode, setViewMode] = useState<"folders" | "grid">("folders");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refreshAssets = useCallback(async () => {
@@ -65,9 +223,12 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
           mediaType: a.media_type as string,
           placement: a.placement as string | null,
           format: a.format as string | null,
+          folder: a.folder as string | null,
           labels: (a.labels as string[]) ?? [],
           status: a.status as string,
           createdAt: a.created_at as string,
+          width: a.width as number | null,
+          height: a.height as number | null,
         })),
       );
     }
@@ -142,7 +303,13 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
     setImporting(false);
   }, [folderUrl, clientSlug, refreshAssets]);
 
-  const filtered = filter === "all" ? assets : assets.filter((a) => a.mediaType === filter);
+  const filtered = useMemo(
+    () => (filter === "all" ? assets : assets.filter((a) => a.mediaType === filter)),
+    [assets, filter],
+  );
+
+  const folderGroups = useMemo(() => groupByFolder(filtered), [filtered]);
+  const hasFolders = assets.some((a) => a.folder);
 
   return (
     <div className="space-y-4">
@@ -168,6 +335,25 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
               </span>
             </button>
           ))}
+
+          {hasFolders && (
+            <div className="ml-2 pl-2 border-l border-white/[0.08] flex items-center gap-1">
+              {(["folders", "grid"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setViewMode(m)}
+                  className={`px-2 py-1 rounded text-[10px] font-medium uppercase tracking-wider transition-all ${
+                    viewMode === m
+                      ? "bg-white/[0.08] text-white/80"
+                      : "text-white/30 hover:text-white/50"
+                  }`}
+                >
+                  {m === "folders" ? "Folders" : "Grid"}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <Button
@@ -241,47 +427,25 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
                 : `No ${filter}s found.`}
             </p>
           </div>
+        ) : viewMode === "folders" && hasFolders ? (
+          <div className="space-y-3">
+            {folderGroups.map((group) => (
+              <FolderSection
+                key={group.path}
+                group={group}
+                onSelect={setPreviewAsset}
+                defaultOpen={folderGroups.length <= 6}
+              />
+            ))}
+          </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
             {filtered.map((asset) => (
-              <button
+              <AssetCard
                 key={asset.id}
-                type="button"
-                className="group relative aspect-square rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] transition-all text-left"
+                asset={asset}
                 onClick={() => setPreviewAsset(asset)}
-              >
-                {asset.mediaType === "video" ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Video className="h-8 w-8 text-white/20" />
-                  </div>
-                ) : asset.publicUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={asset.publicUrl}
-                    alt={asset.fileName}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full">
-                    <ImageIcon className="h-8 w-8 text-white/20" />
-                  </div>
-                )}
-
-                {/* Status badge */}
-                <div className="absolute top-1.5 right-1.5">
-                  <Badge
-                    variant="outline"
-                    className={`text-[10px] px-1.5 py-0 border ${statusColor(asset.status)}`}
-                  >
-                    {asset.status}
-                  </Badge>
-                </div>
-
-                {/* Filename on hover */}
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-[11px] text-white truncate">{asset.fileName}</p>
-                </div>
-              </button>
+              />
             ))}
           </div>
         )}
@@ -326,10 +490,20 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
                     <span className="text-white/40 text-xs">Placement</span>
                     <p className="font-medium text-white/80">{previewAsset.placement ?? "not set"}</p>
                   </div>
-                  <div>
-                    <span className="text-white/40 text-xs">Format</span>
-                    <p className="font-medium text-white/80">{previewAsset.format ?? "not set"}</p>
-                  </div>
+                  {previewAsset.width && previewAsset.height && (
+                    <div>
+                      <span className="text-white/40 text-xs">Dimensions</span>
+                      <p className="font-medium text-white/80">
+                        {previewAsset.width} x {previewAsset.height}
+                      </p>
+                    </div>
+                  )}
+                  {previewAsset.folder && (
+                    <div>
+                      <span className="text-white/40 text-xs">Folder</span>
+                      <p className="font-medium text-white/80">{previewAsset.folder}</p>
+                    </div>
+                  )}
                   <div>
                     <span className="text-white/40 text-xs">Status</span>
                     <Badge

@@ -3,6 +3,7 @@ import { authGuard, apiError } from "@/lib/api-helpers";
 import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { uploadToAssetStorage, insertAssetRow } from "@/lib/asset-storage";
+import { classifyAsset } from "@/lib/asset-classifier";
 import { getMemberAccessForSlug } from "@/lib/member-access";
 
 export const dynamic = "force-dynamic";
@@ -79,12 +80,20 @@ export async function POST(req: NextRequest) {
 
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
+    const classification = await classifyAsset(
+      file.name, buffer, file.type, clientSlug,
+    );
     const { storagePath, publicUrl } = await uploadToAssetStorage(
       clientSlug, file.name, buffer, file.type,
     );
     const asset = await insertAssetRow({
       clientSlug, fileName: file.name, storagePath, publicUrl,
       mimeType: file.type, uploadedBy: userId,
+      placement: classification.placement,
+      folder: classification.folder,
+      labels: classification.labels,
+      width: classification.width,
+      height: classification.height,
     });
     return NextResponse.json({ asset }, { status: 201 });
   } catch (err) {
