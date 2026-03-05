@@ -5,6 +5,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
 import { CreateTaskSchema, UpdateTaskSchema } from "@/lib/api-schemas";
+import type { NotificationType } from "@/lib/workspace-types";
 import { logAudit } from "../../actions/audit";
 
 export async function createTask(formData: {
@@ -62,9 +63,10 @@ export async function createTask(formData: {
   // Notify assignee if assigned to someone else
   if (parsed.assignee_id && parsed.assignee_id !== user.id) {
     const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Someone";
+    const notifType: NotificationType = "assignment";
     await supabaseAdmin.from("notifications").insert({
       user_id: parsed.assignee_id,
-      type: "assignment",
+      type: notifType,
       title: "New task assigned",
       message: parsed.title,
       task_id: task.id,
@@ -124,9 +126,10 @@ export async function updateTask(formData: {
     parsed.assignee_id !== user.id
   ) {
     const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Someone";
+    const notifType: NotificationType = "assignment";
     await supabaseAdmin.from("notifications").insert({
       user_id: parsed.assignee_id,
-      type: "assignment",
+      type: notifType,
       title: "Task assigned to you",
       message: parsed.title ?? "A task",
       task_id: taskId,

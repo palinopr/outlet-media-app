@@ -210,6 +210,8 @@ export const ContactFormSchema = z.object({
 
 // ─── Workspace schemas ──────────────────────────────────────────────────────
 
+import { TASK_STATUSES, TASK_PRIORITIES } from "./workspace-types";
+
 export const CreatePageSchema = z.object({
   title: z.string().max(500).default("Untitled"),
   client_slug: z.string().min(1),
@@ -240,8 +242,8 @@ export const ResolveCommentSchema = z.object({
 export const CreateTaskSchema = z.object({
   title: z.string().min(1).max(500),
   description: z.unknown().optional(),
-  status: z.enum(["todo", "in_progress", "review", "done"]).default("todo"),
-  priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
+  status: z.enum(TASK_STATUSES).default("todo"),
+  priority: z.enum(TASK_PRIORITIES).default("medium"),
   assignee_id: z.string().optional().nullable(),
   assignee_name: z.string().optional().nullable(),
   page_id: z.string().uuid().optional().nullable(),
@@ -252,8 +254,8 @@ export const CreateTaskSchema = z.object({
 export const UpdateTaskSchema = z.object({
   title: z.string().min(1).max(500).optional(),
   description: z.unknown().optional(),
-  status: z.enum(["todo", "in_progress", "review", "done"]).optional(),
-  priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+  status: z.enum(TASK_STATUSES).optional(),
+  priority: z.enum(TASK_PRIORITIES).optional(),
   assignee_id: z.string().optional().nullable(),
   assignee_name: z.string().optional().nullable(),
   page_id: z.string().uuid().optional().nullable(),

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import type { NotificationType } from "@/lib/workspace-types";
 import { createNotification } from "./notifications";
 
 export async function createComment(formData: {
@@ -48,10 +49,11 @@ export async function createComment(formData: {
   ]);
 
   // Notify page owner about new comment
+  const commentType: NotificationType = "comment";
   if (page?.created_by && page.created_by !== userId) {
     await createNotification({
       user_id: page.created_by,
-      type: "comment",
+      type: commentType,
       title: "New comment",
       message: `${authorName} commented on "${page.title}"`,
       page_id: formData.page_id,
@@ -65,7 +67,7 @@ export async function createComment(formData: {
   if (parent?.author_id && parent.author_id !== userId && parent.author_id !== page?.created_by) {
     await createNotification({
       user_id: parent.author_id,
-      type: "comment",
+      type: commentType,
       title: "New reply",
       message: `${authorName} replied to your comment`,
       page_id: formData.page_id,
