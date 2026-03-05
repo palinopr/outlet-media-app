@@ -46,6 +46,27 @@ const LIST_TARGET_PLUGINS = [
   KEYS.codeBlock,
 ];
 
+type EditorLike = Parameters<typeof toggleList>[0];
+
+function listRule(match: string | string[], listStyleType: string, matchByRegex = false) {
+  return {
+    match,
+    mode: "block" as const,
+    type: "list",
+    ...(matchByRegex && { matchByRegex: true }),
+    format: (editor: unknown) => {
+      toggleList(editor as EditorLike, { listStyleType });
+    },
+  };
+}
+
+const AUTOFORMAT_RULES = [
+  listRule("- ", KEYS.ul),
+  listRule("* ", KEYS.ul),
+  listRule([String.raw`^\d+\.$ `, String.raw`^\d+\)$ `], KEYS.ol, true),
+  listRule(["[] ", "[ ] "], KEYS.listTodo),
+];
+
 const DEFAULT_VALUE: Value = [
   { type: "p", children: [{ text: "" }] },
 ];
@@ -95,53 +116,7 @@ export function useCreateEditor(initialContent?: unknown) {
         },
       }),
       // Autoformat
-      AutoformatPlugin.configure({
-        options: {
-          rules: [
-            {
-              match: "- ",
-              mode: "block" as const,
-              type: "list",
-              format: (editor: unknown) => {
-                toggleList(editor as Parameters<typeof toggleList>[0], {
-                  listStyleType: KEYS.ul,
-                });
-              },
-            },
-            {
-              match: "* ",
-              mode: "block" as const,
-              type: "list",
-              format: (editor: unknown) => {
-                toggleList(editor as Parameters<typeof toggleList>[0], {
-                  listStyleType: KEYS.ul,
-                });
-              },
-            },
-            {
-              match: [String.raw`^\d+\.$ `, String.raw`^\d+\)$ `],
-              matchByRegex: true,
-              mode: "block" as const,
-              type: "list",
-              format: (editor: unknown) => {
-                toggleList(editor as Parameters<typeof toggleList>[0], {
-                  listStyleType: KEYS.ol,
-                });
-              },
-            },
-            {
-              match: ["[] ", "[ ] "],
-              mode: "block" as const,
-              type: "list",
-              format: (editor: unknown) => {
-                toggleList(editor as Parameters<typeof toggleList>[0], {
-                  listStyleType: KEYS.listTodo,
-                });
-              },
-            },
-          ],
-        },
-      }),
+      AutoformatPlugin.configure({ options: { rules: AUTOFORMAT_RULES } }),
       // Markdown paste
       MarkdownPlugin,
       // Slash commands

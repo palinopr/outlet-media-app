@@ -1,11 +1,10 @@
 "use client";
 
 import type { PlateElementProps } from "platejs/react";
-import { PlateElement, useElement } from "platejs/react";
+import { PlateElement } from "platejs/react";
 
 export function LinkElement(props: PlateElementProps) {
-  const element = useElement();
-  const url = (element as Record<string, unknown>).url as string;
+  const url = (props.element as Record<string, unknown>).url as string;
 
   return (
     <PlateElement {...props}>

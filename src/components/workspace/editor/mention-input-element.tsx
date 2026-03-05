@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import type { PlateElementProps } from "platejs/react";
 import type { TComboboxInputElement } from "platejs";
-import { PlateElement, useEditorRef, useElement } from "platejs/react";
+import { PlateElement, useEditorRef } from "platejs/react";
 import { useComboboxInput } from "@platejs/combobox/react";
 import { MentionPlugin } from "@platejs/mention/react";
 import type { MentionUser } from "@/lib/workspace-types";

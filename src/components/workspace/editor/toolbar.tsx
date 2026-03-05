@@ -18,17 +18,15 @@ import {
 import { toggleList } from "@platejs/list";
 import { LinkToolbarButton } from "./link-toolbar-button";
 
-function MarkButton({
-  nodeType,
+function ToolbarButton({
   children,
   tooltip,
+  onAction,
 }: {
-  nodeType: string;
   children: React.ReactNode;
   tooltip: string;
+  onAction: () => void;
 }) {
-  const editor = useEditorRef();
-
   return (
     <button
       type="button"
@@ -36,58 +34,7 @@ function MarkButton({
       className="h-8 w-8 flex items-center justify-center rounded text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors"
       onMouseDown={(e) => {
         e.preventDefault();
-        editor.tf.toggleMark(nodeType);
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function BlockButton({
-  blockType,
-  children,
-  tooltip,
-}: {
-  blockType: string;
-  children: React.ReactNode;
-  tooltip: string;
-}) {
-  const editor = useEditorRef();
-
-  return (
-    <button
-      type="button"
-      title={tooltip}
-      className="h-8 w-8 flex items-center justify-center rounded text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors"
-      onMouseDown={(e) => {
-        e.preventDefault();
-        editor.tf.toggleBlock(blockType);
-      }}
-    >
-      {children}
-    </button>
-  );
-}
-
-function ListButton({
-  listStyleType,
-  children,
-  tooltip,
-}: {
-  listStyleType: string;
-  children: React.ReactNode;
-  tooltip: string;
-}) {
-  const editor = useEditorRef();
-  return (
-    <button
-      type="button"
-      title={tooltip}
-      className="h-8 w-8 flex items-center justify-center rounded text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors"
-      onMouseDown={(e) => {
-        e.preventDefault();
-        toggleList(editor, { listStyleType });
+        onAction();
       }}
     >
       {children}
@@ -100,56 +47,57 @@ function Separator() {
 }
 
 export function EditorToolbar() {
+  const editor = useEditorRef();
   const readOnly = useEditorReadOnly();
   if (readOnly) return null;
 
   return (
     <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-white/[0.06] bg-[oklch(0.14_0_0)] rounded-t-lg">
-      <BlockButton blockType="h1" tooltip="Heading 1">
+      <ToolbarButton tooltip="Heading 1" onAction={() => editor.tf.toggleBlock("h1")}>
         <Heading1 className="h-4 w-4" />
-      </BlockButton>
-      <BlockButton blockType="h2" tooltip="Heading 2">
+      </ToolbarButton>
+      <ToolbarButton tooltip="Heading 2" onAction={() => editor.tf.toggleBlock("h2")}>
         <Heading2 className="h-4 w-4" />
-      </BlockButton>
-      <BlockButton blockType="h3" tooltip="Heading 3">
+      </ToolbarButton>
+      <ToolbarButton tooltip="Heading 3" onAction={() => editor.tf.toggleBlock("h3")}>
         <Heading3 className="h-4 w-4" />
-      </BlockButton>
+      </ToolbarButton>
 
       <Separator />
 
-      <MarkButton nodeType="bold" tooltip="Bold (Cmd+B)">
+      <ToolbarButton tooltip="Bold (Cmd+B)" onAction={() => editor.tf.toggleMark("bold")}>
         <Bold className="h-4 w-4" />
-      </MarkButton>
-      <MarkButton nodeType="italic" tooltip="Italic (Cmd+I)">
+      </ToolbarButton>
+      <ToolbarButton tooltip="Italic (Cmd+I)" onAction={() => editor.tf.toggleMark("italic")}>
         <Italic className="h-4 w-4" />
-      </MarkButton>
-      <MarkButton nodeType="underline" tooltip="Underline (Cmd+U)">
+      </ToolbarButton>
+      <ToolbarButton tooltip="Underline (Cmd+U)" onAction={() => editor.tf.toggleMark("underline")}>
         <Underline className="h-4 w-4" />
-      </MarkButton>
-      <MarkButton nodeType="strikethrough" tooltip="Strikethrough">
+      </ToolbarButton>
+      <ToolbarButton tooltip="Strikethrough" onAction={() => editor.tf.toggleMark("strikethrough")}>
         <Strikethrough className="h-4 w-4" />
-      </MarkButton>
-      <MarkButton nodeType="code" tooltip="Code">
+      </ToolbarButton>
+      <ToolbarButton tooltip="Code" onAction={() => editor.tf.toggleMark("code")}>
         <Code className="h-4 w-4" />
-      </MarkButton>
+      </ToolbarButton>
 
       <Separator />
 
-      <BlockButton blockType="blockquote" tooltip="Quote">
+      <ToolbarButton tooltip="Quote" onAction={() => editor.tf.toggleBlock("blockquote")}>
         <Quote className="h-4 w-4" />
-      </BlockButton>
+      </ToolbarButton>
 
       <Separator />
 
-      <ListButton listStyleType="disc" tooltip="Bullet List">
+      <ToolbarButton tooltip="Bullet List" onAction={() => toggleList(editor, { listStyleType: "disc" })}>
         <List className="h-4 w-4" />
-      </ListButton>
-      <ListButton listStyleType="decimal" tooltip="Numbered List">
+      </ToolbarButton>
+      <ToolbarButton tooltip="Numbered List" onAction={() => toggleList(editor, { listStyleType: "decimal" })}>
         <ListOrdered className="h-4 w-4" />
-      </ListButton>
-      <ListButton listStyleType="todo" tooltip="To-do List">
+      </ToolbarButton>
+      <ToolbarButton tooltip="To-do List" onAction={() => toggleList(editor, { listStyleType: "todo" })}>
         <CheckSquare className="h-4 w-4" />
-      </ListButton>
+      </ToolbarButton>
 
       <Separator />
 
