@@ -139,7 +139,7 @@ export async function createClient(formData: { name: string; slug: string; servi
 
 const ToggleServiceSchema = z.object({
   clientId: z.string().min(1),
-  serviceKey: z.string().min(1),
+  serviceKey: z.enum(SERVICE_KEYS),
   enabled: z.boolean(),
   config: z.record(z.string(), z.unknown()).optional(),
 });
@@ -154,9 +154,6 @@ export async function toggleService(formData: {
   if (err) throw new Error("Forbidden");
 
   const parsed = ToggleServiceSchema.parse(formData);
-  if (!SERVICE_KEYS.includes(parsed.serviceKey as ServiceKey)) {
-    throw new Error(`Invalid service key: ${parsed.serviceKey}`);
-  }
 
   await toggleClientService(
     parsed.clientId,

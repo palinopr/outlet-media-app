@@ -9,11 +9,11 @@ import {
   SERVICE_KEYS,
   type ServiceKey,
 } from "@/lib/service-registry";
-import type { ClientServiceRow } from "@/app/admin/clients/types";
+import type { ClientService } from "@/lib/client-services";
 
 interface Props {
   clientId: string;
-  initialServices: ClientServiceRow[];
+  initialServices: ClientService[];
 }
 
 const CATEGORIES = [
@@ -28,7 +28,7 @@ export function ServicesSection({ clientId, initialServices }: Props) {
   const [isPending, startTransition] = useTransition();
 
   function isEnabled(key: ServiceKey): boolean {
-    const svc = services.find((s) => s.serviceKey === (key as string));
+    const svc = services.find((s) => s.serviceKey === key);
     return svc?.enabled ?? false;
   }
 

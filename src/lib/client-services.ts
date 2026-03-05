@@ -1,7 +1,6 @@
 import { cache } from "react";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { ServiceKey } from "./service-registry";
-import { SERVICE_KEYS } from "./service-registry";
 
 export interface ClientService {
   id: string;
@@ -15,18 +14,10 @@ export const getEnabledServices = cache(
   async (slug: string): Promise<ServiceKey[] | null> => {
     if (!supabaseAdmin) return null;
 
-    const { data: client } = await supabaseAdmin
-      .from("clients")
-      .select("id")
-      .eq("slug", slug)
-      .single();
-
-    if (!client) return null;
-
     const { data } = await supabaseAdmin
       .from("client_services")
-      .select("service_key")
-      .eq("client_id", client.id)
+      .select("service_key, clients!inner(slug)")
+      .eq("clients.slug", slug)
       .eq("enabled", true);
 
     if (!data || data.length === 0) return null;
@@ -58,17 +49,11 @@ export async function getClientServices(
 
 export async function toggleClientService(
   clientId: string,
-  serviceKey: string,
+  serviceKey: ServiceKey,
   enabled: boolean,
   config?: Record<string, unknown>,
 ): Promise<void> {
   if (!supabaseAdmin) throw new Error("DB not configured");
-  if (!SERVICE_KEYS.includes(serviceKey as ServiceKey)) {
-    throw new Error(`Invalid service key: ${serviceKey}`);
-  }
-
-  const updateData: Record<string, unknown> = { enabled };
-  if (config !== undefined) updateData.config = config;
 
   const { error } = await supabaseAdmin
     .from("client_services")
@@ -101,7 +86,7 @@ export async function seedClientServices(
 
   const { error } = await supabaseAdmin
     .from("client_services")
-    .insert(rows);
+    .upsert(rows, { onConflict: "client_id,service_key" });
 
   if (error) throw new Error(error.message);
 }

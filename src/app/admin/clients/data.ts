@@ -11,7 +11,6 @@ export type {
   ClientEvent,
   ClientAsset,
   ClientAssetSource,
-  ClientServiceRow,
 } from "./types";
 
 import type {
