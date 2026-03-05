@@ -79,7 +79,7 @@ async function buildConversationContext(
     if (history.length === 0) return currentPrompt;
 
     const lines = history.map(m => {
-      const name = m.author.bot ? "META AGENT" : m.author.username;
+      const name = m.author.bot ? (m.author.username || "AGENT") : m.author.username;
       const text = m.content.slice(0, 500);
       return `${name}: ${text}`;
     });
