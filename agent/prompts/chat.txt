@@ -40,6 +40,9 @@ API base: https://graph.facebook.com/v21.0
 - "camila" → Zamora (Camila sub-brand, multiple cities)
 - "beamina", "beam" → Beamina
 - "happy paws", "paws" → Happy Paws
+- "sienna", "peace in mind" → Sienna
+- "vaz vil", "kiko blade", "penetrado" → Vaz Vil
+- "don omar", "barcelona", "bcn" → Don Omar BCN (uses EATA/Vivaticket, NOT Meta campaigns — see EATA section below)
 - If you can't match the name, ASK. Don't guess.
 
 ---
@@ -226,6 +229,7 @@ curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/adsets" \
   --data-urlencode "access_token=$TOKEN"
 ```
 **CBO note:** Adsets under CBO campaigns have NO `daily_budget`. Budget is at campaign level.
+**Pixel IDs:** Default pixel: `879345548404130`. Sienna pixel: `918875103967661`. Use the correct pixel for the client when creating adsets.
 
 ## Ad write operations
 
@@ -400,6 +404,21 @@ curl -s -X POST "$BASE_URL/api/alerts" \
   -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warn"}'
 ```
 Levels: "info", "warn", "error" (Zod-validated — "warning" and "critical" will be REJECTED). Body: `{ secret, message, level }` only — no other fields.
+
+---
+
+## EATA / Vivaticket (Don Omar BCN)
+
+Don Omar BCN does NOT have Meta campaigns — ticket sales are tracked via Vivaticket/EATA.
+If Jaime asks about Don Omar, query Supabase (not Meta API):
+
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=name,status,tickets_sold,gross,tickets_sold_today,revenue_today,avg_ticket_price,date&tm_id=eq.eata_14948" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+
+Key facts: Event date Jul 23, 2026. Venue: Estadio Olimpico Lluis Companys, Barcelona. Tickets via entradasatualcance.com (Vivaticket). Gross revenue in euros (not dollars).
 
 ---
 

@@ -12,20 +12,30 @@ export const dynamic = "force-dynamic";
 
 const CONCURRENCY = 4;
 
+interface BatchResult<R> {
+  successes: R[];
+  errors: string[];
+}
+
 async function processInBatches<T, R>(
   items: T[],
   concurrency: number,
   fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = [];
+): Promise<BatchResult<R>> {
+  const successes: R[] = [];
+  const errors: string[] = [];
   for (let i = 0; i < items.length; i += concurrency) {
     const batch = items.slice(i, i + concurrency);
     const batchResults = await Promise.allSettled(batch.map(fn));
     for (const r of batchResults) {
-      if (r.status === "fulfilled") results.push(r.value);
+      if (r.status === "fulfilled") {
+        successes.push(r.value);
+      } else {
+        errors.push(r.reason instanceof Error ? r.reason.message : String(r.reason));
+      }
     }
   }
-  return results;
+  return { successes, errors };
 }
 
 // ─── POST: import assets from a Dropbox or Google Drive shared folder ────────
@@ -78,28 +88,28 @@ export async function POST(req: NextRequest) {
   );
   const skipped = listing.files.length - toImport.length;
 
-  let imported = 0;
-  const errors: string[] = [];
-
-  await processInBatches(toImport, CONCURRENCY, async (file) => {
+  const { successes, errors } = await processInBatches(toImport, CONCURRENCY, async (file) => {
     const sourceKey = `${provider}:${file.downloadUrl}`;
+    const { buffer, mimeType } = await downloadCloudFile(
+      provider, folder_url, file.downloadUrl,
+    );
+    const { storagePath, publicUrl } = await uploadToAssetStorage(
+      client_slug, file.name, buffer, mimeType,
+    );
     try {
-      const { buffer, mimeType } = await downloadCloudFile(
-        provider, folder_url, file.downloadUrl,
-      );
-      const { storagePath, publicUrl } = await uploadToAssetStorage(
-        client_slug, file.name, buffer, mimeType,
-      );
       await insertAssetRow({
         clientSlug: client_slug, fileName: file.name,
         storagePath, publicUrl, mimeType,
         uploadedBy: uploaded_by, sourceUrl: sourceKey,
       });
-      imported++;
     } catch (err) {
-      errors.push(`${file.name}: ${err instanceof Error ? err.message : "failed"}`);
+      await supabaseAdmin!.storage.from("ad-assets").remove([storagePath]);
+      throw err;
     }
+    return file.name;
   });
+
+  const imported = successes.length;
 
   // Upsert asset_source record
   await supabaseAdmin.from("asset_sources").upsert(

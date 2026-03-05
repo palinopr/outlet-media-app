@@ -42,24 +42,41 @@ Token refresh is handled by the scheduler (eata-cookie-refresh job) using Playwr
 ### API Endpoints
 
 Base URL: https://www.entradasatualcance.com
+Common query params: `access_token={token}&host=www.entradasatualcance.com&release=2.120.37&team=1578`
+(All params available in session/eata-auth.json)
 
-- `GET /api/events?access_token=...&host=...&release=...&team=...` -- list all events
+- `GET /api/events?...` -- list all events
 - `GET /api/events/{id}?...` -- event detail
 - `GET /api/events/{id}/report?...` -- sales report (revenue, tickets sold)
 
-### Event ID Convention
+### Event IDs
 
-EATA events use `eata_{id}` as the tm_id in Supabase to prevent collisions with TM alphanumeric IDs.
+- **14948** = DON OMAR BARCELONA (active event, the one we track)
+- **14942** = NO VALIDO (skip this event in all queries/syncs)
+- EATA events use `eata_{id}` as the tm_id in Supabase to prevent collisions with TM alphanumeric IDs
 
 ### Data Shape
 
 Events are synced to the `tm_events` table with:
-- `tm_id`: `eata_{vivaticket_id}`
+- `tm_id`: `eata_{vivaticket_id}` (e.g. `eata_14948`)
 - `client_slug`: `don_omar_bcn`
 - `artist`: `Don Omar`
 - `venue`: `Estadio Olimpico Lluis Companys`
 - `city`: `Barcelona`
 - `tickets_sold`, `gross` (EUR), `avg_ticket_price`
+
+### Report Data Fields (from /api/events/{id}/report)
+
+- `revenue.total` — total revenue in whole euros
+- `revenue.daily` — array of daily revenue breakdown
+- `soldTickets.total` — total tickets sold
+- `soldTickets.daily` — array of daily ticket sales
+
+### Token Lifetime
+
+OAuth2 access_token expires in ~1-2 hours. If API calls return 401/403, the token is stale.
+The `eata-cookie-refresh` scheduler job refreshes it via Playwright login every 6h.
+Check `session/eata-auth.json` `savedAt` timestamp to verify freshness before making API calls.
 
 ---
 
@@ -121,8 +138,10 @@ Level must be one of: "info", "warn", "error" (Zod-validated).
 
 ## Session Cache
 
-- session/eata-auth.json -- OAuth2 token for EATA API
-- session/eata-captured-calls.json -- captured API calls from EATA discovery
+- session/eata-auth.json -- OAuth2 token + API params (accessToken, host, release, team, savedAt)
+- session/eata-http-sync.mjs -- EATA sync script (fetches events + reports, pushes to Supabase via ingest)
+- session/eata-cookie-refresh.mjs -- Playwright login script to refresh OAuth2 token
+- session/eata-discover.mjs -- EATA API discovery/exploration script
 - session/last-campaigns.json -- last Meta sync (for cross-referencing ad spend vs ticket sales)
 
 ---

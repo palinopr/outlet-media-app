@@ -52,6 +52,7 @@ next-env.d.ts
 # agent - browser session + credentials
 agent/.env
 agent/session/
+agent/service-account.json
 
 # playwright mcp artifacts
 .playwright-mcp/

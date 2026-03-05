@@ -168,6 +168,9 @@ export async function runCreativeClassify(): Promise<string> {
 
   const results: string[] = [];
 
+  const creativeTools = buildTools();
+  const systemPrompt = readFileSync(join(AGENT_DIR, "prompts", "creative-agent.txt"), "utf-8");
+
   for (const [clientSlug, clientAssets] of byClient) {
     // 3. Build prompt with vision content blocks
     const contentBlocks: Array<
@@ -190,26 +193,29 @@ Then call update_asset for each asset with your classification.
 Here are the assets:`,
     });
 
-    // Add each asset with its image (for images with public URLs)
+    // Fetch all images in parallel, then assemble content blocks
+    const imageAssets = clientAssets.filter((a) => a.media_type === "image" && a.public_url);
+    const imageResults = await Promise.all(
+      imageAssets.map(async (a) => ({ id: a.id, img: await fetchImageAsBase64(a.public_url!) })),
+    );
+    const imageMap = new Map(imageResults.map((r) => [r.id, r.img]));
+
     for (const asset of clientAssets) {
       contentBlocks.push({
         type: "text",
         text: `\n---\nAsset ID: ${asset.id}\nFilename: ${asset.file_name}\nType: ${asset.media_type}\nDimensions: ${asset.width ?? "unknown"}x${asset.height ?? "unknown"}`,
       });
 
-      // Fetch and include image for vision analysis
-      if (asset.media_type === "image" && asset.public_url) {
-        const img = await fetchImageAsBase64(asset.public_url);
-        if (img) {
-          contentBlocks.push({
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: img.mediaType,
-              data: img.data,
-            },
-          });
-        }
+      const img = imageMap.get(asset.id);
+      if (img) {
+        contentBlocks.push({
+          type: "image",
+          source: {
+            type: "base64",
+            media_type: img.mediaType,
+            data: img.data,
+          },
+        });
       }
     }
 
@@ -219,7 +225,6 @@ Here are the assets:`,
     });
 
     // 4. Run the Agent SDK with vision + tools
-    const creativeTools = buildTools();
     let resultText = "";
 
     async function* prompt(): AsyncGenerator<SDKUserMessage> {
@@ -243,7 +248,7 @@ Here are the assets:`,
           permissionMode: "bypassPermissions" as const,
           allowDangerouslySkipPermissions: true,
           settingSources: ["local"],
-          systemPrompt: readFileSync(join(AGENT_DIR, "prompts", "creative-agent.txt"), "utf-8"),
+          systemPrompt,
           mcpServers: { "creative-tools": creativeTools },
           allowedTools: [
             "mcp__creative-tools__update_asset",

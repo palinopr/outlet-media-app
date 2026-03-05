@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -194,10 +194,8 @@ export function AssetsSection({ clientSlug, initialAssets, initialSources }: Pro
     [handleUpload],
   );
 
-  const { imageCount, videoCount } = useMemo(() => ({
-    imageCount: assets.filter((a) => a.mediaType === "image").length,
-    videoCount: assets.filter((a) => a.mediaType === "video").length,
-  }), [assets]);
+  const imageCount = assets.filter((a) => a.mediaType === "image").length;
+  const videoCount = assets.filter((a) => a.mediaType === "video").length;
 
   return (
     <div className="space-y-4">

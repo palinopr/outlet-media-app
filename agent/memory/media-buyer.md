@@ -105,3 +105,10 @@ Use daily snapshots for trend analysis, not intraday deltas.
 <!-- auto-learned 2026-03-04 -->
 - Sienna "Peace In Mind": 65+ eats 70% of budget, zero purchases at $289 spent
 - Sienna: no purchase pixel signal yet; Meta chasing cheap 65+ clicks
+
+<!-- auto-learned 2026-03-05 -->
+- Don Omar Spain pixel created: ID 2005949343681464
+- Pixel 2005949343681464: Jaime, Isabel, Alexandra have EDIT+ANALYZE access
+
+<!-- auto-learned 2026-03-05 -->
+- aa1 is shorthand for ad account act_787610255314938

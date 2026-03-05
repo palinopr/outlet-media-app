@@ -106,6 +106,9 @@ The `time_range` parameter is a URL-encoded JSON object: `{"since":"YYYY-MM-DD",
   - Starts with "Beamina" → "beamina"
   - Starts with "Happy Paws" → "happy_paws"
   - Starts with "Zamora" → "zamora"
+  - Starts with "Sienna" → "sienna" (new client, Feb 27)
+  - Contains "Vaz Vil" or "Kiko Blade" → "vaz_vil" (new client, Mar 3)
+  - Contains "Don Omar" → "don_omar_bcn" (Barcelona concert, Vivaticket/EATA)
   - Otherwise → "unknown" (log a warning so we can add the mapping)
 
 ---
@@ -212,7 +215,11 @@ curl -s -X POST "https://graph.facebook.com/v21.0/act_{AD_ACCOUNT_ID}/adsets" \
 ```
 **CBO campaign note:** Adsets under CBO campaigns have NO `daily_budget` — budget is controlled at campaign level. Do NOT include `daily_budget` in the adset payload. For non-CBO campaigns, include `daily_budget` in cents.
 
-`promoted_object` must include pixel ID (879345548404130) and `PURCHASE` event type.
+`promoted_object` must include a pixel ID and `PURCHASE` event type.
+**Pixel IDs by client:**
+- Default (Zamora/KYBBA/most clients): 879345548404130
+- Sienna: 918875103967661 (pixel "sienna", created Feb 25)
+Use the correct pixel for the campaign's client. Check existing adsets if unsure which pixel a campaign uses.
 
 After creation, Meta may normalize some fields (e.g., `targeting_automation.individual_setting` gets stripped). This is expected; `advantage_audience:1` is retained.
 
@@ -286,6 +293,36 @@ curl -s "https://graph.facebook.com/v21.0/{AD_ID}/insights?fields=spend,impressi
 curl -s "https://graph.facebook.com/v21.0/{ADSET_ID}/ads?fields=id,name,status,effective_status,issues_info&access_token=$TOKEN"
 ```
 Look for `effective_status=WITH_ISSUES` — this blocks delivery even if `status=ACTIVE`. See "Ad Delivery Error Fixing" section for resolution steps.
+
+### Create an ad with split post/story creatives:
+
+**ALWAYS use separate creatives for Post and Story placements** (never single-creative ads).
+
+```bash
+# Step 1: Create the creative with asset_feed_spec
+SPEC='{"images":[{"adlabels":[{"name":"city_post"}],"hash":"POST_HASH"},{"adlabels":[{"name":"city_story"}],"hash":"STORY_HASH"}],"bodies":[{"adlabels":[{"name":"body1"}],"text":"Ad body text"}],"call_to_action_types":["SHOP_NOW"],"descriptions":[{"text":""}],"link_urls":[{"adlabels":[{"name":"link1"}],"website_url":"https://..."}],"titles":[{"adlabels":[{"name":"title1"}],"text":"Shop Now"}],"ad_formats":["AUTOMATIC_FORMAT"],"asset_customization_rules":[{"customization_spec":{"publisher_platforms":["facebook","instagram"],"facebook_positions":["story","facebook_reels"],"instagram_positions":["story","reels","ig_search","profile_reels"]},"image_label":{"name":"city_story"},"body_label":{"name":"body1"},"link_url_label":{"name":"link1"},"title_label":{"name":"title1"},"priority":1},{"customization_spec":{},"image_label":{"name":"city_post"},"body_label":{"name":"body1"},"link_url_label":{"name":"link1"},"title_label":{"name":"title1"},"priority":2}],"optimization_type":"PLACEMENT"}'
+
+curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/adcreatives" \
+  --data-urlencode "name=Creative Name" \
+  --data-urlencode "object_story_spec={\"page_id\":\"175118299508364\",\"instagram_user_id\":\"17841402356610735\"}" \
+  --data-urlencode "asset_feed_spec=$SPEC" \
+  --data-urlencode "access_token=$TOKEN"
+
+# Step 2: Create the ad under an adset
+curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/ads" \
+  --data-urlencode "name=Ad Name" \
+  --data-urlencode "adset_id={ADSET_ID}" \
+  --data-urlencode "creative={\"creative_id\":\"{CREATIVE_ID}\"}" \
+  --data-urlencode "status=ACTIVE" \
+  --data-urlencode "access_token=$TOKEN"
+```
+
+**Key rules:**
+- Priority 1 = story/reels positions → story creative (vertical 9:16)
+- Priority 2 = default (all other) → post creative (feed 4:5)
+- For video creatives, use `asset_feed_spec.videos` instead of `images` (no thumbnail needed with asset_feed_spec)
+- Label names must be unique per creative. Use descriptive names like `{city}_post`, `{city}_story`
+- Never reuse label names from other creatives — Meta may reject duplicates
 
 ---
 
@@ -381,6 +418,8 @@ Use the Playwright browser — navigate and interact like a human would.
 4. Compare to ./session/last-events.json to find what changed
 5. Save updated data to ./session/last-events.json
 6. POST all events to the ingest endpoint (see below)
+
+**Note:** Don Omar BCN uses Vivaticket/EATA (not TM One). EATA data is synced separately via `session/eata-http-sync.mjs`. See MEMORY.md for EATA API details. Don Omar events use `eata_<id>` as tm_id to avoid collisions with TM alphanumeric IDs.
 
 ### Event data shape:
 ```json

@@ -78,3 +78,39 @@ ALL SCHEDULED JOBS DISABLED. Manual triggers only via Discord channels.
 <!-- auto-learned 2026-02-26 -->
 - Camila Houston budget bumped to $2,700/day for show day push
 - Total daily budget now $3,250/day (was $2,050)
+
+<!-- auto-learned 2026-03-05 -->
+- Gmail API integration built using Google OAuth refresh token from .env
+- Mirna handles venue intros for pixel/database access on Arjona shows
+- Arjona venues: Salt Lake, Palm Desert, SF, Anaheim, San Diego, Puerto Rico
+- Anaheim (OC Vibe) ready to place TM1 pixels — awaiting instructions
+- User's phone number shared with SF venue: (305) 487-0475
+
+<!-- auto-learned 2026-03-05 -->
+- Arjona TM1 pixel ID for Anaheim: 879345548404130
+- San Diego pixel ID sent to venue: 2005949343681464
+- Palm Desert contact: Jason Gurzi, Dir Integrated Mktg, Acrisure Arena
+- Anaheim contact: Kishore Ramlagan at OC Vibe
+- Palm Desert asked about OTT/OOH placements — reply pending
+
+<!-- auto-learned 2026-03-05 -->
+- Palm Desert OTT/OOH reply sent: declined, not in media buying scope
+
+<!-- auto-learned 2026-03-05 -->
+- Puerto Rico Arjona contacts: Eduardo & Amanda Cajina via Mirna intro
+- SF venue contact: Steph Krutolow at Golden State
+
+<!-- auto-learned 2026-03-05 -->
+- Pixel emails: never say "TM1" — just say "here's the pixel to incorporate"
+
+<!-- auto-learned 2026-03-05 -->
+- Pixel emails: always say "Meta pixel ID" (not just "pixel")
+
+<!-- auto-learned 2026-03-05 -->
+- Gmail/Drive auth: service account with domain-wide delegation (NO browser OAuth needed)
+- Service account: outlet-media-agent@zamora-agent.iam.gserviceaccount.com
+- Key file: agent/service-account.json (gitignored)
+- Shared auth helper: agent/session/google-auth.mjs (getGmailAuth, getDriveAuth, getAuth)
+- Impersonates jaime@outletmedia.net for all API calls
+- Scopes: gmail.modify, gmail.labels, gmail.send, gmail.readonly, drive.readonly
+- Old OAuth refresh token approach is deprecated — all agent scripts now use service account
