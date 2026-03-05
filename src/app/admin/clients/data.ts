@@ -17,10 +17,33 @@ export interface ClientSummary {
   createdAt: string;
 }
 
+export interface ClientAsset {
+  id: string;
+  fileName: string;
+  publicUrl: string | null;
+  mediaType: string;
+  placement: string | null;
+  format: string | null;
+  labels: string[];
+  status: string;
+  createdAt: string;
+}
+
+export interface ClientAssetSource {
+  id: string;
+  provider: string;
+  folderUrl: string;
+  folderName: string | null;
+  lastSyncedAt: string | null;
+  fileCount: number;
+}
+
 export interface ClientDetail extends ClientSummary {
   members: ClientMember[];
   campaigns: ClientCampaign[];
   events: ClientEvent[];
+  assets: ClientAsset[];
+  assetSources: ClientAssetSource[];
 }
 
 export interface ClientMember {
@@ -101,7 +124,7 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     const activeCampaigns = campaigns.filter(
       (c) => c.status === "ACTIVE",
     ).length;
-    const roas = computeBlendedRoas(campaigns.map(c => ({ spend: (c.spend ?? 0) / 100, roas: c.roas ?? null }))) ?? 0;
+    const roas = computeBlendedRoas(campaigns.map(c => ({ spend: c.spend ?? 0, roas: c.roas }))) ?? 0;
 
     return {
       id: client.id,
@@ -133,7 +156,7 @@ export async function getClientDetail(
 
   if (!client) return null;
 
-  const [membersRes, campaignsRes, eventsRes] = await Promise.all([
+  const [membersRes, campaignsRes, eventsRes, assetsRes, assetSourcesRes] = await Promise.all([
     supabaseAdmin
       .from("client_members")
       .select("id, clerk_user_id, role, scope, created_at")
@@ -147,6 +170,16 @@ export async function getClientDetail(
       .select("id, name, venue, date, status")
       .eq("client_slug", client.slug)
       .order("date", { ascending: true }),
+    supabaseAdmin
+      .from("ad_assets")
+      .select("id, file_name, public_url, media_type, placement, format, labels, status, created_at")
+      .eq("client_slug", client.slug)
+      .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("asset_sources")
+      .select("id, provider, folder_url, folder_name, last_synced_at, file_count")
+      .eq("client_slug", client.slug)
+      .order("created_at", { ascending: false }),
   ]);
 
   const memberRows = membersRes.data ?? [];
@@ -224,6 +257,27 @@ export async function getClientDetail(
     status: e.status,
   }));
 
+  const assets: ClientAsset[] = (assetsRes.data ?? []).map((a) => ({
+    id: a.id,
+    fileName: a.file_name,
+    publicUrl: a.public_url,
+    mediaType: a.media_type,
+    placement: a.placement,
+    format: a.format,
+    labels: a.labels ?? [],
+    status: a.status,
+    createdAt: a.created_at,
+  }));
+
+  const assetSources: ClientAssetSource[] = (assetSourcesRes.data ?? []).map((s) => ({
+    id: s.id,
+    provider: s.provider,
+    folderUrl: s.folder_url,
+    folderName: s.folder_name,
+    lastSyncedAt: s.last_synced_at,
+    fileCount: s.file_count,
+  }));
+
   const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
   const totalRevenue = campaigns.reduce((s, c) => s + c.spend * c.roas, 0);
   const activeCampaigns = campaigns.filter(
@@ -247,5 +301,7 @@ export async function getClientDetail(
     members,
     campaigns,
     events,
+    assets,
+    assetSources,
   };
 }

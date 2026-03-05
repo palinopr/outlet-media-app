@@ -1,9 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, ArrowRight } from "lucide-react";
 import { centsToUsd, fmtUsd, fmtNum, fmtObjective, roasColor } from "@/lib/formatters";
-import type { Database } from "@/lib/database.types";
-
-type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
+import type { MetaCampaign } from "./data";
 
 interface Props {
   campaigns: MetaCampaign[];

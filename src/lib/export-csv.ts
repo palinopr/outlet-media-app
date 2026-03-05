@@ -35,20 +35,6 @@ export function exportToCsv(
   URL.revokeObjectURL(url);
 }
 
-export function centsToUsdString(cents: number | null | undefined): string {
-  if (cents == null) return "";
-  return (cents / 100).toFixed(2);
-}
-
-export function formatDate(date: string | null | undefined): string {
-  if (!date) return "";
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
 export function todayFilename(section: string): string {
   const d = new Date().toISOString().split("T")[0];
   return `outlet-${section}-${d}.csv`;

@@ -3,7 +3,7 @@ import { computeMarginalRoas } from "@/lib/formatters";
 import type { Database } from "@/lib/database.types";
 
 export type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
-type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
+export type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
 export interface AgentLastRun {
   agentId: string;

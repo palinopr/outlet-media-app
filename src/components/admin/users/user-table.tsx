@@ -9,8 +9,8 @@ import { UserRow } from "@/app/admin/users/data";
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { getUserColumns, ClientOption } from "./columns";
 import { bulkUpdateUserRole } from "@/app/admin/actions/users";
-import { slugToLabel } from "@/lib/formatters";
-import { exportToCsv, formatDate, todayFilename } from "@/lib/export-csv";
+import { slugToLabel, fmtDate } from "@/lib/formatters";
+import { exportToCsv, todayFilename } from "@/lib/export-csv";
 
 interface Props {
   users: UserRow[];
@@ -189,7 +189,7 @@ const userCsvColumns = [
   { header: "Email", accessor: (r: Record<string, unknown>) => String(r.email ?? "") },
   { header: "Role", accessor: (r: Record<string, unknown>) => String(r.role ?? "") },
   { header: "Clients", accessor: (r: Record<string, unknown>) => Array.isArray(r.client_slugs) ? (r.client_slugs as string[]).join(", ") : String(r.client_slug ?? "") },
-  { header: "Joined", accessor: (r: Record<string, unknown>) => formatDate(r.created_at as string | null) },
+  { header: "Joined", accessor: (r: Record<string, unknown>) => fmtDate(r.created_at as string | null) },
 ];
 
 export function UserTable({ users, clients }: Props) {

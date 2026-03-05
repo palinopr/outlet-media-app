@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -7,19 +8,30 @@ import {
   Megaphone,
   CalendarDays,
   TrendingUp,
+  ImageIcon,
 } from "lucide-react";
 import { statusBadge } from "@/lib/formatters";
 import { StatCard } from "@/components/admin/stat-card";
 import { MembersSection } from "./members-section";
 import { CampaignsSection } from "./campaigns-section";
+import { AssetsSection } from "./assets-section";
 import type { ClientDetail } from "@/app/admin/clients/data";
+
+type Tab = "members" | "campaigns" | "assets";
 
 interface Props {
   client: ClientDetail;
 }
 
 export function ClientDetailView({ client }: Props) {
+  const [activeTab, setActiveTab] = useState<Tab>("members");
   const roasDisplay = client.roas > 0 ? client.roas.toFixed(1) + "x" : "\u2014";
+
+  const tabs: { id: Tab; label: string; count?: number }[] = [
+    { id: "members", label: "Members", count: client.memberCount },
+    { id: "campaigns", label: "Campaigns", count: client.totalCampaigns },
+    { id: "assets", label: "Assets", count: client.assets.length },
+  ];
 
   return (
     <div className="space-y-6">
@@ -43,7 +55,7 @@ export function ClientDetailView({ client }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <StatCard
           icon={Users}
           label="Members"
@@ -72,10 +84,51 @@ export function ClientDetailView({ client }: Props) {
           accent="bg-emerald-500/10 text-emerald-400"
           variant="compact"
         />
+        <StatCard
+          icon={ImageIcon}
+          label="Ad Assets"
+          value={String(client.assets.length)}
+          accent="bg-pink-500/10 text-pink-400"
+          variant="compact"
+        />
       </div>
 
-      <MembersSection client={client} />
-      <CampaignsSection campaigns={client.campaigns} />
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-border/60">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+              activeTab === tab.id
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground/80"
+            }`}
+          >
+            {tab.label}
+            {tab.count !== undefined && tab.count > 0 && (
+              <span className="ml-1.5 text-[10px] text-muted-foreground">
+                {tab.count}
+              </span>
+            )}
+            {activeTab === tab.id && (
+              <span className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground rounded-t" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* Tab content */}
+      {activeTab === "members" && <MembersSection client={client} />}
+      {activeTab === "campaigns" && <CampaignsSection campaigns={client.campaigns} />}
+      {activeTab === "assets" && (
+        <AssetsSection
+          clientSlug={client.slug}
+          initialAssets={client.assets}
+          initialSources={client.assetSources}
+        />
+      )}
     </div>
   );
 }

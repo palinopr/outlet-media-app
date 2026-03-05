@@ -7,7 +7,7 @@ import { getEventColumns } from "./columns";
 import { bulkAssignEventClient, bulkUpdateEventStatus } from "@/app/admin/actions/events";
 import { toast } from "sonner";
 import { fmtUsd, fmtDate, fmtNum, statusBadge, slugToLabel } from "@/lib/formatters";
-import { exportToCsv, formatDate, todayFilename } from "@/lib/export-csv";
+import { exportToCsv, todayFilename } from "@/lib/export-csv";
 import type { TmEventRow, DemoRow, CampaignRow } from "@/app/admin/events/data";
 import { EVENT_STATUS_OPTIONS } from "@/lib/constants";
 
@@ -108,7 +108,7 @@ const eventCsvColumns = [
   { header: "Name", accessor: (r: Record<string, unknown>) => String(r.artist ?? "") },
   { header: "Venue", accessor: (r: Record<string, unknown>) => String(r.venue ?? "") },
   { header: "City", accessor: (r: Record<string, unknown>) => String(r.city ?? "") },
-  { header: "Date", accessor: (r: Record<string, unknown>) => formatDate(r.date as string | null) },
+  { header: "Date", accessor: (r: Record<string, unknown>) => fmtDate(r.date as string | null) },
   { header: "Tickets Sold", accessor: (r: Record<string, unknown>) => (r.tickets_sold != null ? String(r.tickets_sold) : "") },
   { header: "Gross ($)", accessor: (r: Record<string, unknown>) => (r.gross != null ? Number(r.gross).toFixed(2) : "") },
   { header: "Status", accessor: (r: Record<string, unknown>) => String(r.status ?? "") },

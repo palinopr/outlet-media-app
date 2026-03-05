@@ -1,10 +1,7 @@
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import { matchedCampaigns } from "@/lib/campaign-event-match";
 import { fmtDate } from "@/lib/formatters";
-import type { TmEvent } from "./data";
-import type { Database } from "@/lib/database.types";
-
-type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
+import type { TmEvent, MetaCampaign } from "./data";
 
 function daysUntil(dateStr: string | null): number | null {
   if (!dateStr) return null;
