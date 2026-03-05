@@ -17,17 +17,21 @@ export function DateRangePicker({ options, current }: Props) {
 
   // On mount: if no range param in URL, redirect to stored preference
   useEffect(() => {
-    if (!searchParams.get("range")) {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored && stored !== current) {
-        router.replace(`?range=${stored}`);
+    try {
+      if (!searchParams.get("range")) {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored && stored !== current) {
+          router.replace(`?range=${stored}`);
+        }
       }
-    }
+    } catch { /* localStorage unavailable */ }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Persist current choice
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, current);
+    try {
+      localStorage.setItem(STORAGE_KEY, current);
+    } catch { /* localStorage unavailable */ }
   }, [current]);
 
   return (

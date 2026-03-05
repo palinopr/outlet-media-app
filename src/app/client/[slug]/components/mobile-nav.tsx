@@ -1,43 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import {
-  Menu,
-  X,
-  LayoutDashboard,
-  Megaphone,
-  Ticket,
-  BarChart3,
-  Scale,
-  Settings,
-  Mail,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
-
-interface NavLink {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  matchExact?: boolean;
-}
+import { Menu, X, Mail } from "lucide-react";
+import { getClientNavLinks, isNavActive } from "./nav-config";
 
 export function MobileNav({ slug, clientName }: { slug: string; clientName: string }) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const links = getClientNavLinks(slug);
 
-  const links: NavLink[] = [
-    { href: `/client/${slug}`, label: "Overview", icon: LayoutDashboard, matchExact: true },
-    { href: `/client/${slug}/campaigns`, label: "Campaigns", icon: Megaphone },
-    { href: `/client/${slug}/events`, label: "Events", icon: Ticket },
-    { href: `/client/${slug}/reports`, label: "Reports", icon: BarChart3 },
-    { href: `/client/${slug}/compare`, label: "Compare", icon: Scale },
-    { href: `/client/${slug}/settings`, label: "Settings", icon: Settings },
-  ];
+  const close = useCallback(() => setOpen(false), []);
 
-  const isActive = (link: NavLink) =>
-    link.matchExact ? pathname === link.href : pathname.startsWith(link.href);
+  useEffect(() => {
+    if (!open) return;
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") close();
+    }
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [open, close]);
 
   return (
     <div className="lg:hidden">
@@ -48,6 +32,8 @@ export function MobileNav({ slug, clientName }: { slug: string; clientName: stri
         </div>
         <button
           onClick={() => setOpen(!open)}
+          aria-expanded={open}
+          aria-label="Toggle navigation menu"
           className="flex items-center justify-center h-8 w-8 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-all"
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -58,18 +44,19 @@ export function MobileNav({ slug, clientName }: { slug: string; clientName: stri
         <>
           <div
             className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
-            onClick={() => setOpen(false)}
+            onClick={close}
+            role="presentation"
           />
           <div className="fixed top-[53px] right-0 z-50 w-64 h-[calc(100vh-53px)] bg-[oklch(0.12_0_0)] border-l border-white/[0.06] overflow-y-auto">
-            <nav className="px-3 py-4 space-y-1">
+            <nav className="px-3 py-4 space-y-1" aria-label="Mobile navigation">
               {links.map((link) => {
-                const active = isActive(link);
+                const active = isNavActive(link, pathname);
                 const Icon = link.icon;
                 return (
-                  <a
+                  <Link
                     key={link.href}
                     href={link.href}
-                    onClick={() => setOpen(false)}
+                    onClick={close}
                     className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
                       active
                         ? "text-white/90 bg-white/[0.06] border border-white/[0.04]"
@@ -78,7 +65,7 @@ export function MobileNav({ slug, clientName }: { slug: string; clientName: stri
                   >
                     <Icon className={`h-4 w-4 ${active ? "text-cyan-400" : "text-white/30"}`} />
                     {link.label}
-                  </a>
+                  </Link>
                 );
               })}
             </nav>

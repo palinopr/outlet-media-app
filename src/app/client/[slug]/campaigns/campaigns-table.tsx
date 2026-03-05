@@ -4,24 +4,14 @@ import { useState } from "react";
 import { Search, Megaphone } from "lucide-react";
 import { fmtUsd, fmtNum, roasColor } from "@/lib/formatters";
 import { getCampaignStatusCfg } from "@/lib/status";
+import type { CampaignCard } from "../types";
 
-interface Campaign {
-  campaignId: string;
-  name: string;
-  status: string;
-  spend: number;
-  revenue: number | null;
-  roas: number | null;
-  impressions: number;
-  ctr: number | null;
-  cpc: number | null;
-}
-
-export function CampaignsTable({ campaigns }: { campaigns: Campaign[] }) {
+export function CampaignsTable({ campaigns }: { campaigns: CampaignCard[] }) {
   const [query, setQuery] = useState("");
 
+  const queryLower = query.toLowerCase();
   const filtered = campaigns.filter((c) =>
-    c.name.toLowerCase().includes(query.toLowerCase()),
+    c.name.toLowerCase().includes(queryLower),
   );
 
   return (
@@ -34,6 +24,7 @@ export function CampaignsTable({ campaigns }: { campaigns: Campaign[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search campaigns..."
+          aria-label="Search campaigns"
           className="w-full bg-transparent text-sm text-white/90 placeholder:text-white/30 outline-none"
         />
         {query && (

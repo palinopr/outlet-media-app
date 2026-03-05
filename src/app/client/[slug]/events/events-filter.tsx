@@ -78,6 +78,7 @@ export function EventsFilter({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search events..."
+              aria-label="Search events"
               className="pl-8 pr-3 py-1.5 rounded-lg text-xs bg-white/[0.04] border border-white/[0.08] text-white placeholder:text-white/40 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 focus:border-cyan-500/30 transition w-48"
             />
           </div>

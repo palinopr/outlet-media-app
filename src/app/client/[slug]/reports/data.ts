@@ -1,7 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { fetchAllCampaigns } from "@/lib/meta-campaigns";
 import type { CampaignCard, EventCard, TmEvent } from "../types";
-import type { ScopeFilter } from "../data";
+import { toCampaignCard, type ScopeFilter } from "../data";
 import { buildEventCard } from "../lib";
 
 export interface ReportsSummary {
@@ -26,42 +26,6 @@ export interface ReportsData {
   events: EventCard[];
   summary: ReportsSummary;
   dataSource: "meta_api" | "supabase";
-}
-
-function toCampaignCard(c: {
-  campaignId: string;
-  name: string;
-  status: string;
-  spend: number;
-  roas: number | null;
-  revenue: number | null;
-  impressions: number;
-  clicks: number;
-  ctr: number | null;
-  cpc: number | null;
-  cpm: number | null;
-  dailyBudget: number | null;
-  startTime: string | null;
-}): CampaignCard {
-  return {
-    campaignId: c.campaignId,
-    name: c.name,
-    status: c.status,
-    spend: c.spend,
-    roas: c.roas,
-    revenue: c.revenue,
-    impressions: c.impressions,
-    clicks: c.clicks,
-    ctr: c.ctr,
-    cpc: c.cpc,
-    cpm: c.cpm,
-    dailyBudget: c.dailyBudget,
-    startTime: c.startTime,
-  };
-}
-
-function buildEventCards(events: TmEvent[]): EventCard[] {
-  return events.map(buildEventCard);
 }
 
 function buildSummary(
@@ -149,7 +113,7 @@ export async function getReportsData(
 
   const eventsRes = eventsQuery ? await eventsQuery : { data: null };
   const tmEvents = (eventsRes.data ?? []) as TmEvent[];
-  const events = buildEventCards(tmEvents);
+  const events = tmEvents.map(buildEventCard);
 
   const summary = buildSummary(campaigns, events);
 

@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { getCampaignsPageData } from "../data";
+import { buildTrendData } from "../lib";
 import { getScopeFilter } from "@/lib/member-access";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { CampaignsTable } from "./campaigns-table";
@@ -20,25 +21,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `${clientName} Campaigns`,
     description: `Campaign performance data for ${clientName}`,
   };
-}
-
-// --- Helpers ---
-
-function buildTrendData(snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null }>) {
-  const byDate: Record<string, { roasSum: number; roasCount: number; spendSum: number }> = {};
-  for (const s of snapshots) {
-    const d = s.snapshot_date;
-    if (!byDate[d]) byDate[d] = { roasSum: 0, roasCount: 0, spendSum: 0 };
-    if (s.roas != null) { byDate[d].roasSum += s.roas; byDate[d].roasCount++; }
-    if (s.spend != null) byDate[d].spendSum += s.spend / 100;
-  }
-  return Object.entries(byDate)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, v]) => ({
-      date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      roas: v.roasCount > 0 ? v.roasSum / v.roasCount : 0,
-      spend: v.spendSum,
-    }));
 }
 
 // --- Page ---

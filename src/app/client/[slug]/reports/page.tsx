@@ -15,7 +15,7 @@ import { auth } from "@clerk/nextjs/server";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { getScopeFilter } from "@/lib/member-access";
-import { getCampaignStatusCfg } from "../lib";
+import { getCampaignStatusCfg, buildTrendData } from "../lib";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { getReportsData } from "./data";
 
@@ -32,28 +32,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function buildTrendData(
-  snapshots: Array<{ snapshot_date: string; roas: number | null; spend: number | null }>,
-) {
-  const byDate: Record<string, { roasSum: number; roasCount: number; spendSum: number }> = {};
-  for (const s of snapshots) {
-    const d = s.snapshot_date;
-    if (!byDate[d]) byDate[d] = { roasSum: 0, roasCount: 0, spendSum: 0 };
-    if (s.roas != null) {
-      byDate[d].roasSum += s.roas;
-      byDate[d].roasCount++;
-    }
-    if (s.spend != null) byDate[d].spendSum += s.spend / 100;
-  }
-  return Object.entries(byDate)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, v]) => ({
-      date: new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      roas: v.roasCount > 0 ? v.roasSum / v.roasCount : 0,
-      spend: v.spendSum,
-    }));
-}
-
 export default async function ReportsPage({ params }: Props) {
   const { slug } = await params;
   const clientName = slugToLabel(slug);
@@ -64,14 +42,17 @@ export default async function ReportsPage({ params }: Props) {
   const trendData = buildTrendData(snapshots);
 
   const hasData = campaigns.length > 0;
-  const topPerformers = [...campaigns]
-    .filter((c) => c.roas != null && c.spend > 0)
-    .sort((a, b) => (b.roas ?? 0) - (a.roas ?? 0))
-    .slice(0, 3);
-
-  const rankedByRoas = [...campaigns]
+  const withSpend = [...campaigns]
     .filter((c) => c.spend > 0)
     .sort((a, b) => (b.roas ?? 0) - (a.roas ?? 0));
+  const topPerformers = withSpend.filter((c) => c.roas != null).slice(0, 3);
+
+  const maxCpc = Math.max(...withSpend.filter((c) => c.cpc != null).map((c) => c.cpc ?? 0), 0);
+  const maxCpm = Math.max(...withSpend.filter((c) => c.cpm != null).map((c) => c.cpm ?? 0), 0);
+  const withCpm = withSpend.filter((c) => c.cpm != null);
+  const avgCpm = withCpm.length > 0
+    ? withCpm.reduce((s, c) => s + (c.cpm ?? 0), 0) / withCpm.length
+    : null;
 
   const bestEvent = events.length > 0
     ? [...events]
@@ -237,14 +218,14 @@ export default async function ReportsPage({ params }: Props) {
       )}
 
       {/* Campaign Performance Table */}
-      {rankedByRoas.length > 0 && (
+      {withSpend.length > 0 && (
         <section>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Sparkles className="h-3.5 w-3.5 text-white/50" />
               <span className="section-label">Campaign Performance</span>
             </div>
-            <span className="text-xs text-white/45">{rankedByRoas.length} campaigns</span>
+            <span className="text-xs text-white/45">{withSpend.length} campaigns</span>
           </div>
 
           {/* Desktop table */}
@@ -273,7 +254,7 @@ export default async function ReportsPage({ params }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.04]">
-                {rankedByRoas.map((c) => {
+                {withSpend.map((c) => {
                   const statusCfg = getCampaignStatusCfg(c.status);
                   return (
                     <tr key={c.campaignId} className="hover:bg-white/[0.02] transition-colors">
@@ -311,7 +292,7 @@ export default async function ReportsPage({ params }: Props) {
 
           {/* Mobile card stack */}
           <div className="md:hidden glass-card divide-y divide-white/[0.04] overflow-hidden">
-            {rankedByRoas.map((c) => {
+            {withSpend.map((c) => {
               const statusCfg = getCampaignStatusCfg(c.status);
               return (
                 <div key={c.campaignId} className="px-4 py-3">
@@ -350,7 +331,7 @@ export default async function ReportsPage({ params }: Props) {
       )}
 
       {/* Cost Efficiency */}
-      {campaigns.filter((c) => c.spend > 0).length > 0 && (
+      {withSpend.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
             <Zap className="h-3.5 w-3.5 text-white/50" />
@@ -368,14 +349,11 @@ export default async function ReportsPage({ params }: Props) {
                 {summary.avgCpc != null ? `$${summary.avgCpc.toFixed(2)}` : "--"}
               </p>
               <div className="space-y-2">
-                {campaigns
-                  .filter((c) => c.cpc != null && c.spend > 0)
+                {withSpend
+                  .filter((c) => c.cpc != null)
                   .sort((a, b) => (a.cpc ?? 0) - (b.cpc ?? 0))
                   .slice(0, 5)
                   .map((c) => {
-                    const maxCpc = Math.max(
-                      ...campaigns.filter((x) => x.cpc != null).map((x) => x.cpc ?? 0),
-                    );
                     const pct = maxCpc > 0 ? ((c.cpc ?? 0) / maxCpc) * 100 : 0;
                     return (
                       <div key={c.campaignId}>
@@ -405,22 +383,14 @@ export default async function ReportsPage({ params }: Props) {
                 </span>
               </div>
               <p className="text-2xl font-extrabold text-white tracking-tighter leading-none mb-3">
-                {(() => {
-                  const withCpm = campaigns.filter((c) => c.cpm != null && c.spend > 0);
-                  if (withCpm.length === 0) return "--";
-                  const avg = withCpm.reduce((s, c) => s + (c.cpm ?? 0), 0) / withCpm.length;
-                  return `$${avg.toFixed(2)}`;
-                })()}
+                {avgCpm != null ? `$${avgCpm.toFixed(2)}` : "--"}
               </p>
               <div className="space-y-2">
-                {campaigns
-                  .filter((c) => c.cpm != null && c.spend > 0)
+                {withSpend
+                  .filter((c) => c.cpm != null)
                   .sort((a, b) => (a.cpm ?? 0) - (b.cpm ?? 0))
                   .slice(0, 5)
                   .map((c) => {
-                    const maxCpm = Math.max(
-                      ...campaigns.filter((x) => x.cpm != null).map((x) => x.cpm ?? 0),
-                    );
                     const pct = maxCpm > 0 ? ((c.cpm ?? 0) / maxCpm) * 100 : 0;
                     return (
                       <div key={c.campaignId}>

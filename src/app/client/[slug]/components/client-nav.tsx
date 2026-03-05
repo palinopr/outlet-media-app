@@ -1,51 +1,22 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  LayoutDashboard,
-  Megaphone,
-  Ticket,
-  BarChart3,
-  Scale,
-  Settings,
-  Mail,
-} from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import { Mail } from "lucide-react";
+import { getClientNavLinks, isNavActive } from "./nav-config";
 
-interface Props {
-  slug: string;
-}
-
-interface NavLink {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  matchExact?: boolean;
-}
-
-export function ClientNav({ slug }: Props) {
+export function ClientNav({ slug }: { slug: string }) {
   const pathname = usePathname();
-
-  const links: NavLink[] = [
-    { href: `/client/${slug}`, label: "Overview", icon: LayoutDashboard, matchExact: true },
-    { href: `/client/${slug}/campaigns`, label: "Campaigns", icon: Megaphone },
-    { href: `/client/${slug}/events`, label: "Events", icon: Ticket },
-    { href: `/client/${slug}/reports`, label: "Reports", icon: BarChart3 },
-    { href: `/client/${slug}/compare`, label: "Compare", icon: Scale },
-    { href: `/client/${slug}/settings`, label: "Settings", icon: Settings },
-  ];
-
-  const isActive = (link: NavLink) =>
-    link.matchExact ? pathname === link.href : pathname.startsWith(link.href);
+  const links = getClientNavLinks(slug);
 
   return (
     <nav className="flex-1 px-3 py-1">
       <div className="space-y-1">
         {links.map((link) => {
-          const active = isActive(link);
+          const active = isNavActive(link, pathname);
           const Icon = link.icon;
           return (
-            <a
+            <Link
               key={link.href}
               href={link.href}
               className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
@@ -56,7 +27,7 @@ export function ClientNav({ slug }: Props) {
             >
               <Icon className={`h-4 w-4 ${active ? "text-cyan-400" : "text-white/30"}`} />
               {link.label}
-            </a>
+            </Link>
           );
         })}
       </div>

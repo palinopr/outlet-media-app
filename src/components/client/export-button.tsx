@@ -5,7 +5,6 @@ import { Download, FileText, Printer } from "lucide-react";
 
 function exportTablesToCsv() {
   const tables = document.querySelectorAll("table");
-  const grids = document.querySelectorAll("[class*='grid']");
 
   const rows: string[][] = [];
 
@@ -49,13 +48,21 @@ export function ExportButton() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!open) return;
     function handleClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
       }
     }
-    if (open) document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
   }, [open]);
 
   function handleCsv() {
@@ -80,6 +87,7 @@ export function ExportButton() {
     <div className="relative print:hidden" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
         className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-white/50 hover:text-white/80 bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] transition-all"
       >
         <Download className="h-3.5 w-3.5" />

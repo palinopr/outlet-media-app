@@ -88,6 +88,7 @@ export function CampaignSection({
             placeholder="Search campaigns..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label="Search campaigns"
             className="w-full pl-9 pr-3 py-2 rounded-lg text-sm bg-white/[0.03] border border-white/[0.08] text-white/90 placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-cyan-500/30 transition-all"
           />
         </div>
