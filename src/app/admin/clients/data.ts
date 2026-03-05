@@ -2,77 +2,27 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { clerkClient } from "@clerk/nextjs/server";
 import { computeBlendedRoas } from "@/lib/formatters";
 
-export interface ClientSummary {
-  id: string;
-  name: string;
-  slug: string;
-  status: string;
-  memberCount: number;
-  activeCampaigns: number;
-  totalCampaigns: number;
-  activeShows: number;
-  totalSpend: number;
-  totalRevenue: number;
-  roas: number;
-  createdAt: string;
-}
+export type {
+  ClientSummary,
+  ClientDetail,
+  ClientMember,
+  ClientCampaign,
+  ClientEvent,
+  ClientAsset,
+  ClientAssetSource,
+} from "./types";
 
-export interface ClientAsset {
-  id: string;
-  fileName: string;
-  publicUrl: string | null;
-  mediaType: string;
-  placement: string | null;
-  format: string | null;
-  labels: string[];
-  status: string;
-  createdAt: string;
-}
+import type {
+  ClientSummary,
+  ClientDetail,
+  ClientMember,
+  ClientCampaign,
+  ClientEvent,
+  ClientAsset,
+  ClientAssetSource,
+} from "./types";
 
-export interface ClientAssetSource {
-  id: string;
-  provider: string;
-  folderUrl: string;
-  folderName: string | null;
-  lastSyncedAt: string | null;
-  fileCount: number;
-}
-
-export interface ClientDetail extends ClientSummary {
-  members: ClientMember[];
-  campaigns: ClientCampaign[];
-  events: ClientEvent[];
-  assets: ClientAsset[];
-  assetSources: ClientAssetSource[];
-}
-
-export interface ClientMember {
-  id: string;
-  clerkUserId: string;
-  role: string;
-  scope: string;
-  name: string;
-  email: string;
-  createdAt: string;
-  assignedCampaignIds: string[];
-  assignedEventIds: string[];
-}
-
-export interface ClientEvent {
-  id: string;
-  name: string;
-  venue: string;
-  date: string;
-  status: string;
-}
-
-export interface ClientCampaign {
-  id: string;
-  name: string;
-  status: string;
-  spend: number;
-  roas: number;
-}
+// ─── Summaries ──────────────────────────────────────────────────────────────
 
 export async function getClientSummaries(): Promise<ClientSummary[]> {
   if (!supabaseAdmin) return [];
@@ -143,6 +93,75 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
   });
 }
 
+// ─── Detail ─────────────────────────────────────────────────────────────────
+
+async function fetchMemberAssignments(memberIds: string[]) {
+  if (memberIds.length === 0) {
+    return { campaignsByMember: new Map<string, string[]>(), eventsByMember: new Map<string, string[]>() };
+  }
+
+  const [assignedCampaignsRes, assignedEventsRes] = await Promise.all([
+    supabaseAdmin!
+      .from("client_member_campaigns")
+      .select("member_id, campaign_id")
+      .in("member_id", memberIds),
+    supabaseAdmin!
+      .from("client_member_events")
+      .select("member_id, event_id")
+      .in("member_id", memberIds),
+  ]);
+
+  const campaignsByMember = new Map<string, string[]>();
+  for (const row of assignedCampaignsRes.data ?? []) {
+    const list = campaignsByMember.get(row.member_id) ?? [];
+    list.push(row.campaign_id);
+    campaignsByMember.set(row.member_id, list);
+  }
+
+  const eventsByMember = new Map<string, string[]>();
+  for (const row of assignedEventsRes.data ?? []) {
+    const list = eventsByMember.get(row.member_id) ?? [];
+    list.push(row.event_id);
+    eventsByMember.set(row.member_id, list);
+  }
+
+  return { campaignsByMember, eventsByMember };
+}
+
+async function enrichMembersWithClerk(
+  memberRows: { id: string; clerk_user_id: string; role: string; scope: string; created_at: string }[],
+  campaignsByMember: Map<string, string[]>,
+  eventsByMember: Map<string, string[]>,
+): Promise<ClientMember[]> {
+  const clerk = await clerkClient();
+  return Promise.all(
+    memberRows.map(async (m) => {
+      let name = "Unknown user";
+      let email = "";
+      try {
+        const user = await clerk.users.getUser(m.clerk_user_id);
+        name =
+          [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+          "Unknown user";
+        email = user.emailAddresses?.[0]?.emailAddress ?? "";
+      } catch {
+        // Clerk user deleted or unreachable
+      }
+      return {
+        id: m.id,
+        clerkUserId: m.clerk_user_id,
+        role: m.role,
+        scope: m.scope,
+        name,
+        email,
+        createdAt: m.created_at,
+        assignedCampaignIds: campaignsByMember.get(m.id) ?? [],
+        assignedEventIds: eventsByMember.get(m.id) ?? [],
+      };
+    }),
+  );
+}
+
 export async function getClientDetail(
   clientId: string,
 ): Promise<ClientDetail | null> {
@@ -183,63 +202,8 @@ export async function getClientDetail(
   ]);
 
   const memberRows = membersRes.data ?? [];
-
-  // Fetch assignments for all members in parallel
-  const memberIds = memberRows.map((m) => m.id);
-  const [assignedCampaignsRes, assignedEventsRes] = memberIds.length > 0
-    ? await Promise.all([
-        supabaseAdmin
-          .from("client_member_campaigns")
-          .select("member_id, campaign_id")
-          .in("member_id", memberIds),
-        supabaseAdmin
-          .from("client_member_events")
-          .select("member_id, event_id")
-          .in("member_id", memberIds),
-      ])
-    : [{ data: [] }, { data: [] }];
-
-  // Group assignments by member
-  const campaignsByMember = new Map<string, string[]>();
-  for (const row of assignedCampaignsRes.data ?? []) {
-    const list = campaignsByMember.get(row.member_id) ?? [];
-    list.push(row.campaign_id);
-    campaignsByMember.set(row.member_id, list);
-  }
-  const eventsByMember = new Map<string, string[]>();
-  for (const row of assignedEventsRes.data ?? []) {
-    const list = eventsByMember.get(row.member_id) ?? [];
-    list.push(row.event_id);
-    eventsByMember.set(row.member_id, list);
-  }
-
-  const clerk = await clerkClient();
-  const members: ClientMember[] = await Promise.all(
-    memberRows.map(async (m) => {
-      let name = "Unknown user";
-      let email = "";
-      try {
-        const user = await clerk.users.getUser(m.clerk_user_id);
-        name =
-          [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-          "Unknown user";
-        email = user.emailAddresses?.[0]?.emailAddress ?? "";
-      } catch {
-        // Clerk user deleted or unreachable -- use fallbacks
-      }
-      return {
-        id: m.id,
-        clerkUserId: m.clerk_user_id,
-        role: m.role,
-        scope: m.scope,
-        name,
-        email,
-        createdAt: m.created_at,
-        assignedCampaignIds: campaignsByMember.get(m.id) ?? [],
-        assignedEventIds: eventsByMember.get(m.id) ?? [],
-      };
-    }),
-  );
+  const { campaignsByMember, eventsByMember } = await fetchMemberAssignments(memberRows.map((m) => m.id));
+  const members = await enrichMembersWithClerk(memberRows, campaignsByMember, eventsByMember);
 
   const campaigns: ClientCampaign[] = (campaignsRes.data ?? []).map((c) => ({
     id: c.campaign_id ?? c.id,

@@ -1,15 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 import { adminGuard, apiError } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   detectProvider,
   listCloudFolder,
   downloadCloudFile,
-  mediaTypeFromMime,
 } from "@/lib/cloud-import";
+import { uploadToAssetStorage, insertAssetRow } from "@/lib/asset-storage";
 
 export const dynamic = "force-dynamic";
+
+const CONCURRENCY = 4;
+
+async function processInBatches<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = [];
+  for (let i = 0; i < items.length; i += concurrency) {
+    const batch = items.slice(i, i + concurrency);
+    const batchResults = await Promise.allSettled(batch.map(fn));
+    for (const r of batchResults) {
+      if (r.status === "fulfilled") results.push(r.value);
+    }
+  }
+  return results;
+}
 
 // ─── POST: import assets from a Dropbox or Google Drive shared folder ────────
 
@@ -34,7 +51,6 @@ export async function POST(req: NextRequest) {
     return apiError("Unsupported URL. Paste a Dropbox or Google Drive shared folder link.", 400);
   }
 
-  // List files in the cloud folder
   let listing;
   try {
     listing = await listCloudFolder(folder_url);
@@ -47,68 +63,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ imported: 0, skipped: 0, message: "No media files found in folder." });
   }
 
-  // Check which files we already imported (by source_url matching)
+  // Build source keys for incoming files and check which already exist
+  const incomingKeys = listing.files.map((f) => `${provider}:${f.downloadUrl}`);
   const { data: existing } = await supabaseAdmin
     .from("ad_assets")
     .select("source_url")
-    .eq("client_slug", client_slug);
+    .eq("client_slug", client_slug)
+    .in("source_url", incomingKeys);
 
-  const existingUrls = new Set((existing ?? []).map((a) => a.source_url).filter(Boolean));
+  const existingUrls = new Set((existing ?? []).map((a) => a.source_url));
+
+  const toImport = listing.files.filter(
+    (f) => !existingUrls.has(`${provider}:${f.downloadUrl}`),
+  );
+  const skipped = listing.files.length - toImport.length;
 
   let imported = 0;
-  let skipped = 0;
   const errors: string[] = [];
 
-  for (const file of listing.files) {
+  await processInBatches(toImport, CONCURRENCY, async (file) => {
     const sourceKey = `${provider}:${file.downloadUrl}`;
-    if (existingUrls.has(sourceKey)) {
-      skipped++;
-      continue;
-    }
-
     try {
       const { buffer, mimeType } = await downloadCloudFile(
-        provider,
-        folder_url,
-        file.downloadUrl,
+        provider, folder_url, file.downloadUrl,
       );
-
-      const uid = randomUUID().slice(0, 8);
-      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-      const storagePath = `${client_slug}/${uid}_${safeName}`;
-
-      const { error: uploadErr } = await supabaseAdmin.storage
-        .from("ad-assets")
-        .upload(storagePath, buffer, {
-          contentType: mimeType,
-          upsert: false,
-        });
-
-      if (uploadErr) {
-        errors.push(`${file.name}: ${uploadErr.message}`);
-        continue;
-      }
-
-      const { data: urlData } = supabaseAdmin.storage
-        .from("ad-assets")
-        .getPublicUrl(storagePath);
-
-      await supabaseAdmin.from("ad_assets").insert({
-        client_slug,
-        file_name: file.name,
-        storage_path: storagePath,
-        public_url: urlData.publicUrl,
-        media_type: mediaTypeFromMime(mimeType),
-        uploaded_by,
-        source_url: sourceKey,
-        status: "new",
+      const { storagePath, publicUrl } = await uploadToAssetStorage(
+        client_slug, file.name, buffer, mimeType,
+      );
+      await insertAssetRow({
+        clientSlug: client_slug, fileName: file.name,
+        storagePath, publicUrl, mimeType,
+        uploadedBy: uploaded_by, sourceUrl: sourceKey,
       });
-
       imported++;
     } catch (err) {
-      errors.push(`${file.name}: ${err instanceof Error ? err.message : "download failed"}`);
+      errors.push(`${file.name}: ${err instanceof Error ? err.message : "failed"}`);
     }
-  }
+  });
 
   // Upsert asset_source record
   await supabaseAdmin.from("asset_sources").upsert(

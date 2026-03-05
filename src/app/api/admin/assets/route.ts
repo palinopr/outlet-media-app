@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomUUID } from "crypto";
 import { adminGuard, apiError } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
-import { mediaTypeFromMime } from "@/lib/cloud-import";
+import { uploadToAssetStorage, insertAssetRow } from "@/lib/asset-storage";
 
 export const dynamic = "force-dynamic";
 
@@ -61,38 +60,17 @@ export async function POST(req: NextRequest) {
     return apiError(`Unsupported file type: ${file.type}`, 400);
   }
 
-  const uid = randomUUID().slice(0, 8);
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-  const storagePath = `${clientSlug}/${uid}_${safeName}`;
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const { error: uploadErr } = await supabaseAdmin.storage
-    .from("ad-assets")
-    .upload(storagePath, buffer, {
-      contentType: file.type,
-      upsert: false,
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const { storagePath, publicUrl } = await uploadToAssetStorage(
+      clientSlug, file.name, buffer, file.type,
+    );
+    const asset = await insertAssetRow({
+      clientSlug, fileName: file.name, storagePath, publicUrl,
+      mimeType: file.type, uploadedBy,
     });
-
-  if (uploadErr) return apiError(`Storage upload failed: ${uploadErr.message}`, 500);
-
-  const { data: urlData } = supabaseAdmin.storage
-    .from("ad-assets")
-    .getPublicUrl(storagePath);
-
-  const { data: asset, error: insertErr } = await supabaseAdmin
-    .from("ad_assets")
-    .insert({
-      client_slug: clientSlug,
-      file_name: file.name,
-      storage_path: storagePath,
-      public_url: urlData.publicUrl,
-      media_type: mediaTypeFromMime(file.type),
-      uploaded_by: uploadedBy,
-      status: "new",
-    })
-    .select()
-    .single();
-
-  if (insertErr) return apiError(insertErr.message, 500);
-  return NextResponse.json({ asset }, { status: 201 });
+    return NextResponse.json({ asset }, { status: 201 });
+  } catch (err) {
+    return apiError(err instanceof Error ? err.message : "Upload failed", 500);
+  }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,23 +23,21 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
+import { ASSET_STATUS_COLORS, type AssetStatus } from "@/lib/constants";
 import type {
   ClientAsset,
   ClientAssetSource,
 } from "@/app/admin/clients/data";
+
+function assetStatusColor(status: string): string {
+  return ASSET_STATUS_COLORS[status as AssetStatus] ?? "";
+}
 
 interface Props {
   clientSlug: string;
   initialAssets: ClientAsset[];
   initialSources: ClientAssetSource[];
 }
-
-const STATUS_COLORS: Record<string, string> = {
-  new: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  labeled: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  approved: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  archived: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-};
 
 export function AssetsSection({ clientSlug, initialAssets, initialSources }: Props) {
   const { userId } = useAuth();
@@ -133,7 +131,7 @@ export function AssetsSection({ clientSlug, initialAssets, initialSources }: Pro
         if (exists) return prev;
         return [
           {
-            id: crypto.randomUUID(),
+            id: Math.random().toString(36).slice(2, 11),
             provider: folderUrl.includes("dropbox") ? "dropbox" : "gdrive",
             folderUrl: folderUrl.trim(),
             folderName: null,
@@ -196,8 +194,10 @@ export function AssetsSection({ clientSlug, initialAssets, initialSources }: Pro
     [handleUpload],
   );
 
-  const imageCount = assets.filter((a) => a.mediaType === "image").length;
-  const videoCount = assets.filter((a) => a.mediaType === "video").length;
+  const { imageCount, videoCount } = useMemo(() => ({
+    imageCount: assets.filter((a) => a.mediaType === "image").length,
+    videoCount: assets.filter((a) => a.mediaType === "video").length,
+  }), [assets]);
 
   return (
     <div className="space-y-4">
@@ -340,7 +340,7 @@ export function AssetsSection({ clientSlug, initialAssets, initialSources }: Pro
                 <div className="absolute top-1.5 right-1.5">
                   <Badge
                     variant="outline"
-                    className={`text-[10px] px-1.5 py-0 border ${STATUS_COLORS[asset.status] ?? ""}`}
+                    className={`text-[10px] px-1.5 py-0 border ${assetStatusColor(asset.status) ?? ""}`}
                   >
                     {asset.status}
                   </Badge>
@@ -404,7 +404,7 @@ export function AssetsSection({ clientSlug, initialAssets, initialSources }: Pro
                     <span className="text-muted-foreground text-xs">Status</span>
                     <Badge
                       variant="outline"
-                      className={`text-xs ${STATUS_COLORS[previewAsset.status] ?? ""}`}
+                      className={`text-xs ${assetStatusColor(previewAsset.status) ?? ""}`}
                     >
                       {previewAsset.status}
                     </Badge>
