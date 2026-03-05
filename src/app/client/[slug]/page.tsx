@@ -181,7 +181,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {events.map((e) => (
-              <EventCard key={e.id} e={e} />
+              <EventCard key={e.id} e={e} slug={slug} />
             ))}
           </div>
         </section>

@@ -1,4 +1,5 @@
-import { Calendar, MapPin, RefreshCw } from "lucide-react";
+import Link from "next/link";
+import { Calendar, MapPin, RefreshCw, ChevronRight } from "lucide-react";
 import type { EventCard as EventCardData } from "../types";
 import { fmtDate, fmtUsd, timeAgo } from "@/lib/formatters";
 import { getEventStatusCfg } from "../lib";
@@ -14,12 +15,18 @@ function EventStatusBadge({ status }: { status: string }) {
   );
 }
 
-export function EventCard({ e }: { e: EventCardData }) {
+export function EventCard({ e, slug }: { e: EventCardData; slug: string }) {
   return (
-    <div className="glass-card p-5 flex flex-col">
+    <Link
+      href={`/client/${slug}/event/${e.id}`}
+      className="glass-card p-5 flex flex-col hover:ring-1 hover:ring-white/10 hover:bg-white/[0.03] transition-all duration-200 group"
+    >
       <div className="flex items-start justify-between gap-2 mb-1">
-        <p className="text-sm font-semibold text-white leading-tight truncate">{e.city || e.name}</p>
-        <EventStatusBadge status={e.status} />
+        <p className="text-sm font-semibold text-white leading-tight truncate group-hover:text-cyan-300 transition-colors">{e.city || e.name}</p>
+        <div className="flex items-center gap-1.5">
+          <EventStatusBadge status={e.status} />
+          <ChevronRight className="h-3 w-3 text-white/30 group-hover:text-white/60 transition-colors" />
+        </div>
       </div>
       <div className="flex items-center gap-2 text-xs text-white/50 mb-4">
         <Calendar className="h-3 w-3" />
@@ -67,9 +74,9 @@ export function EventCard({ e }: { e: EventCardData }) {
       {e.updatedAt && (
         <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-white/[0.06]">
           <RefreshCw className="h-3 w-3 text-white/30" />
-          <span className="text-[11px] text-white/30">TM updated {timeAgo(e.updatedAt)}</span>
+          <span className="text-[11px] text-white/30">Updated {timeAgo(e.updatedAt)}</span>
         </div>
       )}
-    </div>
+    </Link>
   );
 }

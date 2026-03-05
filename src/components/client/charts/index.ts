@@ -4,3 +4,4 @@ export { GenderDonutChart } from "./gender-donut-chart";
 export { AgeGenderHeatmap } from "./age-gender-heatmap";
 export { PlacementTreemap, PlacementTable } from "./placement-charts";
 export { HourlyHeatmap, DailyTrendChart, DayOfWeekChart } from "./time-charts";
+export { TicketSalesChart, type TicketChartRow } from "./ticket-sales-chart";

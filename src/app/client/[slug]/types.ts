@@ -155,6 +155,38 @@ export interface CampaignDetailData {
   rangeLabel: string;
 }
 
+// --- Event detail types ---
+
+export interface TicketSnapshot {
+  date: string;
+  ticketsSold: number;
+  ticketsAvailable: number | null;
+  gross: number | null;
+}
+
+export interface LinkedCampaign {
+  campaignId: string;
+  name: string;
+  status: string;
+  spend: number;
+  roas: number | null;
+  impressions: number | null;
+  clicks: number | null;
+}
+
+export interface EventDetailData {
+  event: EventCard;
+  snapshots: TicketSnapshot[];
+  audience: AudienceProfile | null;
+  linkedCampaigns: LinkedCampaign[];
+  channelBreakdown: {
+    internet: number | null;
+    mobile: number | null;
+    box: number | null;
+    phone: number | null;
+  } | null;
+}
+
 // --- Constants ---
 
 export const AGE_BRACKETS = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"] as const;
