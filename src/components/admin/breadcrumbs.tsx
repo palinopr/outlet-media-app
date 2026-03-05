@@ -21,6 +21,8 @@ const labelMap: Record<string, string> = {
   users: "Users",
   activity: "Activity",
   settings: "Settings",
+  workspace: "Workspace",
+  tasks: "Tasks",
 };
 
 export function AdminBreadcrumbs() {

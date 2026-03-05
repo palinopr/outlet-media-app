@@ -18,6 +18,7 @@ import {
   UserCog,
   Activity,
   Settings,
+  FileText,
 } from "lucide-react";
 
 const nav = [
@@ -27,6 +28,7 @@ const nav = [
   { href: "/admin/agents", label: "Agents", icon: Bot },
   { href: "/admin/clients", label: "Clients", icon: Users },
   { href: "/admin/users", label: "Users", icon: UserCog },
+  { href: "/admin/workspace", label: "Workspace", icon: FileText },
   { href: "/admin/activity", label: "Activity", icon: Activity },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

@@ -207,3 +207,56 @@ export const ContactFormSchema = z.object({
   email: z.string().email().max(320),
   message: z.string().min(1).max(5000),
 });
+
+// ─── Workspace schemas ──────────────────────────────────────────────────────
+
+export const CreatePageSchema = z.object({
+  title: z.string().max(500).default("Untitled"),
+  client_slug: z.string().min(1),
+  parent_page_id: z.string().uuid().optional(),
+  icon: z.string().max(10).optional(),
+});
+
+export const UpdatePageSchema = z.object({
+  title: z.string().max(500).optional(),
+  content: z.unknown().optional(),
+  icon: z.string().max(10).optional().nullable(),
+  cover_image: z.string().max(2000).optional().nullable(),
+  parent_page_id: z.string().uuid().optional().nullable(),
+  is_archived: z.boolean().optional(),
+  position: z.number().int().min(0).optional(),
+});
+
+export const CreateCommentSchema = z.object({
+  page_id: z.string().uuid(),
+  content: z.string().min(1).max(10000),
+  parent_comment_id: z.string().uuid().optional(),
+});
+
+export const ResolveCommentSchema = z.object({
+  resolved: z.boolean(),
+});
+
+export const CreateTaskSchema = z.object({
+  title: z.string().min(1).max(500),
+  description: z.unknown().optional(),
+  status: z.enum(["todo", "in_progress", "review", "done"]).default("todo"),
+  priority: z.enum(["low", "medium", "high", "urgent"]).default("medium"),
+  assignee_id: z.string().optional().nullable(),
+  assignee_name: z.string().optional().nullable(),
+  page_id: z.string().uuid().optional().nullable(),
+  client_slug: z.string().min(1),
+  due_date: z.string().optional().nullable(),
+});
+
+export const UpdateTaskSchema = z.object({
+  title: z.string().min(1).max(500).optional(),
+  description: z.unknown().optional(),
+  status: z.enum(["todo", "in_progress", "review", "done"]).optional(),
+  priority: z.enum(["low", "medium", "high", "urgent"]).optional(),
+  assignee_id: z.string().optional().nullable(),
+  assignee_name: z.string().optional().nullable(),
+  page_id: z.string().uuid().optional().nullable(),
+  due_date: z.string().optional().nullable(),
+  position: z.number().int().min(0).optional(),
+});

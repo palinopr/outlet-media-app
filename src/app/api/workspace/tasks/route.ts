@@ -1,0 +1,33 @@
+import { NextResponse, NextRequest } from "next/server";
+import { authGuard, apiError } from "@/lib/api-helpers";
+import { supabaseAdmin } from "@/lib/supabase";
+
+export async function GET(request: NextRequest) {
+  const { userId, error } = await authGuard();
+  if (error) return error;
+
+  if (!supabaseAdmin) return apiError("DB not configured", 500);
+
+  const { searchParams } = request.nextUrl;
+  const clientSlug = searchParams.get("client_slug");
+  const status = searchParams.get("status");
+  const assigneeId = searchParams.get("assignee_id");
+  const priority = searchParams.get("priority");
+
+  if (!clientSlug) return apiError("client_slug is required", 400);
+
+  let query = supabaseAdmin
+    .from("workspace_tasks")
+    .select("*")
+    .eq("client_slug", clientSlug)
+    .order("position", { ascending: true });
+
+  if (status) query = query.eq("status", status);
+  if (assigneeId) query = query.eq("assignee_id", assigneeId);
+  if (priority) query = query.eq("priority", priority);
+
+  const { data, error: dbError } = await query;
+  if (dbError) return apiError(dbError.message, 500);
+
+  return NextResponse.json(data ?? []);
+}

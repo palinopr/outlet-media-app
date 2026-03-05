@@ -1210,6 +1210,226 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          type: string
+          title: string
+          message: string | null
+          page_id: string | null
+          task_id: string | null
+          from_user_id: string | null
+          from_user_name: string | null
+          read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          type: string
+          title: string
+          message?: string | null
+          page_id?: string | null
+          task_id?: string | null
+          from_user_id?: string | null
+          from_user_name?: string | null
+          read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          type?: string
+          title?: string
+          message?: string | null
+          page_id?: string | null
+          task_id?: string | null
+          from_user_id?: string | null
+          from_user_name?: string | null
+          read?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notif_task_fk"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_comments: {
+        Row: {
+          id: string
+          page_id: string
+          content: string
+          author_id: string
+          author_name: string | null
+          parent_comment_id: string | null
+          resolved: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          page_id: string
+          content: string
+          author_id: string
+          author_name?: string | null
+          parent_comment_id?: string | null
+          resolved?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          page_id?: string
+          content?: string
+          author_id?: string
+          author_name?: string | null
+          parent_comment_id?: string | null
+          resolved?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_comments_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_comments_parent_comment_id_fkey"
+            columns: ["parent_comment_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_pages: {
+        Row: {
+          id: string
+          title: string
+          content: Json
+          icon: string | null
+          cover_image: string | null
+          parent_page_id: string | null
+          client_slug: string
+          created_by: string
+          is_archived: boolean
+          position: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title?: string
+          content?: Json
+          icon?: string | null
+          cover_image?: string | null
+          parent_page_id?: string | null
+          client_slug: string
+          created_by: string
+          is_archived?: boolean
+          position?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          content?: Json
+          icon?: string | null
+          cover_image?: string | null
+          parent_page_id?: string | null
+          client_slug?: string
+          created_by?: string
+          is_archived?: boolean
+          position?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_pages_parent_page_id_fkey"
+            columns: ["parent_page_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_tasks: {
+        Row: {
+          id: string
+          title: string
+          description: Json
+          status: string
+          priority: string
+          assignee_id: string | null
+          assignee_name: string | null
+          page_id: string | null
+          client_slug: string
+          created_by: string
+          due_date: string | null
+          position: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: Json
+          status?: string
+          priority?: string
+          assignee_id?: string | null
+          assignee_name?: string | null
+          page_id?: string | null
+          client_slug: string
+          created_by: string
+          due_date?: string | null
+          position?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: Json
+          status?: string
+          priority?: string
+          assignee_id?: string | null
+          assignee_name?: string | null
+          page_id?: string | null
+          client_slug?: string
+          created_by?: string
+          due_date?: string | null
+          position?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_tasks_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
