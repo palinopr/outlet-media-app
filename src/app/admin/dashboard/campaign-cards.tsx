@@ -1,17 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, ArrowRight } from "lucide-react";
-import { centsToUsd, fmtUsd, fmtNum, fmtObjective, computeMarginalRoas, roasColor } from "@/lib/formatters";
+import { centsToUsd, fmtUsd, fmtNum, fmtObjective, roasColor } from "@/lib/formatters";
 import type { Database } from "@/lib/database.types";
-import type { SnapshotRow } from "./data";
 
 type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
 interface Props {
   campaigns: MetaCampaign[];
-  snapshotsByCampaign: Record<string, SnapshotRow[]>;
+  marginalRoasByCampaign: Record<string, number | null>;
 }
 
-export function CampaignCards({ campaigns, snapshotsByCampaign }: Props) {
+export function CampaignCards({ campaigns, marginalRoasByCampaign }: Props) {
   return (
     <div className="lg:col-span-2">
       <div className="flex items-center justify-between mb-3">
@@ -53,7 +52,7 @@ export function CampaignCards({ campaigns, snapshotsByCampaign }: Props) {
                       </p>
                     </div>
                     {(() => {
-                      const m = computeMarginalRoas(snapshotsByCampaign[c.campaign_id] ?? []);
+                      const m = marginalRoasByCampaign[c.campaign_id];
                       if (m == null) return null;
                       const color = m >= 2 ? "text-emerald-400" : m >= 1 ? "text-blue-400" : "text-red-400";
                       return (

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { computeMarginalRoas } from "@/lib/formatters";
 import type { Database } from "@/lib/database.types";
 
 export type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
@@ -38,6 +39,7 @@ export interface DashboardData {
   trendData: Array<{ date: string; roas: number; spend: number }>;
   velocityData: Array<{ date: string; sold: number }>;
   snapshotsByCampaign: Record<string, SnapshotRow[]>;
+  marginalRoasByCampaign: Record<string, number | null>;
   fromDb: boolean;
 }
 
@@ -50,6 +52,7 @@ const EMPTY: DashboardData = {
   trendData: [],
   velocityData: [],
   snapshotsByCampaign: {},
+  marginalRoasByCampaign: {},
   fromDb: false,
 };
 
@@ -109,12 +112,9 @@ export async function getData(): Promise<DashboardData> {
   }
 
   const snapshotsByCampaign: Record<string, SnapshotRow[]> = {};
-  for (const s of snapshots) {
-    (snapshotsByCampaign[s.campaign_id] ??= []).push(s);
-  }
-
   const byDate: Record<string, { roasSum: number; roasCount: number; spendSum: number }> = {};
   for (const s of snapshots) {
+    (snapshotsByCampaign[s.campaign_id] ??= []).push(s);
     const d = s.snapshot_date;
     if (!byDate[d]) byDate[d] = { roasSum: 0, roasCount: 0, spendSum: 0 };
     if (s.roas != null) { byDate[d].roasSum += s.roas; byDate[d].roasCount++; }
@@ -141,5 +141,10 @@ export async function getData(): Promise<DashboardData> {
       sold,
     }));
 
-  return { events, campaigns, allCampaigns, agentRuns, alerts, trendData, velocityData, snapshotsByCampaign, fromDb: Boolean(campaigns.length) };
+  const marginalRoasByCampaign: Record<string, number | null> = {};
+  for (const c of campaigns) {
+    marginalRoasByCampaign[c.campaign_id] = computeMarginalRoas(snapshotsByCampaign[c.campaign_id] ?? []);
+  }
+
+  return { events, campaigns, allCampaigns, agentRuns, alerts, trendData, velocityData, snapshotsByCampaign, marginalRoasByCampaign, fromDb: Boolean(campaigns.length) };
 }

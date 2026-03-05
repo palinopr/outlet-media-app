@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { centsToUsd } from "@/lib/formatters";
 import type {
   TmEvent,
   DemographicsRow,
@@ -63,7 +64,7 @@ export async function getEventDetail(
     campaignId: c.campaign_id,
     name: c.name,
     status: c.status,
-    spend: (c.spend ?? 0) / 100,
+    spend: centsToUsd(c.spend) ?? 0,
     roas: c.roas != null ? Number(c.roas) : null,
     impressions: c.impressions,
     clicks: c.clicks,

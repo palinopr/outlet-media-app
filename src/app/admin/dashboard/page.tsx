@@ -38,7 +38,7 @@ function getUpcomingShows(events: Parameters<typeof EventsPreviewTable>[0]["even
 // --- Page ---
 
 export default async function AdminDashboard() {
-  const { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, snapshotsByCampaign, fromDb } = await getData();
+  const { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb } = await getData();
 
   const upcomingShows = getUpcomingShows(events, 8);
 
@@ -46,7 +46,7 @@ export default async function AdminDashboard() {
   const totalCap = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
   const totalGross = events.reduce((s, e) => s + (e.gross ?? 0), 0);
   const totalSpend = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0), 0);
-  const avgRoas = computeBlendedRoas(campaigns.map(c => ({ spend: centsToUsd(c.spend) ?? 0, roas: c.roas }))) ?? 0;
+  const avgRoas = computeBlendedRoas(campaigns.map(c => ({ spend: c.spend ?? 0, roas: c.roas }))) ?? 0;
 
   const now = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
@@ -131,7 +131,7 @@ export default async function AdminDashboard() {
       {/* Campaigns + Agent status row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-        <CampaignCards campaigns={campaigns} snapshotsByCampaign={snapshotsByCampaign} />
+        <CampaignCards campaigns={campaigns} marginalRoasByCampaign={marginalRoasByCampaign} />
 
         {/* Agent status */}
         <div>
