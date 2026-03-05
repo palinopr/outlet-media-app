@@ -139,9 +139,9 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
       id: "marginal",
       accessorFn: (row) => computeMarginalRoas(dailyInsightsByCampaign[row.campaignId] ?? []),
       header: ({ column }) => <ColumnHeader column={column} title="Marginal" className="justify-end" />,
-      cell: ({ row }) => {
+      cell: ({ row, getValue }) => {
         if (row.original.campaignType !== "sales") return <div className="text-right"><span className="text-muted-foreground text-sm">--</span></div>;
-        const m = computeMarginalRoas(dailyInsightsByCampaign[row.original.campaignId] ?? []);
+        const m = getValue<number | null>();
         if (m == null) return <div className="text-right"><span className="text-muted-foreground text-sm">--</span></div>;
         return <div className="text-right"><span className={`text-sm font-semibold tabular-nums ${roasColor(m)}`}>{m.toFixed(1)}x</span></div>;
       },

@@ -219,11 +219,12 @@ const DEMO_FIELD_MAP: [keyof AudienceProfile, keyof DemographicsRow][] = [
 ];
 
 export function buildAudienceProfile(demos: DemographicsRow[]): AudienceProfile {
-  const profile = { totalFans: demos.reduce((s, d) => s + (d.fans_total ?? 0), 0) } as AudienceProfile;
+  const totalFans = demos.reduce((s, d) => s + (d.fans_total ?? 0), 0);
+  const fields: Record<string, number | null> = {};
   for (const [profileKey, demoKey] of DEMO_FIELD_MAP) {
-    (profile[profileKey] as number | null) = weightedAvg(demos, demoKey);
+    fields[profileKey] = weightedAvg(demos, demoKey);
   }
-  return profile;
+  return { totalFans, ...fields } as AudienceProfile;
 }
 
 // --- Smart insights ---
