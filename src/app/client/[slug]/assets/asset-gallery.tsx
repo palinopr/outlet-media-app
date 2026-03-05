@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -20,6 +21,10 @@ import {
   FolderOpen,
   ChevronDown,
   ChevronRight,
+  Trash2,
+  CheckSquare,
+  Square,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@clerk/nextjs";
@@ -75,15 +80,27 @@ function groupByFolder(assets: Asset[]): FolderGroup[] {
 function AssetCard({
   asset,
   onClick,
+  onDelete,
+  selecting,
+  selected,
+  onToggleSelect,
 }: {
   asset: Asset;
   onClick: () => void;
+  onDelete: (id: string) => void;
+  selecting: boolean;
+  selected: boolean;
+  onToggleSelect: (id: string) => void;
 }) {
   return (
     <button
       type="button"
-      className="group relative aspect-square rounded-xl overflow-hidden border border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12] transition-all text-left"
-      onClick={onClick}
+      className={`group relative aspect-square rounded-xl overflow-hidden border bg-white/[0.02] transition-all text-left ${
+        selected
+          ? "border-cyan-400/50 ring-1 ring-cyan-400/30"
+          : "border-white/[0.06] hover:border-white/[0.12]"
+      }`}
+      onClick={() => selecting ? onToggleSelect(asset.id) : onClick()}
     >
       {asset.mediaType === "video" ? (
         <div className="flex items-center justify-center h-full">
@@ -99,6 +116,17 @@ function AssetCard({
       ) : (
         <div className="flex items-center justify-center h-full">
           <ImageIcon className="h-8 w-8 text-white/20" />
+        </div>
+      )}
+
+      {/* Selection checkbox */}
+      {selecting && (
+        <div className="absolute top-1.5 left-1.5 z-10">
+          {selected ? (
+            <CheckSquare className="h-5 w-5 text-cyan-400" />
+          ) : (
+            <Square className="h-5 w-5 text-white/30" />
+          )}
         </div>
       )}
 
@@ -121,7 +149,7 @@ function AssetCard({
       </div>
 
       {/* Dimensions badge */}
-      {asset.width && asset.height && (
+      {!selecting && asset.width && asset.height && (
         <div className="absolute top-1.5 left-1.5">
           <span className="text-[9px] px-1.5 py-0.5 rounded bg-black/50 text-white/50 font-mono">
             {asset.width}x{asset.height}
@@ -130,8 +158,26 @@ function AssetCard({
       )}
 
       {/* Filename on hover */}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between">
         <p className="text-[11px] text-white truncate">{asset.fileName}</p>
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label={`Delete ${asset.fileName}`}
+          className="shrink-0 p-1 rounded hover:bg-red-500/30 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(asset.id);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.stopPropagation();
+              onDelete(asset.id);
+            }
+          }}
+        >
+          <Trash2 className="h-3.5 w-3.5 text-red-400" />
+        </span>
       </div>
     </button>
   );
@@ -140,11 +186,21 @@ function AssetCard({
 function FolderSection({
   group,
   onSelect,
+  onDeleteAsset,
+  onDeleteFolder,
   defaultOpen,
+  selecting,
+  selectedIds,
+  onToggleSelect,
 }: {
   group: FolderGroup;
   onSelect: (a: Asset) => void;
+  onDeleteAsset: (id: string) => void;
+  onDeleteFolder: (folder: string) => void;
   defaultOpen: boolean;
+  selecting: boolean;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string) => void;
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const parts = group.path.split("/");
@@ -177,6 +233,24 @@ function FolderSection({
         <span className="ml-auto text-xs text-white/30 shrink-0">
           {group.assets.length}
         </span>
+        <span
+          role="button"
+          tabIndex={0}
+          aria-label={`Delete folder ${group.label}`}
+          className="shrink-0 p-1.5 rounded hover:bg-red-500/20 transition-colors ml-1"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDeleteFolder(group.path);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.stopPropagation();
+              onDeleteFolder(group.path);
+            }
+          }}
+        >
+          <Trash2 className="h-3.5 w-3.5 text-white/30 hover:text-red-400 transition-colors" />
+        </span>
       </button>
       {open && (
         <div className="px-4 pb-4">
@@ -186,6 +260,10 @@ function FolderSection({
                 key={asset.id}
                 asset={asset}
                 onClick={() => onSelect(asset)}
+                onDelete={onDeleteAsset}
+                selecting={selecting}
+                selected={selectedIds.has(asset.id)}
+                onToggleSelect={onToggleSelect}
               />
             ))}
           </div>
@@ -209,6 +287,15 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
   const [importing, setImporting] = useState(false);
   const [filter, setFilter] = useState<"all" | "image" | "video">("all");
   const [viewMode, setViewMode] = useState<"folders" | "grid">("folders");
+  const [selecting, setSelecting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<
+    { type: "asset"; id: string; name: string } |
+    { type: "folder"; folder: string; count: number } |
+    { type: "bulk"; ids: string[]; count: number } |
+    null
+  >(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const refreshAssets = useCallback(async () => {
@@ -303,6 +390,61 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
     setImporting(false);
   }, [folderUrl, clientSlug, refreshAssets]);
 
+  const promptDeleteAsset = useCallback(
+    (id: string) => {
+      const asset = assets.find((a) => a.id === id);
+      if (asset) setConfirmDelete({ type: "asset", id, name: asset.fileName });
+    },
+    [assets],
+  );
+
+  const promptDeleteFolder = useCallback(
+    (folder: string) => {
+      const count = assets.filter((a) => (a.folder ?? "Uncategorized") === folder).length;
+      setConfirmDelete({ type: "folder", folder, count });
+    },
+    [assets],
+  );
+
+  const executeDelete = useCallback(async () => {
+    if (!confirmDelete) return;
+    setDeleting(true);
+
+    const idsToDelete =
+      confirmDelete.type === "asset"
+        ? [confirmDelete.id]
+        : confirmDelete.type === "bulk"
+          ? confirmDelete.ids
+          : assets
+              .filter((a) => (a.folder ?? "Uncategorized") === confirmDelete.folder)
+              .map((a) => a.id);
+
+    let deleted = 0;
+    for (const id of idsToDelete) {
+      const res = await fetch(`/api/client/assets/${id}`, { method: "DELETE" });
+      if (res.ok) deleted++;
+    }
+
+    if (deleted > 0) {
+      toast.success(
+        confirmDelete.type === "asset"
+          ? "Asset deleted"
+          : `Deleted ${deleted} asset${deleted > 1 ? "s" : ""}`,
+      );
+      if (previewAsset && idsToDelete.includes(previewAsset.id)) {
+        setPreviewAsset(null);
+      }
+      await refreshAssets();
+    }
+
+    setDeleting(false);
+    setConfirmDelete(null);
+    if (confirmDelete.type === "bulk") {
+      setSelecting(false);
+      setSelectedIds(new Set());
+    }
+  }, [confirmDelete, assets, previewAsset, refreshAssets]);
+
   const filtered = useMemo(
     () => (filter === "all" ? assets : assets.filter((a) => a.mediaType === filter)),
     [assets, filter],
@@ -310,6 +452,37 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
 
   const folderGroups = useMemo(() => groupByFolder(filtered), [filtered]);
   const hasFolders = assets.some((a) => a.folder);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const selectAll = useCallback(() => {
+    setSelectedIds(new Set(filtered.map((a) => a.id)));
+  }, [filtered]);
+
+  const deselectAll = useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
+  const promptDeleteSelected = useCallback(() => {
+    if (selectedIds.size === 0) return;
+    setConfirmDelete({
+      type: "bulk",
+      ids: Array.from(selectedIds),
+      count: selectedIds.size,
+    });
+  }, [selectedIds]);
+
+  const exitSelectMode = useCallback(() => {
+    setSelecting(false);
+    setSelectedIds(new Set());
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -356,20 +529,33 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
           )}
         </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          className="gap-2 h-8 text-xs"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Upload className="h-3.5 w-3.5" />
+        <div className="flex items-center gap-2">
+          {assets.length > 0 && !selecting && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2 h-8 text-xs"
+              onClick={() => setSelecting(true)}
+            >
+              <CheckSquare className="h-3.5 w-3.5" />
+              Select
+            </Button>
           )}
-          Upload Files
-        </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-2 h-8 text-xs"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Upload className="h-3.5 w-3.5" />
+            )}
+            Upload Files
+          </Button>
+        </div>
         <input
           ref={fileInputRef}
           type="file"
@@ -379,6 +565,44 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
           onChange={(e) => e.target.files && handleUpload(e.target.files)}
         />
       </div>
+
+      {/* Bulk selection bar */}
+      {selecting && (
+        <div className="flex items-center justify-between rounded-xl border border-cyan-500/20 bg-cyan-500/[0.05] px-4 py-2.5">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-white/70">
+              {selectedIds.size} of {filtered.length} selected
+            </span>
+            <button
+              type="button"
+              onClick={selectedIds.size === filtered.length ? deselectAll : selectAll}
+              className="text-xs font-medium text-cyan-400 hover:text-cyan-300 transition-colors"
+            >
+              {selectedIds.size === filtered.length ? "Deselect All" : "Select All"}
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-7 text-xs gap-1.5"
+              onClick={promptDeleteSelected}
+              disabled={selectedIds.size === 0}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete ({selectedIds.size})
+            </Button>
+            <button
+              type="button"
+              onClick={exitSelectMode}
+              className="p-1 rounded hover:bg-white/[0.06] transition-colors"
+              aria-label="Exit selection mode"
+            >
+              <X className="h-4 w-4 text-white/40" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Import from cloud folder */}
       <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
@@ -434,7 +658,12 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
                 key={group.path}
                 group={group}
                 onSelect={setPreviewAsset}
+                onDeleteAsset={promptDeleteAsset}
+                onDeleteFolder={promptDeleteFolder}
                 defaultOpen={folderGroups.length <= 6}
+                selecting={selecting}
+                selectedIds={selectedIds}
+                onToggleSelect={toggleSelect}
               />
             ))}
           </div>
@@ -445,6 +674,10 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
                 key={asset.id}
                 asset={asset}
                 onClick={() => setPreviewAsset(asset)}
+                onDelete={promptDeleteAsset}
+                selecting={selecting}
+                selected={selectedIds.has(asset.id)}
+                onToggleSelect={toggleSelect}
               />
             ))}
           </div>
@@ -530,8 +763,17 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
                 )}
 
                 {/* Actions */}
-                {previewAsset.publicUrl && (
-                  <div className="flex justify-end">
+                <div className="flex justify-between">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5 h-8 text-xs text-red-400 border-red-500/20 hover:bg-red-500/10 hover:text-red-300"
+                    onClick={() => promptDeleteAsset(previewAsset.id)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Delete
+                  </Button>
+                  {previewAsset.publicUrl && (
                     <a
                       href={previewAsset.publicUrl}
                       target="_blank"
@@ -542,11 +784,58 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
                         Open Full Size
                       </Button>
                     </a>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!confirmDelete} onOpenChange={() => !deleting && setConfirmDelete(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-sm">
+              {confirmDelete?.type === "folder"
+                ? "Delete Folder"
+                : confirmDelete?.type === "bulk"
+                  ? "Delete Selected Assets"
+                  : "Delete Asset"}
+            </DialogTitle>
+            <DialogDescription className="text-sm text-white/50">
+              {confirmDelete?.type === "folder"
+                ? `This will permanently delete all ${confirmDelete.count} asset${confirmDelete.count !== 1 ? "s" : ""} in "${confirmDelete.folder}". This cannot be undone.`
+                : confirmDelete?.type === "bulk"
+                  ? `This will permanently delete ${confirmDelete.count} selected asset${confirmDelete.count !== 1 ? "s" : ""}. This cannot be undone.`
+                  : `This will permanently delete "${confirmDelete?.name}". This cannot be undone.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 mt-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs"
+              onClick={() => setConfirmDelete(null)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-8 text-xs gap-1.5"
+              onClick={executeDelete}
+              disabled={deleting}
+            >
+              {deleting ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" />
+              )}
+              {deleting ? "Deleting..." : "Delete"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
