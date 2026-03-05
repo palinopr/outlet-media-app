@@ -131,7 +131,7 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
 
     const data = await res.json();
     if (!res.ok) {
-      toast.error(data.error ?? "Import failed");
+      toast.error(data.error ?? "Import failed", { duration: 8000 });
     } else {
       toast.success(
         `Imported ${data.imported} file${data.imported !== 1 ? "s" : ""} (${data.skipped} already existed)`,
@@ -202,7 +202,7 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
         </div>
         <div className="flex gap-2">
           <Input
-            placeholder="Paste shared folder link..."
+            placeholder="Paste a Google Drive or Dropbox folder link..."
             value={folderUrl}
             onChange={(e) => setFolderUrl(e.target.value)}
             className="text-sm h-8 bg-white/[0.03] border-white/[0.08]"
