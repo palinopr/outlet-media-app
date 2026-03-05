@@ -2,12 +2,20 @@
 
 import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Trash2, Loader2, Check, X } from "lucide-react";
+import { Trash2, Loader2, Check, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ColumnHeader } from "@/components/admin/data-table/column-header";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { StatusSelect } from "@/components/admin/status-select";
-import { fmtDate } from "@/lib/formatters";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { fmtDate, slugToLabel } from "@/lib/formatters";
 import { changeUserRole, deleteUser, revokeInvitation } from "@/app/admin/actions/users";
 import { toast } from "sonner";
 import type { UserRow } from "@/app/admin/users/data";
@@ -23,51 +31,70 @@ interface UserColumnsOptions {
 }
 
 function AssignCell({ user, clients }: { user: UserRow; clients: ClientOption[] }) {
-  const [value, setValue] = useState(user.client_slug ?? "");
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set(user.client_slugs));
+  const [busySlug, setBusySlug] = useState<string | null>(null);
 
   if (user.role === "admin") {
     return <span className="text-xs text-muted-foreground italic">admin -- no client</span>;
   }
 
-  async function save(newVal: string) {
-    setValue(newVal);
-    setSaving(true);
-    setSaved(false);
+  async function toggle(slug: string) {
+    const isAdding = !selected.has(slug);
+    setBusySlug(slug);
     try {
-      await fetch(`/api/admin/users/${user.id}`, {
+      const res = await fetch(`/api/admin/users/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ client_slug: newVal || null }),
+        body: JSON.stringify({ action: isAdding ? "add" : "remove", client_slug: slug }),
       });
-      setSaved(true);
-      toast.success("Client access updated");
-      setTimeout(() => setSaved(false), 2000);
+      if (!res.ok) throw new Error("Request failed");
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (isAdding) next.add(slug);
+        else next.delete(slug);
+        return next;
+      });
+      toast.success(isAdding ? `Added ${slugToLabel(slug)}` : `Removed ${slugToLabel(slug)}`);
     } catch {
       toast.error("Failed to update client access");
     } finally {
-      setSaving(false);
+      setBusySlug(null);
     }
   }
 
+  const count = selected.size;
+
   return (
-    <div className="flex items-center gap-2">
-      <select
-        value={value}
-        onChange={(e) => save(e.target.value)}
-        className="h-7 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-      >
-        <option value="">-- Unassigned --</option>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-1.5 h-7 rounded border border-border bg-background px-2 text-xs hover:bg-accent/50 transition-colors focus:outline-none focus:ring-1 focus:ring-ring">
+          {count === 0 ? (
+            <span className="text-muted-foreground">Unassigned</span>
+          ) : count === 1 ? (
+            <span>{clients.find((c) => selected.has(c.slug))?.name ?? [...selected][0]}</span>
+          ) : (
+            <span>{count} clients</span>
+          )}
+          <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          {busySlug && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-48">
+        <DropdownMenuLabel className="text-xs">Assign clients</DropdownMenuLabel>
+        <DropdownMenuSeparator />
         {clients.map((c) => (
-          <option key={c.slug} value={c.slug}>
+          <DropdownMenuCheckboxItem
+            key={c.slug}
+            checked={selected.has(c.slug)}
+            disabled={busySlug !== null}
+            onSelect={(e) => e.preventDefault()}
+            onCheckedChange={() => toggle(c.slug)}
+          >
             {c.name}
-          </option>
+          </DropdownMenuCheckboxItem>
         ))}
-      </select>
-      {saving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
-      {saved && <Check className="h-3 w-3 text-emerald-400" />}
-    </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -145,7 +172,7 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
                 Invited
               </span>
-            ) : u.role !== "admin" && !u.client_slug ? (
+            ) : u.role !== "admin" && u.client_slugs.length === 0 ? (
               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
                 Pending
               </span>
@@ -196,7 +223,7 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
         if (u.status === "invited") {
           return <span className="text-xs text-muted-foreground italic">{u.client_slug ?? "unassigned"}</span>;
         }
-        return <AssignCell user={row.original} clients={clients} />;
+        return <AssignCell user={u} clients={clients} />;
       },
     },
     {

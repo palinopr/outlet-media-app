@@ -16,7 +16,7 @@ export default async function UsersPage() {
   const adminCount = activeUsers.filter((u) => u.role === "admin").length;
   const clientCount = activeUsers.filter((u) => u.role !== "admin").length;
   const pendingCount =
-    activeUsers.filter((u) => u.role !== "admin" && !u.client_slug).length +
+    activeUsers.filter((u) => u.role !== "admin" && u.client_slugs.length === 0).length +
     invitedCount;
 
   const stats = [

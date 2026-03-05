@@ -5,11 +5,12 @@ import { adminGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // PATCH /api/admin/users/[id]
-// Body: { client_slug: string | null }
-// Updates a user's publicMetadata.client_slug via Clerk.
+// Body: { action: "add" | "remove", client_slug: string }
+// Adds or removes a client membership for a user.
 
 const UpdateUserSchema = z.object({
-  client_slug: z.string().nullable(),
+  action: z.enum(["add", "remove"]),
+  client_slug: z.string().min(1),
 });
 
 export async function PATCH(
@@ -37,6 +38,7 @@ export async function PATCH(
 
   const client = await clerkClient();
 
+  // Verify user exists
   let existingMeta: Record<string, unknown>;
   try {
     const user = await client.users.getUser(id);
@@ -48,55 +50,56 @@ export async function PATCH(
     return apiError("User not found", 404);
   }
 
-  const slug = parsed.data.client_slug;
+  const { action, client_slug: slug } = parsed.data;
+
+  if (!supabaseAdmin) {
+    return apiError("Database not configured", 500);
+  }
+
+  // Look up client by slug
+  const { data: clientRow } = await supabaseAdmin
+    .from("clients")
+    .select("id")
+    .eq("slug", slug)
+    .single();
+
+  if (!clientRow) {
+    return apiError("Client not found", 404);
+  }
+
+  if (action === "add") {
+    await supabaseAdmin
+      .from("client_members")
+      .upsert(
+        { client_id: clientRow.id, clerk_user_id: id, role: "member" },
+        { onConflict: "client_id,clerk_user_id" }
+      );
+  } else {
+    await supabaseAdmin
+      .from("client_members")
+      .delete()
+      .eq("clerk_user_id", id)
+      .eq("client_id", clientRow.id);
+  }
+
+  // Sync publicMetadata.client_slug to first remaining membership (legacy compat)
+  const { data: remaining } = await supabaseAdmin
+    .from("client_members")
+    .select("clients(slug)")
+    .eq("clerk_user_id", id);
+
+  const remainingSlugs = (remaining ?? [])
+    .map((r) => (r.clients as unknown as { slug: string })?.slug)
+    .filter(Boolean);
+
   const publicMetadata = { ...existingMeta };
-  if (slug) {
-    publicMetadata.client_slug = slug;
+  if (remainingSlugs.length > 0) {
+    publicMetadata.client_slug = remainingSlugs[0];
   } else {
     delete publicMetadata.client_slug;
   }
 
-  const updated = await client.users.updateUserMetadata(id, {
-    publicMetadata,
-  });
+  const updated = await client.users.updateUserMetadata(id, { publicMetadata });
 
-  // Sync client_members table
-  if (supabaseAdmin) {
-    if (slug) {
-      const { data: clientRow } = await supabaseAdmin
-        .from("clients")
-        .select("id")
-        .eq("slug", slug)
-        .single();
-
-      if (clientRow) {
-        await supabaseAdmin
-          .from("client_members")
-          .upsert(
-            { client_id: clientRow.id, clerk_user_id: id, role: "member" },
-            { onConflict: "client_id,clerk_user_id" }
-          );
-      }
-    } else {
-      // Clearing client_slug -- only remove the membership that matches the old slug
-      // (preserves other client memberships for multi-client users)
-      const oldSlug = existingMeta.client_slug as string | undefined;
-      if (oldSlug) {
-        const { data: oldClient } = await supabaseAdmin
-          .from("clients")
-          .select("id")
-          .eq("slug", oldSlug)
-          .single();
-        if (oldClient) {
-          await supabaseAdmin
-            .from("client_members")
-            .delete()
-            .eq("clerk_user_id", id)
-            .eq("client_id", oldClient.id);
-        }
-      }
-    }
-  }
-
-  return NextResponse.json({ ok: true, user: updated });
+  return NextResponse.json({ ok: true, user: updated, client_slugs: remainingSlugs });
 }

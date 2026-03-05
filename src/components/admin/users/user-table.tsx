@@ -188,7 +188,7 @@ const userCsvColumns = [
   { header: "Name", accessor: (r: Record<string, unknown>) => String(r.name ?? "") },
   { header: "Email", accessor: (r: Record<string, unknown>) => String(r.email ?? "") },
   { header: "Role", accessor: (r: Record<string, unknown>) => String(r.role ?? "") },
-  { header: "Client", accessor: (r: Record<string, unknown>) => String(r.client_slug ?? "") },
+  { header: "Clients", accessor: (r: Record<string, unknown>) => Array.isArray(r.client_slugs) ? (r.client_slugs as string[]).join(", ") : String(r.client_slug ?? "") },
   { header: "Joined", accessor: (r: Record<string, unknown>) => formatDate(r.created_at as string | null) },
 ];
 
@@ -242,10 +242,10 @@ export function UserTable({ users, clients }: Props) {
                 <p className="text-xs text-muted-foreground">Role</p>
                 <p className="text-xs">{u.role ?? "--"}</p>
               </div>
-              {u.client_slug && (
+              {u.client_slugs.length > 0 && (
                 <div>
-                  <p className="text-xs text-muted-foreground">Client</p>
-                  <p className="text-xs truncate">{slugToLabel(u.client_slug)}</p>
+                  <p className="text-xs text-muted-foreground">Clients</p>
+                  <p className="text-xs truncate">{u.client_slugs.map(slugToLabel).join(", ")}</p>
                 </div>
               )}
             </div>

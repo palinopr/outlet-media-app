@@ -1,4 +1,5 @@
 import { clerkClient } from "@clerk/nextjs/server";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export interface UserRow {
   id: string;
@@ -6,6 +7,7 @@ export interface UserRow {
   email: string;
   role: string | null;
   client_slug: string | null;
+  client_slugs: string[];
   created_at: string;
   /** "active" = signed-up user, "invited" = pending Clerk invitation */
   status: "active" | "invited";
@@ -17,6 +19,23 @@ export async function getUsers(): Promise<UserRow[]> {
 
   const client = await clerkClient();
 
+  // Fetch all client_members to map clerk_user_id -> slugs
+  const membershipMap = new Map<string, string[]>();
+  if (supabaseAdmin) {
+    const { data: memberships } = await supabaseAdmin
+      .from("client_members")
+      .select("clerk_user_id, clients(slug)");
+    if (memberships) {
+      for (const m of memberships) {
+        const slug = (m.clients as unknown as { slug: string })?.slug;
+        if (!slug) continue;
+        const existing = membershipMap.get(m.clerk_user_id) ?? [];
+        existing.push(slug);
+        membershipMap.set(m.clerk_user_id, existing);
+      }
+    }
+  }
+
   let userRows: UserRow[] = [];
   try {
     const { data: users } = await client.users.getUserList({ limit: 100 });
@@ -25,12 +44,14 @@ export async function getUsers(): Promise<UserRow[]> {
         role?: string;
         client_slug?: string;
       };
+      const slugs = membershipMap.get(u.id) ?? [];
       return {
         id: u.id,
         name: [u.firstName, u.lastName].filter(Boolean).join(" "),
         email: u.emailAddresses[0]?.emailAddress ?? "",
         role: meta.role ?? null,
         client_slug: meta.client_slug ?? null,
+        client_slugs: slugs,
         created_at: new Date(u.createdAt).toISOString(),
         status: "active" as const,
       };
@@ -68,6 +89,7 @@ export async function getUsers(): Promise<UserRow[]> {
         email: inv.emailAddress,
         role: meta.role ?? null,
         client_slug: meta.client_slug ?? null,
+        client_slugs: [],
         created_at: new Date(inv.createdAt).toISOString(),
         status: "invited" as const,
       };
