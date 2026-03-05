@@ -374,6 +374,7 @@ const CHANNEL_ROUTES: Record<string, string> = {
   "boss":          "boss",
   "zamora":        "zamora",
   "kybba":         "kybba",
+  "don-omar-tickets": "don-omar-tickets",
   "agent-feed":    "agent-feed",
   "schedule":      "schedule",
   "morning-briefing": "morning-briefing",
