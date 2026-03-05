@@ -156,7 +156,7 @@ async function listGDriveOAuth(folderId: string): Promise<CloudFile[] | null> {
   const query = encodeURIComponent(`'${folderId}' in parents and trashed = false`);
   const fields = encodeURIComponent("files(id,name,size,mimeType)");
   const res = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&pageSize=200`,
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&pageSize=200&includeItemsFromAllDrives=true&supportsAllDrives=true`,
     { headers: { Authorization: `Bearer ${accessToken}` } },
   );
 
@@ -173,7 +173,7 @@ async function listGDriveApiKey(folderId: string): Promise<CloudFile[] | null> {
   const query = encodeURIComponent(`'${folderId}' in parents and trashed = false`);
   const fields = encodeURIComponent("files(id,name,size,mimeType)");
   const res = await fetch(
-    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&pageSize=200&key=${apiKey}`,
+    `https://www.googleapis.com/drive/v3/files?q=${query}&fields=${fields}&pageSize=200&key=${apiKey}&includeItemsFromAllDrives=true&supportsAllDrives=true`,
   );
 
   if (!res.ok) return null;
@@ -207,7 +207,7 @@ export async function downloadGDriveFile(
   const accessToken = await getGDriveAccessToken();
   if (accessToken) {
     const res = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`,
       { headers: { Authorization: `Bearer ${accessToken}` } },
     );
     if (res.ok) {
@@ -221,7 +221,7 @@ export async function downloadGDriveFile(
   const apiKey = process.env.GOOGLE_API_KEY;
   if (apiKey) {
     const res = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}`,
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&key=${apiKey}&supportsAllDrives=true`,
     );
     if (res.ok) {
       const buffer = Buffer.from(await res.arrayBuffer());
