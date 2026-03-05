@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { type DateRange, RANGE_LABELS } from "@/lib/constants";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
 import type { TmEvent, DemographicsRow, CampaignCard, EventCard, HeroStats, AudienceProfile } from "./types";
-import { buildAudienceProfile } from "./lib";
+import { buildAudienceProfile, buildEventCard } from "./lib";
 
 export type { DateRange };
 
@@ -93,28 +93,7 @@ function buildHeroStats(campaigns: CampaignCard[]): HeroStats {
 // --- Build event cards from TM data ---
 
 function buildEventCards(events: TmEvent[]): EventCard[] {
-  return events.map((e) => {
-    const sold = e.tickets_sold ?? 0;
-    const available = e.tickets_available;
-    const cap = available != null ? sold + available : null;
-    const sellThrough = cap != null && cap > 0 ? Math.round((sold / cap) * 100) : null;
-
-    return {
-      id: e.id,
-      name: e.name,
-      venue: e.venue,
-      city: e.city ?? "",
-      date: e.date,
-      status: e.status,
-      ticketsSold: sold,
-      ticketsAvailable: available,
-      sellThrough,
-      avgTicketPrice: e.avg_ticket_price != null ? Number(e.avg_ticket_price) : null,
-      potentialRevenue: e.potential_revenue,
-      gross: e.gross,
-      updatedAt: e.updated_at ?? null,
-    };
-  });
+  return events.map(buildEventCard);
 }
 
 // --- Campaigns page data (Meta API via shared module + daily insights) ---
@@ -161,6 +140,47 @@ export async function getCampaignsPageData(slug: string, scope?: ScopeFilter): P
 export interface ScopeFilter {
   allowedCampaignIds: string[] | null;
   allowedEventIds: string[] | null;
+}
+
+// --- Events page data ---
+
+export interface EventsPageData {
+  events: EventCard[];
+  totalEvents: number;
+  onSaleCount: number;
+  totalTicketsSold: number;
+}
+
+export async function getEventsPageData(
+  slug: string,
+  scope?: ScopeFilter,
+): Promise<EventsPageData> {
+  let query = supabaseAdmin
+    ?.from("tm_events")
+    .select("*")
+    .eq("client_slug", slug)
+    .order("date", { ascending: true });
+
+  if (scope?.allowedEventIds && query) {
+    query = query.in("id", scope.allowedEventIds);
+  }
+
+  const res = query ? await query : { data: null };
+  const tmEvents = (res.data ?? []) as TmEvent[];
+  const events = buildEventCards(tmEvents);
+
+  const onSaleCount = events.filter(
+    (e) => e.status.toLowerCase().replace(/_/g, "") === "onsale",
+  ).length;
+
+  const totalTicketsSold = events.reduce((sum, e) => sum + e.ticketsSold, 0);
+
+  return {
+    events,
+    totalEvents: events.length,
+    onSaleCount,
+    totalTicketsSold,
+  };
 }
 
 // --- Main data function ---

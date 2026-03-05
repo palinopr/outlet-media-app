@@ -2,18 +2,8 @@ import Link from "next/link";
 import { Calendar, MapPin, RefreshCw, ChevronRight } from "lucide-react";
 import type { EventCard as EventCardData } from "../types";
 import { fmtDate, fmtUsd, timeAgo } from "@/lib/formatters";
-import { getEventStatusCfg } from "../lib";
+import { EventStatusBadge } from "./event-status-badge";
 import { ProgressBar } from "./progress-bar";
-
-function EventStatusBadge({ status }: { status: string }) {
-  const cfg = getEventStatusCfg(status);
-  return (
-    <span className={`badge-status ${cfg.text} ${cfg.bg}`}>
-      <span className={`inline-block h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.label}
-    </span>
-  );
-}
 
 export function EventCard({ e, slug }: { e: EventCardData; slug: string }) {
   return (

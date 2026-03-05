@@ -16,26 +16,16 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { fmtUsd, fmtNum, fmtDate, roasColor, timeAgo } from "@/lib/formatters";
-import { getEventStatusCfg } from "../../lib";
 import { getEventDetail } from "./data";
 import { StatCard } from "../../components/stat-card";
 import { ProgressBar } from "../../components/progress-bar";
+import { EventStatusBadge } from "../../components/event-status-badge";
 import { AudienceSection } from "../../components/audience-section";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { TicketSalesChart, type TicketChartRow } from "@/components/client/charts";
 
 interface Props {
   params: Promise<{ slug: string; eventId: string }>;
-}
-
-function EventStatusBadge({ status }: { status: string }) {
-  const cfg = getEventStatusCfg(status);
-  return (
-    <span className={`badge-status ${cfg.text} ${cfg.bg}`}>
-      <span className={`inline-block h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.label}
-    </span>
-  );
 }
 
 export default async function EventDetailPage({ params }: Props) {
@@ -194,50 +184,27 @@ export default async function EventDetailPage({ params }: Props) {
             <span className="section-label">Sales Channels</span>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {channelBreakdown.internet != null && (
-              <div className="glass-card p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Monitor className="h-3.5 w-3.5 text-cyan-400" />
-                  <span className="text-xs text-white/60">Internet</span>
-                </div>
-                <p className="text-lg font-bold text-white">
-                  {channelBreakdown.internet.toFixed(0)}%
-                </p>
-              </div>
-            )}
-            {channelBreakdown.mobile != null && (
-              <div className="glass-card p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Smartphone className="h-3.5 w-3.5 text-violet-400" />
-                  <span className="text-xs text-white/60">Mobile</span>
-                </div>
-                <p className="text-lg font-bold text-white">
-                  {channelBreakdown.mobile.toFixed(0)}%
-                </p>
-              </div>
-            )}
-            {channelBreakdown.box != null && (
-              <div className="glass-card p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Store className="h-3.5 w-3.5 text-emerald-400" />
-                  <span className="text-xs text-white/60">Box Office</span>
-                </div>
-                <p className="text-lg font-bold text-white">
-                  {channelBreakdown.box.toFixed(0)}%
-                </p>
-              </div>
-            )}
-            {channelBreakdown.phone != null && (
-              <div className="glass-card p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Phone className="h-3.5 w-3.5 text-amber-400" />
-                  <span className="text-xs text-white/60">Phone</span>
-                </div>
-                <p className="text-lg font-bold text-white">
-                  {channelBreakdown.phone.toFixed(0)}%
-                </p>
-              </div>
-            )}
+            {([
+              { key: "internet" as const, icon: Monitor, color: "text-cyan-400", label: "Internet" },
+              { key: "mobile" as const, icon: Smartphone, color: "text-violet-400", label: "Mobile" },
+              { key: "box" as const, icon: Store, color: "text-emerald-400", label: "Box Office" },
+              { key: "phone" as const, icon: Phone, color: "text-amber-400", label: "Phone" },
+            ])
+              .filter((ch) => channelBreakdown[ch.key] != null)
+              .map((ch) => {
+                const Icon = ch.icon;
+                return (
+                  <div key={ch.key} className="glass-card p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon className={`h-3.5 w-3.5 ${ch.color}`} />
+                      <span className="text-xs text-white/60">{ch.label}</span>
+                    </div>
+                    <p className="text-lg font-bold text-white">
+                      {channelBreakdown[ch.key]!.toFixed(0)}%
+                    </p>
+                  </div>
+                );
+              })}
           </div>
         </section>
       )}
