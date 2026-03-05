@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Value } from "platejs";
 import { Plate, PlateContent } from "platejs/react";
 import { useCreateEditor } from "./editor-kit";
+import { EditorToolbar } from "./editor/toolbar";
 
 interface PlateEditorProps {
   pageId: string;
@@ -55,19 +56,24 @@ export function PlateEditor({ pageId, initialContent, onSave }: PlateEditorProps
   }, []);
 
   return (
-    <div className="relative">
-      {saveStatus !== "idle" && (
-        <div className="absolute top-2 right-2 z-10">
-          <span className="text-xs text-muted-foreground">
-            {saveStatus === "saving" ? "Saving..." : "Saved"}
-          </span>
-        </div>
-      )}
+    <div className="rounded-lg border border-white/[0.06] bg-[oklch(0.13_0_0)] overflow-hidden">
       <Plate editor={editor} onChange={handleChange}>
-        <PlateContent
-          className="min-h-[300px] w-full px-1 py-2 text-base text-foreground outline-none [&_*]:outline-none [&_h1]:text-3xl [&_h1]:font-bold [&_h1]:mt-6 [&_h1]:mb-2 [&_h2]:text-2xl [&_h2]:font-semibold [&_h2]:mt-5 [&_h2]:mb-2 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:mt-4 [&_h3]:mb-1 [&_blockquote]:border-l-2 [&_blockquote]:border-muted-foreground/30 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-muted-foreground [&_hr]:my-4 [&_hr]:border-muted [&_a]:text-blue-400 [&_a]:underline [&_code]:bg-muted [&_code]:px-1 [&_code]:rounded [&_code]:text-sm [&_p]:mb-1"
-          placeholder="Start writing..."
-        />
+        <EditorToolbar />
+
+        <div className="relative">
+          {saveStatus !== "idle" && (
+            <div className="absolute top-2 right-3 z-10">
+              <span className="text-xs text-white/30">
+                {saveStatus === "saving" ? "Saving..." : "Saved"}
+              </span>
+            </div>
+          )}
+
+          <PlateContent
+            className="min-h-[300px] w-full px-6 py-4 text-base text-white/80 outline-none [&_*]:outline-none [&_a]:text-blue-400 [&_a]:underline [&_code]:bg-white/[0.06] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-sm [&_code]:text-orange-300/80"
+            placeholder="Type '/' for commands..."
+          />
+        </div>
       </Plate>
     </div>
   );

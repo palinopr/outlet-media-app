@@ -19,7 +19,7 @@ export default async function ClientWorkspacePage({ params }: Props) {
   const { pages } = await getClientPages(slug);
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-white">Workspace</h1>
         <p className="text-sm text-white/50 mt-1">
