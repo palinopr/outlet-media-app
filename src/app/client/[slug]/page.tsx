@@ -11,8 +11,8 @@ import {
   Ticket,
 } from "lucide-react";
 import { auth } from "@clerk/nextjs/server";
-import { getData, type DateRange, type ScopeFilter } from "./data";
-import { getMemberAccessForSlug } from "@/lib/member-access";
+import { getData, type DateRange } from "./data";
+import { getScopeFilter } from "@/lib/member-access";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { roasLabel, DATE_OPTIONS } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
@@ -43,19 +43,8 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const validRanges: DateRange[] = ["today", "yesterday", "7", "14", "30", "lifetime"];
   const range: DateRange = validRanges.includes(rangeParam as DateRange) ? (rangeParam as DateRange) : "today";
 
-  // Build scope filter based on member access
-  let scope: ScopeFilter | undefined;
   const { userId } = await auth();
-  if (userId) {
-    const access = await getMemberAccessForSlug(userId, slug);
-    if (access?.scope === "assigned") {
-      scope = {
-        allowedCampaignIds: access.allowedCampaignIds,
-        allowedEventIds: access.allowedEventIds,
-      };
-    }
-  }
-
+  const scope = await getScopeFilter(userId, slug);
   const data = await getData(slug, range, scope);
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = data;
 

@@ -1,4 +1,6 @@
+import { cache } from "react";
 import { supabaseAdmin } from "./supabase";
+import type { ScopeFilter } from "@/app/client/[slug]/data";
 
 export interface MemberAccess {
   memberId: string;
@@ -43,9 +45,9 @@ export async function getMemberships(clerkUserId: string): Promise<MemberAccess[
 
 /**
  * Get a user's access for a specific client slug.
- * Returns null if the user has no membership for that client.
+ * Cached per request -- safe to call from both layout and page.
  */
-export async function getMemberAccessForSlug(
+export const getMemberAccessForSlug = cache(async function getMemberAccessForSlug(
   clerkUserId: string,
   slug: string,
 ): Promise<ScopedAccess | null> {
@@ -98,4 +100,21 @@ export async function getMemberAccessForSlug(
   }
 
   return access;
+});
+
+/**
+ * Build a ScopeFilter for data queries. Returns undefined for admins and "all" scope members.
+ */
+export async function getScopeFilter(
+  userId: string | null,
+  slug: string,
+  isAdmin?: boolean,
+): Promise<ScopeFilter | undefined> {
+  if (!userId || isAdmin) return undefined;
+  const access = await getMemberAccessForSlug(userId, slug);
+  if (access?.scope !== "assigned") return undefined;
+  return {
+    allowedCampaignIds: access.allowedCampaignIds,
+    allowedEventIds: access.allowedEventIds,
+  };
 }

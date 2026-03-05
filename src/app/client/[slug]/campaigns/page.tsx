@@ -16,7 +16,7 @@ import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-
 import { fmtUsd, fmtNum, slugToLabel, roasColor } from "@/lib/formatters";
 import { getCampaignStatusCfg } from "../lib";
 import { getCampaignsPageData } from "../data";
-import { getMemberAccessForSlug } from "@/lib/member-access";
+import { getScopeFilter } from "@/lib/member-access";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -56,19 +56,8 @@ export default async function ClientCampaigns({ params }: Props) {
   const { slug } = await params;
   const clientName = slugToLabel(slug);
 
-  // Build scope filter
-  let scope: import("../data").ScopeFilter | undefined;
   const { userId } = await auth();
-  if (userId) {
-    const access = await getMemberAccessForSlug(userId, slug);
-    if (access?.scope === "assigned") {
-      scope = {
-        allowedCampaignIds: access.allowedCampaignIds,
-        allowedEventIds: access.allowedEventIds,
-      };
-    }
-  }
-
+  const scope = await getScopeFilter(userId, slug);
   const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug, scope);
   const trendData = buildTrendData(snapshots);
 
