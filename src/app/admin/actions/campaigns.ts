@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import { currentUser } from "@clerk/nextjs/server";
+import {
+  getCampaignWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
 import { logAudit } from "./audit";
@@ -16,6 +20,16 @@ function eventVisibility(clientSlug: string | null | undefined) {
 function centsLabel(value: number | null | undefined) {
   if (typeof value !== "number") return "unknown budget";
   return `$${(value / 100).toFixed(0)}/day`;
+}
+
+function revalidateCampaignPaths(
+  campaignId: string,
+  clientSlugs: Array<string | null | undefined>,
+) {
+  const uniqueClientSlugs = [...new Set(clientSlugs)];
+  for (const clientSlug of uniqueClientSlugs) {
+    revalidateWorkflowPaths(getCampaignWorkflowPaths(clientSlug, campaignId));
+  }
 }
 
 const UpdateStatusSchema = z.object({
@@ -61,7 +75,7 @@ export async function updateCampaignStatus(formData: { campaignId: string; statu
       to: parsed.status,
     },
   });
-  revalidatePath("/admin/campaigns");
+  revalidateCampaignPaths(parsed.campaignId, [old?.client_slug]);
 }
 
 const UpdateTypeSchema = z.object({
@@ -107,7 +121,7 @@ export async function updateCampaignType(formData: { campaignId: string; campaig
       to: parsed.campaignType,
     },
   });
-  revalidatePath("/admin/campaigns");
+  revalidateCampaignPaths(parsed.campaignId, [old?.client_slug]);
 }
 
 const UpdateBudgetSchema = z.object({
@@ -153,7 +167,7 @@ export async function updateCampaignBudget(formData: { campaignId: string; daily
       to: parsed.dailyBudgetCents,
     },
   });
-  revalidatePath("/admin/campaigns");
+  revalidateCampaignPaths(parsed.campaignId, [old?.client_slug]);
 }
 
 const AssignClientSchema = z.object({
@@ -199,7 +213,7 @@ export async function assignCampaignClient(formData: { campaignId: string; clien
       to: parsed.clientSlug,
     },
   });
-  revalidatePath("/admin/campaigns");
+  revalidateCampaignPaths(parsed.campaignId, [old?.client_slug, parsed.clientSlug]);
 }
 
 const BulkAssignSchema = z.object({
@@ -292,7 +306,7 @@ export async function syncCampaignToMeta(campaignId: string, changes: { status?:
   }
 
   await logAudit("campaign", campaignId, "sync_to_meta", null, { changes, results });
-  revalidatePath("/admin/campaigns");
+  revalidateCampaignPaths(campaignId, [null]);
 
   return results;
 }
