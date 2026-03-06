@@ -1,5 +1,6 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { listActionableInvitations } from "@/features/invitations/server";
 
 export interface UserRow {
   id: string;
@@ -62,35 +63,19 @@ export async function getUsers(): Promise<UserRow[]> {
 
   let inviteRows: UserRow[] = [];
   try {
-    const result = await client.invitations.getInvitationList();
     const existingEmails = new Set(userRows.map((u) => u.email.toLowerCase()));
-    // Only show pending/expired invitations -- these are actionable (revocable).
-    // Accepted invitations without a user account are stale; admin can re-invite
-    // with ignoreExisting. Deduplicate by email, preferring pending over expired.
-    const bestByEmail = new Map<string, (typeof result.data)[number]>();
-    for (const inv of result.data) {
-      const email = inv.emailAddress.toLowerCase();
-      if (existingEmails.has(email)) continue;
-      if (inv.status !== "pending" && inv.status !== "expired") continue;
-      const existing = bestByEmail.get(email);
-      if (!existing || (inv.status === "pending" && existing.status !== "pending")) {
-        bestByEmail.set(email, inv);
-      }
-    }
-    const invitations = [...bestByEmail.values()];
+    const invitations = await listActionableInvitations({
+      excludeEmails: [...existingEmails],
+    });
     inviteRows = invitations.map((inv) => {
-      const meta = (inv.publicMetadata ?? {}) as {
-        role?: string;
-        client_slug?: string;
-      };
       return {
         id: inv.id,
         name: "",
-        email: inv.emailAddress,
-        role: meta.role ?? null,
-        client_slug: meta.client_slug ?? null,
+        email: inv.email,
+        role: inv.role,
+        client_slug: inv.clientSlug,
         client_slugs: [],
-        created_at: new Date(inv.createdAt).toISOString(),
+        created_at: inv.createdAt,
         status: "invited" as const,
       };
     });

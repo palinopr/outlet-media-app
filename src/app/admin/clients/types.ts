@@ -53,6 +53,7 @@ export interface ClientPendingInvite {
   id: string;
   email: string;
   createdAt: string;
+  status: "pending" | "expired";
 }
 
 export interface ClientMember {

@@ -76,7 +76,7 @@ export function MembersSection({ client }: { client: ClientDetail }) {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium">{invite.email}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Pending since {fmtDate(invite.createdAt)}
+                    {invite.status === "expired" ? "Expired" : "Pending"} • sent {fmtDate(invite.createdAt)}
                   </p>
                 </div>
                 <RevokeInvitationButton

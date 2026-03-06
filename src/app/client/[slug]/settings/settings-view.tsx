@@ -105,7 +105,7 @@ export function SettingsView({ data }: { data: SettingsData }) {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-medium text-white/90">{invite.email}</p>
                   <p className="mt-1 text-xs text-white/50">
-                    Pending since {fmtDate(invite.createdAt)}
+                    {invite.status === "expired" ? "Expired" : "Pending"} • sent {fmtDate(invite.createdAt)}
                   </p>
                 </div>
                 {data.isOwner ? (

@@ -61,6 +61,7 @@ const client = {
       createdAt: "2026-03-03T00:00:00.000Z",
       email: "invitee@acme.com",
       id: "invite-1",
+      status: "pending" as const,
     },
   ],
   pendingApprovals: 1,

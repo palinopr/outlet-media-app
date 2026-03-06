@@ -37,6 +37,7 @@ export async function inviteTeamMember(formData: { email: string; slug: string }
   const clerk = await clerkClient();
   await clerk.invitations.createInvitation({
     emailAddress: parsed.email,
+    ignoreExisting: true,
     publicMetadata: { client_slug: parsed.slug },
   });
 

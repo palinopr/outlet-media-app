@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
+import { listActionableInvitations } from "@/features/invitations/server";
 
 // ─── Connected Accounts ─────────────────────────────────────────────────────
 
@@ -49,7 +50,7 @@ export interface PendingInvite {
   id: string;
   email: string;
   createdAt: string;
-  status: "pending";
+  status: "pending" | "expired";
 }
 
 export interface SettingsData {
@@ -104,21 +105,12 @@ export async function getSettingsData(slug: string): Promise<SettingsData | null
   );
   let pendingInvites: PendingInvite[] = [];
   try {
-    const invitationList = await clerk.invitations.getInvitationList({
-      status: "pending",
-    });
-    pendingInvites = invitationList.data
-      .filter((invite) => {
-        const metadata = (invite.publicMetadata ?? {}) as { client_slug?: string };
-        return metadata.client_slug === slug;
-      })
-      .sort((left, right) => right.createdAt - left.createdAt)
-      .map((invite) => ({
-        createdAt: new Date(invite.createdAt).toISOString(),
-        email: invite.emailAddress,
-        id: invite.id,
-        status: "pending",
-      }));
+    pendingInvites = (await listActionableInvitations({ clientSlug: slug })).map((invite) => ({
+      createdAt: invite.createdAt,
+      email: invite.email,
+      id: invite.id,
+      status: invite.status,
+    }));
   } catch (error) {
     console.error("[client/settings] Failed to fetch pending invites:", error);
   }

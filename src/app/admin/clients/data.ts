@@ -3,6 +3,7 @@ import { clerkClient } from "@clerk/nextjs/server";
 import { computeBlendedRoas } from "@/lib/formatters";
 import { getClientServices } from "@/lib/client-services";
 import { buildClientWorkflowHealth } from "@/features/clients/summary";
+import { listActionableInvitations } from "@/features/invitations/server";
 
 export type {
   ClientSummary,
@@ -337,29 +338,7 @@ export async function getClientDetail(
       .eq("client_slug", client.slug)
       .eq("resolved", false)
       .is("parent_comment_id", null),
-    (async () => {
-      try {
-        const clerk = await clerkClient();
-        const invitations = await clerk.invitations.getInvitationList({
-          status: "pending",
-        });
-
-        return invitations.data
-          .filter((invite) => {
-            const metadata = (invite.publicMetadata ?? {}) as { client_slug?: string };
-            return metadata.client_slug === client.slug;
-          })
-          .sort((left, right) => right.createdAt - left.createdAt)
-          .map((invite) => ({
-            createdAt: new Date(invite.createdAt).toISOString(),
-            email: invite.emailAddress,
-            id: invite.id,
-          }));
-      } catch (error) {
-        console.error("[admin/clients] Failed to fetch pending invites:", error);
-        return [];
-      }
-    })(),
+    listActionableInvitations({ clientSlug: client.slug }),
   ]);
 
   const memberRows = membersRes.data ?? [];
