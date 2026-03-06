@@ -7,6 +7,7 @@ import {
   getCrmFollowUpItemById,
   maybeEnqueueCrmFollowUpItemTriage,
 } from "@/features/crm-follow-up-items/server";
+import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import { adminGuard } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
@@ -146,6 +147,18 @@ export async function createCrmFollowUpItem(formData: {
     },
   });
 
+  await notifyWorkflowAssignee({
+    actorId: user.id,
+    actorName: user.fullName ?? user.firstName ?? user.username ?? "Unknown",
+    assigneeId: parsed.assigneeId ?? null,
+    clientSlug: parsed.clientSlug,
+    entityId: parsed.contactId,
+    entityType: "crm_contact",
+    message: parsed.title,
+    title: "CRM follow-up assigned to you",
+    visibility: parsed.visibility,
+  });
+
   await maybeEnqueueCrmFollowUpItemTriage(item);
   revalidateCrmPaths(parsed.clientSlug, parsed.contactId);
   return item;
@@ -274,6 +287,20 @@ export async function updateCrmFollowUpItem(formData: {
       visibility: item.visibility,
     },
   });
+
+  if (nextValues.assigneeId && nextValues.assigneeId !== existingRow.assignee_id) {
+    await notifyWorkflowAssignee({
+      actorId: user.id,
+      actorName: user.fullName ?? user.firstName ?? user.username ?? "Unknown",
+      assigneeId: nextValues.assigneeId as string,
+      clientSlug: item.clientSlug,
+      entityId: item.contactId,
+      entityType: "crm_contact",
+      message: item.title,
+      title: "CRM follow-up assigned to you",
+      visibility: item.visibility,
+    });
+  }
 
   await maybeEnqueueCrmFollowUpItemTriage(item, {
     priority: existingRow.priority as typeof item.priority,

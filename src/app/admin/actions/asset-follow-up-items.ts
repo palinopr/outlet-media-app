@@ -7,6 +7,7 @@ import {
   getAssetFollowUpItemById,
   maybeEnqueueAssetFollowUpItemTriage,
 } from "@/features/asset-follow-up-items/server";
+import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import { adminGuard } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
@@ -149,6 +150,18 @@ export async function createAssetFollowUpItem(formData: {
     },
   });
 
+  await notifyWorkflowAssignee({
+    actorId: user.id,
+    actorName: user.fullName ?? user.firstName ?? user.username ?? "Unknown",
+    assigneeId: parsed.assigneeId ?? null,
+    clientSlug: parsed.clientSlug,
+    entityId: parsed.assetId,
+    entityType: "asset",
+    message: parsed.title,
+    title: "Asset follow-up assigned to you",
+    visibility: parsed.visibility,
+  });
+
   await maybeEnqueueAssetFollowUpItemTriage(item);
   revalidateAssetPaths(parsed.clientSlug, parsed.assetId);
   return item;
@@ -279,6 +292,20 @@ export async function updateAssetFollowUpItem(formData: {
       visibility: item.visibility,
     },
   });
+
+  if (nextValues.assigneeId && nextValues.assigneeId !== existingRow.assignee_id) {
+    await notifyWorkflowAssignee({
+      actorId: user.id,
+      actorName: user.fullName ?? user.firstName ?? user.username ?? "Unknown",
+      assigneeId: nextValues.assigneeId as string,
+      clientSlug: item.clientSlug,
+      entityId: item.assetId,
+      entityType: "asset",
+      message: item.title,
+      title: "Asset follow-up assigned to you",
+      visibility: item.visibility,
+    });
+  }
 
   await maybeEnqueueAssetFollowUpItemTriage(item, {
     priority: existingRow.priority as typeof item.priority,

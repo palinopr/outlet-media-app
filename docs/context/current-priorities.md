@@ -65,6 +65,7 @@ The short-term focus is:
 - On client surfaces, load notifications with client-slug scoping so client users and admin previews never pull unrelated admin notifications into the client portal.
 - Treat shared discussions as incomplete unless they also notify the right inbox audience, so campaign, asset, event, and CRM collaboration cannot get lost between the thread view and the routed inbox.
 - Keep notifications summary-first and filterable, so the inbox reads like an operating queue instead of a flat message dump.
+- Treat non-workspace follow-up items like real assignments too, so campaign, CRM, asset, and event assignees get notified the same way workspace-task assignees do.
 - Treat conversations as a first-class app surface on both admin and client, not only as dashboard widgets or detail-page side panels, so unresolved discussion can be managed in one place.
 - Keep admin conversations actionable too, so operators can create linked action or follow-up items directly from open campaign, CRM, asset, and event threads without detouring into each detail page first.
 - Reuse the shared conversations feature module anywhere open discussion is summarized, instead of re-querying each comment table per route and letting discussion logic drift.

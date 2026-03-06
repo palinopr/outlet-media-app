@@ -7,6 +7,7 @@ import {
   getCampaignActionItemById,
   maybeEnqueueCampaignActionItemTriage,
 } from "@/features/campaign-action-items/server";
+import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import { adminGuard } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { TASK_PRIORITIES, TASK_PRIORITY_LABELS, TASK_STATUSES, TASK_STATUS_LABELS } from "@/lib/workspace-types";
@@ -133,6 +134,18 @@ export async function createCampaignActionItem(formData: {
       status: parsed.status,
       visibility: parsed.visibility,
     },
+  });
+
+  await notifyWorkflowAssignee({
+    actorId: user.id,
+    actorName: user.fullName ?? user.firstName ?? user.username ?? "Unknown",
+    assigneeId: parsed.assigneeId ?? null,
+    clientSlug: parsed.clientSlug,
+    entityId: parsed.campaignId,
+    entityType: "campaign",
+    message: parsed.title,
+    title: "Campaign action assigned to you",
+    visibility: parsed.visibility,
   });
 
   const createdItem = await getCampaignActionItemById(data.id);
@@ -272,6 +285,20 @@ export async function updateCampaignActionItem(formData: {
         status: nextValues.status,
         visibility: nextValues.visibility,
       },
+    });
+  }
+
+  if (nextValues.assigneeId && nextValues.assigneeId !== existing.assignee_id) {
+    await notifyWorkflowAssignee({
+      actorId: user.id,
+      actorName: user.fullName ?? user.firstName ?? user.username ?? "Unknown",
+      assigneeId: nextValues.assigneeId as string,
+      clientSlug: existing.client_slug,
+      entityId: existing.campaign_id,
+      entityType: "campaign",
+      message: nextValues.title,
+      title: "Campaign action assigned to you",
+      visibility: nextValues.visibility as "shared" | "admin_only",
     });
   }
 

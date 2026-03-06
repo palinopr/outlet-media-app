@@ -5,6 +5,7 @@ import {
   type TaskStatus,
 } from "@/lib/workspace-types";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
+import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   logSystemEvent,
@@ -397,6 +398,18 @@ export async function createSystemEventFollowUpItem(
     },
   });
 
+  await notifyWorkflowAssignee({
+    actorId: input.actorId ?? null,
+    actorName: input.actorName ?? null,
+    assigneeId: item.assigneeId,
+    clientSlug: item.clientSlug ?? null,
+    entityId: item.eventId,
+    entityType: "event",
+    message: item.title,
+    title: "Event follow-up assigned to you",
+    visibility: item.visibility,
+  });
+
   await maybeEnqueueEventFollowUpItemTriage(item);
   return item;
 }
@@ -520,6 +533,20 @@ export async function updateSystemEventFollowUpItem(
       visibility: item.visibility,
     },
   });
+
+  if (item.assigneeId && item.assigneeId !== ((existingRow.assignee_id as string | null) ?? null)) {
+    await notifyWorkflowAssignee({
+      actorId: input.actorId ?? null,
+      actorName: input.actorName ?? null,
+      assigneeId: item.assigneeId,
+      clientSlug: item.clientSlug ?? null,
+      entityId: item.eventId,
+      entityType: "event",
+      message: item.title,
+      title: "Event follow-up assigned to you",
+      visibility: item.visibility,
+    });
+  }
 
   await maybeEnqueueEventFollowUpItemTriage(item, {
     priority: existingRow.priority as TaskPriority,
