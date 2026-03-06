@@ -47,6 +47,13 @@ export interface TeamMember {
   createdAt: string;
 }
 
+export interface PendingInvite {
+  id: string;
+  email: string;
+  createdAt: string;
+  status: "pending";
+}
+
 export interface SettingsData {
   clientId: string;
   clientName: string;
@@ -54,6 +61,7 @@ export interface SettingsData {
   slug: string;
   isOwner: boolean;
   members: TeamMember[];
+  pendingInvites: PendingInvite[];
 }
 
 export async function getSettingsData(slug: string): Promise<SettingsData | null> {
@@ -96,6 +104,26 @@ export async function getSettingsData(slug: string): Promise<SettingsData | null
       }
     })
   );
+  let pendingInvites: PendingInvite[] = [];
+  try {
+    const invitationList = await clerk.invitations.getInvitationList({
+      status: "pending",
+    });
+    pendingInvites = invitationList.data
+      .filter((invite) => {
+        const metadata = (invite.publicMetadata ?? {}) as { client_slug?: string };
+        return metadata.client_slug === slug;
+      })
+      .sort((left, right) => right.createdAt - left.createdAt)
+      .map((invite) => ({
+        createdAt: new Date(invite.createdAt).toISOString(),
+        email: invite.emailAddress,
+        id: invite.id,
+        status: "pending",
+      }));
+  } catch (error) {
+    console.error("[client/settings] Failed to fetch pending invites:", error);
+  }
   const connectedAccounts = await getConnectedAccounts(userId, slug);
 
   return {
@@ -105,5 +133,6 @@ export async function getSettingsData(slug: string): Promise<SettingsData | null
     slug: client.slug,
     isOwner,
     members: teamMembers,
+    pendingInvites,
   };
 }

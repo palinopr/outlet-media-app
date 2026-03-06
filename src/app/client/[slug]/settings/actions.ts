@@ -99,3 +99,39 @@ export async function removeTeamMember(formData: { memberId: string; slug: strin
 
   revalidatePath(`/client/${parsed.slug}/settings`);
 }
+
+const RevokeTeamInviteSchema = z.object({
+  invitationId: z.string().min(1),
+  slug: z.string().min(1),
+});
+
+export async function revokeTeamInvite(formData: {
+  invitationId: string;
+  slug: string;
+}) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthenticated");
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const parsed = RevokeTeamInviteSchema.parse(formData);
+
+  const { data: client } = await supabaseAdmin
+    .from("clients")
+    .select("id")
+    .eq("slug", parsed.slug)
+    .single();
+  if (!client) throw new Error("Client not found");
+
+  const { data: membership } = await supabaseAdmin
+    .from("client_members")
+    .select("role")
+    .eq("client_id", client.id)
+    .eq("clerk_user_id", userId)
+    .single();
+  if (membership?.role !== "owner") throw new Error("Only owners can revoke invites");
+
+  const clerk = await clerkClient();
+  await clerk.invitations.revokeInvitation(parsed.invitationId);
+
+  revalidatePath(`/client/${parsed.slug}/settings`);
+}

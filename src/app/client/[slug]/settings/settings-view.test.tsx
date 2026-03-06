@@ -2,9 +2,16 @@ import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { SettingsView } from "./settings-view";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh: vi.fn(),
+  }),
+}));
+
 vi.mock("./actions", () => ({
   inviteTeamMember: vi.fn(),
   removeTeamMember: vi.fn(),
+  revokeTeamInvite: vi.fn(),
 }));
 
 vi.mock("./connected-accounts-list", () => ({
@@ -49,6 +56,14 @@ describe("SettingsView", () => {
               role: "owner",
             },
           ],
+          pendingInvites: [
+            {
+              createdAt: "2026-03-06T12:00:00.000Z",
+              email: "invitee@example.com",
+              id: "inv_1",
+              status: "pending",
+            },
+          ],
           slug: "zamora",
         }}
       />,
@@ -58,6 +73,8 @@ describe("SettingsView", () => {
       "1:/api/meta/connect?slug=zamora",
     );
     expect(screen.getByText("Team")).toBeInTheDocument();
+    expect(screen.getByText("Pending invites")).toBeInTheDocument();
+    expect(screen.getByText("invitee@example.com")).toBeInTheDocument();
     expect(screen.getByText("Owner User")).toBeInTheDocument();
   });
 });

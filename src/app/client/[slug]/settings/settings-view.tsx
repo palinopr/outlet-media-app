@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -12,11 +13,11 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { UserPlus, Loader2, Check, Trash2 } from "lucide-react";
+import { UserPlus, Loader2, Check, MailPlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { fmtDate } from "@/lib/formatters";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
-import { inviteTeamMember, removeTeamMember } from "./actions";
+import { inviteTeamMember, removeTeamMember, revokeTeamInvite } from "./actions";
 import { ConnectedAccountsList } from "./connected-accounts-list";
 import type { SettingsData } from "./data";
 
@@ -36,6 +37,7 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 export function SettingsView({ data }: { data: SettingsData }) {
+  const router = useRouter();
   const [showInvite, setShowInvite] = useState(false);
   const [email, setEmail] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -52,6 +54,7 @@ export function SettingsView({ data }: { data: SettingsData }) {
       setInvited(true);
       setTimeout(() => setInvited(false), 2000);
       setShowInvite(false);
+      router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send invitation");
     } finally {
@@ -62,6 +65,13 @@ export function SettingsView({ data }: { data: SettingsData }) {
   async function handleRemove(memberId: string) {
     await removeTeamMember({ memberId, slug: data.slug });
     toast.success("Team member removed");
+    router.refresh();
+  }
+
+  async function handleRevoke(invitationId: string, email: string) {
+    await revokeTeamInvite({ invitationId, slug: data.slug });
+    toast.success(`Invite revoked for ${email}`);
+    router.refresh();
   }
 
   return (
@@ -71,6 +81,60 @@ export function SettingsView({ data }: { data: SettingsData }) {
         connectUrl={`/api/meta/connect?slug=${data.slug}`}
         slug={data.slug}
       />
+
+      <Card className="border-white/[0.06] bg-white/[0.02] p-0">
+        <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
+          <div>
+            <h2 className="text-sm font-semibold text-white/90">Pending invites</h2>
+            <p className="mt-0.5 text-xs text-white/50">
+              {data.pendingInvites.length} invite{data.pendingInvites.length === 1 ? "" : "s"} waiting for teammates to join
+            </p>
+          </div>
+          <MailPlus className="h-4 w-4 text-white/40" />
+        </div>
+
+        {data.pendingInvites.length === 0 ? (
+          <div className="px-5 py-5 text-sm text-white/50">
+            No team invites are pending right now.
+          </div>
+        ) : (
+          <div className="divide-y divide-white/[0.06]">
+            {data.pendingInvites.map((invite) => (
+              <div key={invite.id} className="flex items-center justify-between gap-3 px-5 py-4">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-white/90">{invite.email}</p>
+                  <p className="mt-1 text-xs text-white/50">
+                    Pending since {fmtDate(invite.createdAt)}
+                  </p>
+                </div>
+                {data.isOwner ? (
+                  <ConfirmDialog
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 shrink-0 px-2 text-white/40 hover:bg-red-500/10 hover:text-red-300"
+                      >
+                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                        Revoke
+                      </Button>
+                    }
+                    title="Revoke invitation"
+                    description={`Revoke the pending invitation for ${invite.email}? They will need a new invite to join ${data.clientName}.`}
+                    confirmLabel="Revoke invite"
+                    variant="destructive"
+                    onConfirm={() => handleRevoke(invite.id, invite.email)}
+                  />
+                ) : (
+                  <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[11px] font-medium text-white/50">
+                    Pending
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       {/* Team Members */}
       <Card className="border-white/[0.06] bg-white/[0.02] p-0">

@@ -1,4 +1,4 @@
-import { BadgeCheck, Settings, ShieldCheck, Users } from "lucide-react";
+import { BadgeCheck, Clock3, Settings, ShieldCheck, Users } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { getSettingsData } from "./data";
 import { SettingsView } from "./settings-view";
@@ -22,6 +22,7 @@ export default async function SettingsPage({
     settingsData?.members.filter((member) => member.role === "owner").length ?? 0;
   const activeConnections =
     settingsData?.connectedAccounts.filter((account) => account.status === "active").length ?? 0;
+  const pendingInviteCount = settingsData?.pendingInvites.length ?? 0;
 
   return (
     <div className="space-y-8">
@@ -46,7 +47,7 @@ export default async function SettingsPage({
       </div>
 
       {settingsData ? (
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
           <StatCard
             icon={Users}
             iconColor="bg-white/[0.08] text-white/80"
@@ -77,6 +78,14 @@ export default async function SettingsPage({
             label="Active links"
             sub="ready for campaign work"
             value={String(activeConnections)}
+            variant="glass"
+          />
+          <StatCard
+            icon={Clock3}
+            iconColor="bg-white/[0.08] text-white/80"
+            label="Pending invites"
+            sub="people invited but not onboarded"
+            value={String(pendingInviteCount)}
             variant="glass"
           />
         </div>
