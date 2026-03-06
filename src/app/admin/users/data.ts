@@ -11,7 +11,7 @@ export interface UserRow {
   client_slug: string | null;
   client_slugs: string[];
   created_at: string;
-  /** "active" = signed-up user, "invited" = pending Clerk invitation */
+  /** "active" = signed-up user, "invited" = pending or expired Clerk invitation */
   status: "active" | "invited";
   invite_status: ActionableInvitationStatus | null;
 }

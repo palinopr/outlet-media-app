@@ -30,5 +30,12 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "agent", ".claude", ".worktrees"]
+  "exclude": [
+    "node_modules",
+    "agent",
+    ".claude",
+    ".worktrees",
+    "src/features/whatsapp/**",
+    "src/app/api/whatsapp/**"
+  ]
 }

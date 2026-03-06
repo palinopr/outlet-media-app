@@ -438,7 +438,7 @@ describe("ClientDetailView", () => {
 
     fireEvent.click(screen.getByRole("button", { name: /Members/i }));
 
-    expect(screen.getByText("Pending invites")).toBeInTheDocument();
+    expect(screen.getByText("Access invites")).toBeInTheDocument();
     expect(screen.getByText("invitee@acme.com")).toBeInTheDocument();
   });
 });
