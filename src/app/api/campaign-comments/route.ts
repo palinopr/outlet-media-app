@@ -5,6 +5,7 @@ import {
   CreateCampaignCommentSchema,
   ResolveCommentSchema,
 } from "@/lib/api-schemas";
+import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   canAccessCampaignComments,
@@ -32,6 +33,40 @@ async function getCampaignName(campaignId: string) {
 async function getAuthorName() {
   const user = await currentUser();
   return [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown";
+}
+
+function shouldEnqueueCampaignCommentTriage(options: {
+  isAdmin: boolean;
+  parentCommentId?: string;
+  visibility: CampaignCommentVisibility;
+}) {
+  return !options.isAdmin && !options.parentCommentId && options.visibility === "shared";
+}
+
+function campaignCommentTriagePrompt(input: {
+  campaignId: string;
+  campaignName: string | null;
+  clientSlug: string;
+  commentId: string;
+  comment: string;
+  authorName: string;
+}) {
+  return [
+    `A client started a new campaign discussion thread.`,
+    `Client: ${input.clientSlug}`,
+    input.campaignName ? `Campaign: ${input.campaignName}` : null,
+    `Campaign ID: ${input.campaignId}`,
+    `Comment ID: ${input.commentId}`,
+    `Author: ${input.authorName}`,
+    `Comment: ${input.comment}`,
+    `Prepare a concise operations triage note with:`,
+    `1. what the client is asking or flagging`,
+    `2. the next best response or action`,
+    `3. any missing information or blockers`,
+    `Keep it short and practical.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export async function GET(request: NextRequest) {
@@ -134,6 +169,47 @@ export async function POST(request: NextRequest) {
       visibility,
     },
   });
+
+  if (
+    shouldEnqueueCampaignCommentTriage({
+      isAdmin: access.isAdmin,
+      parentCommentId: body.parent_comment_id,
+      visibility,
+    })
+  ) {
+    const taskId = await enqueueExternalAgentTask({
+      action: "triage-campaign-comment",
+      prompt: campaignCommentTriagePrompt({
+        campaignId: body.campaign_id,
+        campaignName,
+        clientSlug: body.client_slug,
+        commentId: data.id as string,
+        comment: body.content,
+        authorName,
+      }),
+      toAgent: "assistant",
+    });
+
+    if (taskId) {
+      await logSystemEvent({
+        eventName: "agent_action_requested",
+        actorType: "system",
+        clientSlug: body.client_slug,
+        visibility: "admin_only",
+        entityType: "agent_task",
+        entityId: taskId,
+        summary: `Queued agent triage for campaign comment in ${campaignName ?? "campaign"}`,
+        detail: "Assistant will prepare a concise response and next-step brief for the team.",
+        metadata: {
+          campaignId: body.campaign_id,
+          campaignName,
+          commentId: data.id,
+          taskId,
+          toAgent: "assistant",
+        },
+      });
+    }
+  }
 
   return NextResponse.json({ comment: data }, { status: 201 });
 }

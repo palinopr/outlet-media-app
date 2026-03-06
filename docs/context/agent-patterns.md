@@ -125,6 +125,13 @@ Autonomous actions are safest when they are:
 - assistant prepares a short operational brief
 - the brief supports humans without mutating campaign state on its own
 
+### Campaign Discussion Triage
+
+- `campaign_comment_added`
+- if a client starts a new shared campaign thread, queue a bounded assistant task
+- assistant summarizes what the client needs and the next best response
+- the result helps the team respond faster without auto-replying on the client's behalf
+
 ## Logging Requirements
 
 Every agent action should write back:
