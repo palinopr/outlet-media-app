@@ -11,6 +11,7 @@ describe("buildUsersAccessSummary", () => {
           created_at: "2026-03-06T12:00:00.000Z",
           email: "invite@example.com",
           id: "invite_1",
+          invite_status: "pending",
           name: "",
           role: "member",
           status: "invited",
@@ -21,6 +22,7 @@ describe("buildUsersAccessSummary", () => {
           created_at: "2026-03-06T11:00:00.000Z",
           email: "client@example.com",
           id: "user_1",
+          invite_status: null,
           name: "Client User",
           role: "client",
           status: "active",
@@ -31,6 +33,7 @@ describe("buildUsersAccessSummary", () => {
           created_at: "2026-03-06T10:00:00.000Z",
           email: "assigned@example.com",
           id: "user_2",
+          invite_status: null,
           name: "Assigned User",
           role: "client",
           status: "active",
@@ -78,9 +81,11 @@ describe("buildUsersAccessSummary", () => {
       ],
     );
 
-    expect(summary.pendingInvites).toEqual([
+    expect(summary.accessInvites).toEqual([
       expect.objectContaining({ id: "invite_1" }),
     ]);
+    expect(summary.pendingInviteCount).toBe(1);
+    expect(summary.expiredInviteCount).toBe(0);
     expect(summary.unassignedClientUsers).toEqual([
       expect.objectContaining({ id: "user_1" }),
     ]);

@@ -4,6 +4,7 @@
  * single source of truth — do NOT duplicate these in page files.
  */
 
+import type { ActionableInvitationStatus } from "@/features/invitations/types";
 import { getCampaignStatusCfg, getEventStatusCfg } from "./status";
 
 // ─── Number / Currency ─────────────────────────────────────────────────────
@@ -50,6 +51,28 @@ export function slugToLabel(slug: string | null): string {
     .split("_")
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ");
+}
+
+export function getInvitationStatusCfg(
+  status: ActionableInvitationStatus | null | undefined,
+) {
+  if (status === "expired") {
+    return {
+      label: "Expired",
+      detail: "Invite expired",
+      bg: "bg-amber-500/10",
+      border: "border-amber-500/20",
+      text: "text-amber-400",
+    };
+  }
+
+  return {
+    label: "Pending",
+    detail: "Invite pending",
+    bg: "bg-blue-500/20",
+    border: "border-blue-500/20",
+    text: "text-blue-400",
+  };
 }
 
 // ─── Time ───────────────────────────────────────────────────────────────────

@@ -55,6 +55,13 @@ Common query params: `access_token={token}&host=www.entradasatualcance.com&relea
 - **14942** = NO VALIDO (skip this event in all queries/syncs)
 - EATA events use `eata_{id}` as the tm_id in Supabase to prevent collisions with TM alphanumeric IDs
 
+### Key Facts
+
+- **Show date:** July 23, 2026
+- **Venue capacity:** ~55,000 (Estadio Olimpico Lluis Companys)
+- **Don Omar BCN has ZERO Meta ad campaigns** — Outlet Media does NOT run paid ads for this event (yet). All ticket sales are organic / promoter-driven. Do not look for Meta campaign data.
+- **Currency:** All EATA revenue is in EUR (euros), not USD. Always label amounts with EUR.
+
 ### Data Shape
 
 Events are synced to the `tm_events` table with:
@@ -64,6 +71,7 @@ Events are synced to the `tm_events` table with:
 - `venue`: `Estadio Olimpico Lluis Companys`
 - `city`: `Barcelona`
 - `tickets_sold`, `gross` (EUR), `avg_ticket_price`
+- `tickets_sold_today`, `revenue_today` — daily delta fields populated by EATA sync
 
 ### Report Data Fields (from /api/events/{id}/report)
 
@@ -118,6 +126,47 @@ curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=sn
 ```
 
 Column naming: `spend` (NOT `spend_cents`) -- value is in cents despite the name. `roas` is a float.
+
+### Event snapshots (daily ticket velocity tracking)
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/event_snapshots?tm_id=eq.eata_14948&order=snapshot_date.desc&limit=14" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+Columns: `tm_id`, `tickets_sold`, `tickets_available`, `gross`, `snapshot_date`, `created_at`
+
+### Fan demographics
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/tm_event_demographics?tm_id=eq.eata_14948" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+Columns: `fans_total`, `fans_female`, `fans_male`, `fans_age_18_24`, `fans_age_25_34`, etc.
+Note: demographics may only be available for TM One events, not EATA events. If empty, skip silently.
+
+---
+
+## Velocity & Sell-Through Analysis
+
+When asked about ticket velocity or sell-through projections:
+1. Query `event_snapshots` for the last 7-14 days
+2. Calculate daily ticket delta: `tickets_sold[day N] - tickets_sold[day N-1]`
+3. Average daily velocity = mean of deltas over the period
+4. Days to sell-out (if capacity known) = `(capacity - current_tickets_sold) / avg_daily_velocity`
+5. Projected sell-out date = today + days_to_sell_out
+
+**Caveats:**
+- Velocity varies by day-of-week (weekends typically higher)
+- Marketing pushes / announcements cause spikes — use 7-day rolling average, not single-day
+- If event_snapshots are static (same values across dates), note that velocity tracking is unavailable
+
+---
+
+## Safety
+
+- Revenue/ticket projections are ESTIMATES — always label them as such
+- Do not commit to financial figures (commissions, payouts, ROI) without Jaime's confirmation
+- If asked about contracts, pricing, or legal terms — defer to Jaime
 
 ---
 

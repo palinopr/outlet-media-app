@@ -15,17 +15,25 @@ import {
   GatewayIntentBits,
   MessageFlags,
   Partials,
+  type Message,
   type TextChannel,
 } from "discord.js";
 import { isAnyAgentBusy } from "../../state.js";
 import { matchManualTrigger, isConfigChannel, isInternalChannel } from "./router.js";
+import {
+  canRunCommand,
+  canUseChannel,
+  getAccessDeniedMessage,
+  isReadOnlyChannel,
+} from "./access.js";
 import { handleScheduleCommand, initScheduleJobs } from "../commands/schedule.js";
 import { handleSuperviseCommand } from "../commands/supervisor.js";
 import { handleDashboardCommand } from "../commands/dashboard.js";
 import { handleMessage, isChannelLocked, cleanForDiscord, chunkText } from "../../events/message-handler.js";
-import { initWebhooks } from "../../services/webhook-service.js";
+import { initWebhooks, sendAsAgent } from "../../services/webhook-service.js";
 import { initQueue } from "../../services/queue-service.js";
 import { initApprovals } from "../../services/approval-service.js";
+import { buildPromptFromDiscordMessage } from "./message-prompt.js";
 
 const token = process.env.DISCORD_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;
@@ -104,6 +112,22 @@ export function markChannelLockReleased(channelId: string): void {
 const processedMessages = new Set<string>();
 const MAX_PROCESSED = 500;
 
+const MEETING_HANDOFF_CHANNELS = new Set([
+  "dashboard",
+  "general",
+  "media-buyer",
+  "tm-data",
+  "creative",
+  "zamora",
+  "kybba",
+  "don-omar-tickets",
+]);
+
+const CONFIGURED_OWNER_USER_IDS = (process.env.DISCORD_OWNER_USER_IDS ?? "")
+  .split(",")
+  .map((id) => id.trim())
+  .filter(Boolean);
+
 function markProcessed(msgId: string): boolean {
   if (processedMessages.has(msgId)) return false;
   processedMessages.add(msgId);
@@ -112,6 +136,66 @@ function markProcessed(msgId: string): boolean {
     if (first) processedMessages.delete(first);
   }
   return true;
+}
+
+function looksLikeMeetingRequest(content: string): boolean {
+  const lower = content.toLowerCase();
+  const mentionsMeeting = /\bgoogle meet\b|\bmeeting\b|\bmeet\b|\breunion\b|\breunión\b|\bzoom\b/.test(lower);
+  if (!mentionsMeeting) return false;
+
+  const hasAction = /\bpuedes\b|\bpodrias\b|\bpodrías\b|\bcreate\b|\bcrear\b|\bschedule\b|\bagendar\b|\binvite\b|\binvitar\b|\bquiere\b|\bwants\b|\bhacer\b/.test(lower);
+  const hasTime = /\b\d{1,2}(:\d{2})?\s?(am|pm)\b/.test(lower) ||
+    /\bhoy\b|\btoday\b|\bmañana\b|\btomorrow\b|\blunes\b|\bmartes\b|\bmiércoles\b|\bmiercoles\b|\bjueves\b|\bviernes\b|\bsábado\b|\bsabado\b|\bdomingo\b|\bmonday\b|\btuesday\b|\bwednesday\b|\bthursday\b|\bfriday\b|\bsaturday\b|\bsunday\b/.test(lower);
+  const hasAttendees = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(content) ||
+    lower.includes("@jaime") ||
+    lower.includes("jaime");
+
+  return hasAction || hasTime || hasAttendees;
+}
+
+function getOwnerMentions(msg: Message): string {
+  const ids = new Set<string>();
+  if (msg.guild?.ownerId) ids.add(msg.guild.ownerId);
+  for (const id of CONFIGURED_OWNER_USER_IDS) ids.add(id);
+  return [...ids].map((id) => `<@${id}>`).join(" ").trim();
+}
+
+async function handoffMeetingRequestToBoss(
+  msg: Message,
+  channelName: string,
+  content: string,
+): Promise<void> {
+  const requester = msg.member?.displayName || msg.author.globalName || msg.author.username;
+  const ownerMentions = getOwnerMentions(msg);
+  const sourceChannelRef = `#${channelName}`;
+
+  await sendAsAgent(
+    "boss",
+    channelName,
+    "Boss got it. I'm checking with Jaime in #boss and will bring the scheduling answer back here.",
+  );
+
+  const bossBrief = [
+    ownerMentions,
+    `${requester} in ${sourceChannelRef} requested a Google Meet / meeting.`,
+    `Original request: "${content}"`,
+    `Handle this in #boss: confirm Jaime's availability or approval, then delegate to meeting-agent.`,
+    `When you delegate, report the result back to ${sourceChannelRef}.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  await sendAsAgent("boss", "boss", bossBrief);
+
+  const timestamp = new Date().toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  await notifyChannel(
+    "agent-feed",
+    `\`${timestamp}\` **#${channelName}** (boss-intake) -- ${requester}: "${content.slice(0, 120)}"`,
+  ).catch(() => {});
 }
 
 export function startDiscordBot(): void {
@@ -124,7 +208,7 @@ export function startDiscordBot(): void {
     console.log(`Discord bot online: ${c.user.tag}`);
 
     // Initialize core services
-    initQueue();
+    await initQueue();
     await initWebhooks(discordClient!);
     await initApprovals(discordClient!);
     console.log("[discord] Core services initialized (queue, webhooks, approvals)");
@@ -149,6 +233,10 @@ export function startDiscordBot(): void {
     initScheduleJobs(getJobRunners());
     console.log("[discord] Schedule job runners initialized");
 
+    const { startExternalTaskDispatcher } = await import("../../services/external-task-dispatcher.js");
+    startExternalTaskDispatcher();
+    console.log("[discord] External task dispatcher initialized");
+
     // Register interactive button handler
     const { registerButtonHandler } = await import("../features/buttons.js");
     registerButtonHandler(discordClient!);
@@ -165,14 +253,15 @@ export function startDiscordBot(): void {
     if (msg.author.bot) return;
 
     const content = msg.content.trim();
-    if (!content) return;
+    if (!content && msg.attachments.size === 0) return;
 
     // Dedup
     if (!markProcessed(msg.id)) {
       console.log(`[discord] DEDUP blocked msg ${msg.id} from ${msg.author.username}`);
       return;
     }
-    console.log(`[discord] Processing msg ${msg.id} from ${msg.author.username}: ${content.slice(0, 60)}`);
+    const logPreview = content || `[${msg.attachments.size} attachment(s)]`;
+    console.log(`[discord] Processing msg ${msg.id} from ${msg.author.username}: ${logPreview.slice(0, 60)}`);
 
     // Run auto-moderation first (fast path, no Claude)
     const { checkAutoMod } = await import("../commands/admin.js");
@@ -183,6 +272,11 @@ export function startDiscordBot(): void {
     const channelName = "name" in msg.channel
       ? (msg.channel as TextChannel).name
       : "";
+
+    if (!canUseChannel(channelName, msg.member, msg.author.id)) {
+      await msg.reply(getAccessDeniedMessage(channelName)).catch(() => {});
+      return;
+    }
 
     // Simple built-in commands
     if (content === "!status" || content === "/status") {
@@ -200,13 +294,13 @@ export function startDiscordBot(): void {
         "`!reset` -- clear conversation context in this channel",
         "",
         "**Agent channels** -- just type naturally:",
-        "  #boss -- orchestrator, delegation, supervision",
+        "  #general -- team chat",
         "  #media-buyer -- Meta Ads, budgets, ROAS",
         "  #tm-data -- Ticketmaster events, demographics",
         "  #creative -- ad creative, copy, images",
         "  #dashboard -- reporting, analytics, trends",
         "  #zamora / #kybba -- client forums",
-        "  #general -- team chat",
+        "  #boss / #email / #meetings / #email-log / #schedule -- owner-only",
         "",
         "**Manual triggers:**",
         "  `run meta sync` (in #media-buyer)",
@@ -220,12 +314,12 @@ export function startDiscordBot(): void {
         "**Admin:**",
         "  `!supervise` -- Boss reviews all agent activity",
         "  `!dashboard` -- update campaign status panel",
-        "  `!roles` -- ensure Admin/Team/Bot/Viewer roles",
+        "  `!roles` -- ensure Owner/Admin/Team/Bot/Viewer roles",
         "  `!restructure` -- enforce full server layout",
         "",
         "**Schedule** (in #schedule):",
-        "  `!schedule list` -- show all jobs with status + buttons",
-        "  `!enable <job>` / `!disable <job>` -- toggle a job",
+        "  `!schedule list` -- show runtime-managed and optional jobs with status + buttons",
+        "  `!enable <job>` / `!disable <job>` -- toggle optional jobs only",
         "",
         "**Agents respond via webhooks with unique identities.**",
         "**Three-tier approval: Green (auto), Yellow (Boss checks), Red (you approve).**",
@@ -241,6 +335,10 @@ export function startDiscordBot(): void {
     }
 
     if (content === "!restructure" || content === "/restructure") {
+      if (!canRunCommand("restructure", msg.member, msg.author.id)) {
+        await msg.reply("Access denied. Server restructure is owner-only.");
+        return;
+      }
       const guild = discordClient?.guilds.cache.first();
       if (!guild) { await msg.reply("No guild found."); return; }
       await msg.reply("Running server restructure...");
@@ -254,6 +352,10 @@ export function startDiscordBot(): void {
     }
 
     if (content === "!roles" || content === "/roles") {
+      if (!canRunCommand("roles", msg.member, msg.author.id)) {
+        await msg.reply("Access denied. Role management is owner-only.");
+        return;
+      }
       const guild = discordClient?.guilds.cache.first();
       if (!guild) { await msg.reply("No guild found."); return; }
       const { ensureRoles } = await import("../features/restructure.js");
@@ -263,6 +365,10 @@ export function startDiscordBot(): void {
     }
 
     if (content === "!supervise" || content === "/supervise") {
+      if (!canRunCommand("supervise", msg.member, msg.author.id)) {
+        await msg.reply("Access denied. Supervision is owner-only.");
+        return;
+      }
       if (!discordClient) { await msg.reply("Bot not connected."); return; }
       await msg.reply("Running Boss supervision cycle...");
       const result = await handleSuperviseCommand(discordClient);
@@ -272,6 +378,10 @@ export function startDiscordBot(): void {
     }
 
     if (content === "!dashboard" || content === "/dashboard") {
+      if (!canRunCommand("dashboard", msg.member, msg.author.id)) {
+        await msg.reply("Access denied. Dashboard refresh is owner-only.");
+        return;
+      }
       if (!discordClient) { await msg.reply("Bot not connected."); return; }
       await msg.reply("Updating dashboard...");
       const result = await handleDashboardCommand(discordClient);
@@ -282,6 +392,10 @@ export function startDiscordBot(): void {
 
     // Schedule channel
     if (channelName === "schedule") {
+      if (!canRunCommand("schedule", msg.member, msg.author.id)) {
+        await msg.reply("Access denied. Schedule controls are owner-only.");
+        return;
+      }
       const schedResult = await handleScheduleCommand(content, discordClient!, channelName);
       if (schedResult) {
         if (schedResult.text) await msg.reply(schedResult.text);
@@ -299,6 +413,10 @@ export function startDiscordBot(): void {
 
     // Agent internals channel: inspect commands
     if (channelName === "agent-internals") {
+      if (!canRunCommand("inspect", msg.member, msg.author.id)) {
+        await msg.reply("Access denied. Agent internals are owner-only.");
+        return;
+      }
       const { handleInspectCommand } = await import("../../events/inspect-handler.js");
       const handled = await handleInspectCommand(msg, content);
       if (handled) return;
@@ -317,6 +435,16 @@ export function startDiscordBot(): void {
       } else {
         await msg.reply("Threads are only available in client channels (#zamora, #kybba).");
       }
+      return;
+    }
+
+    if (isReadOnlyChannel(channelName)) {
+      await msg.reply(`This channel is read-only. Use a work channel instead of #${channelName}.`).catch(() => {});
+      return;
+    }
+
+    if (MEETING_HANDOFF_CHANNELS.has(channelName) && looksLikeMeetingRequest(content)) {
+      await handoffMeetingRequestToBoss(msg, channelName, content);
       return;
     }
 
@@ -349,9 +477,17 @@ export function startDiscordBot(): void {
     }
 
     // Track lock acquisition time and route to the correct agent
+    const promptResult = await buildPromptFromDiscordMessage(content, msg.attachments.values());
+    if (!promptResult.prompt) {
+      if (promptResult.fallbackMessage) {
+        await msg.reply(promptResult.fallbackMessage).catch(() => {});
+      }
+      return;
+    }
+
     markChannelLockAcquired(msg.channelId);
     try {
-      await handleMessage(msg, content, channelName, discordClient);
+      await handleMessage(msg, promptResult.prompt, channelName, discordClient);
     } finally {
       markChannelLockReleased(msg.channelId);
     }
@@ -372,10 +508,12 @@ const CHANNEL_ROUTES: Record<string, string> = {
   "tm-data":       "tm-data",
   "creative":      "creative",
   "boss":          "boss",
+  "meetings":      "meetings",
   "zamora":        "zamora",
   "kybba":         "kybba",
   "don-omar-tickets": "don-omar-tickets",
   "agent-feed":    "agent-feed",
+  "email-log":     "email-log",
   "schedule":      "schedule",
   "morning-briefing": "morning-briefing",
   "approvals":     "approvals",
@@ -387,11 +525,13 @@ const CHANNEL_ROUTES: Record<string, string> = {
   "performance":   "dashboard",
   "alerts":        "agent-feed",
   "logs":          "agent-feed",
+  "email-logs":    "email-log",
   "active-jobs":   "agent-feed",
   "agent-alerts":  "agent-feed",
   "agent-logs":    "agent-feed",
   "bot-logs":      "agent-feed",
   "meta-api":      "media-buyer",
+  "calendar":      "meetings",
 };
 
 const channelIdCache = new Map<string, string>();
@@ -415,7 +555,7 @@ async function resolveChannelId(channelName: string): Promise<string | null> {
 }
 
 /** Channels that send silent (no push/desktop notification) */
-const SILENT_CHANNELS = new Set(["agent-feed", "audit-log"]);
+const SILENT_CHANNELS = new Set(["agent-feed", "audit-log", "email-log"]);
 
 /**
  * Send a message to a specific channel by route name.

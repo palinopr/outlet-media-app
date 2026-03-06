@@ -17,7 +17,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { fmtDate, slugToLabel } from "@/lib/formatters";
+import { fmtDate, getInvitationStatusCfg, slugToLabel } from "@/lib/formatters";
 import { changeUserRole, deleteUser } from "@/app/admin/actions/users";
 import { toast } from "sonner";
 import type { UserRow } from "@/app/admin/users/data";
@@ -110,14 +110,17 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
       header: ({ column }) => <ColumnHeader column={column} title="Name" />,
       cell: ({ row }) => {
         const u = row.original;
+        const inviteStatus = getInvitationStatusCfg(u.invite_status);
         return (
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">
               {u.name || <span className="text-muted-foreground italic">No name</span>}
             </span>
             {u.status === "invited" ? (
-              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
-                Invited
+              <span
+                className={`text-[10px] font-medium px-1.5 py-0.5 rounded border ${inviteStatus.bg} ${inviteStatus.border} ${inviteStatus.text}`}
+              >
+                {inviteStatus.label}
               </span>
             ) : u.role !== "admin" && u.client_slugs.length === 0 ? (
               <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
@@ -141,7 +144,11 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
       cell: ({ row }) => {
         const u = row.original;
         if (u.status === "invited") {
-          return <span className="text-xs text-muted-foreground italic">{u.role ?? "client"}</span>;
+          return (
+            <span className="text-xs text-muted-foreground italic">
+              {u.role ?? "client"} • {getInvitationStatusCfg(u.invite_status).label.toLowerCase()}
+            </span>
+          );
         }
         return (
           <StatusSelect
@@ -168,7 +175,11 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
       cell: ({ row }) => {
         const u = row.original;
         if (u.status === "invited") {
-          return <span className="text-xs text-muted-foreground italic">{u.client_slug ?? "unassigned"}</span>;
+          return (
+            <span className="text-xs text-muted-foreground italic">
+              {u.client_slug ?? "unassigned"} • {getInvitationStatusCfg(u.invite_status).detail.toLowerCase()}
+            </span>
+          );
         }
         return <AssignCell user={u} clients={clients} />;
       },

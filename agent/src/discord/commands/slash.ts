@@ -16,6 +16,7 @@ import {
   type ChatInputCommandInteraction,
   type TextChannel,
 } from "discord.js";
+import { canRunCommand } from "../core/access.js";
 
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GUILD_ID = process.env.DISCORD_GUILD_ID;
@@ -87,6 +88,9 @@ export function registerSlashHandler(client: Client): void {
     if (!interaction.isChatInputCommand()) return;
 
     const cmd = interaction as ChatInputCommandInteraction;
+    const guildMember = cmd.guild
+      ? (cmd.guild.members.cache.get(cmd.user.id) ?? await cmd.guild.members.fetch(cmd.user.id).catch(() => null))
+      : null;
 
     try {
       switch (cmd.commandName) {
@@ -113,6 +117,10 @@ export function registerSlashHandler(client: Client): void {
         }
 
         case "supervise": {
+          if (!canRunCommand("supervise", guildMember, cmd.user.id)) {
+            await cmd.reply({ content: "Access denied. Supervision is owner-only.", ephemeral: true });
+            break;
+          }
           await cmd.deferReply();
           const { handleSuperviseCommand } = await import("./supervisor.js");
           const result = await handleSuperviseCommand(client);
@@ -123,6 +131,10 @@ export function registerSlashHandler(client: Client): void {
         }
 
         case "dashboard": {
+          if (!canRunCommand("dashboard", guildMember, cmd.user.id)) {
+            await cmd.reply({ content: "Access denied. Dashboard refresh is owner-only.", ephemeral: true });
+            break;
+          }
           await cmd.deferReply();
           const { handleDashboardCommand } = await import("./dashboard.js");
           const result = await handleDashboardCommand(client);
@@ -134,6 +146,10 @@ export function registerSlashHandler(client: Client): void {
         }
 
         case "schedule": {
+          if (!canRunCommand("schedule", guildMember, cmd.user.id)) {
+            await cmd.reply({ content: "Access denied. Schedule controls are owner-only.", ephemeral: true });
+            break;
+          }
           await cmd.deferReply();
           const { handleScheduleCommand } = await import("./schedule.js");
           const result = await handleScheduleCommand("!schedule list", client, "schedule");
@@ -147,6 +163,10 @@ export function registerSlashHandler(client: Client): void {
         }
 
         case "roles": {
+          if (!canRunCommand("roles", guildMember, cmd.user.id)) {
+            await cmd.reply({ content: "Access denied. Role management is owner-only.", ephemeral: true });
+            break;
+          }
           await cmd.deferReply();
           const guild = client.guilds.cache.first();
           if (!guild) { await cmd.editReply("No guild found."); break; }
@@ -192,17 +212,17 @@ function buildHelpText(): string {
     "`/supervise` -- Boss reviews all agent activity",
     "`/dashboard` -- update campaign status panel",
     "`/schedule` -- show scheduled jobs panel",
-    "`/roles` -- ensure Admin/Team/Bot/Viewer roles",
+    "`/roles` -- ensure Owner/Admin/Team/Bot/Viewer roles",
     "`/threads` -- list active threads (client channels only)",
     "",
     "**Agent channels** -- just type naturally:",
-    "  #boss -- orchestrator, delegation, supervision",
+    "  #general -- team chat",
     "  #media-buyer -- Meta Ads, budgets, ROAS",
     "  #tm-data -- Ticketmaster events, demographics",
     "  #creative -- ad creative, copy, images",
     "  #dashboard -- reporting, analytics, trends",
     "  #zamora / #kybba -- client conversations",
-    "  #general -- team chat",
+    "  #boss / #email / #meetings / #schedule -- owner-only",
     "",
     "**Manual triggers:**",
     "  `run meta sync` (in #media-buyer)",
@@ -213,7 +233,7 @@ function buildHelpText(): string {
     "  `thread: Event Name` -- create a thread",
     "  `/threads` -- list active threads",
     "",
-    "**Agent-to-agent:** agents can delegate tasks with `@agent-name task`",
+    "**Agent-to-agent:** agents can hand work to each other through the runtime task system.",
     "**Memory:** agents auto-learn from conversations and persist to memory files.",
     "**Skills:** agents create reusable procedure files when they discover patterns.",
   ].join("\n");

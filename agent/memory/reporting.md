@@ -9,14 +9,15 @@ to generate reports, trends, and dashboards.
 - **campaign_snapshots**: campaign_id, spend (cents), impressions, clicks, roas, cpm, cpc, ctr, snapshot_date (UNIQUE campaign_id + snapshot_date, UPSERT = ON CONFLICT DO NOTHING)
 - **tm_events**: TM One event data
 - **event_snapshots**: tm_id, tickets_sold, tickets_available, gross, snapshot_date (UNIQUE tm_id + snapshot_date)
-- **agent_jobs**: agent_id, status, prompt, result, error, created_at (NOT started_at for ordering)
-- **agent_alerts**: level (info/warning/critical), read_at for dismissal
+- **agent_tasks**: from_agent, to_agent, action, params, status, result, error, created_at
+- **agent_runtime_state**: key, value JSON, updated_at
+- **agent_alerts**: level (info/warn/error), read_at for dismissal
 
 ## Column Naming Gotchas
 - Campaign name column is `name` (NOT `campaign_name`)
 - Spend column is `spend` (NOT `spend_cents`) -- value IS in cents despite the name
-- Job type column is `agent_id` (NOT `job_type`)
-- Use `created_at` for ordering agent_jobs (NOT `started_at` which can be null)
+- Use `created_at` for ordering `agent_tasks`
+- Runtime status is stored in `agent_runtime_state.value`
 
 ## Data Storage Conventions
 - Supabase: monetary values in CENTS (bigint). spend=224000 = $2,240.00
@@ -34,11 +35,11 @@ to generate reports, trends, and dashboards.
 - Need 2+ day gaps for reliable marginal ROAS calculations.
 - Snapshot-to-live divergence scales with campaign age. Use snapshots for trends, live for current picture.
 
-## Data Pipeline Status (Feb 25)
-- campaign_snapshots: 4 dates (Feb 19, 23, 24, 25). Gap Feb 20-22 (unrecoverable).
-- event_snapshots: 72 rows, 3 dates (Feb 23, 24, 25), 24 events/date.
-- Meta syncs: working (cron at 00/06/12/18 UTC). NOW DISABLED -- manual only.
-- TM scrapes: working (GraphQL captures 25 events).
+## Data Pipeline Status (Mar 6)
+- campaign_snapshots: resumed after the Feb/Mar gap; use live `meta_campaigns` for current state and snapshots for trend windows.
+- event_snapshots: populated, but TM velocity remains limited until TM1 event APIs are stable.
+- Gmail ingestion: Pub/Sub push into `/api/agents/email/watch`, with history polling only as a fallback.
+- Owner alerts and reviews now live in Discord (`#boss`, `#email`, `#email-log`).
 
 ## Ingest/Alerts Endpoints
 - Ingest: POST /api/ingest with x-ingest-secret header

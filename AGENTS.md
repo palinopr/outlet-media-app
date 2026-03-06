@@ -57,6 +57,7 @@
 - `system_events` is the shared product timeline for admin/client-visible activity.
 - `approval_requests` is the first-class approval object. Use it for requests that need an explicit yes/no/cancel decision.
 - `admin_activity` is the internal operator audit log. Do not treat it as the main product activity backbone.
+- Owner email is a private Discord control-plane workflow, not a default web app surface. Keep owner inbox triage in Discord `#email` / `#email-log`; treat `email_events`, `email_drafts`, and related tables as durable backend state for that Discord flow unless a future product decision explicitly asks for a web email app.
 - If an existing implementation is clearly built in a way that will not scale, do not keep extending it just for short-term convenience. Refactor it toward the correct shared architecture.
 - When refactoring a weak pattern into the correct one, update `docs/context/` or `AGENTS.md` in the same pass so future sessions inherit the lesson.
 
@@ -129,5 +130,7 @@ Multi-agent Discord system with per-agent concurrency:
 - **Agents**: delegate (structured JSON delegation), spawner (dynamic agent creation)
 - **Jobs**: `cron-sweeps.ts` (10 sweep jobs, start OFF, enable via `!enable <job>`)
 - **Config**: `discord-router.ts` (channel->agent mapping), `rules.json` (approval thresholds)
-- Discord layout: 16 channels, 8 categories
+- Discord layout: 17 channels, 8 categories
 - 5 core cron jobs run unconditionally on startup (heartbeat, TM check, Meta sync, think cycle, Discord health)
+- Owner email triage is Discord-first and owner-only. Do not add a parallel admin/client web inbox by default; improve the Discord operating surface instead.
+- Owner meeting scheduling is also Discord-first and owner-only in `#meetings`, backed by Google Calendar API rather than a separate shared web surface by default.

@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserPlus, Loader2, Check, MailPlus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { fmtDate } from "@/lib/formatters";
+import { fmtDate, getInvitationStatusCfg } from "@/lib/formatters";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { inviteTeamMember, removeTeamMember, revokeTeamInvite } from "./actions";
 import { ConnectedAccountsList } from "./connected-accounts-list";
@@ -86,9 +86,9 @@ export function SettingsView({ data }: { data: SettingsData }) {
       <Card className="border-white/[0.06] bg-white/[0.02] p-0">
         <div className="flex items-center justify-between border-b border-white/[0.06] px-5 py-4">
           <div>
-            <h2 className="text-sm font-semibold text-white/90">Pending invites</h2>
+            <h2 className="text-sm font-semibold text-white/90">Access invites</h2>
             <p className="mt-0.5 text-xs text-white/50">
-              {data.pendingInvites.length} invite{data.pendingInvites.length === 1 ? "" : "s"} waiting for teammates to join
+              {data.pendingInvites.length} invite{data.pendingInvites.length === 1 ? "" : "s"} waiting for teammates to join or be cleaned up
             </p>
           </div>
           <MailPlus className="h-4 w-4 text-white/40" />
@@ -96,43 +96,52 @@ export function SettingsView({ data }: { data: SettingsData }) {
 
         {data.pendingInvites.length === 0 ? (
           <div className="px-5 py-5 text-sm text-white/50">
-            No team invites are pending right now.
+            No team access invites need attention right now.
           </div>
         ) : (
           <div className="divide-y divide-white/[0.06]">
-            {data.pendingInvites.map((invite) => (
-              <div key={invite.id} className="flex items-center justify-between gap-3 px-5 py-4">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-white/90">{invite.email}</p>
-                  <p className="mt-1 text-xs text-white/50">
-                    {invite.status === "expired" ? "Expired" : "Pending"} • sent {fmtDate(invite.createdAt)}
-                  </p>
+            {data.pendingInvites.map((invite) => {
+              const inviteStatus = getInvitationStatusCfg(invite.status);
+
+              return (
+                <div key={invite.id} className="flex items-center justify-between gap-3 px-5 py-4">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-white/90">{invite.email}</p>
+                    <p className="mt-1 text-xs text-white/50">
+                      {inviteStatus.detail} • sent {fmtDate(invite.createdAt)}
+                    </p>
+                  </div>
+                  {data.isOwner ? (
+                    <div className="flex items-center gap-2">
+                      <span className={`rounded-full border px-2 py-1 text-[11px] font-medium ${inviteStatus.border} ${inviteStatus.bg} ${inviteStatus.text}`}>
+                        {inviteStatus.label}
+                      </span>
+                      <ConfirmDialog
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 shrink-0 px-2 text-white/40 hover:bg-red-500/10 hover:text-red-300"
+                          >
+                            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                            Revoke
+                          </Button>
+                        }
+                        title="Revoke invitation"
+                        description={`Revoke the invitation for ${invite.email}? They will need a new invite to join ${data.clientName}.`}
+                        confirmLabel="Revoke invite"
+                        variant="destructive"
+                        onConfirm={() => handleRevoke(invite.id, invite.email)}
+                      />
+                    </div>
+                  ) : (
+                    <span className={`rounded-full border px-2 py-1 text-[11px] font-medium ${inviteStatus.border} ${inviteStatus.bg} ${inviteStatus.text}`}>
+                      {inviteStatus.label}
+                    </span>
+                  )}
                 </div>
-                {data.isOwner ? (
-                  <ConfirmDialog
-                    trigger={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 shrink-0 px-2 text-white/40 hover:bg-red-500/10 hover:text-red-300"
-                      >
-                        <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                        Revoke
-                      </Button>
-                    }
-                    title="Revoke invitation"
-                    description={`Revoke the pending invitation for ${invite.email}? They will need a new invite to join ${data.clientName}.`}
-                    confirmLabel="Revoke invite"
-                    variant="destructive"
-                    onConfirm={() => handleRevoke(invite.id, invite.email)}
-                  />
-                ) : (
-                  <span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2 py-1 text-[11px] font-medium text-white/50">
-                    Pending
-                  </span>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Card>

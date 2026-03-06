@@ -39,7 +39,16 @@ vi.mock("../discord/features/memory.js", () => ({
 vi.mock("../discord/core/entry.js", () => ({ notifyChannel: vi.fn() }));
 vi.mock("../discord/commands/admin.js", () => ({ buildAdminPrompt: vi.fn() }));
 vi.mock("../discord/features/skills.js", () => ({ maybeCreateSkill: vi.fn() }));
-vi.mock("../agents/delegate.js", () => ({ processDelegations: vi.fn() }));
+vi.mock("../agents/delegate.js", () => ({
+  processChannelMessages: vi.fn().mockResolvedValue({
+    cleanText: "agent response",
+    posted: 0,
+    targets: [],
+    handedOff: 0,
+    handoffTargets: [],
+  }),
+  processDelegations: vi.fn().mockResolvedValue({ cleanText: "agent response", delegated: 0, targets: [] }),
+}));
 
 // --------------- imports ---------------
 
@@ -48,6 +57,7 @@ import { isAgentFree } from "../services/queue-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { runClaude } from "../runner.js";
 import type { Message } from "discord.js";
+import { processChannelMessages, processDelegations } from "../agents/delegate.js";
 
 // --------------- helpers ---------------
 
@@ -216,6 +226,43 @@ describe("handleMessage", () => {
       expect(workingMsg.delete).not.toHaveBeenCalled();
       // Instead, it should fall back to editing the working message
       expect(workingMsg.edit).toHaveBeenCalled();
+    });
+  });
+
+  describe("Structured channel actions", () => {
+    it("should strip action JSON from the visible reply and append a real confirmation", async () => {
+      vi.mocked(isAgentFree).mockReturnValue(true);
+      vi.mocked(runClaude).mockResolvedValue({
+        text: "I'll route this now.\n```json\n{\"channel\":\"boss\",\"message\":\"Pixel update for Isa\"}\n```",
+      } as never);
+      vi.mocked(processChannelMessages).mockResolvedValue({
+        cleanText: "I'll route this now.",
+        posted: 1,
+        targets: ["boss"],
+        handedOff: 1,
+        handoffTargets: ["boss"],
+      });
+      vi.mocked(processDelegations).mockResolvedValue({
+        cleanText: "I'll route this now.",
+        delegated: 0,
+        targets: [],
+      });
+
+      const workingMsg = {
+        edit: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn().mockResolvedValue(undefined),
+      };
+      const msg = makeMockMessage({
+        reply: vi.fn().mockResolvedValue(workingMsg),
+      });
+
+      await handleMessage(msg, "hello", "email", {} as never);
+
+      const delivered = vi.mocked(sendAsAgent).mock.calls[0]?.[2] as string;
+      expect(delivered).toContain("I'll route this now.");
+      expect(delivered).toContain("Posted to #boss.");
+      expect(delivered).toContain("Handoff queued for #boss.");
+      expect(delivered).not.toContain('"channel":"boss"');
     });
   });
 });

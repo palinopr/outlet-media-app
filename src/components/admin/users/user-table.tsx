@@ -9,7 +9,7 @@ import { UserRow } from "@/app/admin/users/data";
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { getUserColumns, ClientOption } from "./columns";
 import { bulkUpdateUserRole } from "@/app/admin/actions/users";
-import { slugToLabel, fmtDate } from "@/lib/formatters";
+import { slugToLabel, fmtDate, getInvitationStatusCfg } from "@/lib/formatters";
 import { exportToCsv, todayFilename } from "@/lib/export-csv";
 
 interface Props {
@@ -232,8 +232,10 @@ export function UserTable({ users, clients }: Props) {
                 {u.name || u.email}
               </p>
               {u.status === "invited" && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border border-amber-400/20 bg-amber-400/10 text-amber-400">
-                  Invited
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${getInvitationStatusCfg(u.invite_status).border} ${getInvitationStatusCfg(u.invite_status).bg} ${getInvitationStatusCfg(u.invite_status).text}`}
+                >
+                  {getInvitationStatusCfg(u.invite_status).label}
                 </span>
               )}
             </div>

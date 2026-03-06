@@ -33,7 +33,7 @@ Makes strategic decisions, delegates work to specialist agents, manages the over
 | Creative | #creative | creative-agent.txt | Ad creative + copy |
 | Reporting | #dashboard | reporting-agent.txt | Cross-source analytics |
 | Client Manager | #zamora, #kybba | client-manager.txt | Per-client operations |
-| General | #general | chat.txt | Quick queries, casual chat |
+| General | #general | general.txt | Quick queries, casual chat |
 
 ## Known Issues (updated Cycle #49)
 1. Houston $400/day $0 spend -- likely delivery issue
@@ -114,3 +114,13 @@ ALL SCHEDULED JOBS DISABLED. Manual triggers only via Discord channels.
 - Impersonates jaime@outletmedia.net for all API calls
 - Scopes: gmail.modify, gmail.labels, gmail.send, gmail.readonly, drive.readonly
 - Old OAuth refresh token approach is deprecated — all agent scripts now use service account
+
+
+<!-- auto-learned 2026-03-06 -->
+- Isabel's Discord: isalealm_ (ID 1308186598617125038)
+
+<!-- auto-learned 2026-03-06 -->
+- Discord agents can't read .txt attachments (only message text)
+
+<!-- auto-learned 2026-03-06 -->
+- SF Arjona venue (Golden State) denied pixel — legal blocked it

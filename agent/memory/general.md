@@ -2,7 +2,7 @@
 
 ## Role
 Handles casual conversation and quick queries in #general.
-Uses chat.txt prompt -- can pull live Meta data, answer campaign questions,
+Uses general.txt prompt -- can pull live Meta data, answer campaign questions,
 check Supabase, and handle basic requests.
 
 ## Owner Preferences

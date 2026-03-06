@@ -31,7 +31,11 @@ const AGENT_PROFILES: Record<string, { name: string; avatar: string; channels: s
   "media-buyer":   { name: "Media Buyer",    avatar: "https://i.imgur.com/Qj8YXBK.png", channels: ["media-buyer"] },
   "tm-agent":      { name: "TM Data",        avatar: "https://i.imgur.com/3JzGKvN.png", channels: ["tm-data"] },
   creative:        { name: "Creative",       avatar: "https://i.imgur.com/WfVlJEK.png", channels: ["creative"] },
+  "creative-agent":{ name: "Creative",       avatar: "https://i.imgur.com/WfVlJEK.png", channels: ["creative"] },
   reporting:       { name: "Reporting",      avatar: "https://i.imgur.com/NqRPmBL.png", channels: ["dashboard"] },
+  "reporting-agent": { name: "Reporting",    avatar: "https://i.imgur.com/NqRPmBL.png", channels: ["dashboard"] },
+  "email-agent":   { name: "Email Agent",    avatar: "https://i.imgur.com/LqJHpGH.png", channels: ["email"] },
+  "meeting-agent": { name: "Meeting Agent",  avatar: "https://i.imgur.com/NqRPmBL.png", channels: ["meetings"] },
   "client-manager":{ name: "Client Manager", avatar: "https://i.imgur.com/8FxTGnA.png", channels: ["zamora", "kybba"] },
 };
 

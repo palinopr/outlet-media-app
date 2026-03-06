@@ -33,7 +33,7 @@ Meta data is pulled via curl to the Graph API. See prompts/command.txt for the e
 - `session/last-campaigns.json` — last Meta sync
 - `session/last-events.json` — last TM One scrape
 - `prompts/command.txt` — full instructions for heavy tasks
-- `prompts/chat.txt` — instructions for Telegram/chat responses
+- `prompts/general.txt` — instructions for general Discord/dashboard responses
 - `.env` — agent credentials
 - `../.env.local` — Next.js app credentials (Meta token lives here)
 

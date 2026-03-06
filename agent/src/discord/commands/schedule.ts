@@ -4,12 +4,16 @@
  * Commands for viewing, enabling, and disabling scheduled jobs
  * from the #schedule channel in Discord.
  *
- * Jobs can be individually toggled. When enabled, they use cron.
- * When disabled, they can still be triggered manually from agent channels.
+ * Optional jobs can be toggled here. Core jobs are runtime-managed
+ * by env-backed scheduler settings and are shown as AUTO or MANUAL.
  */
 
 import cron, { type ScheduledTask } from "node-cron";
 import { EmbedBuilder, type Client } from "discord.js";
+
+const SCHEDULED_OWNER_NOTIFICATIONS = (process.env.SCHEDULED_OWNER_NOTIFICATIONS ?? "false").toLowerCase() === "true";
+const TM_SCHEDULER_ENABLED = (process.env.TM_SCHEDULER_ENABLED ?? "false").toLowerCase() === "true";
+const EATA_SCHEDULER_ENABLED = (process.env.EATA_SCHEDULER_ENABLED ?? "false").toLowerCase() === "true";
 
 /** Lazy import to avoid circular dependency with discord.ts */
 async function postToFeed(text: string): Promise<void> {
@@ -210,10 +214,97 @@ function isCoreJob(jobKey: string): boolean {
   return CORE_JOB_KEYS.has(jobKey);
 }
 
+type RuntimeMode = "auto" | "manual" | "optional-on" | "optional-off";
+
+interface JobStatusView {
+  mode: RuntimeMode;
+  icon: string;
+  label: string;
+  note: string;
+  lastRunLabel: string;
+}
+
+function buildRuntimeManagedNote(jobKey: string): string {
+  switch (jobKey) {
+    case "tm-sync":
+    case "tm-cookie-refresh":
+      return TM_SCHEDULER_ENABLED
+        ? "Runtime-managed core cron is active."
+        : "Runtime-managed core cron is paused by env; this job is manual-only.";
+    case "eata-sync":
+    case "eata-cookie-refresh":
+      return EATA_SCHEDULER_ENABLED
+        ? "Runtime-managed core cron is active."
+        : "Runtime-managed core cron is paused by env; this job is manual-only.";
+    case "meta-sync":
+    case "think":
+      return SCHEDULED_OWNER_NOTIFICATIONS
+        ? "Runtime-managed core cron is active and owner notifications are enabled."
+        : "Runtime-managed core cron is active; owner notifications are muted unless run manually.";
+    default:
+      return "Runtime-managed core cron is active.";
+  }
+}
+
+function getJobStatusView(jobKey: string, job: ScheduleJob): JobStatusView {
+  if (!isCoreJob(jobKey)) {
+    return job.enabled
+      ? {
+          mode: "optional-on",
+          icon: "🟢",
+          label: "ON",
+          note: "Optional cron is enabled from the schedule panel.",
+          lastRunLabel: job.lastRun
+            ? job.lastRun.toISOString().replace("T", " ").slice(0, 19) + " UTC"
+            : "never",
+        }
+      : {
+          mode: "optional-off",
+          icon: "🔴",
+          label: "OFF",
+          note: "Optional cron is disabled, but you can still trigger it manually.",
+          lastRunLabel: job.lastRun
+            ? job.lastRun.toISOString().replace("T", " ").slice(0, 19) + " UTC"
+            : "never",
+        };
+  }
+
+  const runtimeActive = (() => {
+    if (jobKey === "tm-sync" || jobKey === "tm-cookie-refresh") return TM_SCHEDULER_ENABLED;
+    if (jobKey === "eata-sync" || jobKey === "eata-cookie-refresh") return EATA_SCHEDULER_ENABLED;
+    return true;
+  })();
+
+  return runtimeActive
+    ? {
+        mode: "auto",
+        icon: "🔵",
+        label: "AUTO",
+        note: buildRuntimeManagedNote(jobKey),
+        lastRunLabel: "runtime-managed",
+      }
+    : {
+        mode: "manual",
+        icon: "🟡",
+        label: "MANUAL",
+        note: buildRuntimeManagedNote(jobKey),
+        lastRunLabel: "manual-only",
+      };
+}
+
+function describeCoreJobState(jobKey: string, job: ScheduleJob): string {
+  const status = getJobStatusView(jobKey, job);
+  if (status.mode === "auto") {
+    return `**${job.name}** is runtime-managed and currently AUTO. ${status.note}`;
+  }
+
+  return `**${job.name}** is runtime-managed and currently MANUAL. ${status.note}`;
+}
+
 function enableJob(jobKey: string): string {
   const job = JOBS[jobKey];
   if (!job) return `Unknown job: ${jobKey}`;
-  if (isCoreJob(jobKey)) return `**${job.name}** is a core job that runs automatically and cannot be toggled.`;
+  if (isCoreJob(jobKey)) return describeCoreJobState(jobKey, job);
   if (job.enabled) return `${job.name} is already enabled.`;
 
   job.enabled = true;
@@ -228,7 +319,7 @@ function enableJob(jobKey: string): string {
 function disableJob(jobKey: string): string {
   const job = JOBS[jobKey];
   if (!job) return `Unknown job: ${jobKey}`;
-  if (isCoreJob(jobKey)) return `**${job.name}** is a core job that runs automatically and cannot be toggled.`;
+  if (isCoreJob(jobKey)) return describeCoreJobState(jobKey, job);
   if (!job.enabled) return `${job.name} is already disabled.`;
 
   job.enabled = false;
@@ -265,22 +356,26 @@ function buildScheduleEmbed(): EmbedBuilder {
     .setDescription(
       "Use these commands in #schedule:\n" +
       "`!schedule list` -- show this panel\n" +
-      "`!enable <job>` -- enable a job\n" +
-      "`!disable <job>` -- disable a job\n" +
-      "`!enable-all` -- enable all jobs\n" +
-      "`!disable-all` -- disable all jobs"
+      "`!enable <job>` -- enable an optional job\n" +
+      "`!disable <job>` -- disable an optional job\n" +
+      "`!enable-all` -- enable all optional jobs\n" +
+      "`!disable-all` -- disable all optional jobs\n\n" +
+      "Core jobs are runtime-managed and show as `AUTO` or `MANUAL` here."
     )
     .setTimestamp();
 
   for (const [key, job] of Object.entries(JOBS)) {
-    const status = job.enabled ? "ON" : "OFF";
-    const lastRun = job.lastRun
-      ? job.lastRun.toISOString().replace("T", " ").slice(0, 19) + " UTC"
-      : "never";
+    const status = getJobStatusView(key, job);
     embed.addFields({
-      name: `${status === "ON" ? "🟢" : "🔴"} ${job.name} (\`${key}\`)`,
-      value: `${job.description}\nCron: \`${job.cron}\` | Last run: ${lastRun}`,
+      name: `${status.icon} ${job.name} [${status.label}] (\`${key}\`)`,
+      value: `${job.description}\nCron: \`${job.cron}\` | Last run: ${status.lastRunLabel}\n${status.note}`,
       inline: false,
+    });
+  }
+
+  if (!SCHEDULED_OWNER_NOTIFICATIONS) {
+    embed.setFooter({
+      text: "Background scheduler owner notifications are muted. Manual runs still notify.",
     });
   }
 
@@ -333,6 +428,6 @@ export async function handleScheduleCommand(
 
   // Not a schedule command -- show help
   return {
-    text: "Schedule commands: `!schedule list`, `!enable <job>`, `!disable <job>`, `!enable-all`, `!disable-all`",
+    text: "Schedule commands: `!schedule list`, `!enable <job>`, `!disable <job>`, `!enable-all`, `!disable-all` (optional jobs only; core jobs are runtime-managed).",
   };
 }

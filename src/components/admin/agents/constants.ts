@@ -33,6 +33,8 @@ export const AGENT_CONFIG: Record<string, AgentInfo> = {
   "schedule-control": { name: "Schedule Control", icon: Calendar,     accent: "text-teal-400",    description: "Manages cron schedules and manual job triggers" },
   "campaign-monitor": { name: "Campaign Monitor", icon: Radar,        accent: "text-orange-400",  description: "Cross-references Meta spend against TM1 ticket sales, flags low-ROAS campaigns" },
   "tm-demographics":  { name: "TM Demographics",  icon: Eye,          accent: "text-pink-400",    description: "Fetches demographic breakdowns from TM One for all active events" },
+  "email-agent":      { name: "Email Agent",      icon: MessageSquare, accent: "text-amber-400",  description: "Private Gmail monitoring, classification, and draft replies" },
+  "don-omar-agent":   { name: "Don Omar Agent",   icon: Ticket,        accent: "text-orange-400", description: "EATA and Vivaticket monitoring for Don Omar BCN" },
 
   // Job runner agent IDs (sidebar, chat, dashboard, history)
   "tm-monitor": { name: "TM One Monitor", icon: CalendarDays, accent: "text-emerald-400" },
@@ -58,4 +60,3 @@ export const DASHBOARD_AGENTS = ["tm-monitor", "meta-ads", "campaign-monitor"] a
 export function agentName(key: string): string {
   return AGENT_CONFIG[key]?.name ?? key;
 }
-

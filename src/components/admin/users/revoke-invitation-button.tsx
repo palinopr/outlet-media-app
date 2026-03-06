@@ -22,7 +22,7 @@ export function RevokeInvitationButton({
     <ConfirmDialog
       trigger={trigger}
       title="Revoke Invitation"
-      description={`This will revoke the pending invitation for ${email}.`}
+      description={`This will revoke the invitation for ${email}.`}
       confirmLabel="Revoke"
       variant="destructive"
       onConfirm={async () => {

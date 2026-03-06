@@ -8,7 +8,7 @@ import { RevokeInvitationButton } from "@/components/admin/users/revoke-invitati
 import { getClientSummaries } from "../clients/data";
 import { getUsers } from "../users/data";
 import { StatCard } from "@/components/admin/stat-card";
-import { slugToLabel } from "@/lib/formatters";
+import { getInvitationStatusCfg, slugToLabel } from "@/lib/formatters";
 import { buildPlatformSettingsSummary, type PlatformSettingsMetricKey } from "@/features/settings/summary";
 import { Button } from "@/components/ui/button";
 
@@ -117,44 +117,55 @@ export default async function SettingsPage() {
 
         <Card className="border-border/60">
           <CardHeader>
-            <CardTitle className="text-sm">Pending access invites</CardTitle>
+            <CardTitle className="text-sm">Access invites</CardTitle>
             <CardDescription>
-              Invitations still waiting to turn into active users.
+              Pending and expired invitations that still need to turn into active users or be cleaned up.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {summary.pendingInvites.length === 0 ? (
+            {summary.accessInvites.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No pending invites right now.
+                No access invites need attention right now.
               </p>
             ) : (
-              summary.pendingInvites.map((invite) => (
-                <div
-                  key={invite.id}
-                  className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{invite.email}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {invite.client_slug ? slugToLabel(invite.client_slug) : "Admin access"} • Invite pending
-                    </p>
-                  </div>
-                  <RevokeInvitationButton
-                    email={invite.email}
-                    invitationId={invite.id}
-                    trigger={
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 px-2 text-muted-foreground hover:text-red-400"
+              summary.accessInvites.map((invite) => {
+                const inviteStatus = getInvitationStatusCfg(invite.invite_status);
+
+                return (
+                  <div
+                    key={invite.id}
+                    className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{invite.email}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {invite.client_slug ? slugToLabel(invite.client_slug) : "Admin access"} • {inviteStatus.detail}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium ${inviteStatus.bg} ${inviteStatus.border} ${inviteStatus.text} border`}
                       >
-                        <X className="mr-1.5 h-3.5 w-3.5" />
-                        Revoke
-                      </Button>
-                    }
-                  />
-                </div>
-              ))
+                        {inviteStatus.label}
+                      </span>
+                      <RevokeInvitationButton
+                        email={invite.email}
+                        invitationId={invite.id}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-muted-foreground hover:text-red-400"
+                          >
+                            <X className="mr-1.5 h-3.5 w-3.5" />
+                            Revoke
+                          </Button>
+                        }
+                      />
+                    </div>
+                  </div>
+                );
+              })
             )}
           </CardContent>
         </Card>

@@ -21,7 +21,7 @@ Rotate through them across cycles.
 - Log what you found and what you fixed in LEARNINGS.md
 
 ### Priority 2: Self-Improvement (Prompts and Code)
-- Read ONE prompt file per cycle (rotate through all 10: command.txt → chat.txt → think.txt → boss.txt → media-buyer.txt → tm-agent.txt → creative-agent.txt → reporting-agent.txt → client-manager.txt → discord-agent.txt)
+- Read ONE prompt file per cycle (rotate through all 11: command.txt → general.txt → think.txt → boss.txt → media-buyer.txt → tm-agent.txt → creative-agent.txt → reporting-agent.txt → client-manager.txt → email-agent.txt → meeting-agent.txt)
 - Look for: gaps in API patterns, missing data fields, outdated endpoints, unclear instructions
 - Cross-check against MEMORY.md for consistency (e.g., client slugs, API versions, field names)
 - If you find an improvement, update the file
@@ -86,7 +86,7 @@ Rotate through them across cycles.
      ```
      level must be one of: "info", "warn", "error"
      Note: the alerts endpoint accepts { secret, message, level } only — no client_slug field.
-  2. Draft a brief Telegram message (see Communication below)
+  2. Draft a brief owner note for Discord (see Communication below)
 - DO NOT pull live API data during think cycles — work only from session cache
 
 ### Priority 5: Knowledge Expansion
@@ -112,7 +112,7 @@ Rotate through them across cycles.
 - Verify SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env
 - Verify the claude CLI is at the expected path: which claude || ls /Users/jaimeortiz/.local/bin/claude
 - Check session/last-campaigns.json age (use `ls -la` mtime) — if older than 24h, note that scheduled syncs may not be running
-- Check agent_jobs in Supabase for recent heartbeats — if no heartbeat in last 5 minutes, scheduler may be down
+- Check `agent_runtime_state` in Supabase for recent heartbeat/watch rows — if `heartbeat.last_seen` is older than 5 minutes, scheduler may be down
 - Report any missing config in LEARNINGS.md
 
 ## Rotation Rule
@@ -124,7 +124,7 @@ Example rotation: Cycle → P2 (prompt audit), P3 (memory), P4 (monitoring), P5 
 
 ## Communication
 
-Draft a Telegram message to Jaime ONLY when:
+Draft an owner note to Jaime ONLY when:
 - You found and fixed a real bug
 - You detected a business anomaly (low ROAS, stalled ticket sales, upcoming show at risk)
 - You built something meaningfully new
@@ -134,7 +134,7 @@ DO NOT draft messages for:
 - Anything that is working fine
 - Anything Jaime didn't ask about
 
-Save draft to: /tmp/outlet-media-proactive.txt
+Save draft to: /tmp/outlet-media-owner-note.txt
 Keep it under 150 words. Plain text only, no markdown.
 
 DEFAULT: Do NOT draft a message. Only draft when it genuinely matters.
@@ -142,7 +142,7 @@ DEFAULT: Do NOT draft a message. Only draft when it genuinely matters.
 ## Rules
 
 1. DO NOT make live API calls to Meta or TM One — Boss triggers those manually or via schedule
-2. DO NOT send Telegram messages directly — save drafts to /tmp/outlet-media-proactive.txt only
+2. DO NOT send Discord messages directly — save drafts to /tmp/outlet-media-owner-note.txt only
 3. DO read LEARNINGS.md FIRST on every cycle
 4. DO NOT repeat the same priority two cycles in a row unless fixing something broken
 5. DO stay under 10 minutes per cycle — pick ONE thing and do it well
@@ -156,7 +156,8 @@ DEFAULT: Do NOT draft a message. Only draft when it genuinely matters.
    **Supabase column naming gotchas** (see MEMORY.md for full details):
    - `meta_campaigns`: name column is `name` (NOT `campaign_name`)
    - `campaign_snapshots`: spend column is `spend` (NOT `spend_cents`) — value is in cents despite the name
-   - `agent_jobs`: job identifier column is `agent_id` (NOT `job_type`). Use `created_at` for ordering (not `started_at` which can be null).
+   - `agent_tasks`: orchestration ledger uses `from_agent`, `to_agent`, `action`, `status`, and `created_at`
+   - `agent_runtime_state`: singleton status rows use `key` + `value` (for heartbeat/watch metadata)
 9. DO NOT edit source code (src/*.ts) during think cycles — only prompts, memory, and session files. Code changes need Jaime's review.
 
 ## Output Format
@@ -175,5 +176,5 @@ Working directory: . (the agent/ directory)
 Memory: MEMORY.md
 Journal: LEARNINGS.md
 Session cache: session/
-Prompts: prompts/command.txt, prompts/chat.txt, prompts/think.txt
-Supabase tables: meta_campaigns, tm_events, campaign_snapshots, event_snapshots, agent_alerts, agent_jobs, tm_event_demographics, agent_tasks
+Prompts: prompts/command.txt, prompts/general.txt, prompts/think.txt
+Supabase tables: meta_campaigns, tm_events, campaign_snapshots, event_snapshots, agent_alerts, tm_event_demographics, agent_tasks, agent_runtime_state

@@ -93,8 +93,8 @@ export default async function SettingsPage({
           <StatCard
             icon={Clock3}
             iconColor="bg-white/[0.08] text-white/80"
-            label="Pending invites"
-            sub="people invited but not onboarded"
+            label="Access invites"
+            sub="pending or expired team access"
             value={String(pendingInviteCount)}
             variant="glass"
           />

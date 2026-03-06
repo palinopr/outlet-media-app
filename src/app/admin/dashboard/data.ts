@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { computeMarginalRoas } from "@/lib/formatters";
 import { buildTrendData } from "@/app/client/[slug]/lib";
 import type { Database } from "@/lib/database.types";
+import { mapTaskToJob } from "@/lib/agent-jobs";
 
 export type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 export type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
@@ -70,11 +71,11 @@ export async function getData(): Promise<DashboardData> {
       supabaseAdmin.from("meta_campaigns").select("*").eq("status", "ACTIVE").order("spend", { ascending: false }).limit(5),
       supabaseAdmin.from("meta_campaigns").select("name, status, spend, roas, client_slug").order("spend", { ascending: false }).limit(100),
       supabaseAdmin
-        .from("agent_jobs")
-        .select("agent_id, status, finished_at")
-        .in("agent_id", ["meta-ads", "tm-monitor", "campaign-monitor"])
-        .in("status", ["done", "error"])
-        .order("finished_at", { ascending: false })
+        .from("agent_tasks")
+        .select("id, from_agent, to_agent, action, params, status, result, error, created_at, started_at, completed_at")
+        .in("to_agent", ["meta-ads", "tm-monitor", "campaign-monitor"])
+        .in("status", ["completed", "failed", "running", "pending"])
+        .order("completed_at", { ascending: false })
         .limit(20),
       supabaseAdmin
         .from("agent_alerts")
@@ -106,9 +107,10 @@ export async function getData(): Promise<DashboardData> {
   const seen = new Set<string>();
   const agentRuns: AgentLastRun[] = [];
   for (const row of agentRunsRes.data ?? []) {
-    if (!seen.has(row.agent_id)) {
-      seen.add(row.agent_id);
-      agentRuns.push({ agentId: row.agent_id, status: row.status, finishedAt: row.finished_at });
+    const job = mapTaskToJob(row);
+    if (!seen.has(job.agent_id)) {
+      seen.add(job.agent_id);
+      agentRuns.push({ agentId: job.agent_id, status: job.status, finishedAt: job.finished_at });
     }
   }
 

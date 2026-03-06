@@ -25,7 +25,7 @@ const channelLocks = new Set<string>();
 /** How many recent messages to fetch for conversation context */
 const HISTORY_DEPTH = 10;
 
-/** Convert Telegram HTML + markdown to Discord-compatible markdown */
+/** Convert mixed HTML + markdown snippets into Discord-compatible markdown */
 export function cleanForDiscord(text: string): string {
   return text
     .replace(/<b>([\s\S]*?)<\/b>/g, "**$1**")
@@ -54,6 +54,17 @@ export function chunkText(text: string, maxLen: number): string[] {
   return chunks;
 }
 
+function summarizeHistoryAttachments(msg: Message): string {
+  if (msg.attachments.size === 0) return "";
+
+  const names = [...msg.attachments.values()]
+    .slice(0, 3)
+    .map((attachment) => attachment.name);
+
+  const suffix = msg.attachments.size > 3 ? ", ..." : "";
+  return `[attachments: ${names.join(", ")}${suffix}]`;
+}
+
 /**
  * Check if a channel is currently locked for processing.
  */
@@ -80,8 +91,10 @@ async function buildConversationContext(
 
     const lines = history.map(m => {
       const name = m.author.bot ? (m.author.username || "AGENT") : m.author.username;
-      const text = m.content.slice(0, 500);
-      return `${name}: ${text}`;
+      const text = m.content.trim().slice(0, 500);
+      const attachmentSummary = summarizeHistoryAttachments(m);
+      const body = [text, attachmentSummary].filter(Boolean).join(" ");
+      return `${name}: ${body || "[no text]"}`;
     });
 
     return [
@@ -211,7 +224,6 @@ function postProcess(
   username: string,
   prompt: string,
   responseText: string,
-  discordClient: Client | null,
 ): void {
   logActivity(channelName, username, prompt, agent.description, responseText).catch(() => {});
   import("../discord/features/memory.js")
@@ -220,11 +232,6 @@ function postProcess(
   import("../discord/features/skills.js")
     .then(({ maybeCreateSkill }) => maybeCreateSkill(agent.promptFile, prompt, responseText))
     .catch(() => {});
-  if (discordClient && agent.promptFile !== "chat") {
-    import("../agents/delegate.js")
-      .then(({ processDelegations }) => processDelegations(discordClient!, responseText, channelName))
-      .catch(() => {});
-  }
 }
 
 /**
@@ -278,10 +285,44 @@ export async function handleMessage(
       },
     });
 
-    const responseText = result.text || "Done.";
-    const chunks = chunkText(cleanForDiscord(responseText), 1900);
+    let responseText = result.text || "Done.";
+    const actionNotes: string[] = [];
+
+    if (discordClient && agent.promptFile !== "chat") {
+      try {
+        const { processChannelMessages, processDelegations } = await import("../agents/delegate.js");
+
+        const channelMessages = await processChannelMessages(discordClient, responseText, channelName);
+        responseText = channelMessages.cleanText;
+        if (channelMessages.posted > 0) {
+          const targets = channelMessages.targets.map((target) => `#${target}`).join(", ");
+          actionNotes.push(`Posted to ${targets}.`);
+        }
+        if (channelMessages.handedOff > 0) {
+          const targets = channelMessages.handoffTargets.map((target) => `#${target}`).join(", ");
+          actionNotes.push(`Handoff queued for ${targets}.`);
+        }
+
+        const delegations = await processDelegations(discordClient, responseText, channelName);
+        responseText = delegations.cleanText;
+        if (delegations.delegated > 0) {
+          const targets = delegations.targets.map((target) => `#${target}`).join(", ");
+          actionNotes.push(`Queued for ${targets}.`);
+        }
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        console.warn(`[message-handler] action processing failed: ${errMsg}`);
+      }
+    }
+
+    const deliveredText = [responseText.trim(), ...actionNotes.map((note) => `_${note}_`)]
+      .filter(Boolean)
+      .join("\n\n")
+      .trim() || "Done.";
+
+    const chunks = chunkText(cleanForDiscord(deliveredText), 1900);
     await deliverResponse(agentKey, channelName, chunks, working, msg);
-    postProcess(agent, channelName, msg.author.username, prompt, responseText, discordClient);
+    postProcess(agent, channelName, msg.author.username, prompt, deliveredText);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     if (working) {

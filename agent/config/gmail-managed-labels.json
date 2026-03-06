@@ -1,0 +1,16 @@
+[
+  { "name": "Tours/Arjona", "backgroundColor": "#076239", "textColor": "#ffffff" },
+  { "name": "Tours/Camila", "backgroundColor": "#149e60", "textColor": "#ffffff" },
+  { "name": "Tours/Don Omar", "backgroundColor": "#2da2bb", "textColor": "#ffffff" },
+  { "name": "Tours/Other", "backgroundColor": "#a2dcc1", "textColor": "#202124" },
+  { "name": "Outlet Media/Team", "backgroundColor": "#4986e7", "textColor": "#ffffff" },
+  { "name": "Outlet Media/Invoices", "backgroundColor": "#b6cff5", "textColor": "#202124" },
+  { "name": "Clients", "backgroundColor": "#8e63ce", "textColor": "#ffffff" },
+  { "name": "Cuentas", "backgroundColor": "#ffad47", "textColor": "#202124" },
+  { "name": "Importantes", "backgroundColor": "#ac2b16", "textColor": "#ffffff" },
+  { "name": "Insurance", "backgroundColor": "#f2c960", "textColor": "#202124" },
+  { "name": "Life Insurance", "backgroundColor": "#149e60", "textColor": "#ffffff" },
+  { "name": "Meetings", "backgroundColor": "#e07798", "textColor": "#ffffff" },
+  { "name": "Viajes", "backgroundColor": "#fb4c2f", "textColor": "#ffffff" },
+  { "name": "Tech/Alerts", "backgroundColor": "#666666", "textColor": "#ffffff" }
+]

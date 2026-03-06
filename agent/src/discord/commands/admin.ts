@@ -3,7 +3,7 @@
  *
  * Handles:
  * - Bot startup: auto-detect guild, ensure bot channels exist
- * - Auto-moderation: spam detection, banned words, rate limiting, mass mentions
+ * - Auto-moderation: banned words, rate limiting, mass mentions
  * - Welcome flow for new members
  * - Server snapshot for agent context injection
  * - buildAdminPrompt() for agents that need live server snapshot injection
@@ -37,15 +37,6 @@ const EXEMPT_CHANNELS = new Set(
 );
 
 // --- Auto-Moderation Rules ---
-
-const SPAM_PATTERNS = [
-  /discord\.gift/i,
-  /free\s*nitro/i,
-  /claim\s*your?\s*gift/i,
-  /steam\s*community\s*gift/i,
-  /@everyone\s*http/i,
-  /https?:\/\/dis[ck]ord[^.]*\.[a-z]{2,}/i,
-];
 
 const BANNED_WORDS = (process.env.DISCORD_BANNED_WORDS ?? "").split(",").filter(Boolean);
 
@@ -204,16 +195,6 @@ export async function checkAutoMod(msg: Message): Promise<boolean> {
   const userId = msg.author.id;
   const content = msg.content;
 
-  // Spam link detection
-  for (const pattern of SPAM_PATTERNS) {
-    if (pattern.test(content)) {
-      await msg.delete().catch(() => {});
-      await warnUser(msg, "Spam/phishing link detected.");
-      await logAction(`Deleted spam from ${msg.author.tag} in #${(msg.channel as TextChannel).name}: ${content.slice(0, 100)}`);
-      return true;
-    }
-  }
-
   // Banned words
   const lowerContent = content.toLowerCase();
   for (const word of BANNED_WORDS) {
@@ -298,16 +279,15 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
     .setDescription(`Hey ${member}, welcome to the Outlet Media team.`)
     .addFields(
       { name: "What we do", value: "We buy ads for music promoters. Every channel here is powered by an AI agent.", inline: false },
-      { name: "#boss", value: "Orchestrator -- big picture, multi-agent tasks", inline: true },
+      { name: "#general", value: "Team chat and announcements", inline: true },
       { name: "#media-buyer", value: "Meta Ads -- budgets, ROAS, campaigns", inline: true },
       { name: "#tm-data", value: "Ticketmaster -- events, tickets, demographics", inline: true },
       { name: "#creative", value: "Ad creative -- images, video, copy review", inline: true },
       { name: "#dashboard", value: "Reporting -- analytics, trends, data", inline: true },
       { name: "#zamora / #kybba", value: "Client channels -- per-client conversations", inline: true },
-      { name: "#general", value: "Team chat and announcements", inline: true },
       { name: "#agent-feed", value: "Quiet activity log (muted by default)", inline: true },
-      { name: "#schedule", value: "View and toggle scheduled jobs", inline: true },
-      { name: "Quick start", value: "Type `!help` in any channel for all commands. Just chat naturally -- the agents understand plain language.", inline: false },
+      { name: "Private surfaces", value: "Owner-only channels like #boss, #email, #meetings, #email-log, #schedule, and #ops are restricted.", inline: false },
+      { name: "Quick start", value: "Type `!help` in a team channel for available commands. Just chat naturally -- the agents understand plain language.", inline: false },
     )
     .setColor(0x5865f2)
     .setTimestamp();
@@ -323,9 +303,9 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
     // User has DMs disabled
   }
 
-  // Auto-assign Viewer role
-  const viewerRole = guild.roles.cache.find(r => r.name === "Viewer");
-  const defaultRoleId = process.env.DISCORD_DEFAULT_ROLE_ID ?? viewerRole?.id;
+  // Auto-assign Team role unless an explicit default role is configured
+  const teamRole = guild.roles.cache.find(r => r.name === (process.env.DISCORD_TEAM_ROLE_NAME ?? "Team"));
+  const defaultRoleId = process.env.DISCORD_DEFAULT_ROLE_ID ?? teamRole?.id;
   if (defaultRoleId) {
     await member.roles.add(defaultRoleId).catch((err) => {
       console.warn("[discord-admin] Could not assign default role:", err.message);
@@ -446,4 +426,3 @@ async function logAction(text: string): Promise<void> {
     console.warn("[discord-admin] Could not log to channel:", msg);
   }
 }
-

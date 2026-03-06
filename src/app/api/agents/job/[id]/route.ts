@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard, apiError } from "@/lib/api-helpers";
+import { getAgentJob } from "@/lib/agent-jobs";
 
 export async function GET(
   _req: Request,
@@ -16,19 +16,10 @@ export async function GET(
     return apiError("Invalid job ID", 400);
   }
 
-  if (!supabaseAdmin) {
-    return apiError("DB not configured", 503);
+  const job = await getAgentJob(id);
+  if (!job) {
+    return apiError("Job not found", 404);
   }
 
-  const { data, error } = await supabaseAdmin
-    .from("agent_jobs")
-    .select("id, agent_id, status, prompt, result, error, created_at, started_at, finished_at")
-    .eq("id", id)
-    .single();
-
-  if (error) {
-    return apiError(error.message, 404);
-  }
-
-  return NextResponse.json({ job: data });
+  return NextResponse.json({ job });
 }

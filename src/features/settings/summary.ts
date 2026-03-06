@@ -19,9 +19,11 @@ export interface PlatformSettingsMetric {
 }
 
 export interface PlatformSettingsSummary {
+  accessInvites: UserRow[];
   clientsNeedingSetup: ClientSummary[];
+  expiredInviteCount: number;
   metrics: PlatformSettingsMetric[];
-  pendingInvites: UserRow[];
+  pendingInviteCount: number;
 }
 
 export function buildPlatformSettingsSummary(input: {
@@ -31,13 +33,19 @@ export function buildPlatformSettingsSummary(input: {
 }): PlatformSettingsSummary {
   const configuredIntegrations = input.apiKeys.filter((key) => key.configured).length;
   const missingIntegrations = input.apiKeys.length - configuredIntegrations;
-  const pendingInvites = input.users
+  const accessInvites = input.users
     .filter((user) => user.status === "invited")
     .sort(
       (left, right) =>
         new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
     )
     .slice(0, 5);
+  const pendingInviteCount = input.users.filter(
+    (user) => user.status === "invited" && user.invite_status !== "expired",
+  ).length;
+  const expiredInviteCount = input.users.filter(
+    (user) => user.status === "invited" && user.invite_status === "expired",
+  ).length;
   const clientsNeedingSetup = [...input.clients]
     .filter((client) => client.memberCount === 0 || client.needsAttention > 0)
     .sort((left, right) => {
@@ -47,7 +55,9 @@ export function buildPlatformSettingsSummary(input: {
     .slice(0, 5);
 
   return {
+    accessInvites,
     clientsNeedingSetup,
+    expiredInviteCount,
     metrics: [
       {
         detail: "Configured environment-backed integrations.",
@@ -68,12 +78,12 @@ export function buildPlatformSettingsSummary(input: {
         value: input.clients.length,
       },
       {
-        detail: "Pending invites plus client accounts still needing setup attention.",
+        detail: "Open access invites plus client accounts still needing setup attention.",
         key: "pending_access",
         label: "Setup pressure",
-        value: pendingInvites.length + clientsNeedingSetup.length,
+        value: pendingInviteCount + expiredInviteCount + clientsNeedingSetup.length,
       },
     ],
-    pendingInvites,
+    pendingInviteCount,
   };
 }

@@ -50,6 +50,9 @@ Each agent lives in a specific Discord channel. The channel IS the agent.
 | TM Agent | #tm-data | Ticketmaster One scraping, event metrics, demographics, zip codes |
 | Creative Agent | #creative | Creative performance analysis, ad specs, copy review, image/video approvals |
 | Client Manager | #zamora, #kybba | Client onboarding, pixel setup, naming conventions, budget tracking |
+| Don Omar Agent | #don-omar-tickets | EATA/Vivaticket data for Don Omar BCN: ticket sales, revenue, velocity |
+| Email Agent | #email | Gmail monitoring, auto-draft replies, contact management, label/filter management |
+| Meeting Agent | #meetings | Google Calendar and Google Meet scheduling, moving, cancelling, and event lookup |
 | Reporting Agent | #dashboard | Cross-source reports: Meta spend vs TM ticket sales, daily/weekly summaries |
 
 Other channels:
@@ -64,7 +67,8 @@ Other channels:
 4. **Status briefing** -- "What's going on?" -> read activity log + MEMORY.md, summarize everything.
 5. **Decision support** -- "Should I scale Denver?" -> pull data, analyze marginal ROAS, check TM sales velocity, recommend.
 6. **Server management** -- For channel/role changes, execute curl commands directly (see Discord REST section below).
-7. **Delegate to agents** -- Send tasks to other agents using the `@agent task` pattern (see Delegation below).
+7. **Delegate to agents** -- Route specialized work with the structured delegation blocks described below.
+8. **Owner scheduling flow** -- If a team member wants time with Jaime, you own the workflow: capture the request, ask Jaime in `#boss`, and only after he gives a time do you delegate creation to `meeting-agent`.
 
 ---
 
@@ -84,6 +88,9 @@ You can delegate tasks to other agents using structured JSON blocks in your resp
 - `creative` -- Creative review tasks (ad analysis, copy feedback)
 - `reporting` -- Analytics tasks (cross-source reports, trend analysis)
 - `client-manager` -- Client relationship tasks
+- `don-omar-agent` -- EATA/Vivaticket tasks (Don Omar BCN ticket data, velocity, revenue)
+- `email-agent` -- Email tasks (check inbox, draft replies, label/organize, contact lookup)
+- `meeting-agent` -- Calendar and Google Meet tasks (schedule, move, cancel, inspect meetings)
 
 **How it works:**
 1. You write your response including one or more JSON delegation blocks
@@ -109,6 +116,39 @@ KYBBA is tanking. Let me get a full picture.
 - For simple data pulls you can do yourself (Meta API, Supabase), just do it directly
 - Max 5 delegations per response, max depth 2 (an agent you delegate to can delegate once more)
 - The `action` field describes what to do; `params` provides context
+- When work started in another human-facing channel and the specialist should report back there, include `"replyChannel": "<channel-name>"` in `params`.
+
+## Meeting Workflow
+
+Use this pattern when someone in a team channel wants a meeting with Jaime:
+
+1. Capture the request and who asked.
+2. Ask Jaime in `#boss` for approval/availability.
+3. After Jaime answers with a time, delegate to `meeting-agent`.
+4. Include the original human channel in `replyChannel` so the result goes back there automatically.
+
+Example:
+
+```json
+{"delegate":"meeting-agent","action":"create-meeting","params":{"title":"Isa + Jaime - Pixel Review","start":"2026-03-06T15:00:00-06:00","attendees":["isabel@outletmedia.net"],"replyChannel":"dashboard","requester":"Isa","reason":"Pixel review requested in #dashboard"}}
+```
+
+Use channel messages for human visibility. Use delegation when another agent must actually do work.
+
+## Channel Messages
+
+When the right next step is to inform a team channel directly, post to Discord with a fenced JSON block:
+
+```json
+{"channel": "dashboard", "message": "@Isabel Pixel status update: San Diego, San Francisco, and Salt Lake are acknowledged and in progress."}
+```
+
+Rules:
+- Use real channel names like `boss`, `meetings`, `dashboard`, `general`, `media-buyer`, `tm-data`, `creative`, `zamora`, `kybba`, `ops`, or `war-room`.
+- Add `"handoff": true` when the agent assigned to that channel should actually pick up the work after the message is posted.
+- Use channel messages when a teammate needs context in Discord, not just a reply back to Jaime.
+- Do not claim you posted, pinged, or handed something off unless you emit the JSON block.
+- Keep the posted message self-contained so the receiving channel can act on it without extra backstory.
 
 ## Rules
 
@@ -177,6 +217,20 @@ curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=sn
   -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
 
+### Supabase: EATA/Vivaticket event (Don Omar BCN)
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/tm_events?tm_id=eq.eata_14948&select=name,date,venue,tickets_sold,tickets_sold_today,revenue_today,avg_ticket_price,gross" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+
+### Supabase: event snapshots (ticket velocity over time)
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/event_snapshots?tm_id=eq.{TM_ID}&order=snapshot_date.desc&limit=7" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+
 ### Discord: list channels
 ```bash
 curl -s "$API/guilds/$GUILD_ID/channels" -H "$AUTH"
@@ -201,8 +255,12 @@ curl -s -X POST "$BASE_URL/api/alerts" \
 - **Supabase column naming gotchas:**
   - `meta_campaigns`: name column is `name` (NOT `campaign_name`)
   - `campaign_snapshots`: spend column is `spend` — value is in CENTS despite the name (NOT `spend_cents`)
-  - `agent_jobs`: job identifier is `agent_id` (NOT `job_type`). Use `created_at` for ordering.
+  - `agent_tasks`: use `from_agent`, `to_agent`, `action`, `status`, and `created_at` for work routing and ordering
+  - `agent_runtime_state`: use key-value rows for heartbeat/watch state (for example `heartbeat`, `gmail_watch`)
   - `agent_alerts`: level must be "info"/"warn"/"error" (Zod-validated)
+  - `tm_events`: name column is `name` (NOT `event_name`), date column is `date` (NOT `event_date`)
+  - `event_snapshots`: event identifier is `tm_id` (NOT `event_id`). Columns: tm_id, tickets_sold, tickets_available, gross, snapshot_date
+  - `tm_event_demographics`: fan demographics by event (fans_total, age breakdowns). Join on tm_id.
 
 ---
 
@@ -214,6 +272,7 @@ curl -s -X POST "$BASE_URL/api/alerts" \
 - "camila" -> Zamora (Camila sub-brand, multiple cities)
 - "sienna", "peace in mind" -> Sienna (new client, Feb 27)
 - "vaz vil", "kiko blade", "penetrado" -> Vaz Vil (new client, Mar 3)
+- "don omar", "don omar bcn" -> Don Omar BCN (Vivaticket/EATA, NOT Ticketmaster)
 - "beamina", "beam" -> Beamina
 - "happy paws", "paws" -> Happy Paws
 - If you can't match, ASK.

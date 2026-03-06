@@ -35,7 +35,7 @@ describe("POST /api/agents/heartbeat", () => {
 
   it("returns 200 with ok true on successful insert", async () => {
     mockFrom.mockReturnValue({
-      insert: vi.fn().mockResolvedValue({ error: null }),
+      upsert: vi.fn().mockResolvedValue({ error: null }),
     });
 
     const { POST } = await import("@/app/api/agents/heartbeat/route");
@@ -46,34 +46,34 @@ describe("POST /api/agents/heartbeat", () => {
     expect(body.ok).toBe(true);
   });
 
-  it("inserts into agent_jobs table", async () => {
-    const mockInsert = vi.fn().mockResolvedValue({ error: null });
-    mockFrom.mockReturnValue({ insert: mockInsert });
+  it("writes to agent_runtime_state", async () => {
+    const mockUpsert = vi.fn().mockResolvedValue({ error: null });
+    mockFrom.mockReturnValue({ upsert: mockUpsert });
 
     const { POST } = await import("@/app/api/agents/heartbeat/route");
     await POST(makeRequest());
 
-    expect(mockFrom).toHaveBeenCalledWith("agent_jobs");
+    expect(mockFrom).toHaveBeenCalledWith("agent_runtime_state");
   });
 
-  it("inserts a heartbeat row with correct fields", async () => {
-    const mockInsert = vi.fn().mockResolvedValue({ error: null });
-    mockFrom.mockReturnValue({ insert: mockInsert });
+  it("upserts a heartbeat payload with current fields", async () => {
+    const mockUpsert = vi.fn().mockResolvedValue({ error: null });
+    mockFrom.mockReturnValue({ upsert: mockUpsert });
 
     const { POST } = await import("@/app/api/agents/heartbeat/route");
     await POST(makeRequest());
 
-    expect(mockInsert).toHaveBeenCalledWith({
-      agent_id: "heartbeat",
-      status: "done",
-      prompt: null,
-      result: "ping",
+    expect(mockUpsert).toHaveBeenCalledWith({
+      key: "heartbeat",
+      value: expect.objectContaining({
+        source: "agent",
+      }),
     });
   });
 
-  it("returns 500 when supabase insert fails", async () => {
+  it("returns 500 when supabase upsert fails", async () => {
     mockFrom.mockReturnValue({
-      insert: vi.fn().mockResolvedValue({
+      upsert: vi.fn().mockResolvedValue({
         error: { message: "DB connection lost" },
       }),
     });
@@ -84,9 +84,9 @@ describe("POST /api/agents/heartbeat", () => {
     expect(res.status).toBe(500);
   });
 
-  it("returns ok false when insert fails", async () => {
+  it("returns ok false when upsert fails", async () => {
     mockFrom.mockReturnValue({
-      insert: vi.fn().mockResolvedValue({
+      upsert: vi.fn().mockResolvedValue({
         error: { message: "DB connection lost" },
       }),
     });

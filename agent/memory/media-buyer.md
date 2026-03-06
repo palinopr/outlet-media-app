@@ -112,3 +112,26 @@ Use daily snapshots for trend analysis, not intraday deltas.
 
 <!-- auto-learned 2026-03-05 -->
 - aa1 is shorthand for ad account act_787610255314938
+
+<!-- auto-learned 2026-03-06 -->
+- Sienna "Peace In Mind" budget now $100/day (was ~$50/day)
+- Sienna optimized for ViewContent, not purchases; 0x ROAS expected
+- Sienna at $608 spent, 3.04% CTR, $7.92 CPM, 475 ViewContent
+
+<!-- auto-learned 2026-03-06 -->
+- Don Omar BCN campaign created: ID 120243011364360525, PAUSED $50/day
+- Don Omar BCN adset: 120243011428280525, Barcelona 50km, 18-65, broad
+- Don Omar BCN landing page: cookmusicfest.es/don-omar-barcelona-1/
+- Don Omar BCN: 2 ads (video+image), split post/story placements
+- Don Omar BCN creatives sourced from shared Google Drive folder
+
+<!-- auto-learned 2026-03-06 -->
+- Don Omar BCN campaign spend cap set to $9,939
+- Don Omar BCN end date: Jul 23 2026 6PM Barcelona time
+- Don Omar BCN caption uses "ÚNICO SHOW en España" messaging
+- Tenerife and Sevilla Don Omar shows are SOLD OUT
+
+<!-- auto-learned 2026-03-06 -->
+- CTA must always be "Shop Now" for event/ticket campaigns
+- Fan page: use artist's page, fallback to Zamora if unavailable
+- Advantage+ Creative enhancements: ALL set to 0 (disabled)

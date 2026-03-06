@@ -75,8 +75,9 @@ describe("SettingsView", () => {
       "1:true:/api/meta/connect?slug=zamora",
     );
     expect(screen.getByText("Team")).toBeInTheDocument();
-    expect(screen.getByText("Pending invites")).toBeInTheDocument();
+    expect(screen.getByText("Access invites")).toBeInTheDocument();
     expect(screen.getByText("invitee@example.com")).toBeInTheDocument();
+    expect(screen.getByText("Pending")).toBeInTheDocument();
     expect(screen.getByText("Owner User")).toBeInTheDocument();
   });
 });

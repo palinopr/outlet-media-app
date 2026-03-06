@@ -78,15 +78,29 @@ const AGENT_ROUTES: Record<string, AgentConfig> = {
     description: "reporting-agent",
   },
 
+  // --- Email Agent (Gmail monitoring + auto-draft) ---
+  "email": {
+    promptFile: "email-agent",
+    maxTurns: 20,
+    description: "email-agent",
+  },
+
+  // --- Meeting Agent (Google Calendar + Meet scheduling) ---
+  "meetings": {
+    promptFile: "meeting-agent",
+    maxTurns: 20,
+    description: "meeting-agent",
+  },
+
   // --- Read-only channels (bot output, no agent response) ---
   "agent-feed": {
-    promptFile: "chat",
+    promptFile: "general",
     maxTurns: 5,
     description: "read-only",
     readOnly: true,
   },
   "schedule": {
-    promptFile: "chat",
+    promptFile: "general",
     maxTurns: 5,
     description: "schedule-control",
     /** Not readOnly -- handled by discord-schedule.ts command handler */
@@ -95,7 +109,7 @@ const AGENT_ROUTES: Record<string, AgentConfig> = {
 
 /** Default agent config for channels not in the routing table */
 const DEFAULT_AGENT: AgentConfig = {
-  promptFile: "chat",
+  promptFile: "general",
   maxTurns: 10,
   description: "general-chat",
 };
@@ -136,6 +150,9 @@ export function matchManualTrigger(
   }
   if (channelName === "creative" && /^run\s+creative[\s-]classify$/i.test(lower)) {
     return "creative-classify";
+  }
+  if (channelName === "email" && /^run\s+email\s+check$/i.test(lower)) {
+    return "email-check";
   }
   if (/^run\s+think$/i.test(lower)) {
     return "think";
@@ -238,6 +255,24 @@ export const AGENT_INTERNALS: Record<string, AgentInternals> = {
     skillsChannel: "clients-skills",
     tools: ["curl (Supabase REST)", "curl (Meta Graph API - read)"],
   },
+  "email-agent": {
+    name: "Email",
+    memoryFile: "memory/email-agent.md",
+    skillsDir: "skills/email-agent",
+    promptFile: "email-agent",
+    memoryChannel: "email-memory",
+    skillsChannel: "email-skills",
+    tools: ["gmail-reader.mjs", "gmail-sender.mjs", "Gmail API (filters, labels)"],
+  },
+  "meeting-agent": {
+    name: "Meetings",
+    memoryFile: "memory/meeting-agent.md",
+    skillsDir: "skills/meeting-agent",
+    promptFile: "meeting-agent",
+    memoryChannel: "meetings-memory",
+    skillsChannel: "meetings-skills",
+    tools: ["calendar-meet.mjs", "Google Calendar API", "Google Meet conference creation"],
+  },
 };
 
 /**
@@ -267,4 +302,6 @@ export const PROMPT_TO_AGENT: Record<string, string> = {
   "creative-agent": "creative",
   "client-manager": "client-manager",
   "reporting-agent": "reporting",
+  "email-agent": "email-agent",
+  "meeting-agent": "meeting-agent",
 };

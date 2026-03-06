@@ -12,6 +12,9 @@ const isPublicRoute = createRouteMatcher([
   "/api/ingest(.*)",
   "/api/alerts(.*)",
   "/api/agents/heartbeat(.*)",
+  "/api/agents/email/watch",
+  "/api/agents/email(.*)",
+  "/api/agents/email/watch(.*)",
   "/api/health(.*)",
   "/api/meta/callback(.*)",
   "/api/meta/data-deletion(.*)",
@@ -19,9 +22,13 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
-    await auth.protect();
+  const pathname = req.nextUrl.pathname;
+  if (pathname === "/api/agents/email/watch" || pathname.startsWith("/api/agents/email/watch/")) {
+    return;
   }
+
+  if (isPublicRoute(req)) return;
+  await auth.protect();
 });
 
 export const config = {

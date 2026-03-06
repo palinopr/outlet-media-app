@@ -161,6 +161,224 @@ export type Database = {
         }
         Relationships: []
       }
+      agent_runtime_state: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      email_drafts: {
+        Row: {
+          body_text: string
+          cc_emails: Json
+          confidence: string | null
+          created_at: string
+          id: string
+          language: string | null
+          message_id: string | null
+          metadata: Json
+          rationale: string | null
+          sent_at: string | null
+          sent_message_id: string | null
+          status: string
+          subject: string | null
+          thread_id: string
+          to_emails: Json
+          updated_at: string
+        }
+        Insert: {
+          body_text: string
+          cc_emails?: Json
+          confidence?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          message_id?: string | null
+          metadata?: Json
+          rationale?: string | null
+          sent_at?: string | null
+          sent_message_id?: string | null
+          status?: string
+          subject?: string | null
+          thread_id: string
+          to_emails?: Json
+          updated_at?: string
+        }
+        Update: {
+          body_text?: string
+          cc_emails?: Json
+          confidence?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          message_id?: string | null
+          metadata?: Json
+          rationale?: string | null
+          sent_at?: string | null
+          sent_message_id?: string | null
+          status?: string
+          subject?: string | null
+          thread_id?: string
+          to_emails?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_drafts_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "email_events"
+            referencedColumns: ["message_id"]
+          },
+        ]
+      }
+      email_events: {
+        Row: {
+          activity_context: Json
+          applied_labels: Json
+          body_text: string | null
+          business_context: Json
+          cc_emails: Json
+          classification: string | null
+          client_slug: string | null
+          contact_email: string | null
+          created_at: string
+          direction: string
+          gmail_label_ids: Json
+          id: string
+          importance: string | null
+          message_id: string
+          metadata: Json
+          needs_reply: boolean
+          received_at: string | null
+          recipient_emails: Json
+          sender_email: string | null
+          sender_name: string | null
+          should_archive: boolean
+          should_notify: boolean
+          snippet: string | null
+          status: string
+          subject: string | null
+          thread_id: string
+          thread_summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_context?: Json
+          applied_labels?: Json
+          body_text?: string | null
+          business_context?: Json
+          cc_emails?: Json
+          classification?: string | null
+          client_slug?: string | null
+          contact_email?: string | null
+          created_at?: string
+          direction: string
+          gmail_label_ids?: Json
+          id?: string
+          importance?: string | null
+          message_id: string
+          metadata?: Json
+          needs_reply?: boolean
+          received_at?: string | null
+          recipient_emails?: Json
+          sender_email?: string | null
+          sender_name?: string | null
+          should_archive?: boolean
+          should_notify?: boolean
+          snippet?: string | null
+          status?: string
+          subject?: string | null
+          thread_id: string
+          thread_summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_context?: Json
+          applied_labels?: Json
+          body_text?: string | null
+          business_context?: Json
+          cc_emails?: Json
+          classification?: string | null
+          client_slug?: string | null
+          contact_email?: string | null
+          created_at?: string
+          direction?: string
+          gmail_label_ids?: Json
+          id?: string
+          importance?: string | null
+          message_id?: string
+          metadata?: Json
+          needs_reply?: boolean
+          received_at?: string | null
+          recipient_emails?: Json
+          sender_email?: string | null
+          sender_name?: string | null
+          should_archive?: boolean
+          should_notify?: boolean
+          snippet?: string | null
+          status?: string
+          subject?: string | null
+          thread_id?: string
+          thread_summary?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_reply_examples: {
+        Row: {
+          body_text: string
+          client_slug: string | null
+          contact_email: string | null
+          created_at: string
+          id: string
+          language: string | null
+          message_id: string
+          metadata: Json
+          subject: string | null
+          thread_id: string
+          topic: string | null
+        }
+        Insert: {
+          body_text: string
+          client_slug?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          message_id: string
+          metadata?: Json
+          subject?: string | null
+          thread_id: string
+          topic?: string | null
+        }
+        Update: {
+          body_text?: string
+          client_slug?: string | null
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          language?: string | null
+          message_id?: string
+          metadata?: Json
+          subject?: string | null
+          thread_id?: string
+          topic?: string | null
+        }
+        Relationships: []
+      }
       call_transcript_turns: {
         Row: {
           call_id: string

@@ -3,7 +3,9 @@ import type { UserRow } from "@/app/admin/users/data";
 
 export interface UsersAccessSummary {
   clientsNeedingCoverage: ClientSummary[];
-  pendingInvites: UserRow[];
+  accessInvites: UserRow[];
+  expiredInviteCount: number;
+  pendingInviteCount: number;
   unassignedClientUsers: UserRow[];
 }
 
@@ -21,10 +23,16 @@ export function buildUsersAccessSummary(
   users: UserRow[],
   clients: ClientSummary[],
 ): UsersAccessSummary {
-  const pendingInvites = users
+  const accessInvites = users
     .filter((user) => user.status === "invited")
     .sort(compareCreatedAtDesc)
     .slice(0, 5);
+  const pendingInviteCount = users.filter(
+    (user) => user.status === "invited" && user.invite_status !== "expired",
+  ).length;
+  const expiredInviteCount = users.filter(
+    (user) => user.status === "invited" && user.invite_status === "expired",
+  ).length;
 
   const unassignedClientUsers = users
     .filter(
@@ -43,7 +51,9 @@ export function buildUsersAccessSummary(
 
   return {
     clientsNeedingCoverage,
-    pendingInvites,
+    accessInvites,
+    expiredInviteCount,
+    pendingInviteCount,
     unassignedClientUsers,
   };
 }

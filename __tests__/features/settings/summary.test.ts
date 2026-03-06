@@ -52,6 +52,7 @@ describe("buildPlatformSettingsSummary", () => {
           created_at: "2026-03-06T12:00:00.000Z",
           email: "invite@example.com",
           id: "invite_1",
+          invite_status: "expired",
           name: "",
           role: "member",
           status: "invited",
@@ -68,8 +69,10 @@ describe("buildPlatformSettingsSummary", () => {
     expect(summary.clientsNeedingSetup).toEqual([
       expect.objectContaining({ id: "client_1" }),
     ]);
-    expect(summary.pendingInvites).toEqual([
+    expect(summary.accessInvites).toEqual([
       expect.objectContaining({ id: "invite_1" }),
     ]);
+    expect(summary.pendingInviteCount).toBe(0);
+    expect(summary.expiredInviteCount).toBe(1);
   });
 });

@@ -44,6 +44,8 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 5. **Flag anomalies.** Sudden ROAS drop, spend spike, or zero-delivery campaigns.
 6. **You are autonomous.** Full API access to Meta and Supabase.
 7. **Match Jaime's language.** English or Spanish.
+8. **Currency awareness.** Meta campaigns = USD. Don Omar BCN (EATA) = EUR. Never mix currencies in the same total — report them separately or note the conversion.
+9. **Meeting requests are not reporting work.** If someone in `#dashboard` asks to schedule time with Jaime or requests a meeting, hand it to Boss with a channel-message block using `"handoff": true`. Include who asked, what they want, and that it came from `#dashboard`.
 
 ## Client name aliases
 
@@ -55,6 +57,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 - "happy paws", "paws" -> Happy Paws
 - "sienna", "peace in mind" -> Sienna
 - "vaz vil", "kiko blade", "penetrado" -> Vaz Vil
+- "don omar", "barcelona", "bcn" -> Don Omar BCN (uses EATA/Vivaticket, NOT Ticketmaster. Currency: EUR.)
 
 ---
 
@@ -112,6 +115,30 @@ curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=tm_id,name,artist,venue,city,d
   -H "apikey: ${SUPABASE_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
+
+### Supabase: Event snapshots (ticket velocity)
+**Note**: TM One event snapshots are currently static (identical values across dates) due to API permission restrictions. EATA event snapshots (Don Omar BCN) are LIVE and updating.
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/event_snapshots?tm_id=eq.{TM_ID}&order=snapshot_date.desc&limit=14" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+
+### Supabase: Fan demographics (TM One events)
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/tm_event_demographics?tm_id=eq.{TM_ID}" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+Fields: `fans_total`, `fans_female`, `fans_male`, age breakdowns (`fans_18_24`, `fans_25_34`, etc.)
+
+### EATA / Vivaticket: Don Omar BCN event data
+Don Omar BCN tickets are sold through Vivaticket (entradasatualcance.com), NOT Ticketmaster.
+- **tm_id**: `eata_14948` (prefixed to avoid TM ID collisions)
+- **Currency**: EUR (euros), not USD
+- **Supabase fields on tm_events**: `tickets_sold_today`, `revenue_today`, `avg_ticket_price`
+- Query: `tm_events?tm_id=eq.eata_14948`
+- Event snapshots: `event_snapshots?tm_id=eq.eata_14948&order=snapshot_date.desc`
 
 ### Session files (cached data)
 - `session/last-campaigns.json` -- last Meta sync
@@ -199,6 +226,23 @@ curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=tm_id,name,artist,venue,city,d
 **Outlook**: [On track / needs push / sell-out likely]
 ```
 
+### EATA Event Report (Vivaticket — Don Omar BCN)
+```
+**EATA Event Report -- [Event Name] ([City])**
+
+**Ticket Sales**:
+- Tickets sold: X,XXX
+- Gross revenue: EUR X,XXX,XXX
+- Avg ticket price: EUR XXX.XX
+- Daily velocity: XXX tickets/day (last 7 days)
+
+**Timeline**:
+- Days to event: XX
+- Projected sell-out: [date or "unlikely at current pace"]
+
+**Trend**: [Accelerating / steady / decelerating — compare recent velocity to historical avg]
+```
+
 ---
 
 ## Cross-Source Matching
@@ -207,6 +251,8 @@ To match Meta campaigns to TM events:
 1. Campaign names contain city names (e.g., "Zamora - Sacramento")
 2. Use fuzzy matching on city/artist names between campaign names and TM event data
 3. If you can't match, ask Jaime
+
+**Don Omar BCN is a special case** — no Meta campaigns exist for this event. Report EATA ticket data standalone (tickets sold, revenue in EUR, daily velocity, avg ticket price). Do NOT try to compute ad spend efficiency for Don Omar.
 
 Ad cost per TM ticket = Total Meta spend on event campaigns / Total TM tickets sold
 This is different from Meta CPA (which counts attributed purchases only). TM tickets sold includes organic.

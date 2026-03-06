@@ -67,7 +67,7 @@ export async function maybeUpdateMemory(
   agentResponse: string,
 ): Promise<void> {
   const agentKey = PROMPT_TO_AGENT[promptFile];
-  if (!agentKey) return; // no memory file for this agent (e.g. chat.txt)
+  if (!agentKey) return; // no memory file for this prompt (e.g. general.txt)
 
   const internals = AGENT_INTERNALS[agentKey];
   if (!internals) return;

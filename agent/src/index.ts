@@ -1,11 +1,11 @@
 import "dotenv/config";
 import { existsSync, mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
-import { bot } from "./bot.js";
 import { discordClient, startDiscordBot } from "./discord/core/entry.js";
 import { startScheduler } from "./scheduler.js";
 import { killAllClaude } from "./runner.js";
 import { stopStatus } from "./services/status-service.js";
+import { stopExternalTaskDispatcher } from "./services/external-task-dispatcher.js";
 
 // Ensure session directory exists for TM One browser state
 const sessionDir = new URL("../session", import.meta.url).pathname;
@@ -64,7 +64,6 @@ function validateEnv(): void {
     "DISCORD_TOKEN",
     "SUPABASE_URL",
     "SUPABASE_SERVICE_ROLE_KEY",
-    "TELEGRAM_BOT_TOKEN",
     "CLAUDE_PATH",
   ];
   const missing = required.filter((k) => !process.env[k]);
@@ -83,44 +82,28 @@ console.log("");
 // Start Discord bot (if token configured)
 startDiscordBot();
 
-// Start Telegram bot (long-polling)
-bot.start({
-  onStart: (info) => {
-    console.log(`Telegram bot online: @${info.username}`);
-    console.log("Send /start in Telegram to test it.");
-  },
-}).catch((err: unknown) => {
-  const msg = err instanceof Error ? err.message : String(err);
-  // 409 means another instance is already polling - non-fatal
-  if (msg.includes("409")) {
-    console.warn("[bot] Another bot instance already running - Telegram polling disabled");
-  } else {
-    console.error("[bot] Fatal error:", msg);
-  }
-});
-
 // Start autonomous scheduler
 startScheduler();
 
 // Graceful shutdown -- kill child Claude processes to prevent orphaned ghosts
-function shutdown(): void {
+async function shutdown(): Promise<void> {
   killAllClaude();
   stopStatus();
-  bot.stop();
+  stopExternalTaskDispatcher();
   discordClient?.destroy();
 }
 
-function gracefulExit(signal: string): void {
+async function gracefulExit(signal: string): Promise<void> {
   console.log(`${signal} received, shutting down...`);
   // Force exit after 10s if cleanup stalls
   setTimeout(() => process.exit(1), 10_000).unref();
-  shutdown();
+  await shutdown();
   process.exit(0);
 }
 
-process.once("SIGINT", () => gracefulExit("SIGINT"));
-process.once("SIGTERM", () => gracefulExit("SIGTERM"));
-process.once("SIGHUP", () => gracefulExit("SIGHUP"));
+process.once("SIGINT", () => { void gracefulExit("SIGINT"); });
+process.once("SIGTERM", () => { void gracefulExit("SIGTERM"); });
+process.once("SIGHUP", () => { void gracefulExit("SIGHUP"); });
 
 // Suppress unhandled Discord WS close errors on shutdown
 process.on("unhandledRejection", (reason) => {

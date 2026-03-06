@@ -1,6 +1,7 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { listActionableInvitations } from "@/features/invitations/server";
+import type { ActionableInvitationStatus } from "@/features/invitations/types";
 
 export interface UserRow {
   id: string;
@@ -12,6 +13,7 @@ export interface UserRow {
   created_at: string;
   /** "active" = signed-up user, "invited" = pending Clerk invitation */
   status: "active" | "invited";
+  invite_status: ActionableInvitationStatus | null;
 }
 
 export async function getUsers(): Promise<UserRow[]> {
@@ -55,6 +57,7 @@ export async function getUsers(): Promise<UserRow[]> {
         client_slugs: slugs,
         created_at: new Date(u.createdAt).toISOString(),
         status: "active" as const,
+        invite_status: null,
       };
     });
   } catch (err) {
@@ -77,6 +80,7 @@ export async function getUsers(): Promise<UserRow[]> {
         client_slugs: [],
         created_at: inv.createdAt,
         status: "invited" as const,
+        invite_status: inv.status,
       };
     });
   } catch (err) {

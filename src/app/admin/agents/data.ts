@@ -1,16 +1,10 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import {
+  getHeartbeatStatus,
+  listAgentJobs,
+  type AgentJobView,
+} from "@/lib/agent-jobs";
 
-export interface AgentJob {
-  id: string;
-  agent_id: string;
-  status: "pending" | "running" | "done" | "error";
-  prompt: string | null;
-  result: string | null;
-  error: string | null;
-  created_at: string;
-  started_at: string | null;
-  finished_at: string | null;
-}
+export type AgentJob = AgentJobView;
 
 export interface AgentsData {
   jobs: AgentJob[];
@@ -19,27 +13,14 @@ export interface AgentsData {
 }
 
 export async function getInitialData(): Promise<AgentsData> {
-  if (!supabaseAdmin) return { jobs: [], isOnline: false, lastSeen: null };
+  const [jobs, heartbeat] = await Promise.all([
+    listAgentJobs(80),
+    getHeartbeatStatus(),
+  ]);
 
-  const { data: jobs } = await supabaseAdmin
-    .from("agent_jobs")
-    .select("id, agent_id, status, prompt, result, error, created_at, started_at, finished_at")
-    .neq("agent_id", "heartbeat")
-    .order("created_at", { ascending: false })
-    .limit(80);
-
-  const { data: hb } = await supabaseAdmin
-    .from("agent_jobs")
-    .select("created_at")
-    .eq("agent_id", "heartbeat")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  const lastSeen = hb?.created_at ?? null;
-  const isOnline = lastSeen
-    ? Date.now() - new Date(lastSeen).getTime() < 2 * 60 * 1000
-    : false;
-
-  return { jobs: (jobs ?? []) as AgentJob[], isOnline, lastSeen };
+  return {
+    jobs,
+    isOnline: heartbeat.isOnline,
+    lastSeen: heartbeat.lastSeen,
+  };
 }

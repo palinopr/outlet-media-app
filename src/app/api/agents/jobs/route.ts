@@ -1,26 +1,17 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard, apiError } from "@/lib/api-helpers";
+import { listAgentJobs } from "@/lib/agent-jobs";
 
 // Returns the last 30 jobs (excluding heartbeats) for the chat panel refresh
 export async function GET() {
   const adminErr = await adminGuard();
   if (adminErr) return adminErr;
 
-  if (!supabaseAdmin) {
-    return NextResponse.json({ jobs: [] });
+  try {
+    const jobs = await listAgentJobs(30);
+    return NextResponse.json({ jobs: jobs.reverse() });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return apiError(message);
   }
-
-  const { data, error } = await supabaseAdmin
-    .from("agent_jobs")
-    .select("id, agent_id, status, prompt, result, error, created_at, started_at, finished_at")
-    .neq("agent_id", "heartbeat")
-    .order("created_at", { ascending: true })
-    .limit(30);
-
-  if (error) {
-    return apiError(error.message);
-  }
-
-  return NextResponse.json({ jobs: data ?? [] });
 }

@@ -7,7 +7,7 @@ import { RevokeInvitationButton } from "@/components/admin/users/revoke-invitati
 import { StatCard } from "@/components/admin/stat-card";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { slugToLabel } from "@/lib/formatters";
+import { getInvitationStatusCfg, slugToLabel } from "@/lib/formatters";
 import { buildUsersAccessSummary } from "@/features/users/summary";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
@@ -30,7 +30,7 @@ export default async function UsersPage() {
     { label: "Total Users", value: String(users.length), icon: Users, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
     { label: "Admins", value: String(adminCount), icon: Shield, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
     { label: "Client Users", value: String(clientCount), icon: UserCheck, accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
-    { label: "Pending", value: String(pendingCount), icon: Clock, accent: "from-amber-500/20 to-yellow-500/20", iconColor: "text-amber-400" },
+    { label: "Access pressure", value: String(pendingCount), icon: Clock, accent: "from-amber-500/20 to-yellow-500/20", iconColor: "text-amber-400" },
   ];
 
   return (
@@ -52,45 +52,56 @@ export default async function UsersPage() {
           <CardContent className="space-y-4 p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-medium">Pending invites</p>
+                <p className="text-sm font-medium">Access invites</p>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Invitations that still have not turned into active users.
+                  Pending and expired invitations that still need action.
                 </p>
               </div>
               <MailPlus className="h-4 w-4 text-muted-foreground" />
             </div>
-            {accessSummary.pendingInvites.length === 0 ? (
+            {accessSummary.accessInvites.length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No pending invites right now.
+                No access invites need attention right now.
               </p>
             ) : (
               <div className="space-y-3">
-                {accessSummary.pendingInvites.map((invite) => (
-                  <div
-                    key={invite.id}
-                    className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{invite.email}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {invite.client_slug ? slugToLabel(invite.client_slug) : "No client selected"} • Invited
-                      </p>
-                    </div>
-                    <RevokeInvitationButton
-                      email={invite.email}
-                      invitationId={invite.id}
-                      trigger={
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-muted-foreground hover:text-red-400"
+                {accessSummary.accessInvites.map((invite) => {
+                  const inviteStatus = getInvitationStatusCfg(invite.invite_status);
+
+                  return (
+                    <div
+                      key={invite.id}
+                      className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{invite.email}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {invite.client_slug ? slugToLabel(invite.client_slug) : "No client selected"} • {inviteStatus.detail}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium ${inviteStatus.bg} ${inviteStatus.border} ${inviteStatus.text} border`}
                         >
-                          Revoke
-                        </Button>
-                      }
-                    />
-                  </div>
-                ))}
+                          {inviteStatus.label}
+                        </span>
+                        <RevokeInvitationButton
+                          email={invite.email}
+                          invitationId={invite.id}
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-muted-foreground hover:text-red-400"
+                            >
+                              Revoke
+                            </Button>
+                          }
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>

@@ -56,6 +56,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 - "happy paws", "paws" -> Happy Paws
 - "sienna", "peace in mind" -> Sienna
 - "vaz vil", "kiko blade", "penetrado" -> Vaz Vil
+- "don omar", "don omar bcn", "barcelona" -> Don Omar BCN
 
 ---
 
@@ -141,19 +142,26 @@ curl -s "https://graph.facebook.com/v21.0/act_787610255314938/insights?fields=sp
 
 ### From Supabase (for historical)
 ```bash
-curl -s "${SUPABASE_URL}/rest/v1/meta_campaigns?select=campaign_id,name,spend,roas,daily_budget_cents,start_time&name=like.*Zamora*&status=eq.ACTIVE" \
+curl -s "${SUPABASE_URL}/rest/v1/meta_campaigns?select=campaign_id,name,spend,roas,daily_budget,start_time&name=like.*Zamora*&status=eq.ACTIVE" \
   -H "apikey: ${SUPABASE_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
 
 **Supabase column naming (important):**
-- `meta_campaigns`: name column is `name` (NOT `campaign_name`). Budget is `daily_budget_cents` (in cents).
+- `meta_campaigns`: name column is `name` (NOT `campaign_name`). Budget is `daily_budget` (in cents).
 - `campaign_snapshots`: spend column is `spend` (value is in cents despite the name). `roas` is a float.
-- `agent_jobs`: job identifier is `agent_id` (NOT `job_type`).
+- `agent_tasks`: orchestration ledger uses `from_agent`, `to_agent`, `action`, `status`, and `created_at`.
 
 ### Snapshot query (for trend analysis)
 ```bash
 curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.desc&limit=7" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+
+### EATA/Vivaticket query (Don Omar BCN)
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=name,tickets_sold,tickets_sold_today,revenue_today,avg_ticket_price,gross,date,status&tm_id=eq.eata_14948" \
   -H "apikey: ${SUPABASE_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
@@ -165,6 +173,8 @@ Some clients have total spend caps (e.g., Alofoke had $2K cap). When tracking:
 - Alert at 80%, 95%, and 100% thresholds
 - Project remaining days: (budget_cap - total_spend) / daily_budget
 - Post alert to dashboard if approaching cap
+
+**Currency note:** Don Omar BCN revenue is in EUROS (Vivaticket/EATA). All other clients are in USD (Meta). Never mix currencies in reports.
 
 ---
 
@@ -184,15 +194,25 @@ Some clients have total spend caps (e.g., Alofoke had $2K cap). When tracking:
 - Adset swap Feb 25: V9+V1 paused, V5+Asset1 activated — ROAS recovered from 2.46x to 2.65x
 
 ### Sienna (New Client, ~Mar 2026)
-- "Peace In Mind" brand
+- "Peace In Mind" brand — **music artist, optimized for ViewContent, NOT purchases**
 - Pixel: 918875103967661 ("sienna" pixel, created Feb 25)
-- Budget: $200/day
-- Status: early stage, watch for pixel/attribution issues
+- Budget: $100/day (halved from $200 in early Mar)
+- Status: 0x ROAS is EXPECTED (no purchase pixel). Measure by CPM, reach, and ViewContent events — not ROAS.
 
 ### Vaz Vil (New Client, ~Mar 2026)
 - "Kiko Blade" / "Penetrado" events
 - Budget: small ($10 initial)
 - Status: just started, too early to evaluate
+
+### Don Omar BCN (New Client, ~Mar 2026)
+- Don Omar concert in Barcelona, Jul 23 2026
+- Venue: Estadio Olimpico Lluis Companys
+- Tickets sold through **Vivaticket/EATA** (entradasatualcance.com), NOT Ticketmaster
+- No Meta campaigns — ticket tracking only via EATA pipeline
+- Supabase tm_id: `eata_14948`
+- Slug: `don_omar_bcn`
+- Current: ~30K tickets sold, ~3.2M EUR gross, 442 tickets/day avg
+- EATA data syncs every 2h via `session/eata-http-sync.mjs`
 
 ### Beamina
 - Smaller client, fewer campaigns
