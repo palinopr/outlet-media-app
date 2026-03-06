@@ -18,6 +18,7 @@ The short-term focus is:
 ## Near-Term Architecture Focus
 
 - Keep the Notion-like workspace shell, but do not let generic documents become the only product model.
+- Treat the workspace home as an operating shell, not only a page list, so queue pressure, approvals, activity, and agent follow-through stay visible next to the docs layer.
 - Prefer feature modules around domain areas such as `campaigns`, `assets`, `crm`, `workspace`, and `agents`.
 - Record meaningful system actions as structured events.
 - Use `system_events` as the shared activity backbone instead of creating separate ad hoc logs per feature.

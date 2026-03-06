@@ -13,9 +13,17 @@ vi.mock("@/features/approvals/server", () => ({
   listApprovalRequests: vi.fn(),
 }));
 
+vi.mock("@/features/agent-outcomes/server", () => ({
+  listAgentOutcomes: vi.fn(),
+}));
+
 vi.mock("@/features/system-events/server", () => ({
   filterSystemEventsByClientScope: vi.fn(),
   listSystemEvents: vi.fn(),
+}));
+
+vi.mock("@/features/work-queue/server", () => ({
+  getWorkQueue: vi.fn(),
 }));
 
 vi.mock("@/components/workspace/page-list", () => ({
@@ -34,14 +42,28 @@ vi.mock("@/components/workspace/workspace-activity-feed", () => ({
   ),
 }));
 
+vi.mock("@/components/workflow/work-queue-section", () => ({
+  WorkQueueSection: ({ summary }: { summary: { items: unknown[] } }) => (
+    <div data-testid="work-queue-count">{summary.items.length}</div>
+  ),
+}));
+
+vi.mock("@/components/agents/agent-outcomes-panel", () => ({
+  AgentOutcomesPanel: ({ outcomes }: { outcomes: unknown[] }) => (
+    <div data-testid="agent-outcomes-count">{outcomes.length}</div>
+  ),
+}));
+
 import ClientWorkspacePage from "./page";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getWorkspacePages } from "@/features/workspace/server";
 import { listApprovalRequests } from "@/features/approvals/server";
 import {
   filterSystemEventsByClientScope,
   listSystemEvents,
 } from "@/features/system-events/server";
+import { getWorkQueue } from "@/features/work-queue/server";
 
 afterEach(() => {
   cleanup();
@@ -63,6 +85,11 @@ describe("ClientWorkspacePage", () => {
       fromDb: true,
       pages: [],
     });
+    vi.mocked(getWorkQueue).mockResolvedValue({
+      items: [],
+      metrics: [],
+    });
+    vi.mocked(listAgentOutcomes).mockResolvedValue([]);
     vi.mocked(listSystemEvents).mockResolvedValue([]);
     vi.mocked(filterSystemEventsByClientScope).mockResolvedValue([]);
     vi.mocked(listApprovalRequests).mockResolvedValue([]);
@@ -80,11 +107,26 @@ describe("ClientWorkspacePage", () => {
       scope,
       status: "pending",
     });
+    expect(getWorkQueue).toHaveBeenCalledWith({
+      clientSlug: "zamora",
+      limit: 6,
+      mode: "client",
+      scope,
+    });
+    expect(listAgentOutcomes).toHaveBeenCalledWith({
+      audience: "shared",
+      clientSlug: "zamora",
+      limit: 6,
+      scopeCampaignIds: ["cmp_1"],
+      scopeEventIds: ["evt_1"],
+    });
     expect(filterSystemEventsByClientScope).toHaveBeenCalledWith("zamora", [], {
       allowedCampaignIds: ["cmp_1"],
       allowedEventIds: ["evt_1"],
     });
     expect(screen.getByTestId("page-list")).toHaveTextContent("/client/zamora/workspace");
+    expect(screen.getByTestId("work-queue-count")).toHaveTextContent("0");
+    expect(screen.getByTestId("agent-outcomes-count")).toHaveTextContent("0");
     expect(screen.getByTestId("approvals-count")).toHaveTextContent("0");
     expect(screen.getByTestId("events-count")).toHaveTextContent("0");
   });
