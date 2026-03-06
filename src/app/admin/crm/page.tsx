@@ -5,8 +5,10 @@ import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { StatCard } from "@/components/admin/stat-card";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { CrmContactsPanel } from "@/components/crm/crm-contacts-panel";
+import { CrmDiscussionsPanel } from "@/components/crm/crm-discussions-panel";
 import { CrmFollowUpItemsPanel } from "@/components/crm/crm-follow-up-items-panel";
 import { CrmCreateContactForm } from "@/components/crm/crm-create-contact-form";
+import { listCrmDiscussionThreads } from "@/features/crm-comments/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmOverview } from "@/features/crm/server";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
@@ -23,7 +25,7 @@ export default async function AdminCrmPage({ searchParams }: Props) {
       ? resolvedSearchParams.client
       : null;
 
-  const [crm, agentOutcomes, followUpItems] = await Promise.all([
+  const [crm, agentOutcomes, followUpItems, discussions] = await Promise.all([
     getCrmOverview({
       audience: "all",
       clientSlug: selectedClient,
@@ -38,6 +40,11 @@ export default async function AdminCrmPage({ searchParams }: Props) {
       audience: "all",
       clientSlug: selectedClient,
       limit: 20,
+    }),
+    listCrmDiscussionThreads({
+      audience: "all",
+      clientSlug: selectedClient,
+      limit: 8,
     }),
   ]);
 
@@ -147,6 +154,16 @@ export default async function AdminCrmPage({ searchParams }: Props) {
             description="Actionable CRM follow-up work attached directly to contact records."
             emptyState="No CRM follow-up items are active yet."
             showContactName
+            variant="admin"
+          />
+
+          <CrmDiscussionsPanel
+            detailHrefPrefix="/admin/crm"
+            discussions={discussions}
+            title="Relationship discussion"
+            description="Unresolved CRM conversations that still need a response or follow-up."
+            emptyState="No unresolved CRM discussions are active right now."
+            showClientSlug={!selectedClient}
             variant="admin"
           />
 

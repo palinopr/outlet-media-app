@@ -3,8 +3,10 @@ import { ArrowLeft, CalendarClock, Flame, Share2, Users } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { CrmContactsPanel } from "@/components/crm/crm-contacts-panel";
+import { CrmDiscussionsPanel } from "@/components/crm/crm-discussions-panel";
 import { CrmFollowUpItemsPanel } from "@/components/crm/crm-follow-up-items-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { listCrmDiscussionThreads } from "@/features/crm-comments/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmOverview } from "@/features/crm/server";
 import { requireClientAccess } from "@/features/client-portal/access";
@@ -19,7 +21,7 @@ export default async function ClientCrmPage({ params }: Props) {
   const { slug } = await params;
   await requireClientAccess(slug, "crm");
 
-  const [crm, agentOutcomes, followUpItems] = await Promise.all([
+  const [crm, agentOutcomes, followUpItems, discussions] = await Promise.all([
     getCrmOverview({
       audience: "shared",
       clientSlug: slug,
@@ -34,6 +36,11 @@ export default async function ClientCrmPage({ params }: Props) {
       audience: "shared",
       clientSlug: slug,
       limit: 20,
+    }),
+    listCrmDiscussionThreads({
+      audience: "shared",
+      clientSlug: slug,
+      limit: 8,
     }),
   ]);
 
@@ -120,6 +127,15 @@ export default async function ClientCrmPage({ params }: Props) {
             description="Shared CRM follow-up work so you can see the next relationship steps clearly."
             emptyState="No shared CRM follow-up items are active yet."
             showContactName
+            variant="client"
+          />
+
+          <CrmDiscussionsPanel
+            detailHrefPrefix={`/client/${slug}/crm`}
+            discussions={discussions}
+            title="Relationship discussion"
+            description="Shared CRM conversations that still need a response or follow-up."
+            emptyState="No shared CRM discussions are active right now."
             variant="client"
           />
         </div>

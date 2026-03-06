@@ -24,6 +24,22 @@ interface ListCrmCommentsOptions {
   clientSlug: string;
 }
 
+interface ListCrmDiscussionThreadsOptions {
+  audience?: "all" | CrmCommentVisibility;
+  clientSlug?: string | null;
+  limit?: number;
+}
+
+export interface CrmDiscussionThread {
+  id: string;
+  clientSlug: string;
+  contactId: string;
+  contactName: string | null;
+  authorName: string | null;
+  content: string;
+  createdAt: string;
+}
+
 function mapCrmComment(row: Record<string, unknown>): CrmComment {
   return {
     id: row.id as string,
@@ -63,6 +79,64 @@ export async function listCrmComments(options: ListCrmCommentsOptions): Promise<
   }
 
   return (data ?? []).map((row) => mapCrmComment(row as Record<string, unknown>));
+}
+
+export async function listCrmDiscussionThreads(
+  options: ListCrmDiscussionThreadsOptions = {},
+): Promise<CrmDiscussionThread[]> {
+  if (!supabaseAdmin) return [];
+
+  let query = supabaseAdmin
+    .from("crm_comments")
+    .select("id, contact_id, client_slug, author_name, content, created_at")
+    .eq("resolved", false)
+    .is("parent_comment_id", null)
+    .order("created_at", { ascending: false })
+    .limit(options.limit ?? 8);
+
+  if (options.clientSlug) {
+    query = query.eq("client_slug", options.clientSlug);
+  }
+
+  if (options.audience && options.audience !== "all") {
+    query = query.eq("visibility", options.audience);
+  }
+
+  const { data, error } = await query;
+  if (error) {
+    console.error("[crm-comments] thread list failed:", error.message);
+    return [];
+  }
+
+  const rows = (data ?? []) as Record<string, unknown>[];
+  const contactIds = [...new Set(rows.map((row) => row.contact_id as string).filter(Boolean))];
+  const contactNames = new Map<string, string>();
+
+  if (contactIds.length > 0) {
+    const { data: contactRows, error: contactError } = await supabaseAdmin
+      .from("crm_contacts" as never)
+      .select("id, full_name")
+      .in("id", contactIds);
+
+    if (contactError) {
+      console.error("[crm-comments] thread contact lookup failed:", contactError.message);
+    } else {
+      for (const row of contactRows ?? []) {
+        const record = row as Record<string, unknown>;
+        contactNames.set(record.id as string, (record.full_name as string | null) ?? "CRM contact");
+      }
+    }
+  }
+
+  return rows.map((row) => ({
+    id: row.id as string,
+    clientSlug: row.client_slug as string,
+    contactId: row.contact_id as string,
+    contactName: contactNames.get(row.contact_id as string) ?? null,
+    authorName: (row.author_name as string | null) ?? null,
+    content: row.content as string,
+    createdAt: row.created_at as string,
+  }));
 }
 
 export async function canAccessCrmComments(
