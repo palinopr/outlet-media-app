@@ -1,9 +1,10 @@
-import { BadgeCheck, Clock3, Settings, ShieldCheck, Users } from "lucide-react";
+import { BadgeCheck, Clock3, Link2, Settings, ShieldCheck, TriangleAlert, Users } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { getSettingsData } from "./data";
 import { SettingsView } from "./settings-view";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { slugToLabel } from "@/lib/formatters";
+import { buildConnectedAccountsSummary } from "./connected-accounts-summary";
 
 // ConnectedAccountsList + connect flow hidden -- enable when white-label self-serve is ready
 
@@ -20,8 +21,9 @@ export default async function SettingsPage({
   const settingsData = await getSettingsData(slug);
   const ownerCount =
     settingsData?.members.filter((member) => member.role === "owner").length ?? 0;
-  const activeConnections =
-    settingsData?.connectedAccounts.filter((account) => account.status === "active").length ?? 0;
+  const connectionSummary = settingsData
+    ? buildConnectedAccountsSummary(settingsData.connectedAccounts)
+    : null;
   const pendingInviteCount = settingsData?.pendingInvites.length ?? 0;
 
   return (
@@ -47,7 +49,7 @@ export default async function SettingsPage({
       </div>
 
       {settingsData ? (
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 xl:grid-cols-6">
           <StatCard
             icon={Users}
             iconColor="bg-white/[0.08] text-white/80"
@@ -65,7 +67,7 @@ export default async function SettingsPage({
             variant="glass"
           />
           <StatCard
-            icon={BadgeCheck}
+            icon={Link2}
             iconColor="bg-white/[0.08] text-white/80"
             label="Connected accounts"
             sub="Meta ad accounts linked here"
@@ -75,9 +77,17 @@ export default async function SettingsPage({
           <StatCard
             icon={BadgeCheck}
             iconColor="bg-white/[0.08] text-white/80"
-            label="Active links"
+            label="Healthy links"
             sub="ready for campaign work"
-            value={String(activeConnections)}
+            value={String(connectionSummary?.healthyCount ?? 0)}
+            variant="glass"
+          />
+          <StatCard
+            icon={TriangleAlert}
+            iconColor="bg-white/[0.08] text-white/80"
+            label="Needs attention"
+            sub="expiring, stale, or disconnected"
+            value={String(connectionSummary?.attentionCount ?? 0)}
             variant="glass"
           />
           <StatCard
