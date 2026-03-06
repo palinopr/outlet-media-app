@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { createSelectColumn } from "@/components/admin/data-table/select-column";
 import { ExternalLink } from "lucide-react";
@@ -50,7 +51,12 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
       header: ({ column }) => <ColumnHeader column={column} title="Campaign" />,
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium">{row.original.name}</p>
+          <Link
+            href={`/admin/campaigns/${row.original.campaignId}`}
+            className="text-sm font-medium transition-colors hover:text-primary"
+          >
+            {row.original.name}
+          </Link>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs text-muted-foreground">{fmtObjective(row.original.objective)}</span>
           </div>
