@@ -80,6 +80,7 @@ The short-term focus is:
 - Keep client-side people search and mention autocomplete client-slug scoped too, so workspace collaboration surfaces never fall back to global user lookup for non-admin users.
 - Keep workspace page, comment, and task APIs client-scoped too, and treat the admin workspace as its own internal `admin` tenant instead of defaulting those routes to all signed-in users or all workspace pages.
 - Keep the live workspace page/comment APIs on the same notification and revalidation path as the older workspace server actions, so the real editor flows refresh workspace shells and inboxes instead of drifting out of parity.
+- Keep access-management mutations on shared revalidation too, so admin users/settings/client-detail member surfaces and client settings stay in sync after invite, membership, or access-role changes.
 - Treat shared discussions as incomplete unless they also notify the right inbox audience, so campaign, asset, event, and CRM collaboration cannot get lost between the thread view and the routed inbox.
 - Keep notifications summary-first and filterable, so the inbox reads like an operating queue instead of a flat message dump.
 - Treat non-workspace follow-up items like real assignments too, so campaign, CRM, asset, and event assignees get notified the same way workspace-task assignees do.

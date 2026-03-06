@@ -1,10 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import { clerkClient } from "@clerk/nextjs/server";
 import { adminGuard } from "@/lib/api-helpers";
 import { logAudit } from "./audit";
+import { revalidateAccessManagementPaths } from "@/features/access/revalidation";
+import { supabaseAdmin } from "@/lib/supabase";
 
 const ChangeRoleSchema = z.object({
   userId: z.string().min(1),
@@ -25,7 +26,7 @@ export async function changeUserRole(formData: { userId: string; role: string })
   });
 
   await logAudit("user", parsed.userId, "change_role", { role: oldRole }, { role: parsed.role });
-  revalidatePath("/admin/users");
+  revalidateAccessManagementPaths();
 }
 
 const BulkUpdateRoleSchema = z.object({
@@ -58,7 +59,7 @@ export async function bulkUpdateUserRole(formData: { userIds: string[]; role: st
     failed,
     role: parsed.role,
   });
-  revalidatePath("/admin/users");
+  revalidateAccessManagementPaths();
 
   if (failed > 0) {
     return { success: false, message: `${succeeded} updated, ${failed} failed` };
@@ -81,7 +82,7 @@ export async function deleteUser(formData: { userId: string }) {
   await client.users.deleteUser(parsed.userId);
 
   await logAudit("user", parsed.userId, "delete", { email: user.emailAddresses[0]?.emailAddress }, null);
-  revalidatePath("/admin/users");
+  revalidateAccessManagementPaths();
 }
 
 const RevokeInvitationSchema = z.object({
@@ -101,6 +102,21 @@ export async function revokeInvitation(formData: { invitationId: string }) {
   const { data: allInvitations } = await client.invitations.getInvitationList();
   const target = allInvitations.find((i) => i.id === parsed.invitationId);
   const email = target?.emailAddress;
+  const targetClientSlug =
+    target &&
+    typeof (target.publicMetadata as Record<string, unknown> | undefined)?.client_slug === "string"
+      ? ((target.publicMetadata as Record<string, unknown>).client_slug as string)
+      : null;
+  const targetClientId =
+    targetClientSlug && supabaseAdmin
+      ? (
+          await supabaseAdmin
+            .from("clients")
+            .select("id")
+            .eq("slug", targetClientSlug)
+            .maybeSingle()
+        ).data?.id ?? null
+      : null;
 
   if (email) {
     const revocable = allInvitations.filter(
@@ -113,5 +129,8 @@ export async function revokeInvitation(formData: { invitationId: string }) {
     await logAudit("invitation", parsed.invitationId, "revoke", null, null);
   }
 
-  revalidatePath("/admin/users");
+  revalidateAccessManagementPaths({
+    clientId: typeof targetClientId === "string" ? targetClientId : null,
+    clientSlug: targetClientSlug,
+  });
 }

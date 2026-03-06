@@ -15,11 +15,42 @@ import {
 import { toggleClientService, seedClientServices } from "@/lib/client-services";
 import { SERVICE_KEYS, type ServiceKey } from "@/lib/service-registry";
 import { logAudit } from "./audit";
+import { revalidateAccessManagementPaths } from "@/features/access/revalidation";
 
 const RenameClientSchema = z.object({
   oldSlug: z.string().min(1),
   newSlug: z.string().min(1).regex(/^[a-z0-9_]+$/),
 });
+
+async function getClientAccessContextById(clientId: string) {
+  if (!supabaseAdmin) return null;
+
+  const { data } = await supabaseAdmin
+    .from("clients")
+    .select("id, slug")
+    .eq("id", clientId)
+    .single();
+
+  if (!data) return null;
+
+  return {
+    clientId: data.id as string,
+    clientSlug: data.slug as string,
+  };
+}
+
+async function getClientAccessContextByMemberId(memberId: string) {
+  if (!supabaseAdmin) return null;
+
+  const { data: member } = await supabaseAdmin
+    .from("client_members")
+    .select("client_id")
+    .eq("id", memberId)
+    .single();
+
+  if (!member?.client_id) return null;
+  return getClientAccessContextById(member.client_id as string);
+}
 
 export async function renameClient(formData: { oldSlug: string; newSlug: string }) {
   const err = await adminGuard();
@@ -42,6 +73,7 @@ export async function renameClient(formData: { oldSlug: string; newSlug: string 
   if (e2) throw new Error(e2.message);
 
   await logAudit("client", parsed.oldSlug, "rename", { slug: parsed.oldSlug }, { slug: parsed.newSlug });
+  revalidateAccessManagementPaths();
   revalidatePath("/admin/clients");
   revalidatePath("/admin/campaigns");
   revalidatePath("/admin/events");
@@ -67,6 +99,7 @@ export async function deactivateClient(formData: { slug: string }) {
   if (error) throw new Error(error.message);
 
   await logAudit("client", parsed.slug, "deactivate", null, { paused_all_campaigns: true });
+  revalidateAccessManagementPaths();
   revalidatePath("/admin/clients");
   revalidatePath("/admin/campaigns");
 }
@@ -94,7 +127,7 @@ export async function bulkDeactivateClients(formData: { clientIds: string[] }) {
   await logAudit("client", "bulk", "bulk_deactivate", null, {
     count: parsed.clientIds.length,
   });
-  revalidatePath("/admin/clients");
+  revalidateAccessManagementPaths();
   return { success: true };
 }
 
@@ -131,7 +164,10 @@ export async function createClient(formData: { name: string; slug: string; servi
     slug: parsed.slug,
     services: serviceKeys,
   });
-  revalidatePath("/admin/clients");
+  revalidateAccessManagementPaths({
+    clientId: data.id,
+    clientSlug: data.slug,
+  });
   return data;
 }
 
@@ -166,7 +202,8 @@ export async function toggleService(formData: {
     serviceKey: parsed.serviceKey,
     enabled: parsed.enabled,
   });
-  revalidatePath("/admin/clients");
+  const accessContext = await getClientAccessContextById(parsed.clientId);
+  revalidateAccessManagementPaths(accessContext ?? {});
 }
 
 // ─── Update client ──────────────────────────────────────────────────────────
@@ -187,7 +224,8 @@ export async function updateClient(formData: { clientId: string; name?: string; 
   if (error) throw new Error(error.message);
 
   await logAudit("client", clientId, "update", null, updates);
-  revalidatePath("/admin/clients");
+  const accessContext = await getClientAccessContextById(clientId);
+  revalidateAccessManagementPaths(accessContext ?? {});
 }
 
 // ─── Add member to client ───────────────────────────────────────────────────
@@ -236,8 +274,10 @@ export async function addClientMember(formData: { clientId: string; clerkUserId:
     clientId: parsed.clientId,
     role: parsed.role,
   });
-  revalidatePath("/admin/clients");
-  revalidatePath("/admin/users");
+  revalidateAccessManagementPaths({
+    clientId: parsed.clientId,
+    clientSlug: client.slug,
+  });
 }
 
 // ─── Remove member from client ──────────────────────────────────────────────
@@ -285,8 +325,8 @@ export async function removeClientMember(formData: { clientId: string; memberId:
   }
 
   await logAudit("client_member", parsed.memberId, "remove", { clerkUserId: member.clerk_user_id }, null);
-  revalidatePath("/admin/clients");
-  revalidatePath("/admin/users");
+  const accessContext = await getClientAccessContextById(parsed.clientId);
+  revalidateAccessManagementPaths(accessContext ?? {});
 }
 
 // ─── Change member role ─────────────────────────────────────────────────────
@@ -297,6 +337,7 @@ export async function changeClientMemberRole(formData: { memberId: string; role:
   if (!supabaseAdmin) throw new Error("DB not configured");
 
   const parsed = ChangeClientMemberRoleSchema.parse(formData);
+  const accessContext = await getClientAccessContextByMemberId(parsed.memberId);
 
   const { error } = await supabaseAdmin
     .from("client_members")
@@ -306,7 +347,7 @@ export async function changeClientMemberRole(formData: { memberId: string; role:
   if (error) throw new Error(error.message);
 
   await logAudit("client_member", parsed.memberId, "change_role", null, { role: parsed.role });
-  revalidatePath("/admin/clients");
+  revalidateAccessManagementPaths(accessContext ?? {});
 }
 
 // ─── Change member scope ────────────────────────────────────────────────────
@@ -318,6 +359,7 @@ export async function changeClientMemberScope(formData: { memberId: string; scop
 
   const scope = formData.scope;
   if (scope !== "all" && scope !== "assigned") throw new Error("Invalid scope");
+  const accessContext = await getClientAccessContextByMemberId(formData.memberId);
 
   const { error } = await supabaseAdmin
     .from("client_members")
@@ -327,7 +369,7 @@ export async function changeClientMemberScope(formData: { memberId: string; scop
   if (error) throw new Error(error.message);
 
   await logAudit("client_member", formData.memberId, "change_scope", null, { scope });
-  revalidatePath("/admin/clients");
+  revalidateAccessManagementPaths(accessContext ?? {});
 }
 
 // ─── Update member campaign assignments ─────────────────────────────────────
@@ -336,6 +378,7 @@ export async function updateMemberCampaigns(formData: { memberId: string; campai
   const err = await adminGuard();
   if (err) throw new Error("Forbidden");
   if (!supabaseAdmin) throw new Error("DB not configured");
+  const accessContext = await getClientAccessContextByMemberId(formData.memberId);
 
   // Delete existing assignments
   await supabaseAdmin
@@ -358,7 +401,7 @@ export async function updateMemberCampaigns(formData: { memberId: string; campai
   await logAudit("client_member", formData.memberId, "update_campaigns", null, {
     count: formData.campaignIds.length,
   });
-  revalidatePath("/admin/clients");
+  revalidateAccessManagementPaths(accessContext ?? {});
 }
 
 // ─── Update member event assignments ────────────────────────────────────────
@@ -367,6 +410,7 @@ export async function updateMemberEvents(formData: { memberId: string; eventIds:
   const err = await adminGuard();
   if (err) throw new Error("Forbidden");
   if (!supabaseAdmin) throw new Error("DB not configured");
+  const accessContext = await getClientAccessContextByMemberId(formData.memberId);
 
   // Delete existing assignments
   await supabaseAdmin
@@ -389,5 +433,5 @@ export async function updateMemberEvents(formData: { memberId: string; eventIds:
   await logAudit("client_member", formData.memberId, "update_events", null, {
     count: formData.eventIds.length,
   });
-  revalidatePath("/admin/clients");
+  revalidateAccessManagementPaths(accessContext ?? {});
 }

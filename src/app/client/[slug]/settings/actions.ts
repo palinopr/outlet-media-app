@@ -2,9 +2,9 @@
 
 import { auth } from "@clerk/nextjs/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import { supabaseAdmin } from "@/lib/supabase";
+import { revalidateAccessManagementPaths } from "@/features/access/revalidation";
 
 const InviteTeamMemberSchema = z.object({
   email: z.string().email(),
@@ -41,7 +41,10 @@ export async function inviteTeamMember(formData: { email: string; slug: string }
     publicMetadata: { client_slug: parsed.slug },
   });
 
-  revalidatePath(`/client/${parsed.slug}/settings`);
+  revalidateAccessManagementPaths({
+    clientId: client.id,
+    clientSlug: parsed.slug,
+  });
 }
 
 const RemoveTeamMemberSchema = z.object({
@@ -98,7 +101,10 @@ export async function removeTeamMember(formData: { memberId: string; slug: strin
     await clerk.users.updateUserMetadata(member.clerk_user_id, { publicMetadata: meta });
   }
 
-  revalidatePath(`/client/${parsed.slug}/settings`);
+  revalidateAccessManagementPaths({
+    clientId: client.id,
+    clientSlug: parsed.slug,
+  });
 }
 
 const RevokeTeamInviteSchema = z.object({
@@ -134,5 +140,8 @@ export async function revokeTeamInvite(formData: {
   const clerk = await clerkClient();
   await clerk.invitations.revokeInvitation(parsed.invitationId);
 
-  revalidatePath(`/client/${parsed.slug}/settings`);
+  revalidateAccessManagementPaths({
+    clientId: client.id,
+    clientSlug: parsed.slug,
+  });
 }
