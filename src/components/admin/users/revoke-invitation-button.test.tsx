@@ -6,9 +6,16 @@ import { RevokeInvitationButton } from "./revoke-invitation-button";
 const { revokeInvitation } = vi.hoisted(() => ({
   revokeInvitation: vi.fn(),
 }));
+const refresh = vi.fn();
 
 vi.mock("@/app/admin/actions/users", () => ({
   revokeInvitation,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    refresh,
+  }),
 }));
 
 vi.mock("sonner", () => ({
@@ -38,5 +45,6 @@ describe("RevokeInvitationButton", () => {
     await waitFor(() => {
       expect(revokeInvitation).toHaveBeenCalledWith({ invitationId: "inv_1" });
     });
+    expect(refresh).toHaveBeenCalled();
   });
 });

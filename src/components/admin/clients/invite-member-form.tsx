@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ export function InviteMemberForm({
   clientSlug: string;
   onDone: () => void;
 }) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [clientRole, setClientRole] = useState<"owner" | "member">("member");
   const [loading, setLoading] = useState(false);
@@ -34,6 +36,7 @@ export function InviteMemberForm({
       setSent(true);
       toast.success("Invite sent to " + email);
       setTimeout(() => {
+        router.refresh();
         onDone();
       }, 1500);
     } catch (err) {

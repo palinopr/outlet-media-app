@@ -41,11 +41,18 @@ export interface ClientAssetSource {
 
 export interface ClientDetail extends ClientSummary {
   members: ClientMember[];
+  pendingInvites: ClientPendingInvite[];
   campaigns: ClientCampaign[];
   events: ClientEvent[];
   assets: ClientAsset[];
   assetSources: ClientAssetSource[];
   services: import("@/lib/client-services").ClientService[];
+}
+
+export interface ClientPendingInvite {
+  id: string;
+  email: string;
+  createdAt: string;
 }
 
 export interface ClientMember {

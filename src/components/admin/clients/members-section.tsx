@@ -11,12 +11,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Trash2 } from "lucide-react";
+import { Clock3, UserPlus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { fmtDate } from "@/lib/formatters";
 import { removeClientMember } from "@/app/admin/actions/clients";
 import type { ClientDetail } from "@/app/admin/clients/data";
+import { RevokeInvitationButton } from "@/components/admin/users/revoke-invitation-button";
 import { RoleSelect } from "./role-select";
 import { ScopeSelect } from "./scope-select";
 import { AssignmentManager } from "./assignment-manager";
@@ -50,6 +51,53 @@ export function MembersSection({ client }: { client: ClientDetail }) {
           />
         </div>
       )}
+
+      <Card className="mb-4 border-border/60">
+        <div className="flex items-start justify-between gap-3 border-b border-border/60 px-4 py-3">
+          <div>
+            <h3 className="text-sm font-medium">Pending invites</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {client.pendingInvites.length} invite{client.pendingInvites.length === 1 ? "" : "s"} still waiting to turn into active members.
+            </p>
+          </div>
+          <Clock3 className="mt-0.5 h-4 w-4 text-muted-foreground" />
+        </div>
+        {client.pendingInvites.length === 0 ? (
+          <div className="px-4 py-4 text-sm text-muted-foreground">
+            No pending invites for this client right now.
+          </div>
+        ) : (
+          <div className="divide-y divide-border/60">
+            {client.pendingInvites.map((invite) => (
+              <div
+                key={invite.id}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">{invite.email}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Pending since {fmtDate(invite.createdAt)}
+                  </p>
+                </div>
+                <RevokeInvitationButton
+                  email={invite.email}
+                  invitationId={invite.id}
+                  trigger={
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 shrink-0 px-2 text-muted-foreground hover:text-red-400"
+                    >
+                      <X className="mr-1.5 h-3.5 w-3.5" />
+                      Revoke
+                    </Button>
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       <Card className="border-border/60">
         <Table>

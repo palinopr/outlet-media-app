@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { revokeInvitation } from "@/app/admin/actions/users";
@@ -15,6 +16,8 @@ export function RevokeInvitationButton({
   invitationId,
   trigger,
 }: RevokeInvitationButtonProps) {
+  const router = useRouter();
+
   return (
     <ConfirmDialog
       trigger={trigger}
@@ -26,6 +29,7 @@ export function RevokeInvitationButton({
         try {
           await revokeInvitation({ invitationId });
           toast.success(`Invitation revoked for ${email}`);
+          router.refresh();
         } catch (error) {
           toast.error(
             error instanceof Error ? error.message : "Failed to revoke invitation",

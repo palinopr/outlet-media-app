@@ -56,6 +56,13 @@ const client = {
   needsAttention: 3,
   openActionItems: 2,
   openDiscussions: 1,
+  pendingInvites: [
+    {
+      createdAt: "2026-03-03T00:00:00.000Z",
+      email: "invitee@acme.com",
+      id: "invite-1",
+    },
+  ],
   pendingApprovals: 1,
   roas: 3.4,
   services: [],
@@ -411,5 +418,26 @@ describe("ClientDetailView", () => {
       "href",
       "/admin/crm/contact-1",
     );
+  });
+
+  it("renders pending invites on the Members tab", () => {
+    render(
+      <ClientDetailView
+        agentOutcomes={[]}
+        client={client}
+        crmDiscussions={crmDiscussions}
+        crmFollowUpItems={crmFollowUpItems}
+        crmOverview={crmOverview}
+        eventOperations={eventOperations}
+        opsSummary={opsSummary}
+        recentActivity={recentActivity}
+        workQueue={workQueue}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Members/i }));
+
+    expect(screen.getByText("Pending invites")).toBeInTheDocument();
+    expect(screen.getByText("invitee@acme.com")).toBeInTheDocument();
   });
 });
