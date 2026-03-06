@@ -31,6 +31,7 @@ export interface AgentOutcomeView {
   action: string;
   agentId: string;
   assetId: string | null;
+  assetFollowUpItemId: string | null;
   assetName: string | null;
   campaignId: string | null;
   campaignName: string | null;
@@ -42,6 +43,7 @@ export interface AgentOutcomeView {
   crmContactName: string | null;
   errorText: string | null;
   linkedActionItemId: string | null;
+  linkedAssetFollowUpItemId: string | null;
   linkedCrmFollowUpItemId: string | null;
   requestDetail: string | null;
   requestSummary: string;
@@ -79,12 +81,14 @@ export function buildAgentOutcomeView(
   request: AgentOutcomeRequestRecord,
   task?: AgentOutcomeTaskRecord | null,
   linkedActionItemId?: string | null,
+  linkedAssetFollowUpItemId?: string | null,
   linkedCrmFollowUpItemId?: string | null,
 ): AgentOutcomeView {
   return {
     action: task?.action ?? "agent-task",
     agentId: task?.toAgent ?? "assistant",
     assetId: metadataString(request.metadata, "assetId"),
+    assetFollowUpItemId: metadataString(request.metadata, "assetFollowUpItemId"),
     assetName: metadataString(request.metadata, "assetName"),
     campaignId: metadataString(request.metadata, "campaignId"),
     campaignName: metadataString(request.metadata, "campaignName"),
@@ -96,6 +100,7 @@ export function buildAgentOutcomeView(
     crmContactName: metadataString(request.metadata, "crmContactName"),
     errorText: task?.error ?? null,
     linkedActionItemId: linkedActionItemId ?? null,
+    linkedAssetFollowUpItemId: linkedAssetFollowUpItemId ?? null,
     linkedCrmFollowUpItemId: linkedCrmFollowUpItemId ?? null,
     requestDetail: request.detail,
     requestSummary: request.summary,

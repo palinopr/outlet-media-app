@@ -86,6 +86,7 @@ describe("agent outcome summary helpers", () => {
         toAgent: "meta-ads",
       },
       "action_123",
+      null,
     );
 
     expect(outcome.linkedActionItemId).toBe("action_123");
@@ -105,6 +106,7 @@ describe("agent outcome summary helpers", () => {
         taskId: "web_task_3",
         visibility: "shared",
       },
+      null,
       null,
       null,
       "crm_follow_up_123",
@@ -136,15 +138,44 @@ describe("agent outcome summary helpers", () => {
         visibility: "admin_only",
       },
       null,
+      null,
     );
 
     expect(outcome).toMatchObject({
       assetId: "asset_123",
+      linkedAssetFollowUpItemId: null,
       assetName: "miami-story-v3.mp4",
       campaignId: null,
       crmContactId: null,
       status: "pending",
       taskId: "web_task_4",
+    });
+  });
+
+  it("keeps a linked asset follow-up item when agent work already created it", () => {
+    const outcome = buildAgentOutcomeView(
+      {
+        clientSlug: "zamora",
+        createdAt: "2026-03-06T12:00:00.000Z",
+        detail: null,
+        metadata: {
+          assetId: "asset_456",
+          assetName: "miami-post-v1.jpg",
+        },
+        summary: 'Queued asset agent triage for follow-up "Review miami-post-v1.jpg"',
+        taskId: "web_task_5",
+        visibility: "admin_only",
+      },
+      null,
+      null,
+      "asset_follow_up_123",
+    );
+
+    expect(outcome).toMatchObject({
+      assetId: "asset_456",
+      linkedAssetFollowUpItemId: "asset_follow_up_123",
+      status: "pending",
+      taskId: "web_task_5",
     });
   });
 });

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { AssetCommentsPanel } from "@/components/assets/asset-comments-panel";
+import { AssetFollowUpItemsPanel } from "@/components/assets/asset-follow-up-items-panel";
 import { AssetOperatingPanel } from "@/components/admin/assets/asset-operating-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
@@ -17,6 +18,7 @@ import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listAssetComments } from "@/features/asset-comments/server";
+import { listAssetFollowUpItems } from "@/features/asset-follow-up-items/server";
 import { listAssetApprovalRequests } from "@/features/approvals/server";
 import { getAssetOperatingData, getAssetRecordById } from "@/features/assets/server";
 import { listAssetSystemEvents } from "@/features/system-events/server";
@@ -73,7 +75,7 @@ export default async function AdminAssetDetailPage({ params }: Props) {
   const assetRecord = await getAssetRecordById(assetId);
   if (!assetRecord) notFound();
 
-  const [approvals, comments, events] = await Promise.all([
+  const [approvals, comments, events, followUpItems] = await Promise.all([
     listAssetApprovalRequests({
       audience: "all",
       assetId,
@@ -91,6 +93,12 @@ export default async function AdminAssetDetailPage({ params }: Props) {
       assetId,
       clientSlug: assetRecord.client_slug,
       limit: 10,
+    }),
+    listAssetFollowUpItems({
+      audience: "all",
+      assetId,
+      clientSlug: assetRecord.client_slug,
+      limit: 24,
     }),
   ]);
 
@@ -218,13 +226,28 @@ export default async function AdminAssetDetailPage({ params }: Props) {
 
           <AssetCommentsPanel
             allowAdminOnly
+            allowCreateFollowUpItems
             assetId={assetId}
             canDeleteAny
             clientSlug={data.asset.client_slug}
             comments={comments}
             currentUserId={userId ?? ""}
             description="Keep creative feedback, internal review notes, and client-facing discussion on the asset itself."
+            linkedFollowUpSourceIds={followUpItems
+              .filter((item) => item.sourceEntityType === "asset_comment" && item.sourceEntityId)
+              .map((item) => item.sourceEntityId as string)}
             title="Asset discussion"
+            variant="admin"
+          />
+
+          <AssetFollowUpItemsPanel
+            assetId={assetId}
+            canManage
+            clientSlug={data.asset.client_slug}
+            items={followUpItems}
+            title="Creative next steps"
+            description="Track asset-specific review, production, and delivery follow-through without leaving the asset page."
+            emptyState="No asset follow-up items are active yet."
             variant="admin"
           />
 
@@ -293,6 +316,7 @@ export default async function AdminAssetDetailPage({ params }: Props) {
           />
 
           <AgentOutcomesPanel
+            assetHrefPrefix="/admin/assets"
             canCreateActionItems
             outcomes={agentOutcomes}
             title="Agent follow-through"

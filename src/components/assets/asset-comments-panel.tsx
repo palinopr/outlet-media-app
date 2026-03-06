@@ -19,11 +19,13 @@ import { AssetCommentThread } from "./asset-comment-thread";
 
 interface AssetCommentsPanelProps {
   allowAdminOnly: boolean;
+  allowCreateFollowUpItems?: boolean;
   assetId: string;
   canDeleteAny: boolean;
   clientSlug: string;
   comments: AssetComment[];
   currentUserId: string;
+  linkedFollowUpSourceIds?: string[];
   description?: string;
   emptyState?: string;
   title?: string;
@@ -68,11 +70,13 @@ function styles(variant: "admin" | "client") {
 
 export function AssetCommentsPanel({
   allowAdminOnly,
+  allowCreateFollowUpItems = false,
   assetId,
   canDeleteAny,
   clientSlug,
   comments: initialComments,
   currentUserId,
+  linkedFollowUpSourceIds: initialLinkedFollowUpSourceIds = [],
   description = "Keep creative feedback, review notes, and response context attached directly to this asset.",
   emptyState = "No asset discussion yet.",
   title = "Asset discussion",
@@ -80,6 +84,10 @@ export function AssetCommentsPanel({
 }: AssetCommentsPanelProps) {
   const [comments, setComments] = useState(initialComments);
   const [loading, setLoading] = useState(false);
+  const [creatingFollowUpId, setCreatingFollowUpId] = useState<string | null>(null);
+  const [linkedFollowUpSourceIds, setLinkedFollowUpSourceIds] = useState<Set<string>>(
+    new Set(initialLinkedFollowUpSourceIds),
+  );
   const [submitting, setSubmitting] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [visibility, setVisibility] = useState<AssetCommentVisibility>("shared");
@@ -163,6 +171,26 @@ export function AssetCommentsPanel({
     }
   }
 
+  async function createFollowUpItem(commentId: string) {
+    setCreatingFollowUpId(commentId);
+    try {
+      const response = await fetch("/api/asset-comments/follow-up-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId }),
+      });
+      if (!response.ok) return;
+
+      setLinkedFollowUpSourceIds((current) => {
+        const next = new Set(current);
+        next.add(commentId);
+        return next;
+      });
+    } finally {
+      setCreatingFollowUpId(null);
+    }
+  }
+
   const { repliesMap, topLevel } = useMemo(() => {
     const groupedReplies = new Map<string, AssetComment[]>();
     for (const comment of comments) {
@@ -235,9 +263,16 @@ export function AssetCommentsPanel({
         {topLevel.map((comment) => (
           <AssetCommentThread
             key={comment.id}
+            canCreateFollowUpItem={
+              allowCreateFollowUpItems &&
+              !comment.parentCommentId &&
+              !linkedFollowUpSourceIds.has(comment.id) &&
+              creatingFollowUpId !== comment.id
+            }
             canDeleteAny={canDeleteAny}
             comment={comment}
             currentUserId={currentUserId}
+            onCreateFollowUpItem={createFollowUpItem}
             onDelete={deleteComment}
             onReply={reply}
             onResolve={resolveComment}

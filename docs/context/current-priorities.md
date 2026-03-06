@@ -31,6 +31,7 @@ The short-term focus is:
 - Turn admin event surfaces into operating views, not only bulk-edit tables, so ticketing state and promotion workflow live together.
 - Treat assets as a first-class admin app surface with index/detail operating views, instead of hiding creative review inside client detail widgets or raw APIs.
 - Treat asset discussion as a first-class collaboration surface so creative feedback, internal review, and client-visible context stay attached to the asset itself.
+- Treat asset follow-up items as first-class workflow objects so creative review notes, agent outcomes, and production next steps become visible work instead of passive comments.
 - Keep asset review pressure visible on the regular dashboards too, so summary-first users can spot creative bottlenecks without opening the full asset app first.
 - Derive dashboard workflow summaries from the same campaign-native approvals, action items, comments, and `system_events` backbone instead of introducing separate summary-only state.
 - Make dashboard-first users actionable by surfacing pending approvals and unresolved campaign discussion directly on the dashboard.

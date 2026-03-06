@@ -3,6 +3,7 @@ import { adminGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
 import { getCurrentActor } from "@/features/system-events/server";
 import { getAgentOutcomeContext } from "@/features/agent-outcomes/server";
 import { jsonToText } from "@/features/agent-outcomes/summary";
+import { createSystemAssetFollowUpItem } from "@/features/asset-follow-up-items/server";
 import { createSystemCampaignActionItem } from "@/features/campaign-action-items/server";
 import { createSystemCrmFollowUpItem } from "@/features/crm-follow-up-items/server";
 
@@ -34,6 +35,7 @@ function agentLabel(agentId: string) {
 
 function buildActionItemTitle(context: NonNullable<Awaited<ReturnType<typeof getAgentOutcomeContext>>>) {
   const agentName = agentLabel(context.task?.toAgent ?? "assistant");
+  const assetName = metadataString(context.request.metadata, "assetName");
   const crmContactName = metadataString(context.request.metadata, "crmContactName");
 
   if (context.task?.status === "failed") {
@@ -42,6 +44,10 @@ function buildActionItemTitle(context: NonNullable<Awaited<ReturnType<typeof get
 
   if (crmContactName) {
     return `Follow up with ${crmContactName}`;
+  }
+
+  if (assetName) {
+    return `Review ${assetName}`;
   }
 
   if (context.task?.toAgent === "meta-ads") {
@@ -83,6 +89,9 @@ export async function POST(request: NextRequest) {
   if (context.linkedActionItemId) {
     return NextResponse.json({ itemId: context.linkedActionItemId }, { status: 200 });
   }
+  if (context.linkedAssetFollowUpItemId) {
+    return NextResponse.json({ itemId: context.linkedAssetFollowUpItemId }, { status: 200 });
+  }
   if (context.linkedCrmFollowUpItemId) {
     return NextResponse.json({ itemId: context.linkedCrmFollowUpItemId }, { status: 200 });
   }
@@ -96,6 +105,7 @@ export async function POST(request: NextRequest) {
   }
 
   const campaignId = metadataString(context.request.metadata, "campaignId");
+  const assetId = metadataString(context.request.metadata, "assetId");
   const crmContactId = metadataString(context.request.metadata, "crmContactId");
   const clientSlug =
     context.request.clientSlug ?? metadataString(context.request.metadata, "clientSlug");
@@ -137,6 +147,21 @@ export async function POST(request: NextRequest) {
           title: itemTitle,
           visibility: context.request.visibility,
         })
+      : assetId
+        ? await createSystemAssetFollowUpItem({
+            actorId: actor.actorId,
+            actorName: actor.actorName,
+            actorType: actor.actorType,
+            assetId,
+            clientSlug,
+            description: itemDescription,
+            priority: itemPriority,
+            sourceEntityId: taskId,
+            sourceEntityType: "agent_task",
+            status: "todo",
+            title: itemTitle,
+            visibility: context.request.visibility,
+          })
       : null;
 
   if (!item) return apiError("Failed to create action item", 500);

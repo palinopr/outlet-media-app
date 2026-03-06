@@ -10,10 +10,12 @@ import {
 } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { AssetCommentsPanel } from "@/components/assets/asset-comments-panel";
+import { AssetFollowUpItemsPanel } from "@/components/assets/asset-follow-up-items-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listAssetComments } from "@/features/asset-comments/server";
+import { listAssetFollowUpItems } from "@/features/asset-follow-up-items/server";
 import { listAssetApprovalRequests } from "@/features/approvals/server";
 import type { AssetOperatingRecord } from "@/features/assets/server";
 import { getAssetOperatingData } from "@/features/assets/server";
@@ -73,7 +75,7 @@ export default async function ClientAssetDetailPage({ params }: Props) {
   const data = await getAssetOperatingData(assetId);
   if (!data || data.asset.client_slug !== slug) notFound();
 
-  const [approvals, comments, events, agentOutcomes] = await Promise.all([
+  const [approvals, comments, events, agentOutcomes, followUpItems] = await Promise.all([
     listAssetApprovalRequests({
       audience: "shared",
       assetId,
@@ -101,6 +103,12 @@ export default async function ClientAssetDetailPage({ params }: Props) {
         data.linkedCampaigns.length > 0
           ? data.linkedCampaigns.map((campaign) => campaign.campaignId)
           : undefined,
+    }),
+    listAssetFollowUpItems({
+      assetId,
+      audience: "shared",
+      clientSlug: slug,
+      limit: 24,
     }),
   ]);
 
@@ -203,6 +211,17 @@ export default async function ClientAssetDetailPage({ params }: Props) {
             variant="client"
           />
 
+          <AssetFollowUpItemsPanel
+            assetId={assetId}
+            canManage={false}
+            clientSlug={slug}
+            items={followUpItems}
+            title="Creative next steps"
+            description="Shared follow-up work attached directly to this creative asset."
+            emptyState="No shared asset follow-up items are active yet."
+            variant="client"
+          />
+
           <section className="glass-card p-5">
             <div className="mb-4">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-white/45">
@@ -270,6 +289,7 @@ export default async function ClientAssetDetailPage({ params }: Props) {
           />
 
           <AgentOutcomesPanel
+            assetHrefPrefix={`/client/${slug}/assets`}
             outcomes={agentOutcomes}
             title="Agent follow-through"
             description="Shared agent review tied to this creative asset."

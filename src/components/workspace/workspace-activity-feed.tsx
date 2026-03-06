@@ -28,6 +28,7 @@ function getEventIcon(eventName: string) {
   if (eventName === "agent_action_requested") return Cpu;
   if (eventName.startsWith("approval_")) return BadgeCheck;
   if (eventName.startsWith("asset_comment_")) return MessageSquare;
+  if (eventName.startsWith("asset_follow_up_item_")) return CheckSquare;
   if (eventName.startsWith("campaign_action_item_")) return CheckSquare;
   if (eventName.startsWith("campaign_comment_")) return MessageSquare;
   if (eventName.startsWith("crm_contact_")) return Users;

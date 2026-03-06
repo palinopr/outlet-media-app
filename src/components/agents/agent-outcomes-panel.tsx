@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import type { AgentOutcomeStatus, AgentOutcomeView } from "@/features/agent-outcomes/summary";
 
 interface AgentOutcomesPanelProps {
+  assetHrefPrefix?: string;
   canCreateActionItems?: boolean;
   campaignHrefPrefix?: string;
   crmHrefPrefix?: string;
@@ -106,6 +107,7 @@ function agentLabel(agentId: string) {
 }
 
 export function AgentOutcomesPanel({
+  assetHrefPrefix,
   canCreateActionItems = false,
   campaignHrefPrefix,
   crmHrefPrefix,
@@ -184,16 +186,19 @@ export function AgentOutcomesPanel({
             const linkedItemId =
               createdActionItems[outcome.taskId] ??
               outcome.linkedActionItemId ??
+              outcome.linkedAssetFollowUpItemId ??
               outcome.linkedCrmFollowUpItemId ??
               null;
             const canCreateAction =
               canCreateActionItems &&
               !linkedItemId &&
-              (!!outcome.campaignId || !!outcome.crmContactId) &&
+              (!!outcome.campaignId || !!outcome.crmContactId || !!outcome.assetId) &&
               outcome.status !== "pending" &&
               outcome.status !== "running";
-            const createLabel = outcome.crmContactId ? "Create follow-up" : "Create action";
-            const createdLabel = outcome.crmContactId ? "Follow-up created" : "Action created";
+            const createLabel =
+              outcome.crmContactId || outcome.assetId ? "Create follow-up" : "Create action";
+            const createdLabel =
+              outcome.crmContactId || outcome.assetId ? "Follow-up created" : "Action created";
             return (
               <div key={outcome.taskId} className={tone.item}>
                 <div className="flex items-start gap-3">
@@ -276,6 +281,21 @@ export function AgentOutcomesPanel({
                           {outcome.crmContactName
                             ? `Open ${outcome.crmContactName}`
                             : "Open contact"}
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    ) : assetHrefPrefix && outcome.assetId ? (
+                      <div className="mt-3">
+                        <Link
+                          href={`${assetHrefPrefix}/${outcome.assetId}`}
+                          className={cn(
+                            "inline-flex items-center gap-1 text-sm font-medium",
+                            isClient
+                              ? "text-cyan-300 hover:text-cyan-200"
+                              : "text-[#0f7b6c] hover:text-[#0b5e52]",
+                          )}
+                        >
+                          {outcome.assetName ? `Open ${outcome.assetName}` : "Open asset"}
                           <ArrowRight className="h-3 w-3" />
                         </Link>
                       </div>

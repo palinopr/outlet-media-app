@@ -8,9 +8,11 @@ import { timeAgo } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
 interface AssetCommentThreadProps {
+  canCreateFollowUpItem?: boolean;
   canDeleteAny: boolean;
   comment: AssetComment;
   currentUserId: string;
+  onCreateFollowUpItem?: (commentId: string) => Promise<void> | void;
   onDelete: (id: string) => Promise<void> | void;
   onReply: (parentId: string, content: string) => Promise<void> | void;
   onResolve: (id: string, resolved: boolean) => Promise<void> | void;
@@ -55,9 +57,11 @@ function styles(variant: "admin" | "client") {
 }
 
 export function AssetCommentThread({
+  canCreateFollowUpItem = false,
   canDeleteAny,
   comment,
   currentUserId,
+  onCreateFollowUpItem,
   onDelete,
   onReply,
   onResolve,
@@ -92,6 +96,16 @@ export function AssetCommentThread({
       />
 
       <div className="mt-3 flex items-center gap-2">
+        {canCreateFollowUpItem && onCreateFollowUpItem ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className={tone.replyText}
+            onClick={() => void onCreateFollowUpItem(comment.id)}
+          >
+            Create follow-up
+          </Button>
+        ) : null}
         <Button
           variant="ghost"
           size="sm"
