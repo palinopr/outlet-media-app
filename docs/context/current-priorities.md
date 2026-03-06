@@ -51,6 +51,7 @@ The short-term focus is:
 - On client surfaces, load notifications with client-slug scoping so client users and admin previews never pull unrelated admin notifications into the client portal.
 - Treat conversations as a first-class app surface on both admin and client, not only as dashboard widgets or detail-page side panels, so unresolved discussion can be managed in one place.
 - Reuse the shared conversations feature module anywhere open discussion is summarized, instead of re-querying each comment table per route and letting discussion logic drift.
+- When client members have assigned scope, shared workflow loaders should honor both campaign scope and event scope so dashboards, conversations, notifications, and agent follow-through stay complete without leaking unrelated work.
 - Treat the admin clients index as an account health surface, not just a billing roster, so operators can see which client accounts need approvals, discussion responses, next steps, or creative review.
 - Treat admin client detail pages as account operating hubs too, not only membership/assets/service management, so operators can manage workflow pressure, CRM relationship work, activity, agent follow-through, and show-level context from the client record itself.
 - Prefer direct workflow controls on action/follow-up panels so operators can move work between statuses without opening a form for every change.

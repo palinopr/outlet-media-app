@@ -147,6 +147,7 @@ export default async function EventDetailPage({ params }: Props) {
               scope?.allowedCampaignIds ? scope.allowedCampaignIds.includes(campaignId) : true,
             )
           : [],
+      scopeEventIds: scope?.allowedEventIds,
     }),
   ]);
 

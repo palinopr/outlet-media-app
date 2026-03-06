@@ -18,6 +18,7 @@ interface ListAgentOutcomesOptions {
   eventId?: string | null;
   limit?: number;
   scopeCampaignIds?: string[] | null;
+  scopeEventIds?: string[] | null;
 }
 
 export interface AgentOutcomeContext {
@@ -57,7 +58,7 @@ function mapTaskRow(row: Record<string, unknown>): AgentOutcomeTaskRecord {
   };
 }
 
-function matchesContext(
+export function matchesContext(
   request: AgentOutcomeRequestRecord,
   assetId: string | null | undefined,
   campaignId: string | null | undefined,
@@ -65,6 +66,7 @@ function matchesContext(
   crmContactId: string | null | undefined,
   eventId: string | null | undefined,
   scopeCampaignIds?: Set<string> | null,
+  scopeEventIds?: Set<string> | null,
 ) {
   const requestAssetId =
     typeof request.metadata.assetId === "string" ? request.metadata.assetId : null;
@@ -80,15 +82,20 @@ function matchesContext(
   if (contextType === "crm_contact" && !requestCrmContactId) return false;
   if (campaignId && requestCampaignId !== campaignId) return false;
   if (crmContactId && requestCrmContactId !== crmContactId) return false;
-  if (eventId && scopeCampaignIds) {
-    const matchesEvent = requestEventId === eventId;
-    const matchesScopedCampaign = !!(
-      requestCampaignId && scopeCampaignIds.has(requestCampaignId)
-    );
-    if (!matchesEvent && !matchesScopedCampaign) return false;
-  } else {
-    if (eventId && requestEventId !== eventId) return false;
-    if (scopeCampaignIds && (!requestCampaignId || !scopeCampaignIds.has(requestCampaignId))) {
+  const matchesScopedCampaign = !!(requestCampaignId && scopeCampaignIds?.has(requestCampaignId));
+  const matchesScopedEvent = !!(requestEventId && scopeEventIds?.has(requestEventId));
+
+  if (eventId) {
+    const matchesRequestedEvent = requestEventId === eventId;
+    if (scopeCampaignIds || scopeEventIds) {
+      if (!matchesRequestedEvent && !matchesScopedCampaign && !matchesScopedEvent) {
+        return false;
+      }
+    } else if (!matchesRequestedEvent) {
+      return false;
+    }
+  } else if (scopeCampaignIds || scopeEventIds) {
+    if (!matchesScopedCampaign && !matchesScopedEvent) {
       return false;
     }
   }
@@ -100,6 +107,7 @@ export async function listAgentOutcomes(
 ): Promise<AgentOutcomeView[]> {
   if (!supabaseAdmin) return [];
   const scopeCampaignIds = options.scopeCampaignIds ? new Set(options.scopeCampaignIds) : null;
+  const scopeEventIds = options.scopeEventIds ? new Set(options.scopeEventIds) : null;
 
   let eventsQuery = supabaseAdmin
     .from("system_events")
@@ -134,6 +142,7 @@ export async function listAgentOutcomes(
         options.crmContactId,
         options.eventId,
         scopeCampaignIds,
+        scopeEventIds,
       ),
     );
 

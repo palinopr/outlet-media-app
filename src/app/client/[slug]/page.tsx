@@ -85,6 +85,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       clientSlug: slug,
       limit: 4,
       scopeCampaignIds: scope?.allowedCampaignIds,
+      scopeEventIds: scope?.allowedEventIds,
     }),
     getEnabledServices(slug),
     getCrmOverview({

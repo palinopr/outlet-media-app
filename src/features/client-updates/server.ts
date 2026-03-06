@@ -23,6 +23,7 @@ export async function getClientUpdatesCenter(
         clientSlug,
         limit: 6,
         scopeCampaignIds: scope?.allowedCampaignIds,
+        scopeEventIds: scope?.allowedEventIds,
       }),
       listApprovalRequests({
         audience: "shared",
