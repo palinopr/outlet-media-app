@@ -8,6 +8,7 @@ Prefer first-class entities for:
 - client
 - campaign
 - asset
+- campaign action item
 - contact
 - approval
 - report
@@ -90,6 +91,7 @@ Design examples:
 - CRM note -> task -> follow-up agent -> activity feed
 
 When work starts in one app but belongs to another context, preserve that linkage in structured metadata and events immediately. Do not let campaign context disappear just because the upload started in the asset library.
+Campaign-specific next steps should stay attached to the campaign itself instead of falling back to generic workspace task boards.
 
 ## 8. Favor Feature Modules Over Route-Local Logic
 

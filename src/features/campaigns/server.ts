@@ -1,5 +1,6 @@
 import { mapAssetRows } from "@/features/assets/lib";
 import { listCampaignAssets } from "@/features/assets/server";
+import { listCampaignActionItems } from "@/features/campaign-action-items/server";
 import { listCampaignApprovalRequests } from "@/features/approvals/server";
 import { listCampaignSystemEvents } from "@/features/system-events/server";
 import type { MetaCampaignCard } from "@/lib/meta-campaigns";
@@ -54,6 +55,7 @@ export async function getCampaignOperatingData(campaignId: string) {
 
   if (!data.client_slug) {
     return {
+      actionItems: [],
       approvals: [],
       assets: [],
       campaign,
@@ -61,7 +63,7 @@ export async function getCampaignOperatingData(campaignId: string) {
     };
   }
 
-  const [events, approvals, assetRows] = await Promise.all([
+  const [events, approvals, assetRows, actionItems] = await Promise.all([
     listCampaignSystemEvents({
       audience: "all",
       clientSlug: data.client_slug,
@@ -76,9 +78,16 @@ export async function getCampaignOperatingData(campaignId: string) {
       status: "pending",
     }),
     listCampaignAssets(data.client_slug, campaign.name, 8),
+    listCampaignActionItems({
+      audience: "all",
+      campaignId,
+      clientSlug: data.client_slug,
+      limit: 16,
+    }),
   ]);
 
   return {
+    actionItems,
     approvals,
     assets: mapAssetRows(assetRows),
     campaign,

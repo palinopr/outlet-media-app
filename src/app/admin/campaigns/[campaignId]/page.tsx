@@ -14,6 +14,7 @@ import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
+import { CampaignActionItemsPanel } from "@/components/campaigns/campaign-action-items-panel";
 import { SyncButton } from "@/components/admin/campaigns/campaign-cells";
 import { getCampaignOperatingData } from "@/features/campaigns/server";
 import { fmtDate, fmtNum, fmtObjective, fmtUsd, slugToLabel } from "@/lib/formatters";
@@ -28,7 +29,7 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
 
   if (!data) notFound();
 
-  const { campaign, assets, approvals, events } = data;
+  const { campaign, assets, approvals, events, actionItems } = data;
   const metaAdAccountId = process.env.META_AD_ACCOUNT_ID?.replace(/^act_/, "") ?? null;
 
   return (
@@ -108,71 +109,85 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.9fr)]">
-        <section className="rounded-3xl border border-border/70 bg-card p-5 shadow-sm">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Creative</p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight">Linked campaign assets</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Assets that matched this campaign by name and placement context.
-              </p>
-            </div>
-            <Link
-              href={`/client/${campaign.clientSlug}/assets`}
-              className="text-sm font-medium text-emerald-600 hover:text-emerald-500"
-            >
-              Open client library
-            </Link>
-          </div>
+        <div className="space-y-6">
+          <CampaignActionItemsPanel
+            campaignId={campaign.campaignId}
+            clientSlug={campaign.clientSlug}
+            items={actionItems}
+            canManage
+            title="Campaign actions"
+            description="First-class next steps for the team, client, and agents attached to this campaign."
+            emptyState="No action items have been created for this campaign yet."
+          />
 
-          {assets.length === 0 ? (
-            <div className="mt-4 rounded-2xl border border-dashed border-border/70 bg-muted/30 px-4 py-6 text-sm text-muted-foreground">
-              No campaign-linked assets yet.
+          <section className="rounded-3xl border border-border/70 bg-card p-5 shadow-sm">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Creative</p>
+                <h2 className="mt-1 text-xl font-semibold tracking-tight">Linked campaign assets</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Assets that matched this campaign by name and placement context.
+                </p>
+              </div>
+              <Link
+                href={`/client/${campaign.clientSlug}/assets`}
+                className="text-sm font-medium text-emerald-600 hover:text-emerald-500"
+              >
+                Open client library
+              </Link>
             </div>
-          ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {assets.map((asset) => (
-                <a
-                  key={asset.id}
-                  href={asset.publicUrl ?? undefined}
-                  target={asset.publicUrl ? "_blank" : undefined}
-                  rel={asset.publicUrl ? "noopener noreferrer" : undefined}
-                  className="group overflow-hidden rounded-2xl border border-border/70 bg-background transition-colors hover:border-border hover:bg-muted/20"
-                >
-                  <div className="relative aspect-[1.25] overflow-hidden bg-muted/30">
-                    {asset.mediaType === "video" ? (
-                      <div className="flex h-full items-center justify-center">
-                        <Video className="h-8 w-8 text-muted-foreground/40" />
-                      </div>
-                    ) : asset.publicUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={asset.publicUrl}
-                        alt={asset.fileName}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="space-y-2 p-3">
-                    <p className="truncate text-sm font-medium">{asset.fileName}</p>
-                    <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                      <span>{asset.status}</span>
-                      {asset.placement ? <span>&middot; {asset.placement}</span> : null}
-                      {asset.width && asset.height ? <span>&middot; {asset.width}x{asset.height}</span> : null}
+
+            {assets.length === 0 ? (
+              <div className="mt-4 rounded-2xl border border-dashed border-border/70 bg-muted/30 px-4 py-6 text-sm text-muted-foreground">
+                No campaign-linked assets yet.
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {assets.map((asset) => (
+                  <a
+                    key={asset.id}
+                    href={asset.publicUrl ?? undefined}
+                    target={asset.publicUrl ? "_blank" : undefined}
+                    rel={asset.publicUrl ? "noopener noreferrer" : undefined}
+                    className="group overflow-hidden rounded-2xl border border-border/70 bg-background transition-colors hover:border-border hover:bg-muted/20"
+                  >
+                    <div className="relative aspect-[1.25] overflow-hidden bg-muted/30">
+                      {asset.mediaType === "video" ? (
+                        <div className="flex h-full items-center justify-center">
+                          <Video className="h-8 w-8 text-muted-foreground/40" />
+                        </div>
+                      ) : asset.publicUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={asset.publicUrl}
+                          alt={asset.fileName}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                          <ImageIcon className="h-8 w-8 text-muted-foreground/40" />
+                        </div>
+                      )}
                     </div>
-                    {asset.folder ? (
-                      <p className="truncate text-xs text-muted-foreground">{asset.folder}</p>
-                    ) : null}
-                  </div>
-                </a>
-              ))}
-            </div>
-          )}
-        </section>
+                    <div className="space-y-2 p-3">
+                      <p className="truncate text-sm font-medium">{asset.fileName}</p>
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                        <span>{asset.status}</span>
+                        {asset.placement ? <span>&middot; {asset.placement}</span> : null}
+                        {asset.width && asset.height ? (
+                          <span>&middot; {asset.width}x{asset.height}</span>
+                        ) : null}
+                      </div>
+                      {asset.folder ? (
+                        <p className="truncate text-xs text-muted-foreground">{asset.folder}</p>
+                      ) : null}
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
 
         <div className="space-y-6">
           <WorkspaceApprovalsPanel

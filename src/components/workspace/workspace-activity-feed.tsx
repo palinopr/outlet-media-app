@@ -25,6 +25,7 @@ interface WorkspaceActivityFeedProps {
 function getEventIcon(eventName: string) {
   if (eventName === "agent_action_requested") return Cpu;
   if (eventName.startsWith("approval_")) return BadgeCheck;
+  if (eventName.startsWith("campaign_action_item_")) return CheckSquare;
   if (eventName.startsWith("workspace_comment")) return MessageSquare;
   if (eventName.startsWith("workspace_task")) return CheckSquare;
   if (eventName === "campaign_updated") return BarChart3;

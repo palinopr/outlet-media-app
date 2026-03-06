@@ -18,8 +18,10 @@ import { AdsPreview, type AdPreview } from "@/components/client/ads-preview";
 import { RecommendationsList, type RecommendationItem } from "@/components/client/recommendations";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
+import { CampaignActionItemsPanel } from "@/components/campaigns/campaign-action-items-panel";
 import { mapAssetRows } from "@/features/assets/lib";
 import { listCampaignAssets } from "@/features/assets/server";
+import { listCampaignActionItems } from "@/features/campaign-action-items/server";
 import { listCampaignApprovalRequests } from "@/features/approvals/server";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { StatCard } from "../../components/stat-card";
@@ -40,7 +42,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam);
 
-  const [data, events, approvals] = await Promise.all([
+  const [data, events, approvals, actionItems] = await Promise.all([
     getCampaignDetail(slug, campaignId, range),
     listCampaignSystemEvents({
       audience: "shared",
@@ -54,6 +56,12 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       campaignId,
       status: "pending",
       limit: 6,
+    }),
+    listCampaignActionItems({
+      audience: "shared",
+      campaignId,
+      clientSlug: slug,
+      limit: 12,
     }),
   ]);
 
@@ -161,6 +169,15 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           <BadgeCheck className="h-3.5 w-3.5 text-white/50" />
           <span className="section-label">Campaign workflow</span>
         </div>
+        <CampaignActionItemsPanel
+          campaignId={campaignId}
+          clientSlug={slug}
+          items={actionItems}
+          canManage={false}
+          title="Campaign next steps"
+          description="Shared follow-ups, approvals, and handoffs attached directly to this campaign."
+          emptyState="No shared next steps are active for this campaign right now."
+        />
         <div className="grid gap-4 xl:grid-cols-2">
           <WorkspaceApprovalsPanel
             approvals={approvals}
