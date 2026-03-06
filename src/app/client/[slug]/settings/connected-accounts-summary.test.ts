@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildConnectedAccountsSummary,
   getConnectedAccountHealth,
-} from "./connected-accounts-summary";
-import type { ConnectedAccount } from "./data";
+  type ConnectedAccount,
+} from "@/features/settings/connected-accounts";
 
 function makeAccount(overrides: Partial<ConnectedAccount> = {}): ConnectedAccount {
   return {

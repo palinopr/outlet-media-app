@@ -1,4 +1,13 @@
-import type { ConnectedAccount } from "./data";
+export interface ConnectedAccount {
+  ad_account_id: string;
+  ad_account_name: string | null;
+  client_slug?: string | null;
+  connected_at: string;
+  id: string;
+  last_used_at: string | null;
+  status: string;
+  token_expires_at: string;
+}
 
 export type ConnectedAccountHealthKey =
   | "healthy"

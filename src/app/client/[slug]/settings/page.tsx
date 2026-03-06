@@ -4,7 +4,7 @@ import { getSettingsData } from "./data";
 import { SettingsView } from "./settings-view";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { slugToLabel } from "@/lib/formatters";
-import { buildConnectedAccountsSummary } from "./connected-accounts-summary";
+import { buildConnectedAccountsSummary } from "@/features/settings/connected-accounts";
 
 // ConnectedAccountsList + connect flow hidden -- enable when white-label self-serve is ready
 

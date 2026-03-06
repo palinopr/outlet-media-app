@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Bot, Key, UserPlus, ArrowRight, Users, Clock, X } from "lucide-react";
+import { Settings, Bot, Key, UserPlus, ArrowRight, Users, Clock, X, Link2, TriangleAlert } from "lucide-react";
 import { ClientOnboardForm } from "@/components/admin/client-onboard-form";
 import { AGENT_CONFIG, AGENT_TYPE_KEYS } from "@/components/admin/agents/constants";
 import { RevokeInvitationButton } from "@/components/admin/users/revoke-invitation-button";
@@ -10,7 +10,9 @@ import { getUsers } from "../users/data";
 import { StatCard } from "@/components/admin/stat-card";
 import { getInvitationStatusCfg, slugToLabel } from "@/lib/formatters";
 import { buildPlatformSettingsSummary, type PlatformSettingsMetricKey } from "@/features/settings/summary";
+import type { ConnectedAccount } from "@/features/settings/connected-accounts";
 import { Button } from "@/components/ui/button";
+import { supabaseAdmin } from "@/lib/supabase";
 
 // ─── API key display entries ───────────────────────────────────────────────
 
@@ -38,10 +40,21 @@ import { AdminPageHeader } from "@/components/admin/page-header";
 
 export default async function SettingsPage() {
   const apiKeys = getApiKeyStatus();
-  const [clients, users] = await Promise.all([getClientSummaries(), getUsers()]);
+  const [clients, users, connectedAccountsRes] = await Promise.all([
+    getClientSummaries(),
+    getUsers(),
+    supabaseAdmin
+      ?.from("client_accounts")
+      .select(
+        "id, client_slug, ad_account_id, ad_account_name, status, connected_at, token_expires_at, last_used_at",
+      )
+      .order("connected_at", { ascending: false }),
+  ]);
+  const connectedAccounts = ((connectedAccountsRes?.data ?? []) as ConnectedAccount[]);
   const summary = buildPlatformSettingsSummary({
     apiKeys,
     clients,
+    connectedAccounts,
     users,
   });
   const metricIcons: Record<PlatformSettingsMetricKey, typeof Settings> = {
@@ -49,6 +62,7 @@ export default async function SettingsPage() {
     missing_integrations: Key,
     client_accounts: Users,
     pending_access: Clock,
+    connections_needing_attention: Link2,
   };
 
   return (
@@ -82,7 +96,7 @@ export default async function SettingsPage() {
         })}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-3">
         <Card className="border-border/60">
           <CardHeader>
             <CardTitle className="text-sm">Client setup pressure</CardTitle>
@@ -171,6 +185,46 @@ export default async function SettingsPage() {
                   </div>
                 );
               })
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/60">
+          <CardHeader>
+            <CardTitle className="text-sm">Meta connection health</CardTitle>
+            <CardDescription>
+              Client ad account links that are expiring, stale, or disconnected before campaign work breaks.
+            </CardDescription>
+            {summary.connectionSummary.totalCount > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {summary.connectionSummary.healthyCount} healthy • {summary.connectionSummary.attentionCount} needing attention
+              </p>
+            ) : null}
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {summary.connectionRiskClients.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No client ad account links need connection attention right now.
+              </p>
+            ) : (
+              summary.connectionRiskClients.map((client) => (
+                <Link
+                  key={client.clientId}
+                  href={`/admin/clients/${client.clientId}`}
+                  className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/35"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{client.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {client.attentionAccounts} at-risk link{client.attentionAccounts === 1 ? "" : "s"} • {client.healthyAccounts} healthy • {client.totalAccounts} total
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 text-amber-500">
+                    <TriangleAlert className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                </Link>
+              ))
             )}
           </CardContent>
         </Card>

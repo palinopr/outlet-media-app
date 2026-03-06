@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import type { ConnectedAccount } from "./data";
 import {
   buildConnectedAccountsSummary,
   getConnectedAccountHealth,
-} from "./connected-accounts-summary";
+  type ConnectedAccount,
+} from "@/features/settings/connected-accounts";
 
 function toneForHealth(key: ReturnType<typeof getConnectedAccountHealth>["key"]) {
   switch (key) {
