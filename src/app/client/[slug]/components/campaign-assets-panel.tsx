@@ -35,11 +35,9 @@ export function CampaignAssetsPanel({ assets, slug }: Props) {
       ) : (
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {assets.map((asset) => (
-            <a
+            <Link
               key={asset.id}
-              href={asset.publicUrl ?? undefined}
-              target={asset.publicUrl ? "_blank" : undefined}
-              rel={asset.publicUrl ? "noopener noreferrer" : undefined}
+              href={`/client/${slug}/assets/${asset.id}`}
               className="group overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] transition-colors hover:border-white/[0.14] hover:bg-white/[0.05]"
             >
               <div className="relative aspect-[1.15] overflow-hidden bg-white/[0.03]">
@@ -82,8 +80,9 @@ export function CampaignAssetsPanel({ assets, slug }: Props) {
                     </span>
                   ) : null}
                 </div>
+                <p className="text-[11px] font-medium text-cyan-300/85">Open asset workflow</p>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       )}

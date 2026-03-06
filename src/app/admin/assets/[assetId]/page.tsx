@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import {
   ArrowLeft,
   CheckSquare,
@@ -8,12 +9,14 @@ import {
   Video,
 } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import { AssetCommentsPanel } from "@/components/assets/asset-comments-panel";
 import { AssetOperatingPanel } from "@/components/admin/assets/asset-operating-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { listAssetComments } from "@/features/asset-comments/server";
 import { listAssetApprovalRequests } from "@/features/approvals/server";
 import { getAssetOperatingData, getAssetRecordById } from "@/features/assets/server";
 import { listAssetSystemEvents } from "@/features/system-events/server";
@@ -66,16 +69,22 @@ function assetPreview(asset: Awaited<ReturnType<typeof getAssetRecordById>>) {
 
 export default async function AdminAssetDetailPage({ params }: Props) {
   const { assetId } = await params;
+  const { userId } = await auth();
   const assetRecord = await getAssetRecordById(assetId);
   if (!assetRecord) notFound();
 
-  const [approvals, events] = await Promise.all([
+  const [approvals, comments, events] = await Promise.all([
     listAssetApprovalRequests({
       audience: "all",
       assetId,
       clientSlug: assetRecord.client_slug,
       limit: 8,
       status: "pending",
+    }),
+    listAssetComments({
+      assetId,
+      audience: "all",
+      clientSlug: assetRecord.client_slug,
     }),
     listAssetSystemEvents({
       audience: "all",
@@ -114,15 +123,16 @@ export default async function AdminAssetDetailPage({ params }: Props) {
   const data = await getAssetOperatingData(assetId, linkedCampaignIds);
   if (!data) notFound();
 
-  const agentOutcomes =
-    data.linkedCampaigns.length > 0
-      ? await listAgentOutcomes({
-          audience: "all",
-          clientSlug: data.asset.client_slug,
-          limit: 4,
-          scopeCampaignIds: data.linkedCampaigns.map((campaign) => campaign.campaignId),
-        })
-      : [];
+  const agentOutcomes = await listAgentOutcomes({
+    audience: "all",
+    assetId,
+    clientSlug: data.asset.client_slug,
+    limit: 4,
+    scopeCampaignIds:
+      data.linkedCampaigns.length > 0
+        ? data.linkedCampaigns.map((campaign) => campaign.campaignId)
+        : undefined,
+  });
 
   const dimensions =
     data.asset.width && data.asset.height
@@ -205,6 +215,18 @@ export default async function AdminAssetDetailPage({ params }: Props) {
           </section>
 
           <AssetOperatingPanel asset={data.asset} />
+
+          <AssetCommentsPanel
+            allowAdminOnly
+            assetId={assetId}
+            canDeleteAny
+            clientSlug={data.asset.client_slug}
+            comments={comments}
+            currentUserId={userId ?? ""}
+            description="Keep creative feedback, internal review notes, and client-facing discussion on the asset itself."
+            title="Asset discussion"
+            variant="admin"
+          />
 
           <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
             <div className="mb-4">

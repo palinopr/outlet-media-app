@@ -4,6 +4,7 @@ import {
   AlertPostSchema,
   AlertPatchSchema,
   AgentPostSchema,
+  CreateAssetCommentSchema,
   CreateCampaignCommentSchema,
   InviteSchema,
   VALID_AGENTS,
@@ -212,6 +213,41 @@ describe("CreateCampaignCommentSchema", () => {
       client_slug: "zamora",
       content: "hello",
       visibility: "client_only",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ─── CreateAssetCommentSchema ───────────────────────────────────────────────
+
+describe("CreateAssetCommentSchema", () => {
+  it("accepts a valid shared asset comment", () => {
+    const result = CreateAssetCommentSchema.safeParse({
+      asset_id: "34d8c8f2-78ff-4aca-96ac-15591fa7ec7d",
+      client_slug: "zamora",
+      content: "Can we swap this story cut for the brighter version?",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.visibility).toBe("shared");
+    }
+  });
+
+  it("accepts admin-only asset feedback", () => {
+    const result = CreateAssetCommentSchema.safeParse({
+      asset_id: "34d8c8f2-78ff-4aca-96ac-15591fa7ec7d",
+      client_slug: "zamora",
+      content: "Internal note: crop and safe-zone still need review.",
+      visibility: "admin_only",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects invalid asset ids", () => {
+    const result = CreateAssetCommentSchema.safeParse({
+      asset_id: "not-a-uuid",
+      client_slug: "zamora",
+      content: "Need a new version",
     });
     expect(result.success).toBe(false);
   });

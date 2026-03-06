@@ -9,6 +9,7 @@ import {
 } from "@/features/agent-outcomes/summary";
 
 interface ListAgentOutcomesOptions {
+  assetId?: string | null;
   audience?: "all" | AgentOutcomeVisibility;
   campaignId?: string | null;
   clientSlug?: string | null;
@@ -55,16 +56,20 @@ function mapTaskRow(row: Record<string, unknown>): AgentOutcomeTaskRecord {
 
 function matchesContext(
   request: AgentOutcomeRequestRecord,
+  assetId: string | null | undefined,
   campaignId: string | null | undefined,
   contextType: "all" | "campaign" | "crm_contact",
   crmContactId: string | null | undefined,
   scopeCampaignIds?: Set<string> | null,
 ) {
+  const requestAssetId =
+    typeof request.metadata.assetId === "string" ? request.metadata.assetId : null;
   const requestCampaignId =
     typeof request.metadata.campaignId === "string" ? request.metadata.campaignId : null;
   const requestCrmContactId =
     typeof request.metadata.crmContactId === "string" ? request.metadata.crmContactId : null;
 
+  if (assetId && requestAssetId !== assetId) return false;
   if (contextType === "campaign" && !requestCampaignId) return false;
   if (contextType === "crm_contact" && !requestCrmContactId) return false;
   if (campaignId && requestCampaignId !== campaignId) return false;
@@ -108,6 +113,7 @@ export async function listAgentOutcomes(
     .filter((request) =>
       matchesContext(
         request,
+        options.assetId,
         options.campaignId,
         options.contextType ?? "all",
         options.crmContactId,

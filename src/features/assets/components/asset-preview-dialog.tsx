@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,11 +15,12 @@ import type { Asset } from "../types";
 
 interface Props {
   asset: Asset | null;
+  detailHref?: string | null;
   onClose: () => void;
   onDelete: (id: string) => void;
 }
 
-export function AssetPreviewDialog({ asset, onClose, onDelete }: Props) {
+export function AssetPreviewDialog({ asset, detailHref, onClose, onDelete }: Props) {
   return (
     <Dialog open={!!asset} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl">
@@ -95,7 +97,7 @@ export function AssetPreviewDialog({ asset, onClose, onDelete }: Props) {
                 </div>
               )}
 
-              <div className="flex justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -105,18 +107,27 @@ export function AssetPreviewDialog({ asset, onClose, onDelete }: Props) {
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete
                 </Button>
-                {asset.publicUrl && (
-                  <a
-                    href={asset.publicUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs">
-                      <ExternalLink className="h-3.5 w-3.5" />
-                      Open Full Size
+                <div className="flex flex-wrap items-center gap-2">
+                  {detailHref ? (
+                    <Button asChild size="sm" variant="outline" className="h-8 gap-1.5 text-xs">
+                      <Link href={detailHref} onClick={onClose}>
+                        Open Details
+                      </Link>
                     </Button>
-                  </a>
-                )}
+                  ) : null}
+                  {asset.publicUrl ? (
+                    <a
+                      href={asset.publicUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs">
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        Open Full Size
+                      </Button>
+                    </a>
+                  ) : null}
+                </div>
               </div>
             </div>
           </>

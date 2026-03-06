@@ -407,6 +407,7 @@ export function AssetGallery({ assets: initialAssets, clientSlug }: Props) {
 
       <AssetPreviewDialog
         asset={previewAsset}
+        detailHref={previewAsset ? `/client/${clientSlug}/assets/${previewAsset.id}` : null}
         onClose={() => setPreviewAsset(null)}
         onDelete={promptDeleteAsset}
       />

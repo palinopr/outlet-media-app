@@ -209,19 +209,23 @@ export function DashboardActionCenterSection({
               Recent conversation
             </h2>
             <p className={cn("mt-1 text-sm", tone.muted)}>
-              Open campaign and CRM threads that still need a response or follow-up.
+              Open campaign, asset, and CRM threads that still need a response or follow-up.
             </p>
           </div>
         </div>
 
         <div className="space-y-3">
           {actionCenter.discussions.length === 0 ? (
-            <div className={emptyClass(variant)}>No unresolved campaign or CRM discussions right now.</div>
+            <div className={emptyClass(variant)}>No unresolved campaign, asset, or CRM discussions right now.</div>
           ) : (
             actionCenter.discussions.map((discussion) => {
               const href =
                 discussion.kind === "campaign"
                   ? `${campaignHrefPrefix}/${discussion.targetId}`
+                  : discussion.kind === "asset"
+                    ? assetHrefPrefix
+                      ? `${assetHrefPrefix}/${discussion.targetId}`
+                      : assetLibraryHref ?? null
                   : crmHrefPrefix
                     ? `${crmHrefPrefix}/${discussion.targetId}`
                     : null;
@@ -251,7 +255,11 @@ export function DashboardActionCenterSection({
                       </div>
                       <p className={cn("mt-1 text-sm font-medium", tone.title)}>
                         {discussion.targetName ??
-                          (discussion.kind === "campaign" ? "Campaign thread" : "CRM relationship")}
+                          (discussion.kind === "campaign"
+                            ? "Campaign thread"
+                            : discussion.kind === "asset"
+                              ? "Asset discussion"
+                              : "CRM relationship")}
                       </p>
                       <p className={cn("mt-1 text-sm", tone.muted)}>
                         {truncate(discussion.content, 160)}
@@ -267,7 +275,13 @@ export function DashboardActionCenterSection({
                                 : "text-[#0f7b6c] hover:text-[#0b5e52]",
                             )}
                           >
-                            {discussion.kind === "campaign" ? "Open campaign" : "Open contact"}{" "}
+                            {discussion.kind === "campaign"
+                              ? "Open campaign"
+                              : discussion.kind === "asset"
+                                ? assetHrefPrefix
+                                  ? "Open asset"
+                                  : "Open asset library"
+                                : "Open contact"}{" "}
                             <ArrowRight className="h-3 w-3" />
                           </Link>
                         </div>

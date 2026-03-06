@@ -51,7 +51,7 @@ export interface DashboardActionCenterDiscussion {
   content: string;
   createdAt: string;
   id: string;
-  kind: "campaign" | "crm";
+  kind: "asset" | "campaign" | "crm";
   targetId: string;
   targetName: string | null;
 }
@@ -319,11 +319,20 @@ export async function getDashboardActionCenter(
     .order("created_at", { ascending: false })
     .limit(Math.max((options.limit ?? 4) * 4, 12));
 
+  let assetDiscussionsQuery = supabaseAdmin
+    .from("asset_comments" as never)
+    .select("id, asset_id, client_slug, content, created_at, author_name")
+    .eq("resolved", false)
+    .is("parent_comment_id", null)
+    .order("created_at", { ascending: false })
+    .limit(Math.max((options.limit ?? 4) * 4, 12));
+
   if (options.clientSlug) {
     campaignsQuery = campaignsQuery.eq("client_slug", options.clientSlug);
     approvalsQuery = approvalsQuery.eq("client_slug", options.clientSlug);
     discussionsQuery = discussionsQuery.eq("client_slug", options.clientSlug);
     crmDiscussionsQuery = crmDiscussionsQuery.eq("client_slug", options.clientSlug);
+    assetDiscussionsQuery = assetDiscussionsQuery.eq("client_slug", options.clientSlug);
   }
 
   if (scopeIds && scopeIds.length > 0) {
@@ -335,19 +344,28 @@ export async function getDashboardActionCenter(
     approvalsQuery = approvalsQuery.in("audience", ["shared", "client"]);
     discussionsQuery = discussionsQuery.eq("visibility", "shared");
     crmDiscussionsQuery = crmDiscussionsQuery.eq("visibility", "shared");
+    assetDiscussionsQuery = assetDiscussionsQuery.eq("visibility", "shared");
   }
 
-  const [campaignsRes, approvalsRes, discussionsRes, crmDiscussionsRes, crmFollowUpItems] =
+  const [
+    campaignsRes,
+    approvalsRes,
+    discussionsRes,
+    crmDiscussionsRes,
+    assetDiscussionsRes,
+    crmFollowUpItems,
+  ] =
     await Promise.all([
-    campaignsQuery,
-    approvalsQuery,
-    discussionsQuery,
-    crmDiscussionsQuery,
-    listCrmFollowUpItems({
-      audience: options.mode === "client" ? "shared" : "all",
-      clientSlug: options.clientSlug,
-      limit: Math.max((options.limit ?? 4) * 4, 12),
-    }),
+      campaignsQuery,
+      approvalsQuery,
+      discussionsQuery,
+      crmDiscussionsQuery,
+      assetDiscussionsQuery,
+      listCrmFollowUpItems({
+        audience: options.mode === "client" ? "shared" : "all",
+        clientSlug: options.clientSlug,
+        limit: Math.max((options.limit ?? 4) * 4, 12),
+      }),
     ]);
 
   const allowedCampaignIds = scopeIds ? new Set(scopeIds) : null;
@@ -414,6 +432,26 @@ export async function getDashboardActionCenter(
     }
   }
 
+  const assetNames = new Map<string, string>();
+  const assetIds = [
+    ...new Set(
+      ((assetDiscussionsRes.data ?? []) as Record<string, unknown>[])
+        .map((row) => (row.asset_id as string | null) ?? null)
+        .filter((value): value is string => !!value),
+    ),
+  ];
+
+  if (assetIds.length > 0) {
+    const { data: assetRows } = await supabaseAdmin
+      .from("ad_assets")
+      .select("id, file_name")
+      .in("id", assetIds);
+
+    for (const row of assetRows ?? []) {
+      assetNames.set(row.id as string, (row.file_name as string | null) ?? "Asset");
+    }
+  }
+
   const campaignDiscussions: DashboardActionCenterDiscussion[] = (discussionsRes.data ?? [])
     .map((row) => ({
       authorName: (row.author_name as string | null) ?? null,
@@ -438,7 +476,24 @@ export async function getDashboardActionCenter(
       targetName: contactNames.get(row.contact_id as string) ?? null,
     }));
 
-  const discussions: DashboardActionCenterDiscussion[] = [...campaignDiscussions, ...crmDiscussions]
+  const assetDiscussions: DashboardActionCenterDiscussion[] = (
+    (assetDiscussionsRes.data ?? []) as Record<string, unknown>[]
+  ).map((row) => ({
+    authorName: (row.author_name as string | null) ?? null,
+    clientSlug: row.client_slug as string,
+    content: row.content as string,
+    createdAt: row.created_at as string,
+    id: row.id as string,
+    kind: "asset" as const,
+    targetId: row.asset_id as string,
+    targetName: assetNames.get(row.asset_id as string) ?? null,
+  }));
+
+  const discussions: DashboardActionCenterDiscussion[] = [
+    ...campaignDiscussions,
+    ...crmDiscussions,
+    ...assetDiscussions,
+  ]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, options.limit ?? 4);
 

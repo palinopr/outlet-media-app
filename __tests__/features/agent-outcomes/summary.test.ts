@@ -111,12 +111,40 @@ describe("agent outcome summary helpers", () => {
     );
 
     expect(outcome).toMatchObject({
+      assetId: null,
       campaignId: null,
       crmContactId: "contact_123",
       crmContactName: "Mia Rivera",
       linkedCrmFollowUpItemId: "crm_follow_up_123",
       status: "pending",
       taskId: "web_task_3",
+    });
+  });
+
+  it("preserves asset context on creative-focused agent outcomes", () => {
+    const outcome = buildAgentOutcomeView(
+      {
+        clientSlug: "zamora",
+        createdAt: "2026-03-06T12:00:00.000Z",
+        detail: "Assistant will prepare a concise creative review brief.",
+        metadata: {
+          assetId: "asset_123",
+          assetName: "miami-story-v3.mp4",
+        },
+        summary: 'Queued agent triage for asset discussion on "miami-story-v3.mp4"',
+        taskId: "web_task_4",
+        visibility: "admin_only",
+      },
+      null,
+    );
+
+    expect(outcome).toMatchObject({
+      assetId: "asset_123",
+      assetName: "miami-story-v3.mp4",
+      campaignId: null,
+      crmContactId: null,
+      status: "pending",
+      taskId: "web_task_4",
     });
   });
 });

@@ -30,6 +30,8 @@ export interface AgentOutcomeTaskRecord {
 export interface AgentOutcomeView {
   action: string;
   agentId: string;
+  assetId: string | null;
+  assetName: string | null;
   campaignId: string | null;
   campaignName: string | null;
   clientSlug: string | null;
@@ -82,6 +84,8 @@ export function buildAgentOutcomeView(
   return {
     action: task?.action ?? "agent-task",
     agentId: task?.toAgent ?? "assistant",
+    assetId: metadataString(request.metadata, "assetId"),
+    assetName: metadataString(request.metadata, "assetName"),
     campaignId: metadataString(request.metadata, "campaignId"),
     campaignName: metadataString(request.metadata, "campaignName"),
     clientSlug: request.clientSlug,

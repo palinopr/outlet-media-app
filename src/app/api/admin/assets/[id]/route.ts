@@ -11,6 +11,7 @@ function revalidateAssetPaths(assetId: string, clientSlug: string) {
   revalidatePath("/admin/dashboard");
   revalidatePath(`/client/${clientSlug}`);
   revalidatePath(`/client/${clientSlug}/assets`);
+  revalidatePath(`/client/${clientSlug}/assets/${assetId}`);
 }
 
 export async function PATCH(
