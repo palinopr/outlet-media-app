@@ -162,8 +162,21 @@ export async function listConversationThreads(
         .filter((value): value is string => value !== null),
     ),
   ];
+  const campaignCommentIds = campaignRows.map((row) => String(row.id));
+  const crmCommentIds = crmRows.map((row) => String(row.id));
+  const assetCommentIds = assetRows.map((row) => String(row.id));
+  const eventCommentIds = eventRows.map((row) => String(row.id));
 
-  const [campaignNamesRes, contactNamesRes, assetNamesRes, eventNamesRes] = await Promise.all([
+  const [
+    campaignNamesRes,
+    contactNamesRes,
+    assetNamesRes,
+    eventNamesRes,
+    linkedCampaignItemRows,
+    linkedCrmItemRows,
+    linkedAssetItemRows,
+    linkedEventItemRows,
+  ] = await Promise.all([
     campaignIds.length > 0
       ? supabaseAdmin
           .from("meta_campaigns")
@@ -188,6 +201,34 @@ export async function listConversationThreads(
           .select("id, name, artist")
           .in("id", eventIds)
       : Promise.resolve({ data: [] }),
+    campaignCommentIds.length > 0
+      ? supabaseAdmin
+          .from("campaign_action_items")
+          .select("id, source_entity_id")
+          .eq("source_entity_type", "campaign_comment")
+          .in("source_entity_id", campaignCommentIds)
+      : Promise.resolve({ data: [] }),
+    crmCommentIds.length > 0
+      ? supabaseAdmin
+          .from("crm_follow_up_items" as never)
+          .select("id, source_entity_id")
+          .eq("source_entity_type", "crm_comment")
+          .in("source_entity_id", crmCommentIds)
+      : Promise.resolve({ data: [] }),
+    assetCommentIds.length > 0
+      ? supabaseAdmin
+          .from("asset_follow_up_items" as never)
+          .select("id, source_entity_id")
+          .eq("source_entity_type", "asset_comment")
+          .in("source_entity_id", assetCommentIds)
+      : Promise.resolve({ data: [] }),
+    eventCommentIds.length > 0
+      ? supabaseAdmin
+          .from("event_follow_up_items" as never)
+          .select("id, source_entity_id")
+          .eq("source_entity_type", "event_comment")
+          .in("source_entity_id", eventCommentIds)
+      : Promise.resolve({ data: [] }),
   ]);
 
   for (const row of (campaignNamesRes.data ?? []) as { campaign_id: string; name: string | null }[]) {
@@ -209,6 +250,26 @@ export async function listConversationThreads(
     );
   }
 
+  const linkedCampaignItems = new Map<string, string>();
+  for (const row of (linkedCampaignItemRows.data ?? []) as Record<string, unknown>[]) {
+    linkedCampaignItems.set(String(row.source_entity_id), String(row.id));
+  }
+
+  const linkedCrmItems = new Map<string, string>();
+  for (const row of (linkedCrmItemRows.data ?? []) as Record<string, unknown>[]) {
+    linkedCrmItems.set(String(row.source_entity_id), String(row.id));
+  }
+
+  const linkedAssetItems = new Map<string, string>();
+  for (const row of (linkedAssetItemRows.data ?? []) as Record<string, unknown>[]) {
+    linkedAssetItems.set(String(row.source_entity_id), String(row.id));
+  }
+
+  const linkedEventItems = new Map<string, string>();
+  for (const row of (linkedEventItemRows.data ?? []) as Record<string, unknown>[]) {
+    linkedEventItems.set(String(row.source_entity_id), String(row.id));
+  }
+
   return [
     ...campaignRows.map((row) => ({
       authorName: (row.author_name as string | null) ?? null,
@@ -217,6 +278,7 @@ export async function listConversationThreads(
       createdAt: row.created_at as string,
       id: row.id as string,
       kind: "campaign" as const,
+      linkedFollowUpItemId: linkedCampaignItems.get(String(row.id)) ?? null,
       targetId: row.campaign_id as string,
       targetName: campaignNames.get(row.campaign_id as string) ?? null,
     })),
@@ -227,6 +289,7 @@ export async function listConversationThreads(
       createdAt: row.created_at as string,
       id: row.id as string,
       kind: "crm" as const,
+      linkedFollowUpItemId: linkedCrmItems.get(String(row.id)) ?? null,
       targetId: row.contact_id as string,
       targetName: contactNames.get(row.contact_id as string) ?? null,
     })),
@@ -237,6 +300,7 @@ export async function listConversationThreads(
       createdAt: row.created_at as string,
       id: row.id as string,
       kind: "asset" as const,
+      linkedFollowUpItemId: linkedAssetItems.get(String(row.id)) ?? null,
       targetId: row.asset_id as string,
       targetName: assetNames.get(row.asset_id as string) ?? null,
     })),
@@ -247,6 +311,7 @@ export async function listConversationThreads(
       createdAt: row.created_at as string,
       id: row.id as string,
       kind: "event" as const,
+      linkedFollowUpItemId: linkedEventItems.get(String(row.id)) ?? null,
       targetId: row.event_id as string,
       targetName: eventNames.get(row.event_id as string) ?? null,
     })),

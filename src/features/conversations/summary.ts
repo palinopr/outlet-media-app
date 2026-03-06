@@ -7,6 +7,7 @@ export interface ConversationThread {
   createdAt: string;
   id: string;
   kind: ConversationThreadKind;
+  linkedFollowUpItemId: string | null;
   targetId: string;
   targetName: string | null;
 }

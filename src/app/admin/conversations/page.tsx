@@ -49,6 +49,7 @@ export default async function AdminConversationsPage({ searchParams }: Props) {
 
       <ConversationsCenter
         assetHrefPrefix="/admin/assets"
+        canCreateFollowUps
         campaignHrefPrefix="/admin/campaigns"
         crmHrefPrefix="/admin/crm"
         description="Open shared and internal threads that still need a reply, follow-up, or resolution."

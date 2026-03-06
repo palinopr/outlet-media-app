@@ -7,6 +7,7 @@ import {
   Users,
 } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
+import { ConversationFollowUpButton } from "@/components/conversations/conversation-follow-up-button";
 import type {
   ConversationMetric,
   ConversationsSummary,
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils";
 
 interface ConversationsCenterProps {
   assetHrefPrefix?: string;
+  canCreateFollowUps?: boolean;
   campaignHrefPrefix: string;
   crmHrefPrefix?: string;
   description: string;
@@ -119,6 +121,7 @@ function tone(variant: "admin" | "client") {
 
 export function ConversationsCenter({
   assetHrefPrefix,
+  canCreateFollowUps = false,
   campaignHrefPrefix,
   crmHrefPrefix,
   description,
@@ -213,14 +216,34 @@ export function ConversationsCenter({
                         {truncate(thread.content)}
                       </p>
 
-                      {href ? (
-                        <div className="mt-3">
+                      {href || canCreateFollowUps ? (
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
                           <Link
-                            href={href}
-                            className={cn("inline-flex items-center gap-1 text-sm font-medium", styles.link)}
+                            href={href ?? "#"}
+                            className={cn(
+                              "inline-flex items-center gap-1 text-sm font-medium",
+                              styles.link,
+                              !href && "pointer-events-none opacity-50",
+                            )}
                           >
                             {threadLabel(thread.kind, Boolean(assetHrefPrefix))}
                           </Link>
+                          {canCreateFollowUps ? (
+                            thread.linkedFollowUpItemId ? (
+                              <span
+                                className={cn(
+                                  "rounded-full px-2 py-1 text-[11px] font-medium",
+                                  variant === "client"
+                                    ? "bg-white/[0.08] text-white/65"
+                                    : "bg-[#f1ece4] text-[#6f6a63]",
+                                )}
+                              >
+                                Follow-up created
+                              </span>
+                            ) : (
+                              <ConversationFollowUpButton commentId={thread.id} kind={thread.kind} />
+                            )
+                          ) : null}
                         </div>
                       ) : null}
                     </div>
