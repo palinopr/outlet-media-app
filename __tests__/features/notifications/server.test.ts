@@ -293,6 +293,82 @@ describe("listNotificationsForUser", () => {
     expect(notifications.map((notification) => notification.id)).toEqual(["notif_workspace"]);
   });
 
+  it("enriches comment, follow-up, and approval notifications with direct route targets", async () => {
+    state.notifications = [
+      {
+        id: "notif_campaign_comment",
+        user_id: "user_1",
+        title: "Campaign thread",
+        type: "comment",
+        entity_type: "campaign_comment",
+        entity_id: "campaign_comment_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:00:00.000Z",
+      },
+      {
+        id: "notif_asset_follow_up",
+        user_id: "user_1",
+        title: "Asset next step",
+        type: "assignment",
+        entity_type: "asset_follow_up_item",
+        entity_id: "asset_follow_up_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:01:00.000Z",
+      },
+      {
+        id: "notif_approval",
+        user_id: "user_1",
+        title: "Approval requested",
+        type: "approval",
+        entity_type: "approval_request",
+        entity_id: "approval_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:02:00.000Z",
+      },
+    ];
+
+    state.campaign_comments = [{ id: "campaign_comment_1", campaign_id: "cmp_1" }];
+    state.asset_follow_up_items = [{ id: "asset_follow_up_1", asset_id: "asset_1" }];
+    state.approval_requests = [
+      {
+        id: "approval_1",
+        client_slug: "zamora",
+        entity_type: null,
+        entity_id: null,
+        metadata: { campaignId: "cmp_9" },
+        page_id: "page_1",
+        task_id: "task_approval",
+      },
+    ];
+
+    const notifications = await listNotificationsForUser("user_1", {
+      clientSlug: "zamora",
+    });
+
+    expect(notifications).toEqual([
+      expect.objectContaining({
+        id: "notif_campaign_comment",
+        routeEntityId: "cmp_1",
+        routeEntityType: "campaign",
+      }),
+      expect.objectContaining({
+        id: "notif_asset_follow_up",
+        routeEntityId: "asset_1",
+        routeEntityType: "asset",
+      }),
+      expect.objectContaining({
+        id: "notif_approval",
+        pageId: "page_1",
+        routeEntityId: "cmp_9",
+        routeEntityType: "campaign",
+        taskId: "task_approval",
+      }),
+    ]);
+  });
+
   it("targets shared notification recipients to members whose assigned scope matches the entity", async () => {
     state.clients = [{ id: "client_1", slug: "zamora" }];
     state.client_members = [

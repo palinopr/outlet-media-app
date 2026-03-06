@@ -52,17 +52,27 @@ describe("buildNotificationHref", () => {
 
     expect(
       buildNotificationHref(
-        makeNotification({ entityId: "comment_1", entityType: "campaign_comment" }),
+        makeNotification({
+          entityId: "comment_1",
+          entityType: "campaign_comment",
+          routeEntityId: "cmp_2",
+          routeEntityType: "campaign",
+        }),
         { viewer: "admin" },
       ),
-    ).toBe("/admin/conversations");
+    ).toBe("/admin/campaigns/cmp_2");
 
     expect(
       buildNotificationHref(
-        makeNotification({ entityId: "item_1", entityType: "asset_follow_up_item" }),
+        makeNotification({
+          entityId: "item_1",
+          entityType: "asset_follow_up_item",
+          routeEntityId: "asset_9",
+          routeEntityType: "asset",
+        }),
         { viewer: "admin" },
       ),
-    ).toBe("/admin/assets");
+    ).toBe("/admin/assets/asset_9");
   });
 
   it("routes client notifications using the notification slug or fallback slug", () => {
@@ -86,17 +96,27 @@ describe("buildNotificationHref", () => {
 
     expect(
       buildNotificationHref(
-        makeNotification({ entityId: "comment_1", entityType: "event_comment" }),
+        makeNotification({
+          entityId: "comment_1",
+          entityType: "event_comment",
+          routeEntityId: "evt_2",
+          routeEntityType: "event",
+        }),
         { viewer: "client" },
       ),
-    ).toBe("/client/zamora/conversations");
+    ).toBe("/client/zamora/event/evt_2");
 
     expect(
       buildNotificationHref(
-        makeNotification({ entityId: "item_1", entityType: "campaign_action_item" }),
+        makeNotification({
+          entityId: "item_1",
+          entityType: "campaign_action_item",
+          routeEntityId: "cmp_5",
+          routeEntityType: "campaign",
+        }),
         { viewer: "client" },
       ),
-    ).toBe("/client/zamora/campaigns");
+    ).toBe("/client/zamora/campaign/cmp_5");
   });
 
   it("falls back to workspace or updates routes when entity context is missing", () => {

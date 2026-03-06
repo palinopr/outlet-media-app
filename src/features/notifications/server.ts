@@ -22,6 +22,13 @@ type NotificationEntityContext = {
   eventId: string | null;
 };
 
+type NotificationRouteContext = {
+  pageId: string | null;
+  routeEntityId: string | null;
+  routeEntityType: string | null;
+  taskId: string | null;
+};
+
 type NotificationScopeMaps = {
   allowedApprovalIds: Set<string>;
   allowedAssetCommentIds: Set<string>;
@@ -47,6 +54,8 @@ function mapNotificationRow(row: Record<string, unknown>): AppNotification {
     message: (row.message as string | null) ?? null,
     pageId: (row.page_id as string | null) ?? null,
     read: Boolean(row.read),
+    routeEntityId: null,
+    routeEntityType: null,
     taskId: (row.task_id as string | null) ?? null,
     title: row.title as string,
     type: row.type as string,
@@ -105,11 +114,12 @@ export async function listNotificationsForUser(
     mapNotificationRow(row),
   );
 
-  if (!options.clientSlug || !options.scope) {
-    return notifications;
-  }
+  const visibleNotifications =
+    options.clientSlug && options.scope
+      ? await filterNotificationsByScope(notifications, options.clientSlug, options.scope)
+      : notifications;
 
-  return filterNotificationsByScope(notifications, options.clientSlug, options.scope);
+  return enrichNotificationsForRouting(visibleNotifications);
 }
 
 export async function listClientNotificationRecipients(
@@ -295,6 +305,15 @@ function emptyNotificationEntityContext(): NotificationEntityContext {
   };
 }
 
+function emptyNotificationRouteContext(): NotificationRouteContext {
+  return {
+    pageId: null,
+    routeEntityId: null,
+    routeEntityType: null,
+    taskId: null,
+  };
+}
+
 function extractNotificationContextFromApprovalRow(
   row: Record<string, unknown>,
 ): NotificationEntityContext {
@@ -324,6 +343,49 @@ function extractNotificationContextFromApprovalRow(
   };
 }
 
+function extractNotificationRouteContextFromApprovalRow(
+  row: Record<string, unknown>,
+): NotificationRouteContext {
+  const entityType = (row.entity_type as string | null) ?? null;
+  const entityId = (row.entity_id as string | null) ?? null;
+  const metadata = (row.metadata as Record<string, unknown> | null) ?? null;
+
+  const routeEntityType =
+    entityType === "campaign" ||
+    entityType === "event" ||
+    entityType === "asset" ||
+    entityType === "crm_contact"
+      ? entityType
+      : typeof metadata?.campaignId === "string"
+        ? "campaign"
+        : typeof metadata?.eventId === "string"
+          ? "event"
+          : typeof metadata?.assetId === "string"
+            ? "asset"
+            : typeof metadata?.contactId === "string"
+              ? "crm_contact"
+              : null;
+  const routeEntityId =
+    routeEntityType === entityType && entityId
+      ? entityId
+      : routeEntityType === "campaign"
+        ? ((metadata?.campaignId as string | undefined) ?? null)
+        : routeEntityType === "event"
+          ? ((metadata?.eventId as string | undefined) ?? null)
+          : routeEntityType === "asset"
+            ? ((metadata?.assetId as string | undefined) ?? null)
+            : routeEntityType === "crm_contact"
+              ? ((metadata?.contactId as string | undefined) ?? null)
+              : null;
+
+  return {
+    pageId: (row.page_id as string | null) ?? null,
+    routeEntityId,
+    routeEntityType,
+    taskId: (row.task_id as string | null) ?? null,
+  };
+}
+
 async function mapScopedEntityRelations(
   table: string,
   idField: string,
@@ -349,6 +411,176 @@ async function mapScopedEntityRelations(
       String(row[relationField]),
     ]),
   );
+}
+
+async function mapNotificationRouteRelations(
+  table: string,
+  idField: string,
+  relationField: string,
+  routeEntityType: "asset" | "campaign" | "crm_contact" | "event",
+  entityIds: string[],
+): Promise<Map<string, NotificationRouteContext>> {
+  const mapping = await mapScopedEntityRelations(table, idField, relationField, entityIds);
+
+  return new Map(
+    Array.from(mapping.entries()).map(([id, routeEntityId]) => [
+      id,
+      {
+        ...emptyNotificationRouteContext(),
+        routeEntityId,
+        routeEntityType,
+      },
+    ]),
+  );
+}
+
+async function resolveNotificationRouteMaps(notifications: AppNotification[]) {
+  const db = supabaseAdmin;
+  if (!db || notifications.length === 0) return new Map<string, NotificationRouteContext>();
+
+  const campaignCommentIds: string[] = [];
+  const campaignActionItemIds: string[] = [];
+  const eventCommentIds: string[] = [];
+  const eventFollowUpIds: string[] = [];
+  const assetCommentIds: string[] = [];
+  const assetFollowUpIds: string[] = [];
+  const crmCommentIds: string[] = [];
+  const crmFollowUpIds: string[] = [];
+  const approvalIds: string[] = [];
+
+  for (const notification of notifications) {
+    if (!notification.entityId) continue;
+
+    switch (notification.entityType) {
+      case "campaign_comment":
+        campaignCommentIds.push(notification.entityId);
+        break;
+      case "campaign_action_item":
+        campaignActionItemIds.push(notification.entityId);
+        break;
+      case "event_comment":
+        eventCommentIds.push(notification.entityId);
+        break;
+      case "event_follow_up_item":
+        eventFollowUpIds.push(notification.entityId);
+        break;
+      case "asset_comment":
+        assetCommentIds.push(notification.entityId);
+        break;
+      case "asset_follow_up_item":
+        assetFollowUpIds.push(notification.entityId);
+        break;
+      case "crm_comment":
+        crmCommentIds.push(notification.entityId);
+        break;
+      case "crm_follow_up_item":
+        crmFollowUpIds.push(notification.entityId);
+        break;
+      case "approval_request":
+        approvalIds.push(notification.entityId);
+        break;
+      default:
+        break;
+    }
+  }
+
+  const [
+    campaignCommentMap,
+    campaignActionItemMap,
+    eventCommentMap,
+    eventFollowUpMap,
+    assetCommentMap,
+    assetFollowUpMap,
+    crmCommentMap,
+    crmFollowUpMap,
+  ] = await Promise.all([
+    mapNotificationRouteRelations(
+      "campaign_comments",
+      "id",
+      "campaign_id",
+      "campaign",
+      campaignCommentIds,
+    ),
+    mapNotificationRouteRelations(
+      "campaign_action_items",
+      "id",
+      "campaign_id",
+      "campaign",
+      campaignActionItemIds,
+    ),
+    mapNotificationRouteRelations("event_comments", "id", "event_id", "event", eventCommentIds),
+    mapNotificationRouteRelations(
+      "event_follow_up_items",
+      "id",
+      "event_id",
+      "event",
+      eventFollowUpIds,
+    ),
+    mapNotificationRouteRelations("asset_comments", "id", "asset_id", "asset", assetCommentIds),
+    mapNotificationRouteRelations(
+      "asset_follow_up_items",
+      "id",
+      "asset_id",
+      "asset",
+      assetFollowUpIds,
+    ),
+    mapNotificationRouteRelations("crm_comments", "id", "contact_id", "crm_contact", crmCommentIds),
+    mapNotificationRouteRelations(
+      "crm_follow_up_items",
+      "id",
+      "contact_id",
+      "crm_contact",
+      crmFollowUpIds,
+    ),
+  ]);
+
+  const routeMap = new Map<string, NotificationRouteContext>([
+    ...campaignCommentMap,
+    ...campaignActionItemMap,
+    ...eventCommentMap,
+    ...eventFollowUpMap,
+    ...assetCommentMap,
+    ...assetFollowUpMap,
+    ...crmCommentMap,
+    ...crmFollowUpMap,
+  ]);
+
+  if (approvalIds.length > 0) {
+    const { data, error } = await db
+      .from("approval_requests" as never)
+      .select("id, entity_type, entity_id, metadata, page_id, task_id")
+      .in("id", approvalIds);
+
+    if (error) {
+      console.error("[notifications] failed to load approval route mapping:", error.message);
+    } else {
+      for (const row of (data ?? []) as Record<string, unknown>[]) {
+        routeMap.set(String(row.id), extractNotificationRouteContextFromApprovalRow(row));
+      }
+    }
+  }
+
+  return routeMap;
+}
+
+async function enrichNotificationsForRouting(
+  notifications: AppNotification[],
+): Promise<AppNotification[]> {
+  const routeMap = await resolveNotificationRouteMaps(notifications);
+  if (routeMap.size === 0) return notifications;
+
+  return notifications.map((notification) => {
+    const route = routeMap.get(notification.entityId ?? "");
+    if (!route) return notification;
+
+    return {
+      ...notification,
+      pageId: notification.pageId ?? route.pageId,
+      routeEntityId: route.routeEntityId,
+      routeEntityType: route.routeEntityType,
+      taskId: notification.taskId ?? route.taskId,
+    };
+  });
 }
 
 async function resolveNotificationEntityContext(

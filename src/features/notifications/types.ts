@@ -9,6 +9,8 @@ export interface AppNotification {
   message: string | null;
   pageId: string | null;
   read: boolean;
+  routeEntityId?: string | null;
+  routeEntityType?: string | null;
   taskId: string | null;
   title: string;
   type: string;

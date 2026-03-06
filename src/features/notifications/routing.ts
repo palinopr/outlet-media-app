@@ -23,18 +23,29 @@ function clientSlugForNotification(
   return notification.clientSlug ?? fallbackClientSlug ?? null;
 }
 
+function routeEntityTypeForNotification(notification: AppNotification) {
+  return notification.routeEntityType ?? notification.entityType;
+}
+
+function routeEntityIdForNotification(notification: AppNotification) {
+  return notification.routeEntityId ?? notification.entityId;
+}
+
 function buildAdminNotificationEntityHref(notification: AppNotification) {
-  if (notification.entityType === "campaign" && notification.entityId) {
-    return `/admin/campaigns/${notification.entityId}`;
+  const entityType = routeEntityTypeForNotification(notification);
+  const entityId = routeEntityIdForNotification(notification);
+
+  if (entityType === "campaign" && entityId) {
+    return `/admin/campaigns/${entityId}`;
   }
-  if (notification.entityType === "asset" && notification.entityId) {
-    return `/admin/assets/${notification.entityId}`;
+  if (entityType === "asset" && entityId) {
+    return `/admin/assets/${entityId}`;
   }
-  if (notification.entityType === "event" && notification.entityId) {
-    return `/admin/events/${notification.entityId}`;
+  if (entityType === "event" && entityId) {
+    return `/admin/events/${entityId}`;
   }
-  if (notification.entityType === "crm_contact" && notification.entityId) {
-    return `/admin/crm/${notification.entityId}`;
+  if (entityType === "crm_contact" && entityId) {
+    return `/admin/crm/${entityId}`;
   }
   if (notification.entityType === "approval_request") {
     return "/admin/approvals";
@@ -66,17 +77,20 @@ function buildClientNotificationEntityHref(
   notification: AppNotification,
   clientSlug: string,
 ) {
-  if (notification.entityType === "campaign" && notification.entityId) {
-    return `/client/${clientSlug}/campaign/${notification.entityId}`;
+  const entityType = routeEntityTypeForNotification(notification);
+  const entityId = routeEntityIdForNotification(notification);
+
+  if (entityType === "campaign" && entityId) {
+    return `/client/${clientSlug}/campaign/${entityId}`;
   }
-  if (notification.entityType === "asset" && notification.entityId) {
-    return `/client/${clientSlug}/assets/${notification.entityId}`;
+  if (entityType === "asset" && entityId) {
+    return `/client/${clientSlug}/assets/${entityId}`;
   }
-  if (notification.entityType === "event" && notification.entityId) {
-    return `/client/${clientSlug}/event/${notification.entityId}`;
+  if (entityType === "event" && entityId) {
+    return `/client/${clientSlug}/event/${entityId}`;
   }
-  if (notification.entityType === "crm_contact" && notification.entityId) {
-    return `/client/${clientSlug}/crm/${notification.entityId}`;
+  if (entityType === "crm_contact" && entityId) {
+    return `/client/${clientSlug}/crm/${entityId}`;
   }
   if (notification.entityType === "approval_request") {
     return `/client/${clientSlug}/approvals`;
