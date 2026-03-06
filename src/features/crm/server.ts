@@ -3,6 +3,7 @@ import {
   getCurrentActor,
   listSystemEvents,
   logSystemEvent,
+  summarizeChangedFields,
   type SystemEvent,
 } from "@/features/system-events/server";
 import {
@@ -77,6 +78,16 @@ interface CreateCrmContactInput {
   source?: string | null;
   tags?: string[];
   visibility?: CrmContactVisibility;
+}
+
+interface UpdateCrmContactInput {
+  contactId: string;
+  lastContactedAt?: string | null;
+  leadScore?: number | null;
+  lifecycleStage?: CrmLifecycleStage;
+  nextFollowUpAt?: string | null;
+  notes?: string | null;
+  ownerName?: string | null;
 }
 
 function mapCrmContact(row: Record<string, unknown>): CrmContact {
@@ -253,6 +264,89 @@ export async function createCrmContact(input: CreateCrmContactInput): Promise<Cr
       : contact.lifecycleStage === "customer"
         ? "Contact entered the CRM as an active customer."
         : "Contact added to the CRM pipeline.",
+    metadata: {
+      clientSlug: contact.clientSlug,
+      lifecycleStage: contact.lifecycleStage,
+      leadScore: contact.leadScore,
+      visibility: contact.visibility,
+    },
+  });
+
+  return contact;
+}
+
+export async function updateCrmContact(input: UpdateCrmContactInput): Promise<CrmContact | null> {
+  if (!supabaseAdmin) return null;
+
+  const { data: existingRow, error: existingError } = await supabaseAdmin
+    .from(CRM_CONTACTS_TABLE)
+    .select(CRM_CONTACT_SELECT)
+    .eq("id", input.contactId)
+    .maybeSingle();
+
+  if (existingError) {
+    console.error("[crm] fetch contact failed:", existingError.message);
+    return null;
+  }
+
+  if (!existingRow) return null;
+
+  const existing = mapCrmContact(existingRow as Record<string, unknown>);
+  const nextValues = {
+    lastContactedAt:
+      "lastContactedAt" in input ? input.lastContactedAt ?? null : existing.lastContactedAt,
+    leadScore: "leadScore" in input ? input.leadScore ?? null : existing.leadScore,
+    lifecycleStage: "lifecycleStage" in input ? input.lifecycleStage : existing.lifecycleStage,
+    nextFollowUpAt:
+      "nextFollowUpAt" in input ? input.nextFollowUpAt ?? null : existing.nextFollowUpAt,
+    notes: "notes" in input ? input.notes ?? null : existing.notes,
+    ownerName: "ownerName" in input ? input.ownerName ?? null : existing.ownerName,
+  };
+
+  const changedFields: string[] = [];
+  if (nextValues.lastContactedAt !== existing.lastContactedAt) changedFields.push("last contacted");
+  if (nextValues.leadScore !== existing.leadScore) changedFields.push("lead score");
+  if (nextValues.lifecycleStage !== existing.lifecycleStage) changedFields.push("stage");
+  if (nextValues.nextFollowUpAt !== existing.nextFollowUpAt) changedFields.push("next follow-up");
+  if (nextValues.notes !== existing.notes) changedFields.push("notes");
+  if (nextValues.ownerName !== existing.ownerName) changedFields.push("owner");
+
+  if (changedFields.length === 0) return existing;
+
+  const actor = await getCurrentActor();
+  const { data, error } = await supabaseAdmin
+    .from(CRM_CONTACTS_TABLE)
+    .update({
+      last_contacted_at: nextValues.lastContactedAt,
+      lead_score: nextValues.leadScore,
+      lifecycle_stage: nextValues.lifecycleStage,
+      next_follow_up_at: nextValues.nextFollowUpAt,
+      notes: nextValues.notes,
+      owner_name: nextValues.ownerName,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.contactId)
+    .select(CRM_CONTACT_SELECT)
+    .single();
+
+  if (error) {
+    console.error("[crm] update contact failed:", error.message);
+    return null;
+  }
+
+  const contact = mapCrmContact(data as Record<string, unknown>);
+
+  await logSystemEvent({
+    eventName: "crm_contact_updated",
+    actorId: actor.actorId,
+    actorName: actor.actorName,
+    actorType: actor.actorType,
+    clientSlug: contact.clientSlug,
+    visibility: contact.visibility,
+    entityType: "crm_contact",
+    entityId: contact.id,
+    summary: `Updated CRM contact "${contact.fullName}"`,
+    detail: summarizeChangedFields(changedFields),
     metadata: {
       clientSlug: contact.clientSlug,
       lifecycleStage: contact.lifecycleStage,

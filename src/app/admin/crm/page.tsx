@@ -96,6 +96,7 @@ export default async function AdminCrmPage({ searchParams }: Props) {
 
         <div className="space-y-6">
           <CrmContactsPanel
+            canManage
             contacts={contactsForAttention}
             title={crm.upcomingFollowUps.length > 0 ? "Upcoming follow-ups" : "Recent contacts"}
             description={
@@ -109,6 +110,7 @@ export default async function AdminCrmPage({ searchParams }: Props) {
           />
 
           <CrmContactsPanel
+            canManage
             contacts={crm.recentContacts}
             title="CRM pipeline"
             description="A first-class CRM list on the same shared backbone as campaigns, approvals, and activity."
