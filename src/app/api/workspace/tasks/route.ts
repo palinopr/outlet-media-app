@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { authGuard, apiError } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
+import { requireWorkspaceClientAccess } from "@/features/workspace/access";
 
 export async function GET(request: NextRequest) {
   const { userId, error } = await authGuard();
@@ -15,11 +16,13 @@ export async function GET(request: NextRequest) {
   const priority = searchParams.get("priority");
 
   if (!clientSlug) return apiError("client_slug is required", 400);
+  const access = await requireWorkspaceClientAccess(userId, clientSlug);
+  if (access instanceof Response) return access;
 
   let query = supabaseAdmin
     .from("workspace_tasks")
     .select("*")
-    .eq("client_slug", clientSlug)
+    .eq("client_slug", access.clientSlug)
     .order("position", { ascending: true });
 
   if (status) query = query.eq("status", status);

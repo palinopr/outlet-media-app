@@ -6,6 +6,7 @@ import {
   logSystemEvent,
   summarizeChangedFields,
 } from "@/features/system-events/server";
+import { requireWorkspaceClientAccess } from "@/features/workspace/access";
 
 interface Ctx {
   params: Promise<{ pageId: string }>;
@@ -20,7 +21,7 @@ const PAGE_FIELD_LABELS: Record<string, string> = {
 };
 
 export async function GET(_request: Request, { params }: Ctx) {
-  const { error: authErr } = await authGuard();
+  const { userId, error: authErr } = await authGuard();
   if (authErr) return authErr;
   if (!supabaseAdmin) return apiError("DB not configured", 500);
 
@@ -33,6 +34,8 @@ export async function GET(_request: Request, { params }: Ctx) {
     .single();
 
   if (error) return apiError("Page not found", 404);
+  const access = await requireWorkspaceClientAccess(userId, data.client_slug as string | null);
+  if (access instanceof Response) return access;
 
   return NextResponse.json(data);
 }
@@ -54,6 +57,8 @@ export async function PATCH(request: Request, { params }: Ctx) {
     .single();
 
   if (!existing) return apiError("Page not found", 404);
+  const access = await requireWorkspaceClientAccess(userId, existing.client_slug as string | null);
+  if (access instanceof Response) return access;
 
   const { error } = await supabaseAdmin
     .from("workspace_pages")
@@ -116,6 +121,8 @@ export async function DELETE(_request: Request, { params }: Ctx) {
     .single();
 
   if (!existing) return apiError("Page not found", 404);
+  const access = await requireWorkspaceClientAccess(userId, existing.client_slug as string | null);
+  if (access instanceof Response) return access;
 
   const { error } = await supabaseAdmin
     .from("workspace_pages")

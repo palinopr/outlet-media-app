@@ -3,14 +3,16 @@ import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { CreatePageSchema } from "@/lib/api-schemas";
 import { logSystemEvent } from "@/features/system-events/server";
+import { requireWorkspaceClientAccess } from "@/features/workspace/access";
 
 export async function GET(request: Request) {
-  const { userId: _userId, error: authErr } = await authGuard();
+  const { userId, error: authErr } = await authGuard();
   if (authErr) return authErr;
   if (!supabaseAdmin) return apiError("DB not configured", 500);
 
   const { searchParams } = new URL(request.url);
-  const clientSlug = searchParams.get("client_slug");
+  const access = await requireWorkspaceClientAccess(userId, searchParams.get("client_slug"));
+  if (access instanceof Response) return access;
 
   let query = supabaseAdmin
     .from("workspace_pages")
@@ -18,9 +20,7 @@ export async function GET(request: Request) {
     .order("position", { ascending: true })
     .order("created_at", { ascending: true });
 
-  if (clientSlug) {
-    query = query.eq("client_slug", clientSlug);
-  }
+  query = query.eq("client_slug", access.clientSlug);
 
   const { data, error } = await query;
   if (error) return apiError(error.message, 500);
@@ -35,12 +35,14 @@ export async function POST(request: Request) {
 
   const { data: body, error: valErr } = await validateRequest(request, CreatePageSchema);
   if (valErr) return valErr;
+  const access = await requireWorkspaceClientAccess(userId, body.client_slug);
+  if (access instanceof Response) return access;
 
   const { data, error } = await supabaseAdmin
     .from("workspace_pages")
     .insert({
       title: body.title,
-      client_slug: body.client_slug,
+      client_slug: access.clientSlug,
       parent_page_id: body.parent_page_id ?? null,
       icon: body.icon ?? null,
       created_by: userId!,
@@ -54,7 +56,7 @@ export async function POST(request: Request) {
   await logSystemEvent({
     eventName: "workspace_page_created",
     actorId: userId,
-    clientSlug: body.client_slug,
+    clientSlug: access.clientSlug,
     entityType: "workspace_page",
     entityId: data.id,
     pageId: data.id,

@@ -9,7 +9,7 @@ interface Props {
 
 export default async function WorkspacePageView({ params }: Props) {
   const { pageId } = await params;
-  const [page, { userId }] = await Promise.all([getWorkspacePage(pageId), auth()]);
+  const [page, { userId }] = await Promise.all([getWorkspacePage(pageId, "admin"), auth()]);
 
   if (!page) notFound();
 

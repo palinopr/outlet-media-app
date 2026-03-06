@@ -13,7 +13,7 @@ import { getWorkQueue } from "@/features/work-queue/server";
 export default async function WorkspacePage() {
   const { userId } = await auth();
   const [{ pages }, events, approvals, workQueue, assignedWorkQueue, agentOutcomes] = await Promise.all([
-    getWorkspacePages(),
+    getWorkspacePages("admin"),
     listSystemEvents({ audience: "all", limit: 12 }),
     listApprovalRequests({ audience: "all", status: "pending", limit: 8 }),
     getWorkQueue({ limit: 6, mode: "admin" }),

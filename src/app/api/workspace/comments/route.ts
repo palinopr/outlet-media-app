@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { CreateCommentSchema, ResolveCommentSchema } from "@/lib/api-schemas";
 import { currentUser } from "@clerk/nextjs/server";
 import { logSystemEvent } from "@/features/system-events/server";
+import { requireWorkspaceClientAccess } from "@/features/workspace/access";
 
 function excerpt(text: string, limit = 140) {
   const normalized = text.trim().replace(/\s+/g, " ");
@@ -12,12 +13,22 @@ function excerpt(text: string, limit = 140) {
 }
 
 export async function GET(request: NextRequest) {
-  const { error } = await authGuard();
+  const { userId, error } = await authGuard();
   if (error) return error;
   if (!supabaseAdmin) return apiError("DB not configured");
 
   const pageId = request.nextUrl.searchParams.get("page_id");
   if (!pageId) return apiError("page_id required", 400);
+
+  const { data: page } = await supabaseAdmin
+    .from("workspace_pages")
+    .select("client_slug")
+    .eq("id", pageId)
+    .single();
+
+  if (!page) return apiError("Page not found", 404);
+  const access = await requireWorkspaceClientAccess(userId, page.client_slug as string | null);
+  if (access instanceof Response) return access;
 
   const { data, error: dbErr } = await supabaseAdmin
     .from("workspace_comments")
@@ -39,6 +50,15 @@ export async function POST(request: NextRequest) {
 
   const user = await currentUser();
   const authorName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown";
+  const { data: page } = await supabaseAdmin
+    .from("workspace_pages")
+    .select("title, client_slug")
+    .eq("id", body.page_id)
+    .single();
+
+  if (!page) return apiError("Page not found", 404);
+  const access = await requireWorkspaceClientAccess(userId, page.client_slug as string | null);
+  if (access instanceof Response) return access;
 
   const { data, error: dbErr } = await supabaseAdmin
     .from("workspace_comments")
@@ -53,12 +73,6 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (dbErr) return apiError(dbErr.message);
-
-  const { data: page } = await supabaseAdmin
-    .from("workspace_pages")
-    .select("title, client_slug")
-    .eq("id", body.page_id)
-    .single();
 
   if (page) {
     await logSystemEvent({
@@ -99,6 +113,15 @@ export async function PATCH(request: NextRequest) {
     .single();
 
   if (!existing) return apiError("Comment not found", 404);
+  const { data: page } = await supabaseAdmin
+    .from("workspace_pages")
+    .select("title, client_slug")
+    .eq("id", existing.page_id)
+    .single();
+
+  if (!page) return apiError("Page not found", 404);
+  const access = await requireWorkspaceClientAccess(userId, page.client_slug as string | null);
+  if (access instanceof Response) return access;
 
   const { error: dbErr } = await supabaseAdmin
     .from("workspace_comments")
@@ -108,12 +131,6 @@ export async function PATCH(request: NextRequest) {
   if (dbErr) return apiError(dbErr.message);
 
   if (body.resolved !== existing.resolved) {
-    const { data: page } = await supabaseAdmin
-      .from("workspace_pages")
-      .select("title, client_slug")
-      .eq("id", existing.page_id)
-      .single();
-
     if (page) {
       await logSystemEvent({
         eventName: "workspace_comment_resolved",
@@ -149,6 +166,15 @@ export async function DELETE(request: NextRequest) {
     .single();
 
   if (!existing) return apiError("Comment not found", 404);
+  const { data: page } = await supabaseAdmin
+    .from("workspace_pages")
+    .select("title, client_slug")
+    .eq("id", existing.page_id)
+    .single();
+
+  if (!page) return apiError("Page not found", 404);
+  const access = await requireWorkspaceClientAccess(userId, page.client_slug as string | null);
+  if (access instanceof Response) return access;
 
   const { error: dbErr } = await supabaseAdmin
     .from("workspace_comments")
@@ -157,12 +183,6 @@ export async function DELETE(request: NextRequest) {
     .eq("author_id", userId);
 
   if (dbErr) return apiError(dbErr.message);
-
-  const { data: page } = await supabaseAdmin
-    .from("workspace_pages")
-    .select("title, client_slug")
-    .eq("id", existing.page_id)
-    .single();
 
   if (page) {
     await logSystemEvent({

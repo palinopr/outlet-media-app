@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { UpdateTaskSchema } from "@/lib/api-schemas";
+import { requireWorkspaceClientAccess } from "@/features/workspace/access";
 
 export async function PATCH(
   request: NextRequest,
@@ -15,6 +16,15 @@ export async function PATCH(
 
   const { data: body, error: valError } = await validateRequest(request, UpdateTaskSchema);
   if (valError) return valError;
+  const { data: existing } = await supabaseAdmin
+    .from("workspace_tasks")
+    .select("client_slug")
+    .eq("id", taskId)
+    .single();
+
+  if (!existing) return apiError("Task not found", 404);
+  const access = await requireWorkspaceClientAccess(userId, existing.client_slug as string | null);
+  if (access instanceof Response) return access;
 
   const { error: dbError } = await supabaseAdmin
     .from("workspace_tasks")
@@ -42,6 +52,15 @@ export async function DELETE(
   if (!supabaseAdmin) return apiError("DB not configured", 500);
 
   const { taskId } = await params;
+  const { data: existing } = await supabaseAdmin
+    .from("workspace_tasks")
+    .select("client_slug")
+    .eq("id", taskId)
+    .single();
+
+  if (!existing) return apiError("Task not found", 404);
+  const access = await requireWorkspaceClientAccess(userId, existing.client_slug as string | null);
+  if (access instanceof Response) return access;
 
   const { error: dbError } = await supabaseAdmin
     .from("workspace_tasks")
