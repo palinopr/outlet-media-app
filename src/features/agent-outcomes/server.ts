@@ -12,6 +12,7 @@ interface ListAgentOutcomesOptions {
   audience?: "all" | AgentOutcomeVisibility;
   campaignId?: string | null;
   clientSlug?: string | null;
+  contextType?: "all" | "campaign" | "crm_contact";
   crmContactId?: string | null;
   limit?: number;
   scopeCampaignIds?: string[] | null;
@@ -54,6 +55,7 @@ function mapTaskRow(row: Record<string, unknown>): AgentOutcomeTaskRecord {
 function matchesContext(
   request: AgentOutcomeRequestRecord,
   campaignId: string | null | undefined,
+  contextType: "all" | "campaign" | "crm_contact",
   crmContactId: string | null | undefined,
   scopeCampaignIds?: Set<string> | null,
 ) {
@@ -62,6 +64,8 @@ function matchesContext(
   const requestCrmContactId =
     typeof request.metadata.crmContactId === "string" ? request.metadata.crmContactId : null;
 
+  if (contextType === "campaign" && !requestCampaignId) return false;
+  if (contextType === "crm_contact" && !requestCrmContactId) return false;
   if (campaignId && requestCampaignId !== campaignId) return false;
   if (crmContactId && requestCrmContactId !== crmContactId) return false;
   if (scopeCampaignIds && (!requestCampaignId || !scopeCampaignIds.has(requestCampaignId))) {
@@ -101,7 +105,13 @@ export async function listAgentOutcomes(
   const requests: AgentOutcomeRequestRecord[] = (eventRows ?? [])
     .map((row) => mapRequestRow(row as Record<string, unknown>))
     .filter((request) =>
-      matchesContext(request, options.campaignId, options.crmContactId, scopeCampaignIds),
+      matchesContext(
+        request,
+        options.campaignId,
+        options.contextType ?? "all",
+        options.crmContactId,
+        scopeCampaignIds,
+      ),
     );
 
   if (requests.length === 0) return [];

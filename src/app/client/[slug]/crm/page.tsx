@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { ArrowLeft, CalendarClock, Flame, Share2, Users } from "lucide-react";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { CrmContactsPanel } from "@/components/crm/crm-contacts-panel";
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getCrmOverview } from "@/features/crm/server";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { ClientPortalFooter } from "../components/client-portal-footer";
@@ -18,6 +20,12 @@ export default async function ClientCrmPage({ params }: Props) {
   const crm = await getCrmOverview({
     audience: "shared",
     clientSlug: slug,
+  });
+  const agentOutcomes = await listAgentOutcomes({
+    audience: "shared",
+    clientSlug: slug,
+    contextType: "crm_contact",
+    limit: 4,
   });
 
   const contactsForAttention =
@@ -101,6 +109,15 @@ export default async function ClientCrmPage({ params }: Props) {
             title="CRM activity"
             description="Recent shared CRM updates on the same timeline as the rest of your account work."
             emptyState="CRM activity will appear here as contacts are added and updated."
+          />
+
+          <AgentOutcomesPanel
+            outcomes={agentOutcomes}
+            title="CRM follow-through"
+            description="Shared agent recommendations for CRM contacts that currently need follow-up."
+            emptyState="No shared CRM follow-through is available yet."
+            variant="client"
+            crmHrefPrefix={`/client/${slug}/crm`}
           />
         </div>
       </div>

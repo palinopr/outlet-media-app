@@ -12,6 +12,7 @@ import type { AgentOutcomeStatus, AgentOutcomeView } from "@/features/agent-outc
 interface AgentOutcomesPanelProps {
   canCreateActionItems?: boolean;
   campaignHrefPrefix?: string;
+  crmHrefPrefix?: string;
   description?: string;
   emptyState?: string;
   outcomes: AgentOutcomeView[];
@@ -107,6 +108,7 @@ function agentLabel(agentId: string) {
 export function AgentOutcomesPanel({
   canCreateActionItems = false,
   campaignHrefPrefix,
+  crmHrefPrefix,
   description = "Track what the agents have reviewed, what they recommended, and whether the work is still waiting on a human decision.",
   emptyState = "No linked agent follow-through yet.",
   outcomes,
@@ -252,6 +254,23 @@ export function AgentOutcomesPanel({
                           )}
                         >
                           {outcome.campaignName ? `Open ${outcome.campaignName}` : "Open campaign"}
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    ) : crmHrefPrefix && outcome.crmContactId ? (
+                      <div className="mt-3">
+                        <Link
+                          href={`${crmHrefPrefix}/${outcome.crmContactId}`}
+                          className={cn(
+                            "inline-flex items-center gap-1 text-sm font-medium",
+                            isClient
+                              ? "text-cyan-300 hover:text-cyan-200"
+                              : "text-[#0f7b6c] hover:text-[#0b5e52]",
+                          )}
+                        >
+                          {outcome.crmContactName
+                            ? `Open ${outcome.crmContactName}`
+                            : "Open contact"}
                           <ArrowRight className="h-3 w-3" />
                         </Link>
                       </div>

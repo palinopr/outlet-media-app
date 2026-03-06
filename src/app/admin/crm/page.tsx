@@ -1,4 +1,5 @@
 import { CalendarClock, Flame, Share2, Users } from "lucide-react";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { StatCard } from "@/components/admin/stat-card";
@@ -6,6 +7,7 @@ import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity
 import { CrmContactsPanel } from "@/components/crm/crm-contacts-panel";
 import { CrmCreateContactForm } from "@/components/crm/crm-create-contact-form";
 import { getCrmOverview } from "@/features/crm/server";
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { slugToLabel } from "@/lib/formatters";
 
 interface Props {
@@ -22,6 +24,12 @@ export default async function AdminCrmPage({ searchParams }: Props) {
   const crm = await getCrmOverview({
     audience: "all",
     clientSlug: selectedClient,
+  });
+  const agentOutcomes = await listAgentOutcomes({
+    audience: "all",
+    clientSlug: selectedClient,
+    contextType: "crm_contact",
+    limit: 4,
   });
 
   const contactsForAttention =
@@ -91,6 +99,15 @@ export default async function AdminCrmPage({ searchParams }: Props) {
             description="Recent CRM additions and follow-up work on the shared product timeline."
             emptyState="CRM activity will appear here as contacts are created and updated."
             showClientSlug={!selectedClient}
+          />
+
+          <AgentOutcomesPanel
+            outcomes={agentOutcomes}
+            title="CRM follow-through"
+            description="Recent bounded agent triage and recommendations for CRM contacts that need attention."
+            emptyState="No CRM follow-through is queued yet."
+            variant="admin"
+            crmHrefPrefix="/admin/crm"
           />
         </div>
 
