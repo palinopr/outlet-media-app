@@ -1,6 +1,5 @@
-import { supabaseAdmin } from "@/lib/supabase";
 import { TaskBoard } from "@/components/workspace/task-board";
-import type { WorkspaceTask } from "@/lib/workspace-types";
+import { getWorkspaceTasks } from "@/features/workspace/server";
 
 interface Props {
   searchParams: Promise<{ client_slug?: string }>;
@@ -8,22 +7,7 @@ interface Props {
 
 export default async function AdminTasksPage({ searchParams }: Props) {
   const { client_slug } = await searchParams;
-
-  let tasks: WorkspaceTask[] = [];
-
-  if (supabaseAdmin) {
-    let query = supabaseAdmin
-      .from("workspace_tasks")
-      .select("*")
-      .order("position", { ascending: true });
-
-    if (client_slug) {
-      query = query.eq("client_slug", client_slug);
-    }
-
-    const { data } = await query;
-    tasks = (data as WorkspaceTask[]) ?? [];
-  }
+  const tasks = await getWorkspaceTasks(client_slug);
 
   // Derive a slug for the board -- use the filter or the first task's slug or a default
   const boardSlug = client_slug ?? tasks[0]?.client_slug ?? "default";

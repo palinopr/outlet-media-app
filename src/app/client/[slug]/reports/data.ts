@@ -1,7 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { fetchAllCampaigns } from "@/lib/meta-campaigns";
+import type { ScopeFilter } from "@/lib/member-access";
 import type { CampaignCard, EventCard, TmEvent } from "../types";
-import { toCampaignCard, type ScopeFilter } from "../data";
+import { toCampaignCard } from "../data";
 import { buildEventCard } from "../lib";
 
 export interface ReportsSummary {

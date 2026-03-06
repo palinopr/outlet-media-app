@@ -29,7 +29,6 @@ import { StatCard } from "../../components/stat-card";
 import { ProgressBar } from "../../components/progress-bar";
 import { EventStatusBadge } from "../../components/event-status-badge";
 import { AudienceSection } from "../../components/audience-section";
-import { requireService } from "@/lib/service-guard";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import {
   TicketSalesChart,
@@ -37,6 +36,7 @@ import {
   DailySalesChart,
 } from "@/components/client/charts";
 import type { SalesVelocity, TicketPlatform } from "../../types";
+import { requireClientAccess } from "@/features/client-portal/access";
 
 interface Props {
   params: Promise<{ slug: string; eventId: string }>;
@@ -70,9 +70,17 @@ function trendColor(trend: SalesVelocity["trend"]): string {
   return "text-white/50";
 }
 
+function getDaysUntilEvent(eventDate: string | null): number | null {
+  if (!eventDate) return null;
+  return Math.max(
+    0,
+    Math.round((new Date(eventDate).getTime() - Date.now()) / 86400000),
+  );
+}
+
 export default async function EventDetailPage({ params }: Props) {
   const { slug, eventId } = await params;
-  await requireService(slug, "ticketmaster", "eata");
+  await requireClientAccess(slug, "ticketmaster", "eata");
   const data = await getEventDetail(slug, eventId);
 
   if (!data) {
@@ -105,9 +113,7 @@ export default async function EventDetailPage({ params }: Props) {
   const hasTodayData = e.ticketsSoldToday != null || e.revenueToday != null;
 
   // Compute days until event even when velocity is null (needs just an event date)
-  const daysUntilEvent = e.date
-    ? Math.max(0, Math.round((new Date(e.date).getTime() - Date.now()) / 86400000))
-    : null;
+  const daysUntilEvent = getDaysUntilEvent(e.date);
 
   return (
     <div className="space-y-6">

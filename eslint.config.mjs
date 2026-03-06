@@ -18,8 +18,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    ".claude/**",
+    ".worktrees/**",
     // Compiled agent output (should not be linted)
     "agent/dist/**",
+    "agent/.next/**",
   ]),
 ]);
 

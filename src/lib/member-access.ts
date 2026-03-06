@@ -1,6 +1,10 @@
 import { cache } from "react";
 import { supabaseAdmin } from "./supabase";
-import type { ScopeFilter } from "@/app/client/[slug]/data";
+
+export interface ScopeFilter {
+  allowedCampaignIds: string[] | null;
+  allowedEventIds: string[] | null;
+}
 
 export interface MemberAccess {
   memberId: string;

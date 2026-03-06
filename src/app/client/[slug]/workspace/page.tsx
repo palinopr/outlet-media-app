@@ -1,7 +1,5 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { getMemberAccessForSlug } from "@/lib/member-access";
-import { getClientPages } from "./data";
+import { requireClientAccess } from "@/features/client-portal/access";
+import { getWorkspacePages } from "@/features/workspace/server";
 import { PageList } from "@/components/workspace/page-list";
 
 interface Props {
@@ -10,13 +8,8 @@ interface Props {
 
 export default async function ClientWorkspacePage({ params }: Props) {
   const { slug } = await params;
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const access = await getMemberAccessForSlug(userId, slug);
-  if (!access) redirect("/client");
-
-  const { pages } = await getClientPages(slug);
+  await requireClientAccess(slug, "workspace");
+  const { pages } = await getWorkspacePages(slug);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">

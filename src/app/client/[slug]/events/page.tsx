@@ -6,12 +6,10 @@ import {
   Calendar,
   ArrowLeft,
 } from "lucide-react";
-import { auth } from "@clerk/nextjs/server";
-import { getScopeFilter } from "@/lib/member-access";
 import { getEventsPageData } from "../data";
 import { fmtNum, slugToLabel } from "@/lib/formatters";
-import { requireService } from "@/lib/service-guard";
 import { EventsFilter } from "./events-filter";
+import { requireClientAccess } from "@/features/client-portal/access";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -29,11 +27,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientEventsPage({ params, searchParams }: Props) {
   const { slug } = await params;
-  await requireService(slug, "ticketmaster", "eata");
+  const { scope } = await requireClientAccess(slug, "ticketmaster", "eata");
   const { status, q } = await searchParams;
 
-  const { userId } = await auth();
-  const scope = await getScopeFilter(userId, slug);
   const { events, totalEvents, onSaleCount, totalTicketsSold } =
     await getEventsPageData(slug, scope);
 

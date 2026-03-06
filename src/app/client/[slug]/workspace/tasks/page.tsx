@@ -1,9 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
-import { supabaseAdmin } from "@/lib/supabase";
-import { getMemberAccessForSlug } from "@/lib/member-access";
 import { TaskBoard } from "@/components/workspace/task-board";
-import type { WorkspaceTask } from "@/lib/workspace-types";
+import { requireClientAccess } from "@/features/client-portal/access";
+import { getWorkspaceTasks } from "@/features/workspace/server";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -11,24 +8,8 @@ interface Props {
 
 export default async function ClientTasksPage({ params }: Props) {
   const { slug } = await params;
-
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const access = await getMemberAccessForSlug(userId, slug);
-  if (!access) redirect("/client");
-
-  let tasks: WorkspaceTask[] = [];
-
-  if (supabaseAdmin) {
-    const { data } = await supabaseAdmin
-      .from("workspace_tasks")
-      .select("*")
-      .eq("client_slug", slug)
-      .order("position", { ascending: true });
-
-    tasks = (data as WorkspaceTask[]) ?? [];
-  }
+  await requireClientAccess(slug, "workspace");
+  const tasks = await getWorkspaceTasks(slug);
 
   return (
     <div className="max-w-full mx-auto px-6 py-8 space-y-6">

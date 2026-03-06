@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import { DollarSign, Megaphone, TrendingUp, MousePointerClick, Sparkles, Clock } from "lucide-react";
-import { auth } from "@clerk/nextjs/server";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { getCampaignsPageData } from "../data";
 import { buildTrendData } from "../lib";
-import { getScopeFilter } from "@/lib/member-access";
-import { requireService } from "@/lib/service-guard";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { CampaignsTable } from "./campaigns-table";
+import { requireClientAccess } from "@/features/client-portal/access";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -27,11 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientCampaigns({ params }: Props) {
   const { slug } = await params;
-  await requireService(slug, "meta_ads");
+  const { scope } = await requireClientAccess(slug, "meta_ads");
   const clientName = slugToLabel(slug);
 
-  const { userId } = await auth();
-  const scope = await getScopeFilter(userId, slug);
   const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug, scope);
   const trendData = buildTrendData(snapshots);
 

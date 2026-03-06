@@ -1,7 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect, notFound } from "next/navigation";
-import { getMemberAccessForSlug } from "@/lib/member-access";
-import { getClientPage } from "../data";
+import { notFound } from "next/navigation";
+import { requireClientAccess } from "@/features/client-portal/access";
+import { getWorkspacePage } from "@/features/workspace/server";
 import { PageViewClient } from "@/components/workspace/page-view-client";
 
 interface Props {
@@ -10,13 +9,9 @@ interface Props {
 
 export default async function ClientWorkspacePageView({ params }: Props) {
   const { slug, pageId } = await params;
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  const { userId } = await requireClientAccess(slug, "workspace");
 
-  const access = await getMemberAccessForSlug(userId, slug);
-  if (!access) redirect("/client");
-
-  const page = await getClientPage(pageId, slug);
+  const page = await getWorkspacePage(pageId, slug);
   if (!page) notFound();
 
   return <PageViewClient page={page} currentUserId={userId} />;

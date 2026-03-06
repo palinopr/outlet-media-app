@@ -22,6 +22,7 @@
 
 # worktrees
 .worktrees/
+.claude/
 
 # misc
 .DS_Store
@@ -51,6 +52,7 @@ next-env.d.ts
 
 # agent - browser session + credentials
 agent/.env
+agent/.next/
 agent/session/
 agent/service-account.json
 

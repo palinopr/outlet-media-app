@@ -18,6 +18,7 @@
         "name": "next"
       }
     ],
+    "types": ["node", "vitest/globals"],
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -29,5 +30,5 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", "agent"]
+  "exclude": ["node_modules", "agent", ".claude", ".worktrees"]
 }

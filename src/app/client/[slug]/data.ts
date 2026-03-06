@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { type DateRange, RANGE_LABELS } from "@/lib/constants";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
 import { computeBlendedRoas } from "@/lib/formatters";
+import type { ScopeFilter } from "@/lib/member-access";
 import type { TmEvent, DemographicsRow, CampaignCard, EventCard, HeroStats, AudienceProfile } from "./types";
 import { buildAudienceProfile, buildEventCard } from "./lib";
 
@@ -127,13 +128,6 @@ export async function getCampaignsPageData(slug: string, scope?: ScopeFilter): P
     snapshots,
     dataSource: result.error ? "supabase" : "meta_api",
   };
-}
-
-// --- Scope filter options ---
-
-export interface ScopeFilter {
-  allowedCampaignIds: string[] | null;
-  allowedEventIds: string[] | null;
 }
 
 // --- Events page data ---

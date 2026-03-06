@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
-import { getPages } from "./data";
+import { getWorkspacePages } from "@/features/workspace/server";
 import { PageSidebar } from "@/components/workspace/page-sidebar";
 
 export default async function WorkspaceLayout({ children }: { children: ReactNode }) {
-  const { pages } = await getPages();
+  const { pages } = await getWorkspacePages();
 
   return (
     <div className="flex gap-0 -mx-4 sm:-mx-6 lg:-mx-8 -my-4 sm:-my-6 lg:-my-8 h-[calc(100vh-3.5rem)]">

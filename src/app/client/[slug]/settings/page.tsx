@@ -1,7 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
 import { getSettingsData } from "./data";
 import { SettingsView } from "./settings-view";
+import { requireClientAccess } from "@/features/client-portal/access";
 
 // ConnectedAccountsList + connect flow hidden -- enable when white-label self-serve is ready
 
@@ -13,8 +12,7 @@ export default async function SettingsPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  await requireClientAccess(slug);
 
   const settingsData = await getSettingsData(slug);
 

@@ -10,10 +10,9 @@ import {
   Target,
   Ticket,
 } from "lucide-react";
-import { auth, currentUser } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
-import { getScopeFilter } from "@/lib/member-access";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { roasLabel, DATE_OPTIONS } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
@@ -22,6 +21,7 @@ import { ClientPortalFooter } from "./components/client-portal-footer";
 import { CampaignSection } from "./components/campaign-section";
 import { EventCard } from "./components/event-card";
 import { AudienceSection } from "./components/audience-section";
+import { requireClientAccess } from "@/features/client-portal/access";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -44,8 +44,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam);
 
-  const { userId } = await auth();
-  const scope = await getScopeFilter(userId, slug);
+  const { scope } = await requireClientAccess(slug);
   const data = await getData(slug, range, scope);
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = data;
 

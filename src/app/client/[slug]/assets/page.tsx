@@ -2,9 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Sparkles, Image as ImageIcon, Video, ArrowLeft } from "lucide-react";
 import { slugToLabel } from "@/lib/formatters";
-import { supabaseAdmin } from "@/lib/supabase";
-import { requireService } from "@/lib/service-guard";
-import { AssetGallery } from "./asset-gallery";
+import { AssetGallery } from "@/features/assets/asset-gallery";
+import { mapAssetRows } from "@/features/assets/lib";
+import { listAssets } from "@/features/assets/server";
+import { requireClientAccess } from "@/features/client-portal/access";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -19,50 +20,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-interface AssetRow {
-  id: string;
-  file_name: string;
-  public_url: string | null;
-  media_type: string;
-  placement: string | null;
-  format: string | null;
-  folder: string | null;
-  labels: string[] | null;
-  status: string;
-  created_at: string;
-  width: number | null;
-  height: number | null;
-}
-
 export default async function ClientAssetsPage({ params }: Props) {
   const { slug } = await params;
-  await requireService(slug, "assets");
+  await requireClientAccess(slug, "assets");
   const clientName = slugToLabel(slug);
-
-  let assets: AssetRow[] = [];
-  if (supabaseAdmin) {
-    const { data } = await supabaseAdmin
-      .from("ad_assets")
-      .select("id, file_name, public_url, media_type, placement, format, folder, labels, status, created_at, width, height")
-      .eq("client_slug", slug)
-      .order("created_at", { ascending: false });
-    assets = data ?? [];
-  }
-
-  const mapped = assets.map((a) => ({
-    id: a.id,
-    fileName: a.file_name,
-    publicUrl: a.public_url,
-    mediaType: a.media_type,
-    placement: a.placement,
-    format: a.format,
-    folder: a.folder,
-    labels: a.labels ?? [],
-    status: a.status,
-    createdAt: a.created_at,
-    width: a.width,
-    height: a.height,
-  }));
+  const mapped = mapAssetRows(await listAssets(slug));
 
   const imageCount = mapped.filter((a) => a.mediaType === "image").length;
   const videoCount = mapped.filter((a) => a.mediaType === "video").length;
