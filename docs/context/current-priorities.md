@@ -57,6 +57,7 @@ The short-term focus is:
 - Give clients a dedicated updates surface, not just dashboards, so they can follow approvals, discussion, agent follow-through, and shared activity without hunting across tabs.
 - Treat the client settings and connect path as a real account center, not only a member list, so portal users can manage team access and connected Meta accounts from one coherent flow.
 - Treat the admin users page as an access-governance surface, not only a roster, so admins can spot pending invites, unassigned client users, and client accounts with weak coverage before access problems grow.
+- Treat the admin settings page as a platform control center, not only a static config screen, so integration health, pending access pressure, and client setup issues are visible next to onboarding actions.
 - Filter shared client activity by assigned campaign/event scope where possible, so limited-scope members get a coherent feed without seeing unrelated workflow context.
 - Keep cross-app activity links entity-aware, so shared activity opens the correct campaign, asset, CRM contact, or event detail page instead of dropping users into the wrong surface.
 - Keep notifications entity-aware and route-aware too, so admin and client users land on the correct campaign, asset, approval, CRM, event, or workspace surface instead of dead-ending in a generic inbox.

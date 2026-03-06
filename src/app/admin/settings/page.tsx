@@ -1,8 +1,14 @@
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Bot, Key, UserPlus } from "lucide-react";
+import { Settings, Bot, Key, UserPlus, ArrowRight, Users, Clock } from "lucide-react";
 import { ClientOnboardForm } from "@/components/admin/client-onboard-form";
 import { AGENT_CONFIG, AGENT_TYPE_KEYS } from "@/components/admin/agents/constants";
+import { getClientSummaries } from "../clients/data";
+import { getUsers } from "../users/data";
+import { StatCard } from "@/components/admin/stat-card";
+import { slugToLabel } from "@/lib/formatters";
+import { buildPlatformSettingsSummary, type PlatformSettingsMetricKey } from "@/features/settings/summary";
 
 // ─── API key display entries ───────────────────────────────────────────────
 
@@ -28,8 +34,21 @@ function getApiKeyStatus() {
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
   const apiKeys = getApiKeyStatus();
+  const [clients, users] = await Promise.all([getClientSummaries(), getUsers()]);
+  const summary = buildPlatformSettingsSummary({
+    apiKeys,
+    clients,
+    users,
+  });
+  const metricIcons: Record<PlatformSettingsMetricKey, typeof Settings> = {
+    configured_integrations: Key,
+    missing_integrations: Key,
+    client_accounts: Users,
+    pending_access: Clock,
+  };
+
   return (
     <div className="space-y-4 sm:space-y-8">
 
@@ -43,6 +62,82 @@ export default function SettingsPage() {
           Admin
         </Badge>
       </AdminPageHeader>
+
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        {summary.metrics.map((metric) => {
+          const Icon = metricIcons[metric.key];
+          return (
+            <StatCard
+              key={metric.key}
+              accent="from-cyan-500/20 to-blue-500/20"
+              icon={Icon}
+              iconColor="text-cyan-400"
+              label={metric.label}
+              sub={metric.detail}
+              value={String(metric.value)}
+            />
+          );
+        })}
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <Card className="border-border/60">
+          <CardHeader>
+            <CardTitle className="text-sm">Client setup pressure</CardTitle>
+            <CardDescription>
+              Client accounts that still need member coverage or broader operational setup.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {summary.clientsNeedingSetup.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No client accounts currently need setup attention.
+              </p>
+            ) : (
+              summary.clientsNeedingSetup.map((client) => (
+                <Link
+                  key={client.id}
+                  href={`/admin/clients/${client.id}`}
+                  className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/35"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{client.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {client.memberCount} member{client.memberCount === 1 ? "" : "s"} • {client.pendingApprovals} approvals • {client.openActionItems} next steps
+                    </p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                </Link>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/60">
+          <CardHeader>
+            <CardTitle className="text-sm">Pending access invites</CardTitle>
+            <CardDescription>
+              Invitations still waiting to turn into active users.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {summary.pendingInvites.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No pending invites right now.
+              </p>
+            ) : (
+              summary.pendingInvites.map((invite) => (
+                <div key={invite.id} className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                  <p className="text-sm font-medium">{invite.email}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {invite.client_slug ? slugToLabel(invite.client_slug) : "Admin access"} • Invite pending
+                  </p>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       {/* ─── Section 1: Agent Configuration ──────────────────────────────── */}
       <div className="space-y-4">
