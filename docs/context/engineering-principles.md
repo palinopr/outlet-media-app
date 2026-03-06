@@ -17,6 +17,7 @@ Prefer first-class entities for:
 - agent job
 
 Use pages/docs as context and collaboration surfaces around those entities, not as a substitute for them.
+Dashboards and reporting views are also first-class product surfaces for users who prefer summary-first workflows.
 
 ## 2. Prefer Event-Driven Architecture
 
@@ -123,7 +124,27 @@ Before adding a new feature, ask:
 - does it strengthen the shared operating system?
 - will future agents be able to reason over it?
 
-## 11. Correct Weak Architecture Early
+## 11. Support Both Summary Users And Workflow Users
+
+Do not force every user into the same experience depth.
+
+Some users want:
+- charts
+- KPIs
+- trend lines
+- summaries
+- a simple dashboard
+
+Other users want:
+- comments
+- approvals
+- tasks
+- activity
+- deeper operating workflows
+
+Build both layers on the same underlying objects and events.
+
+## 12. Correct Weak Architecture Early
 
 If an implementation is clearly heading in the wrong direction, do not keep building on top of it just to avoid touching existing code.
 
@@ -135,7 +156,7 @@ Prefer to:
 
 Small refactors are cheaper than letting the wrong architecture become the default.
 
-## 12. Update Durable Context When The Shape Changes
+## 13. Update Durable Context When The Shape Changes
 
 When a refactor changes the intended system shape, update the repo context in the same pass.
 
@@ -144,7 +165,7 @@ That means:
 - `docs/context/` for durable architectural guidance
 - `README.md` only for short high-level framing
 
-## 13. Own Verification And Delivery
+## 14. Own Verification And Delivery
 
 Each work slice should be treated as owned end to end.
 

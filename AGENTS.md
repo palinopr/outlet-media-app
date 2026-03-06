@@ -29,6 +29,7 @@
 ## Product Principles
 
 - Build for **shared visibility**: clients should feel included, informed, and guided rather than locked out of the work.
+- Build for **dual visibility modes**: some users need a simple dashboard with graphs and KPIs, while others need deeper workflow/collaboration views. Support both.
 - Build for **collaboration around context**: work should stay attached to the relevant campaign, client, asset, event, or task instead of being scattered across tools.
 - Build for **agent actionability**: agents should react to real system events and structured data, not just ad hoc chat.
 - Build for **guided execution**: the system should help users understand what happened, what matters, what is blocked, and what should happen next.
@@ -47,6 +48,7 @@
 - Treat agents as bounded workers that inspect events, decide next actions, draft work, request approval, and log outcomes.
 - Treat the workspace/editor layer as the **shell**, not the full product. Core business entities should not be hidden inside generic docs when they need first-class models.
 - Campaign-native next steps should live in first-class campaign workflow objects, not only generic workspace tasks.
+- Traditional dashboards and reporting views should remain first-class surfaces for summary-first users.
 - When making product or refactor decisions, prefer designs that make the app feel like a coherent operating system across admin and client views.
 - `system_events` is the shared product timeline for admin/client-visible activity.
 - `approval_requests` is the first-class approval object. Use it for requests that need an explicit yes/no/cancel decision.

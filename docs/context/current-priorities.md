@@ -12,7 +12,8 @@ The short-term focus is:
 2. Turn campaigns, assets, approvals, reports, CRM, and activity into first-class product areas.
 3. Build the event backbone that lets agents react to real system activity.
 4. Improve customer visibility so clients can follow work, comment, approve, and understand progress.
-5. Keep adding apps that fit the same shared operating environment instead of building isolated tools.
+5. Preserve a familiar dashboard/reporting layer with charts and summaries for traditional users.
+6. Keep adding apps that fit the same shared operating environment instead of building isolated tools.
 
 ## Near-Term Architecture Focus
 
@@ -24,12 +25,14 @@ The short-term focus is:
 - Use campaign-native action items for campaign next steps instead of forcing campaign operations into only the generic workspace task board.
 - Design agents as bounded workers attached to those events.
 - Keep admin and client experiences on the same backbone with different permissions and visibility.
+- Keep traditional dashboards as first-class surfaces, not as an afterthought layered on top of workflow views.
 
 ## Immediate Build Bias
 
 When choosing what to build next, bias toward:
 
 - shared visibility
+- familiar dashboards and graph-based reporting for traditional users
 - campaign-centered collaboration
 - approval and activity flows
 - campaign-native comments and discussion

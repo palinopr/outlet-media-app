@@ -31,12 +31,21 @@ Typical failure modes:
 
 Outlet should reduce those failures by making work visible, collaborative, and agent-aware.
 
+## Two Modes Of Visibility
+
+Outlet should support both:
+- a traditional dashboard experience with charts, KPIs, trends, status cards, and familiar summaries
+- a deeper operating-system experience with activity, approvals, comments, tasks, assets, and agent-driven workflows
+
+Some users want to live in workflows. Others want to see graphs, results, and a clear summary. The product should serve both without forcing every user into the same depth of interaction.
+
 ## Product Outcome
 
 Customers should feel:
 - they can see everything that matters
 - they are part of the process without needing to manage every detail
 - Outlet is guiding the work, not just reporting on it
+- they can choose between a simple dashboard view and a deeper collaborative operating view
 
 Internal team should feel:
 - work is organized around the real client/campaign context
@@ -93,5 +102,6 @@ That means:
 
 - Notion-like speed and flexibility in the UI
 - client-friendly visibility
+- familiar dashboard readability for traditional users
 - strong campaign and results orientation
 - agent orchestration as a real differentiator
