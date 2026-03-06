@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { fmtDate } from "@/lib/formatters";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { inviteTeamMember, removeTeamMember } from "./actions";
+import { ConnectedAccountsList } from "./connected-accounts-list";
 import type { SettingsData } from "./data";
 
 function RoleBadge({ role }: { role: string }) {
@@ -65,6 +66,12 @@ export function SettingsView({ data }: { data: SettingsData }) {
 
   return (
     <div className="space-y-6">
+      <ConnectedAccountsList
+        accounts={data.connectedAccounts}
+        connectUrl={`/api/meta/connect?slug=${data.slug}`}
+        slug={data.slug}
+      />
+
       {/* Team Members */}
       <Card className="border-white/[0.06] bg-white/[0.02] p-0">
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">

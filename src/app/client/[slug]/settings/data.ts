@@ -50,6 +50,7 @@ export interface TeamMember {
 export interface SettingsData {
   clientId: string;
   clientName: string;
+  connectedAccounts: ConnectedAccount[];
   slug: string;
   isOwner: boolean;
   members: TeamMember[];
@@ -95,10 +96,12 @@ export async function getSettingsData(slug: string): Promise<SettingsData | null
       }
     })
   );
+  const connectedAccounts = await getConnectedAccounts(userId, slug);
 
   return {
     clientId: client.id,
     clientName: client.name,
+    connectedAccounts,
     slug: client.slug,
     isOwner,
     members: teamMembers,
