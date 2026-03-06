@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import {
   Sparkles,
   Ticket,
@@ -8,7 +10,7 @@ import {
 } from "lucide-react";
 import { getEventsPageData } from "../data";
 import { EventOperationsSection } from "@/components/events/event-operations-section";
-import { getEventOperationsSummary } from "@/features/events/server";
+import { getEventOperationsSummary, getEventsWorkflowData } from "@/features/events/server";
 import { fmtNum, slugToLabel } from "@/lib/formatters";
 import { EventsFilter } from "./events-filter";
 import { requireClientAccess } from "@/features/client-portal/access";
@@ -32,9 +34,10 @@ export default async function ClientEventsPage({ params, searchParams }: Props) 
   const { scope } = await requireClientAccess(slug, "ticketmaster", "eata");
   const { status, q } = await searchParams;
 
-  const [{ events, totalEvents, onSaleCount, totalTicketsSold }, operations] = await Promise.all([
+  const [{ events, totalEvents, onSaleCount, totalTicketsSold }, operations, workflow] = await Promise.all([
     getEventsPageData(slug, scope),
     getEventOperationsSummary({ clientSlug: slug, limit: 6, mode: "client", scope }),
+    getEventsWorkflowData({ clientSlug: slug, limit: 4, mode: "client", scope }),
   ]);
 
   const clientName = slugToLabel(slug);
@@ -121,6 +124,28 @@ export default async function ClientEventsPage({ params, searchParams }: Props) 
         hrefPrefix={`/client/${slug}/event`}
         summary={operations}
         title="What needs follow-through"
+        variant="client"
+      />
+
+      <DashboardActionCenterSection
+        actionCenter={workflow.actionCenter}
+        assetHrefPrefix={`/client/${slug}/assets`}
+        assetLibraryHref={`/client/${slug}/assets`}
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        description="Open event approvals and shared event threads that still need a response."
+        eventHrefPrefix={`/client/${slug}/event`}
+        showCrmFollowUps={false}
+        variant="client"
+      />
+
+      <AgentOutcomesPanel
+        assetHrefPrefix={`/client/${slug}/assets`}
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        crmHrefPrefix={`/client/${slug}/crm`}
+        description="Agent work connected to event operations, so show-level recommendations stay visible alongside ticket updates."
+        eventHrefPrefix={`/client/${slug}/event`}
+        outcomes={workflow.agentOutcomes}
+        title="Event agent follow-through"
         variant="client"
       />
 

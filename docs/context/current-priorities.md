@@ -34,6 +34,7 @@ The short-term focus is:
 - Treat the workspace tasks pages as the operating queue entry point, not only the generic board, so cross-app next steps from campaigns, CRM, events, and assets stay visible in one place.
 - Keep event detail and other analytics-heavy pages tied to the same workflow/activity backbone, so performance views do not become dead ends.
 - Turn admin event surfaces into operating views, not only bulk-edit tables, so ticketing state and promotion workflow live together.
+- Treat the event index pages as operating surfaces too, not only pressure summaries and lists, so users can work through event approvals, discussion, and agent follow-through before opening a single show.
 - Treat assets as a first-class admin app surface with index/detail operating views, instead of hiding creative review inside client detail widgets or raw APIs.
 - Treat asset discussion as a first-class collaboration surface so creative feedback, internal review, and client-visible context stay attached to the asset itself.
 - Treat asset follow-up items as first-class workflow objects so creative review notes, agent outcomes, and production next steps become visible work instead of passive comments.

@@ -1,5 +1,11 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import type { ScopeFilter } from "@/lib/member-access";
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
+import {
+  getDashboardActionCenter,
+  type DashboardActionCenter,
+} from "@/features/dashboard/server";
 import { listSystemEvents } from "@/features/system-events/server";
 import {
   buildEventOperationsSummary,
@@ -52,6 +58,18 @@ interface GetEventOperationsSummaryOptions {
   limit?: number;
   mode: "admin" | "client";
   scope?: ScopeFilter;
+}
+
+interface GetEventsWorkflowDataOptions {
+  clientSlug?: string | null;
+  limit?: number;
+  mode: "admin" | "client";
+  scope?: ScopeFilter;
+}
+
+export interface EventsWorkflowData {
+  actionCenter: DashboardActionCenter;
+  agentOutcomes: AgentOutcomeView[];
 }
 
 function mapEventRow(row: Record<string, unknown>): EventOperatingRecord {
@@ -147,6 +165,42 @@ export async function getEventOperatingData(
     clients,
     event,
     linkedCampaigns,
+  };
+}
+
+export async function getEventsWorkflowData(
+  options: GetEventsWorkflowDataOptions,
+): Promise<EventsWorkflowData> {
+  const scopeCampaignIds = options.scope?.allowedCampaignIds ?? null;
+  const scopeEventIds = options.scope?.allowedEventIds ?? null;
+  const audience = options.mode === "client" ? "shared" : "all";
+  const limit = options.limit ?? 4;
+
+  const [actionCenter, agentOutcomes] = await Promise.all([
+    getDashboardActionCenter({
+      clientSlug: options.clientSlug ?? undefined,
+      limit,
+      mode: options.mode,
+      scopeCampaignIds,
+      scopeEventIds,
+    }),
+    listAgentOutcomes({
+      audience,
+      clientSlug: options.clientSlug ?? undefined,
+      eventId: null,
+      limit,
+      scopeCampaignIds,
+      scopeEventIds,
+    }),
+  ]);
+
+  return {
+    actionCenter: {
+      approvals: actionCenter.approvals,
+      crmFollowUps: [],
+      discussions: actionCenter.discussions.filter((discussion) => discussion.kind === "event"),
+    },
+    agentOutcomes,
   };
 }
 
