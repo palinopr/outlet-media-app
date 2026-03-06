@@ -14,6 +14,10 @@ import {
 import { notifyDiscussionAudience } from "@/features/notifications/discussions";
 import { allowsCampaignInScope } from "@/features/client-portal/scope";
 import { logSystemEvent } from "@/features/system-events/server";
+import {
+  getCampaignWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 
 function excerpt(text: string, limit = 140) {
   const normalized = text.trim().replace(/\s+/g, " ");
@@ -230,6 +234,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  revalidateWorkflowPaths(
+    getCampaignWorkflowPaths(body.client_slug, body.campaign_id),
+  );
+
   return NextResponse.json({ comment: data }, { status: 201 });
 }
 
@@ -292,6 +300,13 @@ export async function PATCH(request: NextRequest) {
     });
   }
 
+  revalidateWorkflowPaths(
+    getCampaignWorkflowPaths(
+      existing.client_slug as string,
+      existing.campaign_id as string,
+    ),
+  );
+
   return NextResponse.json({ success: true });
 }
 
@@ -345,6 +360,13 @@ export async function DELETE(request: NextRequest) {
       campaignId: existing.campaign_id,
     },
   });
+
+  revalidateWorkflowPaths(
+    getCampaignWorkflowPaths(
+      existing.client_slug as string,
+      existing.campaign_id as string,
+    ),
+  );
 
   return NextResponse.json({ success: true });
 }

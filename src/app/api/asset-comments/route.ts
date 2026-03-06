@@ -16,6 +16,10 @@ import {
 } from "@/features/assets/server";
 import { notifyDiscussionAudience } from "@/features/notifications/discussions";
 import { logSystemEvent } from "@/features/system-events/server";
+import {
+  getAssetWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 
 interface AssetCommentRow {
   id: string;
@@ -264,6 +268,8 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  revalidateWorkflowPaths(getAssetWorkflowPaths(body.client_slug, body.asset_id));
+
   return NextResponse.json({ comment: data }, { status: 201 });
 }
 
@@ -332,6 +338,10 @@ export async function PATCH(request: NextRequest) {
     });
   }
 
+  revalidateWorkflowPaths(
+    getAssetWorkflowPaths(existing.client_slug, existing.asset_id),
+  );
+
   return NextResponse.json({ success: true });
 }
 
@@ -391,6 +401,10 @@ export async function DELETE(request: NextRequest) {
       assetName: asset?.file_name ?? null,
     },
   });
+
+  revalidateWorkflowPaths(
+    getAssetWorkflowPaths(existing.client_slug, existing.asset_id),
+  );
 
   return NextResponse.json({ success: true });
 }

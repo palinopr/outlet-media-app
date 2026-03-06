@@ -84,7 +84,7 @@ The short-term focus is:
 - Treat non-workspace follow-up items like real assignments too, so campaign, CRM, asset, and event assignees get notified the same way workspace-task assignees do.
 - Keep shared client approval and discussion broadcasts assignment-scope-aware too, so limited client members are not even notified about campaigns, events, or assets outside their allowed scope.
 - Keep notification deep links app-aware for discussion and follow-up entity types too, so routed updates land in conversations, campaigns, CRM, assets, or events instead of dead-ending in generic pages.
-- When route handlers create cross-app workflow items from comments or agent outcomes, revalidate the affected admin/client operating surfaces too, so the next visit to dashboards, detail pages, queues, and updates pages reflects the new work immediately.
+- When route handlers create or mutate cross-app workflow items or discussion state, revalidate the affected admin/client operating surfaces too, so the next visit to dashboards, detail pages, queues, updates pages, and conversations reflects the new work immediately.
 - Treat conversations as a first-class app surface on both admin and client, not only as dashboard widgets or detail-page side panels, so unresolved discussion can be managed in one place.
 - Keep admin conversations actionable too, so operators can create linked action or follow-up items directly from open campaign, CRM, asset, and event threads without detouring into each detail page first.
 - Reuse the shared conversations feature module anywhere open discussion is summarized, instead of re-querying each comment table per route and letting discussion logic drift.

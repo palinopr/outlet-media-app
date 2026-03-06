@@ -13,6 +13,10 @@ import { notifyDiscussionAudience } from "@/features/notifications/discussions";
 import { allowsEventInScope } from "@/features/client-portal/scope";
 import { getEventOperatingData, getEventRecordById } from "@/features/events/server";
 import { logSystemEvent } from "@/features/system-events/server";
+import {
+  getEventWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 
 interface EventCommentRow {
   id: string;
@@ -250,6 +254,10 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  revalidateWorkflowPaths(
+    getEventWorkflowPaths(eventContext.event.clientSlug, body.event_id),
+  );
+
   return NextResponse.json({ comment: data }, { status: 201 });
 }
 
@@ -314,6 +322,10 @@ export async function PATCH(request: NextRequest) {
     });
   }
 
+  revalidateWorkflowPaths(
+    getEventWorkflowPaths(existing.client_slug, existing.event_id),
+  );
+
   return NextResponse.json({ success: true });
 }
 
@@ -369,6 +381,10 @@ export async function DELETE(request: NextRequest) {
       eventName: event?.artist || event?.name || null,
     },
   });
+
+  revalidateWorkflowPaths(
+    getEventWorkflowPaths(existing.client_slug, existing.event_id),
+  );
 
   return NextResponse.json({ success: true });
 }

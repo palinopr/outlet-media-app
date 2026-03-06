@@ -7,6 +7,10 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { canAccessCrmComments, type CrmCommentVisibility } from "@/features/crm-comments/server";
 import { notifyDiscussionAudience } from "@/features/notifications/discussions";
 import { logSystemEvent } from "@/features/system-events/server";
+import {
+  getCrmWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 
 function excerpt(text: string, limit = 140) {
   const normalized = text.trim().replace(/\s+/g, " ");
@@ -220,6 +224,8 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  revalidateWorkflowPaths(getCrmWorkflowPaths(body.client_slug, body.contact_id));
+
   return NextResponse.json({ comment: data }, { status: 201 });
 }
 
@@ -280,6 +286,10 @@ export async function PATCH(request: NextRequest) {
     });
   }
 
+  revalidateWorkflowPaths(
+    getCrmWorkflowPaths(existing.client_slug as string, existing.contact_id as string),
+  );
+
   return NextResponse.json({ success: true });
 }
 
@@ -327,6 +337,10 @@ export async function DELETE(request: NextRequest) {
       crmContactName: contactName,
     },
   });
+
+  revalidateWorkflowPaths(
+    getCrmWorkflowPaths(existing.client_slug as string, existing.contact_id as string),
+  );
 
   return NextResponse.json({ success: true });
 }
