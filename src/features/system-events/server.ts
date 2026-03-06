@@ -10,6 +10,7 @@ export type SystemEventName =
   | "asset_deleted"
   | "asset_folder_imported"
   | "asset_uploaded"
+  | "asset_updated"
   | "campaign_comment_added"
   | "campaign_comment_deleted"
   | "campaign_comment_resolved"
@@ -101,9 +102,21 @@ interface ListCrmSystemEventsOptions {
   limit?: number;
 }
 
+interface ListAssetSystemEventsOptions {
+  assetId: string;
+  audience?: "all" | SystemEventVisibility;
+  clientSlug?: string | null;
+  limit?: number;
+}
+
 function eventMatchesCampaign(event: SystemEvent, campaignId: string) {
   if (event.entityType === "campaign" && event.entityId === campaignId) return true;
   return event.metadata.campaignId === campaignId;
+}
+
+function eventMatchesAsset(event: SystemEvent, assetId: string) {
+  if (event.entityType === "asset" && event.entityId === assetId) return true;
+  return event.metadata.assetId === assetId;
 }
 
 export function isCrmSystemEvent(event: SystemEvent) {
@@ -262,6 +275,20 @@ export async function listCrmSystemEvents(
       if (!options.contactId) return true;
       return matchesCrmContactSystemEvent(event, options.contactId);
     })
+    .slice(0, options.limit ?? 8);
+}
+
+export async function listAssetSystemEvents(
+  options: ListAssetSystemEventsOptions,
+): Promise<SystemEvent[]> {
+  const events = await listSystemEvents({
+    audience: options.audience,
+    clientSlug: options.clientSlug,
+    limit: Math.max((options.limit ?? 8) * 6, 24),
+  });
+
+  return events
+    .filter((event) => eventMatchesAsset(event, options.assetId))
     .slice(0, options.limit ?? 8);
 }
 

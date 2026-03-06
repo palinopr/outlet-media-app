@@ -223,6 +223,7 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
             emptyState="No campaign approvals are waiting right now."
           />
           <WorkspaceActivityFeed
+            assetHrefPrefix="/admin/assets"
             events={events}
             basePath="/admin/workspace"
             title="Campaign activity"

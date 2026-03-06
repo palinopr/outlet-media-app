@@ -20,12 +20,14 @@ import {
   Activity,
   Settings,
   FileText,
+  Image as ImageIcon,
 } from "lucide-react";
 
 const nav = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/admin/events", label: "Events", icon: CalendarDays },
+  { href: "/admin/assets", label: "Assets", icon: ImageIcon },
   { href: "/admin/crm", label: "CRM", icon: BriefcaseBusiness },
   { href: "/admin/agents", label: "Agents", icon: Bot },
   { href: "/admin/clients", label: "Clients", icon: Users },

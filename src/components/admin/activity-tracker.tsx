@@ -12,6 +12,7 @@ const PAGE_LABELS: Record<string, string> = {
   "/admin/dashboard": "Viewed Dashboard",
   "/admin/campaigns": "Viewed Campaigns",
   "/admin/events": "Viewed Events",
+  "/admin/assets": "Viewed Assets",
   "/admin/agents": "Viewed Agents",
   "/admin/clients": "Viewed Clients",
   "/admin/users": "Viewed Users",

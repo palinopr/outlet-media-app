@@ -29,6 +29,7 @@ export default async function WorkspacePage() {
         <div className="space-y-6">
           <WorkspaceApprovalsPanel approvals={approvals} canDecide />
           <WorkspaceActivityFeed
+            assetHrefPrefix="/admin/assets"
             events={events}
             basePath="/admin/workspace"
             showClientSlug

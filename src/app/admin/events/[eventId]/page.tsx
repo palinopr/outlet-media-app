@@ -199,6 +199,7 @@ export default async function AdminEventDetailPage({ params }: Props) {
           />
 
           <WorkspaceActivityFeed
+            assetHrefPrefix="/admin/assets"
             events={events}
             basePath="/admin/events"
             title="Event activity"

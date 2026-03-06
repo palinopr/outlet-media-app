@@ -15,6 +15,7 @@ import { timeAgo } from "@/lib/formatters";
 import type { SystemEvent } from "@/features/system-events/server";
 
 interface WorkspaceActivityFeedProps {
+  assetHrefPrefix?: string;
   events: SystemEvent[];
   basePath: string;
   description?: string;
@@ -40,7 +41,18 @@ function getEventIcon(eventName: string) {
   return FileText;
 }
 
-function getEventHref(event: SystemEvent, basePath: string) {
+function getEventHref(
+  event: SystemEvent,
+  basePath: string,
+  assetHrefPrefix?: string,
+) {
+  const assetId =
+    event.entityType === "asset" && event.entityId
+      ? event.entityId
+      : typeof event.metadata.assetId === "string"
+        ? event.metadata.assetId
+        : null;
+  if (assetHrefPrefix && assetId) return `${assetHrefPrefix}/${assetId}`;
   if (event.pageId) return `${basePath}/${event.pageId}`;
   if (event.entityType === "event" && event.entityId) return `${basePath}/${event.entityId}`;
   if (event.entityType === "crm_contact" && event.entityId) return `${basePath}/${event.entityId}`;
@@ -58,6 +70,7 @@ function getEventHref(event: SystemEvent, basePath: string) {
 }
 
 export function WorkspaceActivityFeed({
+  assetHrefPrefix,
   events,
   basePath,
   description = "The latest changes across pages, tasks, comments, and assets.",
@@ -85,7 +98,7 @@ export function WorkspaceActivityFeed({
         <div className="space-y-3">
           {events.map((event) => {
             const Icon = getEventIcon(event.eventName);
-            const href = getEventHref(event, basePath);
+            const href = getEventHref(event, basePath, assetHrefPrefix);
 
             return (
               <div

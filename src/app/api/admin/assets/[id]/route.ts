@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 import { adminGuard, apiError } from "@/lib/api-helpers";
-import { deleteAssetById, updateAsset } from "@/features/assets/server";
-import { logSystemEvent } from "@/features/system-events/server";
+import { deleteAssetById, getAssetRecordById, updateAsset } from "@/features/assets/server";
+import { logSystemEvent, summarizeChangedFields } from "@/features/system-events/server";
+
+function revalidateAssetPaths(assetId: string, clientSlug: string) {
+  revalidatePath("/admin/assets");
+  revalidatePath(`/admin/assets/${assetId}`);
+  revalidatePath("/admin/dashboard");
+  revalidatePath(`/client/${clientSlug}`);
+  revalidatePath(`/client/${clientSlug}/assets`);
+}
 
 export async function PATCH(
   req: NextRequest,
@@ -13,9 +22,38 @@ export async function PATCH(
 
   const { id } = await params;
   const body = (await req.json()) as Record<string, unknown>;
+  const user = await currentUser();
 
   try {
+    const before = await getAssetRecordById(id);
+    if (!before) return apiError("Asset not found", 404);
+
     const asset = await updateAsset(id, body);
+
+    const beforeRecord = before as unknown as Record<string, unknown>;
+    const assetRecord = asset as Record<string, unknown>;
+    const changedFields = ["format", "labels", "placement", "status", "used_in_campaigns"].filter(
+      (field) => JSON.stringify(beforeRecord[field]) !== JSON.stringify(assetRecord[field]),
+    );
+
+    if (changedFields.length > 0) {
+      await logSystemEvent({
+        eventName: "asset_updated",
+        actorId: user?.id ?? null,
+        clientSlug: before.client_slug,
+        visibility: "admin_only",
+        entityType: "asset",
+        entityId: id,
+        summary: `Updated asset "${before.file_name}"`,
+        detail: summarizeChangedFields(changedFields),
+        metadata: {
+          assetId: id,
+          assetName: before.file_name,
+        },
+      });
+    }
+
+    revalidateAssetPaths(id, before.client_slug);
     return NextResponse.json({ asset });
   } catch (error) {
     const message =
@@ -50,6 +88,7 @@ export async function DELETE(
       entityId: deleted.id,
       summary: `Deleted asset "${deleted.fileName}"`,
     });
+    revalidateAssetPaths(id, deleted.clientSlug);
     return NextResponse.json({ deleted: true });
   } catch (error) {
     const message =

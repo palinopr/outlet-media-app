@@ -65,6 +65,14 @@ interface ListCampaignApprovalRequestsOptions {
   status?: ApprovalStatus | "all";
 }
 
+interface ListAssetApprovalRequestsOptions {
+  assetId: string;
+  audience?: ApprovalAudience | "all";
+  clientSlug?: string | null;
+  limit?: number;
+  status?: ApprovalStatus | "all";
+}
+
 function approvalMatchesCampaign(approval: ApprovalRequest, campaignId: string) {
   if (approval.entityType === "campaign" && approval.entityId === campaignId) return true;
   return approval.metadata.campaignId === campaignId;
@@ -76,6 +84,10 @@ function approvalAssetId(approval: ApprovalRequest) {
 
   const metadataAssetId = approval.metadata.assetId;
   return typeof metadataAssetId === "string" ? metadataAssetId : null;
+}
+
+function approvalMatchesAsset(approval: ApprovalRequest, assetId: string) {
+  return approvalAssetId(approval) === assetId;
 }
 
 interface ResolveApprovalRequestInput {
@@ -347,6 +359,21 @@ export async function listCampaignApprovalRequests(
 
   return approvals
     .filter((approval) => approvalMatchesCampaign(approval, options.campaignId))
+    .slice(0, options.limit ?? 8);
+}
+
+export async function listAssetApprovalRequests(
+  options: ListAssetApprovalRequestsOptions,
+): Promise<ApprovalRequest[]> {
+  const approvals = await listApprovalRequests({
+    audience: options.audience,
+    clientSlug: options.clientSlug,
+    limit: Math.max((options.limit ?? 8) * 6, 24),
+    status: options.status,
+  });
+
+  return approvals
+    .filter((approval) => approvalMatchesAsset(approval, options.assetId))
     .slice(0, options.limit ?? 8);
 }
 

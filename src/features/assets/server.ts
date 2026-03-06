@@ -26,6 +26,35 @@ export const ALLOWED_ASSET_TYPES = new Set([
 
 const ASSET_SELECT =
   "id, file_name, public_url, media_type, placement, format, folder, labels, status, created_at, width, height";
+const ASSET_OPERATING_SELECT = `${ASSET_SELECT}, client_slug, source_url, uploaded_by, storage_path`;
+
+export interface AssetOperatingRecord extends AssetRow {
+  client_slug: string;
+  source_url: string | null;
+  uploaded_by: string | null;
+  storage_path: string | null;
+}
+
+export interface AssetLinkedCampaign {
+  campaignId: string;
+  name: string;
+  status: string;
+  spend: number | null;
+  roas: number | null;
+  impressions: number | null;
+  clicks: number | null;
+}
+
+export interface AssetLibraryRecord {
+  asset: AssetOperatingRecord;
+  linkedCampaignCount: number;
+  linkedCampaignNames: string[];
+}
+
+export interface AssetOperatingData {
+  asset: AssetOperatingRecord;
+  linkedCampaigns: AssetLinkedCampaign[];
+}
 
 interface BatchResult<R> {
   successes: R[];
@@ -89,11 +118,64 @@ export async function listAssets(clientSlug: string): Promise<AssetRow[]> {
   return (data ?? []) as AssetRow[];
 }
 
+export async function getAssetRecordById(
+  assetId: string,
+): Promise<AssetOperatingRecord | null> {
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const { data, error } = await supabaseAdmin
+    .from("ad_assets")
+    .select(ASSET_OPERATING_SELECT)
+    .eq("id", assetId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  return (data as AssetOperatingRecord | null) ?? null;
+}
+
 function normalizeCampaignName(value: string | null | undefined) {
   return (value ?? "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
+}
+
+function assetNameTokens(asset: Pick<AssetOperatingRecord, "folder" | "labels">) {
+  const tokens = new Set<string>();
+
+  const folderRoot =
+    typeof asset.folder === "string" && asset.folder.length > 0
+      ? asset.folder.split("/")[0]
+      : null;
+  const normalizedFolder = normalizeCampaignName(folderRoot);
+  if (normalizedFolder) tokens.add(normalizedFolder);
+
+  if (Array.isArray(asset.labels)) {
+    for (const label of asset.labels) {
+      const normalized = normalizeCampaignName(label);
+      if (normalized) tokens.add(normalized);
+    }
+  }
+
+  return tokens;
+}
+
+function assetMatchesCampaignName(
+  asset: Pick<AssetOperatingRecord, "folder" | "labels">,
+  campaignName: string | null | undefined,
+) {
+  const normalizedCampaign = normalizeCampaignName(campaignName);
+  if (!normalizedCampaign) return false;
+  return assetNameTokens(asset).has(normalizedCampaign);
+}
+
+function toNullableNumber(value: number | string | null | undefined) {
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && value.length > 0) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
 }
 
 function summarizeCampaignMatches(matches: ImportedAssetResult[]): CampaignMatchSummary[] {
@@ -116,6 +198,112 @@ function summarizeCampaignMatches(matches: ImportedAssetResult[]): CampaignMatch
   }
 
   return Array.from(counts.values()).sort((a, b) => b.count - a.count);
+}
+
+export async function listAssetLibrary(
+  clientSlug?: string | null,
+  limit = 72,
+): Promise<AssetLibraryRecord[]> {
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  let assetsQuery = supabaseAdmin
+    .from("ad_assets")
+    .select(ASSET_OPERATING_SELECT)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (clientSlug) {
+    assetsQuery = assetsQuery.eq("client_slug", clientSlug);
+  }
+
+  const campaignsQuery = clientSlug
+    ? supabaseAdmin
+        .from("meta_campaigns")
+        .select("campaign_id, client_slug, name")
+        .eq("client_slug", clientSlug)
+        .limit(250)
+    : supabaseAdmin
+        .from("meta_campaigns")
+        .select("campaign_id, client_slug, name")
+        .not("client_slug", "is", null)
+        .limit(600);
+
+  const [assetsRes, campaignsRes] = await Promise.all([assetsQuery, campaignsQuery]);
+
+  if (assetsRes.error) throw new Error(assetsRes.error.message);
+  if (campaignsRes.error) throw new Error(campaignsRes.error.message);
+
+  const campaignsBySlug = new Map<
+    string,
+    { campaignId: string; name: string | null }[]
+  >();
+
+  for (const row of campaignsRes.data ?? []) {
+    const slug = row.client_slug as string | null;
+    if (!slug) continue;
+
+    const existing = campaignsBySlug.get(slug) ?? [];
+    existing.push({
+      campaignId: row.campaign_id as string,
+      name: (row.name as string | null) ?? null,
+    });
+    campaignsBySlug.set(slug, existing);
+  }
+
+  return ((assetsRes.data ?? []) as AssetOperatingRecord[]).map((asset) => {
+    const linkedCampaigns = (campaignsBySlug.get(asset.client_slug) ?? []).filter((campaign) =>
+      assetMatchesCampaignName(asset, campaign.name),
+    );
+
+    return {
+      asset,
+      linkedCampaignCount: linkedCampaigns.length,
+      linkedCampaignNames: linkedCampaigns
+        .map((campaign) => campaign.name)
+        .filter((name): name is string => typeof name === "string" && name.length > 0)
+        .slice(0, 3),
+    };
+  });
+}
+
+export async function getAssetOperatingData(
+  assetId: string,
+  explicitCampaignIds: Iterable<string> = [],
+): Promise<AssetOperatingData | null> {
+  const asset = await getAssetRecordById(assetId);
+  if (!asset) return null;
+
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const { data, error } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select("campaign_id, name, status, spend, roas, impressions, clicks")
+    .eq("client_slug", asset.client_slug)
+    .limit(250);
+
+  if (error) throw new Error(error.message);
+
+  const explicitIds = new Set(explicitCampaignIds);
+  const linkedCampaigns = ((data ?? []) as Record<string, unknown>[])
+    .filter((row) => {
+      const campaignId = row.campaign_id as string;
+      return explicitIds.has(campaignId) || assetMatchesCampaignName(asset, row.name as string | null);
+    })
+    .map((row) => ({
+      campaignId: row.campaign_id as string,
+      name: (row.name as string) ?? (row.campaign_id as string),
+      status: ((row.status as string | null) ?? "unknown") as string,
+      spend: toNullableNumber(row.spend as number | string | null | undefined),
+      roas: toNullableNumber(row.roas as number | string | null | undefined),
+      impressions: toNullableNumber(row.impressions as number | string | null | undefined),
+      clicks: toNullableNumber(row.clicks as number | string | null | undefined),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return {
+    asset,
+    linkedCampaigns,
+  };
 }
 
 export async function listCampaignAssets(

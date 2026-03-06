@@ -16,6 +16,7 @@ const labelMap: Record<string, string> = {
   dashboard: "Dashboard",
   campaigns: "Campaigns",
   events: "Events",
+  assets: "Assets",
   crm: "CRM",
   agents: "Agents",
   clients: "Clients",

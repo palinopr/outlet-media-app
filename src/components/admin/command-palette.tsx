@@ -12,6 +12,7 @@ import {
   UserCog,
   Activity,
   Settings,
+  Image as ImageIcon,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -31,6 +32,7 @@ const pages = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/admin/events", label: "Events", icon: CalendarDays },
+  { href: "/admin/assets", label: "Assets", icon: ImageIcon },
   { href: "/admin/crm", label: "CRM", icon: BriefcaseBusiness },
   { href: "/admin/agents", label: "Agents", icon: Bot },
   { href: "/admin/clients", label: "Clients", icon: Users },
@@ -40,6 +42,7 @@ const pages = [
 ] as const;
 
 const typeIcon: Record<SearchableRecord["type"], typeof Megaphone> = {
+  asset: ImageIcon,
   campaign: Megaphone,
   event: CalendarDays,
   client: Users,
@@ -87,6 +90,7 @@ export function CommandPalette() {
 
   const campaigns = records.filter((r) => r.type === "campaign");
   const events = records.filter((r) => r.type === "event");
+  const assets = records.filter((r) => r.type === "asset");
   const clients = records.filter((r) => r.type === "client");
   const crmContacts = records.filter((r) => r.type === "crm_contact");
 
@@ -95,7 +99,7 @@ export function CommandPalette() {
       open={open}
       onOpenChange={setOpen}
       title="Command Palette"
-      description="Search pages, campaigns, events, clients, and CRM contacts"
+      description="Search pages, campaigns, events, assets, clients, and CRM contacts"
       showCloseButton={false}
     >
       <CommandInput placeholder="Type to search..." />
@@ -144,6 +148,30 @@ export function CommandPalette() {
             <CommandSeparator />
             <CommandGroup heading="Events">
               {events.map((r) => {
+                const Icon = typeIcon[r.type];
+                return (
+                  <CommandItem
+                    key={r.id}
+                    value={`${r.name} ${r.subtitle}`}
+                    onSelect={() => navigate(r.href)}
+                  >
+                    <Icon className="size-4" />
+                    <span>{r.name}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {r.subtitle}
+                    </span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </>
+        )}
+
+        {loaded && assets.length > 0 && (
+          <>
+            <CommandSeparator />
+            <CommandGroup heading="Assets">
+              {assets.map((r) => {
                 const Icon = typeIcon[r.type];
                 return (
                   <CommandItem
