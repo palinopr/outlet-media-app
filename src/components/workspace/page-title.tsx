@@ -43,7 +43,7 @@ export function PageTitle({ pageId, initialTitle, onSave }: PageTitleProps) {
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       placeholder="Untitled"
-      className="w-full bg-transparent text-3xl font-bold text-foreground placeholder:text-muted-foreground/40 outline-none border-none"
+      className="w-full border-none bg-transparent text-[2.85rem] font-semibold tracking-tight text-[#2f2f2f] outline-none placeholder:text-[#b8b4ab]"
     />
   );
 }

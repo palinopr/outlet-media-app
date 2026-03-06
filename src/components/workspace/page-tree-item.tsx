@@ -46,50 +46,55 @@ export function PageTreeItem({
     <div>
       <div
         className={cn(
-          "group flex items-center gap-1 py-1 px-2 rounded-md cursor-pointer text-sm hover:bg-white/[0.04] transition-colors",
-          isActive && "bg-white/[0.06]",
+          "group flex cursor-pointer items-center gap-1 rounded-md px-2 py-1 text-sm transition-colors hover:bg-[#efede8]",
+          isActive && "bg-[#e7e5df] text-[#2f2f2f]",
         )}
-        style={{ paddingLeft: `${depth * 16 + 8}px` }}
+        style={{ paddingLeft: `${depth * 14 + 10}px` }}
         onClick={() => router.push(`${basePath}/${node.page.id}`)}
       >
         <button
+          type="button"
           onClick={(e) => {
             e.stopPropagation();
             onToggle(node.page.id);
           }}
           className={cn(
-            "h-5 w-5 flex items-center justify-center rounded hover:bg-white/[0.06] shrink-0 transition-transform",
+            "flex h-5 w-5 shrink-0 items-center justify-center rounded text-[#9b9a97] transition-transform hover:bg-[#e7e5df]",
             !hasChildren && "invisible",
             expanded && "rotate-90",
           )}
         >
-          <ChevronRight className="h-3 w-3 text-white/40" />
+          <ChevronRight className="h-3 w-3" />
         </button>
 
-        <span className="text-base shrink-0">{node.page.icon || "📄"}</span>
-        <span className="flex-1 truncate text-white/70">{node.page.title || "Untitled"}</span>
+        <span className="shrink-0 text-[17px]">{node.page.icon || "📄"}</span>
+        <span className="flex-1 truncate text-[#57534e] group-hover:text-[#2f2f2f]">
+          {node.page.title || "Untitled"}
+        </span>
 
         <div className="hidden group-hover:flex items-center gap-0.5">
           {!isArchived && onCreateChild && (
             <button
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 onCreateChild(node.page.id);
               }}
-              className="h-5 w-5 flex items-center justify-center rounded hover:bg-white/[0.06]"
+              className="flex h-5 w-5 items-center justify-center rounded text-[#9b9a97] hover:bg-[#ddd9cf] hover:text-[#2f2f2f]"
               title="Add child page"
             >
-              <Plus className="h-3 w-3 text-white/40" />
+              <Plus className="h-3 w-3" />
             </button>
           )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
+                type="button"
                 onClick={(e) => e.stopPropagation()}
-                className="h-5 w-5 flex items-center justify-center rounded hover:bg-white/[0.06]"
+                className="flex h-5 w-5 items-center justify-center rounded text-[#9b9a97] hover:bg-[#ddd9cf] hover:text-[#2f2f2f]"
               >
-                <MoreHorizontal className="h-3 w-3 text-white/40" />
+                <MoreHorizontal className="h-3 w-3" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-40">

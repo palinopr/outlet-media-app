@@ -40,7 +40,9 @@ export function CommentThread({
   }
 
   return (
-    <div className={`rounded-lg border border-white/[0.08] p-3 ${comment.resolved ? "opacity-60" : ""}`}>
+    <div
+      className={`rounded-2xl border border-[#ece8df] bg-white p-3 shadow-[0_12px_32px_-28px_rgba(15,23,42,0.45)] ${comment.resolved ? "opacity-60" : ""}`}
+    >
       <SingleComment
         comment={comment}
         currentUserId={currentUserId}
@@ -51,7 +53,7 @@ export function CommentThread({
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 text-xs"
+          className="h-6 text-xs text-[#787774] hover:bg-[#f1efea] hover:text-[#37352f]"
           onClick={() => setReplyOpen(!replyOpen)}
         >
           Reply
@@ -59,7 +61,7 @@ export function CommentThread({
         <Button
           variant="ghost"
           size="sm"
-          className="h-6 text-xs"
+          className="h-6 text-xs text-[#787774] hover:bg-[#f1efea] hover:text-[#37352f]"
           onClick={() => onResolve(comment.id, !comment.resolved)}
         >
           {comment.resolved ? "Reopen" : "Resolve"}
@@ -67,7 +69,7 @@ export function CommentThread({
       </div>
 
       {replies.length > 0 && (
-        <div className="mt-2 ml-4 space-y-2 border-l pl-3">
+        <div className="mt-3 ml-4 space-y-2 border-l border-[#ece8df] pl-3">
           {replies.map((reply) => (
             <SingleComment
               key={reply.id}
@@ -82,7 +84,7 @@ export function CommentThread({
       {replyOpen && (
         <div className="mt-2 ml-4 space-y-2">
           <textarea
-            className="w-full rounded-md border-white/[0.08] bg-[oklch(0.11_0_0)] px-3 py-2 text-sm placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+            className="w-full rounded-xl border border-[#e5e1d8] bg-[#fbfbfa] px-3 py-2 text-sm text-[#37352f] placeholder:text-[#9b9a97] focus:outline-none focus:ring-2 focus:ring-[#ddd7cc]"
             placeholder="Write a reply..."
             rows={2}
             value={replyText}
@@ -95,10 +97,20 @@ export function CommentThread({
             }}
           />
           <div className="flex gap-2">
-            <Button size="sm" className="h-7 text-xs" onClick={handleReply} disabled={submitting || !replyText.trim()}>
+            <Button
+              size="sm"
+              className="h-7 bg-[#2f2f2f] text-xs text-white hover:bg-[#1f1f1f]"
+              onClick={handleReply}
+              disabled={submitting || !replyText.trim()}
+            >
               {submitting ? "Sending..." : "Reply"}
             </Button>
-            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setReplyOpen(false)}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-[#787774] hover:bg-[#f1efea] hover:text-[#37352f]"
+              onClick={() => setReplyOpen(false)}
+            >
               Cancel
             </Button>
           </div>
@@ -131,19 +143,21 @@ function SingleComment({
       </Avatar>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">{comment.author_name ?? "Unknown"}</span>
-          <span className="text-xs text-white/40">{timeAgo(comment.created_at)}</span>
+          <span className="text-sm font-medium text-[#37352f]">
+            {comment.author_name ?? "Unknown"}
+          </span>
+          <span className="text-xs text-[#9b9a97]">{timeAgo(comment.created_at)}</span>
           {comment.author_id === currentUserId && (
             <button
               type="button"
-              className="ml-auto hidden text-xs text-white/40 hover:text-red-400 group-hover:inline"
+              className="ml-auto hidden text-xs text-[#9b9a97] hover:text-red-500 group-hover:inline"
               onClick={() => onDelete(comment.id)}
             >
               Delete
             </button>
           )}
         </div>
-        <p className="mt-0.5 text-sm whitespace-pre-wrap">{comment.content}</p>
+        <p className="mt-0.5 whitespace-pre-wrap text-sm text-[#57534e]">{comment.content}</p>
       </div>
     </div>
   );

@@ -7,7 +7,7 @@ export function ParagraphElement(props: PlateElementProps) {
   return (
     <PlateElement
       {...props}
-      className="mb-1 text-white/80 leading-relaxed"
+      className="mb-1 text-[#37352f] leading-7"
     />
   );
 }
@@ -16,7 +16,7 @@ export function H1Element(props: PlateElementProps) {
   return (
     <PlateElement
       {...props}
-      className="text-3xl font-bold mt-8 mb-3 text-white"
+      className="mb-3 mt-8 text-[2.2rem] font-semibold tracking-tight text-[#2f2f2f]"
     />
   );
 }
@@ -25,7 +25,7 @@ export function H2Element(props: PlateElementProps) {
   return (
     <PlateElement
       {...props}
-      className="text-2xl font-semibold mt-6 mb-2 text-white/95"
+      className="mb-2 mt-6 text-[1.6rem] font-semibold text-[#37352f]"
     />
   );
 }
@@ -34,7 +34,7 @@ export function H3Element(props: PlateElementProps) {
   return (
     <PlateElement
       {...props}
-      className="text-xl font-semibold mt-5 mb-2 text-white/90"
+      className="mb-2 mt-5 text-[1.25rem] font-semibold text-[#44403c]"
     />
   );
 }
@@ -43,7 +43,7 @@ export function BlockquoteElement(props: PlateElementProps) {
   return (
     <PlateElement
       {...props}
-      className="border-l-2 border-white/20 pl-4 my-2 italic text-white/60"
+      className="my-3 border-l-4 border-[#dfdbd2] pl-4 italic text-[#6b6a68]"
     />
   );
 }
@@ -51,7 +51,7 @@ export function BlockquoteElement(props: PlateElementProps) {
 export function HrElement(props: PlateElementProps) {
   return (
     <PlateElement {...props}>
-      <hr className="my-6 border-white/[0.08]" />
+      <hr className="my-6 border-[#ece8df]" />
       {props.children}
     </PlateElement>
   );
@@ -61,7 +61,7 @@ export function CodeBlockElement(props: PlateElementProps) {
   return (
     <PlateElement
       {...props}
-      className="my-2 rounded-lg bg-[oklch(0.12_0_0)] border border-white/[0.06] p-4 font-mono text-sm text-white/80"
+      className="my-3 rounded-2xl border border-[#ece8df] bg-[#f7f5f1] p-4 font-mono text-sm text-[#44403c]"
     />
   );
 }
@@ -78,23 +78,25 @@ export function BlockList() {
 
   if (listStyleType === "todo") {
     const checked = !!(element as Record<string, unknown>).checked;
-    return ({ children }: { children: React.ReactNode }) => (
-      <div className="flex items-start gap-2 py-0.5">
-        <div contentEditable={false} className="flex items-center pt-1">
-          <input
-            type="checkbox"
-            checked={checked}
-            onChange={() => {
-              editor.tf.setNodes({ checked: !checked } as Record<string, unknown>, { at: path });
-            }}
-            className="h-4 w-4 rounded border-white/30 bg-transparent accent-cyan-500 cursor-pointer"
-          />
+    return function TodoList({ children }: { children: React.ReactNode }) {
+      return (
+        <div className="flex items-start gap-2 py-0.5">
+          <div contentEditable={false} className="flex items-center pt-1">
+            <input
+              type="checkbox"
+              checked={checked}
+              onChange={() => {
+                editor.tf.setNodes({ checked: !checked } as Record<string, unknown>, { at: path });
+              }}
+              className="h-4 w-4 cursor-pointer rounded border-[#c8c2b8] bg-transparent accent-[#7f8c75]"
+            />
+          </div>
+          <span className={`flex-1 ${checked ? "text-[#b0aaa0] line-through" : "text-[#37352f]"}`}>
+            {children}
+          </span>
         </div>
-        <span className={`flex-1 ${checked ? "line-through text-white/30" : "text-white/80"}`}>
-          {children}
-        </span>
-      </div>
-    );
+      );
+    };
   }
 
   const Tag = listStyleType === "decimal" ? "ol" : "ul";
@@ -102,14 +104,15 @@ export function BlockList() {
     | number
     | undefined;
 
-  return ({ children }: { children: React.ReactNode }) => (
-    <Tag
-      className="my-0 ps-6 list-none"
-      style={{ listStyleType }}
-      start={listStart}
-    >
-      <li className="my-0">{children}</li>
-    </Tag>
-  );
+  return function StyledList({ children }: { children: React.ReactNode }) {
+    return (
+      <Tag
+        className="my-0 ps-6 list-none"
+        style={{ listStyleType }}
+        start={listStart}
+      >
+        <li className="my-0">{children}</li>
+      </Tag>
+    );
+  };
 }
-

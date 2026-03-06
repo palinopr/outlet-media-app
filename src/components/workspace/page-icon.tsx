@@ -38,30 +38,32 @@ export function PageIcon({ pageId, currentIcon, onSave }: PageIconProps) {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
-          className="text-4xl hover:bg-muted/50 rounded-lg p-1 transition-colors cursor-pointer"
+          type="button"
+          className="cursor-pointer rounded-[18px] border border-transparent bg-white/90 p-2 text-5xl shadow-[0_18px_36px_-28px_rgba(15,23,42,0.85)] transition-colors hover:border-[#ece8df] hover:bg-[#faf8f4]"
           title="Change icon"
         >
           {icon || "📄"}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-3" align="start">
+      <PopoverContent className="w-72 border-[#ece8df] bg-white p-3 shadow-xl" align="start">
         <div className="grid grid-cols-8 gap-1">
           {EMOJI_LIST.map((emoji) => (
             <button
               key={emoji}
+              type="button"
               onClick={() => handleSelect(emoji)}
-              className="h-8 w-8 flex items-center justify-center rounded hover:bg-muted transition-colors text-lg"
+              className="flex h-8 w-8 items-center justify-center rounded-md text-lg transition-colors hover:bg-[#f1efea]"
             >
               {emoji}
             </button>
           ))}
         </div>
         {icon && (
-          <div className="mt-2 pt-2 border-t">
+          <div className="mt-2 border-t border-[#efede8] pt-2">
             <Button
               variant="ghost"
               size="sm"
-              className="w-full text-xs"
+              className="w-full justify-start text-xs text-[#787774] hover:bg-[#f1efea] hover:text-[#37352f]"
               onClick={() => handleSelect(null)}
             >
               Remove icon

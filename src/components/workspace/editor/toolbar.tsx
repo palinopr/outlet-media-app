@@ -31,7 +31,7 @@ function ToolbarButton({
     <button
       type="button"
       title={tooltip}
-      className="h-8 w-8 flex items-center justify-center rounded text-white/50 hover:text-white hover:bg-white/[0.06] transition-colors"
+      className="flex h-8 w-8 items-center justify-center rounded-md text-[#787774] transition-colors hover:bg-[#f1efea] hover:text-[#37352f]"
       onMouseDown={(e) => {
         e.preventDefault();
         onAction();
@@ -43,7 +43,7 @@ function ToolbarButton({
 }
 
 function Separator() {
-  return <div className="w-px h-5 bg-white/[0.08] mx-1" />;
+  return <div className="mx-1 h-5 w-px bg-[#ece8df]" />;
 }
 
 export function EditorToolbar() {
@@ -52,7 +52,7 @@ export function EditorToolbar() {
   if (readOnly) return null;
 
   return (
-    <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-white/[0.06] bg-[oklch(0.14_0_0)] rounded-t-lg">
+    <div className="sticky top-0 z-10 flex items-center gap-0.5 rounded-t-[20px] border-b border-[#efede8] bg-white/95 px-1 py-2 backdrop-blur">
       <ToolbarButton tooltip="Heading 1" onAction={() => editor.tf.toggleBlock("h1")}>
         <Heading1 className="h-4 w-4" />
       </ToolbarButton>
