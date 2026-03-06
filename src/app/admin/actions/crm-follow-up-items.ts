@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod/v4";
 import {
@@ -8,6 +7,10 @@ import {
   maybeEnqueueCrmFollowUpItemTriage,
 } from "@/features/crm-follow-up-items/server";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
+import {
+  getCrmWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { adminGuard } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
@@ -58,13 +61,6 @@ const FIELD_LABELS: Record<string, string> = {
 
 function taskStatusLabel(status: string) {
   return TASK_STATUS_LABELS[status as keyof typeof TASK_STATUS_LABELS] ?? status;
-}
-
-function revalidateCrmPaths(clientSlug: string, contactId: string) {
-  revalidatePath("/admin/crm");
-  revalidatePath(`/admin/crm/${contactId}`);
-  revalidatePath(`/client/${clientSlug}/crm`);
-  revalidatePath(`/client/${clientSlug}/crm/${contactId}`);
 }
 
 export async function createCrmFollowUpItem(formData: {
@@ -160,7 +156,7 @@ export async function createCrmFollowUpItem(formData: {
   });
 
   await maybeEnqueueCrmFollowUpItemTriage(item);
-  revalidateCrmPaths(parsed.clientSlug, parsed.contactId);
+  revalidateWorkflowPaths(getCrmWorkflowPaths(parsed.clientSlug, parsed.contactId));
   return item;
 }
 
@@ -307,7 +303,7 @@ export async function updateCrmFollowUpItem(formData: {
     status: existingRow.status as typeof item.status,
   });
 
-  revalidateCrmPaths(item.clientSlug, item.contactId);
+  revalidateWorkflowPaths(getCrmWorkflowPaths(item.clientSlug, item.contactId));
 }
 
 export async function deleteCrmFollowUpItem(itemId: string) {
@@ -350,5 +346,5 @@ export async function deleteCrmFollowUpItem(itemId: string) {
     },
   });
 
-  revalidateCrmPaths(item.clientSlug, item.contactId);
+  revalidateWorkflowPaths(getCrmWorkflowPaths(item.clientSlug, item.contactId));
 }

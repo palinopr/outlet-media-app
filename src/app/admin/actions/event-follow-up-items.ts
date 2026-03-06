@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod/v4";
 import { adminGuard } from "@/lib/api-helpers";
@@ -12,6 +11,10 @@ import {
   updateSystemEventFollowUpItem,
 } from "@/features/event-follow-up-items/server";
 import { getEventRecordById } from "@/features/events/server";
+import {
+  getEventWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { logAudit } from "./audit";
 
 const VisibilityOptions = ["shared", "admin_only"] as const;
@@ -38,18 +41,6 @@ const UpdateEventFollowUpItemSchema = z.object({
   assigneeName: z.string().max(200).optional().nullable(),
   dueDate: z.string().optional().nullable(),
 });
-
-function revalidateEventPaths(eventId: string, clientSlug: string | null) {
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/admin/events");
-  revalidatePath(`/admin/events/${eventId}`);
-
-  if (clientSlug) {
-    revalidatePath(`/client/${clientSlug}`);
-    revalidatePath(`/client/${clientSlug}/events`);
-    revalidatePath(`/client/${clientSlug}/event/${eventId}`);
-  }
-}
 
 export async function createEventFollowUpItem(formData: {
   eventId: string;
@@ -97,7 +88,7 @@ export async function createEventFollowUpItem(formData: {
     visibility: parsed.visibility,
   });
 
-  revalidateEventPaths(item.eventId, item.clientSlug);
+  revalidateWorkflowPaths(getEventWorkflowPaths(item.clientSlug, item.eventId));
   return item;
 }
 
@@ -138,7 +129,7 @@ export async function updateEventFollowUpItem(formData: {
   if (!item) throw new Error("Failed to update follow-up item");
 
   await logAudit("event_follow_up_item", item.id, "update", null, parsed);
-  revalidateEventPaths(item.eventId, item.clientSlug);
+  revalidateWorkflowPaths(getEventWorkflowPaths(item.clientSlug, item.eventId));
 }
 
 export async function deleteEventFollowUpItemAction(itemId: string) {
@@ -164,5 +155,5 @@ export async function deleteEventFollowUpItemAction(itemId: string) {
     title: existing.title,
   });
 
-  revalidateEventPaths(existing.eventId, existing.clientSlug);
+  revalidateWorkflowPaths(getEventWorkflowPaths(existing.clientSlug, existing.eventId));
 }

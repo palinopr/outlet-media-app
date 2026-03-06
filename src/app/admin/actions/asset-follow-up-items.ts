@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod/v4";
 import {
@@ -8,6 +7,10 @@ import {
   maybeEnqueueAssetFollowUpItemTriage,
 } from "@/features/asset-follow-up-items/server";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
+import {
+  getAssetWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { adminGuard } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
@@ -58,15 +61,6 @@ const FIELD_LABELS: Record<string, string> = {
 
 function taskStatusLabel(status: string) {
   return TASK_STATUS_LABELS[status as keyof typeof TASK_STATUS_LABELS] ?? status;
-}
-
-function revalidateAssetPaths(clientSlug: string, assetId: string) {
-  revalidatePath("/admin/assets");
-  revalidatePath(`/admin/assets/${assetId}`);
-  revalidatePath("/admin/dashboard");
-  revalidatePath(`/client/${clientSlug}`);
-  revalidatePath(`/client/${clientSlug}/assets`);
-  revalidatePath(`/client/${clientSlug}/assets/${assetId}`);
 }
 
 export async function createAssetFollowUpItem(formData: {
@@ -163,7 +157,7 @@ export async function createAssetFollowUpItem(formData: {
   });
 
   await maybeEnqueueAssetFollowUpItemTriage(item);
-  revalidateAssetPaths(parsed.clientSlug, parsed.assetId);
+  revalidateWorkflowPaths(getAssetWorkflowPaths(parsed.clientSlug, parsed.assetId));
   return item;
 }
 
@@ -311,7 +305,7 @@ export async function updateAssetFollowUpItem(formData: {
     priority: existingRow.priority as typeof item.priority,
     status: existingRow.status as typeof item.status,
   });
-  revalidateAssetPaths(item.clientSlug, item.assetId);
+  revalidateWorkflowPaths(getAssetWorkflowPaths(item.clientSlug, item.assetId));
 }
 
 export async function deleteAssetFollowUpItemAction(itemId: string) {
@@ -351,5 +345,5 @@ export async function deleteAssetFollowUpItemAction(itemId: string) {
     },
   });
 
-  revalidateAssetPaths(item.clientSlug, item.assetId);
+  revalidateWorkflowPaths(getAssetWorkflowPaths(item.clientSlug, item.assetId));
 }

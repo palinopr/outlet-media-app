@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod/v4";
 import {
@@ -8,6 +7,10 @@ import {
   maybeEnqueueCampaignActionItemTriage,
 } from "@/features/campaign-action-items/server";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
+import {
+  getCampaignWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { adminGuard } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { TASK_PRIORITIES, TASK_PRIORITY_LABELS, TASK_STATUSES, TASK_STATUS_LABELS } from "@/lib/workspace-types";
@@ -53,13 +56,6 @@ const FIELD_LABELS: Record<string, string> = {
 
 function taskStatusLabel(status: string) {
   return TASK_STATUS_LABELS[status as keyof typeof TASK_STATUS_LABELS] ?? status;
-}
-
-function revalidateCampaignPaths(clientSlug: string, campaignId: string) {
-  revalidatePath(`/admin/campaigns/${campaignId}`);
-  revalidatePath("/admin/workspace");
-  revalidatePath(`/client/${clientSlug}/campaign/${campaignId}`);
-  revalidatePath(`/client/${clientSlug}/workspace`);
 }
 
 export async function createCampaignActionItem(formData: {
@@ -153,7 +149,7 @@ export async function createCampaignActionItem(formData: {
     await maybeEnqueueCampaignActionItemTriage(createdItem);
   }
 
-  revalidateCampaignPaths(parsed.clientSlug, parsed.campaignId);
+  revalidateWorkflowPaths(getCampaignWorkflowPaths(parsed.clientSlug, parsed.campaignId));
   return data;
 }
 
@@ -310,7 +306,7 @@ export async function updateCampaignActionItem(formData: {
     });
   }
 
-  revalidateCampaignPaths(existing.client_slug, existing.campaign_id);
+  revalidateWorkflowPaths(getCampaignWorkflowPaths(existing.client_slug, existing.campaign_id));
 }
 
 export async function deleteCampaignActionItem(formData: { itemId: string }) {
@@ -350,5 +346,5 @@ export async function deleteCampaignActionItem(formData: { itemId: string }) {
     },
   });
 
-  revalidateCampaignPaths(existing.client_slug, existing.campaign_id);
+  revalidateWorkflowPaths(getCampaignWorkflowPaths(existing.client_slug, existing.campaign_id));
 }

@@ -24,6 +24,7 @@ export function getCampaignWorkflowPaths(
     `/admin/campaigns/${campaignId}`,
     "/admin/conversations",
     "/admin/dashboard",
+    "/admin/notifications",
     "/admin/workspace",
     "/admin/workspace/tasks",
     ...clientPaths(clientSlug, [
@@ -31,6 +32,7 @@ export function getCampaignWorkflowPaths(
       `/client/:clientSlug/campaign/${campaignId}`,
       "/client/:clientSlug/campaigns",
       "/client/:clientSlug/conversations",
+      "/client/:clientSlug/notifications",
       "/client/:clientSlug/updates",
       "/client/:clientSlug/workspace",
       "/client/:clientSlug/workspace/tasks",
@@ -45,6 +47,7 @@ export function getAssetWorkflowPaths(clientSlug: string | null | undefined, ass
     `/admin/assets/${assetId}`,
     "/admin/conversations",
     "/admin/dashboard",
+    "/admin/notifications",
     "/admin/workspace",
     "/admin/workspace/tasks",
     ...clientPaths(clientSlug, [
@@ -52,6 +55,7 @@ export function getAssetWorkflowPaths(clientSlug: string | null | undefined, ass
       "/client/:clientSlug/assets",
       `/client/:clientSlug/assets/${assetId}`,
       "/client/:clientSlug/conversations",
+      "/client/:clientSlug/notifications",
       "/client/:clientSlug/updates",
       "/client/:clientSlug/workspace",
       "/client/:clientSlug/workspace/tasks",
@@ -66,6 +70,7 @@ export function getCrmWorkflowPaths(clientSlug: string | null | undefined, conta
     "/admin/crm",
     `/admin/crm/${contactId}`,
     "/admin/dashboard",
+    "/admin/notifications",
     "/admin/workspace",
     "/admin/workspace/tasks",
     ...clientPaths(clientSlug, [
@@ -73,6 +78,7 @@ export function getCrmWorkflowPaths(clientSlug: string | null | undefined, conta
       "/client/:clientSlug/conversations",
       "/client/:clientSlug/crm",
       `/client/:clientSlug/crm/${contactId}`,
+      "/client/:clientSlug/notifications",
       "/client/:clientSlug/updates",
       "/client/:clientSlug/workspace",
       "/client/:clientSlug/workspace/tasks",
@@ -87,6 +93,7 @@ export function getEventWorkflowPaths(clientSlug: string | null | undefined, eve
     "/admin/dashboard",
     "/admin/events",
     `/admin/events/${eventId}`,
+    "/admin/notifications",
     "/admin/workspace",
     "/admin/workspace/tasks",
     ...clientPaths(clientSlug, [
@@ -94,6 +101,7 @@ export function getEventWorkflowPaths(clientSlug: string | null | undefined, eve
       "/client/:clientSlug/conversations",
       `/client/:clientSlug/event/${eventId}`,
       "/client/:clientSlug/events",
+      "/client/:clientSlug/notifications",
       "/client/:clientSlug/updates",
       "/client/:clientSlug/workspace",
       "/client/:clientSlug/workspace/tasks",
