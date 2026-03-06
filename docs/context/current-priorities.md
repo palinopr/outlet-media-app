@@ -48,6 +48,7 @@ The short-term focus is:
 - Keep cross-app activity links entity-aware, so shared activity opens the correct campaign, asset, CRM contact, or event detail page instead of dropping users into the wrong surface.
 - Keep notifications entity-aware and route-aware too, so admin and client users land on the correct campaign, asset, approval, CRM, event, or workspace surface instead of dead-ending in a generic inbox.
 - Treat the admin clients index as an account health surface, not just a billing roster, so operators can see which client accounts need approvals, discussion responses, next steps, or creative review.
+- Treat admin client detail pages as account operating hubs too, not only membership/assets/service management, so operators can manage workflow pressure, activity, agent follow-through, and show-level context from the client record itself.
 - Prefer direct workflow controls on action/follow-up panels so operators can move work between statuses without opening a form for every change.
 - Surface agent follow-through inside campaigns and dashboards so users can see what the system asked agents to do and what came back.
 - Let useful agent outcomes turn into source-linked campaign action items so recommendations and failures become operational next steps.
