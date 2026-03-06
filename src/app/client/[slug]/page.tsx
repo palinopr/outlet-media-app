@@ -74,6 +74,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       limit: 4,
       mode: "client",
       scopeCampaignIds: scope?.allowedCampaignIds,
+      scopeEventIds: scope?.allowedEventIds,
     }),
     getDashboardAssetSummary({
       clientSlug: slug,

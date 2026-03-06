@@ -16,6 +16,7 @@ export async function getClientUpdatesCenter(
         limit: 4,
         mode: "client",
         scopeCampaignIds: scope?.allowedCampaignIds,
+        scopeEventIds: scope?.allowedEventIds,
       }),
       listAgentOutcomes({
         audience: "shared",

@@ -21,6 +21,7 @@ const labelMap: Record<string, string> = {
   crm: "CRM",
   approvals: "Approvals",
   notifications: "Notifications",
+  conversations: "Conversations",
   agents: "Agents",
   clients: "Clients",
   users: "Users",

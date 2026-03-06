@@ -100,7 +100,12 @@ export function DashboardActionCenterSection({
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className={cn("flex flex-wrap items-center gap-2 text-xs", tone.muted)}>
-                      <span>{approval.campaignName ?? "Campaign approval"}</span>
+                      <span>
+                        {approval.campaignName ??
+                          approval.eventName ??
+                          approval.assetName ??
+                          "Approval"}
+                      </span>
                       <span>&middot;</span>
                       <span>{timeAgo(approval.createdAt)}</span>
                       {!isClient ? (
@@ -116,7 +121,7 @@ export function DashboardActionCenterSection({
                         {truncate(approval.summary, 160)}
                       </p>
                     ) : null}
-                    {approval.campaignId || approval.assetId ? (
+                    {approval.campaignId || approval.assetId || approval.eventId ? (
                       <div className="mt-3">
                         <Link
                           href={
@@ -124,6 +129,8 @@ export function DashboardActionCenterSection({
                               ? `${campaignHrefPrefix}/${approval.campaignId}`
                               : approval.assetId && assetHrefPrefix
                                 ? `${assetHrefPrefix}/${approval.assetId}`
+                                : approval.eventId && eventHrefPrefix
+                                  ? `${eventHrefPrefix}/${approval.eventId}`
                                 : assetLibraryHref ?? campaignHrefPrefix
                           }
                           className={cn(
@@ -135,8 +142,10 @@ export function DashboardActionCenterSection({
                         >
                           {approval.campaignId
                             ? "Review campaign"
-                            : assetHrefPrefix
-                              ? "Review asset"
+                            : approval.eventId && eventHrefPrefix
+                              ? "Review event"
+                              : approval.assetId && assetHrefPrefix
+                                ? "Review asset"
                               : "Open asset library"}{" "}
                           <ArrowRight className="h-3 w-3" />
                         </Link>

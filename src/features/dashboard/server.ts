@@ -1,6 +1,8 @@
 import type { TaskPriority } from "@/lib/workspace-types";
 import { supabaseAdmin } from "@/lib/supabase";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
+import { listConversationThreads } from "@/features/conversations/server";
+import type { ConversationThread } from "@/features/conversations/summary";
 import { buildAssetLibrarySummary, type AssetLibrarySummary } from "@/features/assets/summary";
 import { listAssetLibrary } from "@/features/assets/server";
 import {
@@ -26,6 +28,7 @@ interface GetDashboardActionCenterOptions {
   limit?: number;
   mode: DashboardSummaryMode;
   scopeCampaignIds?: string[] | null;
+  scopeEventIds?: string[] | null;
 }
 
 interface GetDashboardAssetSummaryOptions {
@@ -40,21 +43,14 @@ export interface DashboardActionCenterApproval {
   campaignName: string | null;
   clientSlug: string;
   createdAt: string;
+  eventId: string | null;
+  eventName: string | null;
   id: string;
   summary: string | null;
   title: string;
 }
 
-export interface DashboardActionCenterDiscussion {
-  authorName: string | null;
-  clientSlug: string;
-  content: string;
-  createdAt: string;
-  id: string;
-  kind: "asset" | "campaign" | "crm" | "event";
-  targetId: string;
-  targetName: string | null;
-}
+export type DashboardActionCenterDiscussion = ConversationThread;
 
 export interface DashboardActionCenterCrmFollowUp {
   clientSlug: string;
@@ -121,6 +117,28 @@ function resolveAssetId(
 function resolveAssetName(metadata: Record<string, unknown>) {
   const assetName = metadata.assetName;
   return typeof assetName === "string" && assetName.length > 0 ? assetName : null;
+}
+
+function resolveEventId(
+  entityType: string | null,
+  entityId: string | null,
+  metadata: Record<string, unknown>,
+) {
+  if (entityType === "event" && entityId) return entityId;
+
+  const eventId = metadata.eventId;
+  return typeof eventId === "string" && eventId.length > 0 ? eventId : null;
+}
+
+function resolveEventName(
+  eventId: string | null,
+  metadata: Record<string, unknown>,
+  eventNames: Map<string, string>,
+) {
+  const metadataName = metadata.eventName;
+  if (typeof metadataName === "string" && metadataName.length > 0) return metadataName;
+  if (!eventId) return null;
+  return eventNames.get(eventId) ?? null;
 }
 
 export async function getDashboardOpsSummary(
@@ -286,7 +304,8 @@ export async function getDashboardActionCenter(
   }
 
   const scopeIds = options.scopeCampaignIds ?? null;
-  if (scopeIds && scopeIds.length === 0) {
+  const scopeEventIds = options.scopeEventIds ?? null;
+  if (scopeIds && scopeIds.length === 0 && scopeEventIds && scopeEventIds.length === 0) {
     return { approvals: [], crmFollowUps: [], discussions: [] };
   }
 
@@ -303,82 +322,37 @@ export async function getDashboardActionCenter(
     .order("created_at", { ascending: false })
     .limit(Math.max((options.limit ?? 4) * 4, 12));
 
-  let discussionsQuery = supabaseAdmin
-    .from("campaign_comments")
-    .select("id, campaign_id, client_slug, content, created_at, author_name")
-    .eq("resolved", false)
-    .is("parent_comment_id", null)
-    .order("created_at", { ascending: false })
-    .limit(Math.max((options.limit ?? 4) * 4, 12));
-
-  let crmDiscussionsQuery = supabaseAdmin
-    .from("crm_comments")
-    .select("id, contact_id, client_slug, content, created_at, author_name")
-    .eq("resolved", false)
-    .is("parent_comment_id", null)
-    .order("created_at", { ascending: false })
-    .limit(Math.max((options.limit ?? 4) * 4, 12));
-
-  let assetDiscussionsQuery = supabaseAdmin
-    .from("asset_comments" as never)
-    .select("id, asset_id, client_slug, content, created_at, author_name")
-    .eq("resolved", false)
-    .is("parent_comment_id", null)
-    .order("created_at", { ascending: false })
-    .limit(Math.max((options.limit ?? 4) * 4, 12));
-
-  let eventDiscussionsQuery = supabaseAdmin
-    .from("event_comments" as never)
-    .select("id, event_id, client_slug, content, created_at, author_name")
-    .eq("resolved", false)
-    .is("parent_comment_id", null)
-    .order("created_at", { ascending: false })
-    .limit(Math.max((options.limit ?? 4) * 4, 12));
-
   if (options.clientSlug) {
     campaignsQuery = campaignsQuery.eq("client_slug", options.clientSlug);
     approvalsQuery = approvalsQuery.eq("client_slug", options.clientSlug);
-    discussionsQuery = discussionsQuery.eq("client_slug", options.clientSlug);
-    crmDiscussionsQuery = crmDiscussionsQuery.eq("client_slug", options.clientSlug);
-    assetDiscussionsQuery = assetDiscussionsQuery.eq("client_slug", options.clientSlug);
-    eventDiscussionsQuery = eventDiscussionsQuery.eq("client_slug", options.clientSlug);
   }
 
   if (scopeIds && scopeIds.length > 0) {
     campaignsQuery = campaignsQuery.in("campaign_id", scopeIds);
-    discussionsQuery = discussionsQuery.in("campaign_id", scopeIds);
   }
 
   if (options.mode === "client") {
     approvalsQuery = approvalsQuery.in("audience", ["shared", "client"]);
-    discussionsQuery = discussionsQuery.eq("visibility", "shared");
-    crmDiscussionsQuery = crmDiscussionsQuery.eq("visibility", "shared");
-    assetDiscussionsQuery = assetDiscussionsQuery.eq("visibility", "shared");
-    eventDiscussionsQuery = eventDiscussionsQuery.eq("visibility", "shared");
   }
 
-  const [
-    campaignsRes,
-    approvalsRes,
-    discussionsRes,
-    crmDiscussionsRes,
-    assetDiscussionsRes,
-    eventDiscussionsRes,
-    crmFollowUpItems,
-  ] =
-    await Promise.all([
-      campaignsQuery,
-      approvalsQuery,
-      discussionsQuery,
-      crmDiscussionsQuery,
-      assetDiscussionsQuery,
-      eventDiscussionsQuery,
-      listCrmFollowUpItems({
-        audience: options.mode === "client" ? "shared" : "all",
-        clientSlug: options.clientSlug,
-        limit: Math.max((options.limit ?? 4) * 4, 12),
-      }),
-    ]);
+  const [campaignsRes, approvalsRes, discussions, crmFollowUpItems] = await Promise.all([
+    campaignsQuery,
+    approvalsQuery,
+    listConversationThreads({
+      clientSlug: options.clientSlug,
+      limit: Math.max((options.limit ?? 4) * 4, 12),
+      mode: options.mode,
+      scope: {
+        allowedCampaignIds: options.scopeCampaignIds ?? null,
+        allowedEventIds: options.scopeEventIds ?? null,
+      },
+    }),
+    listCrmFollowUpItems({
+      audience: options.mode === "client" ? "shared" : "all",
+      clientSlug: options.clientSlug,
+      limit: Math.max((options.limit ?? 4) * 4, 12),
+    }),
+  ]);
 
   const allowedCampaignIds = scopeIds ? new Set(scopeIds) : null;
   const campaignNames = new Map<string, string>();
@@ -389,6 +363,8 @@ export async function getDashboardActionCenter(
     campaignNames.set(campaignId, name && name.length > 0 ? name : campaignId);
   }
 
+  const allowedEventIdSet = scopeEventIds ? new Set(scopeEventIds) : null;
+
   const approvals: DashboardActionCenterApproval[] = (approvalsRes.data ?? [])
     .map((row) => {
       const metadata = ((row.metadata as Record<string, unknown> | null) ?? {}) as Record<
@@ -396,6 +372,11 @@ export async function getDashboardActionCenter(
         unknown
       >;
       const campaignId = resolveCampaignId(
+        (row.entity_type as string | null) ?? null,
+        (row.entity_id as string | null) ?? null,
+        metadata,
+      );
+      const eventId = resolveEventId(
         (row.entity_type as string | null) ?? null,
         (row.entity_id as string | null) ?? null,
         metadata,
@@ -412,64 +393,26 @@ export async function getDashboardActionCenter(
         campaignName: resolveCampaignName(campaignId, metadata, campaignNames),
         clientSlug: row.client_slug as string,
         createdAt: row.created_at as string,
+        eventId,
+        eventName: resolveEventName(eventId, metadata, new Map<string, string>()),
         id: row.id as string,
         summary: (row.summary as string | null) ?? null,
         title: row.title as string,
       };
     })
     .filter((row) => {
-      if (!allowedCampaignIds) return true;
-      return !!row.campaignId && allowedCampaignIds.has(row.campaignId);
+      if (!allowedCampaignIds && !allowedEventIdSet) return true;
+      if (row.campaignId && allowedCampaignIds?.has(row.campaignId)) return true;
+      if (row.eventId && allowedEventIdSet?.has(row.eventId)) return true;
+      return false;
     })
     .slice(0, options.limit ?? 4);
 
-  const contactNames = new Map<string, string>();
-  const contactIds = [
-    ...new Set(
-      (crmDiscussionsRes.data ?? [])
-        .map((row) => (row.contact_id as string | null) ?? null)
-        .filter((value): value is string => !!value),
-    ),
-  ];
-
-  if (contactIds.length > 0) {
-    const { data: contactRows } = await supabaseAdmin
-      .from("crm_contacts" as never)
-      .select("id, full_name")
-      .in("id", contactIds);
-
-    for (const row of contactRows ?? []) {
-      const record = row as Record<string, unknown>;
-      contactNames.set(record.id as string, (record.full_name as string | null) ?? "CRM contact");
-    }
-  }
-
-  const assetNames = new Map<string, string>();
-  const assetIds = [
-    ...new Set(
-      ((assetDiscussionsRes.data ?? []) as Record<string, unknown>[])
-        .map((row) => (row.asset_id as string | null) ?? null)
-        .filter((value): value is string => !!value),
-    ),
-  ];
-
-  if (assetIds.length > 0) {
-    const { data: assetRows } = await supabaseAdmin
-      .from("ad_assets")
-      .select("id, file_name")
-      .in("id", assetIds);
-
-    for (const row of assetRows ?? []) {
-      assetNames.set(row.id as string, (row.file_name as string | null) ?? "Asset");
-    }
-  }
-
-  const eventNames = new Map<string, string>();
   const eventIds = [
     ...new Set(
-      ((eventDiscussionsRes.data ?? []) as Record<string, unknown>[])
-        .map((row) => (row.event_id as string | null) ?? null)
-        .filter((value): value is string => !!value),
+      approvals
+        .map((row) => row.eventId)
+        .filter((value): value is string => typeof value === "string" && value.length > 0),
     ),
   ];
 
@@ -478,76 +421,19 @@ export async function getDashboardActionCenter(
       .from("tm_events")
       .select("id, name, artist")
       .in("id", eventIds);
+    const eventNames = new Map<string, string>();
 
-    for (const row of eventRows ?? []) {
-      const record = row as Record<string, unknown>;
+    for (const row of (eventRows ?? []) as Record<string, unknown>[]) {
       eventNames.set(
-        record.id as string,
-        (record.artist as string | null) ??
-          (record.name as string | null) ??
-          "Event",
+        row.id as string,
+        (row.artist as string | null) ?? (row.name as string | null) ?? "Event",
       );
     }
+
+    for (const approval of approvals) {
+      approval.eventName = approval.eventName ?? resolveEventName(approval.eventId, {}, eventNames);
+    }
   }
-
-  const campaignDiscussions: DashboardActionCenterDiscussion[] = (discussionsRes.data ?? [])
-    .map((row) => ({
-      authorName: (row.author_name as string | null) ?? null,
-      clientSlug: row.client_slug as string,
-      content: row.content as string,
-      createdAt: row.created_at as string,
-      id: row.id as string,
-      kind: "campaign" as const,
-      targetId: row.campaign_id as string,
-      targetName: campaignNames.get(row.campaign_id as string) ?? null,
-    }));
-
-  const crmDiscussions: DashboardActionCenterDiscussion[] = (crmDiscussionsRes.data ?? [])
-    .map((row) => ({
-      authorName: (row.author_name as string | null) ?? null,
-      clientSlug: row.client_slug as string,
-      content: row.content as string,
-      createdAt: row.created_at as string,
-      id: row.id as string,
-      kind: "crm" as const,
-      targetId: row.contact_id as string,
-      targetName: contactNames.get(row.contact_id as string) ?? null,
-    }));
-
-  const assetDiscussions: DashboardActionCenterDiscussion[] = (
-    (assetDiscussionsRes.data ?? []) as Record<string, unknown>[]
-  ).map((row) => ({
-    authorName: (row.author_name as string | null) ?? null,
-    clientSlug: row.client_slug as string,
-    content: row.content as string,
-    createdAt: row.created_at as string,
-    id: row.id as string,
-    kind: "asset" as const,
-    targetId: row.asset_id as string,
-    targetName: assetNames.get(row.asset_id as string) ?? null,
-  }));
-
-  const eventDiscussions: DashboardActionCenterDiscussion[] = (
-    (eventDiscussionsRes.data ?? []) as Record<string, unknown>[]
-  ).map((row) => ({
-    authorName: (row.author_name as string | null) ?? null,
-    clientSlug: ((row.client_slug as string | null) ?? "unassigned") as string,
-    content: row.content as string,
-    createdAt: row.created_at as string,
-    id: row.id as string,
-    kind: "event" as const,
-    targetId: row.event_id as string,
-    targetName: eventNames.get(row.event_id as string) ?? null,
-  }));
-
-  const discussions: DashboardActionCenterDiscussion[] = [
-    ...campaignDiscussions,
-    ...crmDiscussions,
-    ...assetDiscussions,
-    ...eventDiscussions,
-  ]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, options.limit ?? 4);
 
   const crmFollowUps: DashboardActionCenterCrmFollowUp[] = crmFollowUpItems
     .filter((item) => item.status !== "done")
@@ -569,5 +455,9 @@ export async function getDashboardActionCenter(
       title: item.title,
     }));
 
-  return { approvals, crmFollowUps, discussions };
+  return {
+    approvals,
+    crmFollowUps,
+    discussions: discussions.slice(0, options.limit ?? 4),
+  };
 }

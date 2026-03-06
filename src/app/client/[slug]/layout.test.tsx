@@ -106,6 +106,16 @@ describe("ClientLayout navigation links", () => {
     expect(links[1]).toHaveAttribute("href", "/client/acme/crm");
   });
 
+  it("renders both desktop and mobile Conversations links for any client", async () => {
+    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    await renderLayout("acme");
+    openMobileNav();
+    const links = screen.getAllByRole("link", { name: "Conversations" });
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAttribute("href", "/client/acme/conversations");
+    expect(links[1]).toHaveAttribute("href", "/client/acme/conversations");
+  });
+
   it("renders children inside main content area", async () => {
     delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
     await renderLayout("acme");
