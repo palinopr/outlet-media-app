@@ -1,5 +1,6 @@
 import type { ClientSummary } from "@/app/admin/clients/data";
 import type { UserRow } from "@/app/admin/users/data";
+import { compareActionableInvitationState } from "@/features/invitations/sort";
 
 export interface PlatformKeyStatus {
   configured: boolean;
@@ -37,7 +38,12 @@ export function buildPlatformSettingsSummary(input: {
     .filter((user) => user.status === "invited")
     .sort(
       (left, right) =>
-        new Date(right.created_at).getTime() - new Date(left.created_at).getTime(),
+        compareActionableInvitationState(
+          left.invite_status,
+          left.created_at,
+          right.invite_status,
+          right.created_at,
+        ),
     )
     .slice(0, 5);
   const pendingInviteCount = input.users.filter(

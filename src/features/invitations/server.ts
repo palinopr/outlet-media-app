@@ -1,4 +1,5 @@
 import { clerkClient } from "@clerk/nextjs/server";
+import { compareActionableInvitationState } from "./sort";
 import type { ActionableInvitation, ActionableInvitationStatus } from "./types";
 
 interface InvitationLike {
@@ -44,7 +45,14 @@ export function buildActionableInvitations(
   }
 
   return [...bestByEmail.values()]
-    .sort((left, right) => right.createdAt - left.createdAt)
+    .sort((left, right) =>
+      compareActionableInvitationState(
+        left.status as ActionableInvitationStatus,
+        left.createdAt,
+        right.status as ActionableInvitationStatus,
+        right.createdAt,
+      ),
+    )
     .map((invitation) => {
       const metadata = invitation.publicMetadata ?? {};
       return {

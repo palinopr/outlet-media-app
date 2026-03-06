@@ -63,4 +63,36 @@ describe("buildActionableInvitations", () => {
     expect(invitations).toHaveLength(1);
     expect(invitations[0]?.email).toBe("keep@example.com");
   });
+
+  it("prioritizes pending invites ahead of expired cleanup", () => {
+    const invitations = buildActionableInvitations([
+      {
+        createdAt: Date.parse("2026-03-04T00:00:00.000Z"),
+        emailAddress: "expired@example.com",
+        id: "inv_expired",
+        publicMetadata: { client_slug: "zamora" },
+        status: "expired",
+      },
+      {
+        createdAt: Date.parse("2026-03-02T00:00:00.000Z"),
+        emailAddress: "older-pending@example.com",
+        id: "inv_pending_older",
+        publicMetadata: { client_slug: "zamora" },
+        status: "pending",
+      },
+      {
+        createdAt: Date.parse("2026-03-03T00:00:00.000Z"),
+        emailAddress: "newer-pending@example.com",
+        id: "inv_pending_newer",
+        publicMetadata: { client_slug: "zamora" },
+        status: "pending",
+      },
+    ]);
+
+    expect(invitations.map((invitation) => invitation.id)).toEqual([
+      "inv_pending_newer",
+      "inv_pending_older",
+      "inv_expired",
+    ]);
+  });
 });

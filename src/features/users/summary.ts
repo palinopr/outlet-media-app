@@ -1,5 +1,6 @@
 import type { ClientSummary } from "@/app/admin/clients/data";
 import type { UserRow } from "@/app/admin/users/data";
+import { compareActionableInvitationState } from "@/features/invitations/sort";
 
 export interface UsersAccessSummary {
   clientsNeedingCoverage: ClientSummary[];
@@ -11,6 +12,15 @@ export interface UsersAccessSummary {
 
 function compareCreatedAtDesc(left: { created_at?: string | null }, right: { created_at?: string | null }) {
   return new Date(right.created_at ?? 0).getTime() - new Date(left.created_at ?? 0).getTime();
+}
+
+function compareAccessInvitePriority(left: UserRow, right: UserRow) {
+  return compareActionableInvitationState(
+    left.invite_status,
+    left.created_at,
+    right.invite_status,
+    right.created_at,
+  );
 }
 
 function compareClientCoverage(left: ClientSummary, right: ClientSummary) {
@@ -25,7 +35,7 @@ export function buildUsersAccessSummary(
 ): UsersAccessSummary {
   const accessInvites = users
     .filter((user) => user.status === "invited")
-    .sort(compareCreatedAtDesc)
+    .sort(compareAccessInvitePriority)
     .slice(0, 5);
   const pendingInviteCount = users.filter(
     (user) => user.status === "invited" && user.invite_status !== "expired",
