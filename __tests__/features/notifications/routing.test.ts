@@ -49,6 +49,20 @@ describe("buildNotificationHref", () => {
         { viewer: "admin" },
       ),
     ).toBe("/admin/approvals");
+
+    expect(
+      buildNotificationHref(
+        makeNotification({ entityId: "comment_1", entityType: "campaign_comment" }),
+        { viewer: "admin" },
+      ),
+    ).toBe("/admin/conversations");
+
+    expect(
+      buildNotificationHref(
+        makeNotification({ entityId: "item_1", entityType: "asset_follow_up_item" }),
+        { viewer: "admin" },
+      ),
+    ).toBe("/admin/assets");
   });
 
   it("routes client notifications using the notification slug or fallback slug", () => {
@@ -69,6 +83,20 @@ describe("buildNotificationHref", () => {
         { fallbackClientSlug: "kybba", viewer: "client" },
       ),
     ).toBe("/client/kybba/crm/crm_1");
+
+    expect(
+      buildNotificationHref(
+        makeNotification({ entityId: "comment_1", entityType: "event_comment" }),
+        { viewer: "client" },
+      ),
+    ).toBe("/client/zamora/conversations");
+
+    expect(
+      buildNotificationHref(
+        makeNotification({ entityId: "item_1", entityType: "campaign_action_item" }),
+        { viewer: "client" },
+      ),
+    ).toBe("/client/zamora/campaigns");
   });
 
   it("falls back to workspace or updates routes when entity context is missing", () => {

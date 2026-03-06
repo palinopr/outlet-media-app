@@ -80,6 +80,7 @@ The short-term focus is:
 - Keep notifications summary-first and filterable, so the inbox reads like an operating queue instead of a flat message dump.
 - Treat non-workspace follow-up items like real assignments too, so campaign, CRM, asset, and event assignees get notified the same way workspace-task assignees do.
 - Keep shared client approval and discussion broadcasts assignment-scope-aware too, so limited client members are not even notified about campaigns, events, or assets outside their allowed scope.
+- Keep notification deep links app-aware for discussion and follow-up entity types too, so routed updates land in conversations, campaigns, CRM, assets, or events instead of dead-ending in generic pages.
 - Treat conversations as a first-class app surface on both admin and client, not only as dashboard widgets or detail-page side panels, so unresolved discussion can be managed in one place.
 - Keep admin conversations actionable too, so operators can create linked action or follow-up items directly from open campaign, CRM, asset, and event threads without detouring into each detail page first.
 - Reuse the shared conversations feature module anywhere open discussion is summarized, instead of re-querying each comment table per route and letting discussion logic drift.
