@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
-import { getMemberAccessForSlug } from "@/lib/member-access";
+import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   createSystemCampaignActionItem,
@@ -8,6 +8,12 @@ import {
   updateSystemCampaignActionItem,
 } from "@/features/campaign-action-items/server";
 import { getCurrentActor, logSystemEvent } from "@/features/system-events/server";
+import {
+  approvalCampaignId,
+  approvalEventId,
+  approvalIsWithinScope,
+  filterApprovalRequestsByScope,
+} from "./summary";
 
 export type ApprovalAudience = "admin" | "client" | "shared";
 export type ApprovalStatus = "approved" | "cancelled" | "pending" | "rejected";
@@ -54,6 +60,7 @@ interface ListApprovalRequestsOptions {
   entityId?: string | null;
   entityType?: string | null;
   limit?: number;
+  scope?: ScopeFilter | null;
   status?: ApprovalStatus | "all";
 }
 
@@ -73,9 +80,12 @@ interface ListAssetApprovalRequestsOptions {
   status?: ApprovalStatus | "all";
 }
 
-function approvalMatchesCampaign(approval: ApprovalRequest, campaignId: string) {
-  if (approval.entityType === "campaign" && approval.entityId === campaignId) return true;
-  return approval.metadata.campaignId === campaignId;
+export function approvalMatchesCampaign(approval: ApprovalRequest, campaignId: string) {
+  return approvalCampaignId(approval) === campaignId;
+}
+
+export function approvalMatchesEvent(approval: ApprovalRequest, eventId: string) {
+  return approvalEventId(approval) === eventId;
 }
 
 function approvalAssetId(approval: ApprovalRequest) {
@@ -301,10 +311,49 @@ export async function canAccessApprovalAudience(
   return !!(await getMemberAccessForSlug(userId, clientSlug));
 }
 
+export async function getApprovalRequestById(id: string): Promise<ApprovalRequest | null> {
+  if (!supabaseAdmin) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("approval_requests")
+    .select(
+      "id, created_at, updated_at, client_slug, audience, request_type, status, title, summary, entity_type, entity_id, page_id, task_id, requested_by_id, requested_by_name, decided_by_id, decided_by_name, decided_at, decision_note, metadata",
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[approvals] get by id failed:", error.message);
+    return null;
+  }
+
+  return data ? mapApproval(data as Record<string, unknown>) : null;
+}
+
+export async function canAccessApprovalRequest(userId: string, approval: ApprovalRequest) {
+  if (await isAdminUser()) return true;
+  if (approval.audience === "admin") return false;
+
+  const access = await getMemberAccessForSlug(userId, approval.clientSlug);
+  if (!access) return false;
+  if (access.scope !== "assigned") return true;
+
+  return approvalIsWithinScope(approval, {
+    allowedCampaignIds: access.allowedCampaignIds,
+    allowedEventIds: access.allowedEventIds,
+  });
+}
+
 export async function listApprovalRequests(
   options: ListApprovalRequestsOptions = {},
 ): Promise<ApprovalRequest[]> {
   if (!supabaseAdmin) return [];
+
+  const requestedLimit = options.limit ?? 8;
+  const shouldOverfetchForScope =
+    !!options.scope &&
+    ((options.scope.allowedCampaignIds?.length ?? 0) > 0 ||
+      (options.scope.allowedEventIds?.length ?? 0) > 0);
 
   let query = supabaseAdmin
     .from("approval_requests")
@@ -312,7 +361,7 @@ export async function listApprovalRequests(
       "id, created_at, updated_at, client_slug, audience, request_type, status, title, summary, entity_type, entity_id, page_id, task_id, requested_by_id, requested_by_name, decided_by_id, decided_by_name, decided_at, decision_note, metadata",
     )
     .order("created_at", { ascending: false })
-    .limit(options.limit ?? 8);
+    .limit(shouldOverfetchForScope ? Math.max(requestedLimit * 6, 24) : requestedLimit);
 
   if (options.clientSlug) {
     query = query.eq("client_slug", options.clientSlug);
@@ -344,7 +393,9 @@ export async function listApprovalRequests(
     return [];
   }
 
-  return (data ?? []).map((row) => mapApproval(row as Record<string, unknown>));
+  const approvals = (data ?? []).map((row) => mapApproval(row as Record<string, unknown>));
+  const filtered = options.scope ? filterApprovalRequestsByScope(approvals, options.scope) : approvals;
+  return filtered.slice(0, requestedLimit);
 }
 
 export async function listCampaignApprovalRequests(
@@ -354,6 +405,7 @@ export async function listCampaignApprovalRequests(
     audience: options.audience,
     clientSlug: options.clientSlug,
     limit: Math.max((options.limit ?? 8) * 6, 24),
+    scope: null,
     status: options.status,
   });
 
@@ -369,6 +421,7 @@ export async function listAssetApprovalRequests(
     audience: options.audience,
     clientSlug: options.clientSlug,
     limit: Math.max((options.limit ?? 8) * 6, 24),
+    scope: null,
     status: options.status,
   });
 

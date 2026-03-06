@@ -1,17 +1,24 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BadgeCheck, Clock3, XCircle } from "lucide-react";
-import { timeAgo } from "@/lib/formatters";
+import { slugToLabel, timeAgo } from "@/lib/formatters";
 import type { ApprovalRequest } from "@/features/approvals/server";
 
 interface WorkspaceApprovalsPanelProps {
+  assetHrefPrefix?: string;
+  campaignHrefPrefix?: string;
   approvals: ApprovalRequest[];
   canDecide: boolean;
+  crmHrefPrefix?: string;
   description?: string;
   emptyState?: string;
+  eventHrefPrefix?: string;
+  showClientSlug?: boolean;
   title?: string;
+  workspaceHrefPrefix?: string;
 }
 
 function statusTone(status: ApprovalRequest["status"]) {
@@ -38,12 +45,69 @@ function statusIcon(status: ApprovalRequest["status"]) {
   }
 }
 
+function metadataString(approval: ApprovalRequest, key: string) {
+  const value = approval.metadata[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function approvalContextHref(
+  approval: ApprovalRequest,
+  {
+    assetHrefPrefix,
+    campaignHrefPrefix,
+    crmHrefPrefix,
+    eventHrefPrefix,
+    workspaceHrefPrefix,
+  }: Pick<
+    WorkspaceApprovalsPanelProps,
+    "assetHrefPrefix" | "campaignHrefPrefix" | "crmHrefPrefix" | "eventHrefPrefix" | "workspaceHrefPrefix"
+  >,
+) {
+  if (assetHrefPrefix) {
+    const assetId =
+      (approval.entityType === "asset" && approval.entityId) || metadataString(approval, "assetId");
+    if (assetId) return `${assetHrefPrefix}/${assetId}`;
+  }
+
+  if (campaignHrefPrefix) {
+    const campaignId =
+      (approval.entityType === "campaign" && approval.entityId) ||
+      metadataString(approval, "campaignId");
+    if (campaignId) return `${campaignHrefPrefix}/${campaignId}`;
+  }
+
+  if (eventHrefPrefix) {
+    const eventId =
+      (approval.entityType === "event" && approval.entityId) || metadataString(approval, "eventId");
+    if (eventId) return `${eventHrefPrefix}/${eventId}`;
+  }
+
+  if (crmHrefPrefix) {
+    const contactId =
+      (approval.entityType === "crm_contact" && approval.entityId) ||
+      metadataString(approval, "crmContactId");
+    if (contactId) return `${crmHrefPrefix}/${contactId}`;
+  }
+
+  if (workspaceHrefPrefix && approval.pageId) {
+    return `${workspaceHrefPrefix}/${approval.pageId}`;
+  }
+
+  return null;
+}
+
 export function WorkspaceApprovalsPanel({
+  assetHrefPrefix,
+  campaignHrefPrefix,
   approvals,
   canDecide,
+  crmHrefPrefix,
   description = "Requests that need a clear yes or no to keep work moving.",
   emptyState = "No approvals are waiting right now.",
+  eventHrefPrefix,
+  showClientSlug = false,
   title = "Pending decisions",
+  workspaceHrefPrefix,
 }: WorkspaceApprovalsPanelProps) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -90,6 +154,13 @@ export function WorkspaceApprovalsPanel({
           {approvals.map((approval) => {
             const Icon = statusIcon(approval.status);
             const busy = isPending && pendingId === approval.id;
+            const contextHref = approvalContextHref(approval, {
+              assetHrefPrefix,
+              campaignHrefPrefix,
+              crmHrefPrefix,
+              eventHrefPrefix,
+              workspaceHrefPrefix,
+            });
 
             return (
               <div
@@ -106,6 +177,12 @@ export function WorkspaceApprovalsPanel({
                       <span>{approval.requestedByName ?? "Unknown"}</span>
                       <span>&middot;</span>
                       <span>{timeAgo(approval.createdAt)}</span>
+                      {showClientSlug ? (
+                        <>
+                          <span>&middot;</span>
+                          <span>{slugToLabel(approval.clientSlug)}</span>
+                        </>
+                      ) : null}
                       <span
                         className={`rounded-full border px-2 py-0.5 font-medium ${statusTone(approval.status)}`}
                       >
@@ -119,6 +196,17 @@ export function WorkspaceApprovalsPanel({
 
                     {approval.summary ? (
                       <p className="mt-1 text-sm text-[#787774]">{approval.summary}</p>
+                    ) : null}
+
+                    {contextHref ? (
+                      <div className="mt-3">
+                        <Link
+                          href={contextHref}
+                          className="inline-flex items-center rounded-full border border-[#d8d1c5] bg-white px-3 py-1.5 text-xs font-medium text-[#6f6a63] transition-colors hover:bg-[#f7f5f1] hover:text-[#2f2f2f]"
+                        >
+                          Open context
+                        </Link>
+                      </div>
                     ) : null}
 
                     {canDecide && approval.status === "pending" ? (

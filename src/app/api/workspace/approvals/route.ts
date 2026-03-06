@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { CreateApprovalRequestSchema } from "@/lib/api-schemas";
+import { getMemberAccessForSlug } from "@/lib/member-access";
 import {
   canAccessApprovalAudience,
   createApprovalRequest,
@@ -20,20 +21,27 @@ export async function GET(request: NextRequest) {
   const isAdmin = isAdminRole((user?.publicMetadata as { role?: string } | undefined)?.role);
   const clientSlug = request.nextUrl.searchParams.get("client_slug");
   const status = request.nextUrl.searchParams.get("status");
+  const access = !isAdmin && clientSlug ? await getMemberAccessForSlug(userId, clientSlug) : null;
 
   if (!isAdmin && !clientSlug) {
     return apiError("client_slug is required", 400);
   }
 
   if (!isAdmin && clientSlug) {
-    const allowed = await canAccessApprovalAudience(userId, clientSlug, "shared");
-    if (!allowed) return apiError("Forbidden", 403);
+    if (!access) return apiError("Forbidden", 403);
   }
 
   const approvals = await listApprovalRequests({
     audience: isAdmin ? "all" : "shared",
     clientSlug,
     limit: 20,
+    scope:
+      access?.scope === "assigned"
+        ? {
+            allowedCampaignIds: access.allowedCampaignIds,
+            allowedEventIds: access.allowedEventIds,
+          }
+        : null,
     status:
       status === "approved" ||
       status === "rejected" ||

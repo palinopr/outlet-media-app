@@ -27,6 +27,7 @@ export async function getClientUpdatesCenter(
         audience: "shared",
         clientSlug,
         limit: 6,
+        scope,
         status: "pending",
       }),
       getDashboardAssetSummary({

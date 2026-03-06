@@ -22,6 +22,8 @@ The short-term focus is:
 - Record meaningful system actions as structured events.
 - Use `system_events` as the shared activity backbone instead of creating separate ad hoc logs per feature.
 - Use `approval_requests` for explicit decision flows with audience-aware visibility (`admin`, `client`, `shared`).
+- Treat approvals as a first-class app surface with dedicated admin/client routes instead of only embedding approval panels inside other pages.
+- Keep approval visibility scope-aware for assigned client members, so limited members only see campaign/event-linked approvals that match their allowed scope when context exists.
 - Use campaign-native action items for campaign next steps instead of forcing campaign operations into only the generic workspace task board.
 - Design agents as bounded workers attached to those events.
 - Keep admin and client experiences on the same backbone with different permissions and visibility.
