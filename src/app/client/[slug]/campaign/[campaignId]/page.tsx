@@ -42,12 +42,12 @@ interface Props {
 
 export default async function CampaignDetailPage({ params, searchParams }: Props) {
   const { slug, campaignId } = await params;
-  const { userId } = await requireClientAccess(slug, "meta_ads");
+  const { scope, userId } = await requireClientAccess(slug, "meta_ads");
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam);
 
   const [data, events, approvals, actionItems, comments, agentOutcomes] = await Promise.all([
-    getCampaignDetail(slug, campaignId, range),
+    getCampaignDetail(slug, campaignId, range, scope),
     listCampaignSystemEvents({
       audience: "shared",
       clientSlug: slug,

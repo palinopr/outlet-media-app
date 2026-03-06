@@ -1,6 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import type { ScopeFilter } from "@/lib/member-access";
 import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
 import { metaGet, metaInsightsUrl, metaUrl } from "@/lib/meta-api";
+import { allowsCampaignInScope } from "@/features/client-portal/scope";
 import type { CampaignCard, CampaignDetailData, AgeGenderBreakdown, PlacementBreakdown, AdCard, HourlyBreakdown, DailyPoint } from "../../types";
 import { DAY_LABELS } from "../../types";
 import { generateRecommendations } from "../../lib";
@@ -294,7 +296,25 @@ export async function getCampaignDetail(
   slug: string,
   campaignId: string,
   range: DateRange,
+  scope?: ScopeFilter,
 ): Promise<CampaignDetailData | null> {
+  if (!allowsCampaignInScope(scope, campaignId)) {
+    return null;
+  }
+
+  if (!supabaseAdmin) return null;
+
+  const { data: row } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select(
+      "campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time",
+    )
+    .eq("campaign_id", campaignId)
+    .eq("client_slug", slug)
+    .maybeSingle();
+
+  if (!row) return null;
+
   const creds = getMetaCreds();
 
   // Try Meta API first (parallel calls for speed)
@@ -357,19 +377,6 @@ export async function getCampaignDetail(
   }
 
   // Fallback: Supabase (no breakdowns or ads available)
-  if (!supabaseAdmin) return null;
-
-  const { data: row } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select(
-      "campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time",
-    )
-    .eq("campaign_id", campaignId)
-    .eq("client_slug", slug)
-    .single();
-
-  if (!row) return null;
-
   const spend = (row.spend ?? 0) / 100;
   const roas = row.roas != null ? Number(row.roas) : null;
 
