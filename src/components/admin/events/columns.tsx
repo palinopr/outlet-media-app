@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { createSelectColumn } from "@/components/admin/data-table/select-column";
 import { ExternalLink } from "lucide-react";
@@ -44,7 +45,12 @@ export function getEventColumns(opts: EventColumnsOptions): ColumnDef<TmEventRow
       header: ({ column }) => <ColumnHeader column={column} title="Artist / Event" />,
       cell: ({ row }) => (
         <div>
-          <p className="text-sm font-medium">{row.original.artist}</p>
+          <Link
+            href={`/admin/events/${row.original.id}`}
+            className="text-sm font-medium text-foreground transition-colors hover:text-primary"
+          >
+            {row.original.artist}
+          </Link>
           <p className="text-xs text-muted-foreground">{row.original.name}</p>
         </div>
       ),

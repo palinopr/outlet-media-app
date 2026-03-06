@@ -12,6 +12,19 @@ function eventVisibility(clientSlug: string | null | undefined) {
   return clientSlug ? "shared" : "admin_only";
 }
 
+function revalidateEventPaths(eventId: string, clientSlugs: Array<string | null | undefined>) {
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/events");
+  revalidatePath(`/admin/events/${eventId}`);
+
+  const uniqueClientSlugs = [...new Set(clientSlugs.filter((slug): slug is string => !!slug))];
+  for (const clientSlug of uniqueClientSlugs) {
+    revalidatePath(`/client/${clientSlug}`);
+    revalidatePath(`/client/${clientSlug}/events`);
+    revalidatePath(`/client/${clientSlug}/event/${eventId}`);
+  }
+}
+
 const UpdateEventStatusSchema = z.object({
   eventId: z.string().min(1),
   status: z.string().min(1),
@@ -55,7 +68,7 @@ export async function updateEventStatus(formData: { eventId: string; status: str
       to: parsed.status,
     },
   });
-  revalidatePath("/admin/events");
+  revalidateEventPaths(parsed.eventId, [old?.client_slug]);
 }
 
 const AssignEventClientSchema = z.object({
@@ -101,7 +114,7 @@ export async function assignEventClient(formData: { eventId: string; clientSlug:
       to: parsed.clientSlug,
     },
   });
-  revalidatePath("/admin/events");
+  revalidateEventPaths(parsed.eventId, [old?.client_slug, parsed.clientSlug]);
 }
 
 const UpdateTicketsSchema = z.object({
@@ -244,5 +257,5 @@ export async function updateEventTickets(formData: { eventId: string; ticketsSol
       },
     },
   });
-  revalidatePath("/admin/events");
+  revalidateEventPaths(parsed.eventId, [old?.client_slug]);
 }
