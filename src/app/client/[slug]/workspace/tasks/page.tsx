@@ -10,12 +10,19 @@ interface Props {
 
 export default async function ClientTasksPage({ params }: Props) {
   const { slug } = await params;
-  const { scope } = await requireClientAccess(slug, "workspace");
-  const [tasks, workQueue] = await Promise.all([
+  const { scope, userId } = await requireClientAccess(slug, "workspace");
+  const [tasks, workQueue, assignedWorkQueue] = await Promise.all([
     getWorkspaceTasks(slug),
     getWorkQueue({
       clientSlug: slug,
       limit: 10,
+      mode: "client",
+      scope,
+    }),
+    getWorkQueue({
+      assigneeId: userId,
+      clientSlug: slug,
+      limit: 6,
       mode: "client",
       scope,
     }),
@@ -30,12 +37,22 @@ export default async function ClientTasksPage({ params }: Props) {
           Track the shared next steps across campaigns, CRM, events, and creative review.
         </p>
       </div>
-      <WorkQueueSection
-        description="Shared work that needs attention before it falls back into the generic task board."
-        summary={workQueue}
-        title="Shared work queue"
-        variant="client"
-      />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <WorkQueueSection
+          description="The shared cross-app work already assigned to you."
+          emptyState="Nothing is directly assigned to you right now."
+          showMetrics={false}
+          summary={assignedWorkQueue}
+          title="Assigned to you"
+          variant="client"
+        />
+        <WorkQueueSection
+          description="Shared work that needs attention before it falls back into the generic task board."
+          summary={workQueue}
+          title="Shared work queue"
+          variant="client"
+        />
+      </div>
       <TaskBoard tasks={tasks} clientSlug={slug} />
     </div>
   );
