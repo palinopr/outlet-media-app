@@ -137,17 +137,25 @@ function approvalTriagePrompt(approval: ApprovalRequest) {
     .join("\n");
 }
 
-async function syncApprovalCampaignActionItem(
-  approval: ApprovalRequest,
-  actor: Awaited<ReturnType<typeof getCurrentActor>>,
-  nextStatus?: "done" | "review" | "todo",
-) {
+function approvalCampaignContext(approval: ApprovalRequest) {
   const campaignId =
     approval.entityType === "campaign"
       ? approval.entityId
       : typeof approval.metadata.campaignId === "string"
         ? approval.metadata.campaignId
         : null;
+  const campaignName =
+    typeof approval.metadata.campaignName === "string" ? approval.metadata.campaignName : null;
+
+  return { campaignId, campaignName };
+}
+
+async function syncApprovalCampaignActionItem(
+  approval: ApprovalRequest,
+  actor: Awaited<ReturnType<typeof getCurrentActor>>,
+  nextStatus?: "done" | "review" | "todo",
+) {
+  const { campaignId } = approvalCampaignContext(approval);
 
   if (!campaignId) return;
 
@@ -187,6 +195,81 @@ async function syncApprovalCampaignActionItem(
     priority: nextStatus === "todo" ? "high" : existing.priority,
     status: nextStatus,
     visibility,
+  });
+}
+
+function shouldEnqueueApprovedCreativeHandoff(approval: ApprovalRequest, status: ApprovalStatus) {
+  if (status !== "approved") return false;
+  if (
+    approval.requestType !== "asset_import_review" &&
+    approval.requestType !== "asset_review"
+  ) {
+    return false;
+  }
+
+  return !!approvalCampaignContext(approval).campaignId;
+}
+
+function approvedCreativeHandoffPrompt(approval: ApprovalRequest) {
+  const { campaignId, campaignName } = approvalCampaignContext(approval);
+  const assetName =
+    typeof approval.metadata.assetName === "string" ? approval.metadata.assetName : null;
+  const importedCount =
+    typeof approval.metadata.imported === "number" ? approval.metadata.imported : null;
+
+  return [
+    `Approved campaign creative is ready for Meta review.`,
+    `Client: ${approval.clientSlug}`,
+    campaignName ? `Campaign: ${campaignName}` : null,
+    campaignId ? `Campaign ID: ${campaignId}` : null,
+    `Approval ID: ${approval.id}`,
+    `Request type: ${approval.requestType}`,
+    assetName ? `Asset: ${assetName}` : null,
+    importedCount != null
+      ? `Imported assets approved: ${importedCount}`
+      : null,
+    approval.summary ? `Summary: ${approval.summary}` : null,
+    `Decide whether this approved creative should trigger a Meta draft or campaign update.`,
+    `Return a short operational brief with:`,
+    `1. recommended next Meta action`,
+    `2. missing creative/copy/spec information`,
+    `3. any blockers before launch or update`,
+    `Keep it concise and execution-focused.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+async function maybeEnqueueApprovedCreativeHandoff(approval: ApprovalRequest) {
+  if (!shouldEnqueueApprovedCreativeHandoff(approval, approval.status)) return;
+
+  const { campaignId, campaignName } = approvalCampaignContext(approval);
+  const taskId = await enqueueExternalAgentTask({
+    action: "draft-meta-creative-handoff",
+    prompt: approvedCreativeHandoffPrompt(approval),
+    toAgent: "meta-ads",
+  });
+
+  if (!taskId) return;
+
+  await logSystemEvent({
+    eventName: "agent_action_requested",
+    actorType: "system",
+    clientSlug: approval.clientSlug,
+    visibility: "admin_only",
+    entityType: "agent_task",
+    entityId: taskId,
+    summary: `Queued Meta creative handoff for "${approval.title}"`,
+    detail: "Meta ads agent will review the approved creative and prepare the next recommendation.",
+    metadata: {
+      approvalId: approval.id,
+      campaignId,
+      campaignName,
+      requestType: approval.requestType,
+      taskId,
+      toAgent: "meta-ads",
+      ...approval.metadata,
+    },
   });
 }
 
@@ -300,14 +383,7 @@ export async function createApprovalRequest(
   }
 
   const approval = mapApproval(data as Record<string, unknown>);
-  const campaignId =
-    approval.entityType === "campaign"
-      ? approval.entityId
-      : typeof approval.metadata.campaignId === "string"
-        ? approval.metadata.campaignId
-        : null;
-  const campaignName =
-    typeof approval.metadata.campaignName === "string" ? approval.metadata.campaignName : null;
+  const { campaignId, campaignName } = approvalCampaignContext(approval);
 
   await logSystemEvent({
     eventName: "approval_requested",
@@ -407,14 +483,7 @@ export async function resolveApprovalRequest(
   }
 
   const approval = mapApproval(data as Record<string, unknown>);
-  const campaignId =
-    approval.entityType === "campaign"
-      ? approval.entityId
-      : typeof approval.metadata.campaignId === "string"
-        ? approval.metadata.campaignId
-        : null;
-  const campaignName =
-    typeof approval.metadata.campaignName === "string" ? approval.metadata.campaignName : null;
+  const { campaignId, campaignName } = approvalCampaignContext(approval);
 
   const assetId = approvalAssetId(approval);
 
@@ -465,6 +534,7 @@ export async function resolveApprovalRequest(
     actor,
     input.status === "rejected" ? "todo" : "done",
   );
+  await maybeEnqueueApprovedCreativeHandoff(approval);
 
   return approval;
 }

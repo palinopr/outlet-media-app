@@ -88,7 +88,7 @@ Autonomous actions are safest when they are:
 - `asset_uploaded`
 - creative ops agent checks formatting/spec readiness
 - if campaign linkage exists, notify campaign owner
-- if ready for Meta, create `agent_action_requested`
+- once the linked approval is approved, create `agent_action_requested` for the Meta agent
 - Meta agent drafts recommended next step
 - approval requested if a live change is needed
 - activity feed updated
