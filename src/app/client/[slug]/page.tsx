@@ -17,11 +17,13 @@ import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { DashboardAssetsSection } from "@/components/dashboard/dashboard-assets-section";
 import { DashboardCrmSection } from "@/components/dashboard/dashboard-crm-section";
+import { EventOperationsSection } from "@/components/events/event-operations-section";
 import {
   getDashboardActionCenter,
   getDashboardAssetSummary,
   getDashboardOpsSummary,
 } from "@/features/dashboard/server";
+import { getEventOperationsSummary } from "@/features/events/server";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
@@ -63,7 +65,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const range = parseRange(rangeParam);
 
   const { scope, userId } = await requireClientAccess(slug);
-  const [dashboardData, opsSummary, actionCenter, assetSummary, agentOutcomes, assignedWorkQueue, enabledServices, crm, crmFollowUpItems] = await Promise.all([
+  const [dashboardData, opsSummary, actionCenter, assetSummary, eventOperations, agentOutcomes, assignedWorkQueue, enabledServices, crm, crmFollowUpItems] = await Promise.all([
     getData(slug, range, scope),
     getDashboardOpsSummary({
       clientSlug: slug,
@@ -81,6 +83,12 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
     getDashboardAssetSummary({
       clientSlug: slug,
       limit: 4,
+      scope,
+    }),
+    getEventOperationsSummary({
+      clientSlug: slug,
+      limit: 5,
+      mode: "client",
       scope,
     }),
     listAgentOutcomes({
@@ -291,6 +299,14 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           variant="client"
         />
       ) : null}
+
+      <EventOperationsSection
+        description="A simple events readout for what needs promotion follow-through, responses, or ticketing attention."
+        hrefPrefix={`/client/${slug}/event`}
+        summary={eventOperations}
+        title="Event snapshot"
+        variant="client"
+      />
 
       <div className="grid gap-6 xl:grid-cols-2">
         <WorkQueueSection

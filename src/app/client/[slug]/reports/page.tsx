@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
+import { EventOperationsSection } from "@/components/events/event-operations-section";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { getCampaignStatusCfg, buildTrendData } from "../lib";
@@ -201,6 +202,14 @@ export default async function ReportsPage({ params }: Props) {
         eventHrefPrefix={`/client/${slug}/event`}
         outcomes={workflow.agentOutcomes}
         title="Agent follow-through"
+        variant="client"
+      />
+
+      <EventOperationsSection
+        description="Keep the reporting surface connected to show-level follow-through, open event threads, and ticketing updates."
+        hrefPrefix={`/client/${slug}/event`}
+        summary={workflow.eventOperations}
+        title="Event reporting pressure"
         variant="client"
       />
 

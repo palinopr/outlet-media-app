@@ -12,6 +12,10 @@ import {
 } from "@/features/dashboard/server";
 import type { DashboardOpsSummary, DashboardSummaryMode } from "@/features/dashboard/summary";
 import {
+  getEventOperationsSummary,
+} from "@/features/events/server";
+import type { EventOperationsSummary } from "@/features/events/summary";
+import {
   buildReportsSummary,
   type ReportsCampaignCard,
   type ReportsEventCard,
@@ -104,6 +108,7 @@ interface GetReportsWorkflowDataOptions {
 export interface ReportsWorkflowData {
   actionCenter: DashboardActionCenter;
   agentOutcomes: AgentOutcomeView[];
+  eventOperations: EventOperationsSummary;
   opsSummary: DashboardOpsSummary;
 }
 
@@ -165,7 +170,7 @@ export async function getReportsWorkflowData(
   const audience = options.mode === "client" ? "shared" : "all";
   const limit = options.limit ?? 4;
 
-  const [opsSummary, actionCenter, agentOutcomes] = await Promise.all([
+  const [opsSummary, actionCenter, agentOutcomes, eventOperations] = await Promise.all([
     getDashboardOpsSummary({
       clientSlug: options.clientSlug ?? undefined,
       limit: Math.max(limit, 5),
@@ -186,11 +191,18 @@ export async function getReportsWorkflowData(
       scopeCampaignIds,
       scopeEventIds,
     }),
+    getEventOperationsSummary({
+      clientSlug: options.clientSlug ?? undefined,
+      limit: Math.max(limit, 5),
+      mode: options.mode,
+      scope: options.scope,
+    }),
   ]);
 
   return {
     actionCenter,
     agentOutcomes,
+    eventOperations,
     opsSummary,
   };
 }

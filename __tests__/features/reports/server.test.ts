@@ -5,11 +5,16 @@ vi.mock("@/features/dashboard/server", () => ({
   getDashboardOpsSummary: vi.fn(),
 }));
 
+vi.mock("@/features/events/server", () => ({
+  getEventOperationsSummary: vi.fn(),
+}));
+
 vi.mock("@/features/agent-outcomes/server", () => ({
   listAgentOutcomes: vi.fn(),
 }));
 
 import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
+import { getEventOperationsSummary } from "@/features/events/server";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getReportsWorkflowData } from "@/features/reports/server";
 
@@ -26,6 +31,11 @@ describe("getReportsWorkflowData", () => {
       approvals: [],
       crmFollowUps: [],
       discussions: [],
+    });
+    vi.mocked(getEventOperationsSummary).mockResolvedValue({
+      attentionEvents: [],
+      eventsNeedingAttention: 0,
+      metrics: [],
     });
     vi.mocked(listAgentOutcomes).mockResolvedValue([]);
   });
@@ -61,6 +71,15 @@ describe("getReportsWorkflowData", () => {
       scopeCampaignIds: ["cmp_1"],
       scopeEventIds: ["evt_1"],
     });
+    expect(getEventOperationsSummary).toHaveBeenCalledWith({
+      clientSlug: "zamora",
+      limit: 5,
+      mode: "client",
+      scope: {
+        allowedCampaignIds: ["cmp_1"],
+        allowedEventIds: ["evt_1"],
+      },
+    });
   });
 
   it("uses admin audience for admin report surfaces", async () => {
@@ -76,6 +95,12 @@ describe("getReportsWorkflowData", () => {
       limit: 3,
       scopeCampaignIds: null,
       scopeEventIds: null,
+    });
+    expect(getEventOperationsSummary).toHaveBeenCalledWith({
+      clientSlug: "zamora",
+      limit: 5,
+      mode: "admin",
+      scope: undefined,
     });
   });
 });

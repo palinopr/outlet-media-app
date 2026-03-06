@@ -23,11 +23,13 @@ import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { DashboardAssetsSection } from "@/components/dashboard/dashboard-assets-section";
 import { DashboardCrmSection } from "@/components/dashboard/dashboard-crm-section";
+import { EventOperationsSection } from "@/components/events/event-operations-section";
 import {
   getDashboardActionCenter,
   getDashboardAssetSummary,
   getDashboardOpsSummary,
 } from "@/features/dashboard/server";
+import { getEventOperationsSummary } from "@/features/events/server";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
@@ -60,6 +62,7 @@ export default async function AdminDashboard() {
     opsSummary,
     actionCenter,
     assetSummary,
+    eventOperations,
     agentOutcomes,
     assignedWorkQueue,
     crm,
@@ -69,6 +72,7 @@ export default async function AdminDashboard() {
     getDashboardOpsSummary({ mode: "admin", limit: 6 }),
     getDashboardActionCenter({ mode: "admin", limit: 4 }),
     getDashboardAssetSummary({ limit: 4 }),
+    getEventOperationsSummary({ limit: 5, mode: "admin" }),
     listAgentOutcomes({ audience: "all", limit: 4 }),
     userId ? getWorkQueue({ assigneeId: userId, limit: 4, mode: "admin" }) : Promise.resolve({ items: [], metrics: [] }),
     getCrmOverview({ audience: "all" }),
@@ -172,6 +176,15 @@ export default async function AdminDashboard() {
         title="CRM snapshot"
         description="Hot contacts and due follow-ups on the same dashboard as campaign work."
         emptyState="No CRM contacts are active yet. Add contacts in the CRM app to start tracking follow-ups."
+        variant="admin"
+      />
+
+      <EventOperationsSection
+        description="A summary-first readout of which shows need promotion follow-through, responses, or ticketing attention."
+        hrefPrefix="/admin/events"
+        showClientSlug
+        summary={eventOperations}
+        title="Event snapshot"
         variant="admin"
       />
 

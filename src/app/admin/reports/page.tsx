@@ -13,7 +13,6 @@ import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { EventOperationsSection } from "@/components/events/event-operations-section";
-import { getEventOperationsSummary } from "@/features/events/server";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { getReportsData, getReportsWorkflowData } from "@/features/reports/server";
 import { fmtNum, fmtUsd, roasColor, slugToLabel } from "@/lib/formatters";
@@ -37,16 +36,11 @@ export default async function AdminReportsPage({ searchParams }: Props) {
   const { client } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
 
-  const [reports, workflow, eventOps] = await Promise.all([
+  const [reports, workflow] = await Promise.all([
     getReportsData({ clientSlug }),
     getReportsWorkflowData({
       clientSlug,
       limit: 4,
-      mode: "admin",
-    }),
-    getEventOperationsSummary({
-      clientSlug,
-      limit: 5,
       mode: "admin",
     }),
   ]);
@@ -234,7 +228,7 @@ export default async function AdminReportsPage({ searchParams }: Props) {
             description="Event-level pressure on the reporting surface, so operators can connect performance and show execution."
             hrefPrefix="/admin/events"
             showClientSlug
-            summary={eventOps}
+            summary={workflow.eventOperations}
             title="Event reporting pressure"
             variant="admin"
           />
