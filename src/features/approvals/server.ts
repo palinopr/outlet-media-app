@@ -2,6 +2,11 @@ import { currentUser } from "@clerk/nextjs/server";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { getMemberAccessForSlug } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
+import {
+  createSystemCampaignActionItem,
+  findCampaignActionItemBySource,
+  updateSystemCampaignActionItem,
+} from "@/features/campaign-action-items/server";
 import { getCurrentActor, logSystemEvent } from "@/features/system-events/server";
 
 export type ApprovalAudience = "admin" | "client" | "shared";
@@ -130,6 +135,59 @@ function approvalTriagePrompt(approval: ApprovalRequest) {
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+async function syncApprovalCampaignActionItem(
+  approval: ApprovalRequest,
+  actor: Awaited<ReturnType<typeof getCurrentActor>>,
+  nextStatus?: "done" | "review" | "todo",
+) {
+  const campaignId =
+    approval.entityType === "campaign"
+      ? approval.entityId
+      : typeof approval.metadata.campaignId === "string"
+        ? approval.metadata.campaignId
+        : null;
+
+  if (!campaignId) return;
+
+  const visibility = approval.audience === "admin" ? "admin_only" : "shared";
+  const existing = await findCampaignActionItemBySource("approval_request", approval.id);
+
+  if (!existing) {
+    if (!nextStatus) return;
+
+    await createSystemCampaignActionItem({
+      actorId: actor.actorId,
+      actorName: actor.actorName,
+      actorType: actor.actorType,
+      campaignId,
+      clientSlug: approval.clientSlug,
+      description: approval.summary,
+      priority:
+        approval.requestType === "asset_import_review" || approval.requestType === "asset_review"
+          ? "high"
+          : "medium",
+      sourceEntityId: approval.id,
+      sourceEntityType: "approval_request",
+      status: nextStatus,
+      title: `Review approval: ${approval.title}`,
+      visibility,
+    });
+    return;
+  }
+
+  if (!nextStatus) return;
+
+  await updateSystemCampaignActionItem({
+    actorId: actor.actorId,
+    actorName: actor.actorName,
+    actorType: actor.actorType,
+    itemId: existing.id,
+    priority: nextStatus === "todo" ? "high" : existing.priority,
+    status: nextStatus,
+    visibility,
+  });
 }
 
 async function isAdminUser() {
@@ -301,6 +359,8 @@ export async function createApprovalRequest(
     }
   }
 
+  await syncApprovalCampaignActionItem(approval, actor, "review");
+
   return approval;
 }
 
@@ -399,6 +459,12 @@ export async function resolveApprovalRequest(
       ...approval.metadata,
     },
   });
+
+  await syncApprovalCampaignActionItem(
+    approval,
+    actor,
+    input.status === "rejected" ? "todo" : "done",
+  );
 
   return approval;
 }

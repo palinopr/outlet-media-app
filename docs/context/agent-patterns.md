@@ -30,6 +30,14 @@ Team-safe capabilities include:
 - ticketing operations
 - client-facing collaboration within assigned scope
 
+Owner ingress should prefer webhooks over polling.
+
+Examples:
+- Telegram should terminate at a public webhook in the app.
+- The webhook should validate the request, enqueue an `agent_tasks` job, and return immediately.
+- Agent workers should consume that task and send replies back through the provider API.
+- Polling should be treated as a temporary fallback, not the steady-state architecture.
+
 ## Preferred Agent Loop
 
 1. Observe an event or explicit user request
@@ -88,6 +96,7 @@ Autonomous actions are safest when they are:
 ### Approval Triage
 
 - `approval_requested`
+- create or update the linked campaign action item when the approval belongs to a campaign
 - if the request is internal operational review, queue a bounded `web-admin` task
 - assistant prepares a concise brief or next-step recommendation
 - humans still decide through `approval_requests`
