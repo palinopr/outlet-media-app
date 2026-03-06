@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authGuard, apiError } from "@/lib/api-helpers";
 import {
   canAccessClientAssets,
+  getClientAssetScope,
   listAssets,
   uploadAssetFile,
 } from "@/features/assets/server";
@@ -21,7 +22,8 @@ export async function GET(req: NextRequest) {
   if (!allowed) return apiError("Forbidden", 403);
 
   try {
-    const assets = await listAssets(slug);
+    const scope = await getClientAssetScope(userId, slug);
+    const assets = await listAssets(slug, scope);
     return NextResponse.json({ assets });
   } catch (err) {
     return apiError(

@@ -3,7 +3,8 @@ import { authGuard, apiError } from "@/lib/api-helpers";
 import {
   canAccessClientAssets,
   deleteAssetById,
-  getAssetClientSlug,
+  getAssetOperatingData,
+  getClientAssetScope,
 } from "@/features/assets/server";
 import { logSystemEvent } from "@/features/system-events/server";
 
@@ -16,11 +17,16 @@ export async function DELETE(
 
   const { id } = await params;
 
-  const clientSlug = await getAssetClientSlug(id);
-  if (!clientSlug) return apiError("Asset not found", 404);
+  const asset = await getAssetOperatingData(id);
+  if (!asset) return apiError("Asset not found", 404);
+  const clientSlug = asset.asset.client_slug;
 
   const allowed = await canAccessClientAssets(userId, clientSlug);
   if (!allowed) return apiError("Forbidden", 403);
+
+  const scope = await getClientAssetScope(userId, clientSlug);
+  const scopedAsset = await getAssetOperatingData(id, [], scope);
+  if (!scopedAsset) return apiError("Asset not found", 404);
 
   try {
     const deleted = await deleteAssetById(id);

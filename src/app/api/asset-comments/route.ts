@@ -9,7 +9,11 @@ import {
   type AssetCommentVisibility,
   listAssetComments,
 } from "@/features/asset-comments/server";
-import { getAssetOperatingData, getAssetRecordById } from "@/features/assets/server";
+import {
+  getAssetOperatingData,
+  getAssetRecordById,
+  getClientAssetScope,
+} from "@/features/assets/server";
 import { logSystemEvent } from "@/features/system-events/server";
 
 interface AssetCommentRow {
@@ -94,7 +98,10 @@ export async function GET(request: NextRequest) {
   const access = await canAccessAssetComments(userId, clientSlug);
   if (!access.allowed) return apiError("Forbidden", 403);
 
-  const asset = await getAssetRecordById(assetId);
+  const scope = access.isAdmin ? undefined : await getClientAssetScope(userId, clientSlug);
+  const asset = access.isAdmin
+    ? await getAssetRecordById(assetId)
+    : (await getAssetOperatingData(assetId, [], scope))?.asset ?? null;
   if (!asset || asset.client_slug !== clientSlug) {
     return apiError("Asset not found", 404);
   }
@@ -122,7 +129,19 @@ export async function POST(request: NextRequest) {
   const access = await canAccessAssetComments(userId, body.client_slug, body.visibility);
   if (!access.allowed) return apiError("Forbidden", 403);
 
-  const assetContext = await getAssetContext(body.asset_id);
+  const scope = access.isAdmin
+    ? undefined
+    : await getClientAssetScope(userId, body.client_slug);
+  const assetContext = access.isAdmin
+    ? await getAssetContext(body.asset_id)
+    : await getAssetOperatingData(body.asset_id, [], scope).then((data) =>
+        data
+          ? {
+              asset: data.asset,
+              primaryCampaign: data.linkedCampaigns[0] ?? null,
+            }
+          : null,
+      );
   if (!assetContext || assetContext.asset.client_slug !== body.client_slug) {
     return apiError("Asset not found", 404);
   }
@@ -266,6 +285,14 @@ export async function PATCH(request: NextRequest) {
   );
   if (!access.allowed) return apiError("Forbidden", 403);
 
+  const scope = access.isAdmin
+    ? undefined
+    : await getClientAssetScope(userId, existing.client_slug as string);
+  const assetContext = access.isAdmin
+    ? await getAssetRecordById(existing.asset_id as string)
+    : (await getAssetOperatingData(existing.asset_id as string, [], scope))?.asset ?? null;
+  if (!assetContext) return apiError("Comment not found", 404);
+
   const { error: dbErr } = await supabaseAdmin
     .from("asset_comments" as never)
     .update({ resolved: body.resolved, updated_at: new Date().toISOString() })
@@ -274,7 +301,6 @@ export async function PATCH(request: NextRequest) {
   if (dbErr) return apiError(dbErr.message);
 
   if (body.resolved !== existing.resolved) {
-    const asset = await getAssetRecordById(existing.asset_id as string);
     await logSystemEvent({
       eventName: "asset_comment_resolved",
       actorId: userId,
@@ -283,12 +309,12 @@ export async function PATCH(request: NextRequest) {
       entityType: "asset_comment",
       entityId: id,
       summary: body.resolved
-        ? `Resolved a comment on "${asset?.file_name ?? "asset"}"`
-        : `Reopened a comment on "${asset?.file_name ?? "asset"}"`,
+        ? `Resolved a comment on "${assetContext.file_name ?? "asset"}"`
+        : `Reopened a comment on "${assetContext.file_name ?? "asset"}"`,
       detail: excerpt(existing.content as string),
       metadata: {
         assetId: existing.asset_id,
-        assetName: asset?.file_name ?? null,
+        assetName: assetContext.file_name ?? null,
         resolved: body.resolved,
       },
     });
@@ -324,6 +350,14 @@ export async function DELETE(request: NextRequest) {
     return apiError("Forbidden", 403);
   }
 
+  const scope = access.isAdmin
+    ? undefined
+    : await getClientAssetScope(userId, existing.client_slug as string);
+  const asset = access.isAdmin
+    ? await getAssetRecordById(existing.asset_id as string)
+    : (await getAssetOperatingData(existing.asset_id as string, [], scope))?.asset ?? null;
+  if (!asset) return apiError("Comment not found", 404);
+
   const { error: dbErr } = await supabaseAdmin
     .from("asset_comments" as never)
     .delete()
@@ -331,7 +365,6 @@ export async function DELETE(request: NextRequest) {
 
   if (dbErr) return apiError(dbErr.message);
 
-  const asset = await getAssetRecordById(existing.asset_id as string);
   await logSystemEvent({
     eventName: "asset_comment_deleted",
     actorId: userId,

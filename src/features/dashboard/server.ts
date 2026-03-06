@@ -1,4 +1,5 @@
 import type { TaskPriority } from "@/lib/workspace-types";
+import type { ScopeFilter } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { listConversationThreads } from "@/features/conversations/server";
@@ -34,6 +35,7 @@ interface GetDashboardActionCenterOptions {
 interface GetDashboardAssetSummaryOptions {
   clientSlug?: string;
   limit?: number;
+  scope?: ScopeFilter;
 }
 
 export interface DashboardActionCenterApproval {
@@ -292,7 +294,11 @@ export async function getDashboardOpsSummary(
 export async function getDashboardAssetSummary(
   options: GetDashboardAssetSummaryOptions = {},
 ): Promise<AssetLibrarySummary> {
-  const records = await listAssetLibrary(options.clientSlug, Math.max((options.limit ?? 6) * 8, 48));
+  const records = await listAssetLibrary(
+    options.clientSlug,
+    Math.max((options.limit ?? 6) * 8, 48),
+    options.scope,
+  );
   return buildAssetLibrarySummary(records, options.limit ?? 6);
 }
 

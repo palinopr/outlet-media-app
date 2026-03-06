@@ -10,7 +10,9 @@ import { AssetGallery } from "@/features/assets/asset-gallery";
 import { mapAssetRows } from "@/features/assets/lib";
 import { listAssets } from "@/features/assets/server";
 import { getConversationsCenter } from "@/features/conversations/server";
+import { buildConversationsSummary } from "@/features/conversations/summary";
 import { getWorkQueue } from "@/features/work-queue/server";
+import { buildWorkQueueSummary } from "@/features/work-queue/summary";
 import { requireClientAccess } from "@/features/client-portal/access";
 
 interface Props {
@@ -28,10 +30,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientAssetsPage({ params }: Props) {
   const { slug } = await params;
-  await requireClientAccess(slug, "assets");
+  const { scope } = await requireClientAccess(slug, "assets");
   const clientName = slugToLabel(slug);
   const [mapped, conversations, workQueue, outcomes] = await Promise.all([
-    listAssets(slug).then(mapAssetRows),
+    listAssets(slug, scope).then(mapAssetRows),
     getConversationsCenter({
       clientSlug: slug,
       kinds: ["asset"],
@@ -51,6 +53,17 @@ export default async function ClientAssetsPage({ params }: Props) {
       limit: 6,
     }),
   ]);
+  const allowedAssetIds = new Set(mapped.map((asset) => asset.id));
+  const visibleThreads = conversations.threads.filter((thread) => allowedAssetIds.has(thread.targetId));
+  const visibleQueueItems = workQueue.items.filter((item) => allowedAssetIds.has(item.contextId));
+  const visibleOutcomes = outcomes.filter(
+    (outcome) => outcome.assetId && allowedAssetIds.has(outcome.assetId),
+  );
+  const visibleConversations = {
+    summary: buildConversationsSummary(visibleThreads),
+    threads: visibleThreads,
+  };
+  const visibleWorkQueue = buildWorkQueueSummary(visibleQueueItems, { limit: 6 });
 
   const imageCount = mapped.filter((a) => a.mediaType === "image").length;
   const videoCount = mapped.filter((a) => a.mediaType === "video").length;
@@ -135,7 +148,7 @@ export default async function ClientAssetsPage({ params }: Props) {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
         <WorkQueueSection
           description="Creative follow-through still waiting on review, routing, or delivery."
-          summary={workQueue}
+          summary={visibleWorkQueue}
           title="Asset next steps"
           variant="client"
         />
@@ -146,7 +159,7 @@ export default async function ClientAssetsPage({ params }: Props) {
           crmHrefPrefix={`/client/${slug}/crm`}
           description="What the agents reviewed about your creative and what follow-through is still in motion."
           eventHrefPrefix={`/client/${slug}/event`}
-          outcomes={outcomes}
+          outcomes={visibleOutcomes}
           title="Asset agent follow-through"
           variant="client"
         />
@@ -158,8 +171,8 @@ export default async function ClientAssetsPage({ params }: Props) {
         crmHrefPrefix={`/client/${slug}/crm`}
         description="Open creative discussions attached directly to the files and campaign work they affect."
         eventHrefPrefix={`/client/${slug}/event`}
-        summary={conversations.summary}
-        threads={conversations.threads}
+        summary={visibleConversations.summary}
+        threads={visibleConversations.threads}
         title="Asset discussions"
         variant="client"
       />

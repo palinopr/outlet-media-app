@@ -35,6 +35,7 @@ export async function getClientUpdatesCenter(
       getDashboardAssetSummary({
         clientSlug,
         limit: 4,
+        scope,
       }),
       listSystemEvents({
         audience: "shared",

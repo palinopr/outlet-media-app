@@ -79,6 +79,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
     getDashboardAssetSummary({
       clientSlug: slug,
       limit: 4,
+      scope,
     }),
     listAgentOutcomes({
       audience: "shared",
