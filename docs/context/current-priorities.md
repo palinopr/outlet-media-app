@@ -33,6 +33,7 @@ The short-term focus is:
 - Treat asset discussion as a first-class collaboration surface so creative feedback, internal review, and client-visible context stay attached to the asset itself.
 - Treat asset follow-up items as first-class workflow objects so creative review notes, agent outcomes, and production next steps become visible work instead of passive comments.
 - Treat event discussions and event follow-up items as first-class workflow objects so ticketing context, promotion questions, and show-level next steps stay attached to the event instead of being lost in generic notes.
+- On event pages, combine event-specific agent outcomes with linked campaign agent outcomes so the show-level operating view stays complete instead of forcing users to infer work from campaign pages alone.
 - Keep asset review pressure visible on the regular dashboards too, so summary-first users can spot creative bottlenecks without opening the full asset app first.
 - Derive dashboard workflow summaries from the same campaign-native approvals, action items, comments, and `system_events` backbone instead of introducing separate summary-only state.
 - Make dashboard-first users actionable by surfacing pending approvals and unresolved campaign discussion directly on the dashboard.

@@ -15,6 +15,7 @@ interface ListAgentOutcomesOptions {
   clientSlug?: string | null;
   contextType?: "all" | "campaign" | "crm_contact";
   crmContactId?: string | null;
+  eventId?: string | null;
   limit?: number;
   scopeCampaignIds?: string[] | null;
 }
@@ -23,6 +24,7 @@ export interface AgentOutcomeContext {
   linkedActionItemId: string | null;
   linkedAssetFollowUpItemId: string | null;
   linkedCrmFollowUpItemId: string | null;
+  linkedEventFollowUpItemId: string | null;
   request: AgentOutcomeRequestRecord;
   task: AgentOutcomeTaskRecord | null;
 }
@@ -61,6 +63,7 @@ function matchesContext(
   campaignId: string | null | undefined,
   contextType: "all" | "campaign" | "crm_contact",
   crmContactId: string | null | undefined,
+  eventId: string | null | undefined,
   scopeCampaignIds?: Set<string> | null,
 ) {
   const requestAssetId =
@@ -69,14 +72,25 @@ function matchesContext(
     typeof request.metadata.campaignId === "string" ? request.metadata.campaignId : null;
   const requestCrmContactId =
     typeof request.metadata.crmContactId === "string" ? request.metadata.crmContactId : null;
+  const requestEventId =
+    typeof request.metadata.eventId === "string" ? request.metadata.eventId : null;
 
   if (assetId && requestAssetId !== assetId) return false;
   if (contextType === "campaign" && !requestCampaignId) return false;
   if (contextType === "crm_contact" && !requestCrmContactId) return false;
   if (campaignId && requestCampaignId !== campaignId) return false;
   if (crmContactId && requestCrmContactId !== crmContactId) return false;
-  if (scopeCampaignIds && (!requestCampaignId || !scopeCampaignIds.has(requestCampaignId))) {
-    return false;
+  if (eventId && scopeCampaignIds) {
+    const matchesEvent = requestEventId === eventId;
+    const matchesScopedCampaign = !!(
+      requestCampaignId && scopeCampaignIds.has(requestCampaignId)
+    );
+    if (!matchesEvent && !matchesScopedCampaign) return false;
+  } else {
+    if (eventId && requestEventId !== eventId) return false;
+    if (scopeCampaignIds && (!requestCampaignId || !scopeCampaignIds.has(requestCampaignId))) {
+      return false;
+    }
   }
   return true;
 }
@@ -118,6 +132,7 @@ export async function listAgentOutcomes(
         options.campaignId,
         options.contextType ?? "all",
         options.crmContactId,
+        options.eventId,
         scopeCampaignIds,
       ),
     );
@@ -129,6 +144,7 @@ export async function listAgentOutcomes(
     { data: taskRows, error: tasksError },
     { data: linkedRows, error: linkedError },
     { data: linkedAssetRows, error: linkedAssetError },
+    { data: linkedEventRows, error: linkedEventError },
     { data: linkedCrmRows, error: linkedCrmError },
   ] =
     await Promise.all([
@@ -145,6 +161,11 @@ export async function listAgentOutcomes(
         .in("source_entity_id", taskIds),
       supabaseAdmin
         .from("asset_follow_up_items" as never)
+        .select("id, source_entity_id")
+        .eq("source_entity_type", "agent_task")
+        .in("source_entity_id", taskIds),
+      supabaseAdmin
+        .from("event_follow_up_items" as never)
         .select("id, source_entity_id")
         .eq("source_entity_type", "agent_task")
         .in("source_entity_id", taskIds),
@@ -170,6 +191,13 @@ export async function listAgentOutcomes(
     console.error(
       "[agent-outcomes] linked asset follow-up lookup failed:",
       linkedAssetError.message,
+    );
+  }
+
+  if (linkedEventError) {
+    console.error(
+      "[agent-outcomes] linked event follow-up lookup failed:",
+      linkedEventError.message,
     );
   }
 
@@ -200,6 +228,15 @@ export async function listAgentOutcomes(
     }
   }
 
+  const linkedEventFollowUpItems = new Map<string, string>();
+  for (const row of (linkedEventRows ?? []) as Record<string, unknown>[]) {
+    const sourceEntityId = row.source_entity_id as string | null;
+    const itemId = row.id as string | null;
+    if (sourceEntityId && itemId) {
+      linkedEventFollowUpItems.set(sourceEntityId, itemId);
+    }
+  }
+
   const linkedCrmFollowUpItems = new Map<string, string>();
   for (const row of (linkedCrmRows ?? []) as Record<string, unknown>[]) {
     const sourceEntityId = row.source_entity_id as string | null;
@@ -216,6 +253,7 @@ export async function listAgentOutcomes(
         tasks.get(request.taskId),
         linkedActionItems.get(request.taskId) ?? null,
         linkedAssetFollowUpItems.get(request.taskId) ?? null,
+        linkedEventFollowUpItems.get(request.taskId) ?? null,
         linkedCrmFollowUpItems.get(request.taskId) ?? null,
       ),
     )
@@ -261,6 +299,7 @@ export async function getAgentOutcomeContext(taskId: string): Promise<AgentOutco
     { data: taskRow, error: taskError },
     { data: linkedRow, error: linkedError },
     { data: linkedAssetRow, error: linkedAssetError },
+    { data: linkedEventRow, error: linkedEventError },
     { data: linkedCrmRow, error: linkedCrmError },
   ] =
     await Promise.all([
@@ -281,6 +320,14 @@ export async function getAgentOutcomeContext(taskId: string): Promise<AgentOutco
         .maybeSingle(),
       supabaseAdmin
         .from("asset_follow_up_items" as never)
+        .select("id")
+        .eq("source_entity_type", "agent_task")
+        .eq("source_entity_id", taskId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("event_follow_up_items" as never)
         .select("id")
         .eq("source_entity_type", "agent_task")
         .eq("source_entity_id", taskId)
@@ -312,6 +359,13 @@ export async function getAgentOutcomeContext(taskId: string): Promise<AgentOutco
     );
   }
 
+  if (linkedEventError) {
+    console.error(
+      "[agent-outcomes] linked event follow-up lookup failed:",
+      linkedEventError.message,
+    );
+  }
+
   if (linkedCrmError) {
     console.error("[agent-outcomes] linked CRM follow-up lookup failed:", linkedCrmError.message);
   }
@@ -320,6 +374,8 @@ export async function getAgentOutcomeContext(taskId: string): Promise<AgentOutco
     linkedActionItemId: (linkedRow?.id as string | null) ?? null,
     linkedAssetFollowUpItemId:
       ((linkedAssetRow as Record<string, unknown> | null)?.id as string | null) ?? null,
+    linkedEventFollowUpItemId:
+      ((linkedEventRow as Record<string, unknown> | null)?.id as string | null) ?? null,
     linkedCrmFollowUpItemId: ((linkedCrmRow as Record<string, unknown> | null)?.id as string | null) ?? null,
     request: mapRequestRow(requestRow as Record<string, unknown>),
     task: taskRow ? mapTaskRow(taskRow as Record<string, unknown>) : null,

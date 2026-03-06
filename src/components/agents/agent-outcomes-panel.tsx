@@ -16,6 +16,7 @@ interface AgentOutcomesPanelProps {
   crmHrefPrefix?: string;
   description?: string;
   emptyState?: string;
+  eventHrefPrefix?: string;
   outcomes: AgentOutcomeView[];
   title?: string;
   variant: "admin" | "client";
@@ -113,6 +114,7 @@ export function AgentOutcomesPanel({
   crmHrefPrefix,
   description = "Track what the agents have reviewed, what they recommended, and whether the work is still waiting on a human decision.",
   emptyState = "No linked agent follow-through yet.",
+  eventHrefPrefix,
   outcomes,
   title = "Agent follow-through",
   variant,
@@ -187,18 +189,23 @@ export function AgentOutcomesPanel({
               createdActionItems[outcome.taskId] ??
               outcome.linkedActionItemId ??
               outcome.linkedAssetFollowUpItemId ??
+              outcome.linkedEventFollowUpItemId ??
               outcome.linkedCrmFollowUpItemId ??
               null;
             const canCreateAction =
               canCreateActionItems &&
               !linkedItemId &&
-              (!!outcome.campaignId || !!outcome.crmContactId || !!outcome.assetId) &&
+              (!!outcome.campaignId || !!outcome.crmContactId || !!outcome.assetId || !!outcome.eventId) &&
               outcome.status !== "pending" &&
               outcome.status !== "running";
             const createLabel =
-              outcome.crmContactId || outcome.assetId ? "Create follow-up" : "Create action";
+              outcome.crmContactId || outcome.assetId || outcome.eventId
+                ? "Create follow-up"
+                : "Create action";
             const createdLabel =
-              outcome.crmContactId || outcome.assetId ? "Follow-up created" : "Action created";
+              outcome.crmContactId || outcome.assetId || outcome.eventId
+                ? "Follow-up created"
+                : "Action created";
             return (
               <div key={outcome.taskId} className={tone.item}>
                 <div className="flex items-start gap-3">
@@ -296,6 +303,21 @@ export function AgentOutcomesPanel({
                           )}
                         >
                           {outcome.assetName ? `Open ${outcome.assetName}` : "Open asset"}
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    ) : eventHrefPrefix && outcome.eventId ? (
+                      <div className="mt-3">
+                        <Link
+                          href={`${eventHrefPrefix}/${outcome.eventId}`}
+                          className={cn(
+                            "inline-flex items-center gap-1 text-sm font-medium",
+                            isClient
+                              ? "text-cyan-300 hover:text-cyan-200"
+                              : "text-[#0f7b6c] hover:text-[#0b5e52]",
+                          )}
+                        >
+                          {outcome.eventName ? `Open ${outcome.eventName}` : "Open event"}
                           <ArrowRight className="h-3 w-3" />
                         </Link>
                       </div>

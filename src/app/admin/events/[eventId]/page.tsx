@@ -59,6 +59,7 @@ export default async function AdminEventDetailPage({ params }: Props) {
     listAgentOutcomes({
       audience: "all",
       clientSlug: event.clientSlug ?? undefined,
+      eventId: event.id,
       limit: 4,
       scopeCampaignIds: linkedCampaignIds,
     }),
@@ -254,6 +255,7 @@ export default async function AdminEventDetailPage({ params }: Props) {
             emptyState="No agent work is attached to this event yet."
             variant="admin"
             campaignHrefPrefix="/admin/campaigns"
+            eventHrefPrefix="/admin/events"
           />
 
           <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">

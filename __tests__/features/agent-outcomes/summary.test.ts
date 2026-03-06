@@ -109,6 +109,7 @@ describe("agent outcome summary helpers", () => {
       null,
       null,
       null,
+      null,
       "crm_follow_up_123",
     );
 
@@ -137,6 +138,7 @@ describe("agent outcome summary helpers", () => {
         taskId: "web_task_4",
         visibility: "admin_only",
       },
+      null,
       null,
       null,
     );
@@ -169,6 +171,7 @@ describe("agent outcome summary helpers", () => {
       null,
       null,
       "asset_follow_up_123",
+      null,
     );
 
     expect(outcome).toMatchObject({
@@ -176,6 +179,38 @@ describe("agent outcome summary helpers", () => {
       linkedAssetFollowUpItemId: "asset_follow_up_123",
       status: "pending",
       taskId: "web_task_5",
+    });
+  });
+
+  it("preserves event context on show-level agent outcomes", () => {
+    const outcome = buildAgentOutcomeView(
+      {
+        clientSlug: "zamora",
+        createdAt: "2026-03-06T12:00:00.000Z",
+        detail: "Assistant will prepare a concise ticketing brief.",
+        metadata: {
+          eventFollowUpItemId: "event_follow_up_123",
+          eventId: "event_123",
+          eventName: "Camila Cabello at Kaseya Center",
+        },
+        summary: 'Queued agent triage for event discussion on "Camila Cabello at Kaseya Center"',
+        taskId: "web_task_6",
+        visibility: "admin_only",
+      },
+      null,
+      null,
+      null,
+      "event_follow_up_123",
+      null,
+    );
+
+    expect(outcome).toMatchObject({
+      eventFollowUpItemId: "event_follow_up_123",
+      eventId: "event_123",
+      eventName: "Camila Cabello at Kaseya Center",
+      linkedEventFollowUpItemId: "event_follow_up_123",
+      status: "pending",
+      taskId: "web_task_6",
     });
   });
 });

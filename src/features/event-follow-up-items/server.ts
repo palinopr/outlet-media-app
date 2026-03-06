@@ -318,7 +318,7 @@ export async function maybeEnqueueEventFollowUpItemTriage(
     metadata: {
       eventId: item.eventId,
       eventName: item.eventName,
-      followUpItemId: item.id,
+      eventFollowUpItemId: item.id,
       toAgent: "assistant",
     },
   });

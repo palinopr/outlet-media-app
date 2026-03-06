@@ -177,6 +177,7 @@ export default async function AdminDashboard() {
         emptyState="No agent outcomes are available yet."
         variant="admin"
         campaignHrefPrefix="/admin/campaigns"
+        eventHrefPrefix="/admin/events"
       />
 
       {/* Trend charts */}

@@ -287,6 +287,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         emptyState="No shared agent follow-through is available yet."
         variant="client"
         campaignHrefPrefix={`/client/${slug}/campaign`}
+        eventHrefPrefix={`/client/${slug}/event`}
       />
 
       {/* -- Campaign Cards with Filter -- */}

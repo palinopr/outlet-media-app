@@ -30,6 +30,7 @@ import { ProgressBar } from "../../components/progress-bar";
 import { EventStatusBadge } from "../../components/event-status-badge";
 import { AudienceSection } from "../../components/audience-section";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { EventCommentsPanel } from "@/components/events/event-comments-panel";
 import { EventFollowUpItemsPanel } from "@/components/events/event-follow-up-items-panel";
@@ -41,6 +42,7 @@ import {
 } from "@/components/client/charts";
 import type { SalesVelocity, TicketPlatform } from "../../types";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getDashboardOpsSummary } from "@/features/dashboard/server";
 import { listEventComments } from "@/features/event-comments/server";
 import { listEventFollowUpItems } from "@/features/event-follow-up-items/server";
@@ -107,7 +109,7 @@ export default async function EventDetailPage({ params }: Props) {
 
   const { event: e, snapshots, dailyDeltas, velocity, audience, linkedCampaigns, channelBreakdown } = data;
   const linkedCampaignIds = linkedCampaigns.map((campaign) => campaign.campaignId);
-  const [opsSummary, eventEvents, eventComments, eventFollowUpItems] = await Promise.all([
+  const [opsSummary, eventEvents, eventComments, eventFollowUpItems, agentOutcomes] = await Promise.all([
     getDashboardOpsSummary({
       clientSlug: slug,
       limit: 5,
@@ -133,6 +135,18 @@ export default async function EventDetailPage({ params }: Props) {
       audience: "shared",
       eventId: e.id,
       limit: 24,
+    }),
+    listAgentOutcomes({
+      audience: "shared",
+      clientSlug: slug,
+      eventId: e.id,
+      limit: 4,
+      scopeCampaignIds:
+        linkedCampaignIds.length > 0
+          ? linkedCampaignIds.filter((campaignId) =>
+              scope?.allowedCampaignIds ? scope.allowedCampaignIds.includes(campaignId) : true,
+            )
+          : [],
     }),
   ]);
 
@@ -288,6 +302,15 @@ export default async function EventDetailPage({ params }: Props) {
           description="Shared next steps attached directly to this event."
           emptyState="No shared event follow-up items are active yet."
           variant="client"
+        />
+        <AgentOutcomesPanel
+          outcomes={agentOutcomes}
+          title="Agent follow-through"
+          description="Agent notes and recommendations attached to this event or its linked promotion workflow."
+          emptyState="No event-specific agent follow-through is attached to this show yet."
+          variant="client"
+          campaignHrefPrefix={`/client/${slug}/campaign`}
+          eventHrefPrefix={`/client/${slug}/event`}
         />
       </section>
 
