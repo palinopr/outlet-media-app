@@ -88,13 +88,19 @@ interface CreateCrmContactInput {
 }
 
 interface UpdateCrmContactInput {
+  company?: string | null;
   contactId: string;
+  email?: string | null;
+  fullName?: string;
   lastContactedAt?: string | null;
   leadScore?: number | null;
   lifecycleStage?: CrmLifecycleStage;
   nextFollowUpAt?: string | null;
   notes?: string | null;
   ownerName?: string | null;
+  phone?: string | null;
+  source?: string | null;
+  visibility?: CrmContactVisibility;
 }
 
 function mapCrmContact(row: Record<string, unknown>): CrmContact {
@@ -407,6 +413,9 @@ export async function updateCrmContact(input: UpdateCrmContactInput): Promise<Cr
 
   const existing = mapCrmContact(existingRow as Record<string, unknown>);
   const nextValues = {
+    company: "company" in input ? input.company ?? null : existing.company,
+    email: "email" in input ? input.email ?? null : existing.email,
+    fullName: "fullName" in input ? input.fullName?.trim() || existing.fullName : existing.fullName,
     lastContactedAt:
       "lastContactedAt" in input ? input.lastContactedAt ?? null : existing.lastContactedAt,
     leadScore: "leadScore" in input ? input.leadScore ?? null : existing.leadScore,
@@ -415,9 +424,15 @@ export async function updateCrmContact(input: UpdateCrmContactInput): Promise<Cr
       "nextFollowUpAt" in input ? input.nextFollowUpAt ?? null : existing.nextFollowUpAt,
     notes: "notes" in input ? input.notes ?? null : existing.notes,
     ownerName: "ownerName" in input ? input.ownerName ?? null : existing.ownerName,
+    phone: "phone" in input ? input.phone ?? null : existing.phone,
+    source: "source" in input ? input.source ?? null : existing.source,
+    visibility: "visibility" in input ? input.visibility ?? existing.visibility : existing.visibility,
   };
 
   const changedFields: string[] = [];
+  if (nextValues.company !== existing.company) changedFields.push("company");
+  if (nextValues.email !== existing.email) changedFields.push("email");
+  if (nextValues.fullName !== existing.fullName) changedFields.push("name");
   const followUpChanged = nextValues.nextFollowUpAt !== existing.nextFollowUpAt;
   const leadScoreChanged = nextValues.leadScore !== existing.leadScore;
   const lifecycleChanged = nextValues.lifecycleStage !== existing.lifecycleStage;
@@ -427,6 +442,9 @@ export async function updateCrmContact(input: UpdateCrmContactInput): Promise<Cr
   if (followUpChanged) changedFields.push("next follow-up");
   if (nextValues.notes !== existing.notes) changedFields.push("notes");
   if (nextValues.ownerName !== existing.ownerName) changedFields.push("owner");
+  if (nextValues.phone !== existing.phone) changedFields.push("phone");
+  if (nextValues.source !== existing.source) changedFields.push("source");
+  if (nextValues.visibility !== existing.visibility) changedFields.push("visibility");
 
   if (changedFields.length === 0) return existing;
 
@@ -434,12 +452,18 @@ export async function updateCrmContact(input: UpdateCrmContactInput): Promise<Cr
   const { data, error } = await supabaseAdmin
     .from(CRM_CONTACTS_TABLE)
     .update({
+      company: nextValues.company,
+      email: nextValues.email,
+      full_name: nextValues.fullName,
       last_contacted_at: nextValues.lastContactedAt,
       lead_score: nextValues.leadScore,
       lifecycle_stage: nextValues.lifecycleStage,
       next_follow_up_at: nextValues.nextFollowUpAt,
       notes: nextValues.notes,
       owner_name: nextValues.ownerName,
+      phone: nextValues.phone,
+      source: nextValues.source,
+      visibility: nextValues.visibility,
       updated_at: new Date().toISOString(),
     })
     .eq("id", input.contactId)

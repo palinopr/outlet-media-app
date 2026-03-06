@@ -1,15 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
 import { updateCrmContact } from "@/features/crm/server";
-import type { CrmLifecycleStage } from "@/features/crm/summary";
+import type { CrmContactVisibility, CrmLifecycleStage } from "@/features/crm/summary";
 
 interface UpdateCrmContactBody {
+  company?: string | null;
+  email?: string | null;
+  fullName?: string;
   lastContactedAt?: string | null;
   leadScore?: number | null;
   lifecycleStage?: CrmLifecycleStage;
   nextFollowUpAt?: string | null;
   notes?: string | null;
   ownerName?: string | null;
+  phone?: string | null;
+  source?: string | null;
+  visibility?: CrmContactVisibility;
 }
 
 function normalizeOptional(value: string | null | undefined) {
@@ -38,7 +44,10 @@ export async function PATCH(
   }
 
   const contact = await updateCrmContact({
+    company: normalizeOptional(parsed.company),
     contactId: id,
+    email: normalizeOptional(parsed.email),
+    fullName: normalizeOptional(parsed.fullName) ?? undefined,
     lastContactedAt: normalizeOptional(parsed.lastContactedAt),
     leadScore:
       typeof parsed.leadScore === "number" && Number.isFinite(parsed.leadScore)
@@ -48,6 +57,9 @@ export async function PATCH(
     nextFollowUpAt: normalizeOptional(parsed.nextFollowUpAt),
     notes: normalizeOptional(parsed.notes),
     ownerName: normalizeOptional(parsed.ownerName),
+    phone: normalizeOptional(parsed.phone),
+    source: normalizeOptional(parsed.source),
+    visibility: parsed.visibility,
   });
 
   if (!contact) return apiError("Failed to update CRM contact", 500);

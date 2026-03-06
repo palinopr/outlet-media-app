@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarClock, Flame, Share2, UserRound } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import { CrmContactDetailCard } from "@/components/crm/crm-contact-detail-card";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
-import { CrmContactsPanel } from "@/components/crm/crm-contacts-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getCrmContactById } from "@/features/crm/server";
 import { requireClientAccess } from "@/features/client-portal/access";
@@ -92,11 +92,10 @@ export default async function ClientCrmContactPage({ params }: Props) {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
         <div className="space-y-6">
-          <CrmContactsPanel
-            contacts={[contact]}
+          <CrmContactDetailCard
+            contact={contact}
             title="Contact details"
             description="The current shared CRM context for this relationship."
-            emptyState="This CRM contact is not available."
             variant="client"
           />
 

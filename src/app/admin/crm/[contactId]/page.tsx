@@ -4,7 +4,7 @@ import { ArrowLeft, CalendarClock, Flame, Share2, UserRound } from "lucide-react
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
-import { CrmContactsPanel } from "@/components/crm/crm-contacts-panel";
+import { CrmContactDetailCard } from "@/components/crm/crm-contact-detail-card";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getCrmContactById } from "@/features/crm/server";
@@ -100,12 +100,11 @@ export default async function AdminCrmContactPage({ params }: Props) {
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)]">
         <div className="space-y-6">
-          <CrmContactsPanel
+          <CrmContactDetailCard
             canManage
-            contacts={[contact]}
+            contact={contact}
             title="Contact details"
-            description="Update stage and mark follow-ups complete from the CRM contact record."
-            emptyState="CRM contact not found."
+            description="Manage the full CRM record, ownership, and follow-up state from one place."
             variant="admin"
           />
 
