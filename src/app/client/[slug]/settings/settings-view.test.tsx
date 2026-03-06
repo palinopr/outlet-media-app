@@ -77,6 +77,7 @@ describe("SettingsView", () => {
     expect(screen.getByText("Team")).toBeInTheDocument();
     expect(screen.getByText("Access invites")).toBeInTheDocument();
     expect(screen.getByText("invitee@example.com")).toBeInTheDocument();
+    expect(screen.getByText("1 pending • 0 expired")).toBeInTheDocument();
     expect(screen.getByText("Pending")).toBeInTheDocument();
     expect(screen.getByText("Owner User")).toBeInTheDocument();
   });

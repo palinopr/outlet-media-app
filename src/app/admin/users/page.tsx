@@ -56,6 +56,11 @@ export default async function UsersPage() {
                 <p className="mt-1 text-sm text-muted-foreground">
                   Pending and expired invitations that still need action.
                 </p>
+                {accessSummary.accessInvites.length > 0 ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {accessSummary.pendingInviteCount} pending • {accessSummary.expiredInviteCount} expired
+                  </p>
+                ) : null}
               </div>
               <MailPlus className="h-4 w-4 text-muted-foreground" />
             </div>

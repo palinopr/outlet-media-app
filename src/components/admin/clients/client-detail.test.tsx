@@ -440,5 +440,6 @@ describe("ClientDetailView", () => {
 
     expect(screen.getByText("Access invites")).toBeInTheDocument();
     expect(screen.getByText("invitee@acme.com")).toBeInTheDocument();
+    expect(screen.getByText("1 pending • 0 expired")).toBeInTheDocument();
   });
 });

@@ -23,3 +23,19 @@ export function compareActionableInvitationState(
   if (statusOrder !== 0) return statusOrder;
   return toTimestamp(rightCreatedAt) - toTimestamp(leftCreatedAt);
 }
+
+export function countActionableInvitationStatuses(
+  statuses: Array<ActionableInvitationStatus | null | undefined>,
+) {
+  return statuses.reduce(
+    (counts, status) => {
+      if (status === "expired") {
+        counts.expired += 1;
+      } else {
+        counts.pending += 1;
+      }
+      return counts;
+    },
+    { expired: 0, pending: 0 },
+  );
+}

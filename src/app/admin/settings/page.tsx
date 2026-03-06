@@ -121,6 +121,11 @@ export default async function SettingsPage() {
             <CardDescription>
               Pending and expired invitations that still need to turn into active users or be cleaned up.
             </CardDescription>
+            {summary.accessInvites.length > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {summary.pendingInviteCount} pending • {summary.expiredInviteCount} expired
+              </p>
+            ) : null}
           </CardHeader>
           <CardContent className="space-y-3">
             {summary.accessInvites.length === 0 ? (

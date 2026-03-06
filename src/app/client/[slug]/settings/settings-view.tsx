@@ -20,6 +20,7 @@ import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { inviteTeamMember, removeTeamMember, revokeTeamInvite } from "./actions";
 import { ConnectedAccountsList } from "./connected-accounts-list";
 import type { SettingsData } from "./data";
+import { countActionableInvitationStatuses } from "@/features/invitations/sort";
 
 function RoleBadge({ role }: { role: string }) {
   const isOwner = role === "owner";
@@ -42,6 +43,9 @@ export function SettingsView({ data }: { data: SettingsData }) {
   const [email, setEmail] = useState("");
   const [inviting, setInviting] = useState(false);
   const [invited, setInvited] = useState(false);
+  const inviteCounts = countActionableInvitationStatuses(
+    data.pendingInvites.map((invite) => invite.status),
+  );
 
   async function handleInvite(e: React.FormEvent) {
     e.preventDefault();
@@ -90,6 +94,11 @@ export function SettingsView({ data }: { data: SettingsData }) {
             <p className="mt-0.5 text-xs text-white/50">
               {data.pendingInvites.length} invite{data.pendingInvites.length === 1 ? "" : "s"} waiting for teammates to join or be cleaned up
             </p>
+            {data.pendingInvites.length > 0 ? (
+              <p className="mt-1 text-[11px] text-white/35">
+                {inviteCounts.pending} pending • {inviteCounts.expired} expired
+              </p>
+            ) : null}
           </div>
           <MailPlus className="h-4 w-4 text-white/40" />
         </div>

@@ -18,6 +18,7 @@ import { fmtDate, getInvitationStatusCfg } from "@/lib/formatters";
 import { removeClientMember } from "@/app/admin/actions/clients";
 import type { ClientDetail } from "@/app/admin/clients/data";
 import { RevokeInvitationButton } from "@/components/admin/users/revoke-invitation-button";
+import { countActionableInvitationStatuses } from "@/features/invitations/sort";
 import { RoleSelect } from "./role-select";
 import { ScopeSelect } from "./scope-select";
 import { AssignmentManager } from "./assignment-manager";
@@ -25,6 +26,9 @@ import { InviteMemberForm } from "./invite-member-form";
 
 export function MembersSection({ client }: { client: ClientDetail }) {
   const [showInvite, setShowInvite] = useState(false);
+  const inviteCounts = countActionableInvitationStatuses(
+    client.pendingInvites.map((invite) => invite.status),
+  );
 
   return (
     <div>
@@ -59,6 +63,11 @@ export function MembersSection({ client }: { client: ClientDetail }) {
             <p className="mt-1 text-xs text-muted-foreground">
               {client.pendingInvites.length} invite{client.pendingInvites.length === 1 ? "" : "s"} still waiting to turn into active members or be cleaned up.
             </p>
+            {client.pendingInvites.length > 0 ? (
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                {inviteCounts.pending} pending • {inviteCounts.expired} expired
+              </p>
+            ) : null}
           </div>
           <Clock3 className="mt-0.5 h-4 w-4 text-muted-foreground" />
         </div>
