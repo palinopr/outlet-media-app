@@ -1,18 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
+import {
+  getAssetWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { adminGuard, apiError } from "@/lib/api-helpers";
 import { deleteAssetById, getAssetRecordById, updateAsset } from "@/features/assets/server";
 import { logSystemEvent, summarizeChangedFields } from "@/features/system-events/server";
-
-function revalidateAssetPaths(assetId: string, clientSlug: string) {
-  revalidatePath("/admin/assets");
-  revalidatePath(`/admin/assets/${assetId}`);
-  revalidatePath("/admin/dashboard");
-  revalidatePath(`/client/${clientSlug}`);
-  revalidatePath(`/client/${clientSlug}/assets`);
-  revalidatePath(`/client/${clientSlug}/assets/${assetId}`);
-}
 
 export async function PATCH(
   req: NextRequest,
@@ -54,7 +48,7 @@ export async function PATCH(
       });
     }
 
-    revalidateAssetPaths(id, before.client_slug);
+    revalidateWorkflowPaths(getAssetWorkflowPaths(before.client_slug, id));
     return NextResponse.json({ asset });
   } catch (error) {
     const message =
@@ -89,7 +83,7 @@ export async function DELETE(
       entityId: deleted.id,
       summary: `Deleted asset "${deleted.fileName}"`,
     });
-    revalidateAssetPaths(id, deleted.clientSlug);
+    revalidateWorkflowPaths(getAssetWorkflowPaths(deleted.clientSlug, id));
     return NextResponse.json({ deleted: true });
   } catch (error) {
     const message =

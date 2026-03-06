@@ -1,8 +1,11 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import { currentUser } from "@clerk/nextjs/server";
+import {
+  getEventWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
 import { logAudit } from "./audit";
@@ -34,15 +37,9 @@ async function syncEventWorkflowClientSlug(
 }
 
 function revalidateEventPaths(eventId: string, clientSlugs: Array<string | null | undefined>) {
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/admin/events");
-  revalidatePath(`/admin/events/${eventId}`);
-
-  const uniqueClientSlugs = [...new Set(clientSlugs.filter((slug): slug is string => !!slug))];
+  const uniqueClientSlugs = [...new Set(clientSlugs)];
   for (const clientSlug of uniqueClientSlugs) {
-    revalidatePath(`/client/${clientSlug}`);
-    revalidatePath(`/client/${clientSlug}/events`);
-    revalidatePath(`/client/${clientSlug}/event/${eventId}`);
+    revalidateWorkflowPaths(getEventWorkflowPaths(clientSlug, eventId));
   }
 }
 
@@ -194,7 +191,6 @@ export async function bulkAssignEventClient(formData: { eventIds: string[]; clie
       eventIds: parsed.eventIds,
     },
   });
-  revalidatePath("/admin/events");
   const affectedClientSlugs = new Set<string>();
   affectedClientSlugs.add(parsed.clientSlug);
   for (const row of previousRows ?? []) {
@@ -202,12 +198,8 @@ export async function bulkAssignEventClient(formData: { eventIds: string[]; clie
     if (clientSlug) affectedClientSlugs.add(clientSlug);
   }
 
-  for (const clientSlug of affectedClientSlugs) {
-    revalidatePath(`/client/${clientSlug}`);
-    revalidatePath(`/client/${clientSlug}/events`);
-    for (const eventId of parsed.eventIds) {
-      revalidatePath(`/client/${clientSlug}/event/${eventId}`);
-    }
+  for (const eventId of parsed.eventIds) {
+    revalidateEventPaths(eventId, [...affectedClientSlugs]);
   }
   return { success: true };
 }
@@ -225,6 +217,13 @@ export async function bulkUpdateEventStatus(formData: { eventIds: string[]; stat
   if (!supabaseAdmin) throw new Error("DB not configured");
   const user = await currentUser();
   if (!user) throw new Error("Unauthenticated");
+
+  const { data: previousRows, error: previousError } = await supabaseAdmin
+    .from("tm_events")
+    .select("id, client_slug")
+    .in("id", parsed.eventIds);
+
+  if (previousError) throw new Error(previousError.message);
 
   const now = new Date().toISOString();
   const { error } = await supabaseAdmin
@@ -251,7 +250,17 @@ export async function bulkUpdateEventStatus(formData: { eventIds: string[]; stat
       status: parsed.status,
     },
   });
-  revalidatePath("/admin/events");
+  const clientSlugsByEventId = new Map<string, string | null>();
+  for (const row of (previousRows ?? []) as Record<string, unknown>[]) {
+    clientSlugsByEventId.set(
+      String(row.id),
+      (row.client_slug as string | null) ?? null,
+    );
+  }
+
+  for (const eventId of parsed.eventIds) {
+    revalidateEventPaths(eventId, [clientSlugsByEventId.get(eventId) ?? null]);
+  }
   return { success: true };
 }
 
