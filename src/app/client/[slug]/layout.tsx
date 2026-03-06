@@ -144,7 +144,12 @@ export default async function ClientLayout({ children, params }: Props) {
       <MobileNav slug={slug} clientName={clientName} enabledServices={enabledServices} />
       <div className="flex flex-col flex-1 min-w-0">
         <div className="flex items-center justify-end px-4 py-2 lg:px-6">
-          {clerkUserId && <NotificationBell userId={clerkUserId} />}
+          {clerkUserId && (
+            <NotificationBell
+              fallbackClientSlug={slug}
+              viewer="client"
+            />
+          )}
         </div>
         <main className="flex-1 overflow-auto lg:pt-0 pt-14">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">{children}</div>

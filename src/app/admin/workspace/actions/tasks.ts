@@ -10,6 +10,7 @@ import {
   type NotificationType,
   type TaskStatus,
 } from "@/lib/workspace-types";
+import { createNotification } from "@/features/notifications/server";
 import { logAudit } from "../../actions/audit";
 import {
   logSystemEvent,
@@ -87,14 +88,17 @@ export async function createTask(formData: {
   if (parsed.assignee_id && parsed.assignee_id !== user.id) {
     const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Someone";
     const notifType: NotificationType = "assignment";
-    await supabaseAdmin.from("notifications").insert({
-      user_id: parsed.assignee_id,
+    await createNotification({
+      clientSlug: parsed.client_slug,
+      entityId: task.id,
+      entityType: "workspace_task",
+      fromUserId: user.id,
+      fromUserName: userName,
+      message: parsed.title,
+      taskId: task.id,
       type: notifType,
       title: "New task assigned",
-      message: parsed.title,
-      task_id: task.id,
-      from_user_id: user.id,
-      from_user_name: userName,
+      userId: parsed.assignee_id,
     });
   }
 
@@ -165,14 +169,17 @@ export async function updateTask(formData: {
   ) {
     const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Someone";
     const notifType: NotificationType = "assignment";
-    await supabaseAdmin.from("notifications").insert({
-      user_id: parsed.assignee_id,
+    await createNotification({
+      clientSlug: existing.client_slug,
+      entityId: taskId,
+      entityType: "workspace_task",
+      fromUserId: user.id,
+      fromUserName: userName,
+      message: parsed.title ?? "A task",
+      taskId,
       type: notifType,
       title: "Task assigned to you",
-      message: parsed.title ?? "A task",
-      task_id: taskId,
-      from_user_id: user.id,
-      from_user_name: userName,
+      userId: parsed.assignee_id,
     });
   }
 

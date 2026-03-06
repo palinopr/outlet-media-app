@@ -7,6 +7,10 @@ import {
   findCampaignActionItemBySource,
   updateSystemCampaignActionItem,
 } from "@/features/campaign-action-items/server";
+import {
+  createNotification,
+  listClientNotificationRecipients,
+} from "@/features/notifications/server";
 import { getCurrentActor, logSystemEvent } from "@/features/system-events/server";
 import {
   approvalCampaignId,
@@ -295,6 +299,55 @@ async function maybeEnqueueApprovedCreativeHandoff(approval: ApprovalRequest) {
   });
 }
 
+async function notifyClientApprovalAudience(
+  approval: ApprovalRequest,
+  actor: Awaited<ReturnType<typeof getCurrentActor>>,
+) {
+  if (approval.audience !== "client" && approval.audience !== "shared") return;
+
+  const recipientIds = await listClientNotificationRecipients(approval.clientSlug, {
+    excludeUserId: actor.actorId,
+  });
+
+  await Promise.all(
+    recipientIds.map((userId) =>
+      createNotification({
+        clientSlug: approval.clientSlug,
+        entityId: approval.id,
+        entityType: "approval_request",
+        fromUserId: actor.actorId,
+        fromUserName: actor.actorName,
+        message: approval.title,
+        title: "Approval requested",
+        type: "approval",
+        userId,
+      }),
+    ),
+  );
+}
+
+async function notifyApprovalRequesterResolved(
+  approval: ApprovalRequest,
+  actor: Awaited<ReturnType<typeof getCurrentActor>>,
+) {
+  if (!approval.requestedById || approval.requestedById === actor.actorId) return;
+
+  const statusLabel =
+    approval.status[0].toUpperCase() + approval.status.slice(1);
+
+  await createNotification({
+    clientSlug: approval.clientSlug,
+    entityId: approval.id,
+    entityType: "approval_request",
+    fromUserId: actor.actorId,
+    fromUserName: actor.actorName,
+    message: approval.title,
+    title: `${statusLabel} approval`,
+    type: "approval",
+    userId: approval.requestedById,
+  });
+}
+
 async function isAdminUser() {
   const user = await currentUser();
   const meta = (user?.publicMetadata ?? {}) as { role?: string };
@@ -489,6 +542,8 @@ export async function createApprovalRequest(
     },
   });
 
+  await notifyClientApprovalAudience(approval, actor);
+
   if (shouldEnqueueApprovalTriage(approval)) {
     const taskId = await enqueueExternalAgentTask({
       action: "triage-approval",
@@ -614,6 +669,7 @@ export async function resolveApprovalRequest(
     actor,
     input.status === "rejected" ? "todo" : "done",
   );
+  await notifyApprovalRequesterResolved(approval, actor);
   await maybeEnqueueApprovedCreativeHandoff(approval);
 
   return approval;

@@ -67,7 +67,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <div className="flex items-center justify-between">
           <MobileSidebar clerkEnabled={clerkEnabled} displayName={displayName} />
           <div className="flex items-center px-4 py-2 lg:px-6">
-            {activityUserId && <NotificationBell userId={activityUserId} />}
+            {activityUserId && <NotificationBell viewer="admin" />}
           </div>
         </div>
         <main className="flex-1 overflow-auto">

@@ -4,7 +4,13 @@ import { revalidatePath } from "next/cache";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { NotificationType } from "@/lib/workspace-types";
-import { createNotification } from "./notifications";
+import { createNotification } from "@/features/notifications/server";
+
+function readPageClientSlug(page: unknown): string | null {
+  if (!page || typeof page !== "object") return null;
+  const value = (page as Record<string, unknown>).client_slug;
+  return typeof value === "string" ? value : null;
+}
 
 export async function createComment(formData: {
   page_id: string;
@@ -36,7 +42,7 @@ export async function createComment(formData: {
   const [{ data: page }, parentResult] = await Promise.all([
     supabaseAdmin
       .from("workspace_pages")
-      .select("created_by, title")
+      .select("client_slug, created_by, title")
       .eq("id", formData.page_id)
       .single(),
     formData.parent_comment_id
@@ -47,18 +53,22 @@ export async function createComment(formData: {
           .single()
       : Promise.resolve({ data: null }),
   ]);
+  const pageClientSlug = readPageClientSlug(page);
 
   // Notify page owner about new comment
   const commentType: NotificationType = "comment";
   if (page?.created_by && page.created_by !== userId) {
     await createNotification({
-      user_id: page.created_by,
+      clientSlug: pageClientSlug,
+      entityId: formData.page_id,
+      entityType: "workspace_page",
       type: commentType,
       title: "New comment",
       message: `${authorName} commented on "${page.title}"`,
-      page_id: formData.page_id,
-      from_user_id: userId,
-      from_user_name: authorName,
+      pageId: formData.page_id,
+      fromUserId: userId,
+      fromUserName: authorName,
+      userId: page.created_by,
     });
   }
 
@@ -66,13 +76,16 @@ export async function createComment(formData: {
   const parent = parentResult?.data;
   if (parent?.author_id && parent.author_id !== userId && parent.author_id !== page?.created_by) {
     await createNotification({
-      user_id: parent.author_id,
+      clientSlug: pageClientSlug,
+      entityId: formData.page_id,
+      entityType: "workspace_page",
       type: commentType,
       title: "New reply",
       message: `${authorName} replied to your comment`,
-      page_id: formData.page_id,
-      from_user_id: userId,
-      from_user_name: authorName,
+      pageId: formData.page_id,
+      fromUserId: userId,
+      fromUserName: authorName,
+      userId: parent.author_id,
     });
   }
 

@@ -1,42 +1,54 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NotificationItem } from "./notification-item";
-import type { Notification } from "@/lib/workspace-types";
+import { buildNotificationHref } from "@/features/notifications/routing";
+import type { AppNotification } from "@/features/notifications/types";
 
 interface NotificationBellProps {
-  userId: string;
+  fallbackClientSlug?: string;
+  viewer: "admin" | "client";
 }
 
-export function NotificationBell({ userId }: NotificationBellProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+export function NotificationBell({ fallbackClientSlug, viewer }: NotificationBellProps) {
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const fetchNotifications = useCallback(async () => {
-    try {
-      const res = await fetch("/api/workspace/notifications");
-      if (res.ok) {
-        const data = await res.json();
-        setNotifications(data.notifications ?? []);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
   useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 30_000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+    let cancelled = false;
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch("/api/workspace/notifications");
+        if (!res.ok || cancelled) return;
+
+        const data = await res.json();
+        if (!cancelled) {
+          setNotifications(data.notifications ?? []);
+        }
+      } catch {
+        // ignore
+      }
+    }
+
+    void loadNotifications();
+    const interval = setInterval(() => {
+      void loadNotifications();
+    }, 30_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
 
   async function handleMarkAllRead() {
     try {
@@ -51,7 +63,7 @@ export function NotificationBell({ userId }: NotificationBellProps) {
     }
   }
 
-  async function handleNotificationClick(notification: Notification) {
+  async function handleNotificationClick(notification: AppNotification) {
     if (!notification.read) {
       try {
         await fetch("/api/workspace/notifications", {
@@ -69,10 +81,12 @@ export function NotificationBell({ userId }: NotificationBellProps) {
 
     setOpen(false);
 
-    if (notification.page_id) {
-      router.push(`/admin/workspace/${notification.page_id}`);
-    } else if (notification.task_id) {
-      router.push(`/admin/workspace/tasks`);
+    const href = buildNotificationHref(notification, {
+      fallbackClientSlug,
+      viewer,
+    });
+    if (href) {
+      router.push(href);
     }
   }
 
