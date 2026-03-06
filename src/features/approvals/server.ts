@@ -20,6 +20,10 @@ import {
   approvalIsWithinScope,
   filterApprovalRequestsByScope,
 } from "./summary";
+import {
+  getApprovalWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 
 export type ApprovalAudience = "admin" | "client" | "shared";
 export type ApprovalStatus = "approved" | "cancelled" | "pending" | "rejected";
@@ -588,6 +592,17 @@ export async function createApprovalRequest(
   }
 
   await syncApprovalCampaignActionItem(approval, actor, "review");
+  revalidateWorkflowPaths(
+    getApprovalWorkflowPaths({
+      audience: approval.audience,
+      clientSlug: approval.clientSlug,
+      entityId: approval.entityId,
+      entityType: approval.entityType,
+      metadata: approval.metadata,
+      pageId: approval.pageId,
+      requestType: approval.requestType,
+    }),
+  );
 
   return approval;
 }
@@ -688,6 +703,17 @@ export async function resolveApprovalRequest(
   );
   await notifyApprovalRequesterResolved(approval, actor);
   await maybeEnqueueApprovedCreativeHandoff(approval);
+  revalidateWorkflowPaths(
+    getApprovalWorkflowPaths({
+      audience: approval.audience,
+      clientSlug: approval.clientSlug,
+      entityId: approval.entityId,
+      entityType: approval.entityType,
+      metadata: approval.metadata,
+      pageId: approval.pageId,
+      requestType: approval.requestType,
+    }),
+  );
 
   return approval;
 }

@@ -9,6 +9,11 @@ function clientPaths(clientSlug: string | null | undefined, paths: string[]) {
   return paths.map((path) => path.replaceAll(":clientSlug", clientSlug));
 }
 
+function metadataString(metadata: Record<string, unknown> | null | undefined, key: string) {
+  const value = metadata?.[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
 export function getCampaignWorkflowPaths(
   clientSlug: string | null | undefined,
   campaignId: string,
@@ -93,6 +98,63 @@ export function getEventWorkflowPaths(clientSlug: string | null | undefined, eve
       "/client/:clientSlug/workspace",
       "/client/:clientSlug/workspace/tasks",
     ]),
+  ]);
+}
+
+interface ApprovalWorkflowPathsInput {
+  audience: "admin" | "client" | "shared";
+  clientSlug: string | null | undefined;
+  entityId?: string | null;
+  entityType?: string | null;
+  metadata?: Record<string, unknown> | null;
+  pageId?: string | null;
+  requestType?: string | null;
+}
+
+export function getApprovalWorkflowPaths(input: ApprovalWorkflowPathsInput) {
+  const clientSlug = input.audience === "admin" ? null : input.clientSlug;
+  const campaignId =
+    input.entityType === "campaign" && input.entityId
+      ? input.entityId
+      : metadataString(input.metadata, "campaignId");
+  const eventId =
+    input.entityType === "event" && input.entityId
+      ? input.entityId
+      : metadataString(input.metadata, "eventId");
+  const assetId =
+    input.entityType === "asset" && input.entityId
+      ? input.entityId
+      : input.requestType === "asset_review" || input.requestType === "asset_import_review"
+        ? metadataString(input.metadata, "assetId")
+        : null;
+  const contactId =
+    input.entityType === "crm_contact" && input.entityId
+      ? input.entityId
+      : metadataString(input.metadata, "contactId");
+
+  return uniquePaths([
+    "/admin/activity",
+    "/admin/approvals",
+    "/admin/dashboard",
+    "/admin/notifications",
+    "/admin/reports",
+    "/admin/workspace",
+    "/admin/workspace/tasks",
+    ...clientPaths(clientSlug, [
+      "/client/:clientSlug",
+      "/client/:clientSlug/approvals",
+      "/client/:clientSlug/notifications",
+      "/client/:clientSlug/reports",
+      "/client/:clientSlug/updates",
+      "/client/:clientSlug/workspace",
+      "/client/:clientSlug/workspace/tasks",
+    ]),
+    ...(input.pageId ? [`/admin/workspace/${input.pageId}`] : []),
+    ...(input.pageId && clientSlug ? [`/client/${clientSlug}/workspace/${input.pageId}`] : []),
+    ...(campaignId ? getCampaignWorkflowPaths(clientSlug, campaignId) : []),
+    ...(assetId ? getAssetWorkflowPaths(clientSlug, assetId) : []),
+    ...(eventId ? getEventWorkflowPaths(clientSlug, eventId) : []),
+    ...(contactId ? getCrmWorkflowPaths(clientSlug, contactId) : []),
   ]);
 }
 

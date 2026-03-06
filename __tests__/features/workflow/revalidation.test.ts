@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  getApprovalWorkflowPaths,
   getAssetWorkflowPaths,
   getCampaignWorkflowPaths,
   getCrmWorkflowPaths,
@@ -88,6 +89,73 @@ describe("workflow revalidation paths", () => {
       "/admin/events/evt_1",
       "/admin/workspace",
       "/admin/workspace/tasks",
+    ]);
+  });
+
+  it("covers approval centers plus linked entity surfaces", () => {
+    expect(
+      getApprovalWorkflowPaths({
+        audience: "shared",
+        clientSlug: "zamora",
+        entityId: "asset_1",
+        entityType: "asset",
+        metadata: {
+          assetId: "asset_1",
+          campaignId: "cmp_1",
+        },
+        pageId: "page_1",
+        requestType: "asset_review",
+      }),
+    ).toEqual([
+      "/admin/activity",
+      "/admin/approvals",
+      "/admin/dashboard",
+      "/admin/notifications",
+      "/admin/reports",
+      "/admin/workspace",
+      "/admin/workspace/tasks",
+      "/client/zamora",
+      "/client/zamora/approvals",
+      "/client/zamora/notifications",
+      "/client/zamora/reports",
+      "/client/zamora/updates",
+      "/client/zamora/workspace",
+      "/client/zamora/workspace/tasks",
+      "/admin/workspace/page_1",
+      "/client/zamora/workspace/page_1",
+      "/admin/campaigns",
+      "/admin/campaigns/cmp_1",
+      "/admin/conversations",
+      "/client/zamora/campaign/cmp_1",
+      "/client/zamora/campaigns",
+      "/client/zamora/conversations",
+      "/admin/assets",
+      "/admin/assets/asset_1",
+      "/client/zamora/assets",
+      "/client/zamora/assets/asset_1",
+    ]);
+
+    expect(
+      getApprovalWorkflowPaths({
+        audience: "admin",
+        clientSlug: "zamora",
+        entityId: "evt_1",
+        entityType: "event",
+        metadata: null,
+        pageId: null,
+        requestType: "event_review",
+      }),
+    ).toEqual([
+      "/admin/activity",
+      "/admin/approvals",
+      "/admin/dashboard",
+      "/admin/notifications",
+      "/admin/reports",
+      "/admin/workspace",
+      "/admin/workspace/tasks",
+      "/admin/conversations",
+      "/admin/events",
+      "/admin/events/evt_1",
     ]);
   });
 });

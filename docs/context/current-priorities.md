@@ -85,6 +85,7 @@ The short-term focus is:
 - Keep shared client approval and discussion broadcasts assignment-scope-aware too, so limited client members are not even notified about campaigns, events, or assets outside their allowed scope.
 - Keep notification deep links app-aware for discussion and follow-up entity types too, so routed updates land in conversations, campaigns, CRM, assets, or events instead of dead-ending in generic pages.
 - When route handlers create or mutate cross-app workflow items or discussion state, revalidate the affected admin/client operating surfaces too, so the next visit to dashboards, detail pages, queues, updates pages, and conversations reflects the new work immediately.
+- Keep approval creation and resolution on that same shared revalidation path too, so direct approval actions and system-created approvals from uploads refresh approvals centers, inboxes, dashboards, reports, workspace shells, and linked entity views without relying on individual callers.
 - Treat conversations as a first-class app surface on both admin and client, not only as dashboard widgets or detail-page side panels, so unresolved discussion can be managed in one place.
 - Keep admin conversations actionable too, so operators can create linked action or follow-up items directly from open campaign, CRM, asset, and event threads without detouring into each detail page first.
 - Reuse the shared conversations feature module anywhere open discussion is summarized, instead of re-querying each comment table per route and letting discussion logic drift.
