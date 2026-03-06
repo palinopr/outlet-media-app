@@ -3,6 +3,7 @@ import { BellRing, Bot, CheckSquare, Image as ImageIcon, MessageSquareMore, Badg
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { DashboardAssetsSection } from "@/components/dashboard/dashboard-assets-section";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
+import { EventOperationsSection } from "@/components/events/event-operations-section";
 import { StatCard } from "@/components/admin/stat-card";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
@@ -106,6 +107,14 @@ export default async function ClientUpdatesPage({ params }: Props) {
         emptyState="Your campaign workflows look clear right now."
         summary={updates.opsSummary}
         title="What needs attention"
+        variant="client"
+      />
+
+      <EventOperationsSection
+        description="The event-side follow-through, show threads, and ticketing updates that still need a response."
+        hrefPrefix={`/client/${slug}/event`}
+        summary={updates.eventOperations}
+        title="Event pressure"
         variant="client"
       />
 

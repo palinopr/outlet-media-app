@@ -51,6 +51,7 @@ The short-term focus is:
 - Treat event discussions and event follow-up items as first-class workflow objects so ticketing context, promotion questions, and show-level next steps stay attached to the event instead of being lost in generic notes.
 - On event pages, combine event-specific agent outcomes with linked campaign agent outcomes so the show-level operating view stays complete instead of forcing users to infer work from campaign pages alone.
 - Treat `/admin/activity` as the shared operations center, not only a legacy audit table, so admins can manage approvals, discussions, agent follow-through, and cross-app activity from one place.
+- Keep the admin operations center and client updates center event-aware too, so show-level pressure is visible on the queue-first surfaces and not only inside the dedicated events app.
 - Keep the operations center and client updates center queue-first too, so users can move from visibility into the actual cross-app next steps without leaving those surfaces.
 - Keep `admin_activity` as a secondary audit trail behind the operations center instead of letting low-level page-view logs become the main operating surface.
 - Keep asset review pressure visible on the regular dashboards too, so summary-first users can spot creative bottlenecks without opening the full asset app first.

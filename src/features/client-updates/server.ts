@@ -1,6 +1,7 @@
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listApprovalRequests } from "@/features/approvals/server";
 import { getDashboardActionCenter, getDashboardAssetSummary, getDashboardOpsSummary } from "@/features/dashboard/server";
+import { getEventOperationsSummary } from "@/features/events/server";
 import { buildOperationsCenterSnapshot } from "@/features/operations-center/summary";
 import { filterSystemEventsByClientScope, listSystemEvents } from "@/features/system-events/server";
 import { getWorkQueue } from "@/features/work-queue/server";
@@ -12,7 +13,7 @@ export async function getClientUpdatesCenter(
   scope: ScopeFilter | undefined,
   userId?: string | null,
 ) {
-  const [actionCenter, agentOutcomes, approvals, assetSummary, rawEvents, opsSummary, workQueue, assignedWorkQueue] =
+  const [actionCenter, agentOutcomes, approvals, assetSummary, eventOperations, rawEvents, opsSummary, workQueue, assignedWorkQueue] =
     await Promise.all([
       getDashboardActionCenter({
         clientSlug,
@@ -38,6 +39,12 @@ export async function getClientUpdatesCenter(
       getDashboardAssetSummary({
         clientSlug,
         limit: 4,
+        scope,
+      }),
+      getEventOperationsSummary({
+        clientSlug,
+        limit: 5,
+        mode: "client",
         scope,
       }),
       listSystemEvents({
@@ -79,6 +86,7 @@ export async function getClientUpdatesCenter(
     agentOutcomes,
     approvals,
     assetSummary,
+    eventOperations,
     events,
     opsSummary,
     workQueue,

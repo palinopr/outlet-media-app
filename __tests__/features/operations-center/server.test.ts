@@ -10,6 +10,10 @@ vi.mock("@/features/dashboard/server", () => ({
   getDashboardOpsSummary: vi.fn(),
 }));
 
+vi.mock("@/features/events/server", () => ({
+  getEventOperationsSummary: vi.fn(),
+}));
+
 vi.mock("@/features/system-events/server", () => ({
   listSystemEvents: vi.fn(),
 }));
@@ -24,6 +28,7 @@ import {
   getDashboardAssetSummary,
   getDashboardOpsSummary,
 } from "@/features/dashboard/server";
+import { getEventOperationsSummary } from "@/features/events/server";
 import { getAdminOperationsCenter } from "@/features/operations-center/server";
 import { listSystemEvents } from "@/features/system-events/server";
 import { getWorkQueue } from "@/features/work-queue/server";
@@ -39,6 +44,11 @@ describe("getAdminOperationsCenter", () => {
     vi.mocked(listAgentOutcomes).mockResolvedValue([]);
     vi.mocked(getDashboardAssetSummary).mockResolvedValue({
       attentionAssets: [],
+      metrics: [],
+    });
+    vi.mocked(getEventOperationsSummary).mockResolvedValue({
+      attentionEvents: [],
+      eventsNeedingAttention: 0,
       metrics: [],
     });
     vi.mocked(listSystemEvents).mockResolvedValue([]);
@@ -64,6 +74,10 @@ describe("getAdminOperationsCenter", () => {
     expect(getWorkQueue).toHaveBeenNthCalledWith(2, {
       assigneeId: "admin_1",
       limit: 4,
+      mode: "admin",
+    });
+    expect(getEventOperationsSummary).toHaveBeenCalledWith({
+      limit: 5,
       mode: "admin",
     });
     expect(center.workQueue).toEqual({

@@ -14,6 +14,10 @@ vi.mock("@/features/dashboard/server", () => ({
   getDashboardOpsSummary: vi.fn(),
 }));
 
+vi.mock("@/features/events/server", () => ({
+  getEventOperationsSummary: vi.fn(),
+}));
+
 vi.mock("@/features/system-events/server", () => ({
   filterSystemEventsByClientScope: vi.fn(),
   listSystemEvents: vi.fn(),
@@ -30,6 +34,7 @@ import {
   getDashboardAssetSummary,
   getDashboardOpsSummary,
 } from "@/features/dashboard/server";
+import { getEventOperationsSummary } from "@/features/events/server";
 import { getClientUpdatesCenter } from "@/features/client-updates/server";
 import {
   filterSystemEventsByClientScope,
@@ -49,6 +54,11 @@ describe("getClientUpdatesCenter", () => {
     vi.mocked(listApprovalRequests).mockResolvedValue([]);
     vi.mocked(getDashboardAssetSummary).mockResolvedValue({
       attentionAssets: [],
+      metrics: [],
+    });
+    vi.mocked(getEventOperationsSummary).mockResolvedValue({
+      attentionEvents: [],
+      eventsNeedingAttention: 0,
       metrics: [],
     });
     vi.mocked(listSystemEvents).mockResolvedValue([]);
@@ -83,6 +93,12 @@ describe("getClientUpdatesCenter", () => {
       assigneeId: "user_1",
       clientSlug: "zamora",
       limit: 4,
+      mode: "client",
+      scope,
+    });
+    expect(getEventOperationsSummary).toHaveBeenCalledWith({
+      clientSlug: "zamora",
+      limit: 5,
       mode: "client",
       scope,
     });

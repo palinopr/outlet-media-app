@@ -1,15 +1,17 @@
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getDashboardActionCenter, getDashboardAssetSummary, getDashboardOpsSummary } from "@/features/dashboard/server";
+import { getEventOperationsSummary } from "@/features/events/server";
 import { buildOperationsCenterSnapshot } from "@/features/operations-center/summary";
 import { listSystemEvents } from "@/features/system-events/server";
 import { getWorkQueue } from "@/features/work-queue/server";
 import { buildWorkQueueSummary } from "@/features/work-queue/summary";
 
 export async function getAdminOperationsCenter(userId?: string | null) {
-  const [actionCenter, agentOutcomes, assetSummary, events, opsSummary, workQueue, assignedWorkQueue] = await Promise.all([
+  const [actionCenter, agentOutcomes, assetSummary, eventOperations, events, opsSummary, workQueue, assignedWorkQueue] = await Promise.all([
     getDashboardActionCenter({ limit: 4, mode: "admin" }),
     listAgentOutcomes({ audience: "all", limit: 6 }),
     getDashboardAssetSummary({ limit: 6 }),
+    getEventOperationsSummary({ limit: 5, mode: "admin" }),
     listSystemEvents({ audience: "all", limit: 8 }),
     getDashboardOpsSummary({ limit: 6, mode: "admin" }),
     getWorkQueue({ limit: 6, mode: "admin" }),
@@ -23,6 +25,7 @@ export async function getAdminOperationsCenter(userId?: string | null) {
     assignedWorkQueue,
     agentOutcomes,
     assetSummary,
+    eventOperations,
     events,
     opsSummary,
     workQueue,

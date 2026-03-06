@@ -17,6 +17,7 @@ import { AdminPageHeader } from "@/components/admin/page-header";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { DashboardAssetsSection } from "@/components/dashboard/dashboard-assets-section";
+import { EventOperationsSection } from "@/components/events/event-operations-section";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkQueueSection } from "@/components/workflow/work-queue-section";
@@ -119,6 +120,15 @@ export default async function ActivityPage({ searchParams }: Props) {
         crmHrefPrefix="/admin/crm"
         description="The highest-priority approvals, CRM follow-ups, and discussions that still need a human response."
         eventHrefPrefix="/admin/events"
+        variant="admin"
+      />
+
+      <EventOperationsSection
+        description="The event-side promotion pressure, open show threads, and recent show updates that still need operator attention."
+        hrefPrefix="/admin/events"
+        showClientSlug
+        summary={operations.eventOperations}
+        title="Event pressure"
         variant="admin"
       />
 
