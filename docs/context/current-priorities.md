@@ -61,6 +61,7 @@ The short-term focus is:
 - Surface client-side Meta connection health inside that same account center, so owners can spot stale, expiring, or disconnected ad account links before campaign workflow silently breaks.
 - Keep Meta connect/disconnect owner-gated on both the client UI and the server routes, so non-owner client members can see connection health without being able to change the client account wiring.
 - Treat the admin users page as an access-governance surface, not only a roster, so admins can spot pending invites, unassigned client users, and client accounts with weak coverage before access problems grow.
+- Keep pending invites actionable on those admin access-governance surfaces, so admins can revoke stale invites directly from the admin users page and admin settings control center instead of detouring into a separate table first.
 - Treat the admin settings page as a platform control center, not only a static config screen, so integration health, pending access pressure, and client setup issues are visible next to onboarding actions.
 - Filter shared client activity by assigned campaign/event scope where possible, so limited-scope members get a coherent feed without seeing unrelated workflow context.
 - Keep cross-app activity links entity-aware, so shared activity opens the correct campaign, asset, CRM contact, or event detail page instead of dropping users into the wrong surface.

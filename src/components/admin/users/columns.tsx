@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { createSelectColumn } from "@/components/admin/data-table/select-column";
-import { Trash2, Loader2, Check, X, ChevronDown } from "lucide-react";
+import { Trash2, Loader2, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ColumnHeader } from "@/components/admin/data-table/column-header";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { RevokeInvitationButton } from "./revoke-invitation-button";
 import { StatusSelect } from "@/components/admin/status-select";
 import {
   DropdownMenu,
@@ -17,7 +18,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { fmtDate, slugToLabel } from "@/lib/formatters";
-import { changeUserRole, deleteUser, revokeInvitation } from "@/app/admin/actions/users";
+import { changeUserRole, deleteUser } from "@/app/admin/actions/users";
 import { toast } from "sonner";
 import type { UserRow } from "@/app/admin/users/data";
 
@@ -96,34 +97,6 @@ function AssignCell({ user, clients }: { user: UserRow; clients: ClientOption[] 
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-function RevokeButton({ invitationId, email }: { invitationId: string; email: string }) {
-  return (
-    <ConfirmDialog
-      trigger={
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
-        >
-          <X className="h-3.5 w-3.5" />
-        </Button>
-      }
-      title="Revoke Invitation"
-      description={`This will revoke the pending invitation for ${email}.`}
-      confirmLabel="Revoke"
-      variant="destructive"
-      onConfirm={async () => {
-        try {
-          await revokeInvitation({ invitationId });
-          toast.success(`Invitation revoked for ${email}`);
-        } catch (err) {
-          toast.error(err instanceof Error ? err.message : "Failed to revoke invitation");
-        }
-      }}
-    />
   );
 }
 
@@ -213,7 +186,21 @@ export function getUserColumns(opts: UserColumnsOptions): ColumnDef<UserRow>[] {
       cell: ({ row }) => {
         const u = row.original;
         if (u.status === "invited") {
-          return <RevokeButton invitationId={u.id} email={u.email} />;
+          return (
+            <RevokeInvitationButton
+              email={u.email}
+              invitationId={u.id}
+              trigger={
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-red-400"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              }
+            />
+          );
         }
         return (
           <ConfirmDialog

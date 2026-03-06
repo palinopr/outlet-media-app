@@ -3,8 +3,10 @@ import { getUsers } from "./data";
 import { getClientSummaries } from "../clients/data";
 import { UserTable } from "@/components/admin/users/user-table";
 import { Users, Shield, UserCheck, Clock, ArrowRight, MailPlus, UserRoundX } from "lucide-react";
+import { RevokeInvitationButton } from "@/components/admin/users/revoke-invitation-button";
 import { StatCard } from "@/components/admin/stat-card";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { slugToLabel } from "@/lib/formatters";
 import { buildUsersAccessSummary } from "@/features/users/summary";
 
@@ -64,11 +66,29 @@ export default async function UsersPage() {
             ) : (
               <div className="space-y-3">
                 {accessSummary.pendingInvites.map((invite) => (
-                  <div key={invite.id} className="rounded-xl border border-border/60 bg-muted/20 p-3">
-                    <p className="text-sm font-medium">{invite.email}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {invite.client_slug ? slugToLabel(invite.client_slug) : "No client selected"} • Invited
-                    </p>
+                  <div
+                    key={invite.id}
+                    className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{invite.email}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {invite.client_slug ? slugToLabel(invite.client_slug) : "No client selected"} • Invited
+                      </p>
+                    </div>
+                    <RevokeInvitationButton
+                      email={invite.email}
+                      invitationId={invite.id}
+                      trigger={
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 px-2 text-muted-foreground hover:text-red-400"
+                        >
+                          Revoke
+                        </Button>
+                      }
+                    />
                   </div>
                 ))}
               </div>

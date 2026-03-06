@@ -1,14 +1,16 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Bot, Key, UserPlus, ArrowRight, Users, Clock } from "lucide-react";
+import { Settings, Bot, Key, UserPlus, ArrowRight, Users, Clock, X } from "lucide-react";
 import { ClientOnboardForm } from "@/components/admin/client-onboard-form";
 import { AGENT_CONFIG, AGENT_TYPE_KEYS } from "@/components/admin/agents/constants";
+import { RevokeInvitationButton } from "@/components/admin/users/revoke-invitation-button";
 import { getClientSummaries } from "../clients/data";
 import { getUsers } from "../users/data";
 import { StatCard } from "@/components/admin/stat-card";
 import { slugToLabel } from "@/lib/formatters";
 import { buildPlatformSettingsSummary, type PlatformSettingsMetricKey } from "@/features/settings/summary";
+import { Button } from "@/components/ui/button";
 
 // ─── API key display entries ───────────────────────────────────────────────
 
@@ -127,11 +129,30 @@ export default async function SettingsPage() {
               </p>
             ) : (
               summary.pendingInvites.map((invite) => (
-                <div key={invite.id} className="rounded-xl border border-border/60 bg-muted/20 p-3">
-                  <p className="text-sm font-medium">{invite.email}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {invite.client_slug ? slugToLabel(invite.client_slug) : "Admin access"} • Invite pending
-                  </p>
+                <div
+                  key={invite.id}
+                  className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{invite.email}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {invite.client_slug ? slugToLabel(invite.client_slug) : "Admin access"} • Invite pending
+                    </p>
+                  </div>
+                  <RevokeInvitationButton
+                    email={invite.email}
+                    invitationId={invite.id}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 px-2 text-muted-foreground hover:text-red-400"
+                      >
+                        <X className="mr-1.5 h-3.5 w-3.5" />
+                        Revoke
+                      </Button>
+                    }
+                  />
                 </div>
               ))
             )}
