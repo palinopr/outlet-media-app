@@ -1,5 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { getMemberAccessForSlug } from "@/lib/member-access";
+import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export type EventCommentVisibility = "admin_only" | "shared";
@@ -69,19 +69,29 @@ export async function canAccessEventComments(
   userId: string,
   clientSlug: string | null,
   visibility?: EventCommentVisibility,
-) {
+): Promise<{ allowed: boolean; isAdmin: boolean; scope?: ScopeFilter }> {
   const user = await currentUser();
   const role = (user?.publicMetadata as { role?: string } | null)?.role;
   const isAdmin = role === "admin";
 
   if (isAdmin) {
-    return { allowed: true, isAdmin: true };
+    return { allowed: true, isAdmin: true, scope: undefined };
   }
 
   if (visibility === "admin_only" || !clientSlug) {
-    return { allowed: false, isAdmin: false };
+    return { allowed: false, isAdmin: false, scope: undefined };
   }
 
-  const allowed = !!(await getMemberAccessForSlug(userId, clientSlug));
-  return { allowed, isAdmin: false };
+  const access = await getMemberAccessForSlug(userId, clientSlug);
+  return {
+    allowed: !!access,
+    isAdmin: false,
+    scope:
+      access?.scope === "assigned"
+        ? {
+            allowedCampaignIds: access.allowedCampaignIds,
+            allowedEventIds: access.allowedEventIds,
+          }
+        : undefined,
+  };
 }

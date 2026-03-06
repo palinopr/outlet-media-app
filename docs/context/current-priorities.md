@@ -40,6 +40,7 @@ The short-term focus is:
 - Reuse the shared conversations, work queue, and agent follow-through modules on asset surfaces instead of creating asset-only summary logic that drifts from campaigns, CRM, and events.
 - Keep client asset visibility scope-aware for assigned members, so asset lists, asset detail routes, asset summaries, and asset discussion APIs only expose creative linked to the campaigns or events that member is actually allowed to see.
 - On client campaign detail routes, prove the campaign belongs to that client and matches assigned scope before fetching external Meta detail, so a guessed campaign id cannot bypass tenant or scope boundaries.
+- Keep client campaign and event comment APIs scope-aware too, so guessed ids inside the same client account cannot reveal or mutate discussions outside the member's assigned campaigns or events.
 - Treat event discussions and event follow-up items as first-class workflow objects so ticketing context, promotion questions, and show-level next steps stay attached to the event instead of being lost in generic notes.
 - On event pages, combine event-specific agent outcomes with linked campaign agent outcomes so the show-level operating view stays complete instead of forcing users to infer work from campaign pages alone.
 - Treat `/admin/activity` as the shared operations center, not only a legacy audit table, so admins can manage approvals, discussions, agent follow-through, and cross-app activity from one place.

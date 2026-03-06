@@ -11,6 +11,7 @@ import {
   canAccessCampaignComments,
   type CampaignCommentVisibility,
 } from "@/features/campaign-comments/server";
+import { allowsCampaignInScope } from "@/features/client-portal/scope";
 import { logSystemEvent } from "@/features/system-events/server";
 
 function excerpt(text: string, limit = 140) {
@@ -82,6 +83,9 @@ export async function GET(request: NextRequest) {
 
   const access = await canAccessCampaignComments(userId, clientSlug);
   if (!access.allowed) return apiError("Forbidden", 403);
+  if (!allowsCampaignInScope(access.scope, campaignId)) {
+    return apiError("Campaign not found", 404);
+  }
 
   let query = supabaseAdmin
     .from("campaign_comments")
@@ -113,6 +117,9 @@ export async function POST(request: NextRequest) {
 
   const access = await canAccessCampaignComments(userId, body.client_slug, body.visibility);
   if (!access.allowed) return apiError("Forbidden", 403);
+  if (!allowsCampaignInScope(access.scope, body.campaign_id)) {
+    return apiError("Campaign not found", 404);
+  }
 
   let visibility: CampaignCommentVisibility = body.visibility;
 
@@ -242,6 +249,9 @@ export async function PATCH(request: NextRequest) {
     existing.visibility as CampaignCommentVisibility,
   );
   if (!access.allowed) return apiError("Forbidden", 403);
+  if (!allowsCampaignInScope(access.scope, existing.campaign_id as string)) {
+    return apiError("Comment not found", 404);
+  }
 
   const { error: dbErr } = await supabaseAdmin
     .from("campaign_comments")
@@ -295,6 +305,9 @@ export async function DELETE(request: NextRequest) {
     existing.visibility as CampaignCommentVisibility,
   );
   if (!access.allowed) return apiError("Forbidden", 403);
+  if (!allowsCampaignInScope(access.scope, existing.campaign_id as string)) {
+    return apiError("Comment not found", 404);
+  }
   if (!access.isAdmin && existing.author_id !== userId) {
     return apiError("Forbidden", 403);
   }

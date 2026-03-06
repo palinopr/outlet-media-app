@@ -9,6 +9,7 @@ import {
   type EventCommentVisibility,
   listEventComments,
 } from "@/features/event-comments/server";
+import { allowsEventInScope } from "@/features/client-portal/scope";
 import { getEventOperatingData, getEventRecordById } from "@/features/events/server";
 import { logSystemEvent } from "@/features/system-events/server";
 
@@ -99,6 +100,9 @@ export async function GET(request: NextRequest) {
 
   const access = await canAccessEventComments(userId, event.clientSlug);
   if (!access.allowed) return apiError("Forbidden", 403);
+  if (!allowsEventInScope(access.scope, eventId)) {
+    return apiError("Event not found", 404);
+  }
 
   const comments = await listEventComments({
     eventId,
@@ -124,6 +128,9 @@ export async function POST(request: NextRequest) {
 
   const access = await canAccessEventComments(userId, eventContext.event.clientSlug, body.visibility);
   if (!access.allowed) return apiError("Forbidden", 403);
+  if (!allowsEventInScope(access.scope, body.event_id)) {
+    return apiError("Event not found", 404);
+  }
 
   let visibility: EventCommentVisibility = body.visibility;
 
@@ -263,6 +270,9 @@ export async function PATCH(request: NextRequest) {
     existing.visibility as EventCommentVisibility,
   );
   if (!access.allowed) return apiError("Forbidden", 403);
+  if (!allowsEventInScope(access.scope, existing.event_id as string)) {
+    return apiError("Comment not found", 404);
+  }
 
   const { error: dbErr } = await supabaseAdmin
     .from("event_comments" as never)
@@ -318,6 +328,9 @@ export async function DELETE(request: NextRequest) {
     existing.visibility as EventCommentVisibility,
   );
   if (!access.allowed) return apiError("Forbidden", 403);
+  if (!allowsEventInScope(access.scope, existing.event_id as string)) {
+    return apiError("Comment not found", 404);
+  }
   if (!access.isAdmin && existing.author_id !== userId) {
     return apiError("Forbidden", 403);
   }
