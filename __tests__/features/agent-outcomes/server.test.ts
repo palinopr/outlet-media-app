@@ -114,4 +114,55 @@ describe("matchesContext", () => {
     expect(assetScoped).toBe(true);
     expect(campaignOnly).toBe(false);
   });
+
+  it("keeps asset-linked outcomes visible on generic client surfaces only when the asset id is allowed", () => {
+    const allowed = matchesContext(
+      request({
+        assetId: "asset_123",
+      }),
+      null,
+      null,
+      "all",
+      null,
+      null,
+      new Set<string>(),
+      new Set<string>(),
+      new Set(["asset_123"]),
+    );
+
+    const blocked = matchesContext(
+      request({
+        assetId: "asset_999",
+      }),
+      null,
+      null,
+      "all",
+      null,
+      null,
+      new Set<string>(),
+      new Set<string>(),
+      new Set(["asset_123"]),
+    );
+
+    expect(allowed).toBe(true);
+    expect(blocked).toBe(false);
+  });
+
+  it("does not widen event-specific views with unrelated allowed asset ids", () => {
+    const result = matchesContext(
+      request({
+        assetId: "asset_123",
+      }),
+      null,
+      null,
+      "all",
+      null,
+      "event_123",
+      new Set<string>(),
+      new Set(["event_123"]),
+      new Set(["asset_123"]),
+    );
+
+    expect(result).toBe(false);
+  });
 });

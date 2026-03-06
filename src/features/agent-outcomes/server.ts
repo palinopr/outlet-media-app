@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import type { Json } from "@/lib/database.types";
+import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import {
   buildAgentOutcomeView,
   type AgentOutcomeRequestRecord,
@@ -67,6 +68,7 @@ export function matchesContext(
   eventId: string | null | undefined,
   scopeCampaignIds?: Set<string> | null,
   scopeEventIds?: Set<string> | null,
+  scopeAssetIds?: Set<string> | null,
 ) {
   const requestAssetId =
     typeof request.metadata.assetId === "string" ? request.metadata.assetId : null;
@@ -76,6 +78,9 @@ export function matchesContext(
     typeof request.metadata.crmContactId === "string" ? request.metadata.crmContactId : null;
   const requestEventId =
     typeof request.metadata.eventId === "string" ? request.metadata.eventId : null;
+  const matchesScopedCampaign = !!(requestCampaignId && scopeCampaignIds?.has(requestCampaignId));
+  const matchesScopedEvent = !!(requestEventId && scopeEventIds?.has(requestEventId));
+  const matchesScopedAsset = !!(requestAssetId && scopeAssetIds?.has(requestAssetId));
 
   if (assetId && requestAssetId !== assetId) return false;
   if (contextType === "asset" && !requestAssetId) return false;
@@ -83,8 +88,6 @@ export function matchesContext(
   if (contextType === "crm_contact" && !requestCrmContactId) return false;
   if (campaignId && requestCampaignId !== campaignId) return false;
   if (crmContactId && requestCrmContactId !== crmContactId) return false;
-  const matchesScopedCampaign = !!(requestCampaignId && scopeCampaignIds?.has(requestCampaignId));
-  const matchesScopedEvent = !!(requestEventId && scopeEventIds?.has(requestEventId));
 
   if (eventId) {
     const matchesRequestedEvent = requestEventId === eventId;
@@ -95,8 +98,8 @@ export function matchesContext(
     } else if (!matchesRequestedEvent) {
       return false;
     }
-  } else if (scopeCampaignIds || scopeEventIds) {
-    if (!matchesScopedCampaign && !matchesScopedEvent) {
+  } else if (contextType === "all" && (scopeCampaignIds || scopeEventIds || scopeAssetIds)) {
+    if (!matchesScopedCampaign && !matchesScopedEvent && !matchesScopedAsset) {
       return false;
     }
   }
@@ -132,8 +135,26 @@ export async function listAgentOutcomes(
     return [];
   }
 
-  const requests: AgentOutcomeRequestRecord[] = (eventRows ?? [])
-    .map((row) => mapRequestRow(row as Record<string, unknown>))
+  const requests: AgentOutcomeRequestRecord[] = (eventRows ?? []).map((row) =>
+    mapRequestRow(row as Record<string, unknown>),
+  );
+  const scopeAssetIds =
+    options.clientSlug && (options.scopeCampaignIds != null || options.scopeEventIds != null)
+      ? await listVisibleAssetIdsForScope(
+          options.clientSlug,
+          requests
+            .map((request) =>
+              typeof request.metadata.assetId === "string" ? request.metadata.assetId : null,
+            )
+            .filter((assetId): assetId is string => assetId != null),
+          {
+            allowedCampaignIds: options.scopeCampaignIds ?? null,
+            allowedEventIds: options.scopeEventIds ?? null,
+          },
+        )
+      : null;
+
+  const filteredRequests = requests
     .filter((request) =>
       matchesContext(
         request,
@@ -144,12 +165,13 @@ export async function listAgentOutcomes(
         options.eventId,
         scopeCampaignIds,
         scopeEventIds,
+        scopeAssetIds,
       ),
     );
 
-  if (requests.length === 0) return [];
+  if (filteredRequests.length === 0) return [];
 
-  const taskIds = [...new Set(requests.map((request) => request.taskId))];
+  const taskIds = [...new Set(filteredRequests.map((request) => request.taskId))];
   const [
     { data: taskRows, error: tasksError },
     { data: linkedRows, error: linkedError },
@@ -188,7 +210,7 @@ export async function listAgentOutcomes(
 
   if (tasksError) {
     console.error("[agent-outcomes] task lookup failed:", tasksError.message);
-    return requests
+    return filteredRequests
       .slice(0, options.limit ?? 6)
       .map((request) => buildAgentOutcomeView(request));
   }
@@ -256,7 +278,7 @@ export async function listAgentOutcomes(
     }
   }
 
-  return requests
+  return filteredRequests
     .map((request) =>
       buildAgentOutcomeView(
         request,
