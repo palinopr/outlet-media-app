@@ -3,6 +3,13 @@ import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { CreateCommentSchema, ResolveCommentSchema } from "@/lib/api-schemas";
 import { currentUser } from "@clerk/nextjs/server";
+import { logSystemEvent } from "@/features/system-events/server";
+
+function excerpt(text: string, limit = 140) {
+  const normalized = text.trim().replace(/\s+/g, " ");
+  if (normalized.length <= limit) return normalized;
+  return `${normalized.slice(0, limit - 1)}…`;
+}
 
 export async function GET(request: NextRequest) {
   const { error } = await authGuard();
@@ -46,6 +53,31 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (dbErr) return apiError(dbErr.message);
+
+  const { data: page } = await supabaseAdmin
+    .from("workspace_pages")
+    .select("title, client_slug")
+    .eq("id", body.page_id)
+    .single();
+
+  if (page) {
+    await logSystemEvent({
+      eventName: "workspace_comment_added",
+      actorId: userId,
+      clientSlug: page.client_slug,
+      entityType: "workspace_comment",
+      entityId: data.id,
+      pageId: body.page_id,
+      summary: body.parent_comment_id
+        ? `Replied in "${page.title}"`
+        : `Commented on "${page.title}"`,
+      detail: excerpt(body.content),
+      metadata: {
+        parentCommentId: body.parent_comment_id ?? null,
+      },
+    });
+  }
+
   return NextResponse.json({ comment: data }, { status: 201 });
 }
 
@@ -60,12 +92,44 @@ export async function PATCH(request: NextRequest) {
   const { data: body, error: valErr } = await validateRequest(request, ResolveCommentSchema);
   if (valErr) return valErr;
 
+  const { data: existing } = await supabaseAdmin
+    .from("workspace_comments")
+    .select("page_id, content, resolved")
+    .eq("id", id)
+    .single();
+
+  if (!existing) return apiError("Comment not found", 404);
+
   const { error: dbErr } = await supabaseAdmin
     .from("workspace_comments")
     .update({ resolved: body.resolved, updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (dbErr) return apiError(dbErr.message);
+
+  if (body.resolved !== existing.resolved) {
+    const { data: page } = await supabaseAdmin
+      .from("workspace_pages")
+      .select("title, client_slug")
+      .eq("id", existing.page_id)
+      .single();
+
+    if (page) {
+      await logSystemEvent({
+        eventName: "workspace_comment_resolved",
+        actorId: userId,
+        clientSlug: page.client_slug,
+        entityType: "workspace_comment",
+        entityId: id,
+        pageId: existing.page_id,
+        summary: body.resolved
+          ? `Resolved a comment on "${page.title}"`
+          : `Reopened a comment on "${page.title}"`,
+        detail: excerpt(existing.content),
+      });
+    }
+  }
+
   return NextResponse.json({ success: true });
 }
 
@@ -77,6 +141,15 @@ export async function DELETE(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id");
   if (!id) return apiError("id required", 400);
 
+  const { data: existing } = await supabaseAdmin
+    .from("workspace_comments")
+    .select("page_id, content")
+    .eq("id", id)
+    .eq("author_id", userId)
+    .single();
+
+  if (!existing) return apiError("Comment not found", 404);
+
   const { error: dbErr } = await supabaseAdmin
     .from("workspace_comments")
     .delete()
@@ -84,5 +157,25 @@ export async function DELETE(request: NextRequest) {
     .eq("author_id", userId);
 
   if (dbErr) return apiError(dbErr.message);
+
+  const { data: page } = await supabaseAdmin
+    .from("workspace_pages")
+    .select("title, client_slug")
+    .eq("id", existing.page_id)
+    .single();
+
+  if (page) {
+    await logSystemEvent({
+      eventName: "workspace_comment_deleted",
+      actorId: userId,
+      clientSlug: page.client_slug,
+      entityType: "workspace_comment",
+      entityId: id,
+      pageId: existing.page_id,
+      summary: `Deleted a comment from "${page.title}"`,
+      detail: excerpt(existing.content),
+    });
+  }
+
   return NextResponse.json({ success: true });
 }

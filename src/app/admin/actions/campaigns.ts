@@ -2,10 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
+import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
 import { logAudit } from "./audit";
 import { syncCampaignStatus, syncCampaignBudget } from "./meta-sync";
+import { logSystemEvent } from "@/features/system-events/server";
+
+function eventVisibility(clientSlug: string | null | undefined) {
+  return clientSlug ? "shared" : "admin_only";
+}
+
+function centsLabel(value: number | null | undefined) {
+  if (typeof value !== "number") return "unknown budget";
+  return `$${(value / 100).toFixed(0)}/day`;
+}
 
 const UpdateStatusSchema = z.object({
   campaignId: z.string().min(1),
@@ -18,10 +29,12 @@ export async function updateCampaignStatus(formData: { campaignId: string; statu
 
   const parsed = UpdateStatusSchema.parse(formData);
   if (!supabaseAdmin) throw new Error("DB not configured");
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated");
 
   const { data: old } = await supabaseAdmin
     .from("meta_campaigns")
-    .select("status")
+    .select("client_slug, name, status")
     .eq("campaign_id", parsed.campaignId)
     .single();
 
@@ -33,6 +46,21 @@ export async function updateCampaignStatus(formData: { campaignId: string; statu
   if (error) throw new Error(error.message);
 
   await logAudit("campaign", parsed.campaignId, "update_status", { status: old?.status }, { status: parsed.status });
+  await logSystemEvent({
+    eventName: "campaign_updated",
+    actorId: user.id,
+    clientSlug: old?.client_slug ?? null,
+    visibility: eventVisibility(old?.client_slug),
+    entityType: "campaign",
+    entityId: parsed.campaignId,
+    summary: `Set campaign "${old?.name ?? parsed.campaignId}" to ${parsed.status}`,
+    detail: old?.status ? `Previously ${old.status}.` : null,
+    metadata: {
+      field: "status",
+      from: old?.status ?? null,
+      to: parsed.status,
+    },
+  });
   revalidatePath("/admin/campaigns");
 }
 
@@ -47,10 +75,12 @@ export async function updateCampaignType(formData: { campaignId: string; campaig
 
   const parsed = UpdateTypeSchema.parse(formData);
   if (!supabaseAdmin) throw new Error("DB not configured");
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated");
 
   const { data: old } = await supabaseAdmin
     .from("meta_campaigns")
-    .select("campaign_type")
+    .select("campaign_type, client_slug, name")
     .eq("campaign_id", parsed.campaignId)
     .single();
 
@@ -62,6 +92,21 @@ export async function updateCampaignType(formData: { campaignId: string; campaig
   if (error) throw new Error(error.message);
 
   await logAudit("campaign", parsed.campaignId, "update_type", { campaign_type: old?.campaign_type }, { campaign_type: parsed.campaignType });
+  await logSystemEvent({
+    eventName: "campaign_updated",
+    actorId: user.id,
+    clientSlug: old?.client_slug ?? null,
+    visibility: eventVisibility(old?.client_slug),
+    entityType: "campaign",
+    entityId: parsed.campaignId,
+    summary: `Changed campaign type for "${old?.name ?? parsed.campaignId}"`,
+    detail: `Set type to ${parsed.campaignType}.`,
+    metadata: {
+      field: "campaign_type",
+      from: old?.campaign_type ?? null,
+      to: parsed.campaignType,
+    },
+  });
   revalidatePath("/admin/campaigns");
 }
 
@@ -76,10 +121,12 @@ export async function updateCampaignBudget(formData: { campaignId: string; daily
 
   const parsed = UpdateBudgetSchema.parse(formData);
   if (!supabaseAdmin) throw new Error("DB not configured");
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated");
 
   const { data: old } = await supabaseAdmin
     .from("meta_campaigns")
-    .select("daily_budget")
+    .select("client_slug, daily_budget, name")
     .eq("campaign_id", parsed.campaignId)
     .single();
 
@@ -91,6 +138,21 @@ export async function updateCampaignBudget(formData: { campaignId: string; daily
   if (error) throw new Error(error.message);
 
   await logAudit("campaign", parsed.campaignId, "update_budget", { daily_budget: old?.daily_budget }, { daily_budget: parsed.dailyBudgetCents });
+  await logSystemEvent({
+    eventName: "campaign_updated",
+    actorId: user.id,
+    clientSlug: old?.client_slug ?? null,
+    visibility: eventVisibility(old?.client_slug),
+    entityType: "campaign",
+    entityId: parsed.campaignId,
+    summary: `Updated budget for "${old?.name ?? parsed.campaignId}"`,
+    detail: `${centsLabel(old?.daily_budget)} -> ${centsLabel(parsed.dailyBudgetCents)}`,
+    metadata: {
+      field: "daily_budget",
+      from: old?.daily_budget ?? null,
+      to: parsed.dailyBudgetCents,
+    },
+  });
   revalidatePath("/admin/campaigns");
 }
 
@@ -105,10 +167,12 @@ export async function assignCampaignClient(formData: { campaignId: string; clien
 
   const parsed = AssignClientSchema.parse(formData);
   if (!supabaseAdmin) throw new Error("DB not configured");
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated");
 
   const { data: old } = await supabaseAdmin
     .from("meta_campaigns")
-    .select("client_slug")
+    .select("client_slug, name")
     .eq("campaign_id", parsed.campaignId)
     .single();
 
@@ -120,6 +184,21 @@ export async function assignCampaignClient(formData: { campaignId: string; clien
   if (error) throw new Error(error.message);
 
   await logAudit("campaign", parsed.campaignId, "assign_client", { client_slug: old?.client_slug }, { client_slug: parsed.clientSlug });
+  await logSystemEvent({
+    eventName: "campaign_updated",
+    actorId: user.id,
+    clientSlug: parsed.clientSlug,
+    visibility: "shared",
+    entityType: "campaign",
+    entityId: parsed.campaignId,
+    summary: `Assigned campaign "${old?.name ?? parsed.campaignId}" to ${parsed.clientSlug}`,
+    detail: old?.client_slug ? `Previously assigned to ${old.client_slug}.` : null,
+    metadata: {
+      field: "client_slug",
+      from: old?.client_slug ?? null,
+      to: parsed.clientSlug,
+    },
+  });
   revalidatePath("/admin/campaigns");
 }
 
@@ -134,6 +213,8 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
 
   const parsed = BulkAssignSchema.parse(formData);
   if (!supabaseAdmin) throw new Error("DB not configured");
+  const user = await currentUser();
+  if (!user) throw new Error("Unauthenticated");
 
   // Auto-create client in clients table if it doesn't exist
   const { data: existing } = await supabaseAdmin
@@ -168,6 +249,19 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
   await logAudit("campaign", "bulk", "bulk_assign_client", null, {
     count: parsed.campaignIds.length,
     client_slug: parsed.clientSlug,
+  });
+  await logSystemEvent({
+    eventName: "campaign_updated",
+    actorId: user.id,
+    clientSlug: parsed.clientSlug,
+    visibility: "shared",
+    entityType: "campaign_batch",
+    entityId: "bulk",
+    summary: `Assigned ${parsed.campaignIds.length} campaign${parsed.campaignIds.length === 1 ? "" : "s"} to ${parsed.clientSlug}`,
+    metadata: {
+      campaignIds: parsed.campaignIds,
+      count: parsed.campaignIds.length,
+    },
   });
 
   revalidatePath("/admin/campaigns");

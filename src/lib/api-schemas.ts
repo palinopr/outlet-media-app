@@ -262,3 +262,21 @@ export const UpdateTaskSchema = z.object({
   due_date: z.string().optional().nullable(),
   position: z.number().int().min(0).optional(),
 });
+
+export const CreateApprovalRequestSchema = z.object({
+  audience: z.enum(["admin", "client", "shared"]).default("shared"),
+  client_slug: z.string().min(1),
+  entity_id: z.string().optional().nullable(),
+  entity_type: z.string().min(1).optional().nullable(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
+  page_id: z.string().uuid().optional().nullable(),
+  request_type: z.string().min(1).max(100),
+  summary: z.string().max(2000).optional().nullable(),
+  task_id: z.string().uuid().optional().nullable(),
+  title: z.string().min(1).max(500),
+});
+
+export const ResolveApprovalRequestSchema = z.object({
+  note: z.string().max(2000).optional().nullable(),
+  status: z.enum(["approved", "rejected", "cancelled"]),
+});

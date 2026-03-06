@@ -7,6 +7,7 @@ import {
   Target,
   Image as ImageIcon,
   Activity,
+  BadgeCheck,
   Lightbulb,
 } from "lucide-react";
 import { parseRange } from "@/lib/constants";
@@ -15,11 +16,15 @@ import { roasLabel } from "../../lib";
 import { getCampaignDetail } from "./data";
 import { AdsPreview, type AdPreview } from "@/components/client/ads-preview";
 import { RecommendationsList, type RecommendationItem } from "@/components/client/recommendations";
+import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
+import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
+import { listApprovalRequests } from "@/features/approvals/server";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { StatCard } from "../../components/stat-card";
 import { CampaignDetailHeader } from "../../components/campaign-detail-header";
 import { CampaignAnalytics } from "../../components/campaign-analytics";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { listSystemEvents } from "@/features/system-events/server";
 
 interface Props {
   params: Promise<{ slug: string; campaignId: string }>;
@@ -32,7 +37,24 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam);
 
-  const data = await getCampaignDetail(slug, campaignId, range);
+  const [data, events, approvals] = await Promise.all([
+    getCampaignDetail(slug, campaignId, range),
+    listSystemEvents({
+      audience: "shared",
+      clientSlug: slug,
+      entityType: "campaign",
+      entityId: campaignId,
+      limit: 6,
+    }),
+    listApprovalRequests({
+      audience: "shared",
+      clientSlug: slug,
+      entityType: "campaign",
+      entityId: campaignId,
+      status: "pending",
+      limit: 6,
+    }),
+  ]);
 
   if (!data) {
     return (
@@ -130,6 +152,29 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         daily={daily}
         rangeLabel={rangeLabel}
       />
+
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <BadgeCheck className="h-3.5 w-3.5 text-white/50" />
+          <span className="section-label">Campaign workflow</span>
+        </div>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <WorkspaceApprovalsPanel
+            approvals={approvals}
+            canDecide
+            title="Campaign approvals"
+            description="Approvals tied directly to this campaign will show up here."
+            emptyState="No campaign approvals are pending right now."
+          />
+          <WorkspaceActivityFeed
+            events={events}
+            basePath={`/client/${slug}/workspace`}
+            title="Campaign activity"
+            description="Visible campaign changes logged across the shared system."
+            emptyState="Campaign updates will appear here as the team changes status, budget, or ownership."
+          />
+        </div>
+      </section>
 
       {/* -- Recommendations -- */}
       {recsData.length > 0 && (

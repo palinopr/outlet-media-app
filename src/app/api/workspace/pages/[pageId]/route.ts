@@ -2,10 +2,22 @@ import { NextResponse } from "next/server";
 import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { UpdatePageSchema } from "@/lib/api-schemas";
+import {
+  logSystemEvent,
+  summarizeChangedFields,
+} from "@/features/system-events/server";
 
 interface Ctx {
   params: Promise<{ pageId: string }>;
 }
+
+const PAGE_FIELD_LABELS: Record<string, string> = {
+  cover_image: "cover image",
+  icon: "icon",
+  is_archived: "archive state",
+  parent_page_id: "parent page",
+  title: "title",
+};
 
 export async function GET(_request: Request, { params }: Ctx) {
   const { error: authErr } = await authGuard();
@@ -26,7 +38,7 @@ export async function GET(_request: Request, { params }: Ctx) {
 }
 
 export async function PATCH(request: Request, { params }: Ctx) {
-  const { error: authErr } = await authGuard();
+  const { userId, error: authErr } = await authGuard();
   if (authErr) return authErr;
   if (!supabaseAdmin) return apiError("DB not configured", 500);
 
@@ -35,6 +47,14 @@ export async function PATCH(request: Request, { params }: Ctx) {
   const { data: body, error: valErr } = await validateRequest(request, UpdatePageSchema);
   if (valErr) return valErr;
 
+  const { data: existing } = await supabaseAdmin
+    .from("workspace_pages")
+    .select("title, client_slug, is_archived")
+    .eq("id", pageId)
+    .single();
+
+  if (!existing) return apiError("Page not found", 404);
+
   const { error } = await supabaseAdmin
     .from("workspace_pages")
     .update({ ...body, updated_at: new Date().toISOString() })
@@ -42,15 +62,60 @@ export async function PATCH(request: Request, { params }: Ctx) {
 
   if (error) return apiError(error.message, 500);
 
+  const changedFields = Object.keys(body)
+    .filter((key) => key !== "content" && key !== "position")
+    .map((key) => PAGE_FIELD_LABELS[key] ?? key.replaceAll("_", " "));
+
+  const archiveChanged = typeof body.is_archived === "boolean" && body.is_archived !== existing.is_archived;
+  const eventName = archiveChanged
+    ? body.is_archived
+      ? "workspace_page_archived"
+      : "workspace_page_restored"
+    : "workspace_page_updated";
+
+  if (archiveChanged || changedFields.length > 0) {
+    const nextTitle = typeof body.title === "string" ? body.title : existing.title;
+    const summary =
+      eventName === "workspace_page_archived"
+        ? `Archived page "${existing.title}"`
+        : eventName === "workspace_page_restored"
+          ? `Restored page "${existing.title}"`
+          : body.title && body.title !== existing.title
+            ? `Renamed page to "${body.title}"`
+            : `Updated page "${nextTitle}"`;
+
+    await logSystemEvent({
+      eventName,
+      actorId: userId,
+      clientSlug: existing.client_slug,
+      entityType: "workspace_page",
+      entityId: pageId,
+      pageId,
+      summary,
+      detail: summarizeChangedFields(changedFields),
+      metadata: {
+        changedFields,
+      },
+    });
+  }
+
   return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(_request: Request, { params }: Ctx) {
-  const { error: authErr } = await authGuard();
+  const { userId, error: authErr } = await authGuard();
   if (authErr) return authErr;
   if (!supabaseAdmin) return apiError("DB not configured", 500);
 
   const { pageId } = await params;
+
+  const { data: existing } = await supabaseAdmin
+    .from("workspace_pages")
+    .select("title, client_slug")
+    .eq("id", pageId)
+    .single();
+
+  if (!existing) return apiError("Page not found", 404);
 
   const { error } = await supabaseAdmin
     .from("workspace_pages")
@@ -58,6 +123,16 @@ export async function DELETE(_request: Request, { params }: Ctx) {
     .eq("id", pageId);
 
   if (error) return apiError(error.message, 500);
+
+  await logSystemEvent({
+    eventName: "workspace_page_deleted",
+    actorId: userId,
+    clientSlug: existing.client_slug,
+    entityType: "workspace_page",
+    entityId: pageId,
+    pageId,
+    summary: `Deleted page "${existing.title}"`,
+  });
 
   return NextResponse.json({ ok: true });
 }

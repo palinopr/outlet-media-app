@@ -1,8 +1,16 @@
 import { getWorkspacePages } from "@/features/workspace/server";
 import { PageList } from "@/components/workspace/page-list";
+import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
+import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
+import { listApprovalRequests } from "@/features/approvals/server";
+import { listSystemEvents } from "@/features/system-events/server";
 
 export default async function WorkspacePage() {
-  const { pages } = await getWorkspacePages();
+  const [{ pages }, events, approvals] = await Promise.all([
+    getWorkspacePages(),
+    listSystemEvents({ audience: "all", limit: 12 }),
+    listApprovalRequests({ audience: "all", status: "pending", limit: 8 }),
+  ]);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-8">
@@ -15,7 +23,18 @@ export default async function WorkspacePage() {
           Your internal pages, briefs, and working notes in one place.
         </p>
       </div>
-      <PageList pages={pages} basePath="/admin/workspace" />
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+        <PageList pages={pages} basePath="/admin/workspace" />
+        <div className="space-y-6">
+          <WorkspaceApprovalsPanel approvals={approvals} canDecide />
+          <WorkspaceActivityFeed
+            events={events}
+            basePath="/admin/workspace"
+            showClientSlug
+          />
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,10 @@
 import { requireClientAccess } from "@/features/client-portal/access";
 import { getWorkspacePages } from "@/features/workspace/server";
 import { PageList } from "@/components/workspace/page-list";
+import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
+import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
+import { listApprovalRequests } from "@/features/approvals/server";
+import { listSystemEvents } from "@/features/system-events/server";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -9,7 +13,16 @@ interface Props {
 export default async function ClientWorkspacePage({ params }: Props) {
   const { slug } = await params;
   await requireClientAccess(slug, "workspace");
-  const { pages } = await getWorkspacePages(slug);
+  const [{ pages }, events, approvals] = await Promise.all([
+    getWorkspacePages(slug),
+    listSystemEvents({ audience: "shared", clientSlug: slug, limit: 12 }),
+    listApprovalRequests({
+      audience: "shared",
+      clientSlug: slug,
+      status: "pending",
+      limit: 8,
+    }),
+  ]);
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-8">
@@ -22,7 +35,17 @@ export default async function ClientWorkspacePage({ params }: Props) {
           This is the shared workspace for plans, updates, and context your team can review together.
         </p>
       </div>
-      <PageList pages={pages} basePath={`/client/${slug}/workspace`} />
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+        <PageList pages={pages} basePath={`/client/${slug}/workspace`} />
+        <div className="space-y-6">
+          <WorkspaceApprovalsPanel approvals={approvals} canDecide />
+          <WorkspaceActivityFeed
+            events={events}
+            basePath={`/client/${slug}/workspace`}
+          />
+        </div>
+      </div>
     </div>
   );
 }

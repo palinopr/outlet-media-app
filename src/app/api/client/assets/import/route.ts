@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authGuard, apiError } from "@/lib/api-helpers";
 import { notifyCreative, notifyCreativeNewAssets } from "@/lib/notify-creative";
+import { createApprovalRequest } from "@/features/approvals/server";
 import {
   canAccessClientAssets,
   importAssetsFromFolder,
   userFacingImportError,
 } from "@/features/assets/server";
+import { logSystemEvent } from "@/features/system-events/server";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +51,43 @@ export async function POST(req: NextRequest) {
         skipped: 0,
         message:
           "No images or videos found in this folder. We support JPG, PNG, WEBP, GIF, MP4, MOV.",
+      });
+    }
+
+    if (result.imported > 0) {
+      await logSystemEvent({
+        eventName: "asset_folder_imported",
+        actorId: userId,
+        clientSlug: client_slug,
+        entityType: "asset_folder",
+        entityId: folder_url,
+        summary: `Imported ${result.imported} asset${result.imported === 1 ? "" : "s"}`,
+        detail:
+          result.skipped > 0
+            ? `${result.skipped} already existed in this client library.`
+            : "Imported from a shared folder.",
+        metadata: {
+          folderUrl: folder_url,
+          imported: result.imported,
+          skipped: result.skipped,
+          total: result.total,
+        },
+      });
+
+      await createApprovalRequest({
+        audience: "admin",
+        clientSlug: client_slug,
+        entityId: folder_url,
+        entityType: "asset_folder",
+        requestType: "asset_import_review",
+        summary: `A client imported ${result.imported} new asset${result.imported === 1 ? "" : "s"} from a shared folder and they should be reviewed.`,
+        title: `Review ${result.imported} imported asset${result.imported === 1 ? "" : "s"}`,
+        metadata: {
+          folderUrl: folder_url,
+          imported: result.imported,
+          skipped: result.skipped,
+          total: result.total,
+        },
       });
     }
 

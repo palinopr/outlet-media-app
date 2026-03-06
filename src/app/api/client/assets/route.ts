@@ -5,6 +5,8 @@ import {
   listAssets,
   uploadAssetFile,
 } from "@/features/assets/server";
+import { createApprovalRequest } from "@/features/approvals/server";
+import { logSystemEvent } from "@/features/system-events/server";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +52,26 @@ export async function POST(req: NextRequest) {
       uploadedBy: userId,
       classify: true,
     });
+
+    await logSystemEvent({
+      eventName: "asset_uploaded",
+      actorId: userId,
+      clientSlug,
+      entityType: "asset",
+      entityId: asset.id as string,
+      summary: `Uploaded asset "${asset.file_name as string}"`,
+    });
+
+    await createApprovalRequest({
+      audience: "admin",
+      clientSlug,
+      entityId: asset.id as string,
+      entityType: "asset",
+      requestType: "asset_review",
+      summary: "A client uploaded a new asset that should be reviewed before it moves further in the campaign workflow.",
+      title: `Review uploaded asset "${asset.file_name as string}"`,
+    });
+
     return NextResponse.json({ asset }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Upload failed";

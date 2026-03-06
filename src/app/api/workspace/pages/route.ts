@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { CreatePageSchema } from "@/lib/api-schemas";
+import { logSystemEvent } from "@/features/system-events/server";
 
 export async function GET(request: Request) {
-  const { userId, error: authErr } = await authGuard();
+  const { userId: _userId, error: authErr } = await authGuard();
   if (authErr) return authErr;
   if (!supabaseAdmin) return apiError("DB not configured", 500);
 
@@ -49,6 +50,21 @@ export async function POST(request: Request) {
     .single();
 
   if (error) return apiError(error.message, 500);
+
+  await logSystemEvent({
+    eventName: "workspace_page_created",
+    actorId: userId,
+    clientSlug: body.client_slug,
+    entityType: "workspace_page",
+    entityId: data.id,
+    pageId: data.id,
+    summary: `Created page "${data.title as string}"`,
+    detail: body.parent_page_id ? "Added it inside another page." : null,
+    metadata: {
+      title: data.title,
+      parentPageId: body.parent_page_id ?? null,
+    },
+  });
 
   return NextResponse.json(data, { status: 201 });
 }

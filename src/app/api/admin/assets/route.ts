@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { adminGuard, apiError } from "@/lib/api-helpers";
 import { listAssets, uploadAssetFile } from "@/features/assets/server";
+import { logSystemEvent } from "@/features/system-events/server";
 
 export const dynamic = "force-dynamic";
 
@@ -35,12 +37,24 @@ export async function POST(req: NextRequest) {
   if (!clientSlug) return apiError("client_slug is required", 400);
   if (!uploadedBy) return apiError("uploaded_by is required", 400);
 
+  const user = await currentUser();
+
   try {
     const asset = await uploadAssetFile({
       file,
       clientSlug,
       uploadedBy,
     });
+
+    await logSystemEvent({
+      eventName: "asset_uploaded",
+      actorId: user?.id ?? uploadedBy,
+      clientSlug,
+      entityType: "asset",
+      entityId: asset.id as string,
+      summary: `Uploaded asset "${asset.file_name as string}"`,
+    });
+
     return NextResponse.json({ asset }, { status: 201 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Upload failed";

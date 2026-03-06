@@ -5,6 +5,7 @@ import {
   deleteAssetById,
   getAssetClientSlug,
 } from "@/features/assets/server";
+import { logSystemEvent } from "@/features/system-events/server";
 
 export async function DELETE(
   _req: NextRequest,
@@ -22,7 +23,15 @@ export async function DELETE(
   if (!allowed) return apiError("Forbidden", 403);
 
   try {
-    await deleteAssetById(id);
+    const deleted = await deleteAssetById(id);
+    await logSystemEvent({
+      eventName: "asset_deleted",
+      actorId: userId,
+      clientSlug: deleted.clientSlug,
+      entityType: "asset",
+      entityId: deleted.id,
+      summary: `Deleted asset "${deleted.fileName}"`,
+    });
     return NextResponse.json({ deleted: true });
   } catch (err) {
     const message =

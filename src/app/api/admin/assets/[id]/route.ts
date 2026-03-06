@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { adminGuard, apiError } from "@/lib/api-helpers";
 import { deleteAssetById, updateAsset } from "@/features/assets/server";
+import { logSystemEvent } from "@/features/system-events/server";
 
 export async function PATCH(
   req: NextRequest,
@@ -36,9 +38,18 @@ export async function DELETE(
   if (guard) return guard;
 
   const { id } = await params;
+  const user = await currentUser();
 
   try {
-    await deleteAssetById(id);
+    const deleted = await deleteAssetById(id);
+    await logSystemEvent({
+      eventName: "asset_deleted",
+      actorId: user?.id ?? null,
+      clientSlug: deleted.clientSlug,
+      entityType: "asset",
+      entityId: deleted.id,
+      summary: `Deleted asset "${deleted.fileName}"`,
+    });
     return NextResponse.json({ deleted: true });
   } catch (error) {
     const message =

@@ -350,12 +350,16 @@ export async function getAssetClientSlug(assetId: string): Promise<string | null
   return data?.client_slug ?? null;
 }
 
-export async function deleteAssetById(assetId: string): Promise<void> {
+export async function deleteAssetById(assetId: string): Promise<{
+  clientSlug: string;
+  fileName: string;
+  id: string;
+}> {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
   const { data: asset } = await supabaseAdmin
     .from("ad_assets")
-    .select("storage_path")
+    .select("client_slug, file_name, storage_path")
     .eq("id", assetId)
     .single();
 
@@ -369,4 +373,10 @@ export async function deleteAssetById(assetId: string): Promise<void> {
     .eq("id", assetId);
 
   if (error) throw new Error(error.message);
+
+  return {
+    clientSlug: asset.client_slug as string,
+    fileName: asset.file_name as string,
+    id: assetId,
+  };
 }
