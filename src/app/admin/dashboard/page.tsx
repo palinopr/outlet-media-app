@@ -20,8 +20,13 @@ import { UpcomingShows } from "./upcoming-shows";
 import { CampaignCards } from "./campaign-cards";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
+import { DashboardAssetsSection } from "@/components/dashboard/dashboard-assets-section";
 import { DashboardCrmSection } from "@/components/dashboard/dashboard-crm-section";
-import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
+import {
+  getDashboardActionCenter,
+  getDashboardAssetSummary,
+  getDashboardOpsSummary,
+} from "@/features/dashboard/server";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
@@ -50,6 +55,7 @@ export default async function AdminDashboard() {
     { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb },
     opsSummary,
     actionCenter,
+    assetSummary,
     agentOutcomes,
     crm,
     crmFollowUpItems,
@@ -57,6 +63,7 @@ export default async function AdminDashboard() {
     getData(),
     getDashboardOpsSummary({ mode: "admin", limit: 6 }),
     getDashboardActionCenter({ mode: "admin", limit: 4 }),
+    getDashboardAssetSummary({ limit: 4 }),
     listAgentOutcomes({ audience: "all", limit: 4 }),
     getCrmOverview({ audience: "all" }),
     listCrmFollowUpItems({ audience: "all", limit: 6 }),
@@ -128,8 +135,22 @@ export default async function AdminDashboard() {
 
       <DashboardActionCenterSection
         actionCenter={actionCenter}
+        assetHrefPrefix="/admin/assets"
+        assetLibraryHref="/admin/assets"
         campaignHrefPrefix="/admin/campaigns"
         crmHrefPrefix="/admin/crm"
+        variant="admin"
+      />
+
+      <DashboardAssetsSection
+        assetHrefPrefix="/admin/assets"
+        href="/admin/assets"
+        libraryHrefLabel="Open assets"
+        showClientSlug
+        summary={assetSummary}
+        title="Creative snapshot"
+        description="A simple creative queue for summary-first users: what needs review, what is linked, and what still lacks campaign context."
+        emptyState="No creative review pressure right now."
         variant="admin"
       />
 

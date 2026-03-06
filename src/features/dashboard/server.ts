@@ -1,6 +1,8 @@
 import type { TaskPriority } from "@/lib/workspace-types";
 import { supabaseAdmin } from "@/lib/supabase";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
+import { buildAssetLibrarySummary, type AssetLibrarySummary } from "@/features/assets/summary";
+import { listAssetLibrary } from "@/features/assets/server";
 import {
   buildDashboardOpsSummary,
   type DashboardApprovalRecord,
@@ -26,7 +28,14 @@ interface GetDashboardActionCenterOptions {
   scopeCampaignIds?: string[] | null;
 }
 
+interface GetDashboardAssetSummaryOptions {
+  clientSlug?: string;
+  limit?: number;
+}
+
 export interface DashboardActionCenterApproval {
+  assetId: string | null;
+  assetName: string | null;
   campaignId: string | null;
   campaignName: string | null;
   clientSlug: string;
@@ -96,6 +105,22 @@ function resolveCampaignName(
   if (typeof metadataName === "string" && metadataName.length > 0) return metadataName;
   if (!campaignId) return null;
   return campaignNames.get(campaignId) ?? null;
+}
+
+function resolveAssetId(
+  entityType: string | null,
+  entityId: string | null,
+  metadata: Record<string, unknown>,
+) {
+  if (entityType === "asset" && entityId) return entityId;
+
+  const assetId = metadata.assetId;
+  return typeof assetId === "string" && assetId.length > 0 ? assetId : null;
+}
+
+function resolveAssetName(metadata: Record<string, unknown>) {
+  const assetName = metadata.assetName;
+  return typeof assetName === "string" && assetName.length > 0 ? assetName : null;
 }
 
 export async function getDashboardOpsSummary(
@@ -246,6 +271,13 @@ export async function getDashboardOpsSummary(
   });
 }
 
+export async function getDashboardAssetSummary(
+  options: GetDashboardAssetSummaryOptions = {},
+): Promise<AssetLibrarySummary> {
+  const records = await listAssetLibrary(options.clientSlug, Math.max((options.limit ?? 6) * 8, 48));
+  return buildAssetLibrarySummary(records, options.limit ?? 6);
+}
+
 export async function getDashboardActionCenter(
   options: GetDashboardActionCenterOptions,
 ): Promise<DashboardActionCenter> {
@@ -340,6 +372,12 @@ export async function getDashboardActionCenter(
       );
 
       return {
+        assetId: resolveAssetId(
+          (row.entity_type as string | null) ?? null,
+          (row.entity_id as string | null) ?? null,
+          metadata,
+        ),
+        assetName: resolveAssetName(metadata),
         campaignId,
         campaignName: resolveCampaignName(campaignId, metadata, campaignNames),
         clientSlug: row.client_slug as string,

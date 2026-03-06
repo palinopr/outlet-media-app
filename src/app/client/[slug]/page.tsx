@@ -15,8 +15,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
+import { DashboardAssetsSection } from "@/components/dashboard/dashboard-assets-section";
 import { DashboardCrmSection } from "@/components/dashboard/dashboard-crm-section";
-import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
+import {
+  getDashboardActionCenter,
+  getDashboardAssetSummary,
+  getDashboardOpsSummary,
+} from "@/features/dashboard/server";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
@@ -56,7 +61,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const range = parseRange(rangeParam);
 
   const { scope } = await requireClientAccess(slug);
-  const [dashboardData, opsSummary, actionCenter, agentOutcomes, enabledServices, crm, crmFollowUpItems] = await Promise.all([
+  const [dashboardData, opsSummary, actionCenter, assetSummary, agentOutcomes, enabledServices, crm, crmFollowUpItems] = await Promise.all([
     getData(slug, range, scope),
     getDashboardOpsSummary({
       clientSlug: slug,
@@ -69,6 +74,10 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       limit: 4,
       mode: "client",
       scopeCampaignIds: scope?.allowedCampaignIds,
+    }),
+    getDashboardAssetSummary({
+      clientSlug: slug,
+      limit: 4,
     }),
     listAgentOutcomes({
       audience: "shared",
@@ -89,6 +98,9 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   ]);
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel, trendData } = dashboardData;
   const showCrm = enabledServices?.includes("crm") || crm.summary.totalContacts > 0;
+  const showAssets =
+    enabledServices?.includes("assets") ||
+    (assetSummary.metrics.find((metric) => metric.key === "total_assets")?.value ?? 0) > 0;
   const crmContacts =
     crm.upcomingFollowUps.length > 0 ? crm.upcomingFollowUps.slice(0, 4) : crm.recentContacts.slice(0, 4);
 
@@ -234,10 +246,23 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
 
       <DashboardActionCenterSection
         actionCenter={actionCenter}
+        assetLibraryHref={`/client/${slug}/assets`}
         campaignHrefPrefix={`/client/${slug}/campaign`}
         crmHrefPrefix={`/client/${slug}/crm`}
         variant="client"
       />
+
+      {showAssets ? (
+        <DashboardAssetsSection
+          href={`/client/${slug}/assets`}
+          libraryHrefLabel="Open assets"
+          summary={assetSummary}
+          title="Creative snapshot"
+          description="A simple readout of uploaded creative, what still needs review, and what is already linked into campaign work."
+          emptyState="No creative review pressure right now."
+          variant="client"
+        />
+      ) : null}
 
       {showCrm ? (
         <DashboardCrmSection

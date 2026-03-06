@@ -185,3 +185,16 @@ Minimum verification bias:
 - targeted tests when the path has coverage or the behavior is risky
 
 Do not hand the user a partially verified change when the repo and tools allow you to finish it properly.
+
+## 15. Check Primary Sources Before Assuming
+
+When implementation details are uncertain, do not guess.
+
+Use:
+- GitHub MCP for codebase search, repo patterns, and external implementation references
+- Context7 for current library and framework documentation
+
+Prefer primary sources and concrete examples over memory when:
+- a library API is unclear
+- a framework behavior is version-sensitive
+- a pattern choice would affect architecture or production behavior

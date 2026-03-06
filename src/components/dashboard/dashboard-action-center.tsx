@@ -6,6 +6,8 @@ import type { DashboardActionCenter } from "@/features/dashboard/server";
 
 interface DashboardActionCenterProps {
   actionCenter: DashboardActionCenter;
+  assetHrefPrefix?: string;
+  assetLibraryHref?: string;
   campaignHrefPrefix: string;
   crmHrefPrefix?: string;
   description?: string;
@@ -42,6 +44,8 @@ function emptyClass(variant: "admin" | "client") {
 
 export function DashboardActionCenterSection({
   actionCenter,
+  assetHrefPrefix,
+  assetLibraryHref,
   campaignHrefPrefix,
   crmHrefPrefix,
   description = "The next approvals and conversations that need human attention.",
@@ -96,10 +100,16 @@ export function DashboardActionCenterSection({
                         {truncate(approval.summary, 160)}
                       </p>
                     ) : null}
-                    {approval.campaignId ? (
+                    {approval.campaignId || approval.assetId ? (
                       <div className="mt-3">
                         <Link
-                          href={`${campaignHrefPrefix}/${approval.campaignId}`}
+                          href={
+                            approval.campaignId
+                              ? `${campaignHrefPrefix}/${approval.campaignId}`
+                              : approval.assetId && assetHrefPrefix
+                                ? `${assetHrefPrefix}/${approval.assetId}`
+                                : assetLibraryHref ?? campaignHrefPrefix
+                          }
                           className={cn(
                             "inline-flex items-center gap-1 text-sm font-medium",
                             isClient
@@ -107,7 +117,12 @@ export function DashboardActionCenterSection({
                               : "text-[#0f7b6c] hover:text-[#0b5e52]",
                           )}
                         >
-                          Review <ArrowRight className="h-3 w-3" />
+                          {approval.campaignId
+                            ? "Review campaign"
+                            : assetHrefPrefix
+                              ? "Review asset"
+                              : "Open asset library"}{" "}
+                          <ArrowRight className="h-3 w-3" />
                         </Link>
                       </div>
                     ) : null}

@@ -71,6 +71,7 @@
 - When the user wants autonomous delivery, commit and push only the relevant changes after verification. Do not bundle unrelated dirty files into the commit.
 - After a verified app push, run `railway up --detach`.
 - When a durable engineering lesson is learned, capture it in `docs/context/` or this file before finishing.
+- When a technical detail, library behavior, or implementation pattern is uncertain, use GitHub MCP or Context7 before assuming. Prefer primary sources and concrete examples over guesswork.
 
 ## Persistent Context
 
