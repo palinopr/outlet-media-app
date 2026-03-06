@@ -1,4 +1,8 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import {
+  applyEffectiveCampaignClientSlugs,
+  listEffectiveCampaignRowsForClientSlug,
+} from "@/lib/campaign-client-assignment";
 import { clerkClient } from "@clerk/nextjs/server";
 import { computeBlendedRoas } from "@/lib/formatters";
 import { getClientServices } from "@/lib/client-services";
@@ -51,7 +55,7 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     supabaseAdmin.from("clients").select("id, name, slug, status, created_at"),
     supabaseAdmin
       .from("meta_campaigns")
-      .select("client_slug, status, spend, roas"),
+      .select("campaign_id, client_slug, name, status, spend, roas"),
     supabaseAdmin
       .from("tm_events")
       .select("client_slug")
@@ -98,13 +102,28 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
 
   if (!clientsRes.data?.length) return [];
 
+  const effectiveCampaignRows = await applyEffectiveCampaignClientSlugs(
+    (campaignsRes.data ?? []) as Array<{
+      campaign_id: string;
+      client_slug: string | null;
+      name: string | null;
+      status: string | null;
+      spend: number | null;
+      roas: number | null;
+    }>,
+  );
+
   const campaignsBySlug: Record<
     string,
     { status: string; spend: number | null; roas: number | null }[]
   > = {};
-  for (const c of campaignsRes.data ?? []) {
+  for (const c of effectiveCampaignRows) {
     const slug = c.client_slug ?? "unknown";
-    (campaignsBySlug[slug] ??= []).push(c);
+    (campaignsBySlug[slug] ??= []).push({
+      status: c.status ?? "unknown",
+      spend: c.spend ?? null,
+      roas: c.roas ?? null,
+    });
   }
 
   const showsBySlug: Record<string, number> = {};
@@ -308,10 +327,15 @@ export async function getClientDetail(
       .from("client_members")
       .select("id, clerk_user_id, role, scope, created_at")
       .eq("client_id", clientId),
-    supabaseAdmin
-      .from("meta_campaigns")
-      .select("id, campaign_id, name, status, spend, roas")
-      .eq("client_slug", client.slug),
+    listEffectiveCampaignRowsForClientSlug<{
+      id: string;
+      campaign_id: string;
+      name: string | null;
+      status: string | null;
+      spend: number | null;
+      roas: number | null;
+      client_slug: string | null;
+    }>("id, campaign_id, name, status, spend, roas, client_slug", client.slug),
     supabaseAdmin
       .from("tm_events")
       .select("id, name, venue, date, status")
@@ -376,10 +400,10 @@ export async function getClientDetail(
   const { campaignsByMember, eventsByMember } = await fetchMemberAssignments(memberRows.map((m) => m.id));
   const members = await enrichMembersWithClerk(memberRows, campaignsByMember, eventsByMember);
 
-  const campaigns: ClientCampaign[] = (campaignsRes.data ?? []).map((c) => ({
+  const campaigns: ClientCampaign[] = campaignsRes.map((c) => ({
     id: c.campaign_id ?? c.id,
-    name: c.name,
-    status: c.status,
+    name: c.name ?? c.campaign_id ?? c.id,
+    status: c.status ?? "unknown",
     spend: (c.spend ?? 0) / 100,
     roas: c.roas ?? 0,
   }));

@@ -7,6 +7,9 @@ import {
   getCampaignWorkflowPaths,
   revalidateWorkflowPaths,
 } from "@/features/workflow/revalidation";
+import {
+  applyEffectiveCampaignClientSlugs,
+} from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
 import { logAudit } from "./audit";
@@ -29,6 +32,24 @@ function revalidateCampaignPaths(
   const uniqueClientSlugs = [...new Set(clientSlugs)];
   for (const clientSlug of uniqueClientSlugs) {
     revalidateWorkflowPaths(getCampaignWorkflowPaths(clientSlug, campaignId));
+  }
+}
+
+async function revalidateClientAccountPaths(clientSlugs: Array<string | null | undefined>) {
+  if (!supabaseAdmin) return;
+
+  const uniqueClientSlugs = [...new Set(clientSlugs.filter((value): value is string => Boolean(value)))];
+  if (uniqueClientSlugs.length === 0) return;
+
+  const { data, error } = await supabaseAdmin
+    .from("clients")
+    .select("id, slug")
+    .in("slug", uniqueClientSlugs);
+
+  if (error) throw new Error(error.message);
+
+  for (const client of data ?? []) {
+    revalidatePath(`/admin/clients/${client.id}`);
   }
 }
 
@@ -248,6 +269,22 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
     if (clientErr) throw new Error(clientErr.message);
   }
 
+  const { data: existingCampaignRows, error: existingCampaignRowsError } = await supabaseAdmin
+    .from("meta_campaigns")
+    .select("campaign_id, client_slug, name")
+    .in("campaign_id", parsed.campaignIds);
+
+  if (existingCampaignRowsError) throw new Error(existingCampaignRowsError.message);
+
+  const oldEffectiveCampaignRows = await applyEffectiveCampaignClientSlugs(
+    (existingCampaignRows ?? []) as Array<{
+      campaign_id: string;
+      client_slug: string | null;
+      name: string | null;
+    }>,
+  );
+  const oldClientSlugs = oldEffectiveCampaignRows.map((row) => row.client_slug);
+
   // Save campaign -> client overrides
   const now = new Date().toISOString();
   for (const campaignId of parsed.campaignIds) {
@@ -278,8 +315,12 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
     },
   });
 
+  for (const campaignId of parsed.campaignIds) {
+    revalidateCampaignPaths(campaignId, [...oldClientSlugs, parsed.clientSlug]);
+  }
   revalidatePath("/admin/campaigns");
   revalidatePath("/admin/clients");
+  await revalidateClientAccountPaths([...oldClientSlugs, parsed.clientSlug]);
   return parsed.campaignIds.length;
 }
 

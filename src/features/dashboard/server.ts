@@ -1,5 +1,6 @@
 import type { TaskPriority } from "@/lib/workspace-types";
 import type { ScopeFilter } from "@/lib/member-access";
+import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { listConversationThreads } from "@/features/conversations/server";
@@ -158,8 +159,7 @@ export async function getDashboardOpsSummary(
   let campaignsQuery = supabaseAdmin
     .from("meta_campaigns")
     .select("campaign_id, client_slug, name, status")
-    .not("client_slug", "is", null)
-    .limit(250);
+    .limit(600);
 
   let approvalsQuery = supabaseAdmin
     .from("approval_requests")
@@ -191,7 +191,6 @@ export async function getDashboardOpsSummary(
     .limit(500);
 
   if (options.clientSlug) {
-    campaignsQuery = campaignsQuery.eq("client_slug", options.clientSlug);
     approvalsQuery = approvalsQuery.eq("client_slug", options.clientSlug);
     actionItemsQuery = actionItemsQuery.eq("client_slug", options.clientSlug);
     commentsQuery = commentsQuery.eq("client_slug", options.clientSlug);
@@ -221,12 +220,23 @@ export async function getDashboardOpsSummary(
 
   const allowedCampaignIds = scopeIds ? new Set(scopeIds) : null;
 
-  const campaigns: DashboardCampaignRecord[] = (campaignsRes.data ?? []).map((row) => ({
-    campaignId: row.campaign_id as string,
-    clientSlug: row.client_slug as string,
-    name: (row.name as string) ?? (row.campaign_id as string),
-    status: (row.status as string) ?? "unknown",
-  }));
+  const effectiveCampaignRows = await applyEffectiveCampaignClientSlugs(
+    ((campaignsRes.data ?? []) as Array<Record<string, unknown> & {
+      campaign_id: string;
+      client_slug: string | null;
+      name: string | null;
+      status: string | null;
+    }>),
+  );
+
+  const campaigns: DashboardCampaignRecord[] = effectiveCampaignRows
+    .filter((row) => row.client_slug && (!options.clientSlug || row.client_slug === options.clientSlug))
+    .map((row) => ({
+      campaignId: row.campaign_id as string,
+      clientSlug: row.client_slug as string,
+      name: (row.name as string) ?? (row.campaign_id as string),
+      status: (row.status as string) ?? "unknown",
+    }));
 
   const approvals: DashboardApprovalRecord[] = (approvalsRes.data ?? [])
     .map((row) => ({
@@ -317,9 +327,8 @@ export async function getDashboardActionCenter(
 
   let campaignsQuery = supabaseAdmin
     .from("meta_campaigns")
-    .select("campaign_id, name")
-    .not("client_slug", "is", null)
-    .limit(250);
+    .select("campaign_id, client_slug, name")
+    .limit(600);
 
   let approvalsQuery = supabaseAdmin
     .from("approval_requests")
@@ -329,7 +338,6 @@ export async function getDashboardActionCenter(
     .limit(Math.max((options.limit ?? 4) * 4, 12));
 
   if (options.clientSlug) {
-    campaignsQuery = campaignsQuery.eq("client_slug", options.clientSlug);
     approvalsQuery = approvalsQuery.eq("client_slug", options.clientSlug);
   }
 
@@ -361,9 +369,18 @@ export async function getDashboardActionCenter(
   ]);
 
   const allowedCampaignIds = scopeIds ? new Set(scopeIds) : null;
+  const effectiveCampaignNameRows = await applyEffectiveCampaignClientSlugs(
+    ((campaignsRes.data ?? []) as Array<Record<string, unknown> & {
+      campaign_id: string;
+      client_slug: string | null;
+      name: string | null;
+    }>),
+  );
   const campaignNames = new Map<string, string>();
 
-  for (const row of campaignsRes.data ?? []) {
+  for (const row of effectiveCampaignNameRows) {
+    if (options.clientSlug && row.client_slug !== options.clientSlug) continue;
+    if (!row.client_slug) continue;
     const campaignId = row.campaign_id as string;
     const name = row.name as string | null;
     campaignNames.set(campaignId, name && name.length > 0 ? name : campaignId);

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { getEffectiveCampaignRowById } from "@/lib/campaign-client-assignment";
 import type { ScopeFilter } from "@/lib/member-access";
 import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
 import { metaGet, metaInsightsUrl, metaUrl } from "@/lib/meta-api";
@@ -24,6 +25,22 @@ interface MetaCampaignInfo {
   status: string;
   daily_budget?: string;
   start_time?: string;
+}
+
+interface SupabaseCampaignDetailRow {
+  campaign_id: string;
+  client_slug: string | null;
+  name: string | null;
+  status: string | null;
+  spend: number | null;
+  roas: number | null;
+  impressions: number | null;
+  clicks: number | null;
+  ctr: number | null;
+  cpc: number | null;
+  cpm: number | null;
+  daily_budget: number | null;
+  start_time: string | null;
 }
 
 interface MetaInsightRow {
@@ -304,16 +321,12 @@ export async function getCampaignDetail(
 
   if (!supabaseAdmin) return null;
 
-  const { data: row } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select(
-      "campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time",
-    )
-    .eq("campaign_id", campaignId)
-    .eq("client_slug", slug)
-    .maybeSingle();
+  const row = await getEffectiveCampaignRowById<SupabaseCampaignDetailRow>(
+    campaignId,
+    "campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time, client_slug",
+  );
 
-  if (!row) return null;
+  if (!row || row.client_slug !== slug) return null;
 
   const creds = getMetaCreds();
 

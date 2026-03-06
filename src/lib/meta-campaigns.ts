@@ -1,5 +1,8 @@
 import { META_API_VERSION, type DateRange, META_PRESETS } from "./constants";
-import { guessClientSlug } from "./client-slug";
+import {
+  getCampaignClientOverrideMap,
+  resolveEffectiveCampaignClientSlug,
+} from "./campaign-client-assignment";
 import { supabaseAdmin } from "./supabase";
 
 export interface MetaCampaignCard {
@@ -109,20 +112,6 @@ async function loadCampaignTypes(): Promise<Map<string, string>> {
   return types;
 }
 
-async function loadClientOverrides(): Promise<Map<string, string>> {
-  const overrides = new Map<string, string>();
-  if (!supabaseAdmin) return overrides;
-  const { data } = await supabaseAdmin
-    .from("campaign_client_overrides")
-    .select("campaign_id, client_slug");
-  if (data) {
-    for (const row of data) {
-      if (row.client_slug) overrides.set(row.campaign_id, row.client_slug);
-    }
-  }
-  return overrides;
-}
-
 async function loadAllClientSlugs(): Promise<string[]> {
   if (!supabaseAdmin) return [];
   const { data } = await supabaseAdmin
@@ -187,15 +176,23 @@ export async function fetchAllCampaigns(
   try {
     const [rawCampaigns, overrides, dbClientSlugs, campaignTypes] = await Promise.all([
       fetchAllPages<RawCampaign>(campaignsUrl.toString(), "campaigns"),
-      loadClientOverrides(),
+      getCampaignClientOverrideMap(),
       loadAllClientSlugs(),
       loadCampaignTypes(),
     ]);
 
-    // Derive client slugs: Supabase override > guessClientSlug fallback
+    // Derive client slugs: Supabase override > stored slug > guessed fallback
     const campaignSlugs = new Map<string, string>();
     for (const c of rawCampaigns) {
-      campaignSlugs.set(c.id, overrides.get(c.id) ?? guessClientSlug(c.name));
+      const resolvedClientSlug = resolveEffectiveCampaignClientSlug(
+        {
+          campaign_id: c.id,
+          client_slug: null,
+          name: c.name,
+        },
+        overrides,
+      );
+      campaignSlugs.set(c.id, resolvedClientSlug ?? "unknown");
     }
     // Merge campaign-derived slugs with all clients from the clients table
     const slugSet = new Set(campaignSlugs.values());
@@ -212,8 +209,8 @@ export async function fetchAllCampaigns(
 
     // Fetch insights in batches (Meta API has URL length limits)
     const BATCH = 50;
-    let rawInsights: RawInsight[] = [];
-    let rawDaily: RawDailyInsight[] = [];
+    const rawInsights: RawInsight[] = [];
+    const rawDaily: RawDailyInsight[] = [];
     const insightsFields = "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,purchase_roas";
 
     for (let i = 0; i < insightIds.length; i += BATCH) {

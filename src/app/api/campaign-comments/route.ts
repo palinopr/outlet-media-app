@@ -6,6 +6,7 @@ import {
   ResolveCommentSchema,
 } from "@/lib/api-schemas";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
+import { campaignBelongsToClientSlug } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   canAccessCampaignComments,
@@ -91,6 +92,9 @@ export async function GET(request: NextRequest) {
   if (!allowsCampaignInScope(access.scope, campaignId)) {
     return apiError("Campaign not found", 404);
   }
+  if (!(await campaignBelongsToClientSlug(campaignId, clientSlug))) {
+    return apiError("Campaign not found", 404);
+  }
 
   let query = supabaseAdmin
     .from("campaign_comments")
@@ -123,6 +127,9 @@ export async function POST(request: NextRequest) {
   const access = await canAccessCampaignComments(userId, body.client_slug, body.visibility);
   if (!access.allowed) return apiError("Forbidden", 403);
   if (!allowsCampaignInScope(access.scope, body.campaign_id)) {
+    return apiError("Campaign not found", 404);
+  }
+  if (!(await campaignBelongsToClientSlug(body.campaign_id, body.client_slug))) {
     return apiError("Campaign not found", 404);
   }
 

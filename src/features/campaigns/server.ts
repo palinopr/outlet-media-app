@@ -14,6 +14,7 @@ import type { DashboardOpsSummary, DashboardSummaryMode } from "@/features/dashb
 import { listCampaignSystemEvents } from "@/features/system-events/server";
 import type { ScopeFilter } from "@/lib/member-access";
 import type { MetaCampaignCard } from "@/lib/meta-campaigns";
+import { getEffectiveCampaignRowById } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 
 function toNumber(value: number | string | null | undefined) {
@@ -32,6 +33,24 @@ interface GetCampaignsWorkflowDataOptions {
   limit?: number;
   mode: DashboardSummaryMode;
   scope?: ScopeFilter;
+}
+
+interface CampaignOperatingRow {
+  campaign_id: string;
+  client_slug: string | null;
+  name: string | null;
+  status: string | null;
+  objective: string | null;
+  campaign_type: string | null;
+  spend: number | string | null;
+  roas: number | string | null;
+  impressions: number | string | null;
+  clicks: number | string | null;
+  ctr: number | string | null;
+  cpc: number | string | null;
+  cpm: number | string | null;
+  daily_budget: number | string | null;
+  start_time: string | null;
 }
 
 export interface CampaignsWorkflowData {
@@ -85,15 +104,10 @@ export async function getCampaignsWorkflowData(
 export async function getCampaignOperatingData(campaignId: string) {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
-  const { data, error } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select(
-      "campaign_id, name, status, objective, client_slug, campaign_type, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time",
-    )
-    .eq("campaign_id", campaignId)
-    .maybeSingle();
-
-  if (error) throw new Error(error.message);
+  const data = await getEffectiveCampaignRowById<CampaignOperatingRow>(
+    campaignId,
+    "campaign_id, name, status, objective, client_slug, campaign_type, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time",
+  );
   if (!data) return null;
 
   const campaign: MetaCampaignCard = {
@@ -101,7 +115,7 @@ export async function getCampaignOperatingData(campaignId: string) {
     name: (data.name as string) ?? campaignId,
     status: (data.status as string) ?? "unknown",
     objective: (data.objective as string) ?? "",
-    clientSlug: (data.client_slug as string) ?? "unknown",
+    clientSlug: (data.client_slug as string | null) ?? "unknown",
     campaignType: (data.campaign_type as string) ?? "sales",
     spend: centsToDollars(data.spend) ?? 0,
     roas: toNumber(data.roas),
