@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import {
   LayoutDashboard,
+  BarChart3,
   Megaphone,
   CalendarDays,
   Bot,
@@ -26,6 +27,7 @@ import {
 
 const nav = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/reports", label: "Reports", icon: BarChart3 },
   { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/admin/events", label: "Events", icon: CalendarDays },
   { href: "/admin/assets", label: "Assets", icon: ImageIcon },

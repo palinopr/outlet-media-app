@@ -14,6 +14,7 @@ import { Fragment } from "react";
 const labelMap: Record<string, string> = {
   admin: "Admin",
   dashboard: "Dashboard",
+  reports: "Reports",
   campaigns: "Campaigns",
   events: "Events",
   assets: "Assets",

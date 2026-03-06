@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
+  BarChart3,
   Megaphone,
   CalendarDays,
   BriefcaseBusiness,
@@ -31,6 +32,7 @@ import {
 
 const pages = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/reports", label: "Reports", icon: BarChart3 },
   { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/admin/events", label: "Events", icon: CalendarDays },
   { href: "/admin/assets", label: "Assets", icon: ImageIcon },
