@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import type { Json } from "@/lib/database.types";
 import {
   buildAgentOutcomeView,
   type AgentOutcomeRequestRecord,
@@ -13,6 +14,40 @@ interface ListAgentOutcomesOptions {
   clientSlug?: string | null;
   limit?: number;
   scopeCampaignIds?: string[] | null;
+}
+
+export interface AgentOutcomeContext {
+  linkedActionItemId: string | null;
+  request: AgentOutcomeRequestRecord;
+  task: AgentOutcomeTaskRecord | null;
+}
+
+function mapRequestRow(row: Record<string, unknown>): AgentOutcomeRequestRecord {
+  return {
+    clientSlug: (row.client_slug as string | null) ?? null,
+    createdAt: row.created_at as string,
+    detail: (row.detail as string | null) ?? null,
+    metadata: ((row.metadata as Record<string, unknown> | null) ?? {}) as Record<string, unknown>,
+    summary: row.summary as string,
+    taskId: row.entity_id as string,
+    visibility: row.visibility as AgentOutcomeVisibility,
+  };
+}
+
+function mapTaskRow(row: Record<string, unknown>): AgentOutcomeTaskRecord {
+  return {
+    action: row.action as string,
+    completedAt: (row.completed_at as string | null) ?? null,
+    createdAt: (row.created_at as string | null) ?? null,
+    error: (row.error as string | null) ?? null,
+    fromAgent: row.from_agent as string,
+    id: row.id as string,
+    params: (row.params as Json | null) ?? null,
+    result: (row.result as Json | null) ?? null,
+    startedAt: (row.started_at as string | null) ?? null,
+    status: row.status as string,
+    toAgent: row.to_agent as string,
+  };
 }
 
 function matchesCampaign(
@@ -59,29 +94,26 @@ export async function listAgentOutcomes(
   }
 
   const requests: AgentOutcomeRequestRecord[] = (eventRows ?? [])
-    .map((row) => ({
-      clientSlug: (row.client_slug as string | null) ?? null,
-      createdAt: row.created_at as string,
-      detail: (row.detail as string | null) ?? null,
-      metadata: ((row.metadata as Record<string, unknown> | null) ?? {}) as Record<
-        string,
-        unknown
-      >,
-      summary: row.summary as string,
-      taskId: row.entity_id as string,
-      visibility: row.visibility as AgentOutcomeVisibility,
-    }))
+    .map((row) => mapRequestRow(row as Record<string, unknown>))
     .filter((request) => matchesCampaign(request, options.campaignId, scopeCampaignIds));
 
   if (requests.length === 0) return [];
 
   const taskIds = [...new Set(requests.map((request) => request.taskId))];
-  const { data: taskRows, error: tasksError } = await supabaseAdmin
-    .from("agent_tasks")
-    .select(
-      "id, action, from_agent, to_agent, params, result, error, status, created_at, started_at, completed_at",
-    )
-    .in("id", taskIds);
+  const [{ data: taskRows, error: tasksError }, { data: linkedRows, error: linkedError }] =
+    await Promise.all([
+      supabaseAdmin
+        .from("agent_tasks")
+        .select(
+          "id, action, from_agent, to_agent, params, result, error, status, created_at, started_at, completed_at",
+        )
+        .in("id", taskIds),
+      supabaseAdmin
+        .from("campaign_action_items")
+        .select("id, source_entity_id")
+        .eq("source_entity_type", "agent_task")
+        .in("source_entity_id", taskIds),
+    ]);
 
   if (tasksError) {
     console.error("[agent-outcomes] task lookup failed:", tasksError.message);
@@ -90,25 +122,32 @@ export async function listAgentOutcomes(
       .map((request) => buildAgentOutcomeView(request));
   }
 
+  if (linkedError) {
+    console.error("[agent-outcomes] linked action lookup failed:", linkedError.message);
+  }
+
   const tasks = new Map<string, AgentOutcomeTaskRecord>();
   for (const row of taskRows ?? []) {
-    tasks.set(row.id as string, {
-      action: row.action as string,
-      completedAt: (row.completed_at as string | null) ?? null,
-      createdAt: (row.created_at as string | null) ?? null,
-      error: (row.error as string | null) ?? null,
-      fromAgent: row.from_agent as string,
-      id: row.id as string,
-      params: row.params ?? null,
-      result: row.result ?? null,
-      startedAt: (row.started_at as string | null) ?? null,
-      status: row.status as string,
-      toAgent: row.to_agent as string,
-    });
+    tasks.set(row.id as string, mapTaskRow(row as Record<string, unknown>));
+  }
+
+  const linkedActionItems = new Map<string, string>();
+  for (const row of linkedRows ?? []) {
+    const sourceEntityId = row.source_entity_id as string | null;
+    const itemId = row.id as string | null;
+    if (sourceEntityId && itemId) {
+      linkedActionItems.set(sourceEntityId, itemId);
+    }
   }
 
   return requests
-    .map((request) => buildAgentOutcomeView(request, tasks.get(request.taskId)))
+    .map((request) =>
+      buildAgentOutcomeView(
+        request,
+        tasks.get(request.taskId),
+        linkedActionItems.get(request.taskId) ?? null,
+      ),
+    )
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, options.limit ?? 6);
 }
@@ -125,4 +164,58 @@ export async function listCampaignAgentOutcomes(
     clientSlug,
     limit,
   });
+}
+
+export async function getAgentOutcomeContext(taskId: string): Promise<AgentOutcomeContext | null> {
+  if (!supabaseAdmin) return null;
+
+  const { data: requestRow, error: requestError } = await supabaseAdmin
+    .from("system_events")
+    .select("entity_id, created_at, client_slug, summary, detail, metadata, visibility")
+    .eq("event_name", "agent_action_requested")
+    .eq("entity_type", "agent_task")
+    .eq("entity_id", taskId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (requestError) {
+    console.error("[agent-outcomes] request lookup failed:", requestError.message);
+    return null;
+  }
+
+  if (!requestRow) return null;
+
+  const [{ data: taskRow, error: taskError }, { data: linkedRow, error: linkedError }] =
+    await Promise.all([
+      supabaseAdmin
+        .from("agent_tasks")
+        .select(
+          "id, action, from_agent, to_agent, params, result, error, status, created_at, started_at, completed_at",
+        )
+        .eq("id", taskId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from("campaign_action_items")
+        .select("id")
+        .eq("source_entity_type", "agent_task")
+        .eq("source_entity_id", taskId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+  if (taskError) {
+    console.error("[agent-outcomes] task lookup failed:", taskError.message);
+  }
+
+  if (linkedError) {
+    console.error("[agent-outcomes] linked action lookup failed:", linkedError.message);
+  }
+
+  return {
+    linkedActionItemId: (linkedRow?.id as string | null) ?? null,
+    request: mapRequestRow(requestRow as Record<string, unknown>),
+    task: taskRow ? mapTaskRow(taskRow as Record<string, unknown>) : null,
+  };
 }

@@ -235,6 +235,7 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
             showClientSlug
           />
           <AgentOutcomesPanel
+            canCreateActionItems
             outcomes={agentOutcomes}
             title="Agent follow-through"
             description="Recent agent triage and Meta handoff work attached to this campaign."

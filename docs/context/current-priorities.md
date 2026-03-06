@@ -29,6 +29,7 @@ The short-term focus is:
 - Derive dashboard workflow summaries from the same campaign-native approvals, action items, comments, and `system_events` backbone instead of introducing separate summary-only state.
 - Make dashboard-first users actionable by surfacing pending approvals and unresolved campaign discussion directly on the dashboard.
 - Surface agent follow-through inside campaigns and dashboards so users can see what the system asked agents to do and what came back.
+- Let useful agent outcomes turn into source-linked campaign action items so recommendations and failures become operational next steps.
 
 ## Immediate Build Bias
 

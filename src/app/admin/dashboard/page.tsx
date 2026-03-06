@@ -125,6 +125,7 @@ export default async function AdminDashboard() {
       />
 
       <AgentOutcomesPanel
+        canCreateActionItems
         outcomes={agentOutcomes}
         title="Recent agent outcomes"
         description="The latest completed, running, or blocked agent work across campaign operations."

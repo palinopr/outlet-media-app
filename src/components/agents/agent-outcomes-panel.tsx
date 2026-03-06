@@ -1,10 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { startTransition, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ArrowRight, Bot, CircleAlert, Clock3, LoaderCircle, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { timeAgo } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { AgentOutcomeStatus, AgentOutcomeView } from "@/features/agent-outcomes/summary";
 
 interface AgentOutcomesPanelProps {
+  canCreateActionItems?: boolean;
   campaignHrefPrefix?: string;
   description?: string;
   emptyState?: string;
@@ -99,6 +105,7 @@ function agentLabel(agentId: string) {
 }
 
 export function AgentOutcomesPanel({
+  canCreateActionItems = false,
   campaignHrefPrefix,
   description = "Track what the agents have reviewed, what they recommended, and whether the work is still waiting on a human decision.",
   emptyState = "No linked agent follow-through yet.",
@@ -106,8 +113,57 @@ export function AgentOutcomesPanel({
   title = "Agent follow-through",
   variant,
 }: AgentOutcomesPanelProps) {
+  const router = useRouter();
   const tone = surfaceTone(variant);
   const isClient = variant === "client";
+  const [creatingTaskId, setCreatingTaskId] = useState<string | null>(null);
+  const [createdActionItems, setCreatedActionItems] = useState<Record<string, string>>({});
+  const [errorByTaskId, setErrorByTaskId] = useState<Record<string, string>>({});
+
+  async function createActionItem(taskId: string) {
+    setCreatingTaskId(taskId);
+    setErrorByTaskId((current) => {
+      const next = { ...current };
+      delete next[taskId];
+      return next;
+    });
+
+    try {
+      const response = await fetch("/api/agent-outcomes/action-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId }),
+      });
+
+      const data = (await response.json().catch(() => ({}))) as {
+        error?: string;
+        item?: { id?: string };
+        itemId?: string;
+      };
+
+      if (!response.ok) {
+        setErrorByTaskId((current) => ({
+          ...current,
+          [taskId]: data.error ?? "Failed to create action item.",
+        }));
+        return;
+      }
+
+      const itemId = data.item?.id ?? data.itemId;
+      if (itemId) {
+        setCreatedActionItems((current) => ({
+          ...current,
+          [taskId]: itemId,
+        }));
+      }
+
+      startTransition(() => {
+        router.refresh();
+      });
+    } finally {
+      setCreatingTaskId(null);
+    }
+  }
 
   return (
     <section className={tone.body}>
@@ -123,6 +179,14 @@ export function AgentOutcomesPanel({
         <div className="space-y-3">
           {outcomes.map((outcome) => {
             const StatusIcon = statusIcon(outcome.status);
+            const linkedActionItemId =
+              createdActionItems[outcome.taskId] ?? outcome.linkedActionItemId ?? null;
+            const canCreateAction =
+              canCreateActionItems &&
+              !linkedActionItemId &&
+              !!outcome.campaignId &&
+              outcome.status !== "pending" &&
+              outcome.status !== "running";
             return (
               <div key={outcome.taskId} className={tone.item}>
                 <div className="flex items-start gap-3">
@@ -190,6 +254,52 @@ export function AgentOutcomesPanel({
                           {outcome.campaignName ? `Open ${outcome.campaignName}` : "Open campaign"}
                           <ArrowRight className="h-3 w-3" />
                         </Link>
+                      </div>
+                    ) : null}
+
+                    {canCreateAction || linkedActionItemId || errorByTaskId[outcome.taskId] ? (
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        {linkedActionItemId ? (
+                          <span
+                            className={cn(
+                              "inline-flex items-center rounded-full border px-2 py-1 text-xs font-medium",
+                              isClient
+                                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                                : "border-emerald-200 bg-emerald-50 text-emerald-700",
+                            )}
+                          >
+                            Action created
+                          </span>
+                        ) : null}
+
+                        {canCreateAction ? (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              "h-7 px-2 text-xs",
+                              isClient
+                                ? "text-cyan-300 hover:bg-white/[0.06] hover:text-cyan-200"
+                                : "text-[#0f7b6c] hover:bg-[#eef7f4] hover:text-[#0b5e52]",
+                            )}
+                            disabled={creatingTaskId === outcome.taskId}
+                            onClick={() => void createActionItem(outcome.taskId)}
+                          >
+                            {creatingTaskId === outcome.taskId ? "Creating..." : "Create action"}
+                          </Button>
+                        ) : null}
+
+                        {errorByTaskId[outcome.taskId] ? (
+                          <span
+                            className={cn(
+                              "text-xs",
+                              isClient ? "text-rose-200/90" : "text-rose-700",
+                            )}
+                          >
+                            {errorByTaskId[outcome.taskId]}
+                          </span>
+                        ) : null}
                       </div>
                     ) : null}
                   </div>

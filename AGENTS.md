@@ -46,6 +46,7 @@
   - `agent_action_requested`
   - `agent_action_completed`
 - Treat agents as bounded workers that inspect events, decide next actions, draft work, request approval, and log outcomes.
+- When agent work produces a recommendation, blocker, or failure, make it convertible into first-class campaign follow-up work instead of leaving it as a passive status row.
 - Treat the workspace/editor layer as the **shell**, not the full product. Core business entities should not be hidden inside generic docs when they need first-class models.
 - Campaign-native next steps should live in first-class campaign workflow objects, not only generic workspace tasks.
 - Traditional dashboards and reporting views should remain first-class surfaces for summary-first users.

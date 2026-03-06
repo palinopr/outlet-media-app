@@ -36,6 +36,7 @@ export interface AgentOutcomeView {
   completedAt: string | null;
   createdAt: string;
   errorText: string | null;
+  linkedActionItemId: string | null;
   requestDetail: string | null;
   requestSummary: string;
   resultText: string | null;
@@ -71,6 +72,7 @@ function metadataString(metadata: Record<string, unknown>, key: string) {
 export function buildAgentOutcomeView(
   request: AgentOutcomeRequestRecord,
   task?: AgentOutcomeTaskRecord | null,
+  linkedActionItemId?: string | null,
 ): AgentOutcomeView {
   return {
     action: task?.action ?? "agent-task",
@@ -81,6 +83,7 @@ export function buildAgentOutcomeView(
     completedAt: task?.completedAt ?? null,
     createdAt: task?.createdAt ?? request.createdAt,
     errorText: task?.error ?? null,
+    linkedActionItemId: linkedActionItemId ?? null,
     requestDetail: request.detail,
     requestSummary: request.summary,
     resultText: task ? jsonToText(task.result) : null,
