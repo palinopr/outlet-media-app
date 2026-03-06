@@ -98,6 +98,7 @@ export default async function AdminCrmPage({ searchParams }: Props) {
           <CrmContactsPanel
             canManage
             contacts={contactsForAttention}
+            detailHrefPrefix="/admin/crm"
             title={crm.upcomingFollowUps.length > 0 ? "Upcoming follow-ups" : "Recent contacts"}
             description={
               crm.upcomingFollowUps.length > 0
@@ -112,6 +113,7 @@ export default async function AdminCrmPage({ searchParams }: Props) {
           <CrmContactsPanel
             canManage
             contacts={crm.recentContacts}
+            detailHrefPrefix="/admin/crm"
             title="CRM pipeline"
             description="A first-class CRM list on the same shared backbone as campaigns, approvals, and activity."
             emptyState="Create the first CRM contact to start the shared pipeline."

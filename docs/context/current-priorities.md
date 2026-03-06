@@ -31,6 +31,8 @@ The short-term focus is:
 - Surface agent follow-through inside campaigns and dashboards so users can see what the system asked agents to do and what came back.
 - Let useful agent outcomes turn into source-linked campaign action items so recommendations and failures become operational next steps.
 - Treat `crm_contacts` as the tenant-aware CRM backbone for the in-product CRM app instead of hiding CRM state in unrelated lead tables or ad hoc notes.
+- Treat CRM contact detail pages as first-class routes so search, activity, dashboards, and CRM lists can all deep-link into the same record.
+- Queue bounded CRM follow-up triage when a contact becomes urgent or due soon, and surface that follow-through back on the CRM record instead of leaving it hidden in the agent runtime.
 
 ## Immediate Build Bias
 

@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import {
   getCurrentActor,
   listSystemEvents,
@@ -8,6 +9,7 @@ import {
 } from "@/features/system-events/server";
 import {
   buildCrmSummary,
+  crmNeedsFollowUpTriage,
   type CrmContactSummaryRecord,
   type CrmContactVisibility,
   type CrmLifecycleStage,
@@ -56,6 +58,11 @@ interface ListCrmContactsOptions {
   audience?: "all" | CrmContactVisibility;
   clientSlug?: string | null;
   limit?: number;
+}
+
+interface GetCrmContactOptions {
+  audience?: "all" | CrmContactVisibility;
+  clientSlug?: string | null;
 }
 
 interface GetCrmOverviewOptions {
@@ -115,6 +122,7 @@ function mapCrmContact(row: Record<string, unknown>): CrmContact {
 function toSummaryRecord(contact: CrmContact): CrmContactSummaryRecord {
   return {
     createdAt: contact.createdAt,
+    lastContactedAt: contact.lastContactedAt,
     leadScore: contact.leadScore,
     lifecycleStage: contact.lifecycleStage,
     nextFollowUpAt: contact.nextFollowUpAt,
@@ -129,6 +137,75 @@ function compareFollowUps(a: CrmContact, b: CrmContact) {
   if (!a.nextFollowUpAt) return 1;
   if (!b.nextFollowUpAt) return -1;
   return new Date(a.nextFollowUpAt).getTime() - new Date(b.nextFollowUpAt).getTime();
+}
+
+function formatDateTime(value: string | null) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString("en-US");
+}
+
+function buildCrmFollowUpPrompt(contact: CrmContact, reason: string) {
+  const details = [
+    `Client slug: ${contact.clientSlug}`,
+    `Contact: ${contact.fullName}`,
+    contact.company ? `Company: ${contact.company}` : null,
+    contact.ownerName ? `Owner: ${contact.ownerName}` : null,
+    `Stage: ${contact.lifecycleStage}`,
+    typeof contact.leadScore === "number" ? `Lead score: ${contact.leadScore}` : null,
+    contact.source ? `Source: ${contact.source}` : null,
+    contact.email ? `Email: ${contact.email}` : null,
+    contact.phone ? `Phone: ${contact.phone}` : null,
+    contact.lastContactedAt ? `Last contacted: ${formatDateTime(contact.lastContactedAt)}` : null,
+    contact.nextFollowUpAt ? `Next follow-up: ${formatDateTime(contact.nextFollowUpAt)}` : null,
+    contact.notes ? `Notes: ${contact.notes}` : null,
+  ].filter(Boolean);
+
+  return [
+    `Review the CRM follow-up state for ${contact.fullName}.`,
+    "Prepare an internal follow-up brief only. Do not contact the client or mutate CRM state.",
+    `Reason: ${reason}`,
+    "",
+    details.join("\n"),
+    "",
+    "Return a concise internal recommendation covering:",
+    "1. urgency",
+    "2. why this contact needs attention now",
+    "3. the next best manual follow-up step",
+    "4. any missing context or blockers",
+  ].join("\n");
+}
+
+async function queueCrmFollowUpTriage(contact: CrmContact, reason: string) {
+  const taskId = await enqueueExternalAgentTask({
+    action: "crm-follow-up-triage",
+    prompt: buildCrmFollowUpPrompt(contact, reason),
+    toAgent: "assistant",
+  });
+
+  if (!taskId) return null;
+
+  await logSystemEvent({
+    eventName: "agent_action_requested",
+    actorType: "system",
+    actorName: "Outlet CRM",
+    clientSlug: contact.clientSlug,
+    visibility: contact.visibility,
+    entityType: "agent_task",
+    entityId: taskId,
+    summary: `Queued CRM follow-up triage for "${contact.fullName}"`,
+    detail: reason,
+    metadata: {
+      clientSlug: contact.clientSlug,
+      crmContactId: contact.id,
+      crmContactName: contact.fullName,
+      lifecycleStage: contact.lifecycleStage,
+      leadScore: contact.leadScore,
+    },
+  });
+
+  return taskId;
 }
 
 export async function listCrmContacts(
@@ -160,6 +237,34 @@ export async function listCrmContacts(
   }
 
   return (data ?? []).map((row) => mapCrmContact(row as Record<string, unknown>));
+}
+
+export async function getCrmContactById(
+  contactId: string,
+  options: GetCrmContactOptions = {},
+): Promise<CrmContact | null> {
+  if (!supabaseAdmin) return null;
+
+  let query = supabaseAdmin
+    .from(CRM_CONTACTS_TABLE)
+    .select(CRM_CONTACT_SELECT)
+    .eq("id", contactId);
+
+  if (options.clientSlug) {
+    query = query.eq("client_slug", options.clientSlug);
+  }
+
+  if (options.audience && options.audience !== "all") {
+    query = query.eq("visibility", options.audience);
+  }
+
+  const { data, error } = await query.limit(1).maybeSingle();
+  if (error) {
+    console.error("[crm] get contact failed:", error.message);
+    return null;
+  }
+
+  return data ? mapCrmContact(data as Record<string, unknown>) : null;
 }
 
 export async function listCrmClientOptions(): Promise<CrmClientOption[]> {
@@ -272,6 +377,15 @@ export async function createCrmContact(input: CreateCrmContactInput): Promise<Cr
     },
   });
 
+  if (crmNeedsFollowUpTriage(toSummaryRecord(contact))) {
+    await queueCrmFollowUpTriage(
+      contact,
+      contact.nextFollowUpAt
+        ? `A CRM follow-up is due soon for ${contact.fullName}.`
+        : `${contact.fullName} is a high-priority CRM contact and needs follow-up guidance.`,
+    );
+  }
+
   return contact;
 }
 
@@ -304,10 +418,13 @@ export async function updateCrmContact(input: UpdateCrmContactInput): Promise<Cr
   };
 
   const changedFields: string[] = [];
+  const followUpChanged = nextValues.nextFollowUpAt !== existing.nextFollowUpAt;
+  const leadScoreChanged = nextValues.leadScore !== existing.leadScore;
+  const lifecycleChanged = nextValues.lifecycleStage !== existing.lifecycleStage;
   if (nextValues.lastContactedAt !== existing.lastContactedAt) changedFields.push("last contacted");
-  if (nextValues.leadScore !== existing.leadScore) changedFields.push("lead score");
-  if (nextValues.lifecycleStage !== existing.lifecycleStage) changedFields.push("stage");
-  if (nextValues.nextFollowUpAt !== existing.nextFollowUpAt) changedFields.push("next follow-up");
+  if (leadScoreChanged) changedFields.push("lead score");
+  if (lifecycleChanged) changedFields.push("stage");
+  if (followUpChanged) changedFields.push("next follow-up");
   if (nextValues.notes !== existing.notes) changedFields.push("notes");
   if (nextValues.ownerName !== existing.ownerName) changedFields.push("owner");
 
@@ -354,6 +471,20 @@ export async function updateCrmContact(input: UpdateCrmContactInput): Promise<Cr
       visibility: contact.visibility,
     },
   });
+
+  const nextNeedsTriage = crmNeedsFollowUpTriage(toSummaryRecord(contact));
+  const previousNeededTriage = crmNeedsFollowUpTriage(toSummaryRecord(existing));
+  if (nextNeedsTriage && (!previousNeededTriage || followUpChanged || leadScoreChanged || lifecycleChanged)) {
+    const reason = followUpChanged
+      ? contact.nextFollowUpAt
+        ? `The next CRM follow-up for ${contact.fullName} was updated to ${formatDateTime(contact.nextFollowUpAt)}.`
+        : `${contact.fullName} remains a high-priority CRM contact and needs a fresh follow-up recommendation.`
+      : lifecycleChanged
+        ? `${contact.fullName} moved to the ${contact.lifecycleStage} stage and needs follow-up guidance.`
+        : `${contact.fullName} became a higher-priority CRM contact and needs follow-up guidance.`;
+
+    await queueCrmFollowUpTriage(contact, reason);
+  }
 
   return contact;
 }

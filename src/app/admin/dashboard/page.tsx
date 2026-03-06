@@ -131,6 +131,7 @@ export default async function AdminDashboard() {
 
       <DashboardCrmSection
         contacts={crmContacts}
+        detailHrefPrefix="/admin/crm"
         href="/admin/crm"
         showClientSlug
         summary={crm.summary}

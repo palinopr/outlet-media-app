@@ -40,6 +40,7 @@ function getEventIcon(eventName: string) {
 
 function getEventHref(event: SystemEvent, basePath: string) {
   if (event.pageId) return `${basePath}/${event.pageId}`;
+  if (event.entityType === "crm_contact" && event.entityId) return `${basePath}/${event.entityId}`;
   if (event.taskId) return `${basePath}/tasks`;
   return null;
 }

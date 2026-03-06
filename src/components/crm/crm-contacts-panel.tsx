@@ -1,6 +1,7 @@
 "use client";
 
 import { startTransition, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Building2, CalendarClock, Mail, Phone, Star, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ interface CrmContactsPanelProps {
   canManage?: boolean;
   contacts: CrmContact[];
   description?: string;
+  detailHrefPrefix?: string;
   emptyState?: string;
   showClientSlug?: boolean;
   title?: string;
@@ -65,6 +67,7 @@ export function CrmContactsPanel({
   canManage = false,
   contacts,
   description = "Contacts, owners, and next follow-ups attached to this client relationship.",
+  detailHrefPrefix,
   emptyState = "No CRM contacts yet.",
   showClientSlug = false,
   title = "CRM contacts",
@@ -249,6 +252,20 @@ export function CrmContactsPanel({
                   {errorByContactId[contact.id] ? (
                     <span className="text-xs text-rose-600">{errorByContactId[contact.id]}</span>
                   ) : null}
+                </div>
+              ) : null}
+
+              {detailHrefPrefix ? (
+                <div className="mt-3">
+                  <Link
+                    href={`${detailHrefPrefix}/${contact.id}`}
+                    className={cn(
+                      "text-sm font-medium",
+                      isClient ? "text-cyan-300 hover:text-cyan-200" : "text-[#0f7b6c] hover:text-[#0b5e52]",
+                    )}
+                  >
+                    Open contact
+                  </Link>
                 </div>
               ) : null}
             </article>

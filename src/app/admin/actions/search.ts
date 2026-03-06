@@ -61,7 +61,7 @@ export async function fetchSearchableRecords(): Promise<SearchableRecord[]> {
     type: "crm_contact" as const,
     name: String((contact as Record<string, unknown>).full_name ?? ""),
     subtitle: `${String((contact as Record<string, unknown>).client_slug ?? "")} \u00b7 ${String((contact as Record<string, unknown>).company ?? (contact as Record<string, unknown>).email ?? "")}`,
-    href: "/admin/crm",
+    href: `/admin/crm/${String((contact as Record<string, unknown>).id)}`,
   }));
 
   return [...campaigns, ...events, ...clients, ...crmContacts];

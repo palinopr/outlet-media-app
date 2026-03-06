@@ -12,6 +12,7 @@ interface ListAgentOutcomesOptions {
   audience?: "all" | AgentOutcomeVisibility;
   campaignId?: string | null;
   clientSlug?: string | null;
+  crmContactId?: string | null;
   limit?: number;
   scopeCampaignIds?: string[] | null;
 }
@@ -50,15 +51,19 @@ function mapTaskRow(row: Record<string, unknown>): AgentOutcomeTaskRecord {
   };
 }
 
-function matchesCampaign(
+function matchesContext(
   request: AgentOutcomeRequestRecord,
   campaignId: string | null | undefined,
+  crmContactId: string | null | undefined,
   scopeCampaignIds?: Set<string> | null,
 ) {
   const requestCampaignId =
     typeof request.metadata.campaignId === "string" ? request.metadata.campaignId : null;
+  const requestCrmContactId =
+    typeof request.metadata.crmContactId === "string" ? request.metadata.crmContactId : null;
 
   if (campaignId && requestCampaignId !== campaignId) return false;
+  if (crmContactId && requestCrmContactId !== crmContactId) return false;
   if (scopeCampaignIds && (!requestCampaignId || !scopeCampaignIds.has(requestCampaignId))) {
     return false;
   }
@@ -95,7 +100,9 @@ export async function listAgentOutcomes(
 
   const requests: AgentOutcomeRequestRecord[] = (eventRows ?? [])
     .map((row) => mapRequestRow(row as Record<string, unknown>))
-    .filter((request) => matchesCampaign(request, options.campaignId, scopeCampaignIds));
+    .filter((request) =>
+      matchesContext(request, options.campaignId, options.crmContactId, scopeCampaignIds),
+    );
 
   if (requests.length === 0) return [];
 

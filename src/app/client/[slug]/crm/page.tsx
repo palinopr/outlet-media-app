@@ -74,6 +74,7 @@ export default async function ClientCrmPage({ params }: Props) {
         <div className="space-y-6">
           <CrmContactsPanel
             contacts={contactsForAttention}
+            detailHrefPrefix={`/client/${slug}/crm`}
             title={crm.upcomingFollowUps.length > 0 ? "Next follow-ups" : "Recent contacts"}
             description={
               crm.upcomingFollowUps.length > 0
@@ -85,6 +86,7 @@ export default async function ClientCrmPage({ params }: Props) {
           />
           <CrmContactsPanel
             contacts={crm.recentContacts}
+            detailHrefPrefix={`/client/${slug}/crm`}
             title="Shared CRM contacts"
             description="Contacts, owners, and notes that the Outlet team has chosen to share with you."
             emptyState="No CRM contacts have been shared yet."

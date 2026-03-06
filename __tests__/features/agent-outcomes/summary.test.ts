@@ -90,4 +90,30 @@ describe("agent outcome summary helpers", () => {
 
     expect(outcome.linkedActionItemId).toBe("action_123");
   });
+
+  it("preserves CRM contact context on non-campaign agent outcomes", () => {
+    const outcome = buildAgentOutcomeView(
+      {
+        clientSlug: "happy_paws",
+        createdAt: "2026-03-06T12:00:00.000Z",
+        detail: "Prepare an internal follow-up brief only.",
+        metadata: {
+          crmContactId: "contact_123",
+          crmContactName: "Mia Rivera",
+        },
+        summary: 'Queued CRM follow-up triage for "Mia Rivera"',
+        taskId: "web_task_3",
+        visibility: "shared",
+      },
+      null,
+    );
+
+    expect(outcome).toMatchObject({
+      campaignId: null,
+      crmContactId: "contact_123",
+      crmContactName: "Mia Rivera",
+      status: "pending",
+      taskId: "web_task_3",
+    });
+  });
 });

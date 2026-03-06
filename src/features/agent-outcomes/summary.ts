@@ -35,6 +35,8 @@ export interface AgentOutcomeView {
   clientSlug: string | null;
   completedAt: string | null;
   createdAt: string;
+  crmContactId: string | null;
+  crmContactName: string | null;
   errorText: string | null;
   linkedActionItemId: string | null;
   requestDetail: string | null;
@@ -82,6 +84,8 @@ export function buildAgentOutcomeView(
     clientSlug: request.clientSlug,
     completedAt: task?.completedAt ?? null,
     createdAt: task?.createdAt ?? request.createdAt,
+    crmContactId: metadataString(request.metadata, "crmContactId"),
+    crmContactName: metadataString(request.metadata, "crmContactName"),
     errorText: task?.error ?? null,
     linkedActionItemId: linkedActionItemId ?? null,
     requestDetail: request.detail,

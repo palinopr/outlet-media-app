@@ -7,6 +7,7 @@ import { crmStageLabel } from "@/features/crm/summary";
 
 interface DashboardCrmSectionProps {
   contacts: CrmContact[];
+  detailHrefPrefix?: string;
   description?: string;
   emptyState?: string;
   href: string;
@@ -51,6 +52,7 @@ const METRICS = [
 
 export function DashboardCrmSection({
   contacts,
+  detailHrefPrefix,
   description = "The current relationship load, including hot contacts and due follow-ups.",
   emptyState = "No CRM contacts are active yet.",
   href,
@@ -121,6 +123,18 @@ export function DashboardCrmSection({
                     {typeof contact.leadScore === "number" ? <p className="mt-1">Score {contact.leadScore}</p> : null}
                   </div>
                 </div>
+
+                {detailHrefPrefix ? (
+                  <div className="mt-3">
+                    <Link
+                      href={`${detailHrefPrefix}/${contact.id}`}
+                      className={cn("inline-flex items-center gap-1 text-sm font-medium", styles.link)}
+                    >
+                      Open contact
+                      <ArrowRight className="h-3 w-3" />
+                    </Link>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>

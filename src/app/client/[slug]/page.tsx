@@ -235,6 +235,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       {showCrm ? (
         <DashboardCrmSection
           contacts={crmContacts}
+          detailHrefPrefix={`/client/${slug}/crm`}
           href={`/client/${slug}/crm`}
           summary={crm.summary}
           title="CRM snapshot"

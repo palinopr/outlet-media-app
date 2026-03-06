@@ -11,6 +11,7 @@ export type CrmContactVisibility = "admin_only" | "shared";
 
 export interface CrmContactSummaryRecord {
   createdAt: string;
+  lastContactedAt?: string | null;
   leadScore: number | null;
   lifecycleStage: CrmLifecycleStage;
   nextFollowUpAt: string | null;
@@ -91,4 +92,24 @@ export function buildCrmSummary(
     })),
     totalContacts: contacts.length,
   };
+}
+
+export function crmNeedsFollowUpTriage(
+  contact: CrmContactSummaryRecord,
+  now = new Date(),
+  followUpWindowHours = 48,
+) {
+  const nextFollowUpAt = contact.nextFollowUpAt ? new Date(contact.nextFollowUpAt).getTime() : null;
+  const isHighIntentStage =
+    contact.lifecycleStage === "lead" ||
+    contact.lifecycleStage === "qualified" ||
+    contact.lifecycleStage === "proposal";
+  const isHotLead = typeof contact.leadScore === "number" && contact.leadScore >= 80;
+  const followUpWindowMs = followUpWindowHours * 60 * 60 * 1000;
+  const needsFollowUpSoon =
+    typeof nextFollowUpAt === "number" &&
+    !Number.isNaN(nextFollowUpAt) &&
+    nextFollowUpAt <= now.getTime() + followUpWindowMs;
+
+  return Boolean(needsFollowUpSoon || (isHighIntentStage && isHotLead));
 }
