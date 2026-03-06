@@ -16,12 +16,20 @@ import type { SystemEvent } from "@/features/system-events/server";
 
 interface WorkspaceActivityFeedProps {
   assetHrefPrefix?: string;
+  campaignHrefPrefix?: string;
+  crmHrefPrefix?: string;
   events: SystemEvent[];
   basePath: string;
   description?: string;
   emptyState?: string;
+  eventHrefPrefix?: string;
   showClientSlug?: boolean;
   title?: string;
+}
+
+function metadataString(event: SystemEvent, key: string) {
+  const value = event.metadata[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
 }
 
 function getEventIcon(eventName: string) {
@@ -49,31 +57,35 @@ function getEventHref(
   event: SystemEvent,
   basePath: string,
   assetHrefPrefix?: string,
+  campaignHrefPrefix?: string,
+  crmHrefPrefix?: string,
+  eventHrefPrefix?: string,
 ) {
+  const campaignId =
+    event.entityType === "campaign" && event.entityId
+      ? event.entityId
+      : metadataString(event, "campaignId");
   const assetId =
     event.entityType === "asset" && event.entityId
       ? event.entityId
-      : typeof event.metadata.assetId === "string"
-        ? event.metadata.assetId
-        : null;
+      : metadataString(event, "assetId");
+  const eventId =
+    event.entityType === "event" && event.entityId ? event.entityId : metadataString(event, "eventId");
+  const crmContactId =
+    event.entityType === "crm_contact" && event.entityId
+      ? event.entityId
+      : metadataString(event, "crmContactId");
+
   if (assetHrefPrefix && assetId) return `${assetHrefPrefix}/${assetId}`;
+  if (campaignHrefPrefix && campaignId) return `${campaignHrefPrefix}/${campaignId}`;
+  if (eventHrefPrefix && eventId) return `${eventHrefPrefix}/${eventId}`;
+  if (crmHrefPrefix && crmContactId) return `${crmHrefPrefix}/${crmContactId}`;
   if (event.pageId) return `${basePath}/${event.pageId}`;
-  if (event.entityType === "event" && event.entityId) return `${basePath}/${event.entityId}`;
   if (
     (event.entityType === "event_comment" || event.entityType === "event_follow_up_item") &&
-    typeof event.metadata.eventId === "string"
+    metadataString(event, "eventId")
   ) {
-    return `${basePath}/${event.metadata.eventId}`;
-  }
-  if (event.entityType === "crm_contact" && event.entityId) return `${basePath}/${event.entityId}`;
-  if (event.entityType === "crm_comment" && typeof event.metadata.crmContactId === "string") {
-    return `${basePath}/${event.metadata.crmContactId}`;
-  }
-  if (
-    event.entityType === "crm_follow_up_item" &&
-    typeof event.metadata.crmContactId === "string"
-  ) {
-    return `${basePath}/${event.metadata.crmContactId}`;
+    return `${basePath}/${metadataString(event, "eventId")}`;
   }
   if (event.taskId) return `${basePath}/tasks`;
   return null;
@@ -81,10 +93,13 @@ function getEventHref(
 
 export function WorkspaceActivityFeed({
   assetHrefPrefix,
+  campaignHrefPrefix,
+  crmHrefPrefix,
   events,
   basePath,
   description = "The latest changes across pages, tasks, comments, and assets.",
   emptyState = "Shared activity will appear here as work moves through the system.",
+  eventHrefPrefix,
   showClientSlug = false,
   title = "Recent shared events",
 }: WorkspaceActivityFeedProps) {
@@ -108,7 +123,14 @@ export function WorkspaceActivityFeed({
         <div className="space-y-3">
           {events.map((event) => {
             const Icon = getEventIcon(event.eventName);
-            const href = getEventHref(event, basePath, assetHrefPrefix);
+            const href = getEventHref(
+              event,
+              basePath,
+              assetHrefPrefix,
+              campaignHrefPrefix,
+              crmHrefPrefix,
+              eventHrefPrefix,
+            );
 
             return (
               <div

@@ -150,6 +150,10 @@ export default async function ClientCrmContactPage({ params }: Props) {
         <WorkspaceActivityFeed
           events={events}
           basePath={`/client/${slug}/crm`}
+          campaignHrefPrefix={`/client/${slug}/campaign`}
+          crmHrefPrefix={`/client/${slug}/crm`}
+          assetHrefPrefix={`/client/${slug}/assets`}
+          eventHrefPrefix={`/client/${slug}/event`}
           title="Contact activity"
           description="Shared CRM updates for this contact."
           emptyState="CRM updates for this contact will appear here."

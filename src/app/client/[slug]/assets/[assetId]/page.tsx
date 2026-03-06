@@ -282,7 +282,10 @@ export default async function ClientAssetDetailPage({ params }: Props) {
           <WorkspaceActivityFeed
             events={events}
             assetHrefPrefix={`/client/${slug}/assets`}
+            campaignHrefPrefix={`/client/${slug}/campaign`}
+            crmHrefPrefix={`/client/${slug}/crm`}
             basePath={`/client/${slug}/assets`}
+            eventHrefPrefix={`/client/${slug}/event`}
             title="Asset activity"
             description="Visible review and workflow events attached to this creative."
             emptyState="Shared asset updates will appear here as work moves forward."

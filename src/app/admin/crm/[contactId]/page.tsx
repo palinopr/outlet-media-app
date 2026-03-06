@@ -165,6 +165,10 @@ export default async function AdminCrmContactPage({ params }: Props) {
         <WorkspaceActivityFeed
           events={events}
           basePath="/admin/crm"
+          campaignHrefPrefix="/admin/campaigns"
+          crmHrefPrefix="/admin/crm"
+          eventHrefPrefix="/admin/events"
+          assetHrefPrefix="/admin/assets"
           title="Contact activity"
           description="Shared timeline for this CRM record."
           emptyState="CRM updates for this contact will appear here."

@@ -30,8 +30,11 @@ export default async function WorkspacePage() {
           <WorkspaceApprovalsPanel approvals={approvals} canDecide />
           <WorkspaceActivityFeed
             assetHrefPrefix="/admin/assets"
+            campaignHrefPrefix="/admin/campaigns"
+            crmHrefPrefix="/admin/crm"
             events={events}
             basePath="/admin/workspace"
+            eventHrefPrefix="/admin/events"
             showClientSlug
           />
         </div>

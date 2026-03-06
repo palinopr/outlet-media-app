@@ -210,6 +210,10 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           <WorkspaceActivityFeed
             events={events}
             basePath={`/client/${slug}/workspace`}
+            campaignHrefPrefix={`/client/${slug}/campaign`}
+            crmHrefPrefix={`/client/${slug}/crm`}
+            assetHrefPrefix={`/client/${slug}/assets`}
+            eventHrefPrefix={`/client/${slug}/event`}
             title="Campaign activity"
             description="Visible campaign changes logged across the shared system."
             emptyState="Campaign updates will appear here as the team changes status, budget, or ownership."

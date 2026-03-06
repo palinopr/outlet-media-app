@@ -43,6 +43,10 @@ export default async function ClientWorkspacePage({ params }: Props) {
           <WorkspaceActivityFeed
             events={events}
             basePath={`/client/${slug}/workspace`}
+            campaignHrefPrefix={`/client/${slug}/campaign`}
+            crmHrefPrefix={`/client/${slug}/crm`}
+            assetHrefPrefix={`/client/${slug}/assets`}
+            eventHrefPrefix={`/client/${slug}/event`}
           />
         </div>
       </div>

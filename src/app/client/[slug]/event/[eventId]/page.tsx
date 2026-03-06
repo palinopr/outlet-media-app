@@ -279,6 +279,10 @@ export default async function EventDetailPage({ params }: Props) {
         <WorkspaceActivityFeed
           events={eventEvents}
           basePath={`/client/${slug}/event`}
+          campaignHrefPrefix={`/client/${slug}/campaign`}
+          crmHrefPrefix={`/client/${slug}/crm`}
+          assetHrefPrefix={`/client/${slug}/assets`}
+          eventHrefPrefix={`/client/${slug}/event`}
           title="Event activity"
           description="Shared changes to ticketing and event state for this show."
           emptyState="Event activity will appear here when the team updates ticketing or event status."

@@ -224,8 +224,11 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
           />
           <WorkspaceActivityFeed
             assetHrefPrefix="/admin/assets"
+            campaignHrefPrefix="/admin/campaigns"
+            crmHrefPrefix="/admin/crm"
             events={events}
             basePath="/admin/workspace"
+            eventHrefPrefix="/admin/events"
             title="Campaign activity"
             description={
               campaign.startTime

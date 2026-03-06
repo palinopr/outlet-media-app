@@ -112,6 +112,10 @@ export default async function AdminCrmPage({ searchParams }: Props) {
           <WorkspaceActivityFeed
             events={crm.recentEvents}
             basePath="/admin/crm"
+            campaignHrefPrefix="/admin/campaigns"
+            crmHrefPrefix="/admin/crm"
+            eventHrefPrefix="/admin/events"
+            assetHrefPrefix="/admin/assets"
             title="CRM activity"
             description="Recent CRM additions and follow-up work on the shared product timeline."
             emptyState="CRM activity will appear here as contacts are created and updated."

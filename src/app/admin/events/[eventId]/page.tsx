@@ -240,8 +240,11 @@ export default async function AdminEventDetailPage({ params }: Props) {
 
           <WorkspaceActivityFeed
             assetHrefPrefix="/admin/assets"
+            campaignHrefPrefix="/admin/campaigns"
+            crmHrefPrefix="/admin/crm"
             events={events}
             basePath="/admin/events"
+            eventHrefPrefix="/admin/events"
             title="Event activity"
             description="Recent ticketing and event-state changes attached to this show."
             emptyState="Event activity will appear here as the team updates ticketing, status, or client assignment."

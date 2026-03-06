@@ -144,6 +144,10 @@ export default async function ClientCrmPage({ params }: Props) {
           <WorkspaceActivityFeed
             events={crm.recentEvents}
             basePath={`/client/${slug}/crm`}
+            campaignHrefPrefix={`/client/${slug}/campaign`}
+            crmHrefPrefix={`/client/${slug}/crm`}
+            assetHrefPrefix={`/client/${slug}/assets`}
+            eventHrefPrefix={`/client/${slug}/event`}
             title="CRM activity"
             description="Recent shared CRM updates on the same timeline as the rest of your account work."
             emptyState="CRM activity will appear here as contacts are added and updated."

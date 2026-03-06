@@ -309,7 +309,10 @@ export default async function AdminAssetDetailPage({ params }: Props) {
           <WorkspaceActivityFeed
             events={events}
             assetHrefPrefix="/admin/assets"
+            campaignHrefPrefix="/admin/campaigns"
+            crmHrefPrefix="/admin/crm"
             basePath="/admin/assets"
+            eventHrefPrefix="/admin/events"
             title="Asset activity"
             description="Recent upload, review, and workflow events attached to this asset."
             emptyState="Asset activity will appear here as review state and workflow context change."
