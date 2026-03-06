@@ -52,6 +52,8 @@ const client = {
     },
   ],
   createdAt: "2026-01-01T00:00:00.000Z",
+  connectedAccountCount: 1,
+  connectionRiskAccounts: 1,
   events: [
     {
       date: "2026-04-20",

@@ -4,7 +4,10 @@ import { computeBlendedRoas } from "@/lib/formatters";
 import { getClientServices } from "@/lib/client-services";
 import { buildClientWorkflowHealth } from "@/features/clients/summary";
 import { listActionableInvitations } from "@/features/invitations/server";
-import type { ConnectedAccount } from "@/features/settings/connected-accounts";
+import {
+  buildConnectedAccountsSummary,
+  type ConnectedAccount,
+} from "@/features/settings/connected-accounts";
 
 export type {
   ClientSummary,
@@ -39,6 +42,7 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     approvalsRes,
     actionItemsRes,
     assetsRes,
+    connectedAccountsRes,
     campaignDiscussionsRes,
     crmDiscussionsRes,
     assetDiscussionsRes,
@@ -65,6 +69,11 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
       .from("ad_assets")
       .select("client_slug, status")
       .in("status", ["new", "labeled"]),
+    supabaseAdmin
+      .from("client_accounts")
+      .select(
+        "id, client_slug, ad_account_id, ad_account_name, status, connected_at, token_expires_at, last_used_at",
+      ),
     supabaseAdmin
       .from("campaign_comments")
       .select("client_slug")
@@ -141,6 +150,14 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     }
   }
 
+  const connectedAccountsBySlug = new Map<string, ConnectedAccount[]>();
+  for (const row of (connectedAccountsRes.data ?? []) as ConnectedAccount[]) {
+    const slug = row.client_slug ?? "unknown";
+    const accounts = connectedAccountsBySlug.get(slug) ?? [];
+    accounts.push(row);
+    connectedAccountsBySlug.set(slug, accounts);
+  }
+
   return clientsRes.data.map((client) => {
     const campaigns = campaignsBySlug[client.slug] ?? [];
     const totalSpend = campaigns.reduce(
@@ -155,6 +172,9 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
       (c) => c.status === "ACTIVE",
     ).length;
     const roas = computeBlendedRoas(campaigns.map(c => ({ spend: c.spend ?? 0, roas: c.roas }))) ?? 0;
+    const connectionSummary = buildConnectedAccountsSummary(
+      connectedAccountsBySlug.get(client.slug) ?? [],
+    );
     const workflow = buildClientWorkflowHealth({
       assetsNeedingReview: assetsNeedingReviewBySlug[client.slug] ?? 0,
       openActionItems: openActionItemsBySlug[client.slug] ?? 0,
@@ -164,6 +184,8 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
 
     return {
       assetsNeedingReview: workflow.assetsNeedingReview,
+      connectedAccountCount: connectionSummary.totalCount,
+      connectionRiskAccounts: connectionSummary.attentionCount,
       id: client.id,
       name: client.name,
       slug: client.slug,
@@ -392,6 +414,7 @@ export async function getClientDetail(
   }));
 
   const connectedAccounts: ConnectedAccount[] = ((connectedAccountsRes.data ?? []) as ConnectedAccount[]);
+  const connectionSummary = buildConnectedAccountsSummary(connectedAccounts);
 
   const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
   const totalRevenue = campaigns.reduce((s, c) => s + c.spend * c.roas, 0);
@@ -412,6 +435,8 @@ export async function getClientDetail(
 
   return {
     assetsNeedingReview: workflow.assetsNeedingReview,
+    connectedAccountCount: connectionSummary.totalCount,
+    connectionRiskAccounts: connectionSummary.attentionCount,
     id: client.id,
     name: client.name,
     slug: client.slug,

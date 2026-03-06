@@ -9,8 +9,13 @@ import {
   BadgeCheck,
   MessageSquareMore,
   Image as ImageIcon,
+  Link2Off,
 } from "lucide-react";
-import { compareClientWorkflowHealth } from "@/features/clients/summary";
+import {
+  compareClientAccountHealth,
+  getClientAttentionPressure,
+  hasClientAttention,
+} from "@/features/clients/summary";
 import Link from "next/link";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
@@ -26,17 +31,27 @@ export default async function ClientsPage() {
   const pendingApprovals = clients.reduce((s, c) => s + c.pendingApprovals, 0);
   const openDiscussions = clients.reduce((s, c) => s + c.openDiscussions, 0);
   const assetsNeedingReview = clients.reduce((s, c) => s + c.assetsNeedingReview, 0);
+  const connectionRiskAccounts = clients.reduce(
+    (sum, client) => sum + client.connectionRiskAccounts,
+    0,
+  );
   const blendedRoas = totalSpend > 0
     ? clients.reduce((s, c) => s + c.totalRevenue, 0) / totalSpend
     : 0;
-  const clientsNeedingAttention = clients.filter((client) => client.needsAttention > 0);
+  const clientsNeedingAttention = clients.filter(hasClientAttention);
   const attentionClients = [...clientsNeedingAttention]
-    .sort(compareClientWorkflowHealth)
+    .sort(compareClientAccountHealth)
     .slice(0, 6);
 
   const stats = [
     { label: "Clients Needing Attention", value: String(clientsNeedingAttention.length), sub: `${clients.length} total accounts`, icon: Users },
     { label: "Pending Approvals", value: String(pendingApprovals), sub: "decisions waiting", icon: BadgeCheck },
+    {
+      label: "Connection Risk",
+      value: String(connectionRiskAccounts),
+      sub: `${clients.filter((client) => client.connectionRiskAccounts > 0).length} client accounts affected`,
+      icon: Link2Off,
+    },
     { label: "Open Discussions", value: String(openDiscussions), sub: "threads needing a reply", icon: MessageSquareMore },
     { label: "Assets Needing Review", value: String(assetsNeedingReview), sub: `${activeCampaigns} active campaigns`, icon: ImageIcon },
   ];
@@ -56,12 +71,13 @@ export default async function ClientsPage() {
       </AdminPageHeader>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
         {[
           { ...stats[0], accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
-          { ...stats[1], accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
-          { ...stats[2], accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
-          { ...stats[3], accent: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-400" },
+          { ...stats[1], accent: "from-rose-500/20 to-orange-500/20", iconColor: "text-rose-400" },
+          { ...stats[2], accent: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-400" },
+          { ...stats[3], accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
+          { ...stats[4], accent: "from-sky-500/20 to-cyan-500/20", iconColor: "text-sky-400" },
         ].map((s) => (
           <StatCard key={s.label} {...s} size="lg" />
         ))}
@@ -105,10 +121,13 @@ export default async function ClientsPage() {
                       </p>
                     </div>
                     <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-400">
-                      {client.needsAttention} pressure
+                      {getClientAttentionPressure(client)} pressure
                     </span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                    {client.connectionRiskAccounts > 0 ? (
+                      <span>{client.connectionRiskAccounts} connections at risk</span>
+                    ) : null}
                     {client.pendingApprovals > 0 ? <span>{client.pendingApprovals} approvals</span> : null}
                     {client.openDiscussions > 0 ? <span>{client.openDiscussions} discussions</span> : null}
                     {client.openActionItems > 0 ? <span>{client.openActionItems} next steps</span> : null}

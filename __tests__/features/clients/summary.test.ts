@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildClientWorkflowHealth, compareClientWorkflowHealth } from "@/features/clients/summary";
+import {
+  buildClientWorkflowHealth,
+  compareClientAccountHealth,
+  compareClientWorkflowHealth,
+  getClientAttentionPressure,
+} from "@/features/clients/summary";
 
 describe("client workflow summary helpers", () => {
   it("weights approvals and discussions above passive review counts", () => {
@@ -50,5 +55,40 @@ describe("client workflow summary helpers", () => {
     ].sort(compareClientWorkflowHealth);
 
     expect(ranked.map((client) => client.name)).toEqual(["Client B", "Client A", "Client C"]);
+  });
+
+  it("lets connection risk outrank lighter workflow pressure", () => {
+    const ranked = [
+      {
+        connectedAccountCount: 2,
+        connectionRiskAccounts: 0,
+        name: "Workflow-heavy",
+        totalSpend: 1000,
+        ...buildClientWorkflowHealth({
+          assetsNeedingReview: 2,
+          openActionItems: 0,
+          openDiscussions: 0,
+          pendingApprovals: 0,
+        }),
+      },
+      {
+        connectedAccountCount: 1,
+        connectionRiskAccounts: 1,
+        name: "Connection-risk",
+        totalSpend: 500,
+        ...buildClientWorkflowHealth({
+          assetsNeedingReview: 0,
+          openActionItems: 0,
+          openDiscussions: 0,
+          pendingApprovals: 0,
+        }),
+      },
+    ].sort(compareClientAccountHealth);
+
+    expect(ranked.map((client) => client.name)).toEqual([
+      "Connection-risk",
+      "Workflow-heavy",
+    ]);
+    expect(getClientAttentionPressure(ranked[0])).toBe(3);
   });
 });

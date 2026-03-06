@@ -89,6 +89,7 @@ The short-term focus is:
 - Reuse the shared conversations feature module anywhere open discussion is summarized, instead of re-querying each comment table per route and letting discussion logic drift.
 - When client members have assigned scope, shared workflow loaders should honor both campaign scope and event scope so dashboards, conversations, notifications, and agent follow-through stay complete without leaking unrelated work.
 - Treat the admin clients index as an account health surface, not just a billing roster, so operators can see which client accounts need approvals, discussion responses, next steps, or creative review.
+- Keep Meta connection risk visible on that admin clients index too, so expiring, stale, or disconnected ad-account links are visible before operators drill into a specific client hub.
 - Treat admin client detail pages as account operating hubs too, not only membership/assets/service management, so operators can manage workflow pressure, CRM relationship work, activity, agent follow-through, and show-level context from the client record itself.
 - Keep Meta connection health visible inside those admin client account hubs too, so operators can catch expiring, stale, or disconnected ad-account links from the client record instead of detouring into global settings.
 - Keep pending invites visible and actionable inside that client account hub too, so operators can manage stale access setup from the client record instead of detouring back to the global users/settings surfaces.

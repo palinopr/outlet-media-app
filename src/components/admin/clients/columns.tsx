@@ -141,6 +141,46 @@ export const clientColumns: ColumnDef<ClientSummary>[] = [
     },
   },
   {
+    accessorKey: "connectionRiskAccounts",
+    header: ({ column }) => (
+      <ColumnHeader
+        column={column}
+        title="Connections"
+        className="justify-end"
+      />
+    ),
+    cell: ({ row }) => {
+      const client = row.original;
+      const healthyCount =
+        client.connectedAccountCount - client.connectionRiskAccounts;
+
+      let detail = "No linked accounts";
+      if (client.connectedAccountCount > 0) {
+        detail =
+          client.connectionRiskAccounts > 0
+            ? `${client.connectionRiskAccounts} at risk / ${client.connectedAccountCount}`
+            : `${healthyCount} healthy`;
+      }
+
+      return (
+        <div className="text-right">
+          <span
+            className={`text-sm font-semibold tabular-nums ${
+              client.connectionRiskAccounts > 0
+                ? "text-amber-400"
+                : client.connectedAccountCount > 0
+                  ? "text-emerald-400"
+                  : "text-muted-foreground"
+            }`}
+          >
+            {client.connectedAccountCount}
+          </span>
+          <p className="text-[11px] text-muted-foreground">{detail}</p>
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "totalSpend",
     header: ({ column }) => (
       <ColumnHeader

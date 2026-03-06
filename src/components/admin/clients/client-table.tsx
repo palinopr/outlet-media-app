@@ -226,6 +226,8 @@ const clientCsvColumns = [
   { header: "Slug", accessor: (r: Record<string, unknown>) => String(r.slug ?? "") },
   { header: "Status", accessor: (r: Record<string, unknown>) => String(r.status ?? "") },
   { header: "Campaigns", accessor: (r: Record<string, unknown>) => (r.totalCampaigns != null ? String(r.totalCampaigns) : "") },
+  { header: "Connected Accounts", accessor: (r: Record<string, unknown>) => (r.connectedAccountCount != null ? String(r.connectedAccountCount) : "") },
+  { header: "Connections At Risk", accessor: (r: Record<string, unknown>) => (r.connectionRiskAccounts != null ? String(r.connectionRiskAccounts) : "") },
   { header: "Total Spend ($)", accessor: (r: Record<string, unknown>) => (r.totalSpend != null ? Number(r.totalSpend).toFixed(2) : "") },
   { header: "ROAS", accessor: (r: Record<string, unknown>) => (r.roas != null && Number(r.roas) > 0 ? Number(r.roas).toFixed(2) : "") },
 ];
@@ -290,6 +292,15 @@ export function ClientTable({ clients }: Props) {
               <p className="text-xs text-muted-foreground">ROAS</p>
               <p className="text-xs tabular-nums font-medium">
                 {c.roas > 0 ? `${c.roas.toFixed(2)}x` : "--"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Connections</p>
+              <p className="text-xs tabular-nums">
+                {c.connectedAccountCount} linked
+                {c.connectionRiskAccounts > 0
+                  ? ` / ${c.connectionRiskAccounts} at risk`
+                  : ""}
               </p>
             </div>
           </div>

@@ -6,6 +6,8 @@ export interface ClientSummary {
   status: string;
   memberCount: number;
   needsAttention: number;
+  connectedAccountCount: number;
+  connectionRiskAccounts: number;
   activeCampaigns: number;
   openActionItems: number;
   openDiscussions: number;
