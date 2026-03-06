@@ -1,3 +1,4 @@
+import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { AppNotification, CreateNotificationInput } from "./types";
 
@@ -106,4 +107,27 @@ export async function listClientNotificationRecipients(
   }
 
   return [...new Set((data ?? []).map((row) => row.clerk_user_id).filter(Boolean))];
+}
+
+export async function listAdminNotificationRecipients(
+  options: { excludeUserId?: string | null } = {},
+) {
+  const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (!clerkEnabled) return [];
+
+  try {
+    const client = await clerkClient();
+    const { data: users } = await client.users.getUserList({ limit: 100 });
+
+    return users
+      .filter((user) => {
+        if (options.excludeUserId && user.id === options.excludeUserId) return false;
+        const role = (user.publicMetadata as { role?: string } | null)?.role;
+        return role === "admin";
+      })
+      .map((user) => user.id);
+  } catch (error) {
+    console.error("[notifications] failed to list admin recipients:", error);
+    return [];
+  }
 }

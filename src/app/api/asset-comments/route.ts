@@ -14,6 +14,7 @@ import {
   getAssetRecordById,
   getClientAssetScope,
 } from "@/features/assets/server";
+import { notifyDiscussionAudience } from "@/features/notifications/discussions";
 import { logSystemEvent } from "@/features/system-events/server";
 
 interface AssetCommentRow {
@@ -204,6 +205,17 @@ export async function POST(request: NextRequest) {
       parentCommentId: body.parent_comment_id ?? null,
       visibility,
     },
+  });
+
+  await notifyDiscussionAudience({
+    actorId: userId,
+    actorName: authorName,
+    clientSlug: body.client_slug,
+    entityId: body.asset_id,
+    entityType: "asset",
+    message: excerpt(body.content),
+    title: body.parent_comment_id ? "New reply in asset discussion" : "New asset comment",
+    visibility,
   });
 
   if (

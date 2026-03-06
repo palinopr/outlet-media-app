@@ -11,6 +11,7 @@ import {
   canAccessCampaignComments,
   type CampaignCommentVisibility,
 } from "@/features/campaign-comments/server";
+import { notifyDiscussionAudience } from "@/features/notifications/discussions";
 import { allowsCampaignInScope } from "@/features/client-portal/scope";
 import { logSystemEvent } from "@/features/system-events/server";
 
@@ -175,6 +176,17 @@ export async function POST(request: NextRequest) {
       parentCommentId: body.parent_comment_id ?? null,
       visibility,
     },
+  });
+
+  await notifyDiscussionAudience({
+    actorId: userId,
+    actorName: authorName,
+    clientSlug: body.client_slug,
+    entityId: body.campaign_id,
+    entityType: "campaign",
+    message: excerpt(body.content),
+    title: body.parent_comment_id ? "New reply in campaign discussion" : "New campaign comment",
+    visibility,
   });
 
   if (

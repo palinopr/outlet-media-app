@@ -5,6 +5,7 @@ import { CreateCrmCommentSchema, ResolveCommentSchema } from "@/lib/api-schemas"
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { supabaseAdmin } from "@/lib/supabase";
 import { canAccessCrmComments, type CrmCommentVisibility } from "@/features/crm-comments/server";
+import { notifyDiscussionAudience } from "@/features/notifications/discussions";
 import { logSystemEvent } from "@/features/system-events/server";
 
 function excerpt(text: string, limit = 140) {
@@ -164,6 +165,17 @@ export async function POST(request: NextRequest) {
       parentCommentId: body.parent_comment_id ?? null,
       visibility,
     },
+  });
+
+  await notifyDiscussionAudience({
+    actorId: userId,
+    actorName: authorName,
+    clientSlug: body.client_slug,
+    entityId: body.contact_id,
+    entityType: "crm_contact",
+    message: excerpt(body.content),
+    title: body.parent_comment_id ? "New reply in CRM discussion" : "New CRM comment",
+    visibility,
   });
 
   if (

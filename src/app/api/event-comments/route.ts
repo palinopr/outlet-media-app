@@ -9,6 +9,7 @@ import {
   type EventCommentVisibility,
   listEventComments,
 } from "@/features/event-comments/server";
+import { notifyDiscussionAudience } from "@/features/notifications/discussions";
 import { allowsEventInScope } from "@/features/client-portal/scope";
 import { getEventOperatingData, getEventRecordById } from "@/features/events/server";
 import { logSystemEvent } from "@/features/system-events/server";
@@ -190,6 +191,17 @@ export async function POST(request: NextRequest) {
       parentCommentId: body.parent_comment_id ?? null,
       visibility,
     },
+  });
+
+  await notifyDiscussionAudience({
+    actorId: userId,
+    actorName: authorName,
+    clientSlug: eventContext.event.clientSlug,
+    entityId: body.event_id,
+    entityType: "event",
+    message: excerpt(body.content),
+    title: body.parent_comment_id ? "New reply in event discussion" : "New event comment",
+    visibility,
   });
 
   if (
