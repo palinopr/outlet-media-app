@@ -7,16 +7,29 @@ const { state, supabaseAdmin } = vi.hoisted(() => {
     asset_follow_up_items: [] as Record<string, unknown>[],
     campaign_action_items: [] as Record<string, unknown>[],
     campaign_comments: [] as Record<string, unknown>[],
+    client_member_campaigns: [] as Record<string, unknown>[],
+    client_member_events: [] as Record<string, unknown>[],
+    client_members: [] as Record<string, unknown>[],
+    clients: [] as Record<string, unknown>[],
     event_comments: [] as Record<string, unknown>[],
     event_follow_up_items: [] as Record<string, unknown>[],
     notifications: [] as Record<string, unknown>[],
   };
 
-  function applyFilters(rows: Record<string, unknown>[], filters: Array<{ field: string; type: "eq" | "in"; value: unknown }>) {
+  function applyFilters(
+    rows: Record<string, unknown>[],
+    filters: Array<{ field: string; type: "eq" | "in" | "neq" | "not-null"; value: unknown }>,
+  ) {
     return rows.filter((row) =>
       filters.every((filter) => {
         if (filter.type === "eq") {
           return row[filter.field] === filter.value;
+        }
+        if (filter.type === "neq") {
+          return row[filter.field] !== filter.value;
+        }
+        if (filter.type === "not-null") {
+          return row[filter.field] != null;
         }
         const values = Array.isArray(filter.value) ? filter.value : [];
         return values.includes(row[filter.field]);
@@ -26,7 +39,7 @@ const { state, supabaseAdmin } = vi.hoisted(() => {
 
   const supabaseAdmin = {
     from(table: string) {
-      const filters: Array<{ field: string; type: "eq" | "in"; value: unknown }> = [];
+      const filters: Array<{ field: string; type: "eq" | "in" | "neq" | "not-null"; value: unknown }> = [];
       let limitValue: number | null = null;
 
       const query = {
@@ -41,12 +54,29 @@ const { state, supabaseAdmin } = vi.hoisted(() => {
           filters.push({ field, type: "in", value });
           return this;
         },
+        neq(field: string, value: unknown) {
+          filters.push({ field, type: "neq", value });
+          return this;
+        },
+        not(field: string, operator: string, value: unknown) {
+          if (operator === "is" && value === null) {
+            filters.push({ field, type: "not-null", value });
+          }
+          return this;
+        },
         order() {
           return this;
         },
         limit(value: number) {
           limitValue = value;
           return this;
+        },
+        async maybeSingle() {
+          const rows = applyFilters(
+            (state[table as keyof typeof state] ?? []) as Record<string, unknown>[],
+            filters,
+          );
+          return { data: rows[0] ?? null, error: null };
         },
         then(resolve: (value: { data: Record<string, unknown>[]; error: null }) => unknown) {
           const rows = applyFilters((state[table as keyof typeof state] ?? []) as Record<string, unknown>[], filters);
@@ -71,7 +101,10 @@ vi.mock("@/features/assets/server", () => ({
 }));
 
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
-import { listNotificationsForUser } from "@/features/notifications/server";
+import {
+  listClientNotificationRecipients,
+  listNotificationsForUser,
+} from "@/features/notifications/server";
 
 const mockedListVisibleAssetIdsForScope = vi.mocked(listVisibleAssetIdsForScope);
 
@@ -80,6 +113,10 @@ describe("listNotificationsForUser", () => {
     state.notifications = [];
     state.campaign_comments = [];
     state.campaign_action_items = [];
+    state.clients = [];
+    state.client_member_campaigns = [];
+    state.client_member_events = [];
+    state.client_members = [];
     state.event_comments = [];
     state.event_follow_up_items = [];
     state.asset_comments = [];
@@ -254,5 +291,52 @@ describe("listNotificationsForUser", () => {
     });
 
     expect(notifications.map((notification) => notification.id)).toEqual(["notif_workspace"]);
+  });
+
+  it("targets shared notification recipients to members whose assigned scope matches the entity", async () => {
+    state.clients = [{ id: "client_1", slug: "zamora" }];
+    state.client_members = [
+      { id: "member_all", client_id: "client_1", clerk_user_id: "user_all", scope: "all" },
+      { id: "member_campaign", client_id: "client_1", clerk_user_id: "user_campaign", scope: "assigned" },
+      { id: "member_other", client_id: "client_1", clerk_user_id: "user_other", scope: "assigned" },
+    ];
+    state.client_member_campaigns = [
+      { member_id: "member_campaign", campaign_id: "cmp_allowed" },
+      { member_id: "member_other", campaign_id: "cmp_other" },
+    ];
+
+    const recipientIds = await listClientNotificationRecipients("zamora", {
+      entityId: "cmp_allowed",
+      entityType: "campaign",
+    });
+
+    expect(recipientIds).toEqual(["user_all", "user_campaign"]);
+  });
+
+  it("uses asset visibility to target scoped asset recipients", async () => {
+    state.clients = [{ id: "client_1", slug: "zamora" }];
+    state.client_members = [
+      { id: "member_all", client_id: "client_1", clerk_user_id: "user_all", scope: "all" },
+      { id: "member_asset", client_id: "client_1", clerk_user_id: "user_asset", scope: "assigned" },
+      { id: "member_blocked", client_id: "client_1", clerk_user_id: "user_blocked", scope: "assigned" },
+    ];
+    state.client_member_campaigns = [
+      { member_id: "member_asset", campaign_id: "cmp_asset" },
+      { member_id: "member_blocked", campaign_id: "cmp_other" },
+    ];
+
+    mockedListVisibleAssetIdsForScope.mockImplementation(async (_clientSlug, assetIds, scope) => {
+      if (scope?.allowedCampaignIds?.includes("cmp_asset")) {
+        return new Set(assetIds);
+      }
+      return new Set<string>();
+    });
+
+    const recipientIds = await listClientNotificationRecipients("zamora", {
+      entityId: "asset_1",
+      entityType: "asset",
+    });
+
+    expect(recipientIds).toEqual(["user_all", "user_asset"]);
   });
 });

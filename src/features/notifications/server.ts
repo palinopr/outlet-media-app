@@ -10,6 +10,18 @@ interface ListNotificationsForUserOptions {
   scope?: ScopeFilter;
 }
 
+interface ListClientNotificationRecipientsOptions {
+  entityId?: string | null;
+  entityType?: string | null;
+  excludeUserId?: string | null;
+}
+
+type NotificationEntityContext = {
+  assetId: string | null;
+  campaignId: string | null;
+  eventId: string | null;
+};
+
 type NotificationScopeMaps = {
   allowedApprovalIds: Set<string>;
   allowedAssetCommentIds: Set<string>;
@@ -102,11 +114,12 @@ export async function listNotificationsForUser(
 
 export async function listClientNotificationRecipients(
   clientSlug: string,
-  options: { excludeUserId?: string | null } = {},
+  options: ListClientNotificationRecipientsOptions = {},
 ) {
-  if (!supabaseAdmin) return [];
+  const db = supabaseAdmin;
+  if (!db) return [];
 
-  const { data: client, error: clientError } = await supabaseAdmin
+  const { data: client, error: clientError } = await db
     .from("clients")
     .select("id")
     .eq("slug", clientSlug)
@@ -114,9 +127,9 @@ export async function listClientNotificationRecipients(
 
   if (clientError || !client) return [];
 
-  let query = supabaseAdmin
+  let query = db
     .from("client_members")
-    .select("clerk_user_id")
+    .select("id, clerk_user_id, scope")
     .eq("client_id", client.id)
     .not("clerk_user_id", "is", null);
 
@@ -130,7 +143,110 @@ export async function listClientNotificationRecipients(
     return [];
   }
 
-  return [...new Set((data ?? []).map((row) => row.clerk_user_id).filter(Boolean))];
+  const rows = (data ?? []) as Array<{
+    clerk_user_id: string | null;
+    id: string;
+    scope: "all" | "assigned";
+  }>;
+  const context = await resolveNotificationEntityContext(
+    clientSlug,
+    options.entityType ?? null,
+    options.entityId ?? null,
+  );
+
+  if (!context) {
+    return [
+      ...new Set(
+        rows
+          .map((row) => row.clerk_user_id)
+          .filter((value): value is string => typeof value === "string" && value.length > 0),
+      ),
+    ];
+  }
+
+  const assignedRows = rows.filter((row) => row.scope === "assigned");
+  const allScopeRecipientIds = rows
+    .filter((row) => row.scope !== "assigned")
+    .map((row) => row.clerk_user_id)
+    .filter((value): value is string => typeof value === "string" && value.length > 0);
+
+  if (assignedRows.length === 0) {
+    return [...new Set(allScopeRecipientIds)];
+  }
+
+  const memberIds = assignedRows.map((row) => row.id);
+  const [campaignAssignments, eventAssignments] = await Promise.all([
+    db
+      .from("client_member_campaigns")
+      .select("member_id, campaign_id")
+      .in("member_id", memberIds),
+    db
+      .from("client_member_events")
+      .select("member_id, event_id")
+      .in("member_id", memberIds),
+  ]);
+
+  if (campaignAssignments.error) {
+    console.error(
+      "[notifications] failed to load client campaign assignments:",
+      campaignAssignments.error.message,
+    );
+  }
+
+  if (eventAssignments.error) {
+    console.error(
+      "[notifications] failed to load client event assignments:",
+      eventAssignments.error.message,
+    );
+  }
+
+  const campaignsByMember = new Map<string, string[]>();
+  for (const row of (campaignAssignments.data ?? []) as Array<{ campaign_id: string; member_id: string }>) {
+    const existing = campaignsByMember.get(row.member_id) ?? [];
+    existing.push(row.campaign_id);
+    campaignsByMember.set(row.member_id, existing);
+  }
+
+  const eventsByMember = new Map<string, string[]>();
+  for (const row of (eventAssignments.data ?? []) as Array<{ event_id: string; member_id: string }>) {
+    const existing = eventsByMember.get(row.member_id) ?? [];
+    existing.push(row.event_id);
+    eventsByMember.set(row.member_id, existing);
+  }
+
+  const scopedRecipientIds = await Promise.all(
+    assignedRows.map(async (row) => {
+      const scope: ScopeFilter = {
+        allowedCampaignIds: campaignsByMember.get(row.id) ?? [],
+        allowedEventIds: eventsByMember.get(row.id) ?? [],
+      };
+
+      if (context.campaignId && scope.allowedCampaignIds?.includes(context.campaignId)) {
+        return row.clerk_user_id;
+      }
+
+      if (context.eventId && scope.allowedEventIds?.includes(context.eventId)) {
+        return row.clerk_user_id;
+      }
+
+      if (context.assetId) {
+        const allowedAssetIds = await listVisibleAssetIdsForScope(clientSlug, [context.assetId], scope);
+        if (allowedAssetIds?.has(context.assetId)) {
+          return row.clerk_user_id;
+        }
+      }
+
+      return null;
+    }),
+  );
+
+  return [
+    ...new Set(
+      [...allScopeRecipientIds, ...scopedRecipientIds].filter(
+        (value): value is string => typeof value === "string" && value.length > 0,
+      ),
+    ),
+  ];
 }
 
 export async function listAdminNotificationRecipients(
@@ -171,6 +287,43 @@ function isScopedNotificationEntity(entityType: string | null) {
   ].includes(entityType ?? "");
 }
 
+function emptyNotificationEntityContext(): NotificationEntityContext {
+  return {
+    assetId: null,
+    campaignId: null,
+    eventId: null,
+  };
+}
+
+function extractNotificationContextFromApprovalRow(
+  row: Record<string, unknown>,
+): NotificationEntityContext {
+  const entityType = (row.entity_type as string | null) ?? null;
+  const entityId = (row.entity_id as string | null) ?? null;
+  const metadata = (row.metadata as Record<string, unknown> | null) ?? null;
+
+  return {
+    assetId:
+      entityType === "asset"
+        ? entityId
+        : typeof metadata?.assetId === "string"
+          ? metadata.assetId
+          : null,
+    campaignId:
+      entityType === "campaign"
+        ? entityId
+        : typeof metadata?.campaignId === "string"
+          ? metadata.campaignId
+          : null,
+    eventId:
+      entityType === "event"
+        ? entityId
+        : typeof metadata?.eventId === "string"
+          ? metadata.eventId
+          : null,
+  };
+}
+
 async function mapScopedEntityRelations(
   table: string,
   idField: string,
@@ -196,6 +349,84 @@ async function mapScopedEntityRelations(
       String(row[relationField]),
     ]),
   );
+}
+
+async function resolveNotificationEntityContext(
+  clientSlug: string,
+  entityType: string | null,
+  entityId: string | null,
+): Promise<NotificationEntityContext | null> {
+  const db = supabaseAdmin;
+  if (!db || !entityType || !entityId) return null;
+
+  switch (entityType) {
+    case "campaign":
+      return { ...emptyNotificationEntityContext(), campaignId: entityId };
+    case "event":
+      return { ...emptyNotificationEntityContext(), eventId: entityId };
+    case "asset":
+      return { ...emptyNotificationEntityContext(), assetId: entityId };
+    case "campaign_comment": {
+      const mapping = await mapScopedEntityRelations("campaign_comments", "id", "campaign_id", [entityId]);
+      return { ...emptyNotificationEntityContext(), campaignId: mapping.get(entityId) ?? null };
+    }
+    case "campaign_action_item": {
+      const mapping = await mapScopedEntityRelations(
+        "campaign_action_items",
+        "id",
+        "campaign_id",
+        [entityId],
+      );
+      return { ...emptyNotificationEntityContext(), campaignId: mapping.get(entityId) ?? null };
+    }
+    case "event_comment": {
+      const mapping = await mapScopedEntityRelations("event_comments", "id", "event_id", [entityId]);
+      return { ...emptyNotificationEntityContext(), eventId: mapping.get(entityId) ?? null };
+    }
+    case "event_follow_up_item": {
+      const mapping = await mapScopedEntityRelations(
+        "event_follow_up_items",
+        "id",
+        "event_id",
+        [entityId],
+      );
+      return { ...emptyNotificationEntityContext(), eventId: mapping.get(entityId) ?? null };
+    }
+    case "asset_comment": {
+      const mapping = await mapScopedEntityRelations("asset_comments", "id", "asset_id", [entityId]);
+      return { ...emptyNotificationEntityContext(), assetId: mapping.get(entityId) ?? null };
+    }
+    case "asset_follow_up_item": {
+      const mapping = await mapScopedEntityRelations(
+        "asset_follow_up_items",
+        "id",
+        "asset_id",
+        [entityId],
+      );
+      return { ...emptyNotificationEntityContext(), assetId: mapping.get(entityId) ?? null };
+    }
+    case "approval_request": {
+      const { data, error } = await db
+        .from("approval_requests" as never)
+        .select("id, entity_type, entity_id, metadata")
+        .eq("client_slug", clientSlug)
+        .eq("id", entityId)
+        .maybeSingle();
+
+      if (error) {
+        console.error("[notifications] failed to load approval notification context:", error.message);
+        return null;
+      }
+
+      if (!data) {
+        return null;
+      }
+
+      return extractNotificationContextFromApprovalRow(data as Record<string, unknown>);
+    }
+    default:
+      return null;
+  }
 }
 
 function buildNotificationScopeMaps(scope: ScopeFilter): NotificationScopeMaps {
@@ -346,27 +577,7 @@ async function resolveNotificationScopeMaps(
     } else {
       for (const row of (data ?? []) as Record<string, unknown>[]) {
         const id = String(row.id);
-        const entityType = (row.entity_type as string | null) ?? null;
-        const entityId = (row.entity_id as string | null) ?? null;
-        const metadata = (row.metadata as Record<string, unknown> | null) ?? null;
-        const campaignId =
-          entityType === "campaign"
-            ? entityId
-            : typeof metadata?.campaignId === "string"
-              ? metadata.campaignId
-              : null;
-        const eventId =
-          entityType === "event"
-            ? entityId
-            : typeof metadata?.eventId === "string"
-              ? metadata.eventId
-              : null;
-        const assetId =
-          entityType === "asset"
-            ? entityId
-            : typeof metadata?.assetId === "string"
-              ? metadata.assetId
-              : null;
+        const { assetId, campaignId, eventId } = extractNotificationContextFromApprovalRow(row);
 
         if (campaignId && maps.allowedCampaignIds.has(campaignId)) {
           maps.allowedApprovalIds.add(id);

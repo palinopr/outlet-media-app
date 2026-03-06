@@ -300,6 +300,8 @@ async function notifyClientApprovalAudience(
   if (approval.audience !== "client" && approval.audience !== "shared") return;
 
   const recipientIds = await listClientNotificationRecipients(approval.clientSlug, {
+    entityId: approval.id,
+    entityType: "approval_request",
     excludeUserId: actor.actorId,
   });
 

@@ -9,6 +9,8 @@ type DiscussionNotificationVisibility = "admin_only" | "shared";
 interface DiscussionRecipientOptions {
   actorId?: string | null;
   clientSlug?: string | null;
+  entityId?: string | null;
+  entityType?: string | null;
   visibility: DiscussionNotificationVisibility;
 }
 
@@ -29,6 +31,8 @@ export async function listDiscussionNotificationRecipientIds(
     }),
     options.visibility === "shared" && options.clientSlug
       ? listClientNotificationRecipients(options.clientSlug, {
+          entityId: options.entityId,
+          entityType: options.entityType,
           excludeUserId: options.actorId ?? undefined,
         })
       : Promise.resolve([]),
