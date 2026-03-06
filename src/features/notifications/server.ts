@@ -1,11 +1,27 @@
 import { clerkClient } from "@clerk/nextjs/server";
+import { listVisibleAssetIdsForScope } from "@/features/assets/server";
+import type { ScopeFilter } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { AppNotification, CreateNotificationInput } from "./types";
 
 interface ListNotificationsForUserOptions {
   clientSlug?: string | null;
   limit?: number;
+  scope?: ScopeFilter;
 }
+
+type NotificationScopeMaps = {
+  allowedApprovalIds: Set<string>;
+  allowedAssetCommentIds: Set<string>;
+  allowedAssetFollowUpIds: Set<string>;
+  allowedAssetIds: Set<string> | null;
+  allowedCampaignActionItemIds: Set<string>;
+  allowedCampaignCommentIds: Set<string>;
+  allowedCampaignIds: Set<string>;
+  allowedEventCommentIds: Set<string>;
+  allowedEventFollowUpIds: Set<string>;
+  allowedEventIds: Set<string>;
+};
 
 function mapNotificationRow(row: Record<string, unknown>): AppNotification {
   return {
@@ -73,7 +89,15 @@ export async function listNotificationsForUser(
     return [];
   }
 
-  return ((data ?? []) as Record<string, unknown>[]).map((row) => mapNotificationRow(row));
+  const notifications = ((data ?? []) as Record<string, unknown>[]).map((row) =>
+    mapNotificationRow(row),
+  );
+
+  if (!options.clientSlug || !options.scope) {
+    return notifications;
+  }
+
+  return filterNotificationsByScope(notifications, options.clientSlug, options.scope);
 }
 
 export async function listClientNotificationRecipients(
@@ -130,4 +154,291 @@ export async function listAdminNotificationRecipients(
     console.error("[notifications] failed to list admin recipients:", error);
     return [];
   }
+}
+
+function isScopedNotificationEntity(entityType: string | null) {
+  return [
+    "approval_request",
+    "asset",
+    "asset_comment",
+    "asset_follow_up_item",
+    "campaign",
+    "campaign_action_item",
+    "campaign_comment",
+    "event",
+    "event_comment",
+    "event_follow_up_item",
+  ].includes(entityType ?? "");
+}
+
+async function mapScopedEntityRelations(
+  table: string,
+  idField: string,
+  relationField: string,
+  entityIds: string[],
+): Promise<Map<string, string>> {
+  const db = supabaseAdmin;
+  if (!db || entityIds.length === 0) return new Map();
+
+  const { data, error } = await db
+    .from(table as never)
+    .select("*")
+    .in(idField, entityIds);
+
+  if (error) {
+    console.error(`[notifications] failed to load ${table} scope mapping:`, error.message);
+    return new Map();
+  }
+
+  return new Map(
+    ((data ?? []) as Record<string, unknown>[]).map((row) => [
+      String(row[idField]),
+      String(row[relationField]),
+    ]),
+  );
+}
+
+function buildNotificationScopeMaps(scope: ScopeFilter): NotificationScopeMaps {
+  return {
+    allowedApprovalIds: new Set<string>(),
+    allowedAssetCommentIds: new Set<string>(),
+    allowedAssetFollowUpIds: new Set<string>(),
+    allowedAssetIds: null,
+    allowedCampaignActionItemIds: new Set<string>(),
+    allowedCampaignCommentIds: new Set<string>(),
+    allowedCampaignIds: new Set(scope.allowedCampaignIds ?? []),
+    allowedEventCommentIds: new Set<string>(),
+    allowedEventFollowUpIds: new Set<string>(),
+    allowedEventIds: new Set(scope.allowedEventIds ?? []),
+  };
+}
+
+async function resolveNotificationScopeMaps(
+  notifications: AppNotification[],
+  clientSlug: string,
+  scope: ScopeFilter,
+): Promise<NotificationScopeMaps> {
+  const db = supabaseAdmin;
+  const maps = buildNotificationScopeMaps(scope);
+  if (!db) return maps;
+  const campaignCommentIds: string[] = [];
+  const campaignActionItemIds: string[] = [];
+  const eventCommentIds: string[] = [];
+  const eventFollowUpIds: string[] = [];
+  const assetIds: string[] = [];
+  const assetCommentIds: string[] = [];
+  const assetFollowUpIds: string[] = [];
+  const approvalIds: string[] = [];
+
+  for (const notification of notifications) {
+    if (!notification.entityId) continue;
+
+    switch (notification.entityType) {
+      case "campaign_comment":
+        campaignCommentIds.push(notification.entityId);
+        break;
+      case "campaign_action_item":
+        campaignActionItemIds.push(notification.entityId);
+        break;
+      case "event_comment":
+        eventCommentIds.push(notification.entityId);
+        break;
+      case "event_follow_up_item":
+        eventFollowUpIds.push(notification.entityId);
+        break;
+      case "asset":
+        assetIds.push(notification.entityId);
+        break;
+      case "asset_comment":
+        assetCommentIds.push(notification.entityId);
+        break;
+      case "asset_follow_up_item":
+        assetFollowUpIds.push(notification.entityId);
+        break;
+      case "approval_request":
+        approvalIds.push(notification.entityId);
+        break;
+      default:
+        break;
+    }
+  }
+
+  const [campaignComments, campaignActionItems, eventComments, eventFollowUps] =
+    await Promise.all([
+      mapScopedEntityRelations("campaign_comments", "id", "campaign_id", campaignCommentIds),
+      mapScopedEntityRelations(
+        "campaign_action_items",
+        "id",
+        "campaign_id",
+        campaignActionItemIds,
+      ),
+      mapScopedEntityRelations("event_comments", "id", "event_id", eventCommentIds),
+      mapScopedEntityRelations("event_follow_up_items", "id", "event_id", eventFollowUpIds),
+    ]);
+
+  for (const [id, campaignId] of campaignComments) {
+    if (maps.allowedCampaignIds.has(campaignId)) {
+      maps.allowedCampaignCommentIds.add(id);
+    }
+  }
+
+  for (const [id, campaignId] of campaignActionItems) {
+    if (maps.allowedCampaignIds.has(campaignId)) {
+      maps.allowedCampaignActionItemIds.add(id);
+    }
+  }
+
+  for (const [id, eventId] of eventComments) {
+    if (maps.allowedEventIds.has(eventId)) {
+      maps.allowedEventCommentIds.add(id);
+    }
+  }
+
+  for (const [id, eventId] of eventFollowUps) {
+    if (maps.allowedEventIds.has(eventId)) {
+      maps.allowedEventFollowUpIds.add(id);
+    }
+  }
+
+  const rawAssetIds = [
+    ...assetIds,
+    ...(
+      await Promise.all([
+        mapScopedEntityRelations("asset_comments", "id", "asset_id", assetCommentIds),
+        mapScopedEntityRelations("asset_follow_up_items", "id", "asset_id", assetFollowUpIds),
+      ])
+    ).flatMap((mapping) => Array.from(mapping.values())),
+  ];
+
+  const allowedAssetIds = await listVisibleAssetIdsForScope(
+    clientSlug,
+    [...new Set(rawAssetIds)],
+    scope,
+  );
+  maps.allowedAssetIds = allowedAssetIds;
+
+  const [assetCommentMap, assetFollowUpMap] = await Promise.all([
+    mapScopedEntityRelations("asset_comments", "id", "asset_id", assetCommentIds),
+    mapScopedEntityRelations("asset_follow_up_items", "id", "asset_id", assetFollowUpIds),
+  ]);
+
+  for (const [id, assetId] of assetCommentMap) {
+    if (allowedAssetIds?.has(assetId)) {
+      maps.allowedAssetCommentIds.add(id);
+    }
+  }
+
+  for (const [id, assetId] of assetFollowUpMap) {
+    if (allowedAssetIds?.has(assetId)) {
+      maps.allowedAssetFollowUpIds.add(id);
+    }
+  }
+
+  if (approvalIds.length > 0) {
+    const { data, error } = await db
+      .from("approval_requests" as never)
+      .select("id, entity_type, entity_id, metadata")
+      .eq("client_slug", clientSlug)
+      .in("id", approvalIds);
+
+    if (error) {
+      console.error("[notifications] failed to load approval scope mapping:", error.message);
+    } else {
+      for (const row of (data ?? []) as Record<string, unknown>[]) {
+        const id = String(row.id);
+        const entityType = (row.entity_type as string | null) ?? null;
+        const entityId = (row.entity_id as string | null) ?? null;
+        const metadata = (row.metadata as Record<string, unknown> | null) ?? null;
+        const campaignId =
+          entityType === "campaign"
+            ? entityId
+            : typeof metadata?.campaignId === "string"
+              ? metadata.campaignId
+              : null;
+        const eventId =
+          entityType === "event"
+            ? entityId
+            : typeof metadata?.eventId === "string"
+              ? metadata.eventId
+              : null;
+        const assetId =
+          entityType === "asset"
+            ? entityId
+            : typeof metadata?.assetId === "string"
+              ? metadata.assetId
+              : null;
+
+        if (campaignId && maps.allowedCampaignIds.has(campaignId)) {
+          maps.allowedApprovalIds.add(id);
+          continue;
+        }
+
+        if (eventId && maps.allowedEventIds.has(eventId)) {
+          maps.allowedApprovalIds.add(id);
+          continue;
+        }
+
+        if (assetId && allowedAssetIds?.has(assetId)) {
+          maps.allowedApprovalIds.add(id);
+          continue;
+        }
+
+        if (!campaignId && !eventId && !assetId) {
+          maps.allowedApprovalIds.add(id);
+        }
+      }
+    }
+  }
+
+  return maps;
+}
+
+function notificationMatchesScope(
+  notification: AppNotification,
+  maps: NotificationScopeMaps,
+) {
+  const entityType = notification.entityType;
+  const entityId = notification.entityId;
+
+  if (!isScopedNotificationEntity(entityType)) {
+    return true;
+  }
+
+  if (!entityId) {
+    return false;
+  }
+
+  switch (entityType) {
+    case "campaign":
+      return maps.allowedCampaignIds.has(entityId);
+    case "campaign_comment":
+      return maps.allowedCampaignCommentIds.has(entityId);
+    case "campaign_action_item":
+      return maps.allowedCampaignActionItemIds.has(entityId);
+    case "event":
+      return maps.allowedEventIds.has(entityId);
+    case "event_comment":
+      return maps.allowedEventCommentIds.has(entityId);
+    case "event_follow_up_item":
+      return maps.allowedEventFollowUpIds.has(entityId);
+    case "asset":
+      return maps.allowedAssetIds?.has(entityId) ?? false;
+    case "asset_comment":
+      return maps.allowedAssetCommentIds.has(entityId);
+    case "asset_follow_up_item":
+      return maps.allowedAssetFollowUpIds.has(entityId);
+    case "approval_request":
+      return maps.allowedApprovalIds.has(entityId);
+    default:
+      return true;
+  }
+}
+
+export async function filterNotificationsByScope(
+  notifications: AppNotification[],
+  clientSlug: string,
+  scope: ScopeFilter,
+): Promise<AppNotification[]> {
+  const maps = await resolveNotificationScopeMaps(notifications, clientSlug, scope);
+  return notifications.filter((notification) => notificationMatchesScope(notification, maps));
 }

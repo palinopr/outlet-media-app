@@ -78,7 +78,7 @@ export function NotificationBell({ fallbackClientSlug, viewer }: NotificationBel
         await fetch("/api/workspace/notifications", {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: notification.id }),
+          body: JSON.stringify({ clientSlug, id: notification.id }),
         });
         setNotifications((prev) =>
           prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n)),

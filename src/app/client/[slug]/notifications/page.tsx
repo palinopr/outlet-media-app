@@ -20,9 +20,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientNotificationsPage({ params }: Props) {
   const { slug } = await params;
-  const { userId } = await requireClientAccess(slug);
+  const { scope, userId } = await requireClientAccess(slug);
   const notifications = await listNotificationsForUser(userId, {
     clientSlug: slug,
+    scope,
   });
 
   return (

@@ -73,6 +73,7 @@ The short-term focus is:
 - Keep notifications entity-aware and route-aware too, so admin and client users land on the correct campaign, asset, approval, CRM, event, or workspace surface instead of dead-ending in a generic inbox.
 - Treat notifications as first-class inbox surfaces on both admin and client, not only a bell popover, so users can work through routed updates in a full-screen flow.
 - On client surfaces, load notifications with client-slug scoping so client users and admin previews never pull unrelated admin notifications into the client portal.
+- Keep client inbox notifications assignment-scope-aware too, so limited client members only see campaign, event, asset, and approval updates tied to the campaigns, events, and assets they are actually allowed to see.
 - Keep client-side people search and mention autocomplete client-slug scoped too, so workspace collaboration surfaces never fall back to global user lookup for non-admin users.
 - Keep workspace page, comment, and task APIs client-scoped too, and treat the admin workspace as its own internal `admin` tenant instead of defaulting those routes to all signed-in users or all workspace pages.
 - Treat shared discussions as incomplete unless they also notify the right inbox audience, so campaign, asset, event, and CRM collaboration cannot get lost between the thread view and the routed inbox.

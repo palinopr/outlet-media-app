@@ -141,7 +141,7 @@ export function NotificationsCenter({
   async function openNotification(notification: AppNotification) {
     if (!notification.read) {
       await fetch("/api/workspace/notifications", {
-        body: JSON.stringify({ id: notification.id }),
+        body: JSON.stringify({ clientSlug, id: notification.id }),
         headers: { "Content-Type": "application/json" },
         method: "PATCH",
       });
