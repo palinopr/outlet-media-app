@@ -3,7 +3,9 @@ import { auth } from "@clerk/nextjs/server";
 import { BellRing } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { NotificationsCenter } from "@/components/workspace/notifications-center";
-import { listNotificationsForUser } from "@/features/notifications/server";
+import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
+import { WorkQueueSection } from "@/components/workflow/work-queue-section";
+import { getAdminNotificationsCenter } from "@/features/notifications/center";
 
 export const metadata: Metadata = {
   title: "Notifications",
@@ -12,7 +14,7 @@ export const metadata: Metadata = {
 export default async function AdminNotificationsPage() {
   const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   const { userId } = clerkEnabled ? await auth() : { userId: null };
-  const notifications = userId ? await listNotificationsForUser(userId) : [];
+  const center = await getAdminNotificationsCenter({ userId });
 
   return (
     <div className="space-y-6">
@@ -26,6 +28,31 @@ export default async function AdminNotificationsPage() {
         </span>
       </AdminPageHeader>
 
+      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <WorkspaceApprovalsPanel
+          approvals={center.approvals}
+          canDecide
+          title="Approvals waiting on you"
+          description="Clear decisions you can make directly from the inbox surface."
+          emptyState="No approvals are waiting on you right now."
+          campaignHrefPrefix="/admin/campaigns"
+          crmHrefPrefix="/admin/crm"
+          assetHrefPrefix="/admin/assets"
+          eventHrefPrefix="/admin/events"
+          workspaceHrefPrefix="/admin/workspace"
+          showClientSlug
+        />
+        <WorkQueueSection
+          description="The cross-app items already assigned to you, so the inbox stays connected to real execution."
+          emptyState="Nothing is assigned to you right now."
+          showClientSlug
+          showMetrics={false}
+          summary={center.assignedWorkQueue}
+          title="Assigned to you"
+          variant="admin"
+        />
+      </div>
+
       <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
         <div className="mb-4">
           <p className="text-sm font-medium text-[#9b9a97]">Inbox</p>
@@ -36,7 +63,7 @@ export default async function AdminNotificationsPage() {
             Approval decisions, comments, assignments, and workflow events routed only to your admin inbox.
           </p>
         </div>
-        <NotificationsCenter initialNotifications={notifications} viewer="admin" />
+        <NotificationsCenter initialNotifications={center.notifications} viewer="admin" />
       </section>
     </div>
   );

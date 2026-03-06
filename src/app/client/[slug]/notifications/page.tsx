@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { BellRing } from "lucide-react";
 import { NotificationsCenter } from "@/components/workspace/notifications-center";
-import { listNotificationsForUser } from "@/features/notifications/server";
+import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
+import { WorkQueueSection } from "@/components/workflow/work-queue-section";
+import { getClientNotificationsCenter } from "@/features/notifications/center";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { slugToLabel } from "@/lib/formatters";
 
@@ -21,9 +23,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ClientNotificationsPage({ params }: Props) {
   const { slug } = await params;
   const { scope, userId } = await requireClientAccess(slug);
-  const notifications = await listNotificationsForUser(userId, {
+  const center = await getClientNotificationsCenter({
     clientSlug: slug,
     scope,
+    userId,
   });
 
   return (
@@ -48,6 +51,29 @@ export default async function ClientNotificationsPage({ params }: Props) {
         </div>
       </div>
 
+      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <WorkspaceApprovalsPanel
+          approvals={center.approvals}
+          canDecide
+          title="Approvals waiting on you"
+          description="Clear decisions you can make without leaving the client inbox."
+          emptyState="No shared approvals are waiting on you right now."
+          campaignHrefPrefix={`/client/${slug}/campaign`}
+          crmHrefPrefix={`/client/${slug}/crm`}
+          assetHrefPrefix={`/client/${slug}/assets`}
+          eventHrefPrefix={`/client/${slug}/event`}
+          workspaceHrefPrefix={`/client/${slug}/workspace`}
+        />
+        <WorkQueueSection
+          description="The cross-app items already assigned to you, so the inbox stays connected to the real work."
+          emptyState="Nothing is assigned to you right now."
+          showMetrics={false}
+          summary={center.assignedWorkQueue}
+          title="Assigned to you"
+          variant="client"
+        />
+      </div>
+
       <section className="glass-card p-5">
         <div className="mb-4">
           <p className="text-sm font-medium text-white/50">Inbox</p>
@@ -60,7 +86,7 @@ export default async function ClientNotificationsPage({ params }: Props) {
         </div>
         <NotificationsCenter
           fallbackClientSlug={slug}
-          initialNotifications={notifications}
+          initialNotifications={center.notifications}
           viewer="client"
         />
       </section>

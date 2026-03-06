@@ -74,6 +74,7 @@ The short-term focus is:
 - Keep cross-app activity links entity-aware, so shared activity opens the correct campaign, asset, CRM contact, or event detail page instead of dropping users into the wrong surface.
 - Keep notifications entity-aware and route-aware too, so admin and client users land on the correct campaign, asset, approval, CRM, event, or workspace surface instead of dead-ending in a generic inbox.
 - Treat notifications as first-class inbox surfaces on both admin and client, not only a bell popover, so users can work through routed updates in a full-screen flow.
+- Keep the dedicated inbox pages connected to approvals and assigned work too, so notifications remain an execution surface instead of a dead-end message list.
 - On client surfaces, load notifications with client-slug scoping so client users and admin previews never pull unrelated admin notifications into the client portal.
 - Keep client inbox notifications assignment-scope-aware too, so limited client members only see campaign, event, asset, and approval updates tied to the campaigns, events, and assets they are actually allowed to see.
 - Keep client-side people search and mention autocomplete client-slug scoped too, so workspace collaboration surfaces never fall back to global user lookup for non-admin users.
