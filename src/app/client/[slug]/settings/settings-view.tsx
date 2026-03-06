@@ -78,6 +78,7 @@ export function SettingsView({ data }: { data: SettingsData }) {
     <div className="space-y-6">
       <ConnectedAccountsList
         accounts={data.connectedAccounts}
+        canManage={data.isOwner}
         connectUrl={`/api/meta/connect?slug=${data.slug}`}
         slug={data.slug}
       />

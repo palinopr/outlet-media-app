@@ -37,10 +37,12 @@ function formatDate(value: string | null) {
 
 export function ConnectedAccountsList({
   accounts,
+  canManage,
   slug,
   connectUrl,
 }: {
   accounts: ConnectedAccount[];
+  canManage: boolean;
   slug: string;
   connectUrl: string;
 }) {
@@ -54,7 +56,7 @@ export function ConnectedAccountsList({
       const res = await fetch("/api/meta/disconnect", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ad_account_id: adAccountId }),
+        body: JSON.stringify({ ad_account_id: adAccountId, slug }),
       });
       if (!res.ok) throw new Error("Disconnect failed");
       toast.success("Ad account disconnected");
@@ -75,9 +77,11 @@ export function ConnectedAccountsList({
             Watch connection health so campaign work does not stall when a Meta link goes stale or expires.
           </p>
         </div>
-        <a href={connectUrl}>
-          <Button>Connect Ad Account</Button>
-        </a>
+        {canManage ? (
+          <a href={connectUrl}>
+            <Button>Connect Ad Account</Button>
+          </a>
+        ) : null}
       </div>
 
       {accounts.length > 0 ? (
@@ -112,9 +116,15 @@ export function ConnectedAccountsList({
       {accounts.length === 0 ? (
         <div className="glass-card p-8 text-center">
           <p className="text-muted-foreground">No ad accounts connected yet.</p>
-          <a href={connectUrl}>
-            <Button className="mt-4">Connect Your First Ad Account</Button>
-          </a>
+          {canManage ? (
+            <a href={connectUrl}>
+              <Button className="mt-4">Connect Your First Ad Account</Button>
+            </a>
+          ) : (
+            <p className="mt-4 text-sm text-white/45">
+              Ask a team owner to connect the first Meta ad account for {slug}.
+            </p>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
@@ -155,7 +165,7 @@ export function ConnectedAccountsList({
                     >
                       {health.label}
                     </span>
-                    {account.status === "active" && (
+                    {canManage && account.status === "active" && (
                       <Button
                         variant="outline"
                         size="sm"
@@ -174,6 +184,12 @@ export function ConnectedAccountsList({
           })}
         </div>
       )}
+
+      {!canManage ? (
+        <p className="text-xs text-white/35">
+          Only team owners can connect or disconnect Meta ad accounts for this client portal.
+        </p>
+      ) : null}
     </div>
   );
 }

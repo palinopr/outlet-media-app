@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { randomBytes, createHmac } from "node:crypto";
 import { buildAuthUrl } from "@/lib/meta-oauth";
+import { requireClientOwner } from "@/features/client-portal/ownership";
 
 export async function GET(request: Request) {
   const { userId } = await auth();
@@ -17,6 +18,9 @@ export async function GET(request: Request) {
       { status: 400 },
     );
   }
+
+  const ownerGuard = await requireClientOwner(userId, slug, "connect ad accounts");
+  if (ownerGuard) return ownerGuard;
 
   const nonce = randomBytes(16).toString("hex");
   const statePayload = JSON.stringify({ userId, slug, nonce });

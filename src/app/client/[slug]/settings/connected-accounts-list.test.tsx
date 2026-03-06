@@ -32,6 +32,7 @@ describe("ConnectedAccountsList", () => {
             token_expires_at: "2026-03-08T12:00:00.000Z",
           },
         ]}
+        canManage={false}
         connectUrl="/api/meta/connect?slug=zamora"
         slug="zamora"
       />,
@@ -42,5 +43,7 @@ describe("ConnectedAccountsList", () => {
     expect(screen.getByText("Needs attention")).toBeInTheDocument();
     expect(screen.getByText("Healthy Account")).toBeInTheDocument();
     expect(screen.getByText("Expiring Account")).toBeInTheDocument();
+    expect(screen.queryByText("Connect Ad Account")).not.toBeInTheDocument();
+    expect(screen.getByText(/Only team owners can connect or disconnect Meta ad accounts/i)).toBeInTheDocument();
   });
 });

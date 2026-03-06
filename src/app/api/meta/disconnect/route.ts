@@ -4,9 +4,11 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { decrypt } from "@/lib/crypto";
 import { revokeToken } from "@/lib/meta-oauth";
 import { z } from "zod/v4";
+import { requireClientOwner } from "@/features/client-portal/ownership";
 
 const DisconnectSchema = z.object({
   ad_account_id: z.string().min(1),
+  slug: z.string().min(1),
 });
 
 export async function POST(request: Request) {
@@ -28,10 +30,13 @@ export async function POST(request: Request) {
     );
   }
 
+  const ownerGuard = await requireClientOwner(userId, parsed.data.slug, "disconnect ad accounts");
+  if (ownerGuard) return ownerGuard;
+
   const { data: account, error: fetchErr } = await supabaseAdmin
     .from("client_accounts")
     .select("access_token_encrypted, status")
-    .eq("clerk_user_id", userId)
+    .eq("client_slug", parsed.data.slug)
     .eq("ad_account_id", parsed.data.ad_account_id)
     .single();
 
@@ -49,7 +54,7 @@ export async function POST(request: Request) {
   const { error: updateErr } = await supabaseAdmin
     .from("client_accounts")
     .update({ status: "revoked", updated_at: new Date().toISOString() })
-    .eq("clerk_user_id", userId)
+    .eq("client_slug", parsed.data.slug)
     .eq("ad_account_id", parsed.data.ad_account_id);
 
   if (updateErr) return apiError("Failed to disconnect", 500);

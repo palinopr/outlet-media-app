@@ -17,13 +17,15 @@ vi.mock("./actions", () => ({
 vi.mock("./connected-accounts-list", () => ({
   ConnectedAccountsList: ({
     accounts,
+    canManage,
     connectUrl,
   }: {
     accounts: Array<{ id: string }>;
+    canManage: boolean;
     connectUrl: string;
   }) => (
     <div data-testid="connected-accounts">
-      {accounts.length}:{connectUrl}
+      {accounts.length}:{String(canManage)}:{connectUrl}
     </div>
   ),
 }));
@@ -70,7 +72,7 @@ describe("SettingsView", () => {
     );
 
     expect(screen.getByTestId("connected-accounts")).toHaveTextContent(
-      "1:/api/meta/connect?slug=zamora",
+      "1:true:/api/meta/connect?slug=zamora",
     );
     expect(screen.getByText("Team")).toBeInTheDocument();
     expect(screen.getByText("Pending invites")).toBeInTheDocument();

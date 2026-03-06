@@ -15,7 +15,6 @@ export interface ConnectedAccount {
 }
 
 export async function getConnectedAccounts(
-  clerkUserId: string,
   clientSlug: string
 ): Promise<ConnectedAccount[]> {
   if (!supabaseAdmin) return [];
@@ -25,7 +24,6 @@ export async function getConnectedAccounts(
     .select(
       "id, ad_account_id, ad_account_name, status, connected_at, token_expires_at, last_used_at"
     )
-    .eq("clerk_user_id", clerkUserId)
     .eq("client_slug", clientSlug)
     .order("connected_at", { ascending: false });
 
@@ -124,7 +122,7 @@ export async function getSettingsData(slug: string): Promise<SettingsData | null
   } catch (error) {
     console.error("[client/settings] Failed to fetch pending invites:", error);
   }
-  const connectedAccounts = await getConnectedAccounts(userId, slug);
+  const connectedAccounts = await getConnectedAccounts(slug);
 
   return {
     clientId: client.id,

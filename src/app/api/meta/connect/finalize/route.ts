@@ -6,6 +6,7 @@ import { encrypt, decrypt } from "@/lib/crypto";
 import { fetchAdAccounts } from "@/lib/meta-oauth";
 import { z } from "zod/v4";
 import { apiError, validateRequest } from "@/lib/api-helpers";
+import { requireClientOwner } from "@/features/client-portal/ownership";
 
 const FinalizeSchema = z.object({
   ad_account_id: z.string().min(1),
@@ -19,6 +20,9 @@ export async function POST(request: Request) {
 
   const { data, error: valErr } = await validateRequest(request, FinalizeSchema);
   if (valErr) return valErr;
+
+  const ownerGuard = await requireClientOwner(userId, data.slug, "connect ad accounts");
+  if (ownerGuard) return ownerGuard;
 
   const cookieStore = await cookies();
   const pendingToken = cookieStore.get("meta_pending_token")?.value;
