@@ -7,6 +7,8 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { getEventsPageData } from "../data";
+import { EventOperationsSection } from "@/components/events/event-operations-section";
+import { getEventOperationsSummary } from "@/features/events/server";
 import { fmtNum, slugToLabel } from "@/lib/formatters";
 import { EventsFilter } from "./events-filter";
 import { requireClientAccess } from "@/features/client-portal/access";
@@ -30,8 +32,10 @@ export default async function ClientEventsPage({ params, searchParams }: Props) 
   const { scope } = await requireClientAccess(slug, "ticketmaster", "eata");
   const { status, q } = await searchParams;
 
-  const { events, totalEvents, onSaleCount, totalTicketsSold } =
-    await getEventsPageData(slug, scope);
+  const [{ events, totalEvents, onSaleCount, totalTicketsSold }, operations] = await Promise.all([
+    getEventsPageData(slug, scope),
+    getEventOperationsSummary({ clientSlug: slug, limit: 6, mode: "client", scope }),
+  ]);
 
   const clientName = slugToLabel(slug);
 
@@ -111,6 +115,14 @@ export default async function ClientEventsPage({ params, searchParams }: Props) 
           </p>
         </div>
       </div>
+
+      <EventOperationsSection
+        description="The events with open follow-ups, discussion, and recent movement that may need attention."
+        hrefPrefix={`/client/${slug}/event`}
+        summary={operations}
+        title="What needs follow-through"
+        variant="client"
+      />
 
       {/* -- Events List with Filter -- */}
       {events.length > 0 ? (

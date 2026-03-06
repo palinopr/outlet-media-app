@@ -5,8 +5,10 @@ import { StatCard } from "@/components/admin/stat-card";
 import { getEvents } from "./data";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { EventTable } from "@/components/admin/events/event-table";
+import { EventOperationsSection } from "@/components/events/event-operations-section";
 import { Suspense } from "react";
 import { fmtUsd, slugToLabel } from "@/lib/formatters";
+import { getEventOperationsSummary } from "@/features/events/server";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
@@ -20,7 +22,10 @@ export default async function EventsPage({ searchParams }: Props) {
   const { client } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
 
-  const { events, clients, demoMap, campaigns, fromDb } = await getEvents(clientSlug);
+  const [{ events, clients, demoMap, campaigns, fromDb }, operations] = await Promise.all([
+    getEvents(clientSlug),
+    getEventOperationsSummary({ clientSlug, limit: 6, mode: "admin" }),
+  ]);
 
   const totalSold = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
   const eventsWithCap = events.filter((e) => e.tickets_sold != null && e.tickets_available != null);
@@ -69,6 +74,15 @@ export default async function EventsPage({ searchParams }: Props) {
           <StatCard key={s.label} {...s} />
         ))}
       </div>
+
+      <EventOperationsSection
+        description="The live event workflow across promotion follow-ups, open discussion, and recent show-level updates."
+        hrefPrefix="/admin/events"
+        showClientSlug
+        summary={operations}
+        title="Event operating pressure"
+        variant="admin"
+      />
 
       {/* Table */}
       <Card className="border-border/60">

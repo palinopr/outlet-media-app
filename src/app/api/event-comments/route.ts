@@ -48,7 +48,7 @@ function eventCommentTriagePrompt(input: {
   eventDate: string | null;
   eventId: string;
   eventName: string;
-  eventVenue: string;
+  eventVenue: string | null;
   authorName: string;
   primaryCampaignId: string | null;
   primaryCampaignName: string | null;
@@ -58,7 +58,7 @@ function eventCommentTriagePrompt(input: {
     input.clientSlug ? `Client: ${input.clientSlug}` : "Client: unassigned",
     `Event: ${input.eventName}`,
     `Event ID: ${input.eventId}`,
-    `Venue: ${input.eventVenue}`,
+    input.eventVenue ? `Venue: ${input.eventVenue}` : null,
     input.eventDate ? `Date: ${input.eventDate}` : null,
     input.primaryCampaignName ? `Linked campaign: ${input.primaryCampaignName}` : null,
     input.primaryCampaignId ? `Campaign ID: ${input.primaryCampaignId}` : null,
