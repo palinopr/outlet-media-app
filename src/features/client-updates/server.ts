@@ -3,13 +3,14 @@ import { listApprovalRequests } from "@/features/approvals/server";
 import { getDashboardActionCenter, getDashboardAssetSummary, getDashboardOpsSummary } from "@/features/dashboard/server";
 import { buildOperationsCenterSnapshot } from "@/features/operations-center/summary";
 import { filterSystemEventsByClientScope, listSystemEvents } from "@/features/system-events/server";
+import { getWorkQueue } from "@/features/work-queue/server";
 import type { ScopeFilter } from "@/lib/member-access";
 
 export async function getClientUpdatesCenter(
   clientSlug: string,
   scope: ScopeFilter | undefined,
 ) {
-  const [actionCenter, agentOutcomes, approvals, assetSummary, rawEvents, opsSummary] =
+  const [actionCenter, agentOutcomes, approvals, assetSummary, rawEvents, opsSummary, workQueue] =
     await Promise.all([
       getDashboardActionCenter({
         clientSlug,
@@ -48,6 +49,12 @@ export async function getClientUpdatesCenter(
         mode: "client",
         scopeCampaignIds: scope?.allowedCampaignIds,
       }),
+      getWorkQueue({
+        clientSlug,
+        limit: 6,
+        mode: "client",
+        scope,
+      }),
     ]);
 
   const events = await filterSystemEventsByClientScope(clientSlug, rawEvents, {
@@ -62,6 +69,7 @@ export async function getClientUpdatesCenter(
     assetSummary,
     events,
     opsSummary,
+    workQueue,
     snapshot: buildOperationsCenterSnapshot({
       actionCenter,
       agentOutcomes,

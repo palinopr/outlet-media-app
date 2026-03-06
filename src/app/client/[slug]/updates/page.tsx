@@ -7,6 +7,7 @@ import { StatCard } from "@/components/admin/stat-card";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
+import { WorkQueueSection } from "@/components/workflow/work-queue-section";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { getClientUpdatesCenter } from "@/features/client-updates/server";
@@ -138,6 +139,13 @@ export default async function ClientUpdatesPage({ params }: Props) {
         eventHrefPrefix={`/client/${slug}/event`}
         showApprovals={false}
         showCrmFollowUps={showCrm}
+        variant="client"
+      />
+
+      <WorkQueueSection
+        description="The shared next steps across campaigns, CRM, events, and creative work that still need a human move."
+        summary={updates.workQueue}
+        title="Shared work queue"
         variant="client"
       />
 

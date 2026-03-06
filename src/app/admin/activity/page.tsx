@@ -18,6 +18,7 @@ import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-a
 import { DashboardAssetsSection } from "@/components/dashboard/dashboard-assets-section";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
+import { WorkQueueSection } from "@/components/workflow/work-queue-section";
 import { getAdminOperationsCenter } from "@/features/operations-center/server";
 import type { OperationsCenterMetricKey } from "@/features/operations-center/summary";
 
@@ -116,6 +117,14 @@ export default async function ActivityPage({ searchParams }: Props) {
         crmHrefPrefix="/admin/crm"
         description="The highest-priority approvals, CRM follow-ups, and discussions that still need a human response."
         eventHrefPrefix="/admin/events"
+        variant="admin"
+      />
+
+      <WorkQueueSection
+        description="The cross-app next steps that still need operator action across campaigns, CRM, events, and assets."
+        showClientSlug
+        summary={operations.workQueue}
+        title="Operations queue"
         variant="admin"
       />
 
