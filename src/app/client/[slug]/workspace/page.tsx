@@ -4,7 +4,7 @@ import { PageList } from "@/components/workspace/page-list";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { listApprovalRequests } from "@/features/approvals/server";
-import { filterSystemEventsByScope, listSystemEvents } from "@/features/system-events/server";
+import { filterSystemEventsByClientScope, listSystemEvents } from "@/features/system-events/server";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -23,7 +23,7 @@ export default async function ClientWorkspacePage({ params }: Props) {
       limit: 8,
     }),
   ]);
-  const events = filterSystemEventsByScope(rawEvents, {
+  const events = await filterSystemEventsByClientScope(slug, rawEvents, {
     allowedCampaignIds: scope?.allowedCampaignIds ?? null,
     allowedEventIds: scope?.allowedEventIds ?? null,
   });

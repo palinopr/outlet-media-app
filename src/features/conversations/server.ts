@@ -1,5 +1,6 @@
 import type { ScopeFilter } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
+import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import {
   buildConversationsSummary,
   type ConversationThread,
@@ -112,8 +113,21 @@ export async function listConversationThreads(
 
   const campaignRows = (campaignRes.data ?? []) as Record<string, unknown>[];
   const crmRows = (crmRes.data ?? []) as Record<string, unknown>[];
-  const assetRows = (assetRes.data ?? []) as Record<string, unknown>[];
+  const rawAssetRows = (assetRes.data ?? []) as Record<string, unknown>[];
   const eventRows = (eventRes.data ?? []) as Record<string, unknown>[];
+
+  const scopedAssetIds =
+    options.mode === "client" && options.clientSlug
+      ? await listVisibleAssetIdsForScope(
+          options.clientSlug,
+          rawAssetRows.map((row) => String(row.asset_id)).filter(Boolean),
+          options.scope,
+        )
+      : null;
+  const assetRows =
+    scopedAssetIds === null
+      ? rawAssetRows
+      : rawAssetRows.filter((row) => scopedAssetIds.has(String(row.asset_id)));
 
   const campaignNames = new Map<string, string>();
   const contactNames = new Map<string, string>();

@@ -194,6 +194,52 @@ async function listClientCampaignsForAssets(clientSlug: string): Promise<AssetSc
   }));
 }
 
+export async function listVisibleAssetIdsForScope(
+  clientSlug: string,
+  assetIds: string[],
+  scope?: ScopeFilter,
+): Promise<Set<string> | null> {
+  if (!supabaseAdmin) throw new Error("DB not configured");
+  if (!scope?.allowedCampaignIds && !scope?.allowedEventIds) {
+    return null;
+  }
+
+  if (assetIds.length === 0) {
+    return new Set<string>();
+  }
+
+  const scopedCampaigns = filterCampaignsForScope(
+    await listClientCampaignsForAssets(clientSlug),
+    scope,
+  );
+
+  if (!scopedCampaigns || scopedCampaigns.length === 0) {
+    return new Set<string>();
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("ad_assets")
+    .select("id, folder, labels")
+    .eq("client_slug", clientSlug)
+    .in("id", assetIds);
+
+  if (error) throw new Error(error.message);
+
+  return new Set(
+    ((data ?? []) as Record<string, unknown>[])
+      .filter((asset) =>
+        assetMatchesScopedCampaigns(
+          {
+            folder: (asset.folder as string | null) ?? null,
+            labels: (asset.labels as string[] | null) ?? null,
+          },
+          scopedCampaigns,
+        ),
+      )
+      .map((asset) => String(asset.id)),
+  );
+}
+
 export async function listAssets(
   clientSlug: string,
   scope?: ScopeFilter,

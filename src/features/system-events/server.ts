@@ -1,4 +1,5 @@
 import { currentUser } from "@clerk/nextjs/server";
+import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export type SystemEventName =
@@ -103,6 +104,7 @@ interface ListSystemEventsOptions {
 interface SystemEventScopeFilter {
   allowedCampaignIds?: string[] | null;
   allowedEventIds?: string[] | null;
+  allowedAssetIds?: Iterable<string> | null;
 }
 
 interface ListCampaignSystemEventsOptions {
@@ -158,6 +160,16 @@ function systemEventEventId(event: SystemEvent) {
   return typeof event.metadata.eventId === "string" ? event.metadata.eventId : null;
 }
 
+function systemEventAssetId(event: SystemEvent) {
+  if (event.entityType === "asset" && event.entityId) return event.entityId;
+  return typeof event.metadata.assetId === "string" ? event.metadata.assetId : null;
+}
+
+function normalizeScopeSet(values?: Iterable<string> | null) {
+  if (values == null) return null;
+  return values instanceof Set ? values : new Set(values);
+}
+
 export function isCrmSystemEvent(event: SystemEvent) {
   return (
     event.entityType === "crm_contact" ||
@@ -176,25 +188,45 @@ export function filterSystemEventsByScope(
   events: SystemEvent[],
   scope: SystemEventScopeFilter | null | undefined,
 ) {
-  const campaignIds =
-    scope?.allowedCampaignIds && scope.allowedCampaignIds.length > 0
-      ? new Set(scope.allowedCampaignIds)
-      : null;
-  const eventIds =
-    scope?.allowedEventIds && scope.allowedEventIds.length > 0
-      ? new Set(scope.allowedEventIds)
-      : null;
+  const campaignIds = normalizeScopeSet(scope?.allowedCampaignIds ?? null);
+  const eventIds = normalizeScopeSet(scope?.allowedEventIds ?? null);
+  const assetIds = normalizeScopeSet(scope?.allowedAssetIds ?? null);
 
-  if (!campaignIds && !eventIds) return events;
+  if (!campaignIds && !eventIds && !assetIds) return events;
 
   return events.filter((event) => {
     const campaignId = systemEventCampaignId(event);
     const eventId = systemEventEventId(event);
+    const assetId = systemEventAssetId(event);
 
-    if (!campaignId && !eventId) return true;
+    if (!campaignId && !eventId && !assetId) return true;
     if (campaignId && campaignIds?.has(campaignId)) return true;
     if (eventId && eventIds?.has(eventId)) return true;
+    if (assetId && assetIds?.has(assetId)) return true;
     return false;
+  });
+}
+
+export async function filterSystemEventsByClientScope(
+  clientSlug: string,
+  events: SystemEvent[],
+  scope: SystemEventScopeFilter | null | undefined,
+) {
+  const assetIds = events
+    .map((event) => systemEventAssetId(event))
+    .filter((assetId): assetId is string => assetId != null);
+  const allowedAssetIds =
+    scope && (scope.allowedCampaignIds != null || scope.allowedEventIds != null)
+      ? await listVisibleAssetIdsForScope(clientSlug, assetIds, {
+          allowedCampaignIds: scope.allowedCampaignIds ?? null,
+          allowedEventIds: scope.allowedEventIds ?? null,
+        })
+      : null;
+
+  return filterSystemEventsByScope(events, {
+    allowedCampaignIds: scope?.allowedCampaignIds ?? null,
+    allowedEventIds: scope?.allowedEventIds ?? null,
+    allowedAssetIds,
   });
 }
 

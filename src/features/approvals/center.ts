@@ -1,4 +1,4 @@
-import { filterSystemEventsByScope, listSystemEvents } from "@/features/system-events/server";
+import { filterSystemEventsByClientScope, listSystemEvents } from "@/features/system-events/server";
 import type { ScopeFilter } from "@/lib/member-access";
 import { listApprovalRequests } from "./server";
 import { buildApprovalCenterSummary } from "./summary";
@@ -62,7 +62,7 @@ export async function getClientApprovalsCenter(clientSlug: string, scope: ScopeF
   const recent = recentRaw.filter((approval) => approval.status !== "pending").slice(0, 12);
 
   return {
-    events: filterSystemEventsByScope(rawEvents, scope),
+    events: await filterSystemEventsByClientScope(clientSlug, rawEvents, scope),
     pending,
     recent,
     summary: buildApprovalCenterSummary({ pending, recent }),

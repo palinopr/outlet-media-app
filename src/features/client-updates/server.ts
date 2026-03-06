@@ -2,7 +2,7 @@ import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listApprovalRequests } from "@/features/approvals/server";
 import { getDashboardActionCenter, getDashboardAssetSummary, getDashboardOpsSummary } from "@/features/dashboard/server";
 import { buildOperationsCenterSnapshot } from "@/features/operations-center/summary";
-import { filterSystemEventsByScope, listSystemEvents } from "@/features/system-events/server";
+import { filterSystemEventsByClientScope, listSystemEvents } from "@/features/system-events/server";
 import type { ScopeFilter } from "@/lib/member-access";
 
 export async function getClientUpdatesCenter(
@@ -50,7 +50,7 @@ export async function getClientUpdatesCenter(
       }),
     ]);
 
-  const events = filterSystemEventsByScope(rawEvents, {
+  const events = await filterSystemEventsByClientScope(clientSlug, rawEvents, {
     allowedCampaignIds: scope?.allowedCampaignIds ?? null,
     allowedEventIds: scope?.allowedEventIds ?? null,
   });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { ApprovalRequest } from "@/features/approvals/server";
 import {
+  approvalAssetId,
   approvalIsWithinScope,
   buildApprovalCenterSummary,
   filterApprovalRequestsByScope,
@@ -67,6 +68,43 @@ describe("approval scope filtering", () => {
         allowedEventIds: ["evt_allowed"],
       }),
     ).toBe(true);
+  });
+
+  it("keeps asset approvals only when the asset id is allowed", () => {
+    const allowed = makeApproval({
+      entityType: "asset",
+      entityId: "asset_allowed",
+      metadata: { assetId: "asset_allowed" },
+    });
+    const blocked = makeApproval({
+      entityType: "asset",
+      entityId: "asset_blocked",
+      metadata: { assetId: "asset_blocked" },
+    });
+
+    const filtered = filterApprovalRequestsByScope(
+      [allowed, blocked],
+      {
+        allowedCampaignIds: ["cmp_allowed"],
+        allowedEventIds: [],
+      },
+      ["asset_allowed"],
+    );
+
+    expect(filtered.map((approval) => approval.entityId)).toEqual(["asset_allowed"]);
+    expect(approvalAssetId(allowed)).toBe("asset_allowed");
+  });
+
+  it("blocks scoped approvals when the assigned campaign and event lists are empty", () => {
+    expect(
+      approvalIsWithinScope(
+        makeApproval({ entityType: "campaign", entityId: "cmp_blocked" }),
+        {
+          allowedCampaignIds: [],
+          allowedEventIds: [],
+        },
+      ),
+    ).toBe(false);
   });
 });
 

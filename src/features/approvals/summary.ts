@@ -30,6 +30,11 @@ function approvalString(metadata: Record<string, unknown>, key: string) {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
+function normalizeScopeSet(values?: Iterable<string> | null) {
+  if (values == null) return null;
+  return values instanceof Set ? values : new Set(values);
+}
+
 export function approvalCampaignId(approval: ApprovalRequest) {
   if (approval.entityType === "campaign" && approval.entityId) return approval.entityId;
   return approvalString(approval.metadata, "campaignId");
@@ -40,35 +45,42 @@ export function approvalEventId(approval: ApprovalRequest) {
   return approvalString(approval.metadata, "eventId");
 }
 
+export function approvalAssetId(approval: ApprovalRequest) {
+  if (approval.requestType !== "asset_review" && approval.requestType !== "asset_import_review") {
+    return null;
+  }
+  if (approval.entityType === "asset" && approval.entityId) return approval.entityId;
+  return approvalString(approval.metadata, "assetId");
+}
+
 export function approvalIsWithinScope(
   approval: ApprovalRequest,
   scope: ScopeFilter | null | undefined,
+  allowedAssetIds?: Iterable<string> | null,
 ) {
-  const campaignIds =
-    scope?.allowedCampaignIds && scope.allowedCampaignIds.length > 0
-      ? new Set(scope.allowedCampaignIds)
-      : null;
-  const eventIds =
-    scope?.allowedEventIds && scope.allowedEventIds.length > 0
-      ? new Set(scope.allowedEventIds)
-      : null;
+  const campaignIds = normalizeScopeSet(scope?.allowedCampaignIds ?? null);
+  const eventIds = normalizeScopeSet(scope?.allowedEventIds ?? null);
+  const assetIds = normalizeScopeSet(allowedAssetIds ?? null);
 
-  if (!campaignIds && !eventIds) return true;
+  if (!campaignIds && !eventIds && !assetIds) return true;
 
   const campaignId = approvalCampaignId(approval);
   const eventId = approvalEventId(approval);
+  const assetId = approvalAssetId(approval);
 
-  if (!campaignId && !eventId) return true;
+  if (!campaignId && !eventId && !assetId) return true;
   if (campaignId && campaignIds?.has(campaignId)) return true;
   if (eventId && eventIds?.has(eventId)) return true;
+  if (assetId && assetIds?.has(assetId)) return true;
   return false;
 }
 
 export function filterApprovalRequestsByScope(
   approvals: ApprovalRequest[],
   scope: ScopeFilter | null | undefined,
+  allowedAssetIds?: Iterable<string> | null,
 ) {
-  return approvals.filter((approval) => approvalIsWithinScope(approval, scope));
+  return approvals.filter((approval) => approvalIsWithinScope(approval, scope, allowedAssetIds));
 }
 
 function describeCount(value: number, singular: string, plural = `${singular}s`) {

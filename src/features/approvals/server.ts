@@ -2,6 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
+import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import {
   createSystemCampaignActionItem,
   findCampaignActionItemBySource,
@@ -13,6 +14,7 @@ import {
 } from "@/features/notifications/server";
 import { getCurrentActor, logSystemEvent } from "@/features/system-events/server";
 import {
+  approvalAssetId,
   approvalCampaignId,
   approvalEventId,
   approvalIsWithinScope,
@@ -90,14 +92,6 @@ export function approvalMatchesCampaign(approval: ApprovalRequest, campaignId: s
 
 export function approvalMatchesEvent(approval: ApprovalRequest, eventId: string) {
   return approvalEventId(approval) === eventId;
-}
-
-function approvalAssetId(approval: ApprovalRequest) {
-  if (approval.requestType !== "asset_review") return null;
-  if (approval.entityType === "asset" && approval.entityId) return approval.entityId;
-
-  const metadataAssetId = approval.metadata.assetId;
-  return typeof metadataAssetId === "string" ? metadataAssetId : null;
 }
 
 function approvalMatchesAsset(approval: ApprovalRequest, assetId: string) {
@@ -391,10 +385,20 @@ export async function canAccessApprovalRequest(userId: string, approval: Approva
   if (!access) return false;
   if (access.scope !== "assigned") return true;
 
+  const scope = {
+    allowedCampaignIds: access.allowedCampaignIds,
+    allowedEventIds: access.allowedEventIds,
+  };
+  const assetId = approvalAssetId(approval);
+  const allowedAssetIds =
+    assetId != null
+      ? await listVisibleAssetIdsForScope(approval.clientSlug, [assetId], scope)
+      : null;
+
   return approvalIsWithinScope(approval, {
     allowedCampaignIds: access.allowedCampaignIds,
     allowedEventIds: access.allowedEventIds,
-  });
+  }, allowedAssetIds);
 }
 
 export async function listApprovalRequests(
@@ -405,8 +409,7 @@ export async function listApprovalRequests(
   const requestedLimit = options.limit ?? 8;
   const shouldOverfetchForScope =
     !!options.scope &&
-    ((options.scope.allowedCampaignIds?.length ?? 0) > 0 ||
-      (options.scope.allowedEventIds?.length ?? 0) > 0);
+    (options.scope.allowedCampaignIds != null || options.scope.allowedEventIds != null);
 
   let query = supabaseAdmin
     .from("approval_requests")
@@ -447,7 +450,19 @@ export async function listApprovalRequests(
   }
 
   const approvals = (data ?? []).map((row) => mapApproval(row as Record<string, unknown>));
-  const filtered = options.scope ? filterApprovalRequestsByScope(approvals, options.scope) : approvals;
+  const allowedAssetIds =
+    options.scope && options.clientSlug
+      ? await listVisibleAssetIdsForScope(
+          options.clientSlug,
+          approvals
+            .map((approval) => approvalAssetId(approval))
+            .filter((assetId): assetId is string => assetId != null),
+          options.scope,
+        )
+      : null;
+  const filtered = options.scope
+    ? filterApprovalRequestsByScope(approvals, options.scope, allowedAssetIds)
+    : approvals;
   return filtered.slice(0, requestedLimit);
 }
 
