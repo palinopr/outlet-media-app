@@ -30,6 +30,8 @@ import { ProgressBar } from "../../components/progress-bar";
 import { EventStatusBadge } from "../../components/event-status-badge";
 import { AudienceSection } from "../../components/audience-section";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
+import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
+import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import {
   TicketSalesChart,
   type TicketChartRow,
@@ -37,6 +39,8 @@ import {
 } from "@/components/client/charts";
 import type { SalesVelocity, TicketPlatform } from "../../types";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { getDashboardOpsSummary } from "@/features/dashboard/server";
+import { listSystemEvents } from "@/features/system-events/server";
 
 interface Props {
   params: Promise<{ slug: string; eventId: string }>;
@@ -80,7 +84,7 @@ function getDaysUntilEvent(eventDate: string | null): number | null {
 
 export default async function EventDetailPage({ params }: Props) {
   const { slug, eventId } = await params;
-  await requireClientAccess(slug, "ticketmaster", "eata");
+  const { scope } = await requireClientAccess(slug, "ticketmaster", "eata");
   const data = await getEventDetail(slug, eventId);
 
   if (!data) {
@@ -98,6 +102,27 @@ export default async function EventDetailPage({ params }: Props) {
   }
 
   const { event: e, snapshots, dailyDeltas, velocity, audience, linkedCampaigns, channelBreakdown } = data;
+  const linkedCampaignIds = linkedCampaigns.map((campaign) => campaign.campaignId);
+  const [opsSummary, eventEvents] = await Promise.all([
+    getDashboardOpsSummary({
+      clientSlug: slug,
+      limit: 5,
+      mode: "client",
+      scopeCampaignIds:
+        linkedCampaignIds.length > 0
+          ? linkedCampaignIds.filter((campaignId) =>
+              scope?.allowedCampaignIds ? scope.allowedCampaignIds.includes(campaignId) : true,
+            )
+          : [],
+    }),
+    listSystemEvents({
+      audience: "shared",
+      clientSlug: slug,
+      entityType: "event",
+      entityId: e.id,
+      limit: 6,
+    }),
+  ]);
 
   const chartData: TicketChartRow[] = snapshots.map((s) => {
     const dt = new Date(s.date + "T12:00:00");
@@ -211,6 +236,28 @@ export default async function EventDetailPage({ params }: Props) {
           }
         />
       </div>
+
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-3.5 w-3.5 text-white/50" />
+          <span className="section-label">Event workflow</span>
+        </div>
+        <DashboardOpsSummarySection
+          campaignHrefPrefix={`/client/${slug}/campaign`}
+          description="See the campaign work tied to promoting this event without leaving the event view."
+          emptyState="No linked campaign workflows need attention for this event right now."
+          summary={opsSummary}
+          title="Promotion workflow"
+          variant="client"
+        />
+        <WorkspaceActivityFeed
+          events={eventEvents}
+          basePath={`/client/${slug}/event`}
+          title="Event activity"
+          description="Shared changes to ticketing and event state for this show."
+          emptyState="Event activity will appear here when the team updates ticketing or event status."
+        />
+      </section>
 
       {/* -- Event Overview (always visible) -- */}
       {(daysUntilEvent != null || (e.gross != null && e.gross > 0)) && (

@@ -42,6 +42,7 @@ function getEventIcon(eventName: string) {
 
 function getEventHref(event: SystemEvent, basePath: string) {
   if (event.pageId) return `${basePath}/${event.pageId}`;
+  if (event.entityType === "event" && event.entityId) return `${basePath}/${event.entityId}`;
   if (event.entityType === "crm_contact" && event.entityId) return `${basePath}/${event.entityId}`;
   if (event.entityType === "crm_comment" && typeof event.metadata.crmContactId === "string") {
     return `${basePath}/${event.metadata.crmContactId}`;
