@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Bell } from "lucide-react";
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { NotificationItem } from "./notification-item";
-import { buildNotificationHref } from "@/features/notifications/routing";
+import { buildNotificationHref, buildNotificationsCenterHref } from "@/features/notifications/routing";
 import type { AppNotification } from "@/features/notifications/types";
 
 interface NotificationBellProps {
@@ -19,6 +20,11 @@ export function NotificationBell({ fallbackClientSlug, viewer }: NotificationBel
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const inboxHref = buildNotificationsCenterHref(viewer, fallbackClientSlug);
+  const clientSlug = viewer === "client" ? fallbackClientSlug : undefined;
+  const notificationsUrl = clientSlug
+    ? `/api/workspace/notifications?clientSlug=${encodeURIComponent(clientSlug)}`
+    : "/api/workspace/notifications";
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -27,7 +33,7 @@ export function NotificationBell({ fallbackClientSlug, viewer }: NotificationBel
 
     async function loadNotifications() {
       try {
-        const res = await fetch("/api/workspace/notifications");
+        const res = await fetch(notificationsUrl);
         if (!res.ok || cancelled) return;
 
         const data = await res.json();
@@ -48,14 +54,17 @@ export function NotificationBell({ fallbackClientSlug, viewer }: NotificationBel
       cancelled = true;
       clearInterval(interval);
     };
-  }, []);
+  }, [notificationsUrl]);
 
   async function handleMarkAllRead() {
     try {
       await fetch("/api/workspace/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ markAll: true }),
+        body: JSON.stringify({
+          clientSlug,
+          markAll: true,
+        }),
       });
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
     } catch {
@@ -129,6 +138,15 @@ export function NotificationBell({ fallbackClientSlug, viewer }: NotificationBel
             </div>
           )}
         </ScrollArea>
+        <div className="border-t px-4 py-2">
+          <Link
+            className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+            href={inboxHref}
+            onClick={() => setOpen(false)}
+          >
+            Open inbox
+          </Link>
+        </div>
       </PopoverContent>
     </Popover>
   );

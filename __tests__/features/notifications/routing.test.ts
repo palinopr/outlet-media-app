@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { buildNotificationHref } from "@/features/notifications/routing";
+import {
+  buildNotificationHref,
+  buildNotificationsCenterHref,
+} from "@/features/notifications/routing";
 import type { AppNotification } from "@/features/notifications/types";
 
 function makeNotification(
@@ -89,5 +92,18 @@ describe("buildNotificationHref", () => {
         { viewer: "client" },
       ),
     ).toBe("/client/beamina/updates");
+  });
+});
+
+describe("buildNotificationsCenterHref", () => {
+  it("routes admin viewers to the admin inbox", () => {
+    expect(buildNotificationsCenterHref("admin")).toBe("/admin/notifications");
+  });
+
+  it("keeps client viewers on client-safe inbox routes", () => {
+    expect(buildNotificationsCenterHref("client", "zamora")).toBe(
+      "/client/zamora/notifications",
+    );
+    expect(buildNotificationsCenterHref("client")).toBe("/client");
   });
 });

@@ -5,6 +5,17 @@ interface BuildNotificationHrefOptions {
   viewer: "admin" | "client";
 }
 
+export function buildNotificationsCenterHref(
+  viewer: "admin" | "client",
+  fallbackClientSlug?: string | null,
+) {
+  if (viewer === "admin") {
+    return "/admin/notifications";
+  }
+
+  return fallbackClientSlug ? `/client/${fallbackClientSlug}/notifications` : "/client";
+}
+
 function clientSlugForNotification(
   notification: AppNotification,
   fallbackClientSlug?: string | null,

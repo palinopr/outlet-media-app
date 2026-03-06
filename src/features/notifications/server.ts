@@ -1,5 +1,29 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import type { CreateNotificationInput } from "./types";
+import type { AppNotification, CreateNotificationInput } from "./types";
+
+interface ListNotificationsForUserOptions {
+  clientSlug?: string | null;
+  limit?: number;
+}
+
+function mapNotificationRow(row: Record<string, unknown>): AppNotification {
+  return {
+    clientSlug: (row.client_slug as string | null) ?? null,
+    createdAt: row.created_at as string,
+    entityId: (row.entity_id as string | null) ?? null,
+    entityType: (row.entity_type as string | null) ?? null,
+    fromUserId: (row.from_user_id as string | null) ?? null,
+    fromUserName: (row.from_user_name as string | null) ?? null,
+    id: row.id as string,
+    message: (row.message as string | null) ?? null,
+    pageId: (row.page_id as string | null) ?? null,
+    read: Boolean(row.read),
+    taskId: (row.task_id as string | null) ?? null,
+    title: row.title as string,
+    type: row.type as string,
+    userId: row.user_id as string,
+  };
+}
 
 export async function createNotification(data: CreateNotificationInput) {
   if (!supabaseAdmin) throw new Error("DB not configured");
@@ -20,6 +44,35 @@ export async function createNotification(data: CreateNotificationInput) {
     user_id: data.userId,
   } as never);
   if (error) throw new Error(error.message);
+}
+
+export async function listNotificationsForUser(
+  userId: string,
+  options: ListNotificationsForUserOptions = {},
+): Promise<AppNotification[]> {
+  if (!supabaseAdmin || !userId) return [];
+
+  let query = supabaseAdmin
+    .from("notifications" as never)
+    .select(
+      "id, user_id, type, title, message, page_id, task_id, from_user_id, from_user_name, read, created_at, client_slug, entity_type, entity_id",
+    )
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(options.limit ?? 50);
+
+  if (options.clientSlug) {
+    query = query.eq("client_slug", options.clientSlug);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("[notifications] failed to list notifications:", error.message);
+    return [];
+  }
+
+  return ((data ?? []) as Record<string, unknown>[]).map((row) => mapNotificationRow(row));
 }
 
 export async function listClientNotificationRecipients(
