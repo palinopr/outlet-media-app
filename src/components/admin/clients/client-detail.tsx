@@ -165,6 +165,7 @@ export function ClientDetailView({
         <ClientOverviewTab
           agentOutcomes={agentOutcomes}
           clientSlug={client.slug}
+          connectedAccounts={client.connectedAccounts}
           opsSummary={opsSummary}
           recentActivity={recentActivity}
           workQueue={workQueue}

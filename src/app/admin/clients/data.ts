@@ -4,6 +4,7 @@ import { computeBlendedRoas } from "@/lib/formatters";
 import { getClientServices } from "@/lib/client-services";
 import { buildClientWorkflowHealth } from "@/features/clients/summary";
 import { listActionableInvitations } from "@/features/invitations/server";
+import type { ConnectedAccount } from "@/features/settings/connected-accounts";
 
 export type {
   ClientSummary,
@@ -271,6 +272,7 @@ export async function getClientDetail(
     eventsRes,
     assetsRes,
     assetSourcesRes,
+    connectedAccountsRes,
     serviceRows,
     approvalsRes,
     actionItemsRes,
@@ -303,6 +305,13 @@ export async function getClientDetail(
       .select("id, provider, folder_url, folder_name, last_synced_at, file_count")
       .eq("client_slug", client.slug)
       .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("client_accounts")
+      .select(
+        "id, client_slug, ad_account_id, ad_account_name, status, connected_at, token_expires_at, last_used_at",
+      )
+      .eq("client_slug", client.slug)
+      .order("connected_at", { ascending: false }),
     getClientServices(clientId),
     supabaseAdmin
       .from("approval_requests")
@@ -382,6 +391,8 @@ export async function getClientDetail(
     fileCount: s.file_count,
   }));
 
+  const connectedAccounts: ConnectedAccount[] = ((connectedAccountsRes.data ?? []) as ConnectedAccount[]);
+
   const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
   const totalRevenue = campaigns.reduce((s, c) => s + c.spend * c.roas, 0);
   const activeCampaigns = campaigns.filter(
@@ -419,6 +430,7 @@ export async function getClientDetail(
     roas,
     createdAt: client.created_at,
     members,
+    connectedAccounts,
     campaigns,
     events,
     assets,

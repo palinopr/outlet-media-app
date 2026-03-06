@@ -4,6 +4,8 @@ import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkQueueSection } from "@/components/workflow/work-queue-section";
+import { ClientConnectionsSection } from "./client-connections-section";
+import type { ConnectedAccount } from "@/features/settings/connected-accounts";
 import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import type { DashboardOpsSummary } from "@/features/dashboard/summary";
 import type { SystemEvent } from "@/features/system-events/server";
@@ -12,6 +14,7 @@ import type { WorkQueueSummary } from "@/features/work-queue/summary";
 interface ClientOverviewTabProps {
   agentOutcomes: AgentOutcomeView[];
   clientSlug: string;
+  connectedAccounts: ConnectedAccount[];
   opsSummary: DashboardOpsSummary;
   recentActivity: SystemEvent[];
   workQueue: WorkQueueSummary;
@@ -20,6 +23,7 @@ interface ClientOverviewTabProps {
 export function ClientOverviewTab({
   agentOutcomes,
   clientSlug,
+  connectedAccounts,
   opsSummary,
   recentActivity,
   workQueue,
@@ -41,6 +45,7 @@ export function ClientOverviewTab({
           title="Client work queue"
           variant="admin"
         />
+        <ClientConnectionsSection accounts={connectedAccounts} />
       </div>
 
       <div className="space-y-6">

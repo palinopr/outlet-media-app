@@ -39,6 +39,18 @@ const client = {
       status: "ACTIVE",
     },
   ],
+  connectedAccounts: [
+    {
+      ad_account_id: "act_123",
+      ad_account_name: "Acme Main",
+      client_slug: "acme",
+      connected_at: "2026-02-01T00:00:00.000Z",
+      id: "acct-1",
+      last_used_at: "2026-02-01T00:00:00.000Z",
+      status: "active",
+      token_expires_at: "2026-03-08T00:00:00.000Z",
+    },
+  ],
   createdAt: "2026-01-01T00:00:00.000Z",
   events: [
     {
@@ -369,6 +381,8 @@ describe("ClientDetailView", () => {
 
     expect(screen.getByText("Client workflow overview")).toBeInTheDocument();
     expect(screen.getByText("Client work queue")).toBeInTheDocument();
+    expect(screen.getByText("Connection health")).toBeInTheDocument();
+    expect(screen.getByText("Acme Main")).toBeInTheDocument();
     expect(screen.getByText("acme activity")).toBeInTheDocument();
   });
 
