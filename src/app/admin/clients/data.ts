@@ -2,6 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { clerkClient } from "@clerk/nextjs/server";
 import { computeBlendedRoas } from "@/lib/formatters";
 import { getClientServices } from "@/lib/client-services";
+import { buildClientWorkflowHealth } from "@/features/clients/summary";
 
 export type {
   ClientSummary,
@@ -28,7 +29,19 @@ import type {
 export async function getClientSummaries(): Promise<ClientSummary[]> {
   if (!supabaseAdmin) return [];
 
-  const [clientsRes, campaignsRes, eventsRes, membersRes] = await Promise.all([
+  const [
+    clientsRes,
+    campaignsRes,
+    eventsRes,
+    membersRes,
+    approvalsRes,
+    actionItemsRes,
+    assetsRes,
+    campaignDiscussionsRes,
+    crmDiscussionsRes,
+    assetDiscussionsRes,
+    eventDiscussionsRes,
+  ] = await Promise.all([
     supabaseAdmin.from("clients").select("id, name, slug, status, created_at"),
     supabaseAdmin
       .from("meta_campaigns")
@@ -38,6 +51,38 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
       .select("client_slug")
       .not("client_slug", "is", null),
     supabaseAdmin.from("client_members").select("client_id"),
+    supabaseAdmin
+      .from("approval_requests")
+      .select("client_slug")
+      .eq("status", "pending"),
+    supabaseAdmin
+      .from("campaign_action_items")
+      .select("client_slug, status")
+      .neq("status", "done"),
+    supabaseAdmin
+      .from("ad_assets")
+      .select("client_slug, status")
+      .in("status", ["new", "labeled"]),
+    supabaseAdmin
+      .from("campaign_comments")
+      .select("client_slug")
+      .eq("resolved", false)
+      .is("parent_comment_id", null),
+    supabaseAdmin
+      .from("crm_comments" as never)
+      .select("client_slug")
+      .eq("resolved", false)
+      .is("parent_comment_id", null),
+    supabaseAdmin
+      .from("asset_comments" as never)
+      .select("client_slug")
+      .eq("resolved", false)
+      .is("parent_comment_id", null),
+    supabaseAdmin
+      .from("event_comments" as never)
+      .select("client_slug")
+      .eq("resolved", false)
+      .is("parent_comment_id", null),
   ]);
 
   if (!clientsRes.data?.length) return [];
@@ -62,6 +107,38 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     membersByClientId[m.client_id] = (membersByClientId[m.client_id] ?? 0) + 1;
   }
 
+  const pendingApprovalsBySlug: Record<string, number> = {};
+  for (const row of approvalsRes.data ?? []) {
+    const slug = (row.client_slug as string | null) ?? "unknown";
+    pendingApprovalsBySlug[slug] = (pendingApprovalsBySlug[slug] ?? 0) + 1;
+  }
+
+  const openActionItemsBySlug: Record<string, number> = {};
+  for (const row of actionItemsRes.data ?? []) {
+    const slug = (row.client_slug as string | null) ?? "unknown";
+    openActionItemsBySlug[slug] = (openActionItemsBySlug[slug] ?? 0) + 1;
+  }
+
+  const assetsNeedingReviewBySlug: Record<string, number> = {};
+  for (const row of assetsRes.data ?? []) {
+    const slug = (row.client_slug as string | null) ?? "unknown";
+    assetsNeedingReviewBySlug[slug] = (assetsNeedingReviewBySlug[slug] ?? 0) + 1;
+  }
+
+  const openDiscussionsBySlug: Record<string, number> = {};
+  for (const dataset of [
+    campaignDiscussionsRes.data ?? [],
+    crmDiscussionsRes.data ?? [],
+    assetDiscussionsRes.data ?? [],
+    eventDiscussionsRes.data ?? [],
+  ]) {
+    for (const row of dataset) {
+      const record = row as { client_slug?: string | null };
+      const slug = record.client_slug ?? "unknown";
+      openDiscussionsBySlug[slug] = (openDiscussionsBySlug[slug] ?? 0) + 1;
+    }
+  }
+
   return clientsRes.data.map((client) => {
     const campaigns = campaignsBySlug[client.slug] ?? [];
     const totalSpend = campaigns.reduce(
@@ -76,14 +153,25 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
       (c) => c.status === "ACTIVE",
     ).length;
     const roas = computeBlendedRoas(campaigns.map(c => ({ spend: c.spend ?? 0, roas: c.roas }))) ?? 0;
+    const workflow = buildClientWorkflowHealth({
+      assetsNeedingReview: assetsNeedingReviewBySlug[client.slug] ?? 0,
+      openActionItems: openActionItemsBySlug[client.slug] ?? 0,
+      openDiscussions: openDiscussionsBySlug[client.slug] ?? 0,
+      pendingApprovals: pendingApprovalsBySlug[client.slug] ?? 0,
+    });
 
     return {
+      assetsNeedingReview: workflow.assetsNeedingReview,
       id: client.id,
       name: client.name,
       slug: client.slug,
       status: client.status,
       memberCount: membersByClientId[client.id] ?? 0,
+      needsAttention: workflow.needsAttention,
       activeCampaigns,
+      openActionItems: workflow.openActionItems,
+      openDiscussions: workflow.openDiscussions,
+      pendingApprovals: workflow.pendingApprovals,
       totalCampaigns: campaigns.length,
       activeShows: showsBySlug[client.slug] ?? 0,
       totalSpend,
@@ -176,7 +264,20 @@ export async function getClientDetail(
 
   if (!client) return null;
 
-  const [membersRes, campaignsRes, eventsRes, assetsRes, assetSourcesRes, serviceRows] = await Promise.all([
+  const [
+    membersRes,
+    campaignsRes,
+    eventsRes,
+    assetsRes,
+    assetSourcesRes,
+    serviceRows,
+    approvalsRes,
+    actionItemsRes,
+    campaignDiscussionsRes,
+    crmDiscussionsRes,
+    assetDiscussionsRes,
+    eventDiscussionsRes,
+  ] = await Promise.all([
     supabaseAdmin
       .from("client_members")
       .select("id, clerk_user_id, role, scope, created_at")
@@ -201,6 +302,40 @@ export async function getClientDetail(
       .eq("client_slug", client.slug)
       .order("created_at", { ascending: false }),
     getClientServices(clientId),
+    supabaseAdmin
+      .from("approval_requests")
+      .select("id")
+      .eq("client_slug", client.slug)
+      .eq("status", "pending"),
+    supabaseAdmin
+      .from("campaign_action_items")
+      .select("id")
+      .eq("client_slug", client.slug)
+      .neq("status", "done"),
+    supabaseAdmin
+      .from("campaign_comments")
+      .select("id")
+      .eq("client_slug", client.slug)
+      .eq("resolved", false)
+      .is("parent_comment_id", null),
+    supabaseAdmin
+      .from("crm_comments" as never)
+      .select("id")
+      .eq("client_slug", client.slug)
+      .eq("resolved", false)
+      .is("parent_comment_id", null),
+    supabaseAdmin
+      .from("asset_comments" as never)
+      .select("id")
+      .eq("client_slug", client.slug)
+      .eq("resolved", false)
+      .is("parent_comment_id", null),
+    supabaseAdmin
+      .from("event_comments" as never)
+      .select("id")
+      .eq("client_slug", client.slug)
+      .eq("resolved", false)
+      .is("parent_comment_id", null),
   ]);
 
   const memberRows = membersRes.data ?? [];
@@ -250,14 +385,29 @@ export async function getClientDetail(
     (c) => c.status === "ACTIVE",
   ).length;
   const roas = computeBlendedRoas(campaigns) ?? 0;
+  const workflow = buildClientWorkflowHealth({
+    assetsNeedingReview: assets.filter((asset) => asset.status === "new" || asset.status === "labeled").length,
+    openActionItems: (actionItemsRes.data ?? []).length,
+    openDiscussions:
+      (campaignDiscussionsRes.data ?? []).length +
+      ((crmDiscussionsRes.data ?? []) as unknown[]).length +
+      ((assetDiscussionsRes.data ?? []) as unknown[]).length +
+      ((eventDiscussionsRes.data ?? []) as unknown[]).length,
+    pendingApprovals: (approvalsRes.data ?? []).length,
+  });
 
   return {
+    assetsNeedingReview: workflow.assetsNeedingReview,
     id: client.id,
     name: client.name,
     slug: client.slug,
     status: client.status,
     memberCount: members.length,
+    needsAttention: workflow.needsAttention,
     activeCampaigns,
+    openActionItems: workflow.openActionItems,
+    openDiscussions: workflow.openDiscussions,
+    pendingApprovals: workflow.pendingApprovals,
     totalCampaigns: campaigns.length,
     activeShows: events.length,
     totalSpend,

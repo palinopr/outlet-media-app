@@ -1,10 +1,15 @@
 export interface ClientSummary {
+  assetsNeedingReview: number;
   id: string;
   name: string;
   slug: string;
   status: string;
   memberCount: number;
+  needsAttention: number;
   activeCampaigns: number;
+  openActionItems: number;
+  openDiscussions: number;
+  pendingApprovals: number;
   totalCampaigns: number;
   activeShows: number;
   totalSpend: number;

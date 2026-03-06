@@ -108,6 +108,39 @@ export const clientColumns: ColumnDef<ClientSummary>[] = [
     ),
   },
   {
+    accessorKey: "needsAttention",
+    header: ({ column }) => (
+      <ColumnHeader column={column} title="Workflow" className="justify-end" />
+    ),
+    cell: ({ row }) => {
+      const client = row.original;
+      const needsAttention = client.needsAttention;
+      const detail =
+        client.pendingApprovals > 0
+          ? `${client.pendingApprovals} approvals`
+          : client.openDiscussions > 0
+            ? `${client.openDiscussions} discussions`
+            : client.openActionItems > 0
+              ? `${client.openActionItems} next steps`
+              : client.assetsNeedingReview > 0
+                ? `${client.assetsNeedingReview} assets`
+                : "Clear";
+
+      return (
+        <div className="text-right">
+          <span
+            className={`text-sm font-semibold tabular-nums ${
+              needsAttention > 0 ? "text-amber-400" : "text-emerald-400"
+            }`}
+          >
+            {needsAttention}
+          </span>
+          <p className="text-[11px] text-muted-foreground">{detail}</p>
+        </div>
+      );
+    },
+  },
+  {
     accessorKey: "totalSpend",
     header: ({ column }) => (
       <ColumnHeader
