@@ -18,11 +18,13 @@ import { CampaignCommentThread } from "./campaign-comment-thread";
 
 interface CampaignCommentsPanelProps {
   allowAdminOnly: boolean;
+  allowCreateActionItems?: boolean;
   canDeleteAny: boolean;
   campaignId: string;
   clientSlug: string;
   comments: CampaignComment[];
   currentUserId: string;
+  linkedActionSourceIds?: string[];
   description?: string;
   emptyState?: string;
   title?: string;
@@ -30,17 +32,23 @@ interface CampaignCommentsPanelProps {
 
 export function CampaignCommentsPanel({
   allowAdminOnly,
+  allowCreateActionItems = false,
   canDeleteAny,
   campaignId,
   clientSlug,
   comments: initialComments,
   currentUserId,
+  linkedActionSourceIds: initialLinkedActionSourceIds = [],
   description = "Discuss campaign changes, creative feedback, blockers, and next steps in context.",
   emptyState = "No campaign comments yet.",
   title = "Campaign discussion",
 }: CampaignCommentsPanelProps) {
   const [comments, setComments] = useState(initialComments);
   const [loading, setLoading] = useState(false);
+  const [creatingActionId, setCreatingActionId] = useState<string | null>(null);
+  const [linkedActionSourceIds, setLinkedActionSourceIds] = useState<Set<string>>(
+    new Set(initialLinkedActionSourceIds),
+  );
   const [submitting, setSubmitting] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [visibility, setVisibility] = useState<CampaignCommentVisibility>("shared");
@@ -117,6 +125,26 @@ export function CampaignCommentsPanel({
     });
     if (response.ok) {
       await fetchComments();
+    }
+  }
+
+  async function createActionItem(commentId: string) {
+    setCreatingActionId(commentId);
+    try {
+      const response = await fetch("/api/campaign-comments/action-item", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId }),
+      });
+      if (!response.ok) return;
+
+      setLinkedActionSourceIds((current) => {
+        const next = new Set(current);
+        next.add(commentId);
+        return next;
+      });
+    } finally {
+      setCreatingActionId(null);
     }
   }
 
@@ -203,8 +231,15 @@ export function CampaignCommentsPanel({
           <CampaignCommentThread
             key={comment.id}
             canDeleteAny={canDeleteAny}
+            canCreateActionItem={
+              allowCreateActionItems &&
+              !comment.parentCommentId &&
+              !linkedActionSourceIds.has(comment.id) &&
+              creatingActionId !== comment.id
+            }
             comment={comment}
             currentUserId={currentUserId}
+            onCreateActionItem={createActionItem}
             onDelete={deleteComment}
             onReply={reply}
             onResolve={resolveComment}

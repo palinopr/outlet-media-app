@@ -195,11 +195,15 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
         <div className="space-y-6">
           <CampaignCommentsPanel
             allowAdminOnly
+            allowCreateActionItems
             canDeleteAny
             campaignId={campaign.campaignId}
             clientSlug={campaign.clientSlug}
             comments={comments}
             currentUserId={userId ?? ""}
+            linkedActionSourceIds={actionItems
+              .filter((item) => item.sourceEntityType === "campaign_comment" && item.sourceEntityId)
+              .map((item) => item.sourceEntityId as string)}
             title="Campaign discussion"
             description="Keep campaign feedback, blockers, and internal notes attached to the campaign itself."
           />

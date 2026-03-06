@@ -8,8 +8,10 @@ import { timeAgo } from "@/lib/formatters";
 
 interface CampaignCommentThreadProps {
   canDeleteAny: boolean;
+  canCreateActionItem?: boolean;
   comment: CampaignComment;
   currentUserId: string;
+  onCreateActionItem?: (commentId: string) => Promise<void> | void;
   onDelete: (id: string) => Promise<void> | void;
   onReply: (parentId: string, content: string) => Promise<void> | void;
   onResolve: (id: string, resolved: boolean) => Promise<void> | void;
@@ -18,8 +20,10 @@ interface CampaignCommentThreadProps {
 
 export function CampaignCommentThread({
   canDeleteAny,
+  canCreateActionItem = false,
   comment,
   currentUserId,
+  onCreateActionItem,
   onDelete,
   onReply,
   onResolve,
@@ -53,6 +57,16 @@ export function CampaignCommentThread({
       />
 
       <div className="mt-3 flex items-center gap-2">
+        {canCreateActionItem && onCreateActionItem ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 text-xs text-[#787774] hover:bg-[#f1efea] hover:text-[#37352f]"
+            onClick={() => void onCreateActionItem(comment.id)}
+          >
+            Create action
+          </Button>
+        ) : null}
         <Button
           variant="ghost"
           size="sm"
