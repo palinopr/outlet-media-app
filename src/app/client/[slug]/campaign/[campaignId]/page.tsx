@@ -19,9 +19,11 @@ import { RecommendationsList, type RecommendationItem } from "@/components/clien
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { CampaignActionItemsPanel } from "@/components/campaigns/campaign-action-items-panel";
+import { CampaignCommentsPanel } from "@/components/campaigns/campaign-comments-panel";
 import { mapAssetRows } from "@/features/assets/lib";
 import { listCampaignAssets } from "@/features/assets/server";
 import { listCampaignActionItems } from "@/features/campaign-action-items/server";
+import { listCampaignComments } from "@/features/campaign-comments/server";
 import { listCampaignApprovalRequests } from "@/features/approvals/server";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { StatCard } from "../../components/stat-card";
@@ -38,11 +40,11 @@ interface Props {
 
 export default async function CampaignDetailPage({ params, searchParams }: Props) {
   const { slug, campaignId } = await params;
-  await requireClientAccess(slug, "meta_ads");
+  const { userId } = await requireClientAccess(slug, "meta_ads");
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam);
 
-  const [data, events, approvals, actionItems] = await Promise.all([
+  const [data, events, approvals, actionItems, comments] = await Promise.all([
     getCampaignDetail(slug, campaignId, range),
     listCampaignSystemEvents({
       audience: "shared",
@@ -62,6 +64,11 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       campaignId,
       clientSlug: slug,
       limit: 12,
+    }),
+    listCampaignComments({
+      audience: "shared",
+      campaignId,
+      clientSlug: slug,
     }),
   ]);
 
@@ -177,6 +184,17 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           title="Campaign next steps"
           description="Shared follow-ups, approvals, and handoffs attached directly to this campaign."
           emptyState="No shared next steps are active for this campaign right now."
+        />
+        <CampaignCommentsPanel
+          allowAdminOnly={false}
+          canDeleteAny={false}
+          campaignId={campaignId}
+          clientSlug={slug}
+          comments={comments}
+          currentUserId={userId}
+          title="Campaign discussion"
+          description="Talk through creative, campaign changes, and next steps with the Outlet team in one shared thread."
+          emptyState="No shared campaign comments yet."
         />
         <div className="grid gap-4 xl:grid-cols-2">
           <WorkspaceApprovalsPanel

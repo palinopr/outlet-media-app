@@ -92,6 +92,7 @@ Design examples:
 
 When work starts in one app but belongs to another context, preserve that linkage in structured metadata and events immediately. Do not let campaign context disappear just because the upload started in the asset library.
 Campaign-specific next steps should stay attached to the campaign itself instead of falling back to generic workspace task boards.
+Campaign discussion should stay attached to the campaign itself instead of living only in generic workspace pages.
 
 ## 8. Favor Feature Modules Over Route-Local Logic
 

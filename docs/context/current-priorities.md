@@ -32,6 +32,7 @@ When choosing what to build next, bias toward:
 - shared visibility
 - campaign-centered collaboration
 - approval and activity flows
+- campaign-native comments and discussion
 - event-driven automation
 - first-class business objects over generic page abstractions
 - fully owned, production-ready slices with verification and durable context updates

@@ -4,6 +4,7 @@ import {
   AlertPostSchema,
   AlertPatchSchema,
   AgentPostSchema,
+  CreateCampaignCommentSchema,
   InviteSchema,
   VALID_AGENTS,
 } from "@/lib/api-schemas";
@@ -167,6 +168,51 @@ describe("InviteSchema", () => {
 
   it("rejects missing email", () => {
     const result = InviteSchema.safeParse({});
+    expect(result.success).toBe(false);
+  });
+});
+
+// ─── CreateCampaignCommentSchema ────────────────────────────────────────────
+
+describe("CreateCampaignCommentSchema", () => {
+  it("accepts a valid shared campaign comment", () => {
+    const result = CreateCampaignCommentSchema.safeParse({
+      campaign_id: "123456789",
+      client_slug: "zamora",
+      content: "New creative is ready for review.",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.visibility).toBe("shared");
+    }
+  });
+
+  it("accepts admin-only visibility", () => {
+    const result = CreateCampaignCommentSchema.safeParse({
+      campaign_id: "123456789",
+      client_slug: "zamora",
+      content: "Keep this internal for the team.",
+      visibility: "admin_only",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects empty content", () => {
+    const result = CreateCampaignCommentSchema.safeParse({
+      campaign_id: "123456789",
+      client_slug: "zamora",
+      content: "",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects invalid visibility", () => {
+    const result = CreateCampaignCommentSchema.safeParse({
+      campaign_id: "123456789",
+      client_slug: "zamora",
+      content: "hello",
+      visibility: "client_only",
+    });
     expect(result.success).toBe(false);
   });
 });

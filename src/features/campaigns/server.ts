@@ -1,6 +1,7 @@
 import { mapAssetRows } from "@/features/assets/lib";
 import { listCampaignAssets } from "@/features/assets/server";
 import { listCampaignActionItems } from "@/features/campaign-action-items/server";
+import { listCampaignComments } from "@/features/campaign-comments/server";
 import { listCampaignApprovalRequests } from "@/features/approvals/server";
 import { listCampaignSystemEvents } from "@/features/system-events/server";
 import type { MetaCampaignCard } from "@/lib/meta-campaigns";
@@ -59,11 +60,12 @@ export async function getCampaignOperatingData(campaignId: string) {
       approvals: [],
       assets: [],
       campaign,
+      comments: [],
       events: [],
     };
   }
 
-  const [events, approvals, assetRows, actionItems] = await Promise.all([
+  const [events, approvals, assetRows, actionItems, comments] = await Promise.all([
     listCampaignSystemEvents({
       audience: "all",
       clientSlug: data.client_slug,
@@ -84,6 +86,11 @@ export async function getCampaignOperatingData(campaignId: string) {
       clientSlug: data.client_slug,
       limit: 16,
     }),
+    listCampaignComments({
+      audience: "all",
+      campaignId,
+      clientSlug: data.client_slug,
+    }),
   ]);
 
   return {
@@ -91,6 +98,7 @@ export async function getCampaignOperatingData(campaignId: string) {
     approvals,
     assets: mapAssetRows(assetRows),
     campaign,
+    comments,
     events,
   };
 }

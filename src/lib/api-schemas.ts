@@ -235,6 +235,14 @@ export const CreateCommentSchema = z.object({
   parent_comment_id: z.string().uuid().optional(),
 });
 
+export const CreateCampaignCommentSchema = z.object({
+  campaign_id: z.string().min(1),
+  client_slug: z.string().min(1),
+  content: z.string().min(1).max(10000),
+  parent_comment_id: z.string().uuid().optional(),
+  visibility: z.enum(["shared", "admin_only"]).default("shared"),
+});
+
 export const ResolveCommentSchema = z.object({
   resolved: z.boolean(),
 });

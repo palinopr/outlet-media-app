@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
@@ -15,6 +16,7 @@ import { StatCard } from "@/components/admin/stat-card";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { CampaignActionItemsPanel } from "@/components/campaigns/campaign-action-items-panel";
+import { CampaignCommentsPanel } from "@/components/campaigns/campaign-comments-panel";
 import { SyncButton } from "@/components/admin/campaigns/campaign-cells";
 import { getCampaignOperatingData } from "@/features/campaigns/server";
 import { fmtDate, fmtNum, fmtObjective, fmtUsd, slugToLabel } from "@/lib/formatters";
@@ -25,11 +27,12 @@ interface Props {
 
 export default async function AdminCampaignDetailPage({ params }: Props) {
   const { campaignId } = await params;
+  const { userId } = await auth();
   const data = await getCampaignOperatingData(campaignId);
 
   if (!data) notFound();
 
-  const { campaign, assets, approvals, events, actionItems } = data;
+  const { campaign, assets, approvals, comments, events, actionItems } = data;
   const metaAdAccountId = process.env.META_AD_ACCOUNT_ID?.replace(/^act_/, "") ?? null;
 
   return (
@@ -190,6 +193,16 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
         </div>
 
         <div className="space-y-6">
+          <CampaignCommentsPanel
+            allowAdminOnly
+            canDeleteAny
+            campaignId={campaign.campaignId}
+            clientSlug={campaign.clientSlug}
+            comments={comments}
+            currentUserId={userId ?? ""}
+            title="Campaign discussion"
+            description="Keep campaign feedback, blockers, and internal notes attached to the campaign itself."
+          />
           <WorkspaceApprovalsPanel
             approvals={approvals}
             canDecide
