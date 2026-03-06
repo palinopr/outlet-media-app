@@ -1,16 +1,19 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarClock, Flame, Share2, UserRound } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
+import { CrmCommentsPanel } from "@/components/crm/crm-comments-panel";
 import { StatCard } from "@/components/admin/stat-card";
 import { CrmContactDetailCard } from "@/components/crm/crm-contact-detail-card";
 import { CrmFollowUpItemsPanel } from "@/components/crm/crm-follow-up-items-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { listCrmComments } from "@/features/crm-comments/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmContactById } from "@/features/crm/server";
-import { listSystemEvents } from "@/features/system-events/server";
+import { listCrmSystemEvents } from "@/features/system-events/server";
 import { slugToLabel } from "@/lib/formatters";
 
 interface Props {
@@ -19,15 +22,15 @@ interface Props {
 
 export default async function AdminCrmContactPage({ params }: Props) {
   const { contactId } = await params;
+  const { userId } = await auth();
   const contact = await getCrmContactById(contactId, { audience: "all" });
   if (!contact) notFound();
 
-  const [events, agentOutcomes, followUpItems] = await Promise.all([
-    listSystemEvents({
+  const [events, agentOutcomes, followUpItems, comments] = await Promise.all([
+    listCrmSystemEvents({
       audience: "all",
       clientSlug: contact.clientSlug,
-      entityId: contact.id,
-      entityType: "crm_contact",
+      contactId: contact.id,
       limit: 8,
     }),
     listAgentOutcomes({
@@ -41,6 +44,11 @@ export default async function AdminCrmContactPage({ params }: Props) {
       clientSlug: contact.clientSlug,
       contactId: contact.id,
       limit: 24,
+    }),
+    listCrmComments({
+      audience: "all",
+      clientSlug: contact.clientSlug,
+      contactId: contact.id,
     }),
   ]);
 
@@ -114,6 +122,21 @@ export default async function AdminCrmContactPage({ params }: Props) {
             title="Contact details"
             description="Manage the full CRM record, ownership, and follow-up state from one place."
             variant="admin"
+          />
+
+          <CrmCommentsPanel
+            allowAdminOnly
+            allowCreateFollowUpItems
+            canDeleteAny
+            clientSlug={contact.clientSlug}
+            comments={comments}
+            contactId={contact.id}
+            currentUserId={userId ?? ""}
+            linkedFollowUpSourceIds={followUpItems
+              .filter((item) => item.sourceEntityType === "crm_comment" && item.sourceEntityId)
+              .map((item) => item.sourceEntityId as string)}
+            title="Relationship discussion"
+            description="Keep client requests, internal notes, and relationship context attached to this CRM record."
           />
 
           <CrmFollowUpItemsPanel

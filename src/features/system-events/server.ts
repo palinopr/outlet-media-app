@@ -19,6 +19,9 @@ export type SystemEventName =
   | "campaign_updated"
   | "crm_contact_created"
   | "crm_contact_updated"
+  | "crm_comment_added"
+  | "crm_comment_deleted"
+  | "crm_comment_resolved"
   | "crm_follow_up_item_created"
   | "crm_follow_up_item_deleted"
   | "crm_follow_up_item_updated"
@@ -91,9 +94,30 @@ interface ListCampaignSystemEventsOptions {
   limit?: number;
 }
 
+interface ListCrmSystemEventsOptions {
+  audience?: "all" | SystemEventVisibility;
+  clientSlug?: string | null;
+  contactId?: string | null;
+  limit?: number;
+}
+
 function eventMatchesCampaign(event: SystemEvent, campaignId: string) {
   if (event.entityType === "campaign" && event.entityId === campaignId) return true;
   return event.metadata.campaignId === campaignId;
+}
+
+export function isCrmSystemEvent(event: SystemEvent) {
+  return (
+    event.entityType === "crm_contact" ||
+    event.entityType === "crm_comment" ||
+    event.entityType === "crm_follow_up_item" ||
+    event.metadata.crmContactId != null
+  );
+}
+
+export function matchesCrmContactSystemEvent(event: SystemEvent, contactId: string) {
+  if (event.entityType === "crm_contact" && event.entityId === contactId) return true;
+  return event.metadata.crmContactId === contactId;
 }
 
 function toActorName(user: Awaited<ReturnType<typeof currentUser>>): string | null {
@@ -221,6 +245,24 @@ export async function listCampaignSystemEvents(
   });
 
   return events.filter((event) => eventMatchesCampaign(event, options.campaignId)).slice(0, options.limit ?? 8);
+}
+
+export async function listCrmSystemEvents(
+  options: ListCrmSystemEventsOptions = {},
+): Promise<SystemEvent[]> {
+  const events = await listSystemEvents({
+    audience: options.audience,
+    clientSlug: options.clientSlug,
+    limit: Math.max((options.limit ?? 8) * 6, 24),
+  });
+
+  return events
+    .filter((event) => {
+      if (!isCrmSystemEvent(event)) return false;
+      if (!options.contactId) return true;
+      return matchesCrmContactSystemEvent(event, options.contactId);
+    })
+    .slice(0, options.limit ?? 8);
 }
 
 export function summarizeChangedFields(fields: string[]): string | null {

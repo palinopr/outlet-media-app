@@ -29,6 +29,7 @@ function getEventIcon(eventName: string) {
   if (eventName.startsWith("campaign_action_item_")) return CheckSquare;
   if (eventName.startsWith("campaign_comment_")) return MessageSquare;
   if (eventName.startsWith("crm_contact_")) return Users;
+  if (eventName.startsWith("crm_comment_")) return MessageSquare;
   if (eventName.startsWith("crm_follow_up_item_")) return CheckSquare;
   if (eventName.startsWith("workspace_comment")) return MessageSquare;
   if (eventName.startsWith("workspace_task")) return CheckSquare;
@@ -42,6 +43,9 @@ function getEventIcon(eventName: string) {
 function getEventHref(event: SystemEvent, basePath: string) {
   if (event.pageId) return `${basePath}/${event.pageId}`;
   if (event.entityType === "crm_contact" && event.entityId) return `${basePath}/${event.entityId}`;
+  if (event.entityType === "crm_comment" && typeof event.metadata.crmContactId === "string") {
+    return `${basePath}/${event.metadata.crmContactId}`;
+  }
   if (
     event.entityType === "crm_follow_up_item" &&
     typeof event.metadata.crmContactId === "string"

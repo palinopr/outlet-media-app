@@ -2,7 +2,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import {
   getCurrentActor,
-  listSystemEvents,
+  listCrmSystemEvents,
   logSystemEvent,
   summarizeChangedFields,
   type SystemEvent,
@@ -301,10 +301,9 @@ export async function getCrmOverview(
       clientSlug: options.clientSlug,
     }),
     options.clientSlug ? Promise.resolve([]) : listCrmClientOptions(),
-    listSystemEvents({
+    listCrmSystemEvents({
       audience: options.audience === "all" ? "all" : options.audience ?? "shared",
       clientSlug: options.clientSlug,
-      entityType: "crm_contact",
       limit: 6,
     }),
   ]);

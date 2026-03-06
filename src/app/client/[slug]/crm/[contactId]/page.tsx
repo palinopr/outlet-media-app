@@ -2,14 +2,16 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarClock, Flame, Share2, UserRound } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import { CrmCommentsPanel } from "@/components/crm/crm-comments-panel";
 import { CrmContactDetailCard } from "@/components/crm/crm-contact-detail-card";
 import { CrmFollowUpItemsPanel } from "@/components/crm/crm-follow-up-items-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { listCrmComments } from "@/features/crm-comments/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmContactById } from "@/features/crm/server";
 import { requireClientAccess } from "@/features/client-portal/access";
-import { listSystemEvents } from "@/features/system-events/server";
+import { listCrmSystemEvents } from "@/features/system-events/server";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { StatCard } from "../../components/stat-card";
 
@@ -19,7 +21,7 @@ interface Props {
 
 export default async function ClientCrmContactPage({ params }: Props) {
   const { slug, contactId } = await params;
-  await requireClientAccess(slug, "crm");
+  const { userId } = await requireClientAccess(slug, "crm");
 
   const contact = await getCrmContactById(contactId, {
     audience: "shared",
@@ -27,12 +29,11 @@ export default async function ClientCrmContactPage({ params }: Props) {
   });
   if (!contact) notFound();
 
-  const [events, agentOutcomes, followUpItems] = await Promise.all([
-    listSystemEvents({
+  const [events, agentOutcomes, followUpItems, comments] = await Promise.all([
+    listCrmSystemEvents({
       audience: "shared",
       clientSlug: slug,
-      entityId: contact.id,
-      entityType: "crm_contact",
+      contactId: contact.id,
       limit: 8,
     }),
     listAgentOutcomes({
@@ -46,6 +47,11 @@ export default async function ClientCrmContactPage({ params }: Props) {
       clientSlug: slug,
       contactId: contact.id,
       limit: 24,
+    }),
+    listCrmComments({
+      audience: "shared",
+      clientSlug: slug,
+      contactId: contact.id,
     }),
   ]);
 
@@ -105,6 +111,18 @@ export default async function ClientCrmContactPage({ params }: Props) {
             title="Contact details"
             description="The current shared CRM context for this relationship."
             variant="client"
+          />
+
+          <CrmCommentsPanel
+            allowAdminOnly={false}
+            canDeleteAny={false}
+            clientSlug={slug}
+            comments={comments}
+            contactId={contact.id}
+            currentUserId={userId}
+            title="Relationship discussion"
+            description="Talk with the Outlet team in one shared thread tied directly to this relationship."
+            emptyState="No shared CRM comments yet."
           />
 
           <CrmFollowUpItemsPanel
