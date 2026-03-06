@@ -16,6 +16,8 @@ import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
@@ -50,7 +52,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const range = parseRange(rangeParam);
 
   const { scope } = await requireClientAccess(slug);
-  const [dashboardData, opsSummary, actionCenter] = await Promise.all([
+  const [dashboardData, opsSummary, actionCenter, agentOutcomes] = await Promise.all([
     getData(slug, range, scope),
     getDashboardOpsSummary({
       clientSlug: slug,
@@ -62,6 +64,12 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       clientSlug: slug,
       limit: 4,
       mode: "client",
+      scopeCampaignIds: scope?.allowedCampaignIds,
+    }),
+    listAgentOutcomes({
+      audience: "shared",
+      clientSlug: slug,
+      limit: 4,
       scopeCampaignIds: scope?.allowedCampaignIds,
     }),
   ]);
@@ -211,6 +219,15 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         actionCenter={actionCenter}
         campaignHrefPrefix={`/client/${slug}/campaign`}
         variant="client"
+      />
+
+      <AgentOutcomesPanel
+        outcomes={agentOutcomes}
+        title="Agent follow-through"
+        description="A simple readout of the latest shared agent reviews and recommendations tied to your campaigns."
+        emptyState="No shared agent follow-through is available yet."
+        variant="client"
+        campaignHrefPrefix={`/client/${slug}/campaign`}
       />
 
       {/* -- Campaign Cards with Filter -- */}

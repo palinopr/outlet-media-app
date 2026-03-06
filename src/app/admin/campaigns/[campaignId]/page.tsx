@@ -17,7 +17,9 @@ import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { CampaignActionItemsPanel } from "@/components/campaigns/campaign-action-items-panel";
 import { CampaignCommentsPanel } from "@/components/campaigns/campaign-comments-panel";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { SyncButton } from "@/components/admin/campaigns/campaign-cells";
+import { listCampaignAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getCampaignOperatingData } from "@/features/campaigns/server";
 import { fmtDate, fmtNum, fmtObjective, fmtUsd, slugToLabel } from "@/lib/formatters";
 
@@ -33,6 +35,12 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
   if (!data) notFound();
 
   const { campaign, assets, approvals, comments, events, actionItems } = data;
+  const agentOutcomes = await listCampaignAgentOutcomes(
+    campaign.clientSlug,
+    campaign.campaignId,
+    "all",
+    6,
+  );
   const metaAdAccountId = process.env.META_AD_ACCOUNT_ID?.replace(/^act_/, "") ?? null;
 
   return (
@@ -225,6 +233,13 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
             }
             emptyState="Campaign activity will appear here as the team changes state, uploads creative, and resolves approvals."
             showClientSlug
+          />
+          <AgentOutcomesPanel
+            outcomes={agentOutcomes}
+            title="Agent follow-through"
+            description="Recent agent triage and Meta handoff work attached to this campaign."
+            emptyState="No agent tasks have been triggered for this campaign yet."
+            variant="admin"
           />
         </div>
       </div>

@@ -21,6 +21,8 @@ import { CampaignCards } from "./campaign-cards";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
@@ -45,10 +47,12 @@ export default async function AdminDashboard() {
     { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb },
     opsSummary,
     actionCenter,
+    agentOutcomes,
   ] = await Promise.all([
     getData(),
     getDashboardOpsSummary({ mode: "admin", limit: 6 }),
     getDashboardActionCenter({ mode: "admin", limit: 4 }),
+    listAgentOutcomes({ audience: "all", limit: 4 }),
   ]);
 
   const upcomingShows = getUpcomingShows(events, 8);
@@ -118,6 +122,15 @@ export default async function AdminDashboard() {
         actionCenter={actionCenter}
         campaignHrefPrefix="/admin/campaigns"
         variant="admin"
+      />
+
+      <AgentOutcomesPanel
+        outcomes={agentOutcomes}
+        title="Recent agent outcomes"
+        description="The latest completed, running, or blocked agent work across campaign operations."
+        emptyState="No agent outcomes are available yet."
+        variant="admin"
+        campaignHrefPrefix="/admin/campaigns"
       />
 
       {/* Trend charts */}

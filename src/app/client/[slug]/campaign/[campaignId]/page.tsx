@@ -20,9 +20,11 @@ import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { CampaignActionItemsPanel } from "@/components/campaigns/campaign-action-items-panel";
 import { CampaignCommentsPanel } from "@/components/campaigns/campaign-comments-panel";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { mapAssetRows } from "@/features/assets/lib";
 import { listCampaignAssets } from "@/features/assets/server";
 import { listCampaignActionItems } from "@/features/campaign-action-items/server";
+import { listCampaignAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listCampaignComments } from "@/features/campaign-comments/server";
 import { listCampaignApprovalRequests } from "@/features/approvals/server";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
@@ -44,7 +46,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam);
 
-  const [data, events, approvals, actionItems, comments] = await Promise.all([
+  const [data, events, approvals, actionItems, comments, agentOutcomes] = await Promise.all([
     getCampaignDetail(slug, campaignId, range),
     listCampaignSystemEvents({
       audience: "shared",
@@ -70,6 +72,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       campaignId,
       clientSlug: slug,
     }),
+    listCampaignAgentOutcomes(slug, campaignId, "shared", 6),
   ]);
 
   if (!data) {
@@ -212,6 +215,13 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
             emptyState="Campaign updates will appear here as the team changes status, budget, or ownership."
           />
         </div>
+        <AgentOutcomesPanel
+          outcomes={agentOutcomes}
+          title="Agent follow-through"
+          description="See when the Outlet team has asked an agent to review this campaign and what came back."
+          emptyState="No shared agent follow-through is visible for this campaign yet."
+          variant="client"
+        />
       </section>
 
       <CampaignAssetsPanel assets={campaignAssets} slug={slug} />
