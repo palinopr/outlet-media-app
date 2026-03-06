@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildConversationsSummary } from "@/features/conversations/summary";
+import { matchesConversationKinds } from "@/features/conversations/server";
 
 describe("buildConversationsSummary", () => {
   it("counts open threads across campaign, CRM, asset, and event surfaces", () => {
@@ -54,5 +55,13 @@ describe("buildConversationsSummary", () => {
       expect.objectContaining({ key: "asset_threads", value: 1 }),
       expect.objectContaining({ key: "event_threads", value: 1 }),
     ]);
+  });
+});
+
+describe("matchesConversationKinds", () => {
+  it("keeps only requested conversation surfaces", () => {
+    expect(matchesConversationKinds({ kind: "asset" }, ["asset"])).toBe(true);
+    expect(matchesConversationKinds({ kind: "campaign" }, ["asset"])).toBe(false);
+    expect(matchesConversationKinds({ kind: "event" }, ["asset", "event"])).toBe(true);
   });
 });

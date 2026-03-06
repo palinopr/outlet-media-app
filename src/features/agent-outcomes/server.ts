@@ -13,7 +13,7 @@ interface ListAgentOutcomesOptions {
   audience?: "all" | AgentOutcomeVisibility;
   campaignId?: string | null;
   clientSlug?: string | null;
-  contextType?: "all" | "campaign" | "crm_contact";
+  contextType?: "all" | "asset" | "campaign" | "crm_contact";
   crmContactId?: string | null;
   eventId?: string | null;
   limit?: number;
@@ -62,7 +62,7 @@ export function matchesContext(
   request: AgentOutcomeRequestRecord,
   assetId: string | null | undefined,
   campaignId: string | null | undefined,
-  contextType: "all" | "campaign" | "crm_contact",
+  contextType: "all" | "asset" | "campaign" | "crm_contact",
   crmContactId: string | null | undefined,
   eventId: string | null | undefined,
   scopeCampaignIds?: Set<string> | null,
@@ -78,6 +78,7 @@ export function matchesContext(
     typeof request.metadata.eventId === "string" ? request.metadata.eventId : null;
 
   if (assetId && requestAssetId !== assetId) return false;
+  if (contextType === "asset" && !requestAssetId) return false;
   if (contextType === "campaign" && !requestCampaignId) return false;
   if (contextType === "crm_contact" && !requestCrmContactId) return false;
   if (campaignId && requestCampaignId !== campaignId) return false;

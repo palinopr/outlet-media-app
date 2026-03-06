@@ -3,11 +3,13 @@ import { supabaseAdmin } from "@/lib/supabase";
 import {
   buildConversationsSummary,
   type ConversationThread,
+  type ConversationThreadKind,
   type ConversationsSummary,
 } from "./summary";
 
 interface GetConversationsCenterOptions {
   clientSlug?: string | null;
+  kinds?: ConversationThreadKind[];
   limit?: number;
   mode: "admin" | "client";
   scope?: ScopeFilter;
@@ -24,6 +26,14 @@ function stringValue(value: unknown) {
 
 function sortThreads(left: ConversationThread, right: ConversationThread) {
   return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+}
+
+export function matchesConversationKinds(
+  thread: Pick<ConversationThread, "kind">,
+  kinds?: ConversationThreadKind[] | null,
+) {
+  if (!kinds || kinds.length === 0) return true;
+  return kinds.includes(thread.kind);
 }
 
 export async function listConversationThreads(
@@ -226,7 +236,9 @@ export async function listConversationThreads(
       targetId: row.event_id as string,
       targetName: eventNames.get(row.event_id as string) ?? null,
     })),
-  ].sort(sortThreads);
+  ]
+    .filter((thread) => matchesConversationKinds(thread, options.kinds))
+    .sort(sortThreads);
 }
 
 export async function getConversationsCenter(

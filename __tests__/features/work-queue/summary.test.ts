@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildWorkQueueSummary, type WorkQueueItem } from "@/features/work-queue/summary";
+import { matchesWorkQueueKinds } from "@/features/work-queue/server";
 
 function makeItem(overrides: Partial<WorkQueueItem> = {}): WorkQueueItem {
   return {
@@ -50,5 +51,13 @@ describe("buildWorkQueueSummary", () => {
       expect.objectContaining({ key: "in_review", value: 1 }),
       expect.objectContaining({ key: "due_soon", value: 2 }),
     ]);
+  });
+});
+
+describe("matchesWorkQueueKinds", () => {
+  it("limits queue items to the requested kinds", () => {
+    expect(matchesWorkQueueKinds({ kind: "asset_follow_up" }, ["asset_follow_up"])).toBe(true);
+    expect(matchesWorkQueueKinds({ kind: "crm_follow_up" }, ["asset_follow_up"])).toBe(false);
+    expect(matchesWorkQueueKinds({ kind: "event_follow_up" }, ["asset_follow_up", "event_follow_up"])).toBe(true);
   });
 });

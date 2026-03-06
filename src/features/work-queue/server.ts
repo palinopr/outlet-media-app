@@ -4,6 +4,7 @@ import { buildWorkQueueSummary, type WorkQueueItem } from "./summary";
 
 interface GetWorkQueueOptions {
   clientSlug?: string | null;
+  kinds?: WorkQueueItem["kind"][];
   limit?: number;
   mode: "admin" | "client";
   scope?: ScopeFilter;
@@ -59,6 +60,14 @@ function scopeAllowsCampaign(campaignId: string, scope?: ScopeFilter) {
 function scopeAllowsEvent(eventId: string, scope?: ScopeFilter) {
   if (!scope?.allowedEventIds || scope.allowedEventIds.length === 0) return true;
   return scope.allowedEventIds.includes(eventId);
+}
+
+export function matchesWorkQueueKinds(
+  item: Pick<WorkQueueItem, "kind">,
+  kinds?: WorkQueueItem["kind"][] | null,
+) {
+  if (!kinds || kinds.length === 0) return true;
+  return kinds.includes(item.kind);
 }
 
 export async function getWorkQueue(options: GetWorkQueueOptions) {
@@ -265,7 +274,7 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
         updatedAt: String(row.updated_at),
       };
     }),
-  ];
+  ].filter((item) => matchesWorkQueueKinds(item, options.kinds));
 
   return buildWorkQueueSummary(items, { limit: options.limit });
 }

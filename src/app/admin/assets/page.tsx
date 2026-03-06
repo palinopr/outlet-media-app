@@ -1,11 +1,17 @@
 import Link from "next/link";
 import { Image as ImageIcon, Link2, Video } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
+import { ConversationsCenter } from "@/components/conversations/conversations-center";
+import { WorkQueueSection } from "@/components/workflow/work-queue-section";
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { buildAssetLibrarySummary } from "@/features/assets/summary";
 import { listAssetLibrary } from "@/features/assets/server";
+import { getConversationsCenter } from "@/features/conversations/server";
+import { getWorkQueue } from "@/features/work-queue/server";
 import { slugToLabel, timeAgo } from "@/lib/formatters";
 import { statusColor } from "@/features/assets/lib";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -18,21 +24,41 @@ export default async function AdminAssetsPage({ searchParams }: Props) {
   const { client } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
 
-  const [records, clientsRes] = await Promise.all([
+  const [assetRecords, conversations, workQueue, outcomes, clientsRes] = await Promise.all([
     listAssetLibrary(clientSlug, 72),
+    getConversationsCenter({
+      clientSlug,
+      kinds: ["asset"],
+      limit: 6,
+      mode: "admin",
+    }),
+    getWorkQueue({
+      clientSlug,
+      kinds: ["asset_follow_up"],
+      limit: 6,
+      mode: "admin",
+    }),
+    listAgentOutcomes({
+      audience: "all",
+      clientSlug,
+      contextType: "asset",
+      limit: 6,
+    }),
     supabaseAdmin
       ?.from("clients")
       .select("slug")
       .order("name", { ascending: true }),
   ]);
 
-  const summary = buildAssetLibrarySummary(records, 8);
-  const clients = ((clientsRes?.data ?? []) as { slug: string | null }[])
+  const summary = buildAssetLibrarySummary(assetRecords, 8);
+  const clients = (((clientsRes as { data?: { slug: string | null }[] } | null)?.data ?? []) as {
+    slug: string | null;
+  }[])
     .map((row) => row.slug)
     .filter((slug): slug is string => typeof slug === "string" && slug.length > 0);
 
-  const imageCount = records.filter((record) => record.asset.media_type === "image").length;
-  const videoCount = records.filter((record) => record.asset.media_type === "video").length;
+  const imageCount = assetRecords.filter((record) => record.asset.media_type === "image").length;
+  const videoCount = assetRecords.filter((record) => record.asset.media_type === "video").length;
   const linkedCount = summary.metrics.find((metric) => metric.key === "linked_assets")?.value ?? 0;
   const reviewCount = summary.metrics.find((metric) => metric.key === "needs_review")?.value ?? 0;
 
@@ -50,7 +76,7 @@ export default async function AdminAssetsPage({ searchParams }: Props) {
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
         <StatCard
           label="Total assets"
-          value={String(records.length)}
+          value={String(assetRecords.length)}
           icon={ImageIcon}
           accent="from-cyan-500/20 to-blue-500/20"
           iconColor="text-cyan-400"
@@ -89,7 +115,7 @@ export default async function AdminAssetsPage({ searchParams }: Props) {
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 pb-2">
           <p className="text-sm font-semibold">
             {clientSlug ? slugToLabel(clientSlug) : "All assets"}
-            <span className="ml-1.5 font-normal text-muted-foreground">({records.length})</span>
+            <span className="ml-1.5 font-normal text-muted-foreground">({assetRecords.length})</span>
           </p>
           {clients.length > 0 ? <ClientFilter clients={clients} /> : null}
         </div>
@@ -167,13 +193,13 @@ export default async function AdminAssetsPage({ searchParams }: Props) {
               </p>
             </div>
 
-            {records.length === 0 ? (
+            {assetRecords.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-[#e7e0d3] bg-[#faf8f5] px-4 py-6 text-sm text-[#9b9a97]">
                 No assets have been uploaded yet.
               </div>
             ) : (
               <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {records.map(({ asset, linkedCampaignCount, linkedCampaignNames }) => (
+                {assetRecords.map(({ asset, linkedCampaignCount, linkedCampaignNames }) => (
                   <Link
                     key={asset.id}
                     href={`/admin/assets/${asset.id}`}
@@ -244,6 +270,41 @@ export default async function AdminAssetsPage({ searchParams }: Props) {
           </section>
         </div>
       </Card>
+
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <WorkQueueSection
+          description="Creative next steps that still need review, routing, or production follow-through."
+          showClientSlug={!clientSlug}
+          summary={workQueue}
+          title="Asset work queue"
+          variant="admin"
+        />
+
+        <AgentOutcomesPanel
+          assetHrefPrefix="/admin/assets"
+          canCreateActionItems
+          campaignHrefPrefix="/admin/campaigns"
+          crmHrefPrefix="/admin/crm"
+          description="What the agents reviewed about creative, what they recommended, and whether human follow-through was created."
+          eventHrefPrefix="/admin/events"
+          outcomes={outcomes}
+          title="Asset agent follow-through"
+          variant="admin"
+        />
+      </div>
+
+      <ConversationsCenter
+        assetHrefPrefix="/admin/assets"
+        campaignHrefPrefix="/admin/campaigns"
+        crmHrefPrefix="/admin/crm"
+        description="Open creative discussions across assets, routed through the shared operating-system conversation layer."
+        eventHrefPrefix="/admin/events"
+        showClientSlug={!clientSlug}
+        summary={conversations.summary}
+        threads={conversations.threads}
+        title="Asset discussions"
+        variant="admin"
+      />
     </div>
   );
 }

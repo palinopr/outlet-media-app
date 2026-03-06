@@ -82,4 +82,36 @@ describe("matchesContext", () => {
 
     expect(result).toBe(false);
   });
+
+  it("keeps only asset-linked outcomes when the asset context is requested", () => {
+    const assetScoped = matchesContext(
+      request({
+        assetId: "asset_123",
+        assetName: "Poster v3",
+      }),
+      null,
+      null,
+      "asset",
+      null,
+      null,
+      null,
+      null,
+    );
+
+    const campaignOnly = matchesContext(
+      request({
+        campaignId: "cmp_123",
+      }),
+      null,
+      null,
+      "asset",
+      null,
+      null,
+      null,
+      null,
+    );
+
+    expect(assetScoped).toBe(true);
+    expect(campaignOnly).toBe(false);
+  });
 });
