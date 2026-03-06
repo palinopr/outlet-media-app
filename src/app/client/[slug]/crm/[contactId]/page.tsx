@@ -3,8 +3,10 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarClock, Flame, Share2, UserRound } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { CrmContactDetailCard } from "@/components/crm/crm-contact-detail-card";
+import { CrmFollowUpItemsPanel } from "@/components/crm/crm-follow-up-items-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmContactById } from "@/features/crm/server";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { listSystemEvents } from "@/features/system-events/server";
@@ -25,7 +27,7 @@ export default async function ClientCrmContactPage({ params }: Props) {
   });
   if (!contact) notFound();
 
-  const [events, agentOutcomes] = await Promise.all([
+  const [events, agentOutcomes, followUpItems] = await Promise.all([
     listSystemEvents({
       audience: "shared",
       clientSlug: slug,
@@ -38,6 +40,12 @@ export default async function ClientCrmContactPage({ params }: Props) {
       clientSlug: slug,
       crmContactId: contact.id,
       limit: 4,
+    }),
+    listCrmFollowUpItems({
+      audience: "shared",
+      clientSlug: slug,
+      contactId: contact.id,
+      limit: 24,
     }),
   ]);
 
@@ -99,12 +107,25 @@ export default async function ClientCrmContactPage({ params }: Props) {
             variant="client"
           />
 
+          <CrmFollowUpItemsPanel
+            canManage={false}
+            clientSlug={slug}
+            contactHrefPrefix={`/client/${slug}/crm`}
+            contactId={contact.id}
+            items={followUpItems}
+            title="CRM next steps"
+            description="Shared follow-up work attached to this relationship."
+            emptyState="No shared CRM follow-up items are active for this contact yet."
+            variant="client"
+          />
+
           <AgentOutcomesPanel
             outcomes={agentOutcomes}
             title="CRM follow-through"
             description="Shared agent recommendations tied to this relationship."
             emptyState="No shared CRM follow-through is available for this contact yet."
             variant="client"
+            crmHrefPrefix={`/client/${slug}/crm`}
           />
         </div>
 

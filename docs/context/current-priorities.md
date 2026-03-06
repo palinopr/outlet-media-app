@@ -33,6 +33,7 @@ The short-term focus is:
 - Treat `crm_contacts` as the tenant-aware CRM backbone for the in-product CRM app instead of hiding CRM state in unrelated lead tables or ad hoc notes.
 - Treat CRM contact detail pages as first-class routes so search, activity, dashboards, and CRM lists can all deep-link into the same record.
 - Queue bounded CRM follow-up triage when a contact becomes urgent or due soon, and surface that follow-through back on the CRM record instead of leaving it hidden in the agent runtime.
+- Treat CRM follow-up items as first-class CRM workflow objects so agent recommendations and human next steps become visible work, not just notes or passive output.
 
 ## Immediate Build Bias
 

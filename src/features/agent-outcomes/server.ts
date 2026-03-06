@@ -20,6 +20,7 @@ interface ListAgentOutcomesOptions {
 
 export interface AgentOutcomeContext {
   linkedActionItemId: string | null;
+  linkedCrmFollowUpItemId: string | null;
   request: AgentOutcomeRequestRecord;
   task: AgentOutcomeTaskRecord | null;
 }
@@ -117,7 +118,11 @@ export async function listAgentOutcomes(
   if (requests.length === 0) return [];
 
   const taskIds = [...new Set(requests.map((request) => request.taskId))];
-  const [{ data: taskRows, error: tasksError }, { data: linkedRows, error: linkedError }] =
+  const [
+    { data: taskRows, error: tasksError },
+    { data: linkedRows, error: linkedError },
+    { data: linkedCrmRows, error: linkedCrmError },
+  ] =
     await Promise.all([
       supabaseAdmin
         .from("agent_tasks")
@@ -127,6 +132,11 @@ export async function listAgentOutcomes(
         .in("id", taskIds),
       supabaseAdmin
         .from("campaign_action_items")
+        .select("id, source_entity_id")
+        .eq("source_entity_type", "agent_task")
+        .in("source_entity_id", taskIds),
+      supabaseAdmin
+        .from("crm_follow_up_items" as never)
         .select("id, source_entity_id")
         .eq("source_entity_type", "agent_task")
         .in("source_entity_id", taskIds),
@@ -143,6 +153,10 @@ export async function listAgentOutcomes(
     console.error("[agent-outcomes] linked action lookup failed:", linkedError.message);
   }
 
+  if (linkedCrmError) {
+    console.error("[agent-outcomes] linked CRM follow-up lookup failed:", linkedCrmError.message);
+  }
+
   const tasks = new Map<string, AgentOutcomeTaskRecord>();
   for (const row of taskRows ?? []) {
     tasks.set(row.id as string, mapTaskRow(row as Record<string, unknown>));
@@ -157,12 +171,22 @@ export async function listAgentOutcomes(
     }
   }
 
+  const linkedCrmFollowUpItems = new Map<string, string>();
+  for (const row of (linkedCrmRows ?? []) as Record<string, unknown>[]) {
+    const sourceEntityId = row.source_entity_id as string | null;
+    const itemId = row.id as string | null;
+    if (sourceEntityId && itemId) {
+      linkedCrmFollowUpItems.set(sourceEntityId, itemId);
+    }
+  }
+
   return requests
     .map((request) =>
       buildAgentOutcomeView(
         request,
         tasks.get(request.taskId),
         linkedActionItems.get(request.taskId) ?? null,
+        linkedCrmFollowUpItems.get(request.taskId) ?? null,
       ),
     )
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -203,7 +227,11 @@ export async function getAgentOutcomeContext(taskId: string): Promise<AgentOutco
 
   if (!requestRow) return null;
 
-  const [{ data: taskRow, error: taskError }, { data: linkedRow, error: linkedError }] =
+  const [
+    { data: taskRow, error: taskError },
+    { data: linkedRow, error: linkedError },
+    { data: linkedCrmRow, error: linkedCrmError },
+  ] =
     await Promise.all([
       supabaseAdmin
         .from("agent_tasks")
@@ -220,6 +248,14 @@ export async function getAgentOutcomeContext(taskId: string): Promise<AgentOutco
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle(),
+      supabaseAdmin
+        .from("crm_follow_up_items" as never)
+        .select("id")
+        .eq("source_entity_type", "agent_task")
+        .eq("source_entity_id", taskId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
 
   if (taskError) {
@@ -230,8 +266,13 @@ export async function getAgentOutcomeContext(taskId: string): Promise<AgentOutco
     console.error("[agent-outcomes] linked action lookup failed:", linkedError.message);
   }
 
+  if (linkedCrmError) {
+    console.error("[agent-outcomes] linked CRM follow-up lookup failed:", linkedCrmError.message);
+  }
+
   return {
     linkedActionItemId: (linkedRow?.id as string | null) ?? null,
+    linkedCrmFollowUpItemId: ((linkedCrmRow as Record<string, unknown> | null)?.id as string | null) ?? null,
     request: mapRequestRow(requestRow as Record<string, unknown>),
     task: taskRow ? mapTaskRow(taskRow as Record<string, unknown>) : null,
   };

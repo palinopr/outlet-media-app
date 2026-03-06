@@ -106,12 +106,15 @@ describe("agent outcome summary helpers", () => {
         visibility: "shared",
       },
       null,
+      null,
+      "crm_follow_up_123",
     );
 
     expect(outcome).toMatchObject({
       campaignId: null,
       crmContactId: "contact_123",
       crmContactName: "Mia Rivera",
+      linkedCrmFollowUpItemId: "crm_follow_up_123",
       status: "pending",
       taskId: "web_task_3",
     });

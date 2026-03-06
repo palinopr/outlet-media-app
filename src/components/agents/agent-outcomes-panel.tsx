@@ -181,14 +181,19 @@ export function AgentOutcomesPanel({
         <div className="space-y-3">
           {outcomes.map((outcome) => {
             const StatusIcon = statusIcon(outcome.status);
-            const linkedActionItemId =
-              createdActionItems[outcome.taskId] ?? outcome.linkedActionItemId ?? null;
+            const linkedItemId =
+              createdActionItems[outcome.taskId] ??
+              outcome.linkedActionItemId ??
+              outcome.linkedCrmFollowUpItemId ??
+              null;
             const canCreateAction =
               canCreateActionItems &&
-              !linkedActionItemId &&
-              !!outcome.campaignId &&
+              !linkedItemId &&
+              (!!outcome.campaignId || !!outcome.crmContactId) &&
               outcome.status !== "pending" &&
               outcome.status !== "running";
+            const createLabel = outcome.crmContactId ? "Create follow-up" : "Create action";
+            const createdLabel = outcome.crmContactId ? "Follow-up created" : "Action created";
             return (
               <div key={outcome.taskId} className={tone.item}>
                 <div className="flex items-start gap-3">
@@ -276,9 +281,9 @@ export function AgentOutcomesPanel({
                       </div>
                     ) : null}
 
-                    {canCreateAction || linkedActionItemId || errorByTaskId[outcome.taskId] ? (
+                    {canCreateAction || linkedItemId || errorByTaskId[outcome.taskId] ? (
                       <div className="mt-3 flex flex-wrap items-center gap-2">
-                        {linkedActionItemId ? (
+                        {linkedItemId ? (
                           <span
                             className={cn(
                               "inline-flex items-center rounded-full border px-2 py-1 text-xs font-medium",
@@ -287,7 +292,7 @@ export function AgentOutcomesPanel({
                                 : "border-emerald-200 bg-emerald-50 text-emerald-700",
                             )}
                           >
-                            Action created
+                            {createdLabel}
                           </span>
                         ) : null}
 
@@ -305,7 +310,7 @@ export function AgentOutcomesPanel({
                             disabled={creatingTaskId === outcome.taskId}
                             onClick={() => void createActionItem(outcome.taskId)}
                           >
-                            {creatingTaskId === outcome.taskId ? "Creating..." : "Create action"}
+                            {creatingTaskId === outcome.taskId ? "Creating..." : createLabel}
                           </Button>
                         ) : null}
 

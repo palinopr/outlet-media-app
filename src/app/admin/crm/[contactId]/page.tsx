@@ -5,8 +5,10 @@ import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { CrmContactDetailCard } from "@/components/crm/crm-contact-detail-card";
+import { CrmFollowUpItemsPanel } from "@/components/crm/crm-follow-up-items-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmContactById } from "@/features/crm/server";
 import { listSystemEvents } from "@/features/system-events/server";
 import { slugToLabel } from "@/lib/formatters";
@@ -20,7 +22,7 @@ export default async function AdminCrmContactPage({ params }: Props) {
   const contact = await getCrmContactById(contactId, { audience: "all" });
   if (!contact) notFound();
 
-  const [events, agentOutcomes] = await Promise.all([
+  const [events, agentOutcomes, followUpItems] = await Promise.all([
     listSystemEvents({
       audience: "all",
       clientSlug: contact.clientSlug,
@@ -33,6 +35,12 @@ export default async function AdminCrmContactPage({ params }: Props) {
       clientSlug: contact.clientSlug,
       crmContactId: contact.id,
       limit: 4,
+    }),
+    listCrmFollowUpItems({
+      audience: "all",
+      clientSlug: contact.clientSlug,
+      contactId: contact.id,
+      limit: 24,
     }),
   ]);
 
@@ -108,12 +116,26 @@ export default async function AdminCrmContactPage({ params }: Props) {
             variant="admin"
           />
 
+          <CrmFollowUpItemsPanel
+            canManage
+            clientSlug={contact.clientSlug}
+            contactHrefPrefix="/admin/crm"
+            contactId={contact.id}
+            items={followUpItems}
+            title="CRM next steps"
+            description="First-class follow-up work attached to this CRM relationship."
+            emptyState="No CRM follow-up items are active for this contact yet."
+            variant="admin"
+          />
+
           <AgentOutcomesPanel
+            canCreateActionItems
             outcomes={agentOutcomes}
             title="CRM follow-through"
             description="Bounded agent triage and recommendations tied directly to this CRM contact."
             emptyState="No CRM follow-through has been queued for this contact yet."
             variant="admin"
+            crmHrefPrefix="/admin/crm"
           />
         </div>
 

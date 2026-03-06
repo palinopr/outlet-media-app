@@ -4,6 +4,7 @@ import { getCurrentActor } from "@/features/system-events/server";
 import { getAgentOutcomeContext } from "@/features/agent-outcomes/server";
 import { jsonToText } from "@/features/agent-outcomes/summary";
 import { createSystemCampaignActionItem } from "@/features/campaign-action-items/server";
+import { createSystemCrmFollowUpItem } from "@/features/crm-follow-up-items/server";
 
 function compactText(value: string, limit = 240) {
   const normalized = value.trim().replace(/\s+/g, " ");
@@ -33,9 +34,14 @@ function agentLabel(agentId: string) {
 
 function buildActionItemTitle(context: NonNullable<Awaited<ReturnType<typeof getAgentOutcomeContext>>>) {
   const agentName = agentLabel(context.task?.toAgent ?? "assistant");
+  const crmContactName = metadataString(context.request.metadata, "crmContactName");
 
   if (context.task?.status === "failed") {
     return `Investigate ${agentName} outcome`;
+  }
+
+  if (crmContactName) {
+    return `Follow up with ${crmContactName}`;
   }
 
   if (context.task?.toAgent === "meta-ads") {
@@ -77,6 +83,9 @@ export async function POST(request: NextRequest) {
   if (context.linkedActionItemId) {
     return NextResponse.json({ itemId: context.linkedActionItemId }, { status: 200 });
   }
+  if (context.linkedCrmFollowUpItemId) {
+    return NextResponse.json({ itemId: context.linkedCrmFollowUpItemId }, { status: 200 });
+  }
 
   if (!context.task) {
     return apiError("Agent outcome is not ready yet", 409);
@@ -87,28 +96,48 @@ export async function POST(request: NextRequest) {
   }
 
   const campaignId = metadataString(context.request.metadata, "campaignId");
+  const crmContactId = metadataString(context.request.metadata, "crmContactId");
   const clientSlug =
     context.request.clientSlug ?? metadataString(context.request.metadata, "clientSlug");
 
-  if (!campaignId || !clientSlug) {
-    return apiError("Agent outcome is missing campaign context", 400);
-  }
+  if (!clientSlug) return apiError("Agent outcome is missing client context", 400);
 
   const actor = await getCurrentActor();
-  const item = await createSystemCampaignActionItem({
-    actorId: actor.actorId,
-    actorName: actor.actorName,
-    actorType: actor.actorType,
-    campaignId,
-    clientSlug,
-    description: buildActionItemDescription(context),
-    priority: context.task.status === "failed" ? "high" : "medium",
-    sourceEntityId: taskId,
-    sourceEntityType: "agent_task",
-    status: "todo",
-    title: buildActionItemTitle(context),
-    visibility: context.request.visibility,
-  });
+  const itemTitle = buildActionItemTitle(context);
+  const itemDescription = buildActionItemDescription(context);
+  const itemPriority = context.task.status === "failed" ? "high" : "medium";
+
+  const item = campaignId
+    ? await createSystemCampaignActionItem({
+        actorId: actor.actorId,
+        actorName: actor.actorName,
+        actorType: actor.actorType,
+        campaignId,
+        clientSlug,
+        description: itemDescription,
+        priority: itemPriority,
+        sourceEntityId: taskId,
+        sourceEntityType: "agent_task",
+        status: "todo",
+        title: itemTitle,
+        visibility: context.request.visibility,
+      })
+    : crmContactId
+      ? await createSystemCrmFollowUpItem({
+          actorId: actor.actorId,
+          actorName: actor.actorName,
+          actorType: actor.actorType,
+          clientSlug,
+          contactId: crmContactId,
+          description: itemDescription,
+          priority: itemPriority,
+          sourceEntityId: taskId,
+          sourceEntityType: "agent_task",
+          status: "todo",
+          title: itemTitle,
+          visibility: context.request.visibility,
+        })
+      : null;
 
   if (!item) return apiError("Failed to create action item", 500);
 

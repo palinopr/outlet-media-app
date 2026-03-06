@@ -36,9 +36,11 @@ export interface AgentOutcomeView {
   completedAt: string | null;
   createdAt: string;
   crmContactId: string | null;
+  crmFollowUpItemId: string | null;
   crmContactName: string | null;
   errorText: string | null;
   linkedActionItemId: string | null;
+  linkedCrmFollowUpItemId: string | null;
   requestDetail: string | null;
   requestSummary: string;
   resultText: string | null;
@@ -75,6 +77,7 @@ export function buildAgentOutcomeView(
   request: AgentOutcomeRequestRecord,
   task?: AgentOutcomeTaskRecord | null,
   linkedActionItemId?: string | null,
+  linkedCrmFollowUpItemId?: string | null,
 ): AgentOutcomeView {
   return {
     action: task?.action ?? "agent-task",
@@ -85,9 +88,11 @@ export function buildAgentOutcomeView(
     completedAt: task?.completedAt ?? null,
     createdAt: task?.createdAt ?? request.createdAt,
     crmContactId: metadataString(request.metadata, "crmContactId"),
+    crmFollowUpItemId: metadataString(request.metadata, "crmFollowUpItemId"),
     crmContactName: metadataString(request.metadata, "crmContactName"),
     errorText: task?.error ?? null,
     linkedActionItemId: linkedActionItemId ?? null,
+    linkedCrmFollowUpItemId: linkedCrmFollowUpItemId ?? null,
     requestDetail: request.detail,
     requestSummary: request.summary,
     resultText: task ? jsonToText(task.result) : null,

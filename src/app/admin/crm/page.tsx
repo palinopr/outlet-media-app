@@ -5,7 +5,9 @@ import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { StatCard } from "@/components/admin/stat-card";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { CrmContactsPanel } from "@/components/crm/crm-contacts-panel";
+import { CrmFollowUpItemsPanel } from "@/components/crm/crm-follow-up-items-panel";
 import { CrmCreateContactForm } from "@/components/crm/crm-create-contact-form";
+import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmOverview } from "@/features/crm/server";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { slugToLabel } from "@/lib/formatters";
@@ -21,19 +23,27 @@ export default async function AdminCrmPage({ searchParams }: Props) {
       ? resolvedSearchParams.client
       : null;
 
-  const crm = await getCrmOverview({
-    audience: "all",
-    clientSlug: selectedClient,
-  });
-  const agentOutcomes = await listAgentOutcomes({
-    audience: "all",
-    clientSlug: selectedClient,
-    contextType: "crm_contact",
-    limit: 4,
-  });
+  const [crm, agentOutcomes, followUpItems] = await Promise.all([
+    getCrmOverview({
+      audience: "all",
+      clientSlug: selectedClient,
+    }),
+    listAgentOutcomes({
+      audience: "all",
+      clientSlug: selectedClient,
+      contextType: "crm_contact",
+      limit: 4,
+    }),
+    listCrmFollowUpItems({
+      audience: "all",
+      clientSlug: selectedClient,
+      limit: 20,
+    }),
+  ]);
 
   const contactsForAttention =
     crm.upcomingFollowUps.length > 0 ? crm.upcomingFollowUps : crm.recentContacts;
+  const activeFollowUpItems = followUpItems.filter((item) => item.status !== "done");
 
   return (
     <div className="space-y-6">
@@ -102,6 +112,7 @@ export default async function AdminCrmPage({ searchParams }: Props) {
           />
 
           <AgentOutcomesPanel
+            canCreateActionItems
             outcomes={agentOutcomes}
             title="CRM follow-through"
             description="Recent bounded agent triage and recommendations for CRM contacts that need attention."
@@ -124,6 +135,18 @@ export default async function AdminCrmPage({ searchParams }: Props) {
             }
             emptyState="No follow-ups or contacts are available yet."
             showClientSlug={!selectedClient}
+            variant="admin"
+          />
+
+          <CrmFollowUpItemsPanel
+            canManage
+            clientSlug={selectedClient ?? ""}
+            contactHrefPrefix="/admin/crm"
+            items={activeFollowUpItems}
+            title="CRM next steps"
+            description="Actionable CRM follow-up work attached directly to contact records."
+            emptyState="No CRM follow-up items are active yet."
+            showContactName
             variant="admin"
           />
 

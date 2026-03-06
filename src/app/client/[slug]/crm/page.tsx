@@ -3,7 +3,9 @@ import { ArrowLeft, CalendarClock, Flame, Share2, Users } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { CrmContactsPanel } from "@/components/crm/crm-contacts-panel";
+import { CrmFollowUpItemsPanel } from "@/components/crm/crm-follow-up-items-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmOverview } from "@/features/crm/server";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { ClientPortalFooter } from "../components/client-portal-footer";
@@ -17,19 +19,27 @@ export default async function ClientCrmPage({ params }: Props) {
   const { slug } = await params;
   await requireClientAccess(slug, "crm");
 
-  const crm = await getCrmOverview({
-    audience: "shared",
-    clientSlug: slug,
-  });
-  const agentOutcomes = await listAgentOutcomes({
-    audience: "shared",
-    clientSlug: slug,
-    contextType: "crm_contact",
-    limit: 4,
-  });
+  const [crm, agentOutcomes, followUpItems] = await Promise.all([
+    getCrmOverview({
+      audience: "shared",
+      clientSlug: slug,
+    }),
+    listAgentOutcomes({
+      audience: "shared",
+      clientSlug: slug,
+      contextType: "crm_contact",
+      limit: 4,
+    }),
+    listCrmFollowUpItems({
+      audience: "shared",
+      clientSlug: slug,
+      limit: 20,
+    }),
+  ]);
 
   const contactsForAttention =
     crm.upcomingFollowUps.length > 0 ? crm.upcomingFollowUps : crm.recentContacts;
+  const activeFollowUpItems = followUpItems.filter((item) => item.status !== "done");
 
   return (
     <div className="space-y-6">
@@ -98,6 +108,18 @@ export default async function ClientCrmPage({ params }: Props) {
             title="Shared CRM contacts"
             description="Contacts, owners, and notes that the Outlet team has chosen to share with you."
             emptyState="No CRM contacts have been shared yet."
+            variant="client"
+          />
+
+          <CrmFollowUpItemsPanel
+            canManage={false}
+            clientSlug={slug}
+            contactHrefPrefix={`/client/${slug}/crm`}
+            items={activeFollowUpItems}
+            title="CRM next steps"
+            description="Shared CRM follow-up work so you can see the next relationship steps clearly."
+            emptyState="No shared CRM follow-up items are active yet."
+            showContactName
             variant="client"
           />
         </div>
