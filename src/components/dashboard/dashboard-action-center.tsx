@@ -12,6 +12,9 @@ interface DashboardActionCenterProps {
   crmHrefPrefix?: string;
   description?: string;
   eventHrefPrefix?: string;
+  showApprovals?: boolean;
+  showCrmFollowUps?: boolean;
+  showDiscussions?: boolean;
   variant: "admin" | "client";
 }
 
@@ -51,13 +54,24 @@ export function DashboardActionCenterSection({
   crmHrefPrefix,
   description = "The next approvals and conversations that need human attention.",
   eventHrefPrefix,
+  showApprovals = true,
+  showCrmFollowUps = true,
+  showDiscussions = true,
   variant,
 }: DashboardActionCenterProps) {
   const tone = panelTone(variant);
   const isClient = variant === "client";
+  const visibleSections = [showApprovals, showCrmFollowUps, showDiscussions].filter(Boolean).length;
+  const sectionGridClass =
+    visibleSections <= 1
+      ? "grid gap-4"
+      : visibleSections === 2
+        ? "grid gap-4 xl:grid-cols-2"
+        : "grid gap-4 xl:grid-cols-3";
 
   return (
-    <section className="grid gap-4 xl:grid-cols-3">
+    <section className={sectionGridClass}>
+      {showApprovals ? (
       <div className={tone.body}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -135,7 +149,9 @@ export function DashboardActionCenterSection({
           )}
         </div>
       </div>
+      ) : null}
 
+      {showCrmFollowUps ? (
       <div className={tone.body}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -202,7 +218,9 @@ export function DashboardActionCenterSection({
           )}
         </div>
       </div>
+      ) : null}
 
+      {showDiscussions ? (
       <div className={tone.body}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -304,6 +322,7 @@ export function DashboardActionCenterSection({
           )}
         </div>
       </div>
+      ) : null}
     </section>
   );
 }

@@ -39,6 +39,8 @@ The short-term focus is:
 - Keep asset review pressure visible on the regular dashboards too, so summary-first users can spot creative bottlenecks without opening the full asset app first.
 - Derive dashboard workflow summaries from the same campaign-native approvals, action items, comments, and `system_events` backbone instead of introducing separate summary-only state.
 - Make dashboard-first users actionable by surfacing pending approvals and unresolved campaign discussion directly on the dashboard.
+- Give clients a dedicated updates surface, not just dashboards, so they can follow approvals, discussion, agent follow-through, and shared activity without hunting across tabs.
+- Filter shared client activity by assigned campaign/event scope where possible, so limited-scope members get a coherent feed without seeing unrelated workflow context.
 - Keep cross-app activity links entity-aware, so shared activity opens the correct campaign, asset, CRM contact, or event detail page instead of dropping users into the wrong surface.
 - Prefer direct workflow controls on action/follow-up panels so operators can move work between statuses without opening a form for every change.
 - Surface agent follow-through inside campaigns and dashboards so users can see what the system asked agents to do and what came back.

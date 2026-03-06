@@ -4,7 +4,7 @@ import { PageList } from "@/components/workspace/page-list";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { listApprovalRequests } from "@/features/approvals/server";
-import { listSystemEvents } from "@/features/system-events/server";
+import { filterSystemEventsByScope, listSystemEvents } from "@/features/system-events/server";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -12,8 +12,8 @@ interface Props {
 
 export default async function ClientWorkspacePage({ params }: Props) {
   const { slug } = await params;
-  await requireClientAccess(slug, "workspace");
-  const [{ pages }, events, approvals] = await Promise.all([
+  const { scope } = await requireClientAccess(slug, "workspace");
+  const [{ pages }, rawEvents, approvals] = await Promise.all([
     getWorkspacePages(slug),
     listSystemEvents({ audience: "shared", clientSlug: slug, limit: 12 }),
     listApprovalRequests({
@@ -23,6 +23,10 @@ export default async function ClientWorkspacePage({ params }: Props) {
       limit: 8,
     }),
   ]);
+  const events = filterSystemEventsByScope(rawEvents, {
+    allowedCampaignIds: scope?.allowedCampaignIds ?? null,
+    allowedEventIds: scope?.allowedEventIds ?? null,
+  });
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 sm:px-8">

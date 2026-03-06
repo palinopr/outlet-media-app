@@ -1,4 +1,5 @@
 import {
+  BellRing,
   LayoutDashboard,
   Megaphone,
   Ticket,
@@ -21,6 +22,7 @@ export interface NavLink {
 
 const NAV_LINKS: Omit<NavLink, "href">[] = [
   { label: "Overview", icon: LayoutDashboard, matchExact: true },
+  { label: "Updates", icon: BellRing },
   { label: "Campaigns", icon: Megaphone, requiredService: "meta_ads" },
   { label: "Events", icon: Ticket, requiredService: ["ticketmaster", "eata"] },
   { label: "Reports", icon: BarChart3, requiredService: "meta_ads" },

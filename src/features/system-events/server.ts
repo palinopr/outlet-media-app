@@ -100,6 +100,11 @@ interface ListSystemEventsOptions {
   limit?: number;
 }
 
+interface SystemEventScopeFilter {
+  allowedCampaignIds?: string[] | null;
+  allowedEventIds?: string[] | null;
+}
+
 interface ListCampaignSystemEventsOptions {
   audience?: "all" | SystemEventVisibility;
   clientSlug: string;
@@ -133,6 +138,11 @@ function eventMatchesCampaign(event: SystemEvent, campaignId: string) {
   return event.metadata.campaignId === campaignId;
 }
 
+function systemEventCampaignId(event: SystemEvent) {
+  if (event.entityType === "campaign" && event.entityId) return event.entityId;
+  return typeof event.metadata.campaignId === "string" ? event.metadata.campaignId : null;
+}
+
 function eventMatchesAsset(event: SystemEvent, assetId: string) {
   if (event.entityType === "asset" && event.entityId === assetId) return true;
   return event.metadata.assetId === assetId;
@@ -141,6 +151,11 @@ function eventMatchesAsset(event: SystemEvent, assetId: string) {
 function eventMatchesEvent(event: SystemEvent, eventId: string) {
   if (event.entityType === "event" && event.entityId === eventId) return true;
   return event.metadata.eventId === eventId;
+}
+
+function systemEventEventId(event: SystemEvent) {
+  if (event.entityType === "event" && event.entityId) return event.entityId;
+  return typeof event.metadata.eventId === "string" ? event.metadata.eventId : null;
 }
 
 export function isCrmSystemEvent(event: SystemEvent) {
@@ -155,6 +170,32 @@ export function isCrmSystemEvent(event: SystemEvent) {
 export function matchesCrmContactSystemEvent(event: SystemEvent, contactId: string) {
   if (event.entityType === "crm_contact" && event.entityId === contactId) return true;
   return event.metadata.crmContactId === contactId;
+}
+
+export function filterSystemEventsByScope(
+  events: SystemEvent[],
+  scope: SystemEventScopeFilter | null | undefined,
+) {
+  const campaignIds =
+    scope?.allowedCampaignIds && scope.allowedCampaignIds.length > 0
+      ? new Set(scope.allowedCampaignIds)
+      : null;
+  const eventIds =
+    scope?.allowedEventIds && scope.allowedEventIds.length > 0
+      ? new Set(scope.allowedEventIds)
+      : null;
+
+  if (!campaignIds && !eventIds) return events;
+
+  return events.filter((event) => {
+    const campaignId = systemEventCampaignId(event);
+    const eventId = systemEventEventId(event);
+
+    if (!campaignId && !eventId) return true;
+    if (campaignId && campaignIds?.has(campaignId)) return true;
+    if (eventId && eventIds?.has(eventId)) return true;
+    return false;
+  });
 }
 
 function toActorName(user: Awaited<ReturnType<typeof currentUser>>): string | null {
