@@ -8,10 +8,14 @@ import { useComboboxInput } from "@platejs/combobox/react";
 import { MentionPlugin } from "@platejs/mention/react";
 import type { MentionUser } from "@/lib/workspace-types";
 
+interface MentionInputElementProps extends PlateElementProps<TComboboxInputElement> {
+  clientSlug?: string;
+}
+
 export function MentionInputElement(
-  props: PlateElementProps<TComboboxInputElement>
+  props: MentionInputElementProps,
 ) {
-  const { children, element, ...rest } = props;
+  const { children, clientSlug, element, ...rest } = props;
   const editor = useEditorRef();
   const inputRef = useRef<HTMLSpanElement>(null);
   const [users, setUsers] = useState<MentionUser[]>([]);
@@ -33,18 +37,20 @@ export function MentionInputElement(
       return;
     }
     try {
-      const res = await fetch(
-        `/api/workspace/mentions?q=${encodeURIComponent(q)}`
-      );
+      const params = new URLSearchParams({ q });
+      if (clientSlug) params.set("client_slug", clientSlug);
+      const res = await fetch(`/api/workspace/mentions?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setUsers(data.users ?? []);
         setSelectedIndex(0);
+      } else {
+        setUsers([]);
       }
     } catch {
       setUsers([]);
     }
-  }, []);
+  }, [clientSlug]);
 
   useEffect(() => {
     const timer = setTimeout(() => fetchUsers(query), 200);

@@ -71,7 +71,7 @@ const DEFAULT_VALUE: Value = [
   { type: "p", children: [{ text: "" }] },
 ];
 
-export function useCreateEditor(initialContent?: unknown) {
+export function useCreateEditor(initialContent?: unknown, clientSlug?: string) {
   const value = Array.isArray(initialContent) && initialContent.length > 0
     ? (initialContent as Value)
     : DEFAULT_VALUE;
@@ -100,7 +100,9 @@ export function useCreateEditor(initialContent?: unknown) {
           triggerPreviousCharPattern: /^$|^[\s"']$/,
         },
       }).withComponent(MentionElement),
-      MentionInputPlugin.withComponent(MentionInputElement),
+      MentionInputPlugin.withComponent((props) => (
+        <MentionInputElement {...props} clientSlug={clientSlug} />
+      )),
       // Indent + Lists
       IndentPlugin.configure({
         inject: {

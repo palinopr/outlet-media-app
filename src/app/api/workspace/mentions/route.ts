@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { authGuard, apiError } from "@/lib/api-helpers";
-import { clerkClient } from "@clerk/nextjs/server";
+import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { MentionUser } from "@/lib/workspace-types";
 
 export async function GET(request: NextRequest) {
-  const { error } = await authGuard();
+  const { userId, error } = await authGuard();
   if (error) return error;
 
   const q = request.nextUrl.searchParams.get("q") ?? "";
@@ -15,10 +15,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ users: [] });
   }
 
-  const clerk = await clerkClient();
-  const { data: clerkUsers } = await clerk.users.getUserList({ query: q, limit: 20 });
+  const caller = await currentUser();
+  const callerRole = (caller?.publicMetadata as { role?: string } | null)?.role;
+  const isAdmin = callerRole === "admin";
 
-  if (!clientSlug || !supabaseAdmin) {
+  if (isAdmin && (!clientSlug || clientSlug === "admin" || !supabaseAdmin)) {
+    const clerk = await clerkClient();
+    const { data: clerkUsers } = await clerk.users.getUserList({ query: q, limit: 20 });
     const users: MentionUser[] = clerkUsers.map((u) => ({
       id: u.id,
       name: [u.firstName, u.lastName].filter(Boolean).join(" ") || u.username || "Unknown",
@@ -28,7 +31,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ users });
   }
 
-  // Filter to users who are members of this client
+  if (!clientSlug || !supabaseAdmin) {
+    return apiError("Client scope required", 403);
+  }
+
   const { data: client } = await supabaseAdmin
     .from("clients")
     .select("id")
@@ -39,6 +45,21 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ users: [] });
   }
 
+  if (!isAdmin) {
+    const { data: membership } = await supabaseAdmin
+      .from("client_members")
+      .select("id")
+      .eq("client_id", client.id)
+      .eq("clerk_user_id", userId)
+      .maybeSingle();
+
+    if (!membership) {
+      return apiError("Forbidden", 403);
+    }
+  }
+
+  const clerk = await clerkClient();
+  const { data: clerkUsers } = await clerk.users.getUserList({ query: q, limit: 20 });
   const { data: members } = await supabaseAdmin
     .from("client_members")
     .select("clerk_user_id")

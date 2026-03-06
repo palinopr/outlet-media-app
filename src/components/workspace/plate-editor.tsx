@@ -7,13 +7,14 @@ import { useCreateEditor } from "./editor-kit";
 import { EditorToolbar } from "./editor/toolbar";
 
 interface PlateEditorProps {
+  clientSlug?: string;
   pageId: string;
   initialContent: unknown;
   onSave?: (content: unknown) => void;
 }
 
-export function PlateEditor({ pageId, initialContent, onSave }: PlateEditorProps) {
-  const editor = useCreateEditor(initialContent);
+export function PlateEditor({ clientSlug, pageId, initialContent, onSave }: PlateEditorProps) {
+  const editor = useCreateEditor(initialContent, clientSlug);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "idle">("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 

@@ -11,11 +11,12 @@ import type { WorkspacePage } from "@/lib/workspace-types";
 import { timeAgo } from "@/lib/formatters";
 
 interface PageViewClientProps {
+  clientSlug?: string;
   page: WorkspacePage;
   currentUserId: string;
 }
 
-export function PageViewClient({ page, currentUserId }: PageViewClientProps) {
+export function PageViewClient({ page, currentUserId, clientSlug }: PageViewClientProps) {
   const [commentsOpen, setCommentsOpen] = useState(false);
 
   return (
@@ -60,7 +61,7 @@ export function PageViewClient({ page, currentUserId }: PageViewClientProps) {
                 </div>
               </div>
 
-              <PlateEditor pageId={page.id} initialContent={page.content} />
+              <PlateEditor clientSlug={clientSlug} pageId={page.id} initialContent={page.content} />
             </div>
           </div>
         </div>

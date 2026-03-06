@@ -14,5 +14,5 @@ export default async function ClientWorkspacePageView({ params }: Props) {
   const page = await getWorkspacePage(pageId, slug);
   if (!page) notFound();
 
-  return <PageViewClient page={page} currentUserId={userId} />;
+  return <PageViewClient page={page} currentUserId={userId} clientSlug={slug} />;
 }

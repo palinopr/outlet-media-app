@@ -13,5 +13,5 @@ export default async function WorkspacePageView({ params }: Props) {
 
   if (!page) notFound();
 
-  return <PageViewClient page={page} currentUserId={userId ?? ""} />;
+  return <PageViewClient page={page} currentUserId={userId ?? ""} clientSlug="admin" />;
 }

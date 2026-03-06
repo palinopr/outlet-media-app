@@ -31,6 +31,8 @@ export function MentionCombobox({ query, clientSlug, onSelect, position }: Menti
         const data = await res.json();
         setUsers(data.users ?? []);
         setSelectedIndex(0);
+      } else {
+        setUsers([]);
       }
     } catch {
       setUsers([]);
