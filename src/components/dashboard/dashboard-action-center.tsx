@@ -194,61 +194,74 @@ export function DashboardActionCenterSection({
               Recent conversation
             </h2>
             <p className={cn("mt-1 text-sm", tone.muted)}>
-              Open campaign threads that still need a response or follow-up.
+              Open campaign and CRM threads that still need a response or follow-up.
             </p>
           </div>
         </div>
 
         <div className="space-y-3">
           {actionCenter.discussions.length === 0 ? (
-            <div className={emptyClass(variant)}>No unresolved campaign discussions right now.</div>
+            <div className={emptyClass(variant)}>No unresolved campaign or CRM discussions right now.</div>
           ) : (
-            actionCenter.discussions.map((discussion) => (
-              <div key={discussion.id} className={tone.item}>
-                <div className="flex items-start gap-3">
-                  <div
-                    className={cn(
-                      "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl",
-                      isClient ? "bg-white/[0.08] text-white/80" : "bg-white text-[#6f6a63]",
-                    )}
-                  >
-                    <MessageSquareMore className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className={cn("flex flex-wrap items-center gap-2 text-xs", tone.muted)}>
-                      <span>{discussion.authorName ?? "Team member"}</span>
-                      <span>&middot;</span>
-                      <span>{timeAgo(discussion.createdAt)}</span>
-                      {!isClient ? (
-                        <>
-                          <span>&middot;</span>
-                          <span>{discussion.clientSlug}</span>
-                        </>
-                      ) : null}
+            actionCenter.discussions.map((discussion) => {
+              const href =
+                discussion.kind === "campaign"
+                  ? `${campaignHrefPrefix}/${discussion.targetId}`
+                  : crmHrefPrefix
+                    ? `${crmHrefPrefix}/${discussion.targetId}`
+                    : null;
+
+              return (
+                <div key={discussion.id} className={tone.item}>
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl",
+                        isClient ? "bg-white/[0.08] text-white/80" : "bg-white text-[#6f6a63]",
+                      )}
+                    >
+                      <MessageSquareMore className="h-4 w-4" />
                     </div>
-                    <p className={cn("mt-1 text-sm font-medium", tone.title)}>
-                      {discussion.campaignName ?? "Campaign thread"}
-                    </p>
-                    <p className={cn("mt-1 text-sm", tone.muted)}>
-                      {truncate(discussion.content, 160)}
-                    </p>
-                    <div className="mt-3">
-                      <Link
-                        href={`${campaignHrefPrefix}/${discussion.campaignId}`}
-                        className={cn(
-                          "inline-flex items-center gap-1 text-sm font-medium",
-                          isClient
-                            ? "text-cyan-300 hover:text-cyan-200"
-                            : "text-[#0f7b6c] hover:text-[#0b5e52]",
-                        )}
-                      >
-                        Open thread <ArrowRight className="h-3 w-3" />
-                      </Link>
+                    <div className="min-w-0 flex-1">
+                      <div className={cn("flex flex-wrap items-center gap-2 text-xs", tone.muted)}>
+                        <span>{discussion.authorName ?? "Team member"}</span>
+                        <span>&middot;</span>
+                        <span>{timeAgo(discussion.createdAt)}</span>
+                        {!isClient ? (
+                          <>
+                            <span>&middot;</span>
+                            <span>{discussion.clientSlug}</span>
+                          </>
+                        ) : null}
+                      </div>
+                      <p className={cn("mt-1 text-sm font-medium", tone.title)}>
+                        {discussion.targetName ??
+                          (discussion.kind === "campaign" ? "Campaign thread" : "CRM relationship")}
+                      </p>
+                      <p className={cn("mt-1 text-sm", tone.muted)}>
+                        {truncate(discussion.content, 160)}
+                      </p>
+                      {href ? (
+                        <div className="mt-3">
+                          <Link
+                            href={href}
+                            className={cn(
+                              "inline-flex items-center gap-1 text-sm font-medium",
+                              isClient
+                                ? "text-cyan-300 hover:text-cyan-200"
+                                : "text-[#0f7b6c] hover:text-[#0b5e52]",
+                            )}
+                          >
+                            {discussion.kind === "campaign" ? "Open campaign" : "Open contact"}{" "}
+                            <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
