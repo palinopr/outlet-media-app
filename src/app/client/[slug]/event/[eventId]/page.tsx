@@ -91,7 +91,7 @@ function getDaysUntilEvent(eventDate: string | null): number | null {
 export default async function EventDetailPage({ params }: Props) {
   const { slug, eventId } = await params;
   const { scope, userId } = await requireClientAccess(slug, "ticketmaster", "eata");
-  const data = await getEventDetail(slug, eventId);
+  const data = await getEventDetail(slug, eventId, scope);
 
   if (!data) {
     return (

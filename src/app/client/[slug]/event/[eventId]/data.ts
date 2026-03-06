@@ -1,5 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import type { ScopeFilter } from "@/lib/member-access";
 import { centsToUsd } from "@/lib/formatters";
+import { allowsEventInScope } from "@/features/client-portal/scope";
 import type {
   TmEvent,
   DemographicsRow,
@@ -13,7 +15,12 @@ import { buildAudienceProfile, buildEventCard, computeDailyDeltas, computeVeloci
 export async function getEventDetail(
   slug: string,
   eventId: string,
+  scope?: ScopeFilter,
 ): Promise<EventDetailData | null> {
+  if (!allowsEventInScope(scope, eventId)) {
+    return null;
+  }
+
   if (!supabaseAdmin) return null;
 
   // Campaigns query uses only eventId (a param), so launch in parallel with event fetch
