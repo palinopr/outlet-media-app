@@ -11,6 +11,8 @@ import {
   Target,
   Zap,
 } from "lucide-react";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { getCampaignStatusCfg, buildTrendData } from "../lib";
@@ -18,7 +20,7 @@ import { ClientPortalFooter } from "../components/client-portal-footer";
 import { getReportsData } from "./data";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
-import { getDashboardOpsSummary } from "@/features/dashboard/server";
+import { getReportsWorkflowData } from "@/features/reports/server";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -38,13 +40,13 @@ export default async function ReportsPage({ params }: Props) {
   const { scope } = await requireClientAccess(slug, "meta_ads");
   const clientName = slugToLabel(slug);
 
-  const [{ campaigns, snapshots, events, summary, dataSource }, opsSummary] = await Promise.all([
+  const [{ campaigns, snapshots, events, summary, dataSource }, workflow] = await Promise.all([
     getReportsData(slug, scope),
-    getDashboardOpsSummary({
+    getReportsWorkflowData({
       clientSlug: slug,
-      limit: 5,
+      limit: 4,
       mode: "client",
-      scopeCampaignIds: scope?.allowedCampaignIds,
+      scope,
     }),
   ]);
   const trendData = buildTrendData(snapshots);
@@ -175,8 +177,30 @@ export default async function ReportsPage({ params }: Props) {
         campaignHrefPrefix={`/client/${slug}/campaign`}
         description="Use the same report page to understand both performance trends and the workflow items that need attention."
         emptyState="Your shared campaign workflows look clear right now."
-        summary={opsSummary}
+        summary={workflow.opsSummary}
         title="Reporting workflow summary"
+        variant="client"
+      />
+
+      <DashboardActionCenterSection
+        actionCenter={workflow.actionCenter}
+        assetHrefPrefix={`/client/${slug}/assets`}
+        assetLibraryHref={`/client/${slug}/assets`}
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        description="The approvals and shared threads that still need attention in the current reporting window."
+        eventHrefPrefix={`/client/${slug}/event`}
+        showCrmFollowUps={false}
+        variant="client"
+      />
+
+      <AgentOutcomesPanel
+        assetHrefPrefix={`/client/${slug}/assets`}
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        crmHrefPrefix={`/client/${slug}/crm`}
+        description="Agent work and recommendations connected to the same campaigns and events behind these results."
+        eventHrefPrefix={`/client/${slug}/event`}
+        outcomes={workflow.agentOutcomes}
+        title="Agent follow-through"
         variant="client"
       />
 

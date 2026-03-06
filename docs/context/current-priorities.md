@@ -29,6 +29,7 @@ The short-term focus is:
 - Keep admin and client experiences on the same backbone with different permissions and visibility.
 - Keep traditional dashboards as first-class surfaces, not as an afterthought layered on top of workflow views.
 - Make traditional reporting surfaces pull from the same workflow backbone too, so graphs and summaries stay connected to next steps.
+- Keep report pages actionable with shared approvals, open discussion, and agent follow-through, so traditional users can move from charts to execution without leaving the reporting surface.
 - Keep reports on a shared feature/data layer across admin and client surfaces, so KPI math, trend data, and top-performer logic do not drift into separate route-local implementations.
 - Treat the workspace tasks pages as the operating queue entry point, not only the generic board, so cross-app next steps from campaigns, CRM, events, and assets stay visible in one place.
 - Keep event detail and other analytics-heavy pages tied to the same workflow/activity backbone, so performance views do not become dead ends.

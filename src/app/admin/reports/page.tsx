@@ -6,15 +6,16 @@ import {
   Ticket,
   TrendingUp,
 } from "lucide-react";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
-import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { EventOperationsSection } from "@/components/events/event-operations-section";
-import { getDashboardOpsSummary } from "@/features/dashboard/server";
 import { getEventOperationsSummary } from "@/features/events/server";
-import { getReportsData } from "@/features/reports/server";
+import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
+import { getReportsData, getReportsWorkflowData } from "@/features/reports/server";
 import { fmtNum, fmtUsd, roasColor, slugToLabel } from "@/lib/formatters";
 
 interface Props {
@@ -36,11 +37,11 @@ export default async function AdminReportsPage({ searchParams }: Props) {
   const { client } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
 
-  const [reports, opsSummary, eventOps] = await Promise.all([
+  const [reports, workflow, eventOps] = await Promise.all([
     getReportsData({ clientSlug }),
-    getDashboardOpsSummary({
-      clientSlug: clientSlug ?? undefined,
-      limit: 5,
+    getReportsWorkflowData({
+      clientSlug,
+      limit: 4,
       mode: "admin",
     }),
     getEventOperationsSummary({
@@ -108,8 +109,19 @@ export default async function AdminReportsPage({ searchParams }: Props) {
         campaignHrefPrefix="/admin/campaigns"
         description="Keep the traditional reporting surface connected to campaign workflow and the next decisions."
         emptyState="Campaign workflow pressure is clear right now."
-        summary={opsSummary}
+        summary={workflow.opsSummary}
         title="Workflow summary"
+        variant="admin"
+      />
+
+      <DashboardActionCenterSection
+        actionCenter={workflow.actionCenter}
+        assetHrefPrefix="/admin/assets"
+        assetLibraryHref="/admin/assets"
+        campaignHrefPrefix="/admin/campaigns"
+        description="Use the report page to see which approvals and shared threads still need attention."
+        eventHrefPrefix="/admin/events"
+        showCrmFollowUps={false}
         variant="admin"
       />
 
@@ -207,6 +219,17 @@ export default async function AdminReportsPage({ searchParams }: Props) {
         </div>
 
         <div className="space-y-6">
+          <AgentOutcomesPanel
+            assetHrefPrefix="/admin/assets"
+            campaignHrefPrefix="/admin/campaigns"
+            crmHrefPrefix="/admin/crm"
+            description="Agent follow-through tied to the same reporting window, so recommendations stay visible alongside the charts."
+            eventHrefPrefix="/admin/events"
+            outcomes={workflow.agentOutcomes}
+            title="Agent follow-through"
+            variant="admin"
+          />
+
           <EventOperationsSection
             description="Event-level pressure on the reporting surface, so operators can connect performance and show execution."
             hrefPrefix="/admin/events"

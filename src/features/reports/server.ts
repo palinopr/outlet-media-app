@@ -3,6 +3,14 @@ import type { TmEvent } from "@/app/client/[slug]/types";
 import type { ScopeFilter } from "@/lib/member-access";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
 import { supabaseAdmin } from "@/lib/supabase";
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
+import {
+  getDashboardActionCenter,
+  getDashboardOpsSummary,
+  type DashboardActionCenter,
+} from "@/features/dashboard/server";
+import type { DashboardOpsSummary, DashboardSummaryMode } from "@/features/dashboard/summary";
 import {
   buildReportsSummary,
   type ReportsCampaignCard,
@@ -86,6 +94,19 @@ interface GetReportsDataOptions {
   scope?: ScopeFilter;
 }
 
+interface GetReportsWorkflowDataOptions {
+  clientSlug?: string | null;
+  limit?: number;
+  mode: DashboardSummaryMode;
+  scope?: ScopeFilter;
+}
+
+export interface ReportsWorkflowData {
+  actionCenter: DashboardActionCenter;
+  agentOutcomes: AgentOutcomeView[];
+  opsSummary: DashboardOpsSummary;
+}
+
 export async function getReportsData(
   options: GetReportsDataOptions = {},
 ): Promise<ReportsData> {
@@ -133,5 +154,43 @@ export async function getReportsData(
     summary: buildReportsSummary(campaigns, events),
     dataSource: result.error ? "supabase" : "meta_api",
     clients: result.clients,
+  };
+}
+
+export async function getReportsWorkflowData(
+  options: GetReportsWorkflowDataOptions,
+): Promise<ReportsWorkflowData> {
+  const scopeCampaignIds = options.scope?.allowedCampaignIds ?? null;
+  const scopeEventIds = options.scope?.allowedEventIds ?? null;
+  const audience = options.mode === "client" ? "shared" : "all";
+  const limit = options.limit ?? 4;
+
+  const [opsSummary, actionCenter, agentOutcomes] = await Promise.all([
+    getDashboardOpsSummary({
+      clientSlug: options.clientSlug ?? undefined,
+      limit: Math.max(limit, 5),
+      mode: options.mode,
+      scopeCampaignIds,
+    }),
+    getDashboardActionCenter({
+      clientSlug: options.clientSlug ?? undefined,
+      limit,
+      mode: options.mode,
+      scopeCampaignIds,
+      scopeEventIds,
+    }),
+    listAgentOutcomes({
+      audience,
+      clientSlug: options.clientSlug ?? undefined,
+      limit,
+      scopeCampaignIds,
+      scopeEventIds,
+    }),
+  ]);
+
+  return {
+    actionCenter,
+    agentOutcomes,
+    opsSummary,
   };
 }
