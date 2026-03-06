@@ -6,6 +6,7 @@ import {
 } from "@/lib/workspace-types";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { supabaseAdmin } from "@/lib/supabase";
+import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   logSystemEvent,
   summarizeChangedFields,
@@ -358,6 +359,18 @@ export async function createSystemCrmFollowUpItem(
       sourceEntityId: item.sourceEntityId,
       sourceEntityType: item.sourceEntityType,
     },
+  });
+
+  await notifyWorkflowAssignee({
+    actorId: input.actorId ?? null,
+    actorName: input.actorName ?? null,
+    assigneeId: item.assigneeId,
+    clientSlug: item.clientSlug,
+    entityId: item.contactId,
+    entityType: "crm_contact",
+    message: item.title,
+    title: "CRM follow-up assigned to you",
+    visibility: item.visibility,
   });
 
   await maybeEnqueueCrmFollowUpItemTriage(item);

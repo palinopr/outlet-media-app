@@ -6,6 +6,7 @@ import {
 } from "@/lib/workspace-types";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { supabaseAdmin } from "@/lib/supabase";
+import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   logSystemEvent,
   summarizeChangedFields,
@@ -343,6 +344,18 @@ export async function createSystemCampaignActionItem(
     },
   });
 
+  await notifyWorkflowAssignee({
+    actorId: input.actorId ?? null,
+    actorName: input.actorName ?? null,
+    assigneeId: item.assigneeId,
+    clientSlug: item.clientSlug,
+    entityId: item.campaignId,
+    entityType: "campaign",
+    message: item.title,
+    title: "Campaign action assigned to you",
+    visibility,
+  });
+
   await maybeEnqueueCampaignActionItemTriage(item);
 
   return item;
@@ -478,6 +491,20 @@ export async function updateSystemCampaignActionItem(
       visibility: updated.visibility,
     },
   });
+
+  if (updated.assigneeId && updated.assigneeId !== existing.assigneeId) {
+    await notifyWorkflowAssignee({
+      actorId: input.actorId ?? null,
+      actorName: input.actorName ?? null,
+      assigneeId: updated.assigneeId,
+      clientSlug: updated.clientSlug,
+      entityId: updated.campaignId,
+      entityType: "campaign",
+      message: updated.title,
+      title: "Campaign action assigned to you",
+      visibility: updated.visibility,
+    });
+  }
 
   await maybeEnqueueCampaignActionItemTriage(updated, {
     priority: existing.priority,

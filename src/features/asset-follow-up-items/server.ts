@@ -6,6 +6,7 @@ import {
 } from "@/lib/workspace-types";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { supabaseAdmin } from "@/lib/supabase";
+import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   logSystemEvent,
   summarizeChangedFields,
@@ -387,6 +388,18 @@ export async function createSystemAssetFollowUpItem(
     },
   });
 
+  await notifyWorkflowAssignee({
+    actorId: input.actorId ?? null,
+    actorName: input.actorName ?? null,
+    assigneeId: item.assigneeId,
+    clientSlug: item.clientSlug,
+    entityId: item.assetId,
+    entityType: "asset",
+    message: item.title,
+    title: "Asset follow-up assigned to you",
+    visibility,
+  });
+
   await maybeEnqueueAssetFollowUpItemTriage(item);
   return item;
 }
@@ -496,6 +509,20 @@ export async function updateSystemAssetFollowUpItem(
       visibility: item.visibility,
     },
   });
+
+  if (item.assigneeId && item.assigneeId !== existing.assigneeId) {
+    await notifyWorkflowAssignee({
+      actorId: input.actorId ?? null,
+      actorName: input.actorName ?? null,
+      assigneeId: item.assigneeId,
+      clientSlug: item.clientSlug,
+      entityId: item.assetId,
+      entityType: "asset",
+      message: item.title,
+      title: "Asset follow-up assigned to you",
+      visibility: item.visibility,
+    });
+  }
 
   await maybeEnqueueAssetFollowUpItemTriage(item, {
     priority: existing.priority,
