@@ -17,6 +17,8 @@ import { getCampaignStatusCfg, buildTrendData } from "../lib";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { getReportsData } from "./data";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
+import { getDashboardOpsSummary } from "@/features/dashboard/server";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -36,7 +38,15 @@ export default async function ReportsPage({ params }: Props) {
   const { scope } = await requireClientAccess(slug, "meta_ads");
   const clientName = slugToLabel(slug);
 
-  const { campaigns, snapshots, events, summary, dataSource } = await getReportsData(slug, scope);
+  const [{ campaigns, snapshots, events, summary, dataSource }, opsSummary] = await Promise.all([
+    getReportsData(slug, scope),
+    getDashboardOpsSummary({
+      clientSlug: slug,
+      limit: 5,
+      mode: "client",
+      scopeCampaignIds: scope?.allowedCampaignIds,
+    }),
+  ]);
   const trendData = buildTrendData(snapshots);
 
   const hasData = campaigns.length > 0;
@@ -160,6 +170,15 @@ export default async function ReportsPage({ params }: Props) {
           </p>
         </div>
       </div>
+
+      <DashboardOpsSummarySection
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        description="Use the same report page to understand both performance trends and the workflow items that need attention."
+        emptyState="Your shared campaign workflows look clear right now."
+        summary={opsSummary}
+        title="Reporting workflow summary"
+        variant="client"
+      />
 
       {/* Trend Charts */}
       {hasData && trendData.length > 1 && (

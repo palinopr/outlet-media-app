@@ -26,6 +26,7 @@ The short-term focus is:
 - Design agents as bounded workers attached to those events.
 - Keep admin and client experiences on the same backbone with different permissions and visibility.
 - Keep traditional dashboards as first-class surfaces, not as an afterthought layered on top of workflow views.
+- Make traditional reporting surfaces pull from the same workflow backbone too, so graphs and summaries stay connected to next steps.
 - Derive dashboard workflow summaries from the same campaign-native approvals, action items, comments, and `system_events` backbone instead of introducing separate summary-only state.
 - Make dashboard-first users actionable by surfacing pending approvals and unresolved campaign discussion directly on the dashboard.
 - Prefer direct workflow controls on action/follow-up panels so operators can move work between statuses without opening a form for every change.
