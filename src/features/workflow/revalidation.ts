@@ -17,6 +17,7 @@ export function getCampaignWorkflowPaths(
     "/admin/activity",
     "/admin/campaigns",
     `/admin/campaigns/${campaignId}`,
+    "/admin/conversations",
     "/admin/dashboard",
     "/admin/workspace",
     "/admin/workspace/tasks",
@@ -24,6 +25,7 @@ export function getCampaignWorkflowPaths(
       "/client/:clientSlug",
       `/client/:clientSlug/campaign/${campaignId}`,
       "/client/:clientSlug/campaigns",
+      "/client/:clientSlug/conversations",
       "/client/:clientSlug/updates",
       "/client/:clientSlug/workspace",
       "/client/:clientSlug/workspace/tasks",
@@ -36,6 +38,7 @@ export function getAssetWorkflowPaths(clientSlug: string | null | undefined, ass
     "/admin/activity",
     "/admin/assets",
     `/admin/assets/${assetId}`,
+    "/admin/conversations",
     "/admin/dashboard",
     "/admin/workspace",
     "/admin/workspace/tasks",
@@ -43,6 +46,7 @@ export function getAssetWorkflowPaths(clientSlug: string | null | undefined, ass
       "/client/:clientSlug",
       "/client/:clientSlug/assets",
       `/client/:clientSlug/assets/${assetId}`,
+      "/client/:clientSlug/conversations",
       "/client/:clientSlug/updates",
       "/client/:clientSlug/workspace",
       "/client/:clientSlug/workspace/tasks",
@@ -53,6 +57,7 @@ export function getAssetWorkflowPaths(clientSlug: string | null | undefined, ass
 export function getCrmWorkflowPaths(clientSlug: string | null | undefined, contactId: string) {
   return uniquePaths([
     "/admin/activity",
+    "/admin/conversations",
     "/admin/crm",
     `/admin/crm/${contactId}`,
     "/admin/dashboard",
@@ -60,6 +65,7 @@ export function getCrmWorkflowPaths(clientSlug: string | null | undefined, conta
     "/admin/workspace/tasks",
     ...clientPaths(clientSlug, [
       "/client/:clientSlug",
+      "/client/:clientSlug/conversations",
       "/client/:clientSlug/crm",
       `/client/:clientSlug/crm/${contactId}`,
       "/client/:clientSlug/updates",
@@ -72,6 +78,7 @@ export function getCrmWorkflowPaths(clientSlug: string | null | undefined, conta
 export function getEventWorkflowPaths(clientSlug: string | null | undefined, eventId: string) {
   return uniquePaths([
     "/admin/activity",
+    "/admin/conversations",
     "/admin/dashboard",
     "/admin/events",
     `/admin/events/${eventId}`,
@@ -79,6 +86,7 @@ export function getEventWorkflowPaths(clientSlug: string | null | undefined, eve
     "/admin/workspace/tasks",
     ...clientPaths(clientSlug, [
       "/client/:clientSlug",
+      "/client/:clientSlug/conversations",
       `/client/:clientSlug/event/${eventId}`,
       "/client/:clientSlug/events",
       "/client/:clientSlug/updates",
