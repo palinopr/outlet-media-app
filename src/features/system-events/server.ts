@@ -73,6 +73,18 @@ interface ListSystemEventsOptions {
   limit?: number;
 }
 
+interface ListCampaignSystemEventsOptions {
+  audience?: "all" | SystemEventVisibility;
+  clientSlug: string;
+  campaignId: string;
+  limit?: number;
+}
+
+function eventMatchesCampaign(event: SystemEvent, campaignId: string) {
+  if (event.entityType === "campaign" && event.entityId === campaignId) return true;
+  return event.metadata.campaignId === campaignId;
+}
+
 function toActorName(user: Awaited<ReturnType<typeof currentUser>>): string | null {
   if (!user) return null;
   if (user.fullName) return user.fullName;
@@ -186,6 +198,18 @@ export async function listSystemEvents(
       unknown
     >,
   }));
+}
+
+export async function listCampaignSystemEvents(
+  options: ListCampaignSystemEventsOptions,
+): Promise<SystemEvent[]> {
+  const events = await listSystemEvents({
+    audience: options.audience,
+    clientSlug: options.clientSlug,
+    limit: Math.max((options.limit ?? 8) * 6, 24),
+  });
+
+  return events.filter((event) => eventMatchesCampaign(event, options.campaignId)).slice(0, options.limit ?? 8);
 }
 
 export function summarizeChangedFields(fields: string[]): string | null {

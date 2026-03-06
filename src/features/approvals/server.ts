@@ -52,6 +52,27 @@ interface ListApprovalRequestsOptions {
   status?: ApprovalStatus | "all";
 }
 
+interface ListCampaignApprovalRequestsOptions {
+  audience?: ApprovalAudience | "all";
+  clientSlug: string;
+  campaignId: string;
+  limit?: number;
+  status?: ApprovalStatus | "all";
+}
+
+function approvalMatchesCampaign(approval: ApprovalRequest, campaignId: string) {
+  if (approval.entityType === "campaign" && approval.entityId === campaignId) return true;
+  return approval.metadata.campaignId === campaignId;
+}
+
+function approvalAssetId(approval: ApprovalRequest) {
+  if (approval.requestType !== "asset_review") return null;
+  if (approval.entityType === "asset" && approval.entityId) return approval.entityId;
+
+  const metadataAssetId = approval.metadata.assetId;
+  return typeof metadataAssetId === "string" ? metadataAssetId : null;
+}
+
 interface ResolveApprovalRequestInput {
   id: string;
   note?: string | null;
@@ -173,6 +194,21 @@ export async function listApprovalRequests(
   return (data ?? []).map((row) => mapApproval(row as Record<string, unknown>));
 }
 
+export async function listCampaignApprovalRequests(
+  options: ListCampaignApprovalRequestsOptions,
+): Promise<ApprovalRequest[]> {
+  const approvals = await listApprovalRequests({
+    audience: options.audience,
+    clientSlug: options.clientSlug,
+    limit: Math.max((options.limit ?? 8) * 6, 24),
+    status: options.status,
+  });
+
+  return approvals
+    .filter((approval) => approvalMatchesCampaign(approval, options.campaignId))
+    .slice(0, options.limit ?? 8);
+}
+
 export async function createApprovalRequest(
   input: CreateApprovalRequestInput,
 ): Promise<ApprovalRequest | null> {
@@ -206,6 +242,14 @@ export async function createApprovalRequest(
   }
 
   const approval = mapApproval(data as Record<string, unknown>);
+  const campaignId =
+    approval.entityType === "campaign"
+      ? approval.entityId
+      : typeof approval.metadata.campaignId === "string"
+        ? approval.metadata.campaignId
+        : null;
+  const campaignName =
+    typeof approval.metadata.campaignName === "string" ? approval.metadata.campaignName : null;
 
   await logSystemEvent({
     eventName: "approval_requested",
@@ -222,9 +266,12 @@ export async function createApprovalRequest(
     metadata: {
       approvalId: approval.id,
       audience: approval.audience,
+      campaignId,
+      campaignName,
       requestType: approval.requestType,
       sourceEntityId: input.entityId ?? null,
       sourceEntityType: input.entityType ?? null,
+      ...approval.metadata,
     },
   });
 
@@ -300,19 +347,24 @@ export async function resolveApprovalRequest(
   }
 
   const approval = mapApproval(data as Record<string, unknown>);
+  const campaignId =
+    approval.entityType === "campaign"
+      ? approval.entityId
+      : typeof approval.metadata.campaignId === "string"
+        ? approval.metadata.campaignId
+        : null;
+  const campaignName =
+    typeof approval.metadata.campaignName === "string" ? approval.metadata.campaignName : null;
 
-  if (
-    input.status === "approved" &&
-    approval.requestType === "asset_review" &&
-    approval.entityType === "asset" &&
-    approval.entityId
-  ) {
+  const assetId = approvalAssetId(approval);
+
+  if (input.status === "approved" && assetId) {
     const { error: assetError } = await supabaseAdmin
       .from("ad_assets")
       .update({
         status: "approved",
       })
-      .eq("id", approval.entityId);
+      .eq("id", assetId);
 
     if (assetError) {
       console.error("[approvals] Failed to mark asset approved:", assetError.message);
@@ -340,8 +392,11 @@ export async function resolveApprovalRequest(
     detail: input.note ?? approval.summary,
     metadata: {
       approvalId: approval.id,
+      campaignId,
+      campaignName,
       previousStatus: existingApproval.status,
       requestType: approval.requestType,
+      ...approval.metadata,
     },
   });
 

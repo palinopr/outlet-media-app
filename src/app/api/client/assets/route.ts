@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   if (!allowed) return apiError("Forbidden", 403);
 
   try {
-    const asset = await uploadAssetFile({
+    const { asset, campaignId, campaignName } = await uploadAssetFile({
       file,
       clientSlug,
       uploadedBy: userId,
@@ -57,19 +57,37 @@ export async function POST(req: NextRequest) {
       eventName: "asset_uploaded",
       actorId: userId,
       clientSlug,
-      entityType: "asset",
-      entityId: asset.id as string,
-      summary: `Uploaded asset "${asset.file_name as string}"`,
+      entityType: campaignId ? "campaign" : "asset",
+      entityId: campaignId ?? (asset.id as string),
+      summary: campaignName
+        ? `Uploaded asset "${asset.file_name as string}" for ${campaignName}`
+        : `Uploaded asset "${asset.file_name as string}"`,
+      metadata: {
+        assetId: asset.id,
+        assetName: asset.file_name,
+        campaignId,
+        campaignName,
+      },
     });
 
     await createApprovalRequest({
       audience: "admin",
       clientSlug,
-      entityId: asset.id as string,
-      entityType: "asset",
+      entityId: campaignId ?? (asset.id as string),
+      entityType: campaignId ? "campaign" : "asset",
       requestType: "asset_review",
-      summary: "A client uploaded a new asset that should be reviewed before it moves further in the campaign workflow.",
-      title: `Review uploaded asset "${asset.file_name as string}"`,
+      summary: campaignName
+        ? `A client uploaded a new asset for ${campaignName} that should be reviewed before it moves further in the campaign workflow.`
+        : "A client uploaded a new asset that should be reviewed before it moves further in the campaign workflow.",
+      title: campaignName
+        ? `Review uploaded asset "${asset.file_name as string}" for ${campaignName}`
+        : `Review uploaded asset "${asset.file_name as string}"`,
+      metadata: {
+        assetId: asset.id,
+        assetName: asset.file_name,
+        campaignId,
+        campaignName,
+      },
     });
 
     return NextResponse.json({ asset }, { status: 201 });

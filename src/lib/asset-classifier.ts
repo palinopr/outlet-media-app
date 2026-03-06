@@ -19,6 +19,8 @@ export interface AssetClassification {
   labels: string[];
   width: number | null;
   height: number | null;
+  campaignId: string | null;
+  campaignName: string | null;
 }
 
 // ─── Dimension reading (no external deps) ────────────────────────────────────
@@ -150,45 +152,49 @@ function placementFromRatio(w: number, h: number): "post" | "story" | "feed" {
 // ─── Event/campaign matching ─────────────────────────────────────────────────
 
 interface MatchCandidate {
+  id: string | null;
   name: string;
-  slug: string;
 }
 
-async function getClientContext(clientSlug: string): Promise<MatchCandidate[]> {
+async function getCampaignCandidates(clientSlug: string): Promise<MatchCandidate[]> {
   if (!supabaseAdmin) return [];
   const candidates: MatchCandidate[] = [];
 
-  const { data: events } = await supabaseAdmin
-    .from("tm_events")
-    .select("name")
-    .eq("client_slug", clientSlug);
-  if (events) {
-    for (const e of events) {
-      candidates.push({ name: e.name, slug: e.name });
-    }
-  }
-
   const { data: campaigns } = await supabaseAdmin
     .from("meta_campaigns")
-    .select("name")
+    .select("campaign_id, name")
     .eq("client_slug", clientSlug);
   if (campaigns) {
     for (const c of campaigns) {
-      candidates.push({ name: c.name, slug: c.name });
+      candidates.push({ id: c.campaign_id, name: c.name });
     }
   }
 
   return candidates;
 }
 
-function matchEvent(
+async function getEventCandidates(clientSlug: string): Promise<MatchCandidate[]> {
+  if (!supabaseAdmin) return [];
+
+  const { data: events } = await supabaseAdmin
+    .from("tm_events")
+    .select("name")
+    .eq("client_slug", clientSlug);
+
+  return (events ?? []).map((event) => ({
+    id: null,
+    name: event.name,
+  }));
+}
+
+function matchCandidate(
   nameTokens: string[],
   candidates: MatchCandidate[],
-): string | null {
+): MatchCandidate | null {
   if (candidates.length === 0 || nameTokens.length === 0) return null;
   const joined = nameTokens.join(" ").toLowerCase();
 
-  let bestMatch: string | null = null;
+  let bestMatch: MatchCandidate | null = null;
   let bestScore = 0;
 
   for (const c of candidates) {
@@ -200,7 +206,7 @@ function matchEvent(
     const score = hits / words.length;
     if (hits >= 2 && score > bestScore) {
       bestScore = score;
-      bestMatch = c.name;
+      bestMatch = c;
     }
   }
 
@@ -267,15 +273,21 @@ export async function classifyAsset(
     placement = "both";
   }
 
-  // 3. Match against events/campaigns
-  const candidates = await getClientContext(clientSlug);
-  const eventMatch = matchEvent(nameTokens, candidates);
+  // 3. Match against campaigns first, then events for foldering context
+  const [campaignCandidates, eventCandidates] = await Promise.all([
+    getCampaignCandidates(clientSlug),
+    getEventCandidates(clientSlug),
+  ]);
+  const campaignMatch = matchCandidate(nameTokens, campaignCandidates);
+  const eventMatch = campaignMatch ? null : matchCandidate(nameTokens, eventCandidates);
 
   // 4. Build folder path
   const placementFolder = PLACEMENT_FOLDER[placement];
   let folder: string | null;
-  if (eventMatch) {
-    folder = `${titleCase(eventMatch)}/${placementFolder}`;
+  if (campaignMatch) {
+    folder = `${titleCase(campaignMatch.name)}/${placementFolder}`;
+  } else if (eventMatch) {
+    folder = `${titleCase(eventMatch.name)}/${placementFolder}`;
   } else {
     folder = placementFolder;
   }
@@ -284,8 +296,17 @@ export async function classifyAsset(
   const labels: string[] = [];
   if (placement !== "both") labels.push(placement);
   if (isVideo) labels.push("video");
-  if (eventMatch) labels.push(titleCase(eventMatch));
+  if (campaignMatch) labels.push(titleCase(campaignMatch.name));
+  else if (eventMatch) labels.push(titleCase(eventMatch.name));
   if (width && height) labels.push(`${width}x${height}`);
 
-  return { placement, folder, labels, width, height };
+  return {
+    placement,
+    folder,
+    labels,
+    width,
+    height,
+    campaignId: campaignMatch?.id ?? null,
+    campaignName: campaignMatch ? titleCase(campaignMatch.name) : null,
+  };
 }

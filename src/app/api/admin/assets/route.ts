@@ -40,19 +40,29 @@ export async function POST(req: NextRequest) {
   const user = await currentUser();
 
   try {
-    const asset = await uploadAssetFile({
+    const { asset, campaignId, campaignName } = await uploadAssetFile({
       file,
       clientSlug,
       uploadedBy,
+      classify: true,
     });
 
     await logSystemEvent({
       eventName: "asset_uploaded",
       actorId: user?.id ?? uploadedBy,
       clientSlug,
-      entityType: "asset",
-      entityId: asset.id as string,
-      summary: `Uploaded asset "${asset.file_name as string}"`,
+      visibility: campaignId ? "shared" : "admin_only",
+      entityType: campaignId ? "campaign" : "asset",
+      entityId: campaignId ?? (asset.id as string),
+      summary: campaignName
+        ? `Uploaded asset "${asset.file_name as string}" for ${campaignName}`
+        : `Uploaded asset "${asset.file_name as string}"`,
+      metadata: {
+        assetId: asset.id,
+        assetName: asset.file_name,
+        campaignId,
+        campaignName,
+      },
     });
 
     return NextResponse.json({ asset }, { status: 201 });

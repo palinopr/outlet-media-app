@@ -28,6 +28,7 @@ export async function POST(req: NextRequest) {
       folderUrl: folder_url,
       clientSlug: client_slug,
       uploadedBy: uploaded_by,
+      classify: true,
     });
 
     if (result.imported > 0) {
@@ -49,6 +50,25 @@ export async function POST(req: NextRequest) {
           total: result.total,
         },
       });
+
+      for (const match of result.campaignMatches) {
+        await logSystemEvent({
+          eventName: "asset_folder_imported",
+          actorId: user?.id ?? uploaded_by,
+          clientSlug: client_slug,
+          visibility: "shared",
+          entityType: "campaign",
+          entityId: match.campaignId,
+          summary: `Imported ${match.count} asset${match.count === 1 ? "" : "s"} for ${match.campaignName}`,
+          detail: "Imported from a shared folder and linked to this campaign.",
+          metadata: {
+            folderUrl: folder_url,
+            campaignId: match.campaignId,
+            campaignName: match.campaignName,
+            imported: match.count,
+          },
+        });
+      }
     }
 
     return NextResponse.json(result);

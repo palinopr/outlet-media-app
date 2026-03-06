@@ -48,6 +48,24 @@ interface ImportAssetsFromFolderParams {
   onImportComplete?: (imported: number) => Promise<void> | void;
 }
 
+interface CampaignMatchSummary {
+  campaignId: string;
+  campaignName: string;
+  count: number;
+}
+
+interface ImportedAssetResult {
+  campaignId: string | null;
+  campaignName: string | null;
+  fileName: string;
+}
+
+interface UploadAssetFileResult {
+  asset: Record<string, unknown>;
+  campaignId: string | null;
+  campaignName: string | null;
+}
+
 export async function canAccessClientAssets(
   userId: string,
   clientSlug: string,
@@ -71,6 +89,68 @@ export async function listAssets(clientSlug: string): Promise<AssetRow[]> {
   return (data ?? []) as AssetRow[];
 }
 
+function normalizeCampaignName(value: string | null | undefined) {
+  return (value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function summarizeCampaignMatches(matches: ImportedAssetResult[]): CampaignMatchSummary[] {
+  const counts = new Map<string, CampaignMatchSummary>();
+
+  for (const match of matches) {
+    if (!match.campaignId || !match.campaignName) continue;
+
+    const existing = counts.get(match.campaignId);
+    if (existing) {
+      existing.count += 1;
+      continue;
+    }
+
+    counts.set(match.campaignId, {
+      campaignId: match.campaignId,
+      campaignName: match.campaignName,
+      count: 1,
+    });
+  }
+
+  return Array.from(counts.values()).sort((a, b) => b.count - a.count);
+}
+
+export async function listCampaignAssets(
+  clientSlug: string,
+  campaignName: string,
+  limit = 8,
+): Promise<AssetRow[]> {
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const normalizedCampaign = normalizeCampaignName(campaignName);
+  if (!normalizedCampaign) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from("ad_assets")
+    .select(ASSET_SELECT)
+    .eq("client_slug", clientSlug)
+    .order("created_at", { ascending: false })
+    .limit(Math.max(limit * 6, 48));
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? [])
+    .filter((row) => {
+      const folderRoot = normalizeCampaignName(
+        typeof row.folder === "string" ? row.folder.split("/")[0] : null,
+      );
+      const labels = Array.isArray(row.labels)
+        ? row.labels.map((label) => normalizeCampaignName(label))
+        : [];
+
+      return folderRoot === normalizedCampaign || labels.includes(normalizedCampaign);
+    })
+    .slice(0, limit) as AssetRow[];
+}
+
 export function validateAssetFile(file: File): string | null {
   if (file.size > MAX_ASSET_FILE_SIZE) {
     return "File too large. Max 50 MB.";
@@ -88,7 +168,7 @@ export async function uploadAssetFile({
   clientSlug,
   uploadedBy,
   classify = false,
-}: UploadAssetFileParams) {
+}: UploadAssetFileParams): Promise<UploadAssetFileResult> {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
   const validationError = validateAssetFile(file);
@@ -107,7 +187,7 @@ export async function uploadAssetFile({
   );
 
   try {
-    return await insertAssetRow({
+    const asset = await insertAssetRow({
       clientSlug,
       fileName: file.name,
       storagePath,
@@ -120,6 +200,12 @@ export async function uploadAssetFile({
       width: classification?.width,
       height: classification?.height,
     });
+
+    return {
+      asset,
+      campaignId: classification?.campaignId ?? null,
+      campaignName: classification?.campaignName ?? null,
+    };
   } catch (error) {
     await supabaseAdmin.storage.from("ad-assets").remove([storagePath]);
     throw error;
@@ -172,7 +258,7 @@ async function importCloudFile(
   clientSlug: string,
   uploadedBy: string,
   classify: boolean,
-): Promise<string> {
+): Promise<ImportedAssetResult> {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
   const sourceKey = `${provider}:${file.downloadUrl}`;
@@ -212,7 +298,11 @@ async function importCloudFile(
     throw error;
   }
 
-  return file.name;
+  return {
+    fileName: file.name,
+    campaignId: classification?.campaignId ?? null,
+    campaignName: classification?.campaignName ?? null,
+  };
 }
 
 export async function importAssetsFromFolder({
@@ -223,6 +313,7 @@ export async function importAssetsFromFolder({
   onListError,
   onImportComplete,
 }: ImportAssetsFromFolderParams): Promise<{
+  campaignMatches: CampaignMatchSummary[];
   imported: number;
   skipped: number;
   total: number;
@@ -248,6 +339,7 @@ export async function importAssetsFromFolder({
 
   if (listing.files.length === 0) {
     return {
+      campaignMatches: [],
       imported: 0,
       skipped: 0,
       total: 0,
@@ -285,6 +377,7 @@ export async function importAssetsFromFolder({
   );
 
   const imported = successes.length;
+  const campaignMatches = summarizeCampaignMatches(successes);
 
   await supabaseAdmin.from("asset_sources").upsert(
     {
@@ -302,6 +395,7 @@ export async function importAssetsFromFolder({
   }
 
   return {
+    campaignMatches,
     imported,
     skipped,
     total: listing.files.length,

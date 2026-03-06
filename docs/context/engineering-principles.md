@@ -89,6 +89,8 @@ Design examples:
 - Ticketmaster change -> event update -> alert/report -> client visibility
 - CRM note -> task -> follow-up agent -> activity feed
 
+When work starts in one app but belongs to another context, preserve that linkage in structured metadata and events immediately. Do not let campaign context disappear just because the upload started in the asset library.
+
 ## 8. Favor Feature Modules Over Route-Local Logic
 
 Keep `src/app/**` thin.

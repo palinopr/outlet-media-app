@@ -18,13 +18,16 @@ import { AdsPreview, type AdPreview } from "@/components/client/ads-preview";
 import { RecommendationsList, type RecommendationItem } from "@/components/client/recommendations";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
-import { listApprovalRequests } from "@/features/approvals/server";
+import { mapAssetRows } from "@/features/assets/lib";
+import { listCampaignAssets } from "@/features/assets/server";
+import { listCampaignApprovalRequests } from "@/features/approvals/server";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { StatCard } from "../../components/stat-card";
+import { CampaignAssetsPanel } from "../../components/campaign-assets-panel";
 import { CampaignDetailHeader } from "../../components/campaign-detail-header";
 import { CampaignAnalytics } from "../../components/campaign-analytics";
 import { requireClientAccess } from "@/features/client-portal/access";
-import { listSystemEvents } from "@/features/system-events/server";
+import { listCampaignSystemEvents } from "@/features/system-events/server";
 
 interface Props {
   params: Promise<{ slug: string; campaignId: string }>;
@@ -39,18 +42,16 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 
   const [data, events, approvals] = await Promise.all([
     getCampaignDetail(slug, campaignId, range),
-    listSystemEvents({
+    listCampaignSystemEvents({
       audience: "shared",
       clientSlug: slug,
-      entityType: "campaign",
-      entityId: campaignId,
+      campaignId,
       limit: 6,
     }),
-    listApprovalRequests({
+    listCampaignApprovalRequests({
       audience: "shared",
       clientSlug: slug,
-      entityType: "campaign",
-      entityId: campaignId,
+      campaignId,
       status: "pending",
       limit: 6,
     }),
@@ -81,6 +82,8 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
     dataSource,
     rangeLabel,
   } = data;
+
+  const campaignAssets = mapAssetRows(await listCampaignAssets(slug, c.name, 6));
 
   const adsPreviewData: AdPreview[] = ads.map((ad) => ({
     adId: ad.adId,
@@ -175,6 +178,8 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           />
         </div>
       </section>
+
+      <CampaignAssetsPanel assets={campaignAssets} slug={slug} />
 
       {/* -- Recommendations -- */}
       {recsData.length > 0 && (

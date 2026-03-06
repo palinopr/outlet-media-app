@@ -74,21 +74,59 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await createApprovalRequest({
-        audience: "admin",
-        clientSlug: client_slug,
-        entityId: folder_url,
-        entityType: "asset_folder",
-        requestType: "asset_import_review",
-        summary: `A client imported ${result.imported} new asset${result.imported === 1 ? "" : "s"} from a shared folder and they should be reviewed.`,
-        title: `Review ${result.imported} imported asset${result.imported === 1 ? "" : "s"}`,
-        metadata: {
-          folderUrl: folder_url,
-          imported: result.imported,
-          skipped: result.skipped,
-          total: result.total,
-        },
-      });
+      if (result.campaignMatches.length > 0) {
+        for (const match of result.campaignMatches) {
+          await logSystemEvent({
+            eventName: "asset_folder_imported",
+            actorId: userId,
+            clientSlug: client_slug,
+            entityType: "campaign",
+            entityId: match.campaignId,
+            summary: `Imported ${match.count} asset${match.count === 1 ? "" : "s"} for ${match.campaignName}`,
+            detail: "Imported from a shared folder and linked to this campaign.",
+            metadata: {
+              folderUrl: folder_url,
+              campaignId: match.campaignId,
+              campaignName: match.campaignName,
+              imported: match.count,
+            },
+          });
+
+          await createApprovalRequest({
+            audience: "admin",
+            clientSlug: client_slug,
+            entityId: match.campaignId,
+            entityType: "campaign",
+            requestType: "asset_import_review",
+            summary: `A client imported ${match.count} new asset${match.count === 1 ? "" : "s"} for ${match.campaignName} and they should be reviewed.`,
+            title: `Review ${match.count} imported asset${match.count === 1 ? "" : "s"} for ${match.campaignName}`,
+            metadata: {
+              folderUrl: folder_url,
+              campaignId: match.campaignId,
+              campaignName: match.campaignName,
+              imported: match.count,
+              skipped: result.skipped,
+              total: result.total,
+            },
+          });
+        }
+      } else {
+        await createApprovalRequest({
+          audience: "admin",
+          clientSlug: client_slug,
+          entityId: folder_url,
+          entityType: "asset_folder",
+          requestType: "asset_import_review",
+          summary: `A client imported ${result.imported} new asset${result.imported === 1 ? "" : "s"} from a shared folder and they should be reviewed.`,
+          title: `Review ${result.imported} imported asset${result.imported === 1 ? "" : "s"}`,
+          metadata: {
+            folderUrl: folder_url,
+            imported: result.imported,
+            skipped: result.skipped,
+            total: result.total,
+          },
+        });
+      }
     }
 
     return NextResponse.json(result);
