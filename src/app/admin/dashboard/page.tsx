@@ -20,9 +20,11 @@ import { UpcomingShows } from "./upcoming-shows";
 import { CampaignCards } from "./campaign-cards";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
+import { DashboardCrmSection } from "@/components/dashboard/dashboard-crm-section";
 import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { getCrmOverview } from "@/features/crm/server";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
@@ -48,11 +50,13 @@ export default async function AdminDashboard() {
     opsSummary,
     actionCenter,
     agentOutcomes,
+    crm,
   ] = await Promise.all([
     getData(),
     getDashboardOpsSummary({ mode: "admin", limit: 6 }),
     getDashboardActionCenter({ mode: "admin", limit: 4 }),
     listAgentOutcomes({ audience: "all", limit: 4 }),
+    getCrmOverview({ audience: "all" }),
   ]);
 
   const upcomingShows = getUpcomingShows(events, 8);
@@ -76,6 +80,7 @@ export default async function AdminDashboard() {
     { label: "Tickets Sold", value: fmtNum(totalSold), sub: `of ${fmtNum(totalCap)}`, icon: Ticket },
     { label: "Total Gross", value: fmtUsd(totalGross), sub: "box office revenue", icon: DollarSign },
   ];
+  const crmContacts = crm.upcomingFollowUps.length > 0 ? crm.upcomingFollowUps.slice(0, 4) : crm.recentContacts.slice(0, 4);
 
   return (
     <div className="space-y-4 sm:space-y-8">
@@ -121,6 +126,17 @@ export default async function AdminDashboard() {
       <DashboardActionCenterSection
         actionCenter={actionCenter}
         campaignHrefPrefix="/admin/campaigns"
+        variant="admin"
+      />
+
+      <DashboardCrmSection
+        contacts={crmContacts}
+        href="/admin/crm"
+        showClientSlug
+        summary={crm.summary}
+        title="CRM snapshot"
+        description="Hot contacts and due follow-ups on the same dashboard as campaign work."
+        emptyState="No CRM contacts are active yet. Add contacts in the CRM app to start tracking follow-ups."
         variant="admin"
       />
 

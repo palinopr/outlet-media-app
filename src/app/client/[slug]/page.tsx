@@ -15,9 +15,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
+import { DashboardCrmSection } from "@/components/dashboard/dashboard-crm-section";
 import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { getCrmOverview } from "@/features/crm/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
@@ -29,6 +31,7 @@ import { CampaignSection } from "./components/campaign-section";
 import { EventCard } from "./components/event-card";
 import { AudienceSection } from "./components/audience-section";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { getEnabledServices } from "@/lib/client-services";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -52,7 +55,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const range = parseRange(rangeParam);
 
   const { scope } = await requireClientAccess(slug);
-  const [dashboardData, opsSummary, actionCenter, agentOutcomes] = await Promise.all([
+  const [dashboardData, opsSummary, actionCenter, agentOutcomes, enabledServices, crm] = await Promise.all([
     getData(slug, range, scope),
     getDashboardOpsSummary({
       clientSlug: slug,
@@ -72,8 +75,16 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       limit: 4,
       scopeCampaignIds: scope?.allowedCampaignIds,
     }),
+    getEnabledServices(slug),
+    getCrmOverview({
+      audience: "shared",
+      clientSlug: slug,
+    }),
   ]);
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel, trendData } = dashboardData;
+  const showCrm = enabledServices?.includes("crm") || crm.summary.totalContacts > 0;
+  const crmContacts =
+    crm.upcomingFollowUps.length > 0 ? crm.upcomingFollowUps.slice(0, 4) : crm.recentContacts.slice(0, 4);
 
   const clientName = slugToLabel(slug);
 
@@ -220,6 +231,18 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         campaignHrefPrefix={`/client/${slug}/campaign`}
         variant="client"
       />
+
+      {showCrm ? (
+        <DashboardCrmSection
+          contacts={crmContacts}
+          href={`/client/${slug}/crm`}
+          summary={crm.summary}
+          title="CRM snapshot"
+          description="A simple CRM readout for hot contacts and due follow-ups tied to your account."
+          emptyState="No CRM contacts are visible yet."
+          variant="client"
+        />
+      ) : null}
 
       <AgentOutcomesPanel
         outcomes={agentOutcomes}
