@@ -14,7 +14,8 @@ import { currentUser } from "@clerk/nextjs/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
-import { getDashboardOpsSummary } from "@/features/dashboard/server";
+import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
+import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
@@ -49,7 +50,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const range = parseRange(rangeParam);
 
   const { scope } = await requireClientAccess(slug);
-  const [data, opsSummary] = await Promise.all([
+  const [dashboardData, opsSummary, actionCenter] = await Promise.all([
     getData(slug, range, scope),
     getDashboardOpsSummary({
       clientSlug: slug,
@@ -57,8 +58,14 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       mode: "client",
       scopeCampaignIds: scope?.allowedCampaignIds,
     }),
+    getDashboardActionCenter({
+      clientSlug: slug,
+      limit: 4,
+      mode: "client",
+      scopeCampaignIds: scope?.allowedCampaignIds,
+    }),
   ]);
-  const { heroStats, campaigns, events, audience, dataSource, rangeLabel, trendData } = data;
+  const { heroStats, campaigns, events, audience, dataSource, rangeLabel, trendData } = dashboardData;
 
   const clientName = slugToLabel(slug);
 
@@ -199,6 +206,12 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           </div>
         </section>
       )}
+
+      <DashboardActionCenterSection
+        actionCenter={actionCenter}
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        variant="client"
+      />
 
       {/* -- Campaign Cards with Filter -- */}
       {campaigns.length > 0 && (

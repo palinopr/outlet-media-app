@@ -19,7 +19,8 @@ import { EventsPreviewTable } from "./events-preview-table";
 import { UpcomingShows } from "./upcoming-shows";
 import { CampaignCards } from "./campaign-cards";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
-import { getDashboardOpsSummary } from "@/features/dashboard/server";
+import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
+import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
@@ -43,9 +44,11 @@ export default async function AdminDashboard() {
   const [
     { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb },
     opsSummary,
+    actionCenter,
   ] = await Promise.all([
     getData(),
     getDashboardOpsSummary({ mode: "admin", limit: 6 }),
+    getDashboardActionCenter({ mode: "admin", limit: 4 }),
   ]);
 
   const upcomingShows = getUpcomingShows(events, 8);
@@ -108,6 +111,12 @@ export default async function AdminDashboard() {
         emptyState="No campaigns need workflow attention right now."
         summary={opsSummary}
         title="Operations snapshot"
+        variant="admin"
+      />
+
+      <DashboardActionCenterSection
+        actionCenter={actionCenter}
+        campaignHrefPrefix="/admin/campaigns"
         variant="admin"
       />
 

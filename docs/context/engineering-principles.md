@@ -144,6 +144,7 @@ Other users want:
 
 Build both layers on the same underlying objects and events.
 Traditional dashboard summaries should be composed from the same first-class approvals, action items, comments, and `system_events` backbone as the deeper workflow views.
+Summary-first dashboards should include clear action queues, not only passive metrics, so traditional users can see what needs review without navigating the full workflow surface.
 
 ## 12. Correct Weak Architecture Early
 

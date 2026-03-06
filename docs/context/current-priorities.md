@@ -27,6 +27,7 @@ The short-term focus is:
 - Keep admin and client experiences on the same backbone with different permissions and visibility.
 - Keep traditional dashboards as first-class surfaces, not as an afterthought layered on top of workflow views.
 - Derive dashboard workflow summaries from the same campaign-native approvals, action items, comments, and `system_events` backbone instead of introducing separate summary-only state.
+- Make dashboard-first users actionable by surfacing pending approvals and unresolved campaign discussion directly on the dashboard.
 
 ## Immediate Build Bias
 

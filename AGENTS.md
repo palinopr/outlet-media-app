@@ -50,6 +50,7 @@
 - Campaign-native next steps should live in first-class campaign workflow objects, not only generic workspace tasks.
 - Traditional dashboards and reporting views should remain first-class surfaces for summary-first users.
 - Dashboard summary surfaces should be derived from the same approvals, action items, comments, and `system_events` backbone as deeper workflow views, not from duplicated ad hoc summary state.
+- Summary-first dashboards should still surface the next human actions clearly, especially pending approvals and unresolved campaign discussion.
 - When making product or refactor decisions, prefer designs that make the app feel like a coherent operating system across admin and client views.
 - `system_events` is the shared product timeline for admin/client-visible activity.
 - `approval_requests` is the first-class approval object. Use it for requests that need an explicit yes/no/cancel decision.
