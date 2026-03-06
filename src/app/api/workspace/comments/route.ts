@@ -4,7 +4,10 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { CreateCommentSchema, ResolveCommentSchema } from "@/lib/api-schemas";
 import { currentUser } from "@clerk/nextjs/server";
 import { logSystemEvent } from "@/features/system-events/server";
+import { createNotification } from "@/features/notifications/server";
+import { revalidateWorkspaceMutationTargets } from "@/features/workflow/revalidation";
 import { requireWorkspaceClientAccess } from "@/features/workspace/access";
+import type { NotificationType } from "@/lib/workspace-types";
 
 function excerpt(text: string, limit = 140) {
   const normalized = text.trim().replace(/\s+/g, " ");
@@ -50,11 +53,20 @@ export async function POST(request: NextRequest) {
 
   const user = await currentUser();
   const authorName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown";
-  const { data: page } = await supabaseAdmin
-    .from("workspace_pages")
-    .select("title, client_slug")
-    .eq("id", body.page_id)
-    .single();
+  const [{ data: page }, parentResult] = await Promise.all([
+    supabaseAdmin
+      .from("workspace_pages")
+      .select("title, client_slug, created_by")
+      .eq("id", body.page_id)
+      .single(),
+    body.parent_comment_id
+      ? supabaseAdmin
+          .from("workspace_comments")
+          .select("author_id")
+          .eq("id", body.parent_comment_id)
+          .single()
+      : Promise.resolve({ data: null }),
+  ]);
 
   if (!page) return apiError("Page not found", 404);
   const access = await requireWorkspaceClientAccess(userId, page.client_slug as string | null);
@@ -74,8 +86,50 @@ export async function POST(request: NextRequest) {
 
   if (dbErr) return apiError(dbErr.message);
 
-  if (page) {
-    await logSystemEvent({
+  const commentType: NotificationType = "comment";
+  const notificationJobs: Promise<unknown>[] = [];
+
+  if (page.created_by && page.created_by !== userId) {
+    notificationJobs.push(
+      createNotification({
+        clientSlug: page.client_slug as string | null,
+        entityId: body.page_id,
+        entityType: "workspace_page",
+        fromUserId: userId,
+        fromUserName: authorName,
+        message: `${authorName} commented on "${page.title}"`,
+        pageId: body.page_id,
+        title: "New comment",
+        type: commentType,
+        userId: page.created_by as string,
+      }),
+    );
+  }
+
+  const parentAuthorId =
+    parentResult?.data && typeof parentResult.data.author_id === "string"
+      ? parentResult.data.author_id
+      : null;
+
+  if (parentAuthorId && parentAuthorId !== userId && parentAuthorId !== page.created_by) {
+    notificationJobs.push(
+      createNotification({
+        clientSlug: page.client_slug as string | null,
+        entityId: body.page_id,
+        entityType: "workspace_page",
+        fromUserId: userId,
+        fromUserName: authorName,
+        message: `${authorName} replied to your comment`,
+        pageId: body.page_id,
+        title: "New reply",
+        type: commentType,
+        userId: parentAuthorId,
+      }),
+    );
+  }
+
+  await Promise.all([
+    logSystemEvent({
       eventName: "workspace_comment_added",
       actorId: userId,
       clientSlug: page.client_slug,
@@ -89,8 +143,16 @@ export async function POST(request: NextRequest) {
       metadata: {
         parentCommentId: body.parent_comment_id ?? null,
       },
-    });
-  }
+    }),
+    ...notificationJobs,
+  ]);
+
+  revalidateWorkspaceMutationTargets({
+    clientSlug: page.client_slug as string | null,
+    includeActivity: true,
+    includeNotifications: true,
+    pageIds: [body.page_id],
+  });
 
   return NextResponse.json({ comment: data }, { status: 201 });
 }
@@ -147,6 +209,12 @@ export async function PATCH(request: NextRequest) {
     }
   }
 
+  revalidateWorkspaceMutationTargets({
+    clientSlug: page.client_slug as string | null,
+    includeActivity: true,
+    pageIds: [existing.page_id],
+  });
+
   return NextResponse.json({ success: true });
 }
 
@@ -196,6 +264,12 @@ export async function DELETE(request: NextRequest) {
       detail: excerpt(existing.content),
     });
   }
+
+  revalidateWorkspaceMutationTargets({
+    clientSlug: page.client_slug as string | null,
+    includeActivity: true,
+    pageIds: [existing.page_id],
+  });
 
   return NextResponse.json({ success: true });
 }

@@ -6,6 +6,7 @@ import {
   logSystemEvent,
   summarizeChangedFields,
 } from "@/features/system-events/server";
+import { revalidateWorkspaceMutationTargets } from "@/features/workflow/revalidation";
 import { requireWorkspaceClientAccess } from "@/features/workspace/access";
 
 interface Ctx {
@@ -104,6 +105,12 @@ export async function PATCH(request: Request, { params }: Ctx) {
     });
   }
 
+  revalidateWorkspaceMutationTargets({
+    clientSlug: existing.client_slug as string | null,
+    includeActivity: true,
+    pageIds: [pageId],
+  });
+
   return NextResponse.json({ ok: true });
 }
 
@@ -139,6 +146,12 @@ export async function DELETE(_request: Request, { params }: Ctx) {
     entityId: pageId,
     pageId,
     summary: `Deleted page "${existing.title}"`,
+  });
+
+  revalidateWorkspaceMutationTargets({
+    clientSlug: existing.client_slug as string | null,
+    includeActivity: true,
+    pageIds: [pageId],
   });
 
   return NextResponse.json({ ok: true });

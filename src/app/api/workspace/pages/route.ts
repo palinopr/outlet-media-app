@@ -3,6 +3,7 @@ import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { CreatePageSchema } from "@/lib/api-schemas";
 import { logSystemEvent } from "@/features/system-events/server";
+import { revalidateWorkspaceMutationTargets } from "@/features/workflow/revalidation";
 import { requireWorkspaceClientAccess } from "@/features/workspace/access";
 
 export async function GET(request: Request) {
@@ -66,6 +67,12 @@ export async function POST(request: Request) {
       title: data.title,
       parentPageId: body.parent_page_id ?? null,
     },
+  });
+
+  revalidateWorkspaceMutationTargets({
+    clientSlug: access.clientSlug,
+    includeActivity: true,
+    pageIds: [data.id],
   });
 
   return NextResponse.json(data, { status: 201 });
