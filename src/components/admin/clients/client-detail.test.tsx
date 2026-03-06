@@ -227,12 +227,131 @@ const eventOperations = {
   ],
 };
 
+const crmOverview = {
+  clients: [],
+  contacts: [
+    {
+      clientSlug: "acme",
+      company: "Acme Live",
+      createdAt: "2026-03-01T00:00:00.000Z",
+      email: "casey@acme.com",
+      fullName: "Casey Rivera",
+      id: "contact-1",
+      lastContactedAt: "2026-03-04T10:00:00.000Z",
+      leadScore: 88,
+      lifecycleStage: "customer" as const,
+      nextFollowUpAt: "2026-03-09T10:00:00.000Z",
+      notes: "Needs final approval on launch plan.",
+      ownerName: "Jaime",
+      phone: "555-111-2222",
+      source: "Referral",
+      tags: ["vip"],
+      updatedAt: "2026-03-05T10:00:00.000Z",
+      visibility: "shared" as const,
+    },
+  ],
+  recentContacts: [
+    {
+      clientSlug: "acme",
+      company: "Acme Live",
+      createdAt: "2026-03-01T00:00:00.000Z",
+      email: "casey@acme.com",
+      fullName: "Casey Rivera",
+      id: "contact-1",
+      lastContactedAt: "2026-03-04T10:00:00.000Z",
+      leadScore: 88,
+      lifecycleStage: "customer" as const,
+      nextFollowUpAt: "2026-03-09T10:00:00.000Z",
+      notes: "Needs final approval on launch plan.",
+      ownerName: "Jaime",
+      phone: "555-111-2222",
+      source: "Referral",
+      tags: ["vip"],
+      updatedAt: "2026-03-05T10:00:00.000Z",
+      visibility: "shared" as const,
+    },
+  ],
+  recentEvents: recentActivity,
+  summary: {
+    dueFollowUps: 1,
+    hotContacts: 1,
+    sharedContacts: 1,
+    stageBreakdown: [
+      {
+        count: 1,
+        label: "Customer",
+        stage: "customer" as const,
+      },
+    ],
+    totalContacts: 1,
+  },
+  upcomingFollowUps: [
+    {
+      clientSlug: "acme",
+      company: "Acme Live",
+      createdAt: "2026-03-01T00:00:00.000Z",
+      email: "casey@acme.com",
+      fullName: "Casey Rivera",
+      id: "contact-1",
+      lastContactedAt: "2026-03-04T10:00:00.000Z",
+      leadScore: 88,
+      lifecycleStage: "customer" as const,
+      nextFollowUpAt: "2026-03-09T10:00:00.000Z",
+      notes: "Needs final approval on launch plan.",
+      ownerName: "Jaime",
+      phone: "555-111-2222",
+      source: "Referral",
+      tags: ["vip"],
+      updatedAt: "2026-03-05T10:00:00.000Z",
+      visibility: "shared" as const,
+    },
+  ],
+};
+
+const crmFollowUpItems = [
+  {
+    assigneeId: null,
+    assigneeName: "Jaime",
+    clientSlug: "acme",
+    contactId: "contact-1",
+    contactName: "Casey Rivera",
+    createdAt: "2026-03-05T10:00:00.000Z",
+    createdBy: "user-1",
+    description: "Call to confirm approval timing.",
+    dueDate: "2026-03-09",
+    id: "crm-follow-up-1",
+    position: 0,
+    priority: "high" as const,
+    sourceEntityId: null,
+    sourceEntityType: null,
+    status: "todo" as const,
+    title: "Confirm launch approval",
+    updatedAt: "2026-03-05T10:00:00.000Z",
+    visibility: "shared" as const,
+  },
+];
+
+const crmDiscussions = [
+  {
+    authorName: "Casey",
+    clientSlug: "acme",
+    contactId: "contact-1",
+    contactName: "Casey Rivera",
+    content: "Can we move the approval deadline to Friday?",
+    createdAt: "2026-03-05T10:00:00.000Z",
+    id: "crm-thread-1",
+  },
+];
+
 describe("ClientDetailView", () => {
   it("defaults to the operating overview tab", () => {
     render(
       <ClientDetailView
         agentOutcomes={[]}
         client={client}
+        crmDiscussions={crmDiscussions}
+        crmFollowUpItems={crmFollowUpItems}
+        crmOverview={crmOverview}
         eventOperations={eventOperations}
         opsSummary={opsSummary}
         recentActivity={recentActivity}
@@ -250,6 +369,9 @@ describe("ClientDetailView", () => {
       <ClientDetailView
         agentOutcomes={[]}
         client={client}
+        crmDiscussions={crmDiscussions}
+        crmFollowUpItems={crmFollowUpItems}
+        crmOverview={crmOverview}
         eventOperations={eventOperations}
         opsSummary={opsSummary}
         recentActivity={recentActivity}
@@ -263,6 +385,31 @@ describe("ClientDetailView", () => {
     expect(screen.getByRole("link", { name: "Arena Night" })).toHaveAttribute(
       "href",
       "/admin/events/event-1",
+    );
+  });
+
+  it("renders CRM workflow when the CRM tab is selected", () => {
+    render(
+      <ClientDetailView
+        agentOutcomes={[]}
+        client={client}
+        crmDiscussions={crmDiscussions}
+        crmFollowUpItems={crmFollowUpItems}
+        crmOverview={crmOverview}
+        eventOperations={eventOperations}
+        opsSummary={opsSummary}
+        recentActivity={recentActivity}
+        workQueue={workQueue}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /CRM/i }));
+
+    expect(screen.getByText("CRM next steps")).toBeInTheDocument();
+    expect(screen.getByText("Relationship discussion")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Casey Rivera" })).toHaveAttribute(
+      "href",
+      "/admin/crm/contact-1",
     );
   });
 });

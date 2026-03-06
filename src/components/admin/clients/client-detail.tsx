@@ -16,8 +16,12 @@ import { MembersSection } from "./members-section";
 import { CampaignsSection } from "./campaigns-section";
 import { AssetsSection } from "./assets-section";
 import { ServicesSection } from "./services-section";
+import { ClientCrmTab } from "./client-crm-tab";
 import { ClientOverviewTab } from "./client-overview-tab";
 import { EventsSection } from "./events-section";
+import type { CrmDiscussionThread } from "@/features/crm-comments/server";
+import type { CrmFollowUpItem } from "@/features/crm-follow-up-items/server";
+import type { CrmOverview } from "@/features/crm/server";
 import type { ClientDetail } from "@/app/admin/clients/data";
 import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import type { DashboardOpsSummary } from "@/features/dashboard/summary";
@@ -25,11 +29,21 @@ import type { EventOperationsSummary } from "@/features/events/summary";
 import type { SystemEvent } from "@/features/system-events/server";
 import type { WorkQueueSummary } from "@/features/work-queue/summary";
 
-type Tab = "overview" | "members" | "campaigns" | "events" | "assets" | "services";
+type Tab =
+  | "overview"
+  | "members"
+  | "campaigns"
+  | "events"
+  | "crm"
+  | "assets"
+  | "services";
 
 interface Props {
   agentOutcomes: AgentOutcomeView[];
   client: ClientDetail;
+  crmDiscussions: CrmDiscussionThread[];
+  crmFollowUpItems: CrmFollowUpItem[];
+  crmOverview: CrmOverview;
   eventOperations: EventOperationsSummary;
   opsSummary: DashboardOpsSummary;
   recentActivity: SystemEvent[];
@@ -39,6 +53,9 @@ interface Props {
 export function ClientDetailView({
   agentOutcomes,
   client,
+  crmDiscussions,
+  crmFollowUpItems,
+  crmOverview,
   eventOperations,
   opsSummary,
   recentActivity,
@@ -52,6 +69,7 @@ export function ClientDetailView({
     { id: "members", label: "Members", count: client.memberCount },
     { id: "campaigns", label: "Campaigns", count: client.totalCampaigns },
     { id: "events", label: "Events", count: client.events.length },
+    { id: "crm", label: "CRM", count: crmOverview.summary.totalContacts },
     { id: "assets", label: "Assets", count: client.assets.length },
     { id: "services", label: "Services", count: client.services.length },
   ];
@@ -156,6 +174,14 @@ export function ClientDetailView({
       {activeTab === "campaigns" && <CampaignsSection campaigns={client.campaigns} />}
       {activeTab === "events" && (
         <EventsSection events={client.events} summary={eventOperations} />
+      )}
+      {activeTab === "crm" && (
+        <ClientCrmTab
+          clientSlug={client.slug}
+          discussions={crmDiscussions}
+          followUpItems={crmFollowUpItems}
+          overview={crmOverview}
+        />
       )}
       {activeTab === "assets" && (
         <AssetsSection

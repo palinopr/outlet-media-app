@@ -1,6 +1,9 @@
 import { notFound } from "next/navigation";
 import { getClientDetail } from "../data";
 import { ClientDetailView } from "@/components/admin/clients/client-detail";
+import { listCrmDiscussionThreads } from "@/features/crm-comments/server";
+import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
+import { getCrmOverview } from "@/features/crm/server";
 import { getDashboardOpsSummary } from "@/features/dashboard/server";
 import { listSystemEvents } from "@/features/system-events/server";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
@@ -18,7 +21,16 @@ export default async function ClientDetailPage({ params }: Props) {
   const client = await getClientDetail(id);
   if (!client) notFound();
 
-  const [opsSummary, recentActivity, agentOutcomes, workQueue, eventOperations] =
+  const [
+    opsSummary,
+    recentActivity,
+    agentOutcomes,
+    workQueue,
+    eventOperations,
+    crmOverview,
+    crmFollowUpItems,
+    crmDiscussions,
+  ] =
     await Promise.all([
       getDashboardOpsSummary({
         clientSlug: client.slug,
@@ -45,12 +57,29 @@ export default async function ClientDetailPage({ params }: Props) {
         limit: 5,
         mode: "admin",
       }),
+      getCrmOverview({
+        audience: "all",
+        clientSlug: client.slug,
+      }),
+      listCrmFollowUpItems({
+        audience: "all",
+        clientSlug: client.slug,
+        limit: 20,
+      }),
+      listCrmDiscussionThreads({
+        audience: "all",
+        clientSlug: client.slug,
+        limit: 8,
+      }),
     ]);
 
   return (
     <ClientDetailView
       agentOutcomes={agentOutcomes}
       client={client}
+      crmDiscussions={crmDiscussions}
+      crmFollowUpItems={crmFollowUpItems}
+      crmOverview={crmOverview}
       eventOperations={eventOperations}
       opsSummary={opsSummary}
       recentActivity={recentActivity}
