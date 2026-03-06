@@ -1,15 +1,31 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@clerk/nextjs/server", () => ({
+  currentUser: vi.fn(),
+}));
+
 vi.mock("@/lib/member-access", () => ({
   getMemberAccessForSlug: vi.fn(),
 }));
 
+import { currentUser } from "@clerk/nextjs/server";
 import { getMemberAccessForSlug } from "@/lib/member-access";
 import { requireClientOwner } from "./ownership";
 
 describe("requireClientOwner", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(currentUser).mockResolvedValue({
+      publicMetadata: { role: "client" },
+    } as unknown as Awaited<ReturnType<typeof currentUser>>);
+  });
+
+  it("allows admins", async () => {
+    vi.mocked(currentUser).mockResolvedValueOnce({
+      publicMetadata: { role: "admin" },
+    } as unknown as Awaited<ReturnType<typeof currentUser>>);
+
+    await expect(requireClientOwner("user_admin", "zamora")).resolves.toBeNull();
   });
 
   it("allows client owners", async () => {

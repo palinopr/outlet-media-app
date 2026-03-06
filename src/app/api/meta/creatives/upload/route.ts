@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { authGuard, apiError } from "@/lib/api-helpers";
 import { getClientToken } from "@/lib/client-token";
 import { META_API_VERSION } from "@/lib/constants";
+import { requireClientOwner } from "@/features/client-portal/ownership";
 
 export async function POST(request: Request) {
-  const { error: authErr } = await authGuard();
+  const { userId, error: authErr } = await authGuard();
   if (authErr) return authErr;
 
   const formData = await request.formData();
@@ -15,6 +16,8 @@ export async function POST(request: Request) {
   if (!file || !slug || !accountId) {
     return apiError("Missing file, slug, or account_id", 400);
   }
+  const ownerGuard = await requireClientOwner(userId, slug, "upload Meta creatives");
+  if (ownerGuard) return ownerGuard;
 
   const token = await getClientToken(slug, accountId);
   if (!token) return apiError("Ad account not connected", 403);

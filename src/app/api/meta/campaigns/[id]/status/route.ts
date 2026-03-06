@@ -3,6 +3,7 @@ import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { getClientToken } from "@/lib/client-token";
 import { META_API_VERSION } from "@/lib/constants";
 import { fetchMetaApi, MetaApiError } from "@/lib/meta-api";
+import { requireClientOwner } from "@/features/client-portal/ownership";
 import { z } from "zod/v4";
 
 const StatusSchema = z.object({
@@ -15,12 +16,14 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { error: authErr } = await authGuard();
+  const { userId, error: authErr } = await authGuard();
   if (authErr) return authErr;
 
   const { id: campaignId } = await params;
   const { data, error: valErr } = await validateRequest(request, StatusSchema);
   if (valErr) return valErr;
+  const ownerGuard = await requireClientOwner(userId, data.client_slug, "manage Meta campaigns");
+  if (ownerGuard) return ownerGuard;
 
   const token = await getClientToken(data.client_slug, data.ad_account_id);
   if (!token) return apiError("Ad account not connected", 403);

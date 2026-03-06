@@ -4,6 +4,7 @@ import { getClientToken } from "@/lib/client-token";
 import { CampaignCreateSchema } from "@/lib/api-schemas";
 import { META_API_VERSION } from "@/lib/constants";
 import { fetchMetaApi, MetaApiError } from "@/lib/meta-api";
+import { requireClientOwner } from "@/features/client-portal/ownership";
 
 export async function POST(request: Request) {
   const { userId, error: authErr } = await authGuard();
@@ -14,6 +15,8 @@ export async function POST(request: Request) {
 
   const { ad_account_id, client_slug, name, objective, daily_budget, targeting, placements, creative } =
     data;
+  const ownerGuard = await requireClientOwner(userId, client_slug, "manage Meta campaigns");
+  if (ownerGuard) return ownerGuard;
 
   const token = await getClientToken(client_slug, ad_account_id);
   if (!token) {
