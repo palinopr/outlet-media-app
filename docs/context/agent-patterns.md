@@ -118,6 +118,13 @@ Autonomous actions are safest when they are:
 - task created or reminder sent
 - result logged to activity
 
+### Campaign Action Triage
+
+- `campaign_action_item_created` or `campaign_action_item_updated`
+- if the item becomes urgent or enters review, queue a bounded assistant task
+- assistant prepares a short operational brief
+- the brief supports humans without mutating campaign state on its own
+
 ## Logging Requirements
 
 Every agent action should write back:

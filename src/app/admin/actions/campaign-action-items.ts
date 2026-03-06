@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod/v4";
+import {
+  getCampaignActionItemById,
+  maybeEnqueueCampaignActionItemTriage,
+} from "@/features/campaign-action-items/server";
 import { adminGuard } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { TASK_PRIORITIES, TASK_PRIORITY_LABELS, TASK_STATUSES, TASK_STATUS_LABELS } from "@/lib/workspace-types";
@@ -130,6 +134,11 @@ export async function createCampaignActionItem(formData: {
       visibility: parsed.visibility,
     },
   });
+
+  const createdItem = await getCampaignActionItemById(data.id);
+  if (createdItem) {
+    await maybeEnqueueCampaignActionItemTriage(createdItem);
+  }
 
   revalidateCampaignPaths(parsed.clientSlug, parsed.campaignId);
   return data;
@@ -263,6 +272,14 @@ export async function updateCampaignActionItem(formData: {
         status: nextValues.status,
         visibility: nextValues.visibility,
       },
+    });
+  }
+
+  const updatedItem = await getCampaignActionItemById(itemId);
+  if (updatedItem) {
+    await maybeEnqueueCampaignActionItemTriage(updatedItem, {
+      priority: existing.priority,
+      status: existing.status,
     });
   }
 

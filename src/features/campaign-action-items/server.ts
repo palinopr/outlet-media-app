@@ -4,6 +4,7 @@ import {
   type TaskPriority,
   type TaskStatus,
 } from "@/lib/workspace-types";
+import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   logSystemEvent,
@@ -37,6 +38,11 @@ interface CampaignActionItemActor {
   actorId?: string | null;
   actorName?: string | null;
   actorType?: SystemEventActorType;
+}
+
+interface CampaignActionItemTriagePreviousState {
+  priority: TaskPriority;
+  status: TaskStatus;
 }
 
 interface ListCampaignActionItemsOptions {
@@ -90,6 +96,41 @@ const FIELD_LABELS: Record<string, string> = {
 
 function taskStatusLabel(status: TaskStatus) {
   return TASK_STATUS_LABELS[status] ?? status;
+}
+
+function shouldEnqueueCampaignActionItemTriage(
+  item: CampaignActionItem,
+  previous?: CampaignActionItemTriagePreviousState,
+) {
+  if (item.sourceEntityType === "approval_request") return false;
+  if (!previous) return item.status === "review" || item.priority === "urgent";
+
+  return (
+    (item.status === "review" && previous.status !== "review") ||
+    (item.priority === "urgent" && previous.priority !== "urgent")
+  );
+}
+
+function campaignActionItemTriagePrompt(item: CampaignActionItem) {
+  return [
+    `A campaign action item needs triage.`,
+    `Client: ${item.clientSlug}`,
+    `Campaign ID: ${item.campaignId}`,
+    `Action item: ${item.title}`,
+    item.description ? `Description: ${item.description}` : null,
+    `Status: ${taskStatusLabel(item.status)}`,
+    `Priority: ${TASK_PRIORITY_LABELS[item.priority]}`,
+    item.assigneeName ? `Assignee: ${item.assigneeName}` : null,
+    item.dueDate ? `Due date: ${item.dueDate}` : null,
+    `Action item ID: ${item.id}`,
+    `Give a concise operations brief with:`,
+    `1. what this action item is about`,
+    `2. the next best step`,
+    `3. any blockers or missing information`,
+    `Keep it short and operational.`,
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function mapCampaignActionItem(row: Record<string, unknown>): CampaignActionItem {
@@ -164,6 +205,61 @@ export async function findCampaignActionItemBySource(
   }
 
   return data ? mapCampaignActionItem(data as Record<string, unknown>) : null;
+}
+
+export async function getCampaignActionItemById(
+  itemId: string,
+): Promise<CampaignActionItem | null> {
+  if (!supabaseAdmin) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("campaign_action_items")
+    .select(CAMPAIGN_ACTION_ITEM_SELECT)
+    .eq("id", itemId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[campaign-action-items] item lookup failed:", error.message);
+    return null;
+  }
+
+  return data ? mapCampaignActionItem(data as Record<string, unknown>) : null;
+}
+
+export async function maybeEnqueueCampaignActionItemTriage(
+  item: CampaignActionItem,
+  previous?: CampaignActionItemTriagePreviousState,
+) {
+  if (!shouldEnqueueCampaignActionItemTriage(item, previous)) return null;
+
+  const taskId = await enqueueExternalAgentTask({
+    action: "triage-campaign-action-item",
+    prompt: campaignActionItemTriagePrompt(item),
+    toAgent: "assistant",
+  });
+
+  if (!taskId) return null;
+
+  await logSystemEvent({
+    eventName: "agent_action_requested",
+    actorType: "system",
+    clientSlug: item.clientSlug,
+    visibility: item.visibility,
+    entityType: "agent_task",
+    entityId: taskId,
+    summary: `Queued agent triage for action item "${item.title}"`,
+    detail: "Assistant will prepare a concise operational next-step brief.",
+    metadata: {
+      actionItemId: item.id,
+      campaignId: item.campaignId,
+      sourceEntityId: item.sourceEntityId,
+      sourceEntityType: item.sourceEntityType,
+      taskId,
+      toAgent: "assistant",
+    },
+  });
+
+  return taskId;
 }
 
 export async function createSystemCampaignActionItem(
@@ -246,6 +342,8 @@ export async function createSystemCampaignActionItem(
       visibility: item.visibility,
     },
   });
+
+  await maybeEnqueueCampaignActionItemTriage(item);
 
   return item;
 }
@@ -379,6 +477,11 @@ export async function updateSystemCampaignActionItem(
       status: updated.status,
       visibility: updated.visibility,
     },
+  });
+
+  await maybeEnqueueCampaignActionItemTriage(updated, {
+    priority: existing.priority,
+    status: existing.status,
   });
 
   return updated;
