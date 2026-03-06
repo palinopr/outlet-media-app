@@ -33,6 +33,7 @@ The short-term focus is:
 - Keep report pages actionable with shared approvals, open discussion, and agent follow-through, so traditional users can move from charts to execution without leaving the reporting surface.
 - Keep reports on a shared feature/data layer across admin and client surfaces, so KPI math, trend data, and top-performer logic do not drift into separate route-local implementations.
 - Treat the workspace tasks pages as the operating queue entry point, not only the generic board, so cross-app next steps from campaigns, CRM, events, and assets stay visible in one place.
+- Keep a dedicated "assigned to you" queue on the main admin/client operating surfaces, so routed notifications and assignee fields turn into a clear personal workload view instead of only a generic shared queue.
 - Keep event detail and other analytics-heavy pages tied to the same workflow/activity backbone, so performance views do not become dead ends.
 - Turn admin event surfaces into operating views, not only bulk-edit tables, so ticketing state and promotion workflow live together.
 - Treat the event index pages as operating surfaces too, not only pressure summaries and lists, so users can work through event approvals, discussion, and agent follow-through before opening a single show.

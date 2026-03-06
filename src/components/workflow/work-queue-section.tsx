@@ -20,6 +20,7 @@ import {
 interface WorkQueueSectionProps {
   description?: string;
   emptyState?: string;
+  showMetrics?: boolean;
   showClientSlug?: boolean;
   summary: WorkQueueSummary;
   title?: string;
@@ -70,6 +71,7 @@ function workItemIcon(kind: WorkQueueItem["kind"]) {
 export function WorkQueueSection({
   description = "Cross-app next steps across campaigns, CRM, events, and creative workflow.",
   emptyState = "No cross-app work items need attention right now.",
+  showMetrics = true,
   showClientSlug = false,
   summary,
   title = "Work queue",
@@ -85,21 +87,23 @@ export function WorkQueueSection({
         <p className={cn("mt-1 text-sm", styles.muted)}>{description}</p>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-4">
-        {summary.metrics.map((metric) => (
-          <div key={metric.key} className={styles.metric}>
-            <p className={cn("text-xs font-semibold uppercase tracking-wide", styles.muted)}>
-              {metric.label}
-            </p>
-            <p className={cn("mt-2 text-2xl font-bold tracking-tight", styles.text)}>
-              {metric.value}
-            </p>
-            <p className={cn("mt-1 text-xs", styles.muted)}>{metric.detail}</p>
-          </div>
-        ))}
-      </div>
+      {showMetrics ? (
+        <div className="grid gap-3 md:grid-cols-4">
+          {summary.metrics.map((metric) => (
+            <div key={metric.key} className={styles.metric}>
+              <p className={cn("text-xs font-semibold uppercase tracking-wide", styles.muted)}>
+                {metric.label}
+              </p>
+              <p className={cn("mt-2 text-2xl font-bold tracking-tight", styles.text)}>
+                {metric.value}
+              </p>
+              <p className={cn("mt-1 text-xs", styles.muted)}>{metric.detail}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
 
-      <div className="mt-4 space-y-3">
+      <div className={cn("space-y-3", showMetrics ? "mt-4" : "mt-1")}>
         {summary.items.length === 0 ? (
           <div className={styles.empty}>{emptyState}</div>
         ) : (

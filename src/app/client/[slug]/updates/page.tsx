@@ -30,10 +30,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientUpdatesPage({ params }: Props) {
   const { slug } = await params;
-  const { scope } = await requireClientAccess(slug);
+  const { scope, userId } = await requireClientAccess(slug);
 
   const [updates, enabledServices] = await Promise.all([
-    getClientUpdatesCenter(slug, scope),
+    getClientUpdatesCenter(slug, scope, userId),
     getEnabledServices(slug),
   ]);
 
@@ -142,12 +142,22 @@ export default async function ClientUpdatesPage({ params }: Props) {
         variant="client"
       />
 
-      <WorkQueueSection
-        description="The shared next steps across campaigns, CRM, events, and creative work that still need a human move."
-        summary={updates.workQueue}
-        title="Shared work queue"
-        variant="client"
-      />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <WorkQueueSection
+          description="The cross-app work already assigned to you across campaigns, CRM, events, and creative workflow."
+          emptyState="Nothing is directly assigned to you right now."
+          showMetrics={false}
+          summary={updates.assignedWorkQueue}
+          title="Assigned to you"
+          variant="client"
+        />
+        <WorkQueueSection
+          description="The shared next steps across campaigns, CRM, events, and creative work that still need a human move."
+          summary={updates.workQueue}
+          title="Shared work queue"
+          variant="client"
+        />
+      </div>
 
       {showAssets ? (
         <DashboardAssetsSection

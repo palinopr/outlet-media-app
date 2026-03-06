@@ -43,8 +43,16 @@ vi.mock("@/components/workspace/workspace-activity-feed", () => ({
 }));
 
 vi.mock("@/components/workflow/work-queue-section", () => ({
-  WorkQueueSection: ({ summary }: { summary: { items: unknown[] } }) => (
-    <div data-testid="work-queue-count">{summary.items.length}</div>
+  WorkQueueSection: ({
+    summary,
+    title,
+  }: {
+    summary: { items: unknown[] };
+    title?: string;
+  }) => (
+    <div data-testid={`work-queue-${(title ?? "section").toLowerCase().replace(/\s+/g, "-")}`}>
+      {summary.items.length}
+    </div>
   ),
 }));
 
@@ -71,7 +79,7 @@ afterEach(() => {
 });
 
 describe("ClientWorkspacePage", () => {
-  it("passes assigned scope into shared approvals and activity filtering", async () => {
+  it("passes assigned scope into shared and assigned work queues plus approvals and activity filtering", async () => {
     const scope = {
       allowedCampaignIds: ["cmp_1"],
       allowedEventIds: ["evt_1"],
@@ -107,9 +115,16 @@ describe("ClientWorkspacePage", () => {
       scope,
       status: "pending",
     });
-    expect(getWorkQueue).toHaveBeenCalledWith({
+    expect(getWorkQueue).toHaveBeenNthCalledWith(1, {
       clientSlug: "zamora",
       limit: 6,
+      mode: "client",
+      scope,
+    });
+    expect(getWorkQueue).toHaveBeenNthCalledWith(2, {
+      assigneeId: "user_1",
+      clientSlug: "zamora",
+      limit: 4,
       mode: "client",
       scope,
     });
@@ -125,7 +140,8 @@ describe("ClientWorkspacePage", () => {
       allowedEventIds: ["evt_1"],
     });
     expect(screen.getByTestId("page-list")).toHaveTextContent("/client/zamora/workspace");
-    expect(screen.getByTestId("work-queue-count")).toHaveTextContent("0");
+    expect(screen.getByTestId("work-queue-assigned-to-you")).toHaveTextContent("0");
+    expect(screen.getByTestId("work-queue-shared-work-queue")).toHaveTextContent("0");
     expect(screen.getByTestId("agent-outcomes-count")).toHaveTextContent("0");
     expect(screen.getByTestId("approvals-count")).toHaveTextContent("0");
     expect(screen.getByTestId("events-count")).toHaveTextContent("0");

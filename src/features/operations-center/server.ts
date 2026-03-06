@@ -3,19 +3,24 @@ import { getDashboardActionCenter, getDashboardAssetSummary, getDashboardOpsSumm
 import { buildOperationsCenterSnapshot } from "@/features/operations-center/summary";
 import { listSystemEvents } from "@/features/system-events/server";
 import { getWorkQueue } from "@/features/work-queue/server";
+import { buildWorkQueueSummary } from "@/features/work-queue/summary";
 
-export async function getAdminOperationsCenter() {
-  const [actionCenter, agentOutcomes, assetSummary, events, opsSummary, workQueue] = await Promise.all([
+export async function getAdminOperationsCenter(userId?: string | null) {
+  const [actionCenter, agentOutcomes, assetSummary, events, opsSummary, workQueue, assignedWorkQueue] = await Promise.all([
     getDashboardActionCenter({ limit: 4, mode: "admin" }),
     listAgentOutcomes({ audience: "all", limit: 6 }),
     getDashboardAssetSummary({ limit: 6 }),
     listSystemEvents({ audience: "all", limit: 8 }),
     getDashboardOpsSummary({ limit: 6, mode: "admin" }),
     getWorkQueue({ limit: 6, mode: "admin" }),
+    userId
+      ? getWorkQueue({ assigneeId: userId, limit: 4, mode: "admin" })
+      : Promise.resolve(buildWorkQueueSummary([], { limit: 4 })),
   ]);
 
   return {
     actionCenter,
+    assignedWorkQueue,
     agentOutcomes,
     assetSummary,
     events,

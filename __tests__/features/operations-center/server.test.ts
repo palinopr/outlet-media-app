@@ -54,14 +54,23 @@ describe("getAdminOperationsCenter", () => {
     });
   });
 
-  it("includes the shared work queue in the operations center payload", async () => {
-    const center = await getAdminOperationsCenter();
+  it("includes shared and assigned queues in the operations center payload", async () => {
+    const center = await getAdminOperationsCenter("admin_1");
 
-    expect(getWorkQueue).toHaveBeenCalledWith({
+    expect(getWorkQueue).toHaveBeenNthCalledWith(1, {
       limit: 6,
       mode: "admin",
     });
+    expect(getWorkQueue).toHaveBeenNthCalledWith(2, {
+      assigneeId: "admin_1",
+      limit: 4,
+      mode: "admin",
+    });
     expect(center.workQueue).toEqual({
+      items: [],
+      metrics: [],
+    });
+    expect(center.assignedWorkQueue).toEqual({
       items: [],
       metrics: [],
     });

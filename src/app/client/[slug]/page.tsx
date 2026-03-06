@@ -26,6 +26,8 @@ import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmOverview } from "@/features/crm/server";
+import { WorkQueueSection } from "@/components/workflow/work-queue-section";
+import { getWorkQueue } from "@/features/work-queue/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
@@ -60,8 +62,8 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam);
 
-  const { scope } = await requireClientAccess(slug);
-  const [dashboardData, opsSummary, actionCenter, assetSummary, agentOutcomes, enabledServices, crm, crmFollowUpItems] = await Promise.all([
+  const { scope, userId } = await requireClientAccess(slug);
+  const [dashboardData, opsSummary, actionCenter, assetSummary, agentOutcomes, assignedWorkQueue, enabledServices, crm, crmFollowUpItems] = await Promise.all([
     getData(slug, range, scope),
     getDashboardOpsSummary({
       clientSlug: slug,
@@ -87,6 +89,13 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       limit: 4,
       scopeCampaignIds: scope?.allowedCampaignIds,
       scopeEventIds: scope?.allowedEventIds,
+    }),
+    getWorkQueue({
+      assigneeId: userId,
+      clientSlug: slug,
+      limit: 4,
+      mode: "client",
+      scope,
     }),
     getEnabledServices(slug),
     getCrmOverview({
@@ -283,15 +292,25 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         />
       ) : null}
 
-      <AgentOutcomesPanel
-        outcomes={agentOutcomes}
-        title="Agent follow-through"
-        description="A simple readout of the latest shared agent reviews and recommendations tied to your campaigns."
-        emptyState="No shared agent follow-through is available yet."
-        variant="client"
-        campaignHrefPrefix={`/client/${slug}/campaign`}
-        eventHrefPrefix={`/client/${slug}/event`}
-      />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <WorkQueueSection
+          description="The cross-app work already assigned to you across campaigns, CRM, events, and creative workflow."
+          emptyState="Nothing is directly assigned to you right now."
+          showMetrics={false}
+          summary={assignedWorkQueue}
+          title="Assigned to you"
+          variant="client"
+        />
+        <AgentOutcomesPanel
+          outcomes={agentOutcomes}
+          title="Agent follow-through"
+          description="A simple readout of the latest shared agent reviews and recommendations tied to your campaigns."
+          emptyState="No shared agent follow-through is available yet."
+          variant="client"
+          campaignHrefPrefix={`/client/${slug}/campaign`}
+          eventHrefPrefix={`/client/${slug}/event`}
+        />
+      </div>
 
       {/* -- Campaign Cards with Filter -- */}
       {campaigns.length > 0 && (

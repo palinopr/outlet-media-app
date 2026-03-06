@@ -1,4 +1,5 @@
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import { auth } from "@clerk/nextjs/server";
 import { getWorkspacePages } from "@/features/workspace/server";
 import { PageList } from "@/components/workspace/page-list";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
@@ -10,11 +11,13 @@ import { listSystemEvents } from "@/features/system-events/server";
 import { getWorkQueue } from "@/features/work-queue/server";
 
 export default async function WorkspacePage() {
-  const [{ pages }, events, approvals, workQueue, agentOutcomes] = await Promise.all([
+  const { userId } = await auth();
+  const [{ pages }, events, approvals, workQueue, assignedWorkQueue, agentOutcomes] = await Promise.all([
     getWorkspacePages(),
     listSystemEvents({ audience: "all", limit: 12 }),
     listApprovalRequests({ audience: "all", status: "pending", limit: 8 }),
     getWorkQueue({ limit: 6, mode: "admin" }),
+    userId ? getWorkQueue({ assigneeId: userId, limit: 4, mode: "admin" }) : Promise.resolve({ items: [], metrics: [] }),
     listAgentOutcomes({ audience: "all", limit: 6 }),
   ]);
 
@@ -33,6 +36,15 @@ export default async function WorkspacePage() {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
         <PageList pages={pages} basePath="/admin/workspace" />
         <div className="space-y-6">
+          <WorkQueueSection
+            description="The cross-app work already assigned to you across campaigns, CRM, events, and creative workflow."
+            emptyState="Nothing is directly assigned to you right now."
+            showClientSlug
+            showMetrics={false}
+            summary={assignedWorkQueue}
+            title="Assigned to you"
+            variant="admin"
+          />
           <WorkQueueSection
             description="Cross-app next steps across campaigns, CRM, events, and creative workflow."
             showClientSlug

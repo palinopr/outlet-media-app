@@ -65,21 +65,32 @@ describe("getClientUpdatesCenter", () => {
     });
   });
 
-  it("passes client scope into the shared work queue loader", async () => {
+  it("loads both shared and assigned work queues with client scope", async () => {
     const scope = {
       allowedCampaignIds: ["cmp_1"],
       allowedEventIds: ["evt_1"],
     };
 
-    const center = await getClientUpdatesCenter("zamora", scope);
+    const center = await getClientUpdatesCenter("zamora", scope, "user_1");
 
-    expect(getWorkQueue).toHaveBeenCalledWith({
+    expect(getWorkQueue).toHaveBeenNthCalledWith(1, {
       clientSlug: "zamora",
       limit: 6,
       mode: "client",
       scope,
     });
+    expect(getWorkQueue).toHaveBeenNthCalledWith(2, {
+      assigneeId: "user_1",
+      clientSlug: "zamora",
+      limit: 4,
+      mode: "client",
+      scope,
+    });
     expect(center.workQueue).toEqual({
+      items: [],
+      metrics: [],
+    });
+    expect(center.assignedWorkQueue).toEqual({
       items: [],
       metrics: [],
     });

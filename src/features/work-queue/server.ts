@@ -4,6 +4,7 @@ import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import { buildWorkQueueSummary, type WorkQueueItem } from "./summary";
 
 interface GetWorkQueueOptions {
+  assigneeId?: string | null;
   clientSlug?: string | null;
   kinds?: WorkQueueItem["kind"][];
   limit?: number;
@@ -111,6 +112,13 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
     crmQuery = crmQuery.eq("client_slug", options.clientSlug);
     eventQuery = eventQuery.eq("client_slug", options.clientSlug);
     assetQuery = assetQuery.eq("client_slug", options.clientSlug);
+  }
+
+  if (options.assigneeId) {
+    campaignQuery = campaignQuery.eq("assignee_id", options.assigneeId);
+    crmQuery = crmQuery.eq("assignee_id", options.assigneeId);
+    eventQuery = eventQuery.eq("assignee_id", options.assigneeId);
+    assetQuery = assetQuery.eq("assignee_id", options.assigneeId);
   }
 
   if (visibility) {

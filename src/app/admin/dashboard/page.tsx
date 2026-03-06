@@ -9,6 +9,7 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { TicketVelocityChart } from "@/components/charts/ticket-velocity-chart";
 import { centsToUsd, fmtUsd, fmtNum, computeBlendedRoas } from "@/lib/formatters";
@@ -31,6 +32,8 @@ import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmOverview } from "@/features/crm/server";
+import { WorkQueueSection } from "@/components/workflow/work-queue-section";
+import { getWorkQueue } from "@/features/work-queue/server";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
@@ -51,12 +54,14 @@ function getUpcomingShows(events: Parameters<typeof EventsPreviewTable>[0]["even
 // --- Page ---
 
 export default async function AdminDashboard() {
+  const { userId } = await auth();
   const [
     { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb },
     opsSummary,
     actionCenter,
     assetSummary,
     agentOutcomes,
+    assignedWorkQueue,
     crm,
     crmFollowUpItems,
   ] = await Promise.all([
@@ -65,6 +70,7 @@ export default async function AdminDashboard() {
     getDashboardActionCenter({ mode: "admin", limit: 4 }),
     getDashboardAssetSummary({ limit: 4 }),
     listAgentOutcomes({ audience: "all", limit: 4 }),
+    userId ? getWorkQueue({ assigneeId: userId, limit: 4, mode: "admin" }) : Promise.resolve({ items: [], metrics: [] }),
     getCrmOverview({ audience: "all" }),
     listCrmFollowUpItems({ audience: "all", limit: 6 }),
   ]);
@@ -169,16 +175,27 @@ export default async function AdminDashboard() {
         variant="admin"
       />
 
-      <AgentOutcomesPanel
-        canCreateActionItems
-        outcomes={agentOutcomes}
-        title="Recent agent outcomes"
-        description="The latest completed, running, or blocked agent work across campaign operations."
-        emptyState="No agent outcomes are available yet."
-        variant="admin"
-        campaignHrefPrefix="/admin/campaigns"
-        eventHrefPrefix="/admin/events"
-      />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <WorkQueueSection
+          description="The cross-app work already assigned to you across campaigns, CRM, events, and assets."
+          emptyState="Nothing is assigned to you right now."
+          showClientSlug
+          showMetrics={false}
+          summary={assignedWorkQueue}
+          title="Assigned to you"
+          variant="admin"
+        />
+        <AgentOutcomesPanel
+          canCreateActionItems
+          outcomes={agentOutcomes}
+          title="Recent agent outcomes"
+          description="The latest completed, running, or blocked agent work across campaign operations."
+          emptyState="No agent outcomes are available yet."
+          variant="admin"
+          campaignHrefPrefix="/admin/campaigns"
+          eventHrefPrefix="/admin/events"
+        />
+      </div>
 
       {/* Trend charts */}
       {(trendData.length > 0 || velocityData.length > 0) && (

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { auth } from "@clerk/nextjs/server";
 import {
   BadgeCheck,
   Bot,
@@ -30,6 +31,7 @@ interface Props {
 
 export default async function ActivityPage({ searchParams }: Props) {
   const { user, type, range } = await searchParams;
+  const { userId } = await auth();
 
   const selectedUser = user ?? "all";
   const selectedType = type ?? "all";
@@ -41,7 +43,7 @@ export default async function ActivityPage({ searchParams }: Props) {
       eventType: selectedType !== "all" ? selectedType : null,
       range: selectedRange,
     }),
-    getAdminOperationsCenter(),
+    getAdminOperationsCenter(userId),
   ]);
 
   const metricIcons: Record<OperationsCenterMetricKey, typeof BadgeCheck> = {
@@ -120,13 +122,24 @@ export default async function ActivityPage({ searchParams }: Props) {
         variant="admin"
       />
 
-      <WorkQueueSection
-        description="The cross-app next steps that still need operator action across campaigns, CRM, events, and assets."
-        showClientSlug
-        summary={operations.workQueue}
-        title="Operations queue"
-        variant="admin"
-      />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <WorkQueueSection
+          description="The work currently assigned to you across campaigns, CRM, events, and assets."
+          emptyState="Nothing is directly assigned to you right now."
+          showClientSlug
+          showMetrics={false}
+          summary={operations.assignedWorkQueue}
+          title="Assigned to you"
+          variant="admin"
+        />
+        <WorkQueueSection
+          description="The cross-app next steps that still need operator action across campaigns, CRM, events, and assets."
+          showClientSlug
+          summary={operations.workQueue}
+          title="Operations queue"
+          variant="admin"
+        />
+      </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <DashboardAssetsSection
