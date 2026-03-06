@@ -235,6 +235,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       <DashboardActionCenterSection
         actionCenter={actionCenter}
         campaignHrefPrefix={`/client/${slug}/campaign`}
+        crmHrefPrefix={`/client/${slug}/crm`}
         variant="client"
       />
 

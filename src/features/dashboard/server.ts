@@ -1,5 +1,6 @@
 import type { TaskPriority } from "@/lib/workspace-types";
 import { supabaseAdmin } from "@/lib/supabase";
+import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import {
   buildDashboardOpsSummary,
   type DashboardApprovalRecord,
@@ -45,8 +46,20 @@ export interface DashboardActionCenterDiscussion {
   id: string;
 }
 
+export interface DashboardActionCenterCrmFollowUp {
+  clientSlug: string;
+  contactId: string;
+  contactName: string | null;
+  createdAt: string;
+  dueDate: string | null;
+  id: string;
+  priority: TaskPriority;
+  title: string;
+}
+
 export interface DashboardActionCenter {
   approvals: DashboardActionCenterApproval[];
+  crmFollowUps: DashboardActionCenterCrmFollowUp[];
   discussions: DashboardActionCenterDiscussion[];
 }
 
@@ -236,12 +249,12 @@ export async function getDashboardActionCenter(
   options: GetDashboardActionCenterOptions,
 ): Promise<DashboardActionCenter> {
   if (!supabaseAdmin) {
-    return { approvals: [], discussions: [] };
+    return { approvals: [], crmFollowUps: [], discussions: [] };
   }
 
   const scopeIds = options.scopeCampaignIds ?? null;
   if (scopeIds && scopeIds.length === 0) {
-    return { approvals: [], discussions: [] };
+    return { approvals: [], crmFollowUps: [], discussions: [] };
   }
 
   let campaignsQuery = supabaseAdmin
@@ -281,10 +294,15 @@ export async function getDashboardActionCenter(
     discussionsQuery = discussionsQuery.eq("visibility", "shared");
   }
 
-  const [campaignsRes, approvalsRes, discussionsRes] = await Promise.all([
+  const [campaignsRes, approvalsRes, discussionsRes, crmFollowUpItems] = await Promise.all([
     campaignsQuery,
     approvalsQuery,
     discussionsQuery,
+    listCrmFollowUpItems({
+      audience: options.mode === "client" ? "shared" : "all",
+      clientSlug: options.clientSlug,
+      limit: Math.max((options.limit ?? 4) * 4, 12),
+    }),
   ]);
 
   const allowedCampaignIds = scopeIds ? new Set(scopeIds) : null;
@@ -336,5 +354,25 @@ export async function getDashboardActionCenter(
     }))
     .slice(0, options.limit ?? 4);
 
-  return { approvals, discussions };
+  const crmFollowUps: DashboardActionCenterCrmFollowUp[] = crmFollowUpItems
+    .filter((item) => item.status !== "done")
+    .sort((a, b) => {
+      const aDate = a.dueDate ? new Date(a.dueDate).getTime() : Number.POSITIVE_INFINITY;
+      const bDate = b.dueDate ? new Date(b.dueDate).getTime() : Number.POSITIVE_INFINITY;
+      if (aDate !== bDate) return aDate - bDate;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    })
+    .slice(0, options.limit ?? 4)
+    .map((item) => ({
+      clientSlug: item.clientSlug,
+      contactId: item.contactId,
+      contactName: item.contactName,
+      createdAt: item.createdAt,
+      dueDate: item.dueDate,
+      id: item.id,
+      priority: item.priority,
+      title: item.title,
+    }));
+
+  return { approvals, crmFollowUps, discussions };
 }

@@ -129,6 +129,7 @@ export default async function AdminDashboard() {
       <DashboardActionCenterSection
         actionCenter={actionCenter}
         campaignHrefPrefix="/admin/campaigns"
+        crmHrefPrefix="/admin/crm"
         variant="admin"
       />
 

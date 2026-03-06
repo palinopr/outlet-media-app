@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BadgeCheck, MessageSquareMore } from "lucide-react";
+import { ArrowRight, BadgeCheck, CheckSquare, MessageSquareMore } from "lucide-react";
 import { timeAgo } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import type { DashboardActionCenter } from "@/features/dashboard/server";
@@ -7,6 +7,7 @@ import type { DashboardActionCenter } from "@/features/dashboard/server";
 interface DashboardActionCenterProps {
   actionCenter: DashboardActionCenter;
   campaignHrefPrefix: string;
+  crmHrefPrefix?: string;
   description?: string;
   variant: "admin" | "client";
 }
@@ -42,6 +43,7 @@ function emptyClass(variant: "admin" | "client") {
 export function DashboardActionCenterSection({
   actionCenter,
   campaignHrefPrefix,
+  crmHrefPrefix,
   description = "The next approvals and conversations that need human attention.",
   variant,
 }: DashboardActionCenterProps) {
@@ -49,7 +51,7 @@ export function DashboardActionCenterSection({
   const isClient = variant === "client";
 
   return (
-    <section className="grid gap-4 xl:grid-cols-2">
+    <section className="grid gap-4 xl:grid-cols-3">
       <div className={tone.body}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
@@ -106,6 +108,73 @@ export function DashboardActionCenterSection({
                           )}
                         >
                           Review <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className={tone.body}>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div>
+            <p className={cn("text-sm font-medium", tone.muted)}>CRM</p>
+            <h2 className={cn("mt-1 text-xl font-semibold tracking-tight", tone.title)}>
+              Next relationship steps
+            </h2>
+            <p className={cn("mt-1 text-sm", tone.muted)}>
+              CRM follow-up work that needs attention soon.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {actionCenter.crmFollowUps.length === 0 ? (
+            <div className={emptyClass(variant)}>No CRM next steps are waiting right now.</div>
+          ) : (
+            actionCenter.crmFollowUps.map((item) => (
+              <div key={item.id} className={tone.item}>
+                <div className="flex items-start gap-3">
+                  <div
+                    className={cn(
+                      "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl",
+                      isClient ? "bg-white/[0.08] text-white/80" : "bg-white text-[#6f6a63]",
+                    )}
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className={cn("flex flex-wrap items-center gap-2 text-xs", tone.muted)}>
+                      <span>{item.contactName ?? "CRM contact"}</span>
+                      <span>&middot;</span>
+                      <span>{timeAgo(item.createdAt)}</span>
+                      {!isClient ? (
+                        <>
+                          <span>&middot;</span>
+                          <span>{item.clientSlug}</span>
+                        </>
+                      ) : null}
+                    </div>
+                    <p className={cn("mt-1 text-sm font-medium", tone.title)}>{item.title}</p>
+                    <p className={cn("mt-1 text-sm", tone.muted)}>
+                      {item.dueDate ? `Due ${item.dueDate}` : "No due date set"}
+                    </p>
+                    {crmHrefPrefix ? (
+                      <div className="mt-3">
+                        <Link
+                          href={`${crmHrefPrefix}/${item.contactId}`}
+                          className={cn(
+                            "inline-flex items-center gap-1 text-sm font-medium",
+                            isClient
+                              ? "text-cyan-300 hover:text-cyan-200"
+                              : "text-[#0f7b6c] hover:text-[#0b5e52]",
+                          )}
+                        >
+                          Open contact <ArrowRight className="h-3 w-3" />
                         </Link>
                       </div>
                     ) : null}
