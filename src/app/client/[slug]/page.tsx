@@ -11,6 +11,10 @@ import {
   Ticket,
 } from "lucide-react";
 import { currentUser } from "@clerk/nextjs/server";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
+import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
+import { getDashboardOpsSummary } from "@/features/dashboard/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
@@ -45,8 +49,16 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const range = parseRange(rangeParam);
 
   const { scope } = await requireClientAccess(slug);
-  const data = await getData(slug, range, scope);
-  const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = data;
+  const [data, opsSummary] = await Promise.all([
+    getData(slug, range, scope),
+    getDashboardOpsSummary({
+      clientSlug: slug,
+      limit: 5,
+      mode: "client",
+      scopeCampaignIds: scope?.allowedCampaignIds,
+    }),
+  ]);
+  const { heroStats, campaigns, events, audience, dataSource, rangeLabel, trendData } = data;
 
   const clientName = slugToLabel(slug);
 
@@ -151,6 +163,42 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           </p>
         </div>
       </div>
+
+      <DashboardOpsSummarySection
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        description="A simple summary of the approvals, next steps, open threads, and recent updates that need attention across your campaigns."
+        emptyState="Your shared campaign workflows look clear right now."
+        summary={opsSummary}
+        title="What needs attention"
+        variant="client"
+      />
+
+      {trendData.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-3.5 w-3.5 text-white/50" />
+              <span className="section-label">ROAS Trend</span>
+            </div>
+            <span className="text-xs text-white/45">{rangeLabel}</span>
+          </div>
+          <div className="glass-card p-5">
+            <Card className="border-white/10 bg-transparent shadow-none">
+              <CardHeader className="px-0 pt-0 pb-3">
+                <CardTitle className="text-sm font-semibold text-white">
+                  Campaign performance trend
+                </CardTitle>
+                <p className="text-xs text-white/50">
+                  A familiar chart view for quick readouts before opening deeper workflow details.
+                </p>
+              </CardHeader>
+              <CardContent className="px-0 pb-0">
+                <RoasTrendChart data={trendData} />
+              </CardContent>
+            </Card>
+          </div>
+        </section>
+      )}
 
       {/* -- Campaign Cards with Filter -- */}
       {campaigns.length > 0 && (

@@ -4,7 +4,7 @@ import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
 import { computeBlendedRoas } from "@/lib/formatters";
 import type { ScopeFilter } from "@/lib/member-access";
 import type { TmEvent, DemographicsRow, CampaignCard, EventCard, HeroStats, AudienceProfile } from "./types";
-import { buildAudienceProfile, buildEventCard } from "./lib";
+import { buildAudienceProfile, buildEventCard, buildTrendData } from "./lib";
 
 export type { DateRange };
 
@@ -16,6 +16,7 @@ export interface ClientData {
   audience: AudienceProfile | null;
   dataSource: "meta_api" | "supabase";
   rangeLabel: string;
+  trendData: Array<{ date: string; roas: number; spend: number }>;
 }
 
 const EMPTY: ClientData = {
@@ -34,6 +35,7 @@ const EMPTY: ClientData = {
   audience: null,
   dataSource: "supabase",
   rangeLabel: "Last 7 days",
+  trendData: [],
 };
 
 // --- Map shared MetaCampaignCard to client portal CampaignCard ---
@@ -205,6 +207,17 @@ export async function getData(
 
   if (campaigns.length === 0 && result.error) return EMPTY;
 
+  const allowedCampaignIds = new Set(campaigns.map((campaign) => campaign.campaignId));
+  const trendData = buildTrendData(
+    result.dailyInsights
+      .filter((row) => allowedCampaignIds.has(row.campaignId))
+      .map((row) => ({
+        snapshot_date: row.date,
+        roas: row.roas,
+        spend: row.spend != null ? Math.round(row.spend * 100) : null,
+      })),
+  );
+
   const dataSource = result.error ? "supabase" : "meta_api";
   const tmEvents = (eventsRes.data ?? []) as TmEvent[];
   const events = buildEventCards(tmEvents);
@@ -229,5 +242,6 @@ export async function getData(
     audience,
     dataSource,
     rangeLabel: RANGE_LABELS[range],
+    trendData,
   };
 }

@@ -26,6 +26,7 @@ The short-term focus is:
 - Design agents as bounded workers attached to those events.
 - Keep admin and client experiences on the same backbone with different permissions and visibility.
 - Keep traditional dashboards as first-class surfaces, not as an afterthought layered on top of workflow views.
+- Derive dashboard workflow summaries from the same campaign-native approvals, action items, comments, and `system_events` backbone instead of introducing separate summary-only state.
 
 ## Immediate Build Bias
 

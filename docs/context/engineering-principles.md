@@ -143,6 +143,7 @@ Other users want:
 - deeper operating workflows
 
 Build both layers on the same underlying objects and events.
+Traditional dashboard summaries should be composed from the same first-class approvals, action items, comments, and `system_events` backbone as the deeper workflow views.
 
 ## 12. Correct Weak Architecture Early
 
