@@ -4,6 +4,25 @@ function uniquePaths(paths: string[]) {
   return [...new Set(paths)];
 }
 
+type RevalidationTarget = {
+  path: string;
+  type?: "layout" | "page";
+};
+
+function uniqueTargets(targets: RevalidationTarget[]) {
+  const seen = new Set<string>();
+  const result: RevalidationTarget[] = [];
+
+  for (const target of targets) {
+    const key = `${target.path}:${target.type ?? "page"}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(target);
+  }
+
+  return result;
+}
+
 function clientPaths(clientSlug: string | null | undefined, paths: string[]) {
   if (!clientSlug) return [];
   return paths.map((path) => path.replaceAll(":clientSlug", clientSlug));
@@ -12,6 +31,11 @@ function clientPaths(clientSlug: string | null | undefined, paths: string[]) {
 function metadataString(metadata: Record<string, unknown> | null | undefined, key: string) {
   const value = metadata?.[key];
   return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function portalClientSlug(clientSlug: string | null | undefined) {
+  if (!clientSlug || clientSlug === "admin") return null;
+  return clientSlug;
 }
 
 export function getCampaignWorkflowPaths(
@@ -164,6 +188,40 @@ export function getApprovalWorkflowPaths(input: ApprovalWorkflowPathsInput) {
     ...(eventId ? getEventWorkflowPaths(clientSlug, eventId) : []),
     ...(contactId ? getCrmWorkflowPaths(clientSlug, contactId) : []),
   ]);
+}
+
+interface WorkspaceMutationTargetsInput {
+  clientSlug?: string | null;
+  includeActivity?: boolean;
+  includeNotifications?: boolean;
+  includeTasks?: boolean;
+  pageIds?: Array<string | null | undefined>;
+}
+
+export function getWorkspaceMutationTargets(input: WorkspaceMutationTargetsInput) {
+  const clientSlug = portalClientSlug(input.clientSlug);
+  const pageIds = [...new Set((input.pageIds ?? []).filter((value): value is string => Boolean(value)))];
+
+  return uniqueTargets([
+    { path: "/admin/workspace", type: "layout" },
+    ...(input.includeActivity ? [{ path: "/admin/activity" }] : []),
+    ...(input.includeNotifications ? [{ path: "/admin/notifications" }] : []),
+    ...(input.includeTasks ? [{ path: "/admin/workspace/tasks" }] : []),
+    ...pageIds.map((pageId) => ({ path: `/admin/workspace/${pageId}` })),
+    ...(clientSlug ? [{ path: `/client/${clientSlug}/workspace`, type: "layout" as const }] : []),
+    ...(clientSlug && input.includeActivity ? [{ path: `/client/${clientSlug}/updates` }] : []),
+    ...(clientSlug && input.includeNotifications ? [{ path: `/client/${clientSlug}/notifications` }] : []),
+    ...(clientSlug && input.includeTasks ? [{ path: `/client/${clientSlug}/workspace/tasks` }] : []),
+    ...pageIds.map((pageId) => ({
+      path: clientSlug ? `/client/${clientSlug}/workspace/${pageId}` : "",
+    })).filter((target) => target.path.length > 0),
+  ]);
+}
+
+export function revalidateWorkspaceMutationTargets(input: WorkspaceMutationTargetsInput) {
+  for (const target of getWorkspaceMutationTargets(input)) {
+    revalidatePath(target.path, target.type);
+  }
 }
 
 export function revalidateWorkflowPaths(paths: string[]) {

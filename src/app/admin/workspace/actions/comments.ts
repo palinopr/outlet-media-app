@@ -1,10 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { NotificationType } from "@/lib/workspace-types";
 import { createNotification } from "@/features/notifications/server";
+import { revalidateWorkspaceMutationTargets } from "@/features/workflow/revalidation";
 
 function readPageClientSlug(page: unknown): string | null {
   if (!page || typeof page !== "object") return null;
@@ -89,7 +89,11 @@ export async function createComment(formData: {
     });
   }
 
-  revalidatePath(`/admin/workspace`);
+  revalidateWorkspaceMutationTargets({
+    clientSlug: pageClientSlug,
+    includeNotifications: true,
+    pageIds: [formData.page_id],
+  });
   return comment;
 }
 
@@ -98,13 +102,31 @@ export async function resolveComment(formData: { id: string; resolved: boolean }
   if (!userId) throw new Error("Unauthenticated");
   if (!supabaseAdmin) throw new Error("DB not configured");
 
-  const { error } = await supabaseAdmin
+  const { data: existing } = await supabaseAdmin
     .from("workspace_comments")
-    .update({ resolved: formData.resolved, updated_at: new Date().toISOString() })
-    .eq("id", formData.id);
+    .select("page_id")
+    .eq("id", formData.id)
+    .single();
+
+  if (!existing) throw new Error("Comment not found");
+
+  const [{ error }, { data: page }] = await Promise.all([
+    supabaseAdmin
+      .from("workspace_comments")
+      .update({ resolved: formData.resolved, updated_at: new Date().toISOString() })
+      .eq("id", formData.id),
+    supabaseAdmin
+      .from("workspace_pages")
+      .select("client_slug")
+      .eq("id", existing.page_id)
+      .single(),
+  ]);
 
   if (error) throw new Error(error.message);
-  revalidatePath(`/admin/workspace`);
+  revalidateWorkspaceMutationTargets({
+    clientSlug: readPageClientSlug(page),
+    pageIds: [existing.page_id],
+  });
 }
 
 export async function deleteComment(formData: { id: string }) {
@@ -112,12 +134,31 @@ export async function deleteComment(formData: { id: string }) {
   if (!userId) throw new Error("Unauthenticated");
   if (!supabaseAdmin) throw new Error("DB not configured");
 
-  const { error } = await supabaseAdmin
+  const { data: existing } = await supabaseAdmin
     .from("workspace_comments")
-    .delete()
+    .select("page_id")
     .eq("id", formData.id)
-    .eq("author_id", userId);
+    .eq("author_id", userId)
+    .single();
+
+  if (!existing) throw new Error("Comment not found");
+
+  const [{ error }, { data: page }] = await Promise.all([
+    supabaseAdmin
+      .from("workspace_comments")
+      .delete()
+      .eq("id", formData.id)
+      .eq("author_id", userId),
+    supabaseAdmin
+      .from("workspace_pages")
+      .select("client_slug")
+      .eq("id", existing.page_id)
+      .single(),
+  ]);
 
   if (error) throw new Error(error.message);
-  revalidatePath(`/admin/workspace`);
+  revalidateWorkspaceMutationTargets({
+    clientSlug: readPageClientSlug(page),
+    pageIds: [existing.page_id],
+  });
 }

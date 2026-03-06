@@ -1,6 +1,5 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
 import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
@@ -16,6 +15,7 @@ import {
   logSystemEvent,
   summarizeChangedFields,
 } from "@/features/system-events/server";
+import { revalidateWorkspaceMutationTargets } from "@/features/workflow/revalidation";
 
 const TASK_FIELD_LABELS: Record<string, string> = {
   assignee_id: "assignee",
@@ -118,8 +118,13 @@ export async function createTask(formData: {
       status: parsed.status,
     },
   });
-  revalidatePath("/admin/workspace/tasks");
-  revalidatePath(`/client/${parsed.client_slug}/workspace/tasks`);
+  revalidateWorkspaceMutationTargets({
+    clientSlug: parsed.client_slug,
+    includeActivity: true,
+    includeNotifications: true,
+    includeTasks: true,
+    pageIds: [parsed.page_id],
+  });
   return task;
 }
 
@@ -210,8 +215,13 @@ export async function updateTask(formData: {
       },
     });
   }
-  revalidatePath("/admin/workspace/tasks");
-  revalidatePath(`/client/${existing.client_slug}/workspace/tasks`);
+  revalidateWorkspaceMutationTargets({
+    clientSlug: existing.client_slug,
+    includeActivity: true,
+    includeNotifications: true,
+    includeTasks: true,
+    pageIds: [existing.page_id, parsed.page_id],
+  });
 }
 
 export async function deleteTask(formData: { taskId: string }) {
@@ -224,7 +234,7 @@ export async function deleteTask(formData: { taskId: string }) {
   // Get task for slug before deleting
   const { data: task } = await supabaseAdmin
     .from("workspace_tasks")
-    .select("client_slug, title")
+    .select("client_slug, page_id, title")
     .eq("id", formData.taskId)
     .single();
 
@@ -247,8 +257,13 @@ export async function deleteTask(formData: { taskId: string }) {
     taskId: formData.taskId,
     summary: `Deleted task "${task.title}"`,
   });
-  revalidatePath("/admin/workspace/tasks");
-  revalidatePath(`/client/${task.client_slug}/workspace/tasks`);
+  revalidateWorkspaceMutationTargets({
+    clientSlug: task.client_slug,
+    includeActivity: true,
+    includeNotifications: true,
+    includeTasks: true,
+    pageIds: [task.page_id],
+  });
 }
 
 export async function reorderTask(formData: {
@@ -293,6 +308,9 @@ export async function reorderTask(formData: {
       summary: `Moved task "${existing.title}" to ${taskStatusLabel(formData.status)}`,
     });
   }
-
-  revalidatePath("/admin/workspace/tasks");
+  revalidateWorkspaceMutationTargets({
+    clientSlug: existing.client_slug,
+    includeActivity: true,
+    includeTasks: true,
+  });
 }

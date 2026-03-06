@@ -5,6 +5,7 @@ import {
   getCampaignWorkflowPaths,
   getCrmWorkflowPaths,
   getEventWorkflowPaths,
+  getWorkspaceMutationTargets,
 } from "@/features/workflow/revalidation";
 
 describe("workflow revalidation paths", () => {
@@ -165,6 +166,43 @@ describe("workflow revalidation paths", () => {
       "/admin/conversations",
       "/admin/events",
       "/admin/events/evt_1",
+    ]);
+  });
+
+  it("covers workspace layout, detail, notifications, and activity targets", () => {
+    expect(
+      getWorkspaceMutationTargets({
+        clientSlug: "zamora",
+        includeActivity: true,
+        includeNotifications: true,
+        includeTasks: true,
+        pageIds: ["page_1", "page_2", "page_1"],
+      }),
+    ).toEqual([
+      { path: "/admin/workspace", type: "layout" },
+      { path: "/admin/activity" },
+      { path: "/admin/notifications" },
+      { path: "/admin/workspace/tasks" },
+      { path: "/admin/workspace/page_1" },
+      { path: "/admin/workspace/page_2" },
+      { path: "/client/zamora/workspace", type: "layout" },
+      { path: "/client/zamora/updates" },
+      { path: "/client/zamora/notifications" },
+      { path: "/client/zamora/workspace/tasks" },
+      { path: "/client/zamora/workspace/page_1" },
+      { path: "/client/zamora/workspace/page_2" },
+    ]);
+
+    expect(
+      getWorkspaceMutationTargets({
+        clientSlug: "admin",
+        includeNotifications: true,
+        pageIds: ["page_1"],
+      }),
+    ).toEqual([
+      { path: "/admin/workspace", type: "layout" },
+      { path: "/admin/notifications" },
+      { path: "/admin/workspace/page_1" },
     ]);
   });
 });
