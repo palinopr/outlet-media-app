@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, cleanup } from "@testing-library/react";
+import { fireEvent, render, screen, cleanup } from "@testing-library/react";
 
 // Mock Clerk so the async server component can be rendered synchronously
 vi.mock("@clerk/nextjs/server", () => ({
@@ -28,6 +28,10 @@ async function renderLayout(slug: string, children?: React.ReactNode) {
     params: Promise.resolve({ slug }),
   });
   return render(<>{element}</>);
+}
+
+function openMobileNav() {
+  fireEvent.click(screen.getByRole("button", { name: "Toggle navigation menu" }));
 }
 
 describe("ClientLayout navigation links", () => {
@@ -60,9 +64,10 @@ describe("ClientLayout navigation links", () => {
   it("renders Overview link in the mobile header", async () => {
     delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
     await renderLayout("acme");
+    openMobileNav();
     const links = screen.getAllByRole("link", { name: "Overview" });
     const mobileLink = links.find((l) =>
-      l.className.includes("text-xs")
+      l.getAttribute("href") === "/client/acme"
     );
     expect(mobileLink).toBeDefined();
     expect(mobileLink).toHaveAttribute("href", "/client/acme");
@@ -71,9 +76,10 @@ describe("ClientLayout navigation links", () => {
   it("renders Campaigns link in the mobile header", async () => {
     delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
     await renderLayout("acme");
+    openMobileNav();
     const links = screen.getAllByRole("link", { name: "Campaigns" });
     const mobileLink = links.find((l) =>
-      l.className.includes("text-xs")
+      l.getAttribute("href") === "/client/acme/campaigns"
     );
     expect(mobileLink).toBeDefined();
     expect(mobileLink).toHaveAttribute("href", "/client/acme/campaigns");
@@ -82,11 +88,22 @@ describe("ClientLayout navigation links", () => {
   it("renders both desktop and mobile Campaigns links for any slug", async () => {
     delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
     await renderLayout("test_client");
+    openMobileNav();
     const links = screen.getAllByRole("link", { name: "Campaigns" });
     // Should appear twice: once in desktop sidebar, once in mobile header
     expect(links).toHaveLength(2);
     expect(links[0]).toHaveAttribute("href", "/client/test_client/campaigns");
     expect(links[1]).toHaveAttribute("href", "/client/test_client/campaigns");
+  });
+
+  it("renders both desktop and mobile CRM links when CRM is enabled", async () => {
+    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    await renderLayout("acme");
+    openMobileNav();
+    const links = screen.getAllByRole("link", { name: "CRM" });
+    expect(links).toHaveLength(2);
+    expect(links[0]).toHaveAttribute("href", "/client/acme/crm");
+    expect(links[1]).toHaveAttribute("href", "/client/acme/crm");
   });
 
   it("renders children inside main content area", async () => {

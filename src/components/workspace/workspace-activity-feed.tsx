@@ -9,6 +9,7 @@ import {
   FolderInput,
   MessageSquare,
   Upload,
+  Users,
 } from "lucide-react";
 import { timeAgo } from "@/lib/formatters";
 import type { SystemEvent } from "@/features/system-events/server";
@@ -27,6 +28,7 @@ function getEventIcon(eventName: string) {
   if (eventName.startsWith("approval_")) return BadgeCheck;
   if (eventName.startsWith("campaign_action_item_")) return CheckSquare;
   if (eventName.startsWith("campaign_comment_")) return MessageSquare;
+  if (eventName.startsWith("crm_contact_")) return Users;
   if (eventName.startsWith("workspace_comment")) return MessageSquare;
   if (eventName.startsWith("workspace_task")) return CheckSquare;
   if (eventName === "campaign_updated") return BarChart3;

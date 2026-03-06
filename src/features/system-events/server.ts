@@ -17,6 +17,8 @@ export type SystemEventName =
   | "campaign_action_item_deleted"
   | "campaign_action_item_updated"
   | "campaign_updated"
+  | "crm_contact_created"
+  | "crm_contact_updated"
   | "event_updated"
   | "workspace_comment_added"
   | "workspace_comment_deleted"
