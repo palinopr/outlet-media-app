@@ -139,6 +139,7 @@ export default async function AdminDashboard() {
         assetLibraryHref="/admin/assets"
         campaignHrefPrefix="/admin/campaigns"
         crmHrefPrefix="/admin/crm"
+        eventHrefPrefix="/admin/events"
         variant="admin"
       />
 

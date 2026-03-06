@@ -51,7 +51,7 @@ export interface DashboardActionCenterDiscussion {
   content: string;
   createdAt: string;
   id: string;
-  kind: "asset" | "campaign" | "crm";
+  kind: "asset" | "campaign" | "crm" | "event";
   targetId: string;
   targetName: string | null;
 }
@@ -327,12 +327,21 @@ export async function getDashboardActionCenter(
     .order("created_at", { ascending: false })
     .limit(Math.max((options.limit ?? 4) * 4, 12));
 
+  let eventDiscussionsQuery = supabaseAdmin
+    .from("event_comments" as never)
+    .select("id, event_id, client_slug, content, created_at, author_name")
+    .eq("resolved", false)
+    .is("parent_comment_id", null)
+    .order("created_at", { ascending: false })
+    .limit(Math.max((options.limit ?? 4) * 4, 12));
+
   if (options.clientSlug) {
     campaignsQuery = campaignsQuery.eq("client_slug", options.clientSlug);
     approvalsQuery = approvalsQuery.eq("client_slug", options.clientSlug);
     discussionsQuery = discussionsQuery.eq("client_slug", options.clientSlug);
     crmDiscussionsQuery = crmDiscussionsQuery.eq("client_slug", options.clientSlug);
     assetDiscussionsQuery = assetDiscussionsQuery.eq("client_slug", options.clientSlug);
+    eventDiscussionsQuery = eventDiscussionsQuery.eq("client_slug", options.clientSlug);
   }
 
   if (scopeIds && scopeIds.length > 0) {
@@ -345,6 +354,7 @@ export async function getDashboardActionCenter(
     discussionsQuery = discussionsQuery.eq("visibility", "shared");
     crmDiscussionsQuery = crmDiscussionsQuery.eq("visibility", "shared");
     assetDiscussionsQuery = assetDiscussionsQuery.eq("visibility", "shared");
+    eventDiscussionsQuery = eventDiscussionsQuery.eq("visibility", "shared");
   }
 
   const [
@@ -353,6 +363,7 @@ export async function getDashboardActionCenter(
     discussionsRes,
     crmDiscussionsRes,
     assetDiscussionsRes,
+    eventDiscussionsRes,
     crmFollowUpItems,
   ] =
     await Promise.all([
@@ -361,6 +372,7 @@ export async function getDashboardActionCenter(
       discussionsQuery,
       crmDiscussionsQuery,
       assetDiscussionsQuery,
+      eventDiscussionsQuery,
       listCrmFollowUpItems({
         audience: options.mode === "client" ? "shared" : "all",
         clientSlug: options.clientSlug,
@@ -452,6 +464,32 @@ export async function getDashboardActionCenter(
     }
   }
 
+  const eventNames = new Map<string, string>();
+  const eventIds = [
+    ...new Set(
+      ((eventDiscussionsRes.data ?? []) as Record<string, unknown>[])
+        .map((row) => (row.event_id as string | null) ?? null)
+        .filter((value): value is string => !!value),
+    ),
+  ];
+
+  if (eventIds.length > 0) {
+    const { data: eventRows } = await supabaseAdmin
+      .from("tm_events")
+      .select("id, name, artist")
+      .in("id", eventIds);
+
+    for (const row of eventRows ?? []) {
+      const record = row as Record<string, unknown>;
+      eventNames.set(
+        record.id as string,
+        (record.artist as string | null) ??
+          (record.name as string | null) ??
+          "Event",
+      );
+    }
+  }
+
   const campaignDiscussions: DashboardActionCenterDiscussion[] = (discussionsRes.data ?? [])
     .map((row) => ({
       authorName: (row.author_name as string | null) ?? null,
@@ -489,10 +527,24 @@ export async function getDashboardActionCenter(
     targetName: assetNames.get(row.asset_id as string) ?? null,
   }));
 
+  const eventDiscussions: DashboardActionCenterDiscussion[] = (
+    (eventDiscussionsRes.data ?? []) as Record<string, unknown>[]
+  ).map((row) => ({
+    authorName: (row.author_name as string | null) ?? null,
+    clientSlug: ((row.client_slug as string | null) ?? "unassigned") as string,
+    content: row.content as string,
+    createdAt: row.created_at as string,
+    id: row.id as string,
+    kind: "event" as const,
+    targetId: row.event_id as string,
+    targetName: eventNames.get(row.event_id as string) ?? null,
+  }));
+
   const discussions: DashboardActionCenterDiscussion[] = [
     ...campaignDiscussions,
     ...crmDiscussions,
     ...assetDiscussions,
+    ...eventDiscussions,
   ]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, options.limit ?? 4);

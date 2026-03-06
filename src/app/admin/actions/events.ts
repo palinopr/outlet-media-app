@@ -12,6 +12,27 @@ function eventVisibility(clientSlug: string | null | undefined) {
   return clientSlug ? "shared" : "admin_only";
 }
 
+async function syncEventWorkflowClientSlug(
+  eventIds: string[],
+  clientSlug: string | null,
+) {
+  if (!supabaseAdmin || eventIds.length === 0) return;
+
+  const [commentsResult, followUpItemsResult] = await Promise.all([
+    supabaseAdmin
+      .from("event_comments" as never)
+      .update({ client_slug: clientSlug, updated_at: new Date().toISOString() })
+      .in("event_id", eventIds),
+    supabaseAdmin
+      .from("event_follow_up_items" as never)
+      .update({ client_slug: clientSlug, updated_at: new Date().toISOString() })
+      .in("event_id", eventIds),
+  ]);
+
+  if (commentsResult.error) throw new Error(commentsResult.error.message);
+  if (followUpItemsResult.error) throw new Error(followUpItemsResult.error.message);
+}
+
 function revalidateEventPaths(eventId: string, clientSlugs: Array<string | null | undefined>) {
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin/events");
@@ -97,16 +118,19 @@ export async function assignEventClient(formData: { eventId: string; clientSlug:
     .eq("id", parsed.eventId);
 
   if (error) throw new Error(error.message);
+  await syncEventWorkflowClientSlug([parsed.eventId], parsed.clientSlug || null);
 
   await logAudit("event", parsed.eventId, "assign_client", { client_slug: old?.client_slug }, { client_slug: parsed.clientSlug });
   await logSystemEvent({
     eventName: "event_updated",
     actorId: user.id,
-    clientSlug: parsed.clientSlug,
-    visibility: "shared",
+    clientSlug: parsed.clientSlug || null,
+    visibility: eventVisibility(parsed.clientSlug),
     entityType: "event",
     entityId: parsed.eventId,
-    summary: `Assigned event "${old?.name ?? parsed.eventId}" to ${parsed.clientSlug}`,
+    summary: parsed.clientSlug
+      ? `Assigned event "${old?.name ?? parsed.eventId}" to ${parsed.clientSlug}`
+      : `Unassigned event "${old?.name ?? parsed.eventId}" from a client`,
     detail: old?.client_slug ? `Previously assigned to ${old.client_slug}.` : null,
     metadata: {
       field: "client_slug",
@@ -137,6 +161,13 @@ export async function bulkAssignEventClient(formData: { eventIds: string[]; clie
   const user = await currentUser();
   if (!user) throw new Error("Unauthenticated");
 
+  const { data: previousRows, error: previousError } = await supabaseAdmin
+    .from("tm_events")
+    .select("id, client_slug")
+    .in("id", parsed.eventIds);
+
+  if (previousError) throw new Error(previousError.message);
+
   const now = new Date().toISOString();
   const { error } = await supabaseAdmin
     .from("tm_events")
@@ -144,6 +175,7 @@ export async function bulkAssignEventClient(formData: { eventIds: string[]; clie
     .in("id", parsed.eventIds);
 
   if (error) throw new Error(error.message);
+  await syncEventWorkflowClientSlug(parsed.eventIds, parsed.clientSlug);
 
   await logAudit("event", "bulk", "bulk_assign_client", null, {
     count: parsed.eventIds.length,
@@ -163,6 +195,20 @@ export async function bulkAssignEventClient(formData: { eventIds: string[]; clie
     },
   });
   revalidatePath("/admin/events");
+  const affectedClientSlugs = new Set<string>();
+  affectedClientSlugs.add(parsed.clientSlug);
+  for (const row of previousRows ?? []) {
+    const clientSlug = (row as Record<string, unknown>).client_slug as string | null;
+    if (clientSlug) affectedClientSlugs.add(clientSlug);
+  }
+
+  for (const clientSlug of affectedClientSlugs) {
+    revalidatePath(`/client/${clientSlug}`);
+    revalidatePath(`/client/${clientSlug}/events`);
+    for (const eventId of parsed.eventIds) {
+      revalidatePath(`/client/${clientSlug}/event/${eventId}`);
+    }
+  }
   return { success: true };
 }
 

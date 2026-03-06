@@ -249,6 +249,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         assetLibraryHref={`/client/${slug}/assets`}
         campaignHrefPrefix={`/client/${slug}/campaign`}
         crmHrefPrefix={`/client/${slug}/crm`}
+        eventHrefPrefix={`/client/${slug}/event`}
         variant="client"
       />
 

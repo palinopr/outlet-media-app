@@ -11,6 +11,7 @@ interface DashboardActionCenterProps {
   campaignHrefPrefix: string;
   crmHrefPrefix?: string;
   description?: string;
+  eventHrefPrefix?: string;
   variant: "admin" | "client";
 }
 
@@ -49,6 +50,7 @@ export function DashboardActionCenterSection({
   campaignHrefPrefix,
   crmHrefPrefix,
   description = "The next approvals and conversations that need human attention.",
+  eventHrefPrefix,
   variant,
 }: DashboardActionCenterProps) {
   const tone = panelTone(variant);
@@ -209,14 +211,14 @@ export function DashboardActionCenterSection({
               Recent conversation
             </h2>
             <p className={cn("mt-1 text-sm", tone.muted)}>
-              Open campaign, asset, and CRM threads that still need a response or follow-up.
+              Open campaign, asset, CRM, and event threads that still need a response or follow-up.
             </p>
           </div>
         </div>
 
         <div className="space-y-3">
           {actionCenter.discussions.length === 0 ? (
-            <div className={emptyClass(variant)}>No unresolved campaign, asset, or CRM discussions right now.</div>
+            <div className={emptyClass(variant)}>No unresolved campaign, asset, CRM, or event discussions right now.</div>
           ) : (
             actionCenter.discussions.map((discussion) => {
               const href =
@@ -226,6 +228,10 @@ export function DashboardActionCenterSection({
                     ? assetHrefPrefix
                       ? `${assetHrefPrefix}/${discussion.targetId}`
                       : assetLibraryHref ?? null
+                  : discussion.kind === "event"
+                    ? eventHrefPrefix
+                      ? `${eventHrefPrefix}/${discussion.targetId}`
+                      : null
                   : crmHrefPrefix
                     ? `${crmHrefPrefix}/${discussion.targetId}`
                     : null;
@@ -259,6 +265,8 @@ export function DashboardActionCenterSection({
                             ? "Campaign thread"
                             : discussion.kind === "asset"
                               ? "Asset discussion"
+                              : discussion.kind === "event"
+                                ? "Event discussion"
                               : "CRM relationship")}
                       </p>
                       <p className={cn("mt-1 text-sm", tone.muted)}>
@@ -281,6 +289,8 @@ export function DashboardActionCenterSection({
                                 ? assetHrefPrefix
                                   ? "Open asset"
                                   : "Open asset library"
+                                : discussion.kind === "event"
+                                  ? "Open event"
                                 : "Open contact"}{" "}
                             <ArrowRight className="h-3 w-3" />
                           </Link>

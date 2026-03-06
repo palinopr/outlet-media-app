@@ -31,6 +31,8 @@ import { EventStatusBadge } from "../../components/event-status-badge";
 import { AudienceSection } from "../../components/audience-section";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
+import { EventCommentsPanel } from "@/components/events/event-comments-panel";
+import { EventFollowUpItemsPanel } from "@/components/events/event-follow-up-items-panel";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import {
   TicketSalesChart,
@@ -40,7 +42,9 @@ import {
 import type { SalesVelocity, TicketPlatform } from "../../types";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { getDashboardOpsSummary } from "@/features/dashboard/server";
-import { listSystemEvents } from "@/features/system-events/server";
+import { listEventComments } from "@/features/event-comments/server";
+import { listEventFollowUpItems } from "@/features/event-follow-up-items/server";
+import { listEventSystemEvents } from "@/features/system-events/server";
 
 interface Props {
   params: Promise<{ slug: string; eventId: string }>;
@@ -84,7 +88,7 @@ function getDaysUntilEvent(eventDate: string | null): number | null {
 
 export default async function EventDetailPage({ params }: Props) {
   const { slug, eventId } = await params;
-  const { scope } = await requireClientAccess(slug, "ticketmaster", "eata");
+  const { scope, userId } = await requireClientAccess(slug, "ticketmaster", "eata");
   const data = await getEventDetail(slug, eventId);
 
   if (!data) {
@@ -103,7 +107,7 @@ export default async function EventDetailPage({ params }: Props) {
 
   const { event: e, snapshots, dailyDeltas, velocity, audience, linkedCampaigns, channelBreakdown } = data;
   const linkedCampaignIds = linkedCampaigns.map((campaign) => campaign.campaignId);
-  const [opsSummary, eventEvents] = await Promise.all([
+  const [opsSummary, eventEvents, eventComments, eventFollowUpItems] = await Promise.all([
     getDashboardOpsSummary({
       clientSlug: slug,
       limit: 5,
@@ -115,12 +119,20 @@ export default async function EventDetailPage({ params }: Props) {
             )
           : [],
     }),
-    listSystemEvents({
+    listEventSystemEvents({
       audience: "shared",
       clientSlug: slug,
-      entityType: "event",
-      entityId: e.id,
+      eventId: e.id,
       limit: 6,
+    }),
+    listEventComments({
+      audience: "shared",
+      eventId: e.id,
+    }),
+    listEventFollowUpItems({
+      audience: "shared",
+      eventId: e.id,
+      limit: 24,
     }),
   ]);
 
@@ -256,6 +268,26 @@ export default async function EventDetailPage({ params }: Props) {
           title="Event activity"
           description="Shared changes to ticketing and event state for this show."
           emptyState="Event activity will appear here when the team updates ticketing or event status."
+        />
+        <EventCommentsPanel
+          allowAdminOnly={false}
+          canDeleteAny={false}
+          comments={eventComments}
+          currentUserId={userId}
+          eventId={e.id}
+          description="Ask questions, flag ticketing concerns, and stay aligned with the Outlet team on this show."
+          emptyState="No shared event discussion yet."
+          title="Event discussion"
+          variant="client"
+        />
+        <EventFollowUpItemsPanel
+          canManage={false}
+          eventId={e.id}
+          items={eventFollowUpItems}
+          title="Event next steps"
+          description="Shared next steps attached directly to this event."
+          emptyState="No shared event follow-up items are active yet."
+          variant="client"
         />
       </section>
 

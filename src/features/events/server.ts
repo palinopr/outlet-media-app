@@ -61,6 +61,26 @@ function mapEvent(row: Record<string, unknown>): EventOperatingRecord {
   };
 }
 
+export async function getEventRecordById(eventId: string): Promise<EventOperatingRecord | null> {
+  if (!supabaseAdmin) return null;
+
+  const { data, error } = await supabaseAdmin
+    .from("tm_events")
+    .select(
+      "id, tm_id, tm1_number, client_slug, name, artist, venue, city, date, status, tickets_sold, tickets_available, gross, avg_ticket_price, url, updated_at",
+    )
+    .eq("id", eventId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[events] event lookup failed:", error.message);
+    return null;
+  }
+
+  if (!data) return null;
+  return mapEvent(data as Record<string, unknown>);
+}
+
 export async function getEventOperatingData(eventId: string): Promise<EventOperatingData | null> {
   if (!supabaseAdmin) return null;
 

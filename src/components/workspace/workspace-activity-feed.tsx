@@ -34,6 +34,8 @@ function getEventIcon(eventName: string) {
   if (eventName.startsWith("crm_contact_")) return Users;
   if (eventName.startsWith("crm_comment_")) return MessageSquare;
   if (eventName.startsWith("crm_follow_up_item_")) return CheckSquare;
+  if (eventName.startsWith("event_comment_")) return MessageSquare;
+  if (eventName.startsWith("event_follow_up_item_")) return CheckSquare;
   if (eventName.startsWith("workspace_comment")) return MessageSquare;
   if (eventName.startsWith("workspace_task")) return CheckSquare;
   if (eventName === "campaign_updated") return BarChart3;
@@ -57,6 +59,12 @@ function getEventHref(
   if (assetHrefPrefix && assetId) return `${assetHrefPrefix}/${assetId}`;
   if (event.pageId) return `${basePath}/${event.pageId}`;
   if (event.entityType === "event" && event.entityId) return `${basePath}/${event.entityId}`;
+  if (
+    (event.entityType === "event_comment" || event.entityType === "event_follow_up_item") &&
+    typeof event.metadata.eventId === "string"
+  ) {
+    return `${basePath}/${event.metadata.eventId}`;
+  }
   if (event.entityType === "crm_contact" && event.entityId) return `${basePath}/${event.entityId}`;
   if (event.entityType === "crm_comment" && typeof event.metadata.crmContactId === "string") {
     return `${basePath}/${event.metadata.crmContactId}`;

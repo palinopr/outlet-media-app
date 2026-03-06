@@ -32,6 +32,12 @@ export type SystemEventName =
   | "crm_follow_up_item_created"
   | "crm_follow_up_item_deleted"
   | "crm_follow_up_item_updated"
+  | "event_comment_added"
+  | "event_comment_deleted"
+  | "event_comment_resolved"
+  | "event_follow_up_item_created"
+  | "event_follow_up_item_deleted"
+  | "event_follow_up_item_updated"
   | "event_updated"
   | "workspace_comment_added"
   | "workspace_comment_deleted"
@@ -115,6 +121,13 @@ interface ListAssetSystemEventsOptions {
   limit?: number;
 }
 
+interface ListEventSystemEventsOptions {
+  eventId: string;
+  audience?: "all" | SystemEventVisibility;
+  clientSlug?: string | null;
+  limit?: number;
+}
+
 function eventMatchesCampaign(event: SystemEvent, campaignId: string) {
   if (event.entityType === "campaign" && event.entityId === campaignId) return true;
   return event.metadata.campaignId === campaignId;
@@ -123,6 +136,11 @@ function eventMatchesCampaign(event: SystemEvent, campaignId: string) {
 function eventMatchesAsset(event: SystemEvent, assetId: string) {
   if (event.entityType === "asset" && event.entityId === assetId) return true;
   return event.metadata.assetId === assetId;
+}
+
+function eventMatchesEvent(event: SystemEvent, eventId: string) {
+  if (event.entityType === "event" && event.entityId === eventId) return true;
+  return event.metadata.eventId === eventId;
 }
 
 export function isCrmSystemEvent(event: SystemEvent) {
@@ -295,6 +313,20 @@ export async function listAssetSystemEvents(
 
   return events
     .filter((event) => eventMatchesAsset(event, options.assetId))
+    .slice(0, options.limit ?? 8);
+}
+
+export async function listEventSystemEvents(
+  options: ListEventSystemEventsOptions,
+): Promise<SystemEvent[]> {
+  const events = await listSystemEvents({
+    audience: options.audience,
+    clientSlug: options.clientSlug,
+    limit: Math.max((options.limit ?? 8) * 6, 24),
+  });
+
+  return events
+    .filter((event) => eventMatchesEvent(event, options.eventId))
     .slice(0, options.limit ?? 8);
 }
 

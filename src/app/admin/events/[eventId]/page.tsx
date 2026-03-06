@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import {
   ArrowLeft,
   DollarSign,
@@ -9,14 +10,18 @@ import {
 } from "lucide-react";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
+import { EventCommentsPanel } from "@/components/events/event-comments-panel";
+import { EventFollowUpItemsPanel } from "@/components/events/event-follow-up-items-panel";
 import { StatCard } from "@/components/admin/stat-card";
 import { EventOperatingPanel } from "@/components/admin/events/event-operating-panel";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getDashboardOpsSummary } from "@/features/dashboard/server";
+import { listEventComments } from "@/features/event-comments/server";
+import { listEventFollowUpItems } from "@/features/event-follow-up-items/server";
 import { getEventOperatingData } from "@/features/events/server";
-import { listSystemEvents } from "@/features/system-events/server";
+import { listEventSystemEvents } from "@/features/system-events/server";
 import { fmtDate, fmtNum, fmtUsd, slugToLabel } from "@/lib/formatters";
 
 interface Props {
@@ -32,23 +37,23 @@ function eventSellThrough(sold: number, available: number | null) {
 
 export default async function AdminEventDetailPage({ params }: Props) {
   const { eventId } = await params;
+  const { userId } = await auth();
   const data = await getEventOperatingData(eventId);
   if (!data) notFound();
 
   const { event, linkedCampaigns, clients } = data;
   const linkedCampaignIds = linkedCampaigns.map((campaign) => campaign.campaignId);
-  const [opsSummary, events, agentOutcomes] = await Promise.all([
+  const [opsSummary, events, agentOutcomes, comments, followUpItems] = await Promise.all([
     getDashboardOpsSummary({
       clientSlug: event.clientSlug ?? undefined,
       limit: 5,
       mode: "admin",
       scopeCampaignIds: linkedCampaignIds,
     }),
-    listSystemEvents({
+    listEventSystemEvents({
       audience: "all",
       clientSlug: event.clientSlug ?? undefined,
-      entityType: "event",
-      entityId: event.id,
+      eventId: event.id,
       limit: 8,
     }),
     listAgentOutcomes({
@@ -56,6 +61,15 @@ export default async function AdminEventDetailPage({ params }: Props) {
       clientSlug: event.clientSlug ?? undefined,
       limit: 4,
       scopeCampaignIds: linkedCampaignIds,
+    }),
+    listEventComments({
+      audience: "all",
+      eventId,
+    }),
+    listEventFollowUpItems({
+      audience: "all",
+      eventId,
+      limit: 24,
     }),
   ]);
 
@@ -139,6 +153,31 @@ export default async function AdminEventDetailPage({ params }: Props) {
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.95fr)]">
         <div className="space-y-6">
           <EventOperatingPanel event={event} clients={clients} />
+
+          <EventCommentsPanel
+            allowAdminOnly
+            allowCreateFollowUpItems
+            canDeleteAny
+            comments={comments}
+            currentUserId={userId ?? ""}
+            eventId={eventId}
+            linkedFollowUpSourceIds={followUpItems
+              .filter((item) => item.sourceEntityType === "event_comment" && item.sourceEntityId)
+              .map((item) => item.sourceEntityId as string)}
+            description="Keep ticketing notes, promotion context, and client-facing discussion attached directly to this event."
+            title="Event discussion"
+            variant="admin"
+          />
+
+          <EventFollowUpItemsPanel
+            canManage
+            eventId={eventId}
+            items={followUpItems}
+            title="Event next steps"
+            description="Track ticketing, promotion, and delivery follow-through without leaving the event page."
+            emptyState="No event follow-up items are active yet."
+            variant="admin"
+          />
 
           <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
             <div className="mb-4">
