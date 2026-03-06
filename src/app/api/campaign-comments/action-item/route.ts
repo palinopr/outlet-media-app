@@ -4,6 +4,10 @@ import {
   createSystemCampaignActionItem,
   findCampaignActionItemBySource,
 } from "@/features/campaign-action-items/server";
+import {
+  getCampaignWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { supabaseAdmin } from "@/lib/supabase";
 
 function compactText(value: string, limit = 240) {
@@ -51,6 +55,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (!item) return apiError("Failed to create action item", 500);
+
+  revalidateWorkflowPaths(
+    getCampaignWorkflowPaths(comment.client_slug as string, comment.campaign_id as string),
+  );
 
   return NextResponse.json({ item }, { status: 201 });
 }

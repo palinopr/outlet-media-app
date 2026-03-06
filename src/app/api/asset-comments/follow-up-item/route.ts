@@ -4,6 +4,10 @@ import {
   createSystemAssetFollowUpItem,
   findAssetFollowUpItemBySource,
 } from "@/features/asset-follow-up-items/server";
+import {
+  getAssetWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { supabaseAdmin } from "@/lib/supabase";
 
 function compactText(value: string, limit = 240) {
@@ -54,6 +58,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (!item) return apiError("Failed to create follow-up item", 500);
+
+  revalidateWorkflowPaths(
+    getAssetWorkflowPaths(comment.client_slug as string, comment.asset_id as string),
+  );
 
   return NextResponse.json({ item }, { status: 201 });
 }

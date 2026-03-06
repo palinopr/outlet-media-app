@@ -4,6 +4,10 @@ import {
   createSystemEventFollowUpItem,
   findEventFollowUpItemBySource,
 } from "@/features/event-follow-up-items/server";
+import {
+  getEventWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { supabaseAdmin } from "@/lib/supabase";
 
 function compactText(value: string, limit = 240) {
@@ -52,6 +56,14 @@ export async function POST(request: NextRequest) {
   });
 
   if (!item) return apiError("Failed to create follow-up item", 500);
+
+  const commentRow = comment as Record<string, unknown>;
+  revalidateWorkflowPaths(
+    getEventWorkflowPaths(
+      (commentRow.client_slug as string | null) ?? "",
+      commentRow.event_id as string,
+    ),
+  );
 
   return NextResponse.json({ item }, { status: 201 });
 }

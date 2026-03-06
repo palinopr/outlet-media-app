@@ -4,6 +4,10 @@ import {
   createSystemCrmFollowUpItem,
   findCrmFollowUpItemBySource,
 } from "@/features/crm-follow-up-items/server";
+import {
+  getCrmWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 import { supabaseAdmin } from "@/lib/supabase";
 
 function compactText(value: string, limit = 240) {
@@ -58,6 +62,10 @@ export async function POST(request: NextRequest) {
   });
 
   if (!item) return apiError("Failed to create follow-up item", 500);
+
+  revalidateWorkflowPaths(
+    getCrmWorkflowPaths(comment.client_slug as string, comment.contact_id as string),
+  );
 
   return NextResponse.json(
     {

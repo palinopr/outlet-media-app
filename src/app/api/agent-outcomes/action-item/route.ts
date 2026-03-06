@@ -7,6 +7,13 @@ import { createSystemAssetFollowUpItem } from "@/features/asset-follow-up-items/
 import { createSystemCampaignActionItem } from "@/features/campaign-action-items/server";
 import { createSystemCrmFollowUpItem } from "@/features/crm-follow-up-items/server";
 import { createSystemEventFollowUpItem } from "@/features/event-follow-up-items/server";
+import {
+  getAssetWorkflowPaths,
+  getCampaignWorkflowPaths,
+  getCrmWorkflowPaths,
+  getEventWorkflowPaths,
+  revalidateWorkflowPaths,
+} from "@/features/workflow/revalidation";
 
 function compactText(value: string, limit = 240) {
   const normalized = value.trim().replace(/\s+/g, " ");
@@ -190,6 +197,16 @@ export async function POST(request: NextRequest) {
       : null;
 
   if (!item) return apiError("Failed to create action item", 500);
+
+  if (campaignId) {
+    revalidateWorkflowPaths(getCampaignWorkflowPaths(clientSlug, campaignId));
+  } else if (crmContactId) {
+    revalidateWorkflowPaths(getCrmWorkflowPaths(clientSlug, crmContactId));
+  } else if (assetId) {
+    revalidateWorkflowPaths(getAssetWorkflowPaths(clientSlug, assetId));
+  } else if (eventId) {
+    revalidateWorkflowPaths(getEventWorkflowPaths(clientSlug, eventId));
+  }
 
   return NextResponse.json({ item }, { status: 201 });
 }
