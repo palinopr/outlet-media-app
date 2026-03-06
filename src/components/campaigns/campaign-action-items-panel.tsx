@@ -4,7 +4,10 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays, CheckSquare, Pencil, Trash2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { deleteCampaignActionItem } from "@/app/admin/actions/campaign-action-items";
+import {
+  deleteCampaignActionItem,
+  updateCampaignActionItem,
+} from "@/app/admin/actions/campaign-action-items";
 import type { CampaignActionItem } from "@/features/campaign-action-items/server";
 import { fmtDate } from "@/lib/formatters";
 import {
@@ -13,6 +16,7 @@ import {
   TASK_STATUSES,
   type TaskStatus,
 } from "@/lib/workspace-types";
+import { QuickStatusActions } from "@/components/workflow/quick-status-actions";
 import { CampaignActionItemForm } from "./campaign-action-item-form";
 
 interface CampaignActionItemsPanelProps {
@@ -58,6 +62,7 @@ export function CampaignActionItemsPanel({
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<CampaignActionItem | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeStatusItemId, setActiveStatusItemId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const groupedItems = useMemo(() => {
@@ -106,6 +111,28 @@ export function CampaignActionItemsPanel({
             ? removeError.message
             : "Failed to delete action item.",
         );
+      }
+    });
+  }
+
+  function moveItem(item: CampaignActionItem, status: TaskStatus) {
+    if (item.status === status) return;
+
+    startTransition(async () => {
+      try {
+        setActiveStatusItemId(item.id);
+        setError(null);
+        await updateCampaignActionItem({
+          itemId: item.id,
+          status,
+        });
+        router.refresh();
+      } catch (moveError) {
+        setError(
+          moveError instanceof Error ? moveError.message : "Failed to update action item status.",
+        );
+      } finally {
+        setActiveStatusItemId(null);
       }
     });
   }
@@ -210,6 +237,14 @@ export function CampaignActionItemsPanel({
                               </span>
                             ) : null}
                           </div>
+
+                          {canManage ? (
+                            <QuickStatusActions
+                              currentStatus={item.status}
+                              disabled={isPending && activeStatusItemId === item.id}
+                              onChangeStatus={(status) => moveItem(item, status)}
+                            />
+                          ) : null}
                         </div>
 
                         {canManage ? (

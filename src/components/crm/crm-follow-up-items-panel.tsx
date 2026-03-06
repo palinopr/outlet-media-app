@@ -5,7 +5,10 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays, CheckSquare, Pencil, Trash2, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { deleteCrmFollowUpItem } from "@/app/admin/actions/crm-follow-up-items";
+import {
+  deleteCrmFollowUpItem,
+  updateCrmFollowUpItem,
+} from "@/app/admin/actions/crm-follow-up-items";
 import type { CrmFollowUpItem } from "@/features/crm-follow-up-items/server";
 import { fmtDate } from "@/lib/formatters";
 import {
@@ -15,6 +18,7 @@ import {
   type TaskStatus,
 } from "@/lib/workspace-types";
 import { cn } from "@/lib/utils";
+import { QuickStatusActions } from "@/components/workflow/quick-status-actions";
 import { CrmFollowUpItemForm } from "./crm-follow-up-item-form";
 
 interface CrmFollowUpItemsPanelProps {
@@ -91,6 +95,7 @@ export function CrmFollowUpItemsPanel({
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<CrmFollowUpItem | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [activeStatusItemId, setActiveStatusItemId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const groupedItems = useMemo(() => {
@@ -135,6 +140,28 @@ export function CrmFollowUpItemsPanel({
         setError(
           removeError instanceof Error ? removeError.message : "Failed to delete follow-up item.",
         );
+      }
+    });
+  }
+
+  function moveItem(item: CrmFollowUpItem, status: TaskStatus) {
+    if (item.status === status) return;
+
+    startTransition(async () => {
+      try {
+        setActiveStatusItemId(item.id);
+        setError(null);
+        await updateCrmFollowUpItem({
+          itemId: item.id,
+          status,
+        });
+        router.refresh();
+      } catch (moveError) {
+        setError(
+          moveError instanceof Error ? moveError.message : "Failed to update follow-up item status.",
+        );
+      } finally {
+        setActiveStatusItemId(null);
       }
     });
   }
@@ -241,6 +268,14 @@ export function CrmFollowUpItemsPanel({
                               </span>
                             ) : null}
                           </div>
+
+                          {canManage ? (
+                            <QuickStatusActions
+                              currentStatus={item.status}
+                              disabled={isPending && activeStatusItemId === item.id}
+                              onChangeStatus={(status) => moveItem(item, status)}
+                            />
+                          ) : null}
                         </div>
 
                         {canManage ? (
