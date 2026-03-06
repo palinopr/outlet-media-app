@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, CalendarClock, Flame, Share2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CrmContact } from "@/features/crm/server";
+import type { CrmFollowUpItem } from "@/features/crm-follow-up-items/server";
 import type { CrmSummary } from "@/features/crm/summary";
 import { crmStageLabel } from "@/features/crm/summary";
 
@@ -10,6 +11,9 @@ interface DashboardCrmSectionProps {
   detailHrefPrefix?: string;
   description?: string;
   emptyState?: string;
+  followUpEmptyState?: string;
+  followUpHrefPrefix?: string;
+  followUpItems?: CrmFollowUpItem[];
   href: string;
   showClientSlug?: boolean;
   summary: CrmSummary;
@@ -55,6 +59,9 @@ export function DashboardCrmSection({
   detailHrefPrefix,
   description = "The current relationship load, including hot contacts and due follow-ups.",
   emptyState = "No CRM contacts are active yet.",
+  followUpEmptyState = "No CRM follow-up items are active right now.",
+  followUpHrefPrefix,
+  followUpItems = [],
   href,
   showClientSlug = false,
   summary,
@@ -135,6 +142,53 @@ export function DashboardCrmSection({
                     </Link>
                   </div>
                 ) : null}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4">
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div>
+            <p className={cn("text-sm font-medium", styles.text)}>Open CRM next steps</p>
+            <p className={cn("mt-1 text-sm", styles.muted)}>
+              Active follow-up work tied directly to CRM relationships.
+            </p>
+          </div>
+        </div>
+
+        {followUpItems.length === 0 ? (
+          <div className={styles.empty}>{followUpEmptyState}</div>
+        ) : (
+          <div className="space-y-3">
+            {followUpItems.map((item) => (
+              <div key={item.id} className={styles.card}>
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className={cn("text-sm font-medium", styles.text)}>{item.title}</p>
+                    {item.contactName && followUpHrefPrefix ? (
+                      <div className="mt-1">
+                        <Link
+                          href={`${followUpHrefPrefix}/${item.contactId}`}
+                          className={cn("text-sm font-medium", styles.link)}
+                        >
+                          {item.contactName}
+                        </Link>
+                      </div>
+                    ) : item.contactName ? (
+                      <p className={cn("mt-1 text-sm", styles.muted)}>{item.contactName}</p>
+                    ) : null}
+                    {item.description ? (
+                      <p className={cn("mt-1 text-sm", styles.muted)}>{item.description}</p>
+                    ) : null}
+                  </div>
+
+                  <div className={cn("text-right text-xs", styles.muted)}>
+                    {item.dueDate ? <p>Due {item.dueDate}</p> : <p>No due date</p>}
+                    <p className="mt-1 capitalize">{item.priority}</p>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

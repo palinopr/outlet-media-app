@@ -19,6 +19,7 @@ import { DashboardCrmSection } from "@/components/dashboard/dashboard-crm-sectio
 import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmOverview } from "@/features/crm/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
@@ -55,7 +56,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const range = parseRange(rangeParam);
 
   const { scope } = await requireClientAccess(slug);
-  const [dashboardData, opsSummary, actionCenter, agentOutcomes, enabledServices, crm] = await Promise.all([
+  const [dashboardData, opsSummary, actionCenter, agentOutcomes, enabledServices, crm, crmFollowUpItems] = await Promise.all([
     getData(slug, range, scope),
     getDashboardOpsSummary({
       clientSlug: slug,
@@ -79,6 +80,11 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
     getCrmOverview({
       audience: "shared",
       clientSlug: slug,
+    }),
+    listCrmFollowUpItems({
+      audience: "shared",
+      clientSlug: slug,
+      limit: 6,
     }),
   ]);
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel, trendData } = dashboardData;
@@ -236,6 +242,8 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         <DashboardCrmSection
           contacts={crmContacts}
           detailHrefPrefix={`/client/${slug}/crm`}
+          followUpHrefPrefix={`/client/${slug}/crm`}
+          followUpItems={crmFollowUpItems.filter((item) => item.status !== "done").slice(0, 4)}
           href={`/client/${slug}/crm`}
           summary={crm.summary}
           title="CRM snapshot"

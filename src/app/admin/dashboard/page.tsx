@@ -24,6 +24,7 @@ import { DashboardCrmSection } from "@/components/dashboard/dashboard-crm-sectio
 import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getCrmOverview } from "@/features/crm/server";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
@@ -51,12 +52,14 @@ export default async function AdminDashboard() {
     actionCenter,
     agentOutcomes,
     crm,
+    crmFollowUpItems,
   ] = await Promise.all([
     getData(),
     getDashboardOpsSummary({ mode: "admin", limit: 6 }),
     getDashboardActionCenter({ mode: "admin", limit: 4 }),
     listAgentOutcomes({ audience: "all", limit: 4 }),
     getCrmOverview({ audience: "all" }),
+    listCrmFollowUpItems({ audience: "all", limit: 6 }),
   ]);
 
   const upcomingShows = getUpcomingShows(events, 8);
@@ -132,6 +135,8 @@ export default async function AdminDashboard() {
       <DashboardCrmSection
         contacts={crmContacts}
         detailHrefPrefix="/admin/crm"
+        followUpHrefPrefix="/admin/crm"
+        followUpItems={crmFollowUpItems.filter((item) => item.status !== "done").slice(0, 4)}
         href="/admin/crm"
         showClientSlug
         summary={crm.summary}

@@ -34,6 +34,7 @@ The short-term focus is:
 - Treat CRM contact detail pages as first-class routes so search, activity, dashboards, and CRM lists can all deep-link into the same record.
 - Queue bounded CRM follow-up triage when a contact becomes urgent or due soon, and surface that follow-through back on the CRM record instead of leaving it hidden in the agent runtime.
 - Treat CRM follow-up items as first-class CRM workflow objects so agent recommendations and human next steps become visible work, not just notes or passive output.
+- Surface active CRM next steps on the regular dashboards so summary-first users can still see relationship work that needs attention.
 
 ## Immediate Build Bias
 
