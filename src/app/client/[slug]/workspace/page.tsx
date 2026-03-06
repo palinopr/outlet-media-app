@@ -19,6 +19,7 @@ export default async function ClientWorkspacePage({ params }: Props) {
     listApprovalRequests({
       audience: "shared",
       clientSlug: slug,
+      scope,
       status: "pending",
       limit: 8,
     }),
