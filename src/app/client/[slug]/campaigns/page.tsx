@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { DollarSign, Megaphone, TrendingUp, MousePointerClick, Sparkles, Clock } from "lucide-react";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
+import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
+import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
+import { getCampaignsWorkflowData } from "@/features/campaigns/server";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
 import { getCampaignsPageData } from "../data";
 import { buildTrendData } from "../lib";
@@ -28,7 +32,15 @@ export default async function ClientCampaigns({ params }: Props) {
   const { scope } = await requireClientAccess(slug, "meta_ads");
   const clientName = slugToLabel(slug);
 
-  const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug, scope);
+  const [{ campaigns, snapshots, dataSource }, workflow] = await Promise.all([
+    getCampaignsPageData(slug, scope),
+    getCampaignsWorkflowData({
+      clientSlug: slug,
+      limit: 4,
+      mode: "client",
+      scope,
+    }),
+  ]);
   const trendData = buildTrendData(snapshots);
 
   const totalSpend       = campaigns.reduce((a, c) => a + c.spend, 0);
@@ -145,6 +157,37 @@ export default async function ClientCampaigns({ params }: Props) {
           </div>
         ))}
       </div>
+
+      <DashboardOpsSummarySection
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        description="Keep campaign performance tied to the approvals, next steps, and conversations that still need attention."
+        emptyState="Your shared campaign workflow looks clear right now."
+        summary={workflow.opsSummary}
+        title="Campaign workflow summary"
+        variant="client"
+      />
+
+      <DashboardActionCenterSection
+        actionCenter={workflow.actionCenter}
+        assetHrefPrefix={`/client/${slug}/assets`}
+        assetLibraryHref={`/client/${slug}/assets`}
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        description="Open campaign approvals and shared campaign threads that still need a response."
+        eventHrefPrefix={`/client/${slug}/event`}
+        showCrmFollowUps={false}
+        variant="client"
+      />
+
+      <AgentOutcomesPanel
+        assetHrefPrefix={`/client/${slug}/assets`}
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        crmHrefPrefix={`/client/${slug}/crm`}
+        description="Agent work connected to campaign operations, so recommendations stay visible alongside the performance view."
+        eventHrefPrefix={`/client/${slug}/event`}
+        outcomes={workflow.agentOutcomes}
+        title="Campaign agent follow-through"
+        variant="client"
+      />
 
       {/* -- Trend Charts -- */}
       {hasData && trendData.length > 1 && (

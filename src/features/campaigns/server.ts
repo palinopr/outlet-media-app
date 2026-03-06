@@ -1,9 +1,18 @@
 import { mapAssetRows } from "@/features/assets/lib";
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import { listCampaignAssets } from "@/features/assets/server";
 import { listCampaignActionItems } from "@/features/campaign-action-items/server";
 import { listCampaignComments } from "@/features/campaign-comments/server";
 import { listCampaignApprovalRequests } from "@/features/approvals/server";
+import {
+  getDashboardActionCenter,
+  getDashboardOpsSummary,
+  type DashboardActionCenter,
+} from "@/features/dashboard/server";
+import type { DashboardOpsSummary, DashboardSummaryMode } from "@/features/dashboard/summary";
 import { listCampaignSystemEvents } from "@/features/system-events/server";
+import type { ScopeFilter } from "@/lib/member-access";
 import type { MetaCampaignCard } from "@/lib/meta-campaigns";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -16,6 +25,61 @@ function toNumber(value: number | string | null | undefined) {
 function centsToDollars(value: number | string | null | undefined) {
   const amount = toNumber(value);
   return amount == null ? null : amount / 100;
+}
+
+interface GetCampaignsWorkflowDataOptions {
+  clientSlug?: string | null;
+  limit?: number;
+  mode: DashboardSummaryMode;
+  scope?: ScopeFilter;
+}
+
+export interface CampaignsWorkflowData {
+  actionCenter: DashboardActionCenter;
+  agentOutcomes: AgentOutcomeView[];
+  opsSummary: DashboardOpsSummary;
+}
+
+export async function getCampaignsWorkflowData(
+  options: GetCampaignsWorkflowDataOptions,
+): Promise<CampaignsWorkflowData> {
+  const scopeCampaignIds = options.scope?.allowedCampaignIds ?? null;
+  const scopeEventIds = options.scope?.allowedEventIds ?? null;
+  const audience = options.mode === "client" ? "shared" : "all";
+  const limit = options.limit ?? 4;
+
+  const [opsSummary, actionCenter, agentOutcomes] = await Promise.all([
+    getDashboardOpsSummary({
+      clientSlug: options.clientSlug ?? undefined,
+      limit: Math.max(limit, 5),
+      mode: options.mode,
+      scopeCampaignIds,
+    }),
+    getDashboardActionCenter({
+      clientSlug: options.clientSlug ?? undefined,
+      limit,
+      mode: options.mode,
+      scopeCampaignIds,
+      scopeEventIds,
+    }),
+    listAgentOutcomes({
+      audience,
+      clientSlug: options.clientSlug ?? undefined,
+      limit,
+      scopeCampaignIds,
+      scopeEventIds,
+    }),
+  ]);
+
+  return {
+    actionCenter: {
+      approvals: actionCenter.approvals,
+      crmFollowUps: [],
+      discussions: actionCenter.discussions.filter((discussion) => discussion.kind === "campaign"),
+    },
+    agentOutcomes,
+    opsSummary,
+  };
 }
 
 export async function getCampaignOperatingData(campaignId: string) {

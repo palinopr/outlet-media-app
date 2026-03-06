@@ -1,12 +1,16 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, DollarSign, TrendingUp, Eye, MousePointerClick } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
+import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { getCampaigns } from "./data";
 import { parseRange } from "@/lib/constants";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { DateRangeFilter } from "@/components/admin/campaigns/date-range-filter";
 import { CampaignTable } from "@/components/admin/campaigns/campaign-table";
 import { Suspense } from "react";
+import { getCampaignsWorkflowData } from "@/features/campaigns/server";
 import { fmtUsd, fmtNum, slugToLabel, computeBlendedRoas } from "@/lib/formatters";
 import type { DailyInsight } from "@/lib/meta-campaigns";
 
@@ -21,7 +25,14 @@ export default async function CampaignsPage({ searchParams }: Props) {
   const clientSlug = client && client !== "all" ? client : null;
   const range = parseRange(rawRange);
 
-  const { campaigns, clients, dailyInsights, error } = await getCampaigns(clientSlug, range);
+  const [{ campaigns, clients, dailyInsights, error }, workflow] = await Promise.all([
+    getCampaigns(clientSlug, range),
+    getCampaignsWorkflowData({
+      clientSlug,
+      limit: 5,
+      mode: "admin",
+    }),
+  ]);
 
   const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
   const totalImpressions = campaigns.reduce((s, c) => s + c.impressions, 0);
@@ -78,6 +89,37 @@ export default async function CampaignsPage({ searchParams }: Props) {
           <StatCard key={s.label} {...s} />
         ))}
       </div>
+
+      <DashboardOpsSummarySection
+        campaignHrefPrefix="/admin/campaigns"
+        description="Use the campaigns tab to see which ad programs have the most pending approvals, next steps, and recent workflow movement."
+        emptyState="Campaign workflow pressure is clear right now."
+        summary={workflow.opsSummary}
+        title="Campaign operating pressure"
+        variant="admin"
+      />
+
+      <DashboardActionCenterSection
+        actionCenter={workflow.actionCenter}
+        assetHrefPrefix="/admin/assets"
+        assetLibraryHref="/admin/assets"
+        campaignHrefPrefix="/admin/campaigns"
+        description="Pending campaign approvals and open campaign threads that still need operator attention."
+        eventHrefPrefix="/admin/events"
+        showCrmFollowUps={false}
+        variant="admin"
+      />
+
+      <AgentOutcomesPanel
+        assetHrefPrefix="/admin/assets"
+        campaignHrefPrefix="/admin/campaigns"
+        crmHrefPrefix="/admin/crm"
+        description="Agent follow-through tied to campaign work, so recommendations stay visible before you drill into a single campaign."
+        eventHrefPrefix="/admin/events"
+        outcomes={workflow.agentOutcomes}
+        title="Campaign agent follow-through"
+        variant="admin"
+      />
 
       {/* Campaigns table */}
       <Card className="border-border/60">
