@@ -17,6 +17,11 @@ import { Button } from "@/components/ui/button";
 import { timeAgo } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 import { buildNotificationHref } from "@/features/notifications/routing";
+import {
+  buildNotificationsCenterSummary,
+  notificationMatchesFilter,
+  type NotificationFilterKey,
+} from "@/features/notifications/summary";
 import type { AppNotification } from "@/features/notifications/types";
 
 interface NotificationsCenterProps {
@@ -78,6 +83,7 @@ export function NotificationsCenter({
   viewer,
 }: NotificationsCenterProps) {
   const [notifications, setNotifications] = useState(initialNotifications);
+  const [filter, setFilter] = useState<NotificationFilterKey>("all");
   const [loading, setLoading] = useState(initialNotifications.length === 0);
   const router = useRouter();
   const styles = tone(viewer);
@@ -112,6 +118,12 @@ export function NotificationsCenter({
   }, [notificationsUrl]);
 
   const unreadCount = notifications.filter((notification) => !notification.read).length;
+  const summary = buildNotificationsCenterSummary(notifications);
+  const filteredNotifications = notifications.filter((notification) =>
+    notificationMatchesFilter(notification, filter),
+  );
+  const unreadNotifications = filteredNotifications.filter((notification) => !notification.read);
+  const readNotifications = filteredNotifications.filter((notification) => notification.read);
 
   async function markAllRead() {
     await fetch("/api/workspace/notifications", {
@@ -170,51 +182,168 @@ export function NotificationsCenter({
         ) : null}
       </div>
 
+      <div className="grid gap-3 md:grid-cols-5">
+        {summary.metrics.map((metric) => (
+          <div
+            className={
+              viewer === "client"
+                ? "rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4"
+                : "rounded-2xl border border-[#ece8df] bg-[#fcfbf8] p-4"
+            }
+            key={metric.key}
+          >
+            <p className={cn("text-xs font-semibold uppercase tracking-wide", styles.meta)}>
+              {metric.label}
+            </p>
+            <p className={cn("mt-2 text-2xl font-bold tracking-tight", styles.text)}>
+              {metric.value}
+            </p>
+            <p className={cn("mt-1 text-xs", styles.meta)}>{metric.detail}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {summary.filters.map((option) => {
+          const active = option.key === filter;
+          return (
+            <button
+              className={cn(
+                "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                viewer === "client"
+                  ? active
+                    ? "border-cyan-400/40 bg-cyan-400/10 text-cyan-200"
+                    : "border-white/[0.08] bg-white/[0.03] text-white/60 hover:bg-white/[0.06]"
+                  : active
+                    ? "border-[#0f7b6c]/20 bg-[#0f7b6c]/10 text-[#0f7b6c]"
+                    : "border-[#ece8df] bg-[#fcfbf8] text-[#6f6a63] hover:bg-white",
+              )}
+              key={option.key}
+              onClick={() => setFilter(option.key)}
+              type="button"
+            >
+              <span>{option.label}</span>
+              <span
+                className={
+                  viewer === "client"
+                    ? "rounded-full bg-white/[0.08] px-1.5 py-0.5 text-[11px] text-white/70"
+                    : "rounded-full bg-[#f1ece4] px-1.5 py-0.5 text-[11px] text-[#6f6a63]"
+                }
+              >
+                {option.count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
       {loading && notifications.length === 0 ? (
         <div className={styles.empty}>Loading notifications…</div>
-      ) : notifications.length === 0 ? (
+      ) : filteredNotifications.length === 0 ? (
         <div className={styles.empty}>
-          No notifications yet. Shared updates and assigned work will appear here.
+          {notifications.length === 0
+            ? "No notifications yet. Shared updates and assigned work will appear here."
+            : "No notifications match this filter yet."}
         </div>
       ) : (
-        notifications.map((notification) => (
-          <button
-            className={styles.item}
-            key={notification.id}
-            onClick={() => void openNotification(notification)}
-            type="button"
-          >
-            <div className="flex items-start gap-3">
-              <div
-                className={cn(
-                  "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border",
-                  viewer === "client"
-                    ? "border-white/[0.08] bg-white/[0.04] text-white/70"
-                    : "border-[#ece8df] bg-white text-[#6f6a63]",
-                )}
-              >
-                {typeIcon(notification.type)}
+        <div className="space-y-5">
+          {unreadNotifications.length > 0 ? (
+            <div className="space-y-3">
+              <div>
+                <p className={cn("text-sm font-medium", styles.muted)}>Unread</p>
+                <p className={cn("mt-1 text-xs", styles.meta)}>
+                  Start with the newest items that still need attention.
+                </p>
               </div>
+              {unreadNotifications.map((notification) => (
+                <button
+                  className={styles.item}
+                  key={notification.id}
+                  onClick={() => void openNotification(notification)}
+                  type="button"
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border",
+                        viewer === "client"
+                          ? "border-white/[0.08] bg-white/[0.04] text-white/70"
+                          : "border-[#ece8df] bg-white text-[#6f6a63]",
+                      )}
+                    >
+                      {typeIcon(notification.type)}
+                    </div>
 
-              <div className="min-w-0 flex-1">
-                <div className={cn("flex flex-wrap items-center gap-2 text-xs", styles.meta)}>
-                  <span>{notification.fromUserName ?? "Outlet"}</span>
-                  <span>&middot;</span>
-                  <span>{timeAgo(notification.createdAt)}</span>
-                  {!notification.read ? (
-                    <span className={cn("h-2 w-2 rounded-full", styles.unread)} />
-                  ) : null}
-                </div>
+                    <div className="min-w-0 flex-1">
+                      <div className={cn("flex flex-wrap items-center gap-2 text-xs", styles.meta)}>
+                        <span>{notification.fromUserName ?? "Outlet"}</span>
+                        <span>&middot;</span>
+                        <span>{timeAgo(notification.createdAt)}</span>
+                        <span className={cn("h-2 w-2 rounded-full", styles.unread)} />
+                      </div>
 
-                <p className={cn("mt-1 text-sm font-medium", styles.text)}>{notification.title}</p>
+                      <p className={cn("mt-1 text-sm font-medium", styles.text)}>
+                        {notification.title}
+                      </p>
 
-                {notification.message ? (
-                  <p className={cn("mt-1 text-sm", styles.muted)}>{notification.message}</p>
-                ) : null}
-              </div>
+                      {notification.message ? (
+                        <p className={cn("mt-1 text-sm", styles.muted)}>{notification.message}</p>
+                      ) : null}
+                    </div>
+                  </div>
+                </button>
+              ))}
             </div>
-          </button>
-        ))
+          ) : null}
+
+          {readNotifications.length > 0 ? (
+            <div className="space-y-3">
+              <div>
+                <p className={cn("text-sm font-medium", styles.muted)}>Recently read</p>
+                <p className={cn("mt-1 text-xs", styles.meta)}>
+                  Recent workflow updates you already opened.
+                </p>
+              </div>
+              {readNotifications.map((notification) => (
+                <button
+                  className={styles.item}
+                  key={notification.id}
+                  onClick={() => void openNotification(notification)}
+                  type="button"
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        "mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border",
+                        viewer === "client"
+                          ? "border-white/[0.08] bg-white/[0.04] text-white/70"
+                          : "border-[#ece8df] bg-white text-[#6f6a63]",
+                      )}
+                    >
+                      {typeIcon(notification.type)}
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className={cn("flex flex-wrap items-center gap-2 text-xs", styles.meta)}>
+                        <span>{notification.fromUserName ?? "Outlet"}</span>
+                        <span>&middot;</span>
+                        <span>{timeAgo(notification.createdAt)}</span>
+                      </div>
+
+                      <p className={cn("mt-1 text-sm font-medium", styles.text)}>
+                        {notification.title}
+                      </p>
+
+                      {notification.message ? (
+                        <p className={cn("mt-1 text-sm", styles.muted)}>{notification.message}</p>
+                      ) : null}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
       )}
     </div>
   );
