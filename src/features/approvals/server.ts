@@ -1,5 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
+import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
@@ -82,6 +83,9 @@ interface ListCampaignApprovalRequestsOptions {
   status?: ApprovalStatus | "all";
 }
 
+const APPROVAL_SELECT =
+  "id, created_at, updated_at, client_slug, audience, request_type, status, title, summary, entity_type, entity_id, page_id, task_id, requested_by_id, requested_by_name, decided_by_id, decided_by_name, decided_at, decision_note, metadata";
+
 interface ListAssetApprovalRequestsOptions {
   assetId: string;
   audience?: ApprovalAudience | "all";
@@ -134,6 +138,47 @@ function mapApproval(row: Record<string, unknown>): ApprovalRequest {
       unknown
     >,
   };
+}
+
+function buildApprovalListQuery(
+  requestedLimit: number,
+  shouldOverfetchForScope: boolean,
+  options: ListApprovalRequestsOptions,
+  clientSlug?: string | null,
+) {
+  if (!supabaseAdmin) return null;
+
+  let query = supabaseAdmin
+    .from("approval_requests")
+    .select(APPROVAL_SELECT)
+    .order("created_at", { ascending: false })
+    .limit(shouldOverfetchForScope ? Math.max(requestedLimit * 6, 24) : requestedLimit);
+
+  if (clientSlug) {
+    query = query.eq("client_slug", clientSlug);
+  }
+
+  if (options.entityType) {
+    query = query.eq("entity_type", options.entityType);
+  }
+
+  if (options.entityId) {
+    query = query.eq("entity_id", options.entityId);
+  }
+
+  if (options.audience && options.audience !== "all") {
+    if (options.audience === "shared") {
+      query = query.in("audience", ["shared", "client"]);
+    } else {
+      query = query.eq("audience", options.audience);
+    }
+  }
+
+  if (options.status && options.status !== "all") {
+    query = query.eq("status", options.status);
+  }
+
+  return query;
 }
 
 function shouldEnqueueApprovalTriage(approval: ApprovalRequest) {
@@ -369,9 +414,7 @@ export async function getApprovalRequestById(id: string): Promise<ApprovalReques
 
   const { data, error } = await supabaseAdmin
     .from("approval_requests")
-    .select(
-      "id, created_at, updated_at, client_slug, audience, request_type, status, title, summary, entity_type, entity_id, page_id, task_id, requested_by_id, requested_by_name, decided_by_id, decided_by_name, decided_at, decision_note, metadata",
-    )
+    .select(APPROVAL_SELECT)
     .eq("id", id)
     .maybeSingle();
 
@@ -416,46 +459,47 @@ export async function listApprovalRequests(
   const shouldOverfetchForScope =
     !!options.scope &&
     (options.scope.allowedCampaignIds != null || options.scope.allowedEventIds != null);
+  const effectiveCampaignIds = options.clientSlug
+    ? await listEffectiveCampaignIdsForClientSlug(options.clientSlug)
+    : [];
+  const [primaryRes, campaignLinkedRes] = await Promise.all([
+    buildApprovalListQuery(requestedLimit, shouldOverfetchForScope, options, options.clientSlug) ??
+      Promise.resolve({ data: [], error: null }),
+    options.clientSlug && effectiveCampaignIds.length > 0
+      ? buildApprovalListQuery(
+          Math.max(requestedLimit * 8, 40),
+          shouldOverfetchForScope,
+          options,
+          null,
+        ) ?? Promise.resolve({ data: [], error: null })
+      : Promise.resolve({ data: [], error: null }),
+  ]);
 
-  let query = supabaseAdmin
-    .from("approval_requests")
-    .select(
-      "id, created_at, updated_at, client_slug, audience, request_type, status, title, summary, entity_type, entity_id, page_id, task_id, requested_by_id, requested_by_name, decided_by_id, decided_by_name, decided_at, decision_note, metadata",
-    )
-    .order("created_at", { ascending: false })
-    .limit(shouldOverfetchForScope ? Math.max(requestedLimit * 6, 24) : requestedLimit);
-
-  if (options.clientSlug) {
-    query = query.eq("client_slug", options.clientSlug);
-  }
-
-  if (options.entityType) {
-    query = query.eq("entity_type", options.entityType);
-  }
-
-  if (options.entityId) {
-    query = query.eq("entity_id", options.entityId);
-  }
-
-  if (options.audience && options.audience !== "all") {
-    if (options.audience === "shared") {
-      query = query.in("audience", ["shared", "client"]);
-    } else {
-      query = query.eq("audience", options.audience);
-    }
-  }
-
-  if (options.status && options.status !== "all") {
-    query = query.eq("status", options.status);
-  }
-
-  const { data, error } = await query;
-  if (error) {
-    console.error("[approvals] list failed:", error.message);
+  if (primaryRes.error) {
+    console.error("[approvals] list failed:", primaryRes.error.message);
     return [];
   }
 
-  const approvals = (data ?? []).map((row) => mapApproval(row as Record<string, unknown>));
+  if (campaignLinkedRes.error) {
+    console.error("[approvals] campaign-linked fallback failed:", campaignLinkedRes.error.message);
+    return [];
+  }
+
+  const effectiveCampaignIdSet = new Set(effectiveCampaignIds);
+  const approvals = [
+    ...((primaryRes.data ?? []) as Record<string, unknown>[]),
+    ...((campaignLinkedRes.data ?? []) as Record<string, unknown>[]).filter((row) => {
+      if (!options.clientSlug) return false;
+      const approval = mapApproval(row);
+      const campaignId = approvalCampaignId(approval);
+      return !!campaignId && effectiveCampaignIdSet.has(campaignId);
+    }),
+  ].reduce<ApprovalRequest[]>((merged, row) => {
+    const approval = mapApproval(row as Record<string, unknown>);
+    if (merged.some((item) => item.id === approval.id)) return merged;
+    merged.push(approval);
+    return merged;
+  }, []);
   const allowedAssetIds =
     options.scope && options.clientSlug
       ? await listVisibleAssetIdsForScope(
