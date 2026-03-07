@@ -6,7 +6,10 @@ import {
   ResolveCommentSchema,
 } from "@/lib/api-schemas";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
-import { campaignBelongsToClientSlug } from "@/lib/campaign-client-assignment";
+import {
+  campaignBelongsToClientSlug,
+  getEffectiveCampaignRowById,
+} from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   canAccessCampaignComments,
@@ -35,6 +38,14 @@ async function getCampaignName(campaignId: string) {
     .maybeSingle();
 
   return (data?.name as string | undefined) ?? null;
+}
+
+async function getCampaignContext(campaignId: string) {
+  return getEffectiveCampaignRowById<{
+    campaign_id: string;
+    client_slug: string | null;
+    name: string | null;
+  }>(campaignId, "campaign_id, client_slug, name");
 }
 
 async function getAuthorName() {
@@ -100,7 +111,6 @@ export async function GET(request: NextRequest) {
     .from("campaign_comments")
     .select("*")
     .eq("campaign_id", campaignId)
-    .eq("client_slug", clientSlug)
     .order("created_at", { ascending: true });
 
   if (!access.isAdmin) {
@@ -143,7 +153,7 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (!parent) return apiError("Parent comment not found", 404);
-    if (parent.campaign_id !== body.campaign_id || parent.client_slug !== body.client_slug) {
+    if (parent.campaign_id !== body.campaign_id) {
       return apiError("Parent comment does not belong to this campaign", 400);
     }
 
@@ -269,10 +279,12 @@ export async function PATCH(request: NextRequest) {
     .maybeSingle();
 
   if (!existing) return apiError("Comment not found", 404);
+  const campaign = await getCampaignContext(existing.campaign_id as string);
+  const effectiveClientSlug = campaign?.client_slug ?? (existing.client_slug as string);
 
   const access = await canAccessCampaignComments(
     userId,
-    existing.client_slug as string,
+    effectiveClientSlug,
     existing.visibility as CampaignCommentVisibility,
   );
   if (!access.allowed) return apiError("Forbidden", 403);
@@ -292,7 +304,7 @@ export async function PATCH(request: NextRequest) {
     await logSystemEvent({
       eventName: "campaign_comment_resolved",
       actorId: userId,
-      clientSlug: existing.client_slug as string,
+      clientSlug: effectiveClientSlug,
       visibility: existing.visibility as CampaignCommentVisibility,
       entityType: "campaign_comment",
       entityId: id,
@@ -309,7 +321,7 @@ export async function PATCH(request: NextRequest) {
 
   revalidateWorkflowPaths(
     getCampaignWorkflowPaths(
-      existing.client_slug as string,
+      effectiveClientSlug,
       existing.campaign_id as string,
     ),
   );
@@ -332,10 +344,12 @@ export async function DELETE(request: NextRequest) {
     .maybeSingle();
 
   if (!existing) return apiError("Comment not found", 404);
+  const campaign = await getCampaignContext(existing.campaign_id as string);
+  const effectiveClientSlug = campaign?.client_slug ?? (existing.client_slug as string);
 
   const access = await canAccessCampaignComments(
     userId,
-    existing.client_slug as string,
+    effectiveClientSlug,
     existing.visibility as CampaignCommentVisibility,
   );
   if (!access.allowed) return apiError("Forbidden", 403);
@@ -357,7 +371,7 @@ export async function DELETE(request: NextRequest) {
   await logSystemEvent({
     eventName: "campaign_comment_deleted",
     actorId: userId,
-    clientSlug: existing.client_slug as string,
+    clientSlug: effectiveClientSlug,
     visibility: existing.visibility as CampaignCommentVisibility,
     entityType: "campaign_comment",
     entityId: id,
@@ -370,7 +384,7 @@ export async function DELETE(request: NextRequest) {
 
   revalidateWorkflowPaths(
     getCampaignWorkflowPaths(
-      existing.client_slug as string,
+      effectiveClientSlug,
       existing.campaign_id as string,
     ),
   );

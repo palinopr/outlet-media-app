@@ -85,6 +85,7 @@ The short-term focus is:
 - Keep campaign-aware asset classification on that same effective ownership model, so uploads and folder imports can still match reassigned campaigns instead of falling back to stale raw `meta_campaigns.client_slug` data.
 - When a campaign is reassigned, migrate the linked campaign workflow rows with it too, so campaign comments, action items, approvals, notifications, and shared activity do not stay attached to the previous client slug after ownership changes.
 - On cross-campaign readers, prefer effective campaign ids over the denormalized `client_slug` on campaign-native rows, so conversations, queues, and workflow summaries stay correct even if older rows were written before ownership was reassigned.
+- Treat campaign comments the same way: read and mutate them by `campaign_id` plus effective campaign ownership, not by the stored comment `client_slug`, so older discussion threads remain visible and actionable after reassignment.
 - Treat client slug mutations the same way: renames and deactivations should update the active `client_slug` references and operate on effectively assigned campaigns, not only the raw `meta_campaigns.client_slug` column.
 - Treat shared discussions as incomplete unless they also notify the right inbox audience, so campaign, asset, event, and CRM collaboration cannot get lost between the thread view and the routed inbox.
 - Keep notifications summary-first and filterable, so the inbox reads like an operating queue instead of a flat message dump.

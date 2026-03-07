@@ -51,7 +51,6 @@ export async function listCampaignComments(
       "id, campaign_id, client_slug, content, visibility, author_id, author_name, parent_comment_id, resolved, created_at, updated_at",
     )
     .eq("campaign_id", options.campaignId)
-    .eq("client_slug", options.clientSlug)
     .order("created_at", { ascending: true });
 
   if (options.audience && options.audience !== "all") {
