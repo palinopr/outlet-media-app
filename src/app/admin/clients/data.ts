@@ -63,7 +63,7 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     supabaseAdmin.from("client_members").select("client_id"),
     supabaseAdmin
       .from("approval_requests")
-      .select("client_slug")
+      .select("client_slug, entity_type, entity_id, metadata")
       .eq("status", "pending"),
     supabaseAdmin
       .from("campaign_action_items")
@@ -148,7 +148,29 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
 
   const pendingApprovalsBySlug: Record<string, number> = {};
   for (const row of approvalsRes.data ?? []) {
-    const slug = (row.client_slug as string | null) ?? "unknown";
+    const approvalClientSlug = (row.client_slug as string | null) ?? null;
+    const entityType = (row.entity_type as string | null) ?? null;
+    const entityId = (row.entity_id as string | null) ?? null;
+    const metadata =
+      typeof row.metadata === "object" && row.metadata !== null
+        ? (row.metadata as Record<string, unknown>)
+        : {};
+    const campaignId =
+      entityType === "campaign"
+        ? entityId
+        : typeof metadata.campaignId === "string"
+          ? metadata.campaignId
+          : null;
+
+    if (campaignId) {
+      for (const [slug, campaignIds] of campaignIdsBySlug) {
+        if (!campaignIds.has(campaignId)) continue;
+        pendingApprovalsBySlug[slug] = (pendingApprovalsBySlug[slug] ?? 0) + 1;
+      }
+      continue;
+    }
+
+    const slug = approvalClientSlug ?? "unknown";
     pendingApprovalsBySlug[slug] = (pendingApprovalsBySlug[slug] ?? 0) + 1;
   }
 
@@ -384,8 +406,7 @@ export async function getClientDetail(
     getClientServices(clientId),
     supabaseAdmin
       .from("approval_requests")
-      .select("id")
-      .eq("client_slug", client.slug)
+      .select("id, client_slug, entity_type, entity_id, metadata")
       .eq("status", "pending"),
     supabaseAdmin
       .from("campaign_action_items")
@@ -480,7 +501,29 @@ export async function getClientDetail(
       ((crmDiscussionsRes.data ?? []) as unknown[]).length +
       ((assetDiscussionsRes.data ?? []) as unknown[]).length +
       ((eventDiscussionsRes.data ?? []) as unknown[]).length,
-    pendingApprovals: (approvalsRes.data ?? []).length,
+    pendingApprovals: ((approvalsRes.data ?? []) as Array<Record<string, unknown>>)
+      .filter((row) => {
+        const approvalClientSlug = (row.client_slug as string | null) ?? null;
+        const entityType = (row.entity_type as string | null) ?? null;
+        const entityId = (row.entity_id as string | null) ?? null;
+        const metadata =
+          typeof row.metadata === "object" && row.metadata !== null
+            ? (row.metadata as Record<string, unknown>)
+            : {};
+        const campaignId =
+          entityType === "campaign"
+            ? entityId
+            : typeof metadata.campaignId === "string"
+              ? metadata.campaignId
+              : null;
+
+        if (campaignId) {
+          return clientCampaignIds.has(campaignId);
+        }
+
+        return approvalClientSlug === client.slug;
+      })
+      .length,
   });
 
   return {

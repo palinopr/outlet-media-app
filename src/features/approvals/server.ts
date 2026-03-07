@@ -477,8 +477,7 @@ export async function listCampaignApprovalRequests(
 ): Promise<ApprovalRequest[]> {
   const approvals = await listApprovalRequests({
     audience: options.audience,
-    clientSlug: options.clientSlug,
-    limit: Math.max((options.limit ?? 8) * 6, 24),
+    limit: Math.max((options.limit ?? 8) * 10, 40),
     scope: null,
     status: options.status,
   });

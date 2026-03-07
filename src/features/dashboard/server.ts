@@ -197,7 +197,6 @@ export async function getDashboardOpsSummary(
     .limit(500);
 
   if (options.clientSlug) {
-    approvalsQuery = approvalsQuery.eq("client_slug", options.clientSlug);
     eventsQuery = eventsQuery.eq("client_slug", options.clientSlug);
   }
 
@@ -223,6 +222,9 @@ export async function getDashboardOpsSummary(
   ]);
 
   const allowedCampaignIds = scopeIds ? new Set(scopeIds) : null;
+  const clientCampaignIds = effectiveClientCampaignIds
+    ? new Set(effectiveClientCampaignIds)
+    : null;
 
   const effectiveCampaignRows = await applyEffectiveCampaignClientSlugs(
     ((campaignsRes.data ?? []) as Array<Record<string, unknown> & {
@@ -251,13 +253,21 @@ export async function getDashboardOpsSummary(
       metadata: ((row.metadata as Record<string, unknown> | null) ?? {}) as Record<string, unknown>,
     }))
     .filter((row) => {
-      if (!allowedCampaignIds) return true;
       const campaignId =
         row.entityType === "campaign"
           ? row.entityId
           : typeof row.metadata.campaignId === "string"
             ? row.metadata.campaignId
             : null;
+
+      if (options.clientSlug) {
+        if (campaignId) {
+          return clientCampaignIds?.has(campaignId) ?? false;
+        }
+        return row.clientSlug === options.clientSlug;
+      }
+
+      if (!allowedCampaignIds) return true;
       return !!campaignId && allowedCampaignIds.has(campaignId);
     });
 
