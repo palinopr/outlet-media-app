@@ -11,6 +11,7 @@
  *   video with "reel"  -> story
  */
 
+import { listEffectiveCampaignRowsForClientSlug } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export interface AssetClassification {
@@ -157,20 +158,18 @@ interface MatchCandidate {
 }
 
 async function getCampaignCandidates(clientSlug: string): Promise<MatchCandidate[]> {
-  if (!supabaseAdmin) return [];
-  const candidates: MatchCandidate[] = [];
+  const campaigns = await listEffectiveCampaignRowsForClientSlug<{
+    campaign_id: string;
+    client_slug: string | null;
+    name: string | null;
+  }>("campaign_id, client_slug, name", clientSlug);
 
-  const { data: campaigns } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select("campaign_id, name")
-    .eq("client_slug", clientSlug);
-  if (campaigns) {
-    for (const c of campaigns) {
-      candidates.push({ id: c.campaign_id, name: c.name });
-    }
-  }
-
-  return candidates;
+  return campaigns
+    .filter((campaign) => typeof campaign.name === "string" && campaign.name.trim().length > 0)
+    .map((campaign) => ({
+      id: campaign.campaign_id,
+      name: campaign.name as string,
+    }));
 }
 
 async function getEventCandidates(clientSlug: string): Promise<MatchCandidate[]> {
