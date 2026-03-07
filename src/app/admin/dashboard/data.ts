@@ -3,6 +3,7 @@ import { computeMarginalRoas } from "@/lib/formatters";
 import { buildTrendData } from "@/app/client/[slug]/lib";
 import type { Database } from "@/lib/database.types";
 import { mapTaskToJob } from "@/lib/agent-jobs";
+import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
 
 export type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 export type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
@@ -69,7 +70,7 @@ export async function getData(): Promise<DashboardData> {
     await Promise.all([
       supabaseAdmin.from("tm_events").select("*").order("date", { ascending: true }).limit(200),
       supabaseAdmin.from("meta_campaigns").select("*").eq("status", "ACTIVE").order("spend", { ascending: false }).limit(5),
-      supabaseAdmin.from("meta_campaigns").select("name, status, spend, roas, client_slug").order("spend", { ascending: false }).limit(100),
+      supabaseAdmin.from("meta_campaigns").select("campaign_id, name, status, spend, roas, client_slug").order("spend", { ascending: false }).limit(100),
       supabaseAdmin
         .from("agent_tasks")
         .select("id, from_agent, to_agent, action, params, status, result, error, created_at, started_at, completed_at")
@@ -98,8 +99,12 @@ export async function getData(): Promise<DashboardData> {
     ]);
 
   const events = (eventsRes.data ?? []) as TmEvent[];
-  const campaigns = (campaignsRes.data ?? []) as MetaCampaign[];
-  const allCampaigns = (allCampaignsRes.data ?? []) as Pick<MetaCampaign, "name" | "status" | "spend" | "roas" | "client_slug">[];
+  const campaigns = await applyEffectiveCampaignClientSlugs(
+    ((campaignsRes.data ?? []) as MetaCampaign[]),
+  ) as MetaCampaign[];
+  const allCampaigns = await applyEffectiveCampaignClientSlugs(
+    ((allCampaignsRes.data ?? []) as Pick<MetaCampaign, "name" | "status" | "spend" | "roas" | "client_slug" | "campaign_id">[]),
+  ) as Pick<MetaCampaign, "name" | "status" | "spend" | "roas" | "client_slug">[];
   const alerts = (alertsRes.data ?? []) as Alert[];
   const snapshots = (snapshotsRes.data ?? []) as SnapshotRow[];
   const dailyRows = (dailyRes.data ?? []) as DailyRow[];

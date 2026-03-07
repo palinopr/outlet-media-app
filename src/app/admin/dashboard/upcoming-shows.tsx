@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import { matchedCampaigns } from "@/lib/campaign-event-match";
 import { fmtDate } from "@/lib/formatters";
@@ -21,14 +22,17 @@ export function UpcomingShows({ shows, allCampaigns }: Props) {
     <div>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold">Upcoming Shows</h2>
-        <a href="/admin/events" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+        <Link href="/admin/events" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
           View all <ArrowRight className="h-3 w-3" />
-        </a>
+        </Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {shows.map((e) => {
           const days = daysUntil(e.date);
-          const linked = matchedCampaigns(allCampaigns, e);
+          const linked = matchedCampaigns(allCampaigns, e).filter((campaign) => {
+            if (!e.client_slug || !campaign.client_slug) return true;
+            return campaign.client_slug === e.client_slug;
+          });
           const hasActive = linked.some(c => c.status === "ACTIVE");
           const hasPaused = linked.some(c => c.status === "PAUSED");
           const urgent = days != null && days <= 7 && !hasActive;

@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import type { ScopeFilter } from "@/lib/member-access";
+import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import {
@@ -51,6 +52,17 @@ export interface EventOperatingData {
   clients: EventClientOption[];
   event: EventOperatingRecord;
   linkedCampaigns: EventLinkedCampaign[];
+}
+
+interface EventLinkedCampaignRow {
+  campaign_id: string;
+  client_slug: string | null;
+  name: string | null;
+  status: string | null;
+  spend: number | null;
+  roas: number | null;
+  impressions: number | null;
+  clicks: number | null;
 }
 
 interface GetEventOperationsSummaryOptions {
@@ -127,7 +139,7 @@ export async function getEventOperatingData(
     supabaseAdmin.from("clients").select("slug").order("name", { ascending: true }),
     supabaseAdmin
       .from("meta_campaigns")
-      .select("campaign_id, name, status, spend, roas, impressions, clicks")
+      .select("campaign_id, client_slug, name, status, spend, roas, impressions, clicks")
       .eq("tm_event_id", eventId),
   ]);
 
@@ -143,18 +155,21 @@ export async function getEventOperatingData(
     console.error("[events] linked campaigns failed:", campaignsRes.error.message);
   }
 
-  const linkedCampaigns: EventLinkedCampaign[] = ((campaignsRes.data ?? []) as Record<
-    string,
-    unknown
-  >[]).map((campaign) => ({
-    campaignId: campaign.campaign_id as string,
-    clicks: (campaign.clicks as number | null) ?? null,
-    impressions: (campaign.impressions as number | null) ?? null,
-    name: (campaign.name as string) ?? (campaign.campaign_id as string),
-    roas: (campaign.roas as number | null) ?? null,
-    spend: (campaign.spend as number | null) ?? null,
-    status: (campaign.status as string) ?? "unknown",
-  }));
+  const linkedCampaignRows = await applyEffectiveCampaignClientSlugs(
+    ((campaignsRes.data ?? []) as EventLinkedCampaignRow[]),
+  );
+
+  const linkedCampaigns: EventLinkedCampaign[] = linkedCampaignRows
+    .filter((campaign) => !event.clientSlug || campaign.client_slug === event.clientSlug)
+    .map((campaign) => ({
+      campaignId: campaign.campaign_id,
+      clicks: campaign.clicks ?? null,
+      impressions: campaign.impressions ?? null,
+      name: campaign.name ?? campaign.campaign_id,
+      roas: campaign.roas ?? null,
+      spend: campaign.spend ?? null,
+      status: campaign.status ?? "unknown",
+    }));
 
   const clients: EventClientOption[] = ((clientsRes.data ?? []) as { slug: string | null }[])
     .map((client) => client.slug)
