@@ -7,12 +7,14 @@ const { state, supabaseAdmin } = vi.hoisted(() => {
     asset_follow_up_items: [] as Record<string, unknown>[],
     campaign_action_items: [] as Record<string, unknown>[],
     campaign_comments: [] as Record<string, unknown>[],
+    campaign_client_overrides: [] as Record<string, unknown>[],
     client_member_campaigns: [] as Record<string, unknown>[],
     client_member_events: [] as Record<string, unknown>[],
     client_members: [] as Record<string, unknown>[],
     clients: [] as Record<string, unknown>[],
     event_comments: [] as Record<string, unknown>[],
     event_follow_up_items: [] as Record<string, unknown>[],
+    meta_campaigns: [] as Record<string, unknown>[],
     notifications: [] as Record<string, unknown>[],
   };
 
@@ -113,12 +115,14 @@ describe("listNotificationsForUser", () => {
     state.notifications = [];
     state.campaign_comments = [];
     state.campaign_action_items = [];
+    state.campaign_client_overrides = [];
     state.clients = [];
     state.client_member_campaigns = [];
     state.client_member_events = [];
     state.client_members = [];
     state.event_comments = [];
     state.event_follow_up_items = [];
+    state.meta_campaigns = [];
     state.asset_comments = [];
     state.asset_follow_up_items = [];
     state.approval_requests = [];
@@ -348,24 +352,95 @@ describe("listNotificationsForUser", () => {
       clientSlug: "zamora",
     });
 
-    expect(notifications).toEqual([
-      expect.objectContaining({
-        id: "notif_campaign_comment",
-        routeEntityId: "cmp_1",
-        routeEntityType: "campaign",
-      }),
-      expect.objectContaining({
-        id: "notif_asset_follow_up",
-        routeEntityId: "asset_1",
-        routeEntityType: "asset",
-      }),
-      expect.objectContaining({
+    expect(notifications.map((notification) => notification.id)).toEqual([
+      "notif_approval",
+      "notif_asset_follow_up",
+      "notif_campaign_comment",
+    ]);
+    expect(notifications).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "notif_campaign_comment",
+          routeEntityId: "cmp_1",
+          routeEntityType: "campaign",
+        }),
+        expect.objectContaining({
+          id: "notif_asset_follow_up",
+          routeEntityId: "asset_1",
+          routeEntityType: "asset",
+        }),
+        expect.objectContaining({
+          id: "notif_approval",
+          pageId: "page_1",
+          routeEntityId: "cmp_9",
+          routeEntityType: "campaign",
+          taskId: "task_approval",
+        }),
+      ]),
+    );
+  });
+
+  it("backfills reassigned campaign notifications that still carry the old client slug", async () => {
+    state.meta_campaigns = [
+      {
+        campaign_id: "cmp_override",
+        client_slug: "legacy",
+        name: "Legacy campaign",
+      },
+    ];
+    state.campaign_client_overrides = [
+      {
+        campaign_id: "cmp_override",
+        client_slug: "zamora",
+      },
+    ];
+    state.notifications = [
+      {
+        id: "notif_item",
+        user_id: "user_1",
+        title: "Campaign next step",
+        type: "assignment",
+        entity_type: "campaign_action_item",
+        entity_id: "item_override",
+        client_slug: "legacy",
+        read: false,
+        created_at: "2026-03-06T12:03:00.000Z",
+      },
+      {
         id: "notif_approval",
-        pageId: "page_1",
-        routeEntityId: "cmp_9",
-        routeEntityType: "campaign",
-        taskId: "task_approval",
-      }),
+        user_id: "user_1",
+        title: "Campaign approval",
+        type: "approval",
+        entity_type: "approval_request",
+        entity_id: "approval_override",
+        client_slug: "legacy",
+        read: false,
+        created_at: "2026-03-06T12:04:00.000Z",
+      },
+    ];
+    state.campaign_action_items = [
+      {
+        id: "item_override",
+        campaign_id: "cmp_override",
+      },
+    ];
+    state.approval_requests = [
+      {
+        id: "approval_override",
+        client_slug: "legacy",
+        entity_type: "campaign",
+        entity_id: "cmp_override",
+        metadata: {},
+      },
+    ];
+
+    const notifications = await listNotificationsForUser("user_1", {
+      clientSlug: "zamora",
+    });
+
+    expect(notifications.map((notification) => notification.id)).toEqual([
+      "notif_approval",
+      "notif_item",
     ]);
   });
 

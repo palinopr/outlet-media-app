@@ -1,6 +1,11 @@
 import { clerkClient } from "@clerk/nextjs/server";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
+import {
+  approvalMatchesCampaignOwnership,
+  notificationMatchesCampaignOwnership,
+} from "@/features/campaigns/ownership-sync";
 import type { ScopeFilter } from "@/lib/member-access";
+import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { AppNotification, CreateNotificationInput } from "./types";
 
@@ -41,6 +46,9 @@ type NotificationScopeMaps = {
   allowedEventFollowUpIds: Set<string>;
   allowedEventIds: Set<string>;
 };
+
+const NOTIFICATION_SELECT =
+  "id, user_id, type, title, message, page_id, task_id, from_user_id, from_user_name, read, created_at, client_slug, entity_type, entity_id";
 
 function mapNotificationRow(row: Record<string, unknown>): AppNotification {
   return {
@@ -90,14 +98,13 @@ export async function listNotificationsForUser(
 ): Promise<AppNotification[]> {
   if (!supabaseAdmin || !userId) return [];
 
+  const requestedLimit = options.limit ?? 50;
   let query = supabaseAdmin
     .from("notifications" as never)
-    .select(
-      "id, user_id, type, title, message, page_id, task_id, from_user_id, from_user_name, read, created_at, client_slug, entity_type, entity_id",
-    )
+    .select(NOTIFICATION_SELECT)
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
-    .limit(options.limit ?? 50);
+    .limit(requestedLimit);
 
   if (options.clientSlug) {
     query = query.eq("client_slug", options.clientSlug);
@@ -110,16 +117,27 @@ export async function listNotificationsForUser(
     return [];
   }
 
-  const notifications = ((data ?? []) as Record<string, unknown>[]).map((row) =>
-    mapNotificationRow(row),
-  );
+  let notifications = ((data ?? []) as Record<string, unknown>[]).map((row) => mapNotificationRow(row));
+
+  if (options.clientSlug) {
+    const fallbackNotifications = await listCampaignOwnedNotificationsForClient({
+      clientSlug: options.clientSlug,
+      existingNotificationIds: new Set(notifications.map((notification) => notification.id)),
+      limit: Math.max(requestedLimit * 4, 50),
+      userId,
+    });
+
+    notifications = [...notifications, ...fallbackNotifications]
+      .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
+      .slice(0, requestedLimit);
+  }
 
   const visibleNotifications =
     options.clientSlug && options.scope
       ? await filterNotificationsByScope(notifications, options.clientSlug, options.scope)
       : notifications;
 
-  return enrichNotificationsForRouting(visibleNotifications);
+  return enrichNotificationsForRouting(visibleNotifications.slice(0, requestedLimit));
 }
 
 export async function listClientNotificationRecipients(
@@ -638,23 +656,12 @@ async function resolveNotificationEntityContext(
       return { ...emptyNotificationEntityContext(), assetId: mapping.get(entityId) ?? null };
     }
     case "approval_request": {
-      const { data, error } = await db
-        .from("approval_requests" as never)
-        .select("id, entity_type, entity_id, metadata")
-        .eq("client_slug", clientSlug)
-        .eq("id", entityId)
-        .maybeSingle();
-
-      if (error) {
-        console.error("[notifications] failed to load approval notification context:", error.message);
-        return null;
-      }
-
+      const data = await getApprovalRowForClientSlug(clientSlug, entityId);
       if (!data) {
         return null;
       }
 
-      return extractNotificationContextFromApprovalRow(data as Record<string, unknown>);
+      return extractNotificationContextFromApprovalRow(data);
     }
     default:
       return null;
@@ -798,16 +805,9 @@ async function resolveNotificationScopeMaps(
   }
 
   if (approvalIds.length > 0) {
-    const { data, error } = await db
-      .from("approval_requests" as never)
-      .select("id, entity_type, entity_id, metadata")
-      .eq("client_slug", clientSlug)
-      .in("id", approvalIds);
+    const approvals = await listApprovalRowsForClientSlug(clientSlug, approvalIds);
 
-    if (error) {
-      console.error("[notifications] failed to load approval scope mapping:", error.message);
-    } else {
-      for (const row of (data ?? []) as Record<string, unknown>[]) {
+    for (const row of approvals) {
         const id = String(row.id);
         const { assetId, campaignId, eventId } = extractNotificationContextFromApprovalRow(row);
 
@@ -829,7 +829,6 @@ async function resolveNotificationScopeMaps(
         if (!campaignId && !eventId && !assetId) {
           maps.allowedApprovalIds.add(id);
         }
-      }
     }
   }
 
@@ -884,4 +883,133 @@ export async function filterNotificationsByScope(
 ): Promise<AppNotification[]> {
   const maps = await resolveNotificationScopeMaps(notifications, clientSlug, scope);
   return notifications.filter((notification) => notificationMatchesScope(notification, maps));
+}
+
+async function listCampaignOwnedNotificationsForClient(options: {
+  clientSlug: string;
+  existingNotificationIds: Set<string>;
+  limit: number;
+  userId: string;
+}) {
+  if (!supabaseAdmin) return [];
+
+  const effectiveCampaignIds = new Set(
+    await listEffectiveCampaignIdsForClientSlug(options.clientSlug),
+  );
+  if (effectiveCampaignIds.size === 0) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from("notifications" as never)
+    .select(NOTIFICATION_SELECT)
+    .eq("user_id", options.userId)
+    .order("created_at", { ascending: false })
+    .limit(options.limit);
+
+  if (error) {
+    console.error("[notifications] failed to list fallback campaign notifications:", error.message);
+    return [];
+  }
+
+  const notifications = ((data ?? []) as Record<string, unknown>[])
+    .map((row) => mapNotificationRow(row))
+    .filter((notification) => !options.existingNotificationIds.has(notification.id));
+
+  if (notifications.length === 0) return [];
+
+  const campaignCommentIds: string[] = [];
+  const campaignActionItemIds: string[] = [];
+  const approvalIds: string[] = [];
+
+  for (const notification of notifications) {
+    if (!notification.entityId) continue;
+
+    switch (notification.entityType) {
+      case "campaign_comment":
+        campaignCommentIds.push(notification.entityId);
+        break;
+      case "campaign_action_item":
+        campaignActionItemIds.push(notification.entityId);
+        break;
+      case "approval_request":
+        approvalIds.push(notification.entityId);
+        break;
+      default:
+        break;
+    }
+  }
+
+  const [campaignComments, campaignActionItems, approvalRows] = await Promise.all([
+    mapScopedEntityRelations("campaign_comments", "id", "campaign_id", campaignCommentIds),
+    mapScopedEntityRelations(
+      "campaign_action_items",
+      "id",
+      "campaign_id",
+      campaignActionItemIds,
+    ),
+    listApprovalRowsForClientSlug(options.clientSlug, approvalIds),
+  ]);
+
+  const entities = {
+    approvalIds: new Set<string>(),
+    campaignActionItemIds: new Set<string>(),
+    campaignCommentIds: new Set<string>(),
+    campaignIds: effectiveCampaignIds,
+  };
+
+  for (const [id, campaignId] of campaignComments) {
+    if (effectiveCampaignIds.has(campaignId)) {
+      entities.campaignCommentIds.add(id);
+    }
+  }
+
+  for (const [id, campaignId] of campaignActionItems) {
+    if (effectiveCampaignIds.has(campaignId)) {
+      entities.campaignActionItemIds.add(id);
+    }
+  }
+
+  for (const row of approvalRows) {
+    if (approvalMatchesCampaignOwnership(row, effectiveCampaignIds)) {
+      entities.approvalIds.add(String(row.id));
+    }
+  }
+
+  return notifications.filter((notification) =>
+    notificationMatchesCampaignOwnership(
+      {
+        entity_id: notification.entityId,
+        entity_type: notification.entityType,
+      },
+      entities,
+    ),
+  );
+}
+
+async function listApprovalRowsForClientSlug(clientSlug: string, approvalIds: string[]) {
+  if (!supabaseAdmin || approvalIds.length === 0) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from("approval_requests" as never)
+    .select("id, client_slug, entity_type, entity_id, metadata")
+    .in("id", approvalIds);
+
+  if (error) {
+    console.error("[notifications] failed to load approval rows:", error.message);
+    return [];
+  }
+
+  const effectiveCampaignIds = new Set(
+    await listEffectiveCampaignIdsForClientSlug(clientSlug),
+  );
+
+  return ((data ?? []) as Record<string, unknown>[]).filter((row) => {
+    const rowClientSlug = typeof row.client_slug === "string" ? row.client_slug : null;
+    if (rowClientSlug === clientSlug) return true;
+    return approvalMatchesCampaignOwnership(row, effectiveCampaignIds);
+  });
+}
+
+async function getApprovalRowForClientSlug(clientSlug: string, approvalId: string) {
+  const rows = await listApprovalRowsForClientSlug(clientSlug, [approvalId]);
+  return rows[0] ?? null;
 }
