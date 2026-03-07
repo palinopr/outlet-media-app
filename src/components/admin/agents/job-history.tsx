@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ColumnDef,
   SortingState,
@@ -10,7 +10,9 @@ import {
   getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -30,6 +32,8 @@ import { DataTablePagination } from "@/components/admin/data-table/data-table-pa
 interface Props {
   jobs: AgentJob[];
 }
+
+type JobHistoryFilter = "active" | "all" | "completed" | "failures";
 
 function durationMs(started: string | null, finished: string | null): number | null {
   if (!started || !finished) return null;
@@ -110,14 +114,48 @@ export function JobHistory({ jobs }: Props) {
     () => jobs.filter((j) => j.agent_id !== "assistant" && j.agent_id !== "heartbeat"),
     [jobs],
   );
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<JobHistoryFilter>("all");
 
   const [sorting, setSorting] = useState<SortingState>([
     { id: "created_at", desc: true },
   ]);
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredData = useMemo(() => {
+    return data.filter((job) => {
+      if (filter === "active" && job.status !== "pending" && job.status !== "running") {
+        return false;
+      }
+      if (filter === "completed" && job.status !== "done") {
+        return false;
+      }
+      if (filter === "failures" && job.status !== "error") {
+        return false;
+      }
+
+      if (!normalizedQuery) return true;
+
+      const haystack = [
+        agentName(job.agent_id),
+        job.status,
+        job.prompt,
+        job.result,
+        job.error,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(normalizedQuery);
+    });
+  }, [data, filter, normalizedQuery]);
+
+  // TanStack Table is the intended engine here; the React Compiler warning is expected.
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
@@ -126,6 +164,27 @@ export function JobHistory({ jobs }: Props) {
     getPaginationRowModel: getPaginationRowModel(),
     initialState: { pagination: { pageSize: 20 } },
   });
+
+  useEffect(() => {
+    table.setPageIndex(0);
+  }, [filter, normalizedQuery, table]);
+
+  const filterCounts = useMemo(
+    () => ({
+      active: data.filter((job) => job.status === "pending" || job.status === "running").length,
+      all: data.length,
+      completed: data.filter((job) => job.status === "done").length,
+      failures: data.filter((job) => job.status === "error").length,
+    }),
+    [data],
+  );
+
+  const filterOptions: Array<{ key: JobHistoryFilter; label: string }> = [
+    { key: "all", label: "All runs" },
+    { key: "failures", label: "Failures" },
+    { key: "active", label: "In flight" },
+    { key: "completed", label: "Completed" },
+  ];
 
   function toggleRow(id: string) {
     setExpandedRows((prev) => {
@@ -143,12 +202,48 @@ export function JobHistory({ jobs }: Props) {
         <span className="text-muted-foreground font-normal ml-2">({data.length})</span>
       </h2>
       <Card className="border-border/60">
+        <div className="flex flex-col gap-3 border-b border-border/60 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap gap-2">
+            {filterOptions.map((option) => {
+              const isActive = filter === option.key;
+              const count = filterCounts[option.key];
+
+              return (
+                <Button
+                  key={option.key}
+                  type="button"
+                  variant={isActive ? "default" : "outline"}
+                  size="sm"
+                  className="h-8 rounded-full"
+                  onClick={() => setFilter(option.key)}
+                >
+                  {option.label}
+                  <span className={isActive ? "text-primary-foreground/80" : "text-muted-foreground"}>
+                    {count}
+                  </span>
+                </Button>
+              );
+            })}
+          </div>
+          <div className="w-full lg:w-72">
+            <Input
+              aria-label="Search automated runs"
+              className="h-8"
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search agent, prompt, or output"
+              value={query}
+            />
+          </div>
+        </div>
         {data.length === 0 ? (
           <div className="py-10 text-center text-xs text-muted-foreground">
             No automated runs yet -- the agent runs Meta sync every 6h and think cycles every 30m
           </div>
         ) : (
           <>
+            <div className="px-4 pt-3 text-xs text-muted-foreground">
+              Showing {filteredData.length} of {data.length} automated runs.
+            </div>
             <Table>
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -170,7 +265,7 @@ export function JobHistory({ jobs }: Props) {
                 {table.getRowModel().rows.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={columns.length} className="h-24 text-center text-xs text-muted-foreground">
-                      No results.
+                      No runs match the current filters.
                     </TableCell>
                   </TableRow>
                 ) : (

@@ -52,6 +52,7 @@ The short-term focus is:
 - On event pages, combine event-specific agent outcomes with linked campaign agent outcomes so the show-level operating view stays complete instead of forcing users to infer work from campaign pages alone.
 - Treat `/admin/activity` as the shared operations center, not only a legacy audit table, so admins can manage approvals, discussions, agent follow-through, and cross-app activity from one place.
 - Treat `/admin/agents` as an operating surface too, not only chat plus raw run history, so runtime health, actionable agent follow-through, and urgent agent runs are visible together in one command center.
+- Keep `/admin/agents` triage-first too, so actionable follow-through is grouped by surface and automated run history can be filtered quickly down to failures or in-flight work instead of forcing operators to scan a flat mixed table.
 - Keep the admin operations center and client updates center event-aware too, so show-level pressure is visible on the queue-first surfaces and not only inside the dedicated events app.
 - Keep the operations center and client updates center queue-first too, so users can move from visibility into the actual cross-app next steps without leaving those surfaces.
 - Keep `admin_activity` as a secondary audit trail behind the operations center instead of letting low-level page-view logs become the main operating surface.

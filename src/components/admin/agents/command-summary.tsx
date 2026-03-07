@@ -1,8 +1,11 @@
-import { Bot, CircleAlert, LoaderCircle, Signal } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Bot, CircleAlert, LoaderCircle, Signal } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { AgentJob } from "@/app/admin/agents/data";
-import type { AgentCommandSummary } from "@/features/agents/summary";
+import type { AgentCommandSummary, AgentCommandOutcomeBucket } from "@/features/agents/summary";
+import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import { fmtDate } from "@/lib/formatters";
 import { agentName } from "./constants";
 import { StatusBadge } from "./status-badge";
@@ -10,6 +13,60 @@ import { StatusBadge } from "./status-badge";
 interface AgentCommandSummaryProps {
   attentionJobs: AgentJob[];
   summary: AgentCommandSummary;
+}
+
+function outcomeContext(outcome: AgentOutcomeView) {
+  if (outcome.assetId) {
+    return {
+      href: `/admin/assets/${outcome.assetId}`,
+      label: outcome.assetName ?? "Asset",
+      type: "Asset",
+    };
+  }
+  if (outcome.crmContactId) {
+    return {
+      href: `/admin/crm/${outcome.crmContactId}`,
+      label: outcome.crmContactName ?? "CRM contact",
+      type: "CRM",
+    };
+  }
+  if (outcome.eventId) {
+    return {
+      href: `/admin/events/${outcome.eventId}`,
+      label: outcome.eventName ?? "Event",
+      type: "Event",
+    };
+  }
+  if (outcome.campaignId) {
+    return {
+      href: `/admin/campaigns/${outcome.campaignId}`,
+      label: outcome.campaignName ?? "Campaign",
+      type: "Campaign",
+    };
+  }
+
+  return {
+    href: null,
+    label: "General follow-through",
+    type: "Other",
+  };
+}
+
+function actionableOutcomeNote(outcome: AgentOutcomeView) {
+  switch (outcome.status) {
+    case "error":
+      return "Failed and needs inspection or a retry.";
+    case "running":
+      return "Still running and waiting on the worker.";
+    case "pending":
+      return "Queued and waiting on the worker.";
+    default:
+      return "Completed, but no tracked next step exists yet.";
+  }
+}
+
+function nonZeroBuckets(buckets: AgentCommandOutcomeBucket[]) {
+  return buckets.filter((bucket) => bucket.value > 0);
 }
 
 function metricTone(tone: "critical" | "neutral" | "positive") {
@@ -52,6 +109,8 @@ export function AgentCommandSummarySection({
   attentionJobs,
   summary,
 }: AgentCommandSummaryProps) {
+  const buckets = nonZeroBuckets(summary.outcomeBuckets);
+
   return (
     <section className="space-y-4">
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -124,6 +183,75 @@ export function AgentCommandSummarySection({
                 </div>
               );
             })}
+          </div>
+        )}
+      </Card>
+
+      <Card className="border-border/60">
+        <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
+          <div>
+            <p className="text-sm font-medium">Follow-through queue</p>
+            <p className="text-xs text-muted-foreground">
+              Agent work that is still blocked on a human next step or worker completion.
+            </p>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {summary.actionableOutcomes.length} active
+          </span>
+        </div>
+
+        {summary.actionableOutcomes.length === 0 ? (
+          <div className="px-5 py-6 text-sm text-muted-foreground">
+            No queued, failed, or untriaged agent outcomes need follow-through right now.
+          </div>
+        ) : (
+          <div className="space-y-4 px-5 py-4">
+            {buckets.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {buckets.map((bucket) => (
+                  <Badge key={bucket.key} variant="outline" className="gap-1 border-border/60">
+                    <span>{bucket.label}</span>
+                    <span className="text-muted-foreground">{bucket.value}</span>
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
+
+            <div className="space-y-3">
+              {summary.actionableOutcomes.map((outcome) => {
+                const context = outcomeContext(outcome);
+
+                return (
+                  <div key={outcome.taskId} className="rounded-2xl border border-border/60 bg-muted/10 p-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-medium">{outcome.requestSummary}</p>
+                      <StatusBadge status={outcome.status} />
+                      <span className="text-xs text-muted-foreground">{agentName(outcome.agentId)}</span>
+                    </div>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {actionableOutcomeNote(outcome)}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <Badge variant="outline" className="border-border/60">
+                        {context.type}
+                      </Badge>
+                      <span>{context.label}</span>
+                    </div>
+                    {context.href ? (
+                      <div className="mt-3">
+                        <Link
+                          href={context.href}
+                          className="inline-flex items-center gap-1 text-sm font-medium text-[#0f7b6c] hover:text-[#0b5e52]"
+                        >
+                          Open {context.type.toLowerCase()}
+                          <ArrowRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </Card>

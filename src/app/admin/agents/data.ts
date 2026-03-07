@@ -22,7 +22,7 @@ export async function getInitialData(): Promise<AgentsData> {
     getHeartbeatStatus(),
     listAgentOutcomes({
       audience: "all",
-      limit: 8,
+      limit: 12,
     }),
   ]);
 

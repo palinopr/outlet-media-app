@@ -10,9 +10,17 @@ export interface AgentCommandMetric {
   value: number | string;
 }
 
+export interface AgentCommandOutcomeBucket {
+  key: "asset" | "campaign" | "crm" | "event" | "other";
+  label: string;
+  value: number;
+}
+
 export interface AgentCommandSummary {
+  actionableOutcomes: AgentOutcomeView[];
   attentionJobs: AgentJobView[];
   metrics: AgentCommandMetric[];
+  outcomeBuckets: AgentCommandOutcomeBucket[];
 }
 
 function runtimeDetail(isOnline: boolean, lastSeen: string | null) {
@@ -48,6 +56,42 @@ function compareAttentionJobs(left: AgentJobView, right: AgentJobView) {
   return right.created_at.localeCompare(left.created_at);
 }
 
+function hasLinkedWork(outcome: AgentOutcomeView) {
+  return Boolean(
+    outcome.linkedActionItemId ??
+      outcome.linkedAssetFollowUpItemId ??
+      outcome.linkedCrmFollowUpItemId ??
+      outcome.linkedEventFollowUpItemId,
+  );
+}
+
+function isActionableOutcome(outcome: AgentOutcomeView) {
+  if (outcome.status === "pending" || outcome.status === "running") return true;
+  return !hasLinkedWork(outcome);
+}
+
+function outcomeBucketKey(outcome: AgentOutcomeView): AgentCommandOutcomeBucket["key"] {
+  if (outcome.assetId) return "asset";
+  if (outcome.crmContactId) return "crm";
+  if (outcome.eventId) return "event";
+  if (outcome.campaignId) return "campaign";
+  return "other";
+}
+
+function compareActionableOutcomes(left: AgentOutcomeView, right: AgentOutcomeView) {
+  const statusWeight = (outcome: AgentOutcomeView) => {
+    if (outcome.status === "error") return 0;
+    if (outcome.status === "done" && !hasLinkedWork(outcome)) return 1;
+    if (outcome.status === "running") return 2;
+    if (outcome.status === "pending") return 3;
+    return 4;
+  };
+
+  const statusDiff = statusWeight(left) - statusWeight(right);
+  if (statusDiff !== 0) return statusDiff;
+  return right.createdAt.localeCompare(left.createdAt);
+}
+
 export function buildAgentCommandSummary(input: {
   isOnline: boolean;
   jobs: AgentJobView[];
@@ -64,8 +108,20 @@ export function buildAgentCommandSummary(input: {
     (job) => job.status === "error" && isRecent(job, now),
   );
   const actionableOutcomes = countActionableAgentOutcomes(input.outcomes);
+  const actionableOutcomeQueue = input.outcomes
+    .filter(isActionableOutcome)
+    .sort(compareActionableOutcomes)
+    .slice(0, 6);
+  const outcomeBuckets = new Map<AgentCommandOutcomeBucket["key"], number>();
+
+  for (const outcome of input.outcomes) {
+    if (!isActionableOutcome(outcome)) continue;
+    const key = outcomeBucketKey(outcome);
+    outcomeBuckets.set(key, (outcomeBuckets.get(key) ?? 0) + 1);
+  }
 
   return {
+    actionableOutcomes: actionableOutcomeQueue,
     attentionJobs: nonAssistantJobs
       .filter((job) => job.status !== "done")
       .sort(compareAttentionJobs)
@@ -99,6 +155,13 @@ export function buildAgentCommandSummary(input: {
         detail: "Agent work that is queued, still running, or missing a linked next step.",
         tone: actionableOutcomes > 0 ? "neutral" : "positive",
       },
+    ],
+    outcomeBuckets: [
+      { key: "campaign", label: "Campaigns", value: outcomeBuckets.get("campaign") ?? 0 },
+      { key: "asset", label: "Assets", value: outcomeBuckets.get("asset") ?? 0 },
+      { key: "event", label: "Events", value: outcomeBuckets.get("event") ?? 0 },
+      { key: "crm", label: "CRM", value: outcomeBuckets.get("crm") ?? 0 },
+      { key: "other", label: "Other", value: outcomeBuckets.get("other") ?? 0 },
     ],
   };
 }
