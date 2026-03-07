@@ -12,6 +12,7 @@ import {
   summarizeChangedFields,
   type SystemEventActorType,
 } from "@/features/system-events/server";
+import { getEffectiveCampaignClientSlug } from "@/lib/campaign-client-assignment";
 
 export type CampaignActionItemVisibility = "admin_only" | "shared";
 
@@ -165,7 +166,6 @@ export async function listCampaignActionItems(
     .from("campaign_action_items")
     .select(CAMPAIGN_ACTION_ITEM_SELECT)
     .eq("campaign_id", options.campaignId)
-    .eq("client_slug", options.clientSlug)
     .order("position", { ascending: true })
     .order("created_at", { ascending: true });
 
@@ -268,13 +268,37 @@ export async function createSystemCampaignActionItem(
 ): Promise<CampaignActionItem | null> {
   if (!supabaseAdmin) return null;
 
+  const effectiveClientSlug =
+    (await getEffectiveCampaignClientSlug(input.campaignId)) ?? input.clientSlug;
+
   if (input.sourceEntityType && input.sourceEntityId) {
     const existing = await findCampaignActionItemBySource(
       input.sourceEntityType,
       input.sourceEntityId,
     );
 
-    if (existing) return existing;
+    if (existing) {
+      if (existing.clientSlug !== effectiveClientSlug) {
+        const { error } = await supabaseAdmin
+          .from("campaign_action_items")
+          .update({
+            client_slug: effectiveClientSlug,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id);
+
+        if (error) {
+          console.error("[campaign-action-items] source ownership sync failed:", error.message);
+        } else {
+          return {
+            ...existing,
+            clientSlug: effectiveClientSlug,
+          };
+        }
+      }
+
+      return existing;
+    }
   }
 
   const status = input.status ?? "todo";
@@ -299,7 +323,7 @@ export async function createSystemCampaignActionItem(
     .from("campaign_action_items")
     .insert({
       campaign_id: input.campaignId,
-      client_slug: input.clientSlug,
+      client_slug: effectiveClientSlug,
       title: input.title,
       description: input.description ?? null,
       status,
@@ -380,6 +404,8 @@ export async function updateSystemCampaignActionItem(
   if (!existingRow) return null;
 
   const existing = mapCampaignActionItem(existingRow as Record<string, unknown>);
+  const effectiveClientSlug =
+    (await getEffectiveCampaignClientSlug(existing.campaignId)) ?? existing.clientSlug;
   const nextValues = {
     assigneeId:
       "assigneeId" in input ? input.assigneeId ?? null : existing.assigneeId,
@@ -452,6 +478,7 @@ export async function updateSystemCampaignActionItem(
   if (changedKeys.includes("assigneeId")) updates.assignee_id = nextValues.assigneeId;
   if (changedKeys.includes("assigneeName")) updates.assignee_name = nextValues.assigneeName;
   if (changedKeys.includes("dueDate")) updates.due_date = nextValues.dueDate;
+  if (effectiveClientSlug !== existing.clientSlug) updates.client_slug = effectiveClientSlug;
 
   const { data: updatedRow, error: updateError } = await supabaseAdmin
     .from("campaign_action_items")

@@ -12,6 +12,7 @@ import {
   revalidateWorkflowPaths,
 } from "@/features/workflow/revalidation";
 import { adminGuard } from "@/lib/api-helpers";
+import { getEffectiveCampaignClientSlug } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 import { TASK_PRIORITIES, TASK_PRIORITY_LABELS, TASK_STATUSES, TASK_STATUS_LABELS } from "@/lib/workspace-types";
 import { logAudit } from "./audit";
@@ -77,6 +78,8 @@ export async function createCampaignActionItem(formData: {
   const parsed = CreateCampaignActionItemSchema.parse(formData);
   const user = await currentUser();
   if (!user) throw new Error("Unauthenticated");
+  const effectiveClientSlug =
+    (await getEffectiveCampaignClientSlug(parsed.campaignId)) ?? parsed.clientSlug;
 
   const { data: maxRow } = await supabaseAdmin
     .from("campaign_action_items")
@@ -93,7 +96,7 @@ export async function createCampaignActionItem(formData: {
     .from("campaign_action_items")
     .insert({
       campaign_id: parsed.campaignId,
-      client_slug: parsed.clientSlug,
+      client_slug: effectiveClientSlug,
       title: parsed.title,
       description: parsed.description ?? null,
       status: parsed.status,
@@ -118,7 +121,7 @@ export async function createCampaignActionItem(formData: {
   await logSystemEvent({
     eventName: "campaign_action_item_created",
     actorId: user.id,
-    clientSlug: parsed.clientSlug,
+    clientSlug: effectiveClientSlug,
     visibility: parsed.visibility,
     entityType: "campaign_action_item",
     entityId: data.id,
@@ -136,7 +139,7 @@ export async function createCampaignActionItem(formData: {
     actorId: user.id,
     actorName: user.fullName ?? user.firstName ?? user.username ?? "Unknown",
     assigneeId: parsed.assigneeId ?? null,
-    clientSlug: parsed.clientSlug,
+    clientSlug: effectiveClientSlug,
     entityId: parsed.campaignId,
     entityType: "campaign",
     message: parsed.title,
@@ -149,7 +152,7 @@ export async function createCampaignActionItem(formData: {
     await maybeEnqueueCampaignActionItemTriage(createdItem);
   }
 
-  revalidateWorkflowPaths(getCampaignWorkflowPaths(parsed.clientSlug, parsed.campaignId));
+  revalidateWorkflowPaths(getCampaignWorkflowPaths(effectiveClientSlug, parsed.campaignId));
   return data;
 }
 
@@ -182,6 +185,8 @@ export async function updateCampaignActionItem(formData: {
     .maybeSingle();
 
   if (!existing) throw new Error("Action item not found");
+  const effectiveClientSlug =
+    (await getEffectiveCampaignClientSlug(existing.campaign_id)) ?? existing.client_slug;
 
   const nextValues = {
     assigneeId: "assigneeId" in parsed ? parsed.assigneeId ?? null : existing.assignee_id,
@@ -247,6 +252,7 @@ export async function updateCampaignActionItem(formData: {
   if (changedKeys.includes("assigneeId")) updates.assignee_id = nextValues.assigneeId;
   if (changedKeys.includes("assigneeName")) updates.assignee_name = nextValues.assigneeName;
   if (changedKeys.includes("dueDate")) updates.due_date = nextValues.dueDate;
+  if (effectiveClientSlug !== existing.client_slug) updates.client_slug = effectiveClientSlug;
 
   const { error } = await supabaseAdmin
     .from("campaign_action_items")
@@ -267,7 +273,7 @@ export async function updateCampaignActionItem(formData: {
     await logSystemEvent({
       eventName: "campaign_action_item_updated",
       actorId: user.id,
-      clientSlug: existing.client_slug,
+      clientSlug: effectiveClientSlug,
       visibility: nextValues.visibility as "shared" | "admin_only",
       entityType: "campaign_action_item",
       entityId: itemId,
@@ -289,7 +295,7 @@ export async function updateCampaignActionItem(formData: {
       actorId: user.id,
       actorName: user.fullName ?? user.firstName ?? user.username ?? "Unknown",
       assigneeId: nextValues.assigneeId as string,
-      clientSlug: existing.client_slug,
+      clientSlug: effectiveClientSlug,
       entityId: existing.campaign_id,
       entityType: "campaign",
       message: nextValues.title,
@@ -306,7 +312,7 @@ export async function updateCampaignActionItem(formData: {
     });
   }
 
-  revalidateWorkflowPaths(getCampaignWorkflowPaths(existing.client_slug, existing.campaign_id));
+  revalidateWorkflowPaths(getCampaignWorkflowPaths(effectiveClientSlug, existing.campaign_id));
 }
 
 export async function deleteCampaignActionItem(formData: { itemId: string }) {
@@ -324,6 +330,8 @@ export async function deleteCampaignActionItem(formData: { itemId: string }) {
     .maybeSingle();
 
   if (!existing) throw new Error("Action item not found");
+  const effectiveClientSlug =
+    (await getEffectiveCampaignClientSlug(existing.campaign_id)) ?? existing.client_slug;
 
   const { error } = await supabaseAdmin
     .from("campaign_action_items")
@@ -336,7 +344,7 @@ export async function deleteCampaignActionItem(formData: { itemId: string }) {
   await logSystemEvent({
     eventName: "campaign_action_item_deleted",
     actorId: user.id,
-    clientSlug: existing.client_slug,
+    clientSlug: effectiveClientSlug,
     visibility: existing.visibility,
     entityType: "campaign_action_item",
     entityId: formData.itemId,
@@ -346,5 +354,5 @@ export async function deleteCampaignActionItem(formData: { itemId: string }) {
     },
   });
 
-  revalidateWorkflowPaths(getCampaignWorkflowPaths(existing.client_slug, existing.campaign_id));
+  revalidateWorkflowPaths(getCampaignWorkflowPaths(effectiveClientSlug, existing.campaign_id));
 }

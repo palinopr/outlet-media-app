@@ -82,6 +82,15 @@ export async function getEffectiveCampaignRowById<T extends CampaignClientAssign
   return row ?? null;
 }
 
+export async function getEffectiveCampaignClientSlug(campaignId: string) {
+  const row = await getEffectiveCampaignRowById<CampaignClientAssignmentRow>(
+    campaignId,
+    "campaign_id, client_slug, name",
+  );
+
+  return row?.client_slug ?? null;
+}
+
 export async function listEffectiveCampaignRowsForClientSlug<
   T extends CampaignClientAssignmentRow,
 >(select: string, clientSlug: string): Promise<T[]> {
