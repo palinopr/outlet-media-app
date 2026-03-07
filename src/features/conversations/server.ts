@@ -1,6 +1,7 @@
 import type { ScopeFilter } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
+import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import {
   buildConversationsSummary,
   type ConversationThread,
@@ -43,7 +44,10 @@ export async function listConversationThreads(
   if (!supabaseAdmin) return [];
 
   const limitPerKind = Math.max((options.limit ?? 12) * 4, 24);
-  const allowedCampaignIds = options.scope?.allowedCampaignIds ?? null;
+  const effectiveClientCampaignIds = options.clientSlug
+    ? await listEffectiveCampaignIdsForClientSlug(options.clientSlug)
+    : null;
+  const allowedCampaignIds = options.scope?.allowedCampaignIds ?? effectiveClientCampaignIds;
   const allowedEventIds = options.scope?.allowedEventIds ?? null;
 
   let campaignQuery = supabaseAdmin
@@ -79,7 +83,6 @@ export async function listConversationThreads(
     .limit(limitPerKind);
 
   if (options.clientSlug) {
-    campaignQuery = campaignQuery.eq("client_slug", options.clientSlug);
     crmQuery = crmQuery.eq("client_slug", options.clientSlug);
     assetQuery = assetQuery.eq("client_slug", options.clientSlug);
     eventQuery = eventQuery.eq("client_slug", options.clientSlug);

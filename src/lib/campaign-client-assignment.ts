@@ -126,6 +126,15 @@ export async function listEffectiveCampaignRowsForClientSlug<
   return effectiveRows.filter((row) => row.client_slug === clientSlug);
 }
 
+export async function listEffectiveCampaignIdsForClientSlug(clientSlug: string) {
+  const rows = await listEffectiveCampaignRowsForClientSlug<CampaignClientAssignmentRow>(
+    "campaign_id, client_slug, name",
+    clientSlug,
+  );
+
+  return rows.map((row) => row.campaign_id);
+}
+
 export async function campaignBelongsToClientSlug(campaignId: string, clientSlug: string) {
   const row = await getEffectiveCampaignRowById<CampaignClientAssignmentRow>(
     campaignId,

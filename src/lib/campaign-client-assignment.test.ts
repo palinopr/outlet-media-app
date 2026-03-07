@@ -75,6 +75,7 @@ import {
   applyEffectiveCampaignClientSlugs,
   campaignBelongsToClientSlug,
   getEffectiveCampaignRowById,
+  listEffectiveCampaignIdsForClientSlug,
   listEffectiveCampaignRowsForClientSlug,
 } from "@/lib/campaign-client-assignment";
 
@@ -162,5 +163,12 @@ describe("campaign client assignment helpers", () => {
       campaign_id: "cmp_override",
       client_slug: "zamora",
     });
+  });
+
+  it("lists effective campaign ids for a client", async () => {
+    await expect(listEffectiveCampaignIdsForClientSlug("zamora")).resolves.toEqual([
+      "cmp_direct",
+      "cmp_override",
+    ]);
   });
 });

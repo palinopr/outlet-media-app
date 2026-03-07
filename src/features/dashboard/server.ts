@@ -1,6 +1,9 @@
 import type { TaskPriority } from "@/lib/workspace-types";
 import type { ScopeFilter } from "@/lib/member-access";
-import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
+import {
+  applyEffectiveCampaignClientSlugs,
+  listEffectiveCampaignIdsForClientSlug,
+} from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { listConversationThreads } from "@/features/conversations/server";
@@ -149,7 +152,10 @@ export async function getDashboardOpsSummary(
 ): Promise<DashboardOpsSummary> {
   if (!supabaseAdmin) return emptySummary(options.mode, options.limit);
 
-  const scopeIds = options.scopeCampaignIds ?? null;
+  const effectiveClientCampaignIds = options.clientSlug
+    ? await listEffectiveCampaignIdsForClientSlug(options.clientSlug)
+    : null;
+  const scopeIds = options.scopeCampaignIds ?? effectiveClientCampaignIds ?? null;
   if (scopeIds && scopeIds.length === 0) {
     return emptySummary(options.mode, options.limit);
   }
@@ -192,8 +198,6 @@ export async function getDashboardOpsSummary(
 
   if (options.clientSlug) {
     approvalsQuery = approvalsQuery.eq("client_slug", options.clientSlug);
-    actionItemsQuery = actionItemsQuery.eq("client_slug", options.clientSlug);
-    commentsQuery = commentsQuery.eq("client_slug", options.clientSlug);
     eventsQuery = eventsQuery.eq("client_slug", options.clientSlug);
   }
 

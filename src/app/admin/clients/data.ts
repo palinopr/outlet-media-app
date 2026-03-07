@@ -67,7 +67,7 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
       .eq("status", "pending"),
     supabaseAdmin
       .from("campaign_action_items")
-      .select("client_slug, status")
+      .select("campaign_id, status")
       .neq("status", "done"),
     supabaseAdmin
       .from("ad_assets")
@@ -80,7 +80,7 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
       ),
     supabaseAdmin
       .from("campaign_comments")
-      .select("client_slug")
+      .select("campaign_id")
       .eq("resolved", false)
       .is("parent_comment_id", null),
     supabaseAdmin
@@ -115,15 +115,24 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
 
   const campaignsBySlug: Record<
     string,
-    { status: string; spend: number | null; roas: number | null }[]
+    { campaignId: string; status: string; spend: number | null; roas: number | null }[]
   > = {};
   for (const c of effectiveCampaignRows) {
     const slug = c.client_slug ?? "unknown";
     (campaignsBySlug[slug] ??= []).push({
+      campaignId: c.campaign_id,
       status: c.status ?? "unknown",
       spend: c.spend ?? null,
       roas: c.roas ?? null,
     });
+  }
+
+  const campaignIdsBySlug = new Map<string, Set<string>>();
+  for (const [slug, campaigns] of Object.entries(campaignsBySlug)) {
+    campaignIdsBySlug.set(
+      slug,
+      new Set(campaigns.map((campaign) => campaign.campaignId)),
+    );
   }
 
   const showsBySlug: Record<string, number> = {};
@@ -145,8 +154,13 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
 
   const openActionItemsBySlug: Record<string, number> = {};
   for (const row of actionItemsRes.data ?? []) {
-    const slug = (row.client_slug as string | null) ?? "unknown";
-    openActionItemsBySlug[slug] = (openActionItemsBySlug[slug] ?? 0) + 1;
+    const campaignId = (row.campaign_id as string | null) ?? null;
+    if (!campaignId) continue;
+
+    for (const [slug, campaignIds] of campaignIdsBySlug) {
+      if (!campaignIds.has(campaignId)) continue;
+      openActionItemsBySlug[slug] = (openActionItemsBySlug[slug] ?? 0) + 1;
+    }
   }
 
   const assetsNeedingReviewBySlug: Record<string, number> = {};
@@ -156,8 +170,17 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
   }
 
   const openDiscussionsBySlug: Record<string, number> = {};
+  for (const row of campaignDiscussionsRes.data ?? []) {
+    const campaignId = (row as { campaign_id?: string | null }).campaign_id ?? null;
+    if (!campaignId) continue;
+
+    for (const [slug, campaignIds] of campaignIdsBySlug) {
+      if (!campaignIds.has(campaignId)) continue;
+      openDiscussionsBySlug[slug] = (openDiscussionsBySlug[slug] ?? 0) + 1;
+    }
+  }
+
   for (const dataset of [
-    campaignDiscussionsRes.data ?? [],
     crmDiscussionsRes.data ?? [],
     assetDiscussionsRes.data ?? [],
     eventDiscussionsRes.data ?? [],
@@ -366,13 +389,11 @@ export async function getClientDetail(
       .eq("status", "pending"),
     supabaseAdmin
       .from("campaign_action_items")
-      .select("id")
-      .eq("client_slug", client.slug)
+      .select("id, campaign_id")
       .neq("status", "done"),
     supabaseAdmin
       .from("campaign_comments")
-      .select("id")
-      .eq("client_slug", client.slug)
+      .select("id, campaign_id")
       .eq("resolved", false)
       .is("parent_comment_id", null),
     supabaseAdmin
@@ -407,6 +428,7 @@ export async function getClientDetail(
     spend: (c.spend ?? 0) / 100,
     roas: c.roas ?? 0,
   }));
+  const clientCampaignIds = new Set(campaigns.map((campaign) => campaign.id));
 
   const events: ClientEvent[] = (eventsRes.data ?? []).map((e) => ({
     id: e.id,
@@ -448,9 +470,13 @@ export async function getClientDetail(
   const roas = computeBlendedRoas(campaigns) ?? 0;
   const workflow = buildClientWorkflowHealth({
     assetsNeedingReview: assets.filter((asset) => asset.status === "new" || asset.status === "labeled").length,
-    openActionItems: (actionItemsRes.data ?? []).length,
+    openActionItems: ((actionItemsRes.data ?? []) as Array<{ campaign_id: string | null }>)
+      .filter((row) => row.campaign_id && clientCampaignIds.has(row.campaign_id))
+      .length,
     openDiscussions:
-      (campaignDiscussionsRes.data ?? []).length +
+      ((campaignDiscussionsRes.data ?? []) as Array<{ campaign_id: string | null }>)
+        .filter((row) => row.campaign_id && clientCampaignIds.has(row.campaign_id))
+        .length +
       ((crmDiscussionsRes.data ?? []) as unknown[]).length +
       ((assetDiscussionsRes.data ?? []) as unknown[]).length +
       ((eventDiscussionsRes.data ?? []) as unknown[]).length,

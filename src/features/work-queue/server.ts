@@ -1,6 +1,7 @@
 import type { ScopeFilter } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
+import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import { buildWorkQueueSummary, type WorkQueueItem } from "./summary";
 
 interface GetWorkQueueOptions {
@@ -78,6 +79,10 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
   }
 
   const visibility = visibilityForMode(options.mode);
+  const effectiveClientCampaignIds = options.clientSlug
+    ? await listEffectiveCampaignIdsForClientSlug(options.clientSlug)
+    : null;
+  const allowedCampaignIds = options.scope?.allowedCampaignIds ?? effectiveClientCampaignIds;
 
   let campaignQuery = supabaseAdmin
     .from("campaign_action_items")
@@ -108,7 +113,6 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
     .limit(100);
 
   if (options.clientSlug) {
-    campaignQuery = campaignQuery.eq("client_slug", options.clientSlug);
     crmQuery = crmQuery.eq("client_slug", options.clientSlug);
     eventQuery = eventQuery.eq("client_slug", options.clientSlug);
     assetQuery = assetQuery.eq("client_slug", options.clientSlug);
@@ -129,7 +133,11 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
   }
 
   const [campaignRes, crmRes, eventRes, assetRes] = await Promise.all([
-    campaignQuery,
+    allowedCampaignIds && allowedCampaignIds.length === 0
+      ? Promise.resolve({ data: [] })
+      : allowedCampaignIds
+        ? campaignQuery.in("campaign_id", allowedCampaignIds)
+        : campaignQuery,
     crmQuery,
     eventQuery,
     assetQuery,
