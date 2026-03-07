@@ -1,5 +1,6 @@
 "use server";
 
+import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export type SearchableRecord = {
@@ -36,12 +37,21 @@ export async function fetchSearchableRecords(): Promise<SearchableRecord[]> {
       .limit(100),
   ]);
 
-  const campaigns: SearchableRecord[] = (campaignsRes.data ?? []).map((c) => ({
+  const effectiveCampaignRows = await applyEffectiveCampaignClientSlugs(
+    ((campaignsRes.data ?? []) as Array<{
+      campaign_id: string;
+      client_slug: string | null;
+      name: string | null;
+      status: string | null;
+    }>),
+  );
+
+  const campaigns: SearchableRecord[] = effectiveCampaignRows.map((c) => ({
     id: c.campaign_id,
     type: "campaign" as const,
     name: c.name ?? "",
     subtitle: `${c.status ?? "unknown"} \u00b7 ${c.client_slug ?? "unassigned"}`,
-    href: "/admin/campaigns",
+    href: `/admin/campaigns/${c.campaign_id}`,
   }));
 
   const events: SearchableRecord[] = (eventsRes.data ?? []).map((e) => ({

@@ -7,6 +7,10 @@ import {
 } from "@/lib/cloud-import";
 import { classifyAsset } from "@/lib/asset-classifier";
 import { insertAssetRow, uploadToAssetStorage } from "@/lib/asset-storage";
+import {
+  applyEffectiveCampaignClientSlugs,
+  listEffectiveCampaignRowsForClientSlug,
+} from "@/lib/campaign-client-assignment";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { AssetRow } from "./types";
@@ -177,17 +181,14 @@ export function assetMatchesScopedCampaigns(
 }
 
 async function listClientCampaignsForAssets(clientSlug: string): Promise<AssetScopeCampaign[]> {
-  if (!supabaseAdmin) throw new Error("DB not configured");
+  const rows = await listEffectiveCampaignRowsForClientSlug<{
+    campaign_id: string;
+    client_slug: string | null;
+    name: string | null;
+    tm_event_id: string | null;
+  }>("campaign_id, client_slug, name, tm_event_id", clientSlug);
 
-  const { data, error } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select("campaign_id, name, tm_event_id")
-    .eq("client_slug", clientSlug)
-    .limit(250);
-
-  if (error) throw new Error(error.message);
-
-  return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+  return rows.map((row) => ({
     campaignId: row.campaign_id as string,
     eventId: (row.tm_event_id as string | null) ?? null,
     name: (row.name as string | null) ?? null,
@@ -365,28 +366,38 @@ export async function listAssetLibrary(
   }
 
   const campaignsQuery = clientSlug
-    ? supabaseAdmin
-        .from("meta_campaigns")
-        .select("campaign_id, client_slug, name, tm_event_id")
-        .eq("client_slug", clientSlug)
-        .limit(250)
+    ? listEffectiveCampaignRowsForClientSlug<{
+        campaign_id: string;
+        client_slug: string | null;
+        name: string | null;
+        tm_event_id: string | null;
+      }>("campaign_id, client_slug, name, tm_event_id", clientSlug)
     : supabaseAdmin
         .from("meta_campaigns")
         .select("campaign_id, client_slug, name, tm_event_id")
-        .not("client_slug", "is", null)
-        .limit(600);
+        .limit(600)
+        .then(async ({ data, error }) => {
+          if (error) throw new Error(error.message);
+          return applyEffectiveCampaignClientSlugs(
+            ((data ?? []) as Array<{
+              campaign_id: string;
+              client_slug: string | null;
+              name: string | null;
+              tm_event_id: string | null;
+            }>),
+          );
+        });
 
   const [assetsRes, campaignsRes] = await Promise.all([assetsQuery, campaignsQuery]);
 
   if (assetsRes.error) throw new Error(assetsRes.error.message);
-  if (campaignsRes.error) throw new Error(campaignsRes.error.message);
 
   const campaignsBySlug = new Map<
     string,
     AssetScopeCampaign[]
   >();
 
-  for (const row of campaignsRes.data ?? []) {
+  for (const row of campaignsRes ?? []) {
     const slug = row.client_slug as string | null;
     if (!slug) continue;
 
@@ -434,16 +445,23 @@ export async function getAssetOperatingData(
 
   if (!supabaseAdmin) throw new Error("DB not configured");
 
-  const { data, error } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select("campaign_id, name, status, spend, roas, impressions, clicks, tm_event_id")
-    .eq("client_slug", asset.client_slug)
-    .limit(250);
-
-  if (error) throw new Error(error.message);
-
   const explicitIds = new Set(explicitCampaignIds);
-  const campaigns = ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+  const campaignRows = await listEffectiveCampaignRowsForClientSlug<{
+    campaign_id: string;
+    client_slug: string | null;
+    name: string | null;
+    status: string | null;
+    spend: number | string | null;
+    roas: number | string | null;
+    impressions: number | string | null;
+    clicks: number | string | null;
+    tm_event_id: string | null;
+  }>(
+    "campaign_id, client_slug, name, status, spend, roas, impressions, clicks, tm_event_id",
+    asset.client_slug,
+  );
+
+  const campaigns = campaignRows.map((row) => ({
     campaignId: row.campaign_id as string,
     clicks: toNullableNumber(row.clicks as number | string | null | undefined),
     eventId: (row.tm_event_id as string | null) ?? null,

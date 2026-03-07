@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
 import type { ScopeFilter } from "@/lib/member-access";
 import { centsToUsd } from "@/lib/formatters";
 import { allowsEventInScope } from "@/features/client-portal/scope";
@@ -11,6 +12,17 @@ import type {
   EventDetailData,
 } from "../../types";
 import { buildAudienceProfile, buildEventCard, computeDailyDeltas, computeVelocity } from "../../lib";
+
+interface LinkedCampaignRow {
+  campaign_id: string;
+  client_slug: string | null;
+  name: string | null;
+  status: string | null;
+  spend: number | null;
+  roas: number | null;
+  impressions: number | null;
+  clicks: number | null;
+}
 
 export async function getEventDetail(
   slug: string,
@@ -33,7 +45,7 @@ export async function getEventDetail(
       .single(),
     supabaseAdmin
       .from("meta_campaigns")
-      .select("campaign_id, name, status, spend, roas, impressions, clicks")
+      .select("campaign_id, client_slug, name, status, spend, roas, impressions, clicks")
       .eq("tm_event_id", eventId),
   ]);
 
@@ -67,15 +79,21 @@ export async function getEventDetail(
     audience = buildAudienceProfile(demosRes.data as DemographicsRow[]);
   }
 
-  const linkedCampaigns: LinkedCampaign[] = (campaignsRes.data ?? []).map((c) => ({
-    campaignId: c.campaign_id,
-    name: c.name,
-    status: c.status,
-    spend: centsToUsd(c.spend) ?? 0,
-    roas: c.roas != null ? Number(c.roas) : null,
-    impressions: c.impressions,
-    clicks: c.clicks,
-  }));
+  const linkedCampaignRows = await applyEffectiveCampaignClientSlugs(
+    ((campaignsRes.data ?? []) as LinkedCampaignRow[]),
+  );
+
+  const linkedCampaigns: LinkedCampaign[] = linkedCampaignRows
+    .filter((campaign) => campaign.client_slug === slug)
+    .map((c) => ({
+      campaignId: c.campaign_id,
+      name: c.name ?? c.campaign_id,
+      status: c.status ?? "unknown",
+      spend: centsToUsd(c.spend) ?? 0,
+      roas: c.roas != null ? Number(c.roas) : null,
+      impressions: c.impressions,
+      clicks: c.clicks,
+    }));
 
   const channelBreakdown =
     tmEvent.channel_internet_pct != null ||
