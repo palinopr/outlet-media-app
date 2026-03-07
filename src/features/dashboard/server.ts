@@ -333,7 +333,10 @@ export async function getDashboardActionCenter(
     return { approvals: [], crmFollowUps: [], discussions: [] };
   }
 
-  const scopeIds = options.scopeCampaignIds ?? null;
+  const effectiveClientCampaignIds = options.clientSlug
+    ? await listEffectiveCampaignIdsForClientSlug(options.clientSlug)
+    : null;
+  const scopeIds = options.scopeCampaignIds ?? effectiveClientCampaignIds ?? null;
   const scopeEventIds = options.scopeEventIds ?? null;
   if (scopeIds && scopeIds.length === 0 && scopeEventIds && scopeEventIds.length === 0) {
     return { approvals: [], crmFollowUps: [], discussions: [] };
@@ -350,10 +353,6 @@ export async function getDashboardActionCenter(
     .eq("status", "pending")
     .order("created_at", { ascending: false })
     .limit(Math.max((options.limit ?? 4) * 4, 12));
-
-  if (options.clientSlug) {
-    approvalsQuery = approvalsQuery.eq("client_slug", options.clientSlug);
-  }
 
   if (scopeIds && scopeIds.length > 0) {
     campaignsQuery = campaignsQuery.in("campaign_id", scopeIds);
@@ -383,6 +382,9 @@ export async function getDashboardActionCenter(
   ]);
 
   const allowedCampaignIds = scopeIds ? new Set(scopeIds) : null;
+  const clientCampaignIds = effectiveClientCampaignIds
+    ? new Set(effectiveClientCampaignIds)
+    : null;
   const effectiveCampaignNameRows = await applyEffectiveCampaignClientSlugs(
     ((campaignsRes.data ?? []) as Array<Record<string, unknown> & {
       campaign_id: string;
@@ -438,6 +440,14 @@ export async function getDashboardActionCenter(
       };
     })
     .filter((row) => {
+      if (options.clientSlug) {
+        if (row.campaignId) {
+          return clientCampaignIds?.has(row.campaignId) ?? false;
+        }
+
+        return row.clientSlug === options.clientSlug;
+      }
+
       if (!allowedCampaignIds && !allowedEventIdSet) return true;
       if (row.campaignId && allowedCampaignIds?.has(row.campaignId)) return true;
       if (row.eventId && allowedEventIdSet?.has(row.eventId)) return true;
