@@ -9,12 +9,18 @@ import {
 } from "@/features/workflow/revalidation";
 import {
   applyEffectiveCampaignClientSlugs,
+  getEffectiveCampaignRowById,
 } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
 import { logAudit } from "./audit";
 import { syncCampaignStatus, syncCampaignBudget } from "./meta-sync";
 import { logSystemEvent } from "@/features/system-events/server";
+import {
+  approvalMatchesCampaignOwnership,
+  notificationMatchesCampaignOwnership,
+  systemEventMatchesCampaignOwnership,
+} from "@/features/campaigns/ownership-sync";
 
 function eventVisibility(clientSlug: string | null | undefined) {
   return clientSlug ? "shared" : "admin_only";
@@ -50,6 +56,186 @@ async function revalidateClientAccountPaths(clientSlugs: Array<string | null | u
 
   for (const client of data ?? []) {
     revalidatePath(`/admin/clients/${client.id}`);
+  }
+}
+
+async function ensureClientExists(clientSlug: string) {
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const { data: existing } = await supabaseAdmin
+    .from("clients")
+    .select("id")
+    .eq("slug", clientSlug)
+    .maybeSingle();
+
+  if (existing) return;
+
+  const name = clientSlug
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+  const { error } = await supabaseAdmin
+    .from("clients")
+    .insert({ name, slug: clientSlug, status: "active" });
+
+  if (error) throw new Error(error.message);
+}
+
+async function upsertCampaignClientOverrides(campaignIds: string[], clientSlug: string) {
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const now = new Date().toISOString();
+  for (const campaignId of campaignIds) {
+    const { error } = await supabaseAdmin
+      .from("campaign_client_overrides")
+      .upsert(
+        { campaign_id: campaignId, client_slug: clientSlug, updated_at: now },
+        { onConflict: "campaign_id" },
+      );
+
+    if (error) throw new Error(error.message);
+  }
+}
+
+async function syncCampaignLinkedClientSlug(
+  campaignIds: string[],
+  clientSlug: string,
+  previousClientSlugs: Array<string | null | undefined>,
+) {
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const uniqueCampaignIds = [...new Set(campaignIds.filter(Boolean))];
+  if (uniqueCampaignIds.length === 0) return;
+
+  const previousSlugs = [
+    ...new Set(
+      previousClientSlugs.filter(
+        (value): value is string => Boolean(value) && value !== clientSlug,
+      ),
+    ),
+  ];
+
+  const [commentRowsRes, actionItemRowsRes] = await Promise.all([
+    supabaseAdmin
+      .from("campaign_comments")
+      .select("id")
+      .in("campaign_id", uniqueCampaignIds),
+    supabaseAdmin
+      .from("campaign_action_items")
+      .select("id")
+      .in("campaign_id", uniqueCampaignIds),
+  ]);
+
+  if (commentRowsRes.error) throw new Error(commentRowsRes.error.message);
+  if (actionItemRowsRes.error) throw new Error(actionItemRowsRes.error.message);
+
+  const campaignCommentIds = new Set(
+    ((commentRowsRes.data ?? []) as Array<{ id: string | null }>)
+      .map((row) => row.id)
+      .filter((value): value is string => Boolean(value)),
+  );
+  const campaignActionItemIds = new Set(
+    ((actionItemRowsRes.data ?? []) as Array<{ id: string | null }>)
+      .map((row) => row.id)
+      .filter((value): value is string => Boolean(value)),
+  );
+  const campaignIdSet = new Set(uniqueCampaignIds);
+
+  const approvalRowsQuery = supabaseAdmin
+    .from("approval_requests")
+    .select("id, entity_type, entity_id, metadata");
+  const approvalRows =
+    previousSlugs.length > 0
+      ? approvalRowsQuery.in("client_slug", previousSlugs)
+      : approvalRowsQuery.limit(0);
+
+  const { data: approvalRowsData, error: approvalRowsError } = await approvalRows;
+  if (approvalRowsError) throw new Error(approvalRowsError.message);
+
+  const approvalIds = new Set(
+    ((approvalRowsData ?? []) as Record<string, unknown>[])
+      .filter((row) => approvalMatchesCampaignOwnership(row, campaignIdSet))
+      .map((row) => String(row.id)),
+  );
+
+  const updates: PromiseLike<{ error: { message: string } | null }>[] = [
+    supabaseAdmin
+      .from("campaign_comments")
+      .update({ client_slug: clientSlug })
+      .in("campaign_id", uniqueCampaignIds),
+    supabaseAdmin
+      .from("campaign_action_items")
+      .update({ client_slug: clientSlug })
+      .in("campaign_id", uniqueCampaignIds),
+  ];
+
+  if (approvalIds.size > 0) {
+    updates.push(
+      supabaseAdmin
+        .from("approval_requests")
+        .update({ client_slug: clientSlug })
+        .in("id", [...approvalIds]),
+    );
+  }
+
+  const updateResults = await Promise.all(updates);
+  for (const result of updateResults) {
+    if (result.error) throw new Error(result.error.message);
+  }
+
+  if (previousSlugs.length === 0) return;
+
+  const [notificationRowsRes, systemEventRowsRes] = await Promise.all([
+    supabaseAdmin
+      .from("notifications" as never)
+      .select("id, entity_type, entity_id")
+      .in("client_slug", previousSlugs),
+    supabaseAdmin
+      .from("system_events")
+      .select("id, entity_type, entity_id, metadata")
+      .in("client_slug", previousSlugs),
+  ]);
+
+  if (notificationRowsRes.error) throw new Error(notificationRowsRes.error.message);
+  if (systemEventRowsRes.error) throw new Error(systemEventRowsRes.error.message);
+
+  const linkedEntities = {
+    approvalIds,
+    campaignActionItemIds,
+    campaignCommentIds,
+    campaignIds: campaignIdSet,
+  };
+
+  const notificationIds = ((notificationRowsRes.data ?? []) as Record<string, unknown>[])
+    .filter((row) => notificationMatchesCampaignOwnership(row, linkedEntities))
+    .map((row) => String(row.id));
+  const systemEventIds = ((systemEventRowsRes.data ?? []) as Record<string, unknown>[])
+    .filter((row) => systemEventMatchesCampaignOwnership(row, linkedEntities))
+    .map((row) => String(row.id));
+
+  const linkedUpdates: PromiseLike<{ error: { message: string } | null }>[] = [];
+
+  if (notificationIds.length > 0) {
+    linkedUpdates.push(
+      supabaseAdmin
+        .from("notifications" as never)
+        .update({ client_slug: clientSlug } as never)
+        .in("id", notificationIds),
+    );
+  }
+
+  if (systemEventIds.length > 0) {
+    linkedUpdates.push(
+      supabaseAdmin
+        .from("system_events")
+        .update({ client_slug: clientSlug })
+        .in("id", systemEventIds),
+    );
+  }
+
+  const linkedResults = await Promise.all(linkedUpdates);
+  for (const result of linkedResults) {
+    if (result.error) throw new Error(result.error.message);
   }
 }
 
@@ -205,18 +391,20 @@ export async function assignCampaignClient(formData: { campaignId: string; clien
   const user = await currentUser();
   if (!user) throw new Error("Unauthenticated");
 
-  const { data: old } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select("client_slug, name")
-    .eq("campaign_id", parsed.campaignId)
-    .single();
+  await ensureClientExists(parsed.clientSlug);
 
-  const { error } = await supabaseAdmin
-    .from("meta_campaigns")
-    .update({ client_slug: parsed.clientSlug || null, updated_at: new Date().toISOString() })
-    .eq("campaign_id", parsed.campaignId);
+  const old = await getEffectiveCampaignRowById<{
+    campaign_id: string;
+    client_slug: string | null;
+    name: string | null;
+  }>(parsed.campaignId, "campaign_id, client_slug, name");
 
-  if (error) throw new Error(error.message);
+  await upsertCampaignClientOverrides([parsed.campaignId], parsed.clientSlug);
+  await syncCampaignLinkedClientSlug(
+    [parsed.campaignId],
+    parsed.clientSlug,
+    [old?.client_slug],
+  );
 
   await logAudit("campaign", parsed.campaignId, "assign_client", { client_slug: old?.client_slug }, { client_slug: parsed.clientSlug });
   await logSystemEvent({
@@ -251,23 +439,7 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
   const user = await currentUser();
   if (!user) throw new Error("Unauthenticated");
 
-  // Auto-create client in clients table if it doesn't exist
-  const { data: existing } = await supabaseAdmin
-    .from("clients")
-    .select("id")
-    .eq("slug", parsed.clientSlug)
-    .maybeSingle();
-
-  if (!existing) {
-    const name = parsed.clientSlug
-      .split("_")
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(" ");
-    const { error: clientErr } = await supabaseAdmin
-      .from("clients")
-      .insert({ name, slug: parsed.clientSlug, status: "active" });
-    if (clientErr) throw new Error(clientErr.message);
-  }
+  await ensureClientExists(parsed.clientSlug);
 
   const { data: existingCampaignRows, error: existingCampaignRowsError } = await supabaseAdmin
     .from("meta_campaigns")
@@ -285,17 +457,12 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
   );
   const oldClientSlugs = oldEffectiveCampaignRows.map((row) => row.client_slug);
 
-  // Save campaign -> client overrides
-  const now = new Date().toISOString();
-  for (const campaignId of parsed.campaignIds) {
-    const { error: upsertErr } = await supabaseAdmin
-      .from("campaign_client_overrides")
-      .upsert(
-        { campaign_id: campaignId, client_slug: parsed.clientSlug, updated_at: now },
-        { onConflict: "campaign_id" },
-      );
-    if (upsertErr) throw new Error(upsertErr.message);
-  }
+  await upsertCampaignClientOverrides(parsed.campaignIds, parsed.clientSlug);
+  await syncCampaignLinkedClientSlug(
+    parsed.campaignIds,
+    parsed.clientSlug,
+    oldClientSlugs,
+  );
 
   await logAudit("campaign", "bulk", "bulk_assign_client", null, {
     count: parsed.campaignIds.length,

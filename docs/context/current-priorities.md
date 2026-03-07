@@ -83,6 +83,7 @@ The short-term focus is:
 - Keep access-management mutations on shared revalidation too, so admin users/settings/client-detail member surfaces and client settings stay in sync after invite, membership, or access-role changes.
 - Treat `campaign_client_overrides` as part of the real campaign ownership model, not as an admin-only bulk-edit side table, so loaders that group or authorize campaigns use the effective client slug instead of trusting raw `meta_campaigns.client_slug`.
 - Keep campaign-aware asset classification on that same effective ownership model, so uploads and folder imports can still match reassigned campaigns instead of falling back to stale raw `meta_campaigns.client_slug` data.
+- When a campaign is reassigned, migrate the linked campaign workflow rows with it too, so campaign comments, action items, approvals, notifications, and shared activity do not stay attached to the previous client slug after ownership changes.
 - Treat client slug mutations the same way: renames and deactivations should update the active `client_slug` references and operate on effectively assigned campaigns, not only the raw `meta_campaigns.client_slug` column.
 - Treat shared discussions as incomplete unless they also notify the right inbox audience, so campaign, asset, event, and CRM collaboration cannot get lost between the thread view and the routed inbox.
 - Keep notifications summary-first and filterable, so the inbox reads like an operating queue instead of a flat message dump.
