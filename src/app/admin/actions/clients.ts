@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { listEffectiveCampaignRowsForClientSlug } from "@/lib/campaign-client-assignment";
 import { adminGuard } from "@/lib/api-helpers";
 import {
   CreateClientSchema,
@@ -52,6 +53,96 @@ async function getClientAccessContextByMemberId(memberId: string) {
   return getClientAccessContextById(member.client_id as string);
 }
 
+const CLIENT_SLUG_REFERENCE_TABLES = [
+  "ad_assets",
+  "approval_requests",
+  "asset_comments",
+  "asset_follow_up_items",
+  "asset_sources",
+  "campaign_action_items",
+  "campaign_client_overrides",
+  "campaign_comments",
+  "client_accounts",
+  "crm_comments",
+  "crm_contacts",
+  "crm_follow_up_items",
+  "email_events",
+  "email_reply_examples",
+  "event_comments",
+  "event_follow_up_items",
+  "meta_campaigns",
+  "notifications",
+  "system_events",
+  "tm_events",
+  "workspace_pages",
+  "workspace_tasks",
+] as const;
+
+async function revalidateClientSlugSurfaces(
+  oldSlug: string,
+  newSlug: string,
+  clientId: string,
+) {
+  revalidateAccessManagementPaths({
+    clientId,
+    clientSlug: newSlug,
+  });
+  revalidatePath("/admin/activity");
+  revalidatePath("/admin/assets");
+  revalidatePath("/admin/campaigns");
+  revalidatePath("/admin/clients");
+  revalidatePath(`/admin/clients/${clientId}`);
+  revalidatePath("/admin/conversations");
+  revalidatePath("/admin/crm");
+  revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/events");
+  revalidatePath("/admin/notifications");
+  revalidatePath("/admin/reports");
+  revalidatePath("/admin/workspace", "layout");
+  revalidatePath("/admin/workspace/tasks");
+  revalidatePath(`/client/${oldSlug}`, "layout");
+  revalidatePath(`/client/${newSlug}`, "layout");
+}
+
+async function renameClientSlugReferences(oldSlug: string, newSlug: string) {
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  for (const table of CLIENT_SLUG_REFERENCE_TABLES) {
+    const { error } = await supabaseAdmin
+      .from(table as never)
+      .update({ client_slug: newSlug } as never)
+      .eq("client_slug", oldSlug);
+
+    if (error) throw new Error(error.message);
+  }
+}
+
+async function pauseCampaignsForClientSlug(slug: string) {
+  if (!supabaseAdmin) throw new Error("DB not configured");
+
+  const campaigns = await listEffectiveCampaignRowsForClientSlug<{
+    campaign_id: string;
+    client_slug: string | null;
+    status: string | null;
+  }>("campaign_id, client_slug, status", slug);
+
+  const activeCampaignIds = campaigns
+    .filter((campaign) => campaign.status === "ACTIVE")
+    .map((campaign) => campaign.campaign_id);
+
+  if (activeCampaignIds.length === 0) {
+    return 0;
+  }
+
+  const { error } = await supabaseAdmin
+    .from("meta_campaigns")
+    .update({ status: "PAUSED", updated_at: new Date().toISOString() })
+    .in("campaign_id", activeCampaignIds);
+
+  if (error) throw new Error(error.message);
+  return activeCampaignIds.length;
+}
+
 export async function renameClient(formData: { oldSlug: string; newSlug: string }) {
   const err = await adminGuard();
   if (err) throw new Error("Forbidden");
@@ -60,23 +151,23 @@ export async function renameClient(formData: { oldSlug: string; newSlug: string 
   if (!supabaseAdmin) throw new Error("DB not configured");
   if (parsed.oldSlug === parsed.newSlug) return;
 
-  const { error: e1 } = await supabaseAdmin
-    .from("meta_campaigns")
-    .update({ client_slug: parsed.newSlug, updated_at: new Date().toISOString() })
-    .eq("client_slug", parsed.oldSlug);
-  if (e1) throw new Error(e1.message);
+  const { data: client, error: clientError } = await supabaseAdmin
+    .from("clients")
+    .select("id, slug")
+    .eq("slug", parsed.oldSlug)
+    .single();
+  if (clientError) throw new Error(clientError.message);
 
-  const { error: e2 } = await supabaseAdmin
-    .from("tm_events")
-    .update({ client_slug: parsed.newSlug, updated_at: new Date().toISOString() })
-    .eq("client_slug", parsed.oldSlug);
-  if (e2) throw new Error(e2.message);
+  const { error: updateClientError } = await supabaseAdmin
+    .from("clients")
+    .update({ slug: parsed.newSlug })
+    .eq("id", client.id);
+  if (updateClientError) throw new Error(updateClientError.message);
+
+  await renameClientSlugReferences(parsed.oldSlug, parsed.newSlug);
 
   await logAudit("client", parsed.oldSlug, "rename", { slug: parsed.oldSlug }, { slug: parsed.newSlug });
-  revalidateAccessManagementPaths();
-  revalidatePath("/admin/clients");
-  revalidatePath("/admin/campaigns");
-  revalidatePath("/admin/events");
+  await revalidateClientSlugSurfaces(parsed.oldSlug, parsed.newSlug, client.id as string);
 }
 
 const DeactivateClientSchema = z.object({
@@ -90,15 +181,11 @@ export async function deactivateClient(formData: { slug: string }) {
   const parsed = DeactivateClientSchema.parse(formData);
   if (!supabaseAdmin) throw new Error("DB not configured");
 
-  const { error } = await supabaseAdmin
-    .from("meta_campaigns")
-    .update({ status: "PAUSED", updated_at: new Date().toISOString() })
-    .eq("client_slug", parsed.slug)
-    .eq("status", "ACTIVE");
+  const pausedCampaigns = await pauseCampaignsForClientSlug(parsed.slug);
 
-  if (error) throw new Error(error.message);
-
-  await logAudit("client", parsed.slug, "deactivate", null, { paused_all_campaigns: true });
+  await logAudit("client", parsed.slug, "deactivate", null, {
+    paused_active_campaigns: pausedCampaigns,
+  });
   revalidateAccessManagementPaths();
   revalidatePath("/admin/clients");
   revalidatePath("/admin/campaigns");
@@ -117,12 +204,25 @@ export async function bulkDeactivateClients(formData: { clientIds: string[] }) {
   const parsed = BulkDeactivateClientsSchema.parse(formData);
   if (!supabaseAdmin) throw new Error("DB not configured");
 
+  const { data: clientsRes, error: clientsError } = await supabaseAdmin
+    .from("clients")
+    .select("slug")
+    .in("id", parsed.clientIds);
+
+  if (clientsError) throw new Error(clientsError.message);
+
   const { error } = await supabaseAdmin
     .from("clients")
     .update({ status: "inactive" })
     .in("id", parsed.clientIds);
 
   if (error) throw new Error(error.message);
+
+  for (const client of clientsRes ?? []) {
+    if (typeof client.slug === "string" && client.slug.length > 0) {
+      await pauseCampaignsForClientSlug(client.slug);
+    }
+  }
 
   await logAudit("client", "bulk", "bulk_deactivate", null, {
     count: parsed.clientIds.length,
