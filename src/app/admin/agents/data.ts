@@ -1,3 +1,5 @@
+import { listAgentOutcomes } from "@/features/agent-outcomes/server";
+import { buildAgentCommandSummary, type AgentCommandSummary } from "@/features/agents/summary";
 import {
   getHeartbeatStatus,
   listAgentJobs,
@@ -7,20 +9,33 @@ import {
 export type AgentJob = AgentJobView;
 
 export interface AgentsData {
+  commandSummary: AgentCommandSummary;
   jobs: AgentJob[];
   isOnline: boolean;
   lastSeen: string | null;
+  outcomes: Awaited<ReturnType<typeof listAgentOutcomes>>;
 }
 
 export async function getInitialData(): Promise<AgentsData> {
-  const [jobs, heartbeat] = await Promise.all([
+  const [jobs, heartbeat, outcomes] = await Promise.all([
     listAgentJobs(80),
     getHeartbeatStatus(),
+    listAgentOutcomes({
+      audience: "all",
+      limit: 8,
+    }),
   ]);
 
   return {
+    commandSummary: buildAgentCommandSummary({
+      isOnline: heartbeat.isOnline,
+      jobs,
+      lastSeen: heartbeat.lastSeen,
+      outcomes,
+    }),
     jobs,
     isOnline: heartbeat.isOnline,
     lastSeen: heartbeat.lastSeen,
+    outcomes,
   };
 }

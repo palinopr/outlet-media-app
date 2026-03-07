@@ -1,5 +1,7 @@
 import { getInitialData } from "./data";
+import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { ChatPanel } from "@/components/admin/agents/chat-panel";
+import { AgentCommandSummarySection } from "@/components/admin/agents/command-summary";
 import { AgentSidebar } from "@/components/admin/agents/agent-sidebar";
 import { JobHistory } from "@/components/admin/agents/job-history";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -11,7 +13,7 @@ import { AdminPageHeader } from "@/components/admin/page-header";
 export const dynamic = "force-dynamic";
 
 export default async function AgentsPage() {
-  const { jobs, isOnline, lastSeen } = await getInitialData();
+  const { commandSummary, jobs, isOnline, lastSeen, outcomes } = await getInitialData();
 
   // Chat panel gets only assistant jobs, in ascending order
   const chatJobs = [...jobs]
@@ -23,7 +25,12 @@ export default async function AgentsPage() {
 
       <AdminPageHeader
         title="Agent Command Center"
-        description="Talk to the agent, view all runs, trigger tasks manually"
+        description="Talk to the assistant, inspect live runtime pressure, and turn agent output into tracked follow-through."
+      />
+
+      <AgentCommandSummarySection
+        attentionJobs={commandSummary.attentionJobs}
+        summary={commandSummary}
       />
 
       {/* Desktop: side-by-side layout */}
@@ -53,6 +60,19 @@ export default async function AgentsPage() {
         </Sheet>
         <AgentSidebar isOnline={isOnline} lastSeen={lastSeen} />
       </div>
+
+      <AgentOutcomesPanel
+        canCreateActionItems
+        campaignHrefPrefix="/admin/campaigns"
+        crmHrefPrefix="/admin/crm"
+        assetHrefPrefix="/admin/assets"
+        eventHrefPrefix="/admin/events"
+        description="Recent agent requests, what came back, and whether they have already been turned into tracked next steps."
+        emptyState="No agent follow-through is attached yet."
+        outcomes={outcomes}
+        title="Recent agent follow-through"
+        variant="admin"
+      />
 
       <JobHistory jobs={jobs} />
 
