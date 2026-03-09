@@ -103,12 +103,12 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - **Snapshot UPSERT is write-once**: `campaign_snapshots` uses ON CONFLICT DO NOTHING — first sync of the day (by UTC date) creates the snapshot, subsequent syncs only update `meta_campaigns`. First sync fires at 00:00 UTC (6 PM CST previous day), so snapshots capture late-afternoon CST data. Good for consistency (same time daily), but live campaign data may differ from snapshot data within the same day.
 - **Meta intraday reporting lag**: Within-day spend deltas from Meta API are unreliable for real-time monitoring. On Feb 23, ACTIVE campaigns showed <3% of expected daily delivery after 12 hours ($0.22-$1.35 on $100/day budgets). This is normal Meta reporting lag — true daily spend finalizes 24-48h after the day ends. Use daily snapshots (midnight-to-midnight) for trend analysis, not intraday deltas.
 
-## Data Pipeline Status (verified 2026-03-08, Cycle #140)
-- `daily_budget` ✅ populated for all 27 campaigns in Supabase
-- `start_time` ✅ populated for all 27 campaigns in Supabase
-- `campaign_snapshots` ✅ **HEALTHY** — 9 dates, 111 rows. Latest: Mar 8 (10 rows, ACTIVE only). Gap Feb 27-Mar 4 permanent.
+## Data Pipeline Status (verified 2026-03-09, Cycle #156)
+- `daily_budget` ✅ populated for all 29 campaigns in Supabase
+- `start_time` ✅ populated for all 29 campaigns in Supabase
+- `campaign_snapshots` ✅ **HEALTHY** — 9+ dates. Gap Feb 27-Mar 4 permanent.
 - `event_snapshots` ⚠️ **POPULATED BUT STATIC** — ticket values identical across dates (TM One source frozen).
-- **Meta syncs:** ✅ Working. Session cache has 9 ACTIVE campaigns (Mar 8 06:01), Supabase has 27 total.
+- **Meta syncs:** ⚠️ Session cache from Mar 8 18:01 (>24h stale). Heartbeat 23h old — scheduler may be down. Supabase has 29 total, 8 ACTIVE.
 - **TM One events:** Jaime actively developing TM1 scraper.
 - **Pacing checks (P4):** ✅ Can run with fresh data.
 - **ROAS trend checks (P4):** ✅ Can run (consecutive snapshots Mar 5-8 available).
@@ -128,67 +128,69 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - **Scheduler:** `eata-sync` (every 2h), `eata-cookie-refresh` (every 6h)
 - **Pipeline status (verified Cycle #76):** LIVE. Don Omar BCN: 30,052 tickets sold, gross 3,231,949 euros, 442 tickets/day, avg price 107.55 euros. Event date Jul 23, 2026. Event snapshot writing to Supabase.
 
-## Known Issues (tracked, ranked by impact — updated Cycle #140, Mar 8)
-1. 🔴 **Vaz Vil 0x ROAS** — $197 spent, $50/day. 6+ consecutive 0x snapshots (Mar 5-8). Alert posted Cycle #136.
-2. ⚠️ **Phoenix post-show** — Show was Mar 8, campaign still ACTIVE at $500/day in Supabase. Alert posted Cycle #131. Jaime may have paused manually (next sync will confirm).
-3. 🟡 **KYBBA blended ROAS flat at 2.47** — stable but close to 2.0 threshold. Show Mar 22. Monitor.
-4. 🟡 **KYBBA delivery issue** — $100/day budget but only $2-6/day actual spend. Meta barely spending. Noted 4+ cycles.
-5. 🟡 **Campaign snapshots gap Feb 20-22 + Feb 27-Mar 4** — Two permanent gaps in historical data.
-6. 🟡 **TM One per-event data incomplete** — Jaime actively working on TM1 scraper.
-7. 🟡 **EATA token staleness** — Cookie refresh visibility still needs explicit runtime-state logging.
-- ✅ RESOLVED: `/api/health` (returns 200 now), Palm Desert (recovered to 3.35x), Don Omar BCN (delivering, 6.54x), Anaheim trend reversal (4.09x), Sienna (PAUSED by Jaime ~Mar 8), SF 8.55x (recovered), San Diego (PAUSED), Meta sync stale (resumed), Houston (PAUSED, $2,977 5.90x), Dallas (PAUSED, $625 19.02x), San Antonio (PAUSED, $1,718 3.89x), Alofoke (PAUSED, show past), KYBBA marginal recovered (4.67x), PAUSED status sync, Scheduler auto-firing, `/api/alerts` Clerk bug, Scheduler down, agent_jobs deprecated
+## Known Issues (tracked, ranked by impact — updated Cycle #157, Mar 9)
+1. 🔴 **Scheduler possibly down** — heartbeat last_seen Mar 8 23:05 UTC (~23h stale as of Mar 9). No Mar 9 snapshots. Session cache from Mar 8 18:01. If heartbeat doesn't recover, Jaime needs to restart.
+2. 🔴 **Vaz Vil 0x ROAS** — $197 spent, $50/day. 7+ consecutive 0x snapshots (Mar 5-8, no Mar 9 data). Alert posted Cycle #136.
+3. ⚠️ **Phoenix post-show** — Show was Mar 8 (PAST), campaign still ACTIVE at $500/day in Supabase. No sync since Mar 8 18:01 (scheduler stale). Jaime may have paused but no data to confirm.
+4. ⚠️ **SLC show TODAY (Mar 9)** — $800/day, 17.7× ROAS. Should be paused after show tonight.
+5. 🟡 **KYBBA blended ROAS flat at 2.47** — stable but close to 2.0 threshold. Show Mar 22. Monitor.
+6. 🟡 **KYBBA delivery issue** — $100/day budget but only $2-6/day actual spend. Meta barely spending. Noted 9+ cycles.
+7. 🟡 **Campaign snapshots gap Feb 20-22 + Feb 27-Mar 4** — Two permanent gaps in historical data.
+8. 🟡 **TM One per-event data incomplete** — Jaime actively working on TM1 scraper.
+9. 🟡 **EATA token staleness** — Cookie refresh visibility still needs explicit runtime-state logging.
+- ✅ RESOLVED: `/api/health` (returns 200 now), Palm Desert (recovered to 3.35x), Don Omar BCN (delivered 6.73x, now PAUSED by Jaime), Anaheim trend reversal (4.09x), Sienna (PAUSED by Jaime ~Mar 8), SF 8.55x (recovered), San Diego (PAUSED), Meta sync stale (resumed), Houston (PAUSED, $2,977 5.90x), Dallas (PAUSED, $625 19.02x), San Antonio (PAUSED, $1,718 3.89x), Alofoke (PAUSED, show past), KYBBA marginal recovered (4.67x), PAUSED status sync, Scheduler auto-firing, `/api/alerts` Clerk bug, Scheduler down, agent_jobs deprecated
 
-## Current Campaign Landscape (as of 2026-03-08, verified Cycle #137)
-- **27 total campaigns** in Supabase (9 ACTIVE, 18 PAUSED). Supabase is authoritative.
-- **Data freshness:** Mar 8 snapshot. Session cache from Mar 8 06:01 CST.
+## Current Campaign Landscape (as of 2026-03-09, verified Cycle #156)
+- **29 total campaigns** in Supabase (8 ACTIVE, 21 PAUSED). Supabase is authoritative.
+- **Data freshness:** Session cache from Mar 8 18:01 CST (>24h stale as of Mar 9).
 
-### ACTIVE Campaigns (9) — updated Cycle #147 from Supabase
+### ACTIVE Campaigns (8) — updated Cycle #156 from Supabase
 **Zamora — Continuing:**
-- KYBBA Miami — ~$2,703 spend, 2.47x ROAS, $100/day. Show Mar 22 (14 days). Stable but near 2.0 threshold. Delivery issue: only $2-6/day actual on $100/day budget.
-- Camila Anaheim — ~$1,541 spend, 4.09x ROAS, $100/day. Show Mar 14 (6 days). Healthy, marginal 5.9x.
-- Camila Sacramento — ~$1,539 spend, 5.02x ROAS, $100/day. Show Mar 15. Healthy, marginal 4.6x.
+- KYBBA Miami — ~$2,703 spend, 2.47x ROAS, $100/day. Show Mar 22 (13 days). Stable but near 2.0 threshold. Delivery issue: only $2-6/day actual on $100/day budget.
+- Camila Anaheim — ~$1,541 spend, 4.16x ROAS, $100/day. Show Mar 14 (5 days). Healthy.
+- Camila Sacramento — ~$1,539 spend, 4.92x ROAS, $100/day. Show Mar 15 (6 days). Healthy.
 
-**Zamora — Camila (high budget):**
-- Camila Phoenix — ~$1,771 spend, **3.02x ROAS**, **$500/day**. **Show Mar 8 TODAY — should be paused tonight.** Alert posted.
+**Zamora — Show-day / Post-show (needs pause verification):**
+- Camila Phoenix — ~$1,771 spend, **3.02x ROAS**, **$500/day**. **Show Mar 8 PAST — should be paused.** Still ACTIVE in stale data.
+- Arjona Salt Lake City — ~$1,131 spend, **17.72x ROAS**, **$800/day**. **Show Mar 9 TODAY.** Should pause after show.
 
 **Zamora — Arjona cities:**
-- Arjona Salt Lake City — ~$1,131 spend, **17.72x ROAS**, **$800/day**. **Show Mar 9 (TOMORROW).** Exceptional — 51.6x marginal. Should pause after show.
-- Arjona Palm Desert — ~$320 spend, **3.35x ROAS**, $50/day. Show Mar 12 (4 days). Fully recovered from 0.31x, marginal 12.9x.
-- Arjona San Francisco — ~$323 spend, **8.55x ROAS**, $50/day. Show Mar 15. Exceptional, marginal 13.5x.
+- Arjona Palm Desert — ~$320 spend, **3.35x ROAS**, **$500/day** (budget bumped from $50, final push). Show Mar 12 (3 days).
+- Arjona San Francisco — ~$323 spend, **7.51x ROAS**, $50/day. Show Mar 15 (6 days). Healthy.
 
 **New Clients:**
-- Vaz Vil - Kiko Blade — $197 spend, 0x ROAS, $50/day. Started Mar 3. **6 consecutive 0x snapshots — alert posted.**
+- Vaz Vil - Kiko Blade — $197 spend, 0x ROAS, $50/day. Started Mar 3. **7+ consecutive 0x snapshots — alert posted.**
 
-**Don Omar BCN:**
-- Don Omar Barcelona — $370 spend, **6.53x ROAS**, **$600/day**. Launched Mar 6. Delivering. Meta campaign for Don Omar concert (Jul 23).
-
-### PAUSED Campaigns (18) — updated Cycle #147
+### PAUSED Campaigns (21) — updated Cycle #156
+- **Don Omar Barcelona** — $370 spend, 6.73x ROAS, $600/day. **PAUSED by Jaime** (was ACTIVE, launched Mar 6). Concert Jul 23 via Vivaticket.
 - Sienna - Peace In Mind — $776 spend, $200/day. **ViewContent optimization (music artist), NOT purchase.** 0x ROAS expected. Paused by Jaime ~Mar 8.
 - Camila San Diego (Zamora) — $703 spend, 1.13x ROAS. Show Mar 7 past.
 - Camila San Antonio (Zamora) — $1,718 spend, 3.89x ROAS. Show Mar 26. Was activated, ran, then paused.
 - Camila Houston (Zamora) — $2,977 spend, 5.90x ROAS. Was reactivated and scaled ($2,700/day budget).
 - Camila Dallas (Zamora) — $625 spend, 19.02x ROAS. Was reactivated and ran well ($1,600/day budget).
 - Alofoke (Zamora) — $1,448 spend, 9.79x ROAS. Boston show Mar 2 past.
-- Arjona Boston (4 campaigns) — ~$4,559 combined, shows past. Main $3,209 (4.01x), Retargeting $613 (6.43x), Original $534 (9.35x), ROAS $202 (5.48x), Cost Per Result $1 (0x).
+- Arjona Boston (4 campaigns) — ~$4,559 combined, shows past.
 - Arjona Denver V2 — $2,240, 9.82x. Show past.
-- Arjona Sacramento V2 ($339, 8.91x), Seattle V2 ($189, 10.63x), Portland V2 ($372, 9.21x) — all high ROAS, shows past.
+- Arjona Sacramento V2, Seattle V2, Portland V2 — all high ROAS, shows past.
+- Arjona Anaheim, Arjona San Diego — $0 spend, PAUSED (staged for activation).
 - Denver Retargeting ($126, 0.39x), Happy Paws ($200, 0x), Beamina V3 ($1,136, 3.73x).
+- Note: PAUSED campaigns show $0 spend in meta_campaigns (Meta API behavior). Historical spend preserved in campaign_snapshots.
 
 ### Clients Summary
-- **Zamora:** 22 campaigns (7 ACTIVE, 15 PAUSED)
+- **Zamora:** 24 campaigns (6 ACTIVE, 18 PAUSED) — includes Arjona, Camila, Alofoke sub-brands
 - **KYBBA:** 1 campaign (ACTIVE)
 - **Sienna:** 1 campaign (PAUSED — paused ~Mar 8)
 - **Vaz Vil:** 1 campaign (ACTIVE)
-- **Don Omar BCN:** 1 Meta campaign (ACTIVE, $600/day, launched Mar 6) + 1 EATA event (eata_14948). Tickets via Vivaticket, not TM.
+- **Don Omar BCN:** 1 Meta campaign (PAUSED, was $600/day, 6.73× — paused by Jaime) + 1 EATA event (eata_14948). Tickets via Vivaticket, not TM.
 - **Beamina:** 1 campaign (PAUSED)
 - **Happy Paws:** 1 campaign (PAUSED)
 
 ### Snapshot Dates
-9 dates, 111 total rows. Key: Feb 19 (13), Feb 23 (17), Feb 24 (15), Feb 25 (5), Feb 26 (5), Mar 5 (10), Mar 6 (26), Mar 7 (10), Mar 8 (10). Gap Feb 27-Mar 4 permanent.
+9+ dates. Key dates: Feb 19, Feb 23-26, Mar 5-8. Gap Feb 27-Mar 4 permanent.
 
 ## Upcoming Shows (from TM One GraphQL, 25 events — updated Cycle #140, Mar 8)
-- **PAST:** Denver Feb 18, Seattle Feb 25, Portland Feb 26, Inglewood Mar 1, Boston Mar 2, San Jose Mar 6, San Diego Mar 7, Phoenix Mar 8
-- **This week:** **SLC Mar 9** (Arjona, 34.27x ✅, $800/day — show TOMORROW), Palm Desert Mar 12 (Arjona, 2.11x ✅), **Anaheim Mar 14** (Camila, 4.09x ✅), **Sacramento Mar 15** (Camila, 5.03x ✅), SF Mar 15 (Arjona, 8.56x ✅), Arjona Mar 16
+- **PAST:** Denver Feb 18, Seattle Feb 25, Portland Feb 26, Inglewood Mar 1, Boston Mar 2, San Jose Mar 6, San Diego Mar 7, Phoenix Mar 8, **SLC Mar 9** (Arjona, 17.7x, show TODAY — pause after)
+- **This week:** Palm Desert Mar 12 (Arjona, 3.35x ✅, $500/day), **Anaheim Mar 14** (Camila, 4.16x ✅), **Sacramento Mar 15** (Camila, 4.92x ✅), SF Mar 15 (Arjona, 7.51x ✅), Arjona Mar 16
 - **Late March:** Glendale Mar 21, **KYBBA Miami Mar 22** (2.47x ⚠️), San Antonio Mar 26, Austin Mar 30
 - **April:** Miami Apr 3-8 (5 shows), Nashville Apr 11, Atlanta Apr 12, DC Apr 14, Reading Apr 17
 - **Don Omar BCN Jul 23** — Via Vivaticket/EATA (30,052 tickets sold). Meta campaign launched Mar 6.

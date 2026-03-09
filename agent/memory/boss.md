@@ -20,6 +20,9 @@ Makes strategic decisions, delegates work to specialist agents, manages the over
 ## Clients
 - **Zamora** (slug: "zamora") -- music promoter, campaigns contain "arjona", "camila", "alofoke"
 - **KYBBA** (slug: "kybba") -- separate music promoter
+- **Sienna** (slug: "sienna") -- music artist, ViewContent optimization (NOT purchase), 0x ROAS expected
+- **Vaz Vil** (slug: "vaz_vil") -- new client Mar 3, campaign "Kiko Blade - penetrado tour"
+- **Don Omar BCN** (slug: "don_omar_bcn") -- Don Omar concert Barcelona Jul 23. Tickets via Vivaticket/EATA, NOT Ticketmaster.
 - **Beamina** (slug: "beamina") -- music promoter
 - **Happy Paws** (slug: "happy_paws") -- client
 - Unknown campaigns default to slug: "unknown"
@@ -33,22 +36,37 @@ Makes strategic decisions, delegates work to specialist agents, manages the over
 | Creative | #creative | creative-agent.txt | Ad creative + copy |
 | Reporting | #dashboard | reporting-agent.txt | Cross-source analytics |
 | Client Manager | #zamora, #kybba | client-manager.txt | Per-client operations |
+| Email Agent | #email | email-agent.txt | Gmail monitoring, auto-draft replies |
+| Meeting Agent | #meetings | meeting-agent.txt | Google Calendar scheduling |
+| Don Omar Agent | #don-omar | don-omar-agent.txt | Don Omar BCN campaign + EATA data |
 | General | #general | general.txt | Quick queries, casual chat |
 
-## Known Issues (updated Cycle #49)
-1. Houston $400/day $0 spend -- likely delivery issue
-2. KYBBA ROAS declining -- marginal 0.95x, blended crosses 2.0 ~Mar 18
-3. Campaign snapshots gap Feb 20-22 (unrecoverable)
-4. TM One per-event data incomplete (percentSold/ticketsSold null)
+## Known Issues (updated Mar 9 2026, Cycle #157)
+1. Scheduler possibly down -- heartbeat last seen Mar 8 23:05 UTC (~23h stale). No Mar 9 snapshots. Needs restart if it doesn't recover.
+2. Vaz Vil 0x ROAS -- $197 spent, $50/day, 7+ consecutive zero-purchase snapshots (Mar 5-8). Alert posted.
+3. Phoenix post-show -- show was Mar 8, campaign still ACTIVE at $500/day in stale data. Jaime may have paused but no sync to confirm.
+4. SLC show TODAY (Mar 9) -- $800/day, 17.7x ROAS. Should be paused after show tonight.
+5. KYBBA delivery issue -- $100/day budget but only $2-6/day actual spend for 9+ cycles. Blended ROAS flat at 2.47x.
+6. Campaign snapshots gaps Feb 20-22 + Feb 27-Mar 4 (permanent, unrecoverable).
+7. TM One per-event data incomplete -- Jaime actively working on TM1 scraper.
+8. EATA token staleness -- cookie refresh visibility needs explicit runtime-state logging.
 
 ## Proposals Status (ranked)
 G (Ad health scan) > I (Budget cap monitor) > A (Campaign-event linking) > C (Marginal ROAS dashboard) > J (Change journal) > B (Show countdown) > H (Post-show reports) > E (Creative-level data) > F (Budget recommendations)
 
-## Current Campaign Landscape (Feb 25)
-- 18 total campaigns (5 ACTIVE, 13 PAUSED)
-- ACTIVE: Alofoke 8.72x, Camila Sac 4.42x, Camila Ana 3.81x, KYBBA 2.47x, Houston 0.00x
-- All Zamora campaigns healthy except Houston ($0 spend)
-- KYBBA declining but above 2.0, show Mar 22
+## Current Campaign Landscape (Mar 9 2026, Cycle #156)
+- **29 total campaigns** (8 ACTIVE, 21 PAUSED)
+- Data freshness: session cache from Mar 8 18:01 CST (>24h stale as of Mar 9)
+
+### ACTIVE (8)
+- KYBBA Miami -- $2,703 spend, 2.47x ROAS, $100/day. Show Mar 22. Delivery issue ($2-6/day actual).
+- Camila Anaheim -- $1,541 spend, 4.16x ROAS, $100/day. Show Mar 14.
+- Camila Sacramento -- $1,539 spend, 4.92x ROAS, $100/day. Show Mar 15.
+- Camila Phoenix -- $1,771 spend, 3.02x ROAS, $500/day. **Show Mar 8 PAST -- should be paused.**
+- Arjona Salt Lake City -- $1,131 spend, 17.72x ROAS, $800/day. **Show Mar 9 TODAY.**
+- Arjona Palm Desert -- $320 spend, 3.35x ROAS, $500/day. Show Mar 12.
+- Arjona San Francisco -- $323 spend, 7.51x ROAS, $50/day. Show Mar 15.
+- Vaz Vil - Kiko Blade -- $197 spend, 0x ROAS, $50/day. **7+ consecutive 0x snapshots.**
 
 ## Scheduler Status
 ALL SCHEDULED JOBS DISABLED. Manual triggers only via Discord channels.
@@ -132,3 +150,7 @@ ALL SCHEDULED JOBS DISABLED. Manual triggers only via Discord channels.
 - SLC Arjona copy swap: "Hoy" ad 120243055587590525 replacing "Mañana"
 - Swap scheduled midnight MT (1AM CST) — activate Hoy, pause Mañana
 - Ariel Rivas is Don Omar WhatsApp contact (likely don_omar_bcn)
+
+<!-- auto-learned 2026-03-09 -->
+- Sienna meeting contacts: Rosana (Carreman), Edu (EO Entertainment)
+- AI Idea meeting contacts: Alexandra, Enid (Outlet Holdings), José Ruiz (KW)

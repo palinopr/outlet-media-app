@@ -88,19 +88,20 @@ function normalizeDateTime(iso: string): { dateTime: string; timeZone?: string }
 
 function computeEnd(startIso: string, durationMinutes: number): { dateTime: string; timeZone?: string } {
   const start = normalizeDateTime(startIso);
-  const baseMs = new Date(start.dateTime).getTime();
-  if (Number.isNaN(baseMs)) {
-    throw new Error(`Invalid start datetime: ${startIso}`);
-  }
+  const match = start.dateTime.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
+  if (!match) throw new Error(`Invalid start datetime: ${startIso}`);
 
-  const endDate = new Date(baseMs + durationMinutes * 60_000);
-  const endIso = start.timeZone
-    ? endDate.toISOString().slice(0, 19)
-    : endDate.toISOString();
+  const parts = match.slice(1).map(Number);
+  let [y, mo, d, h, mi] = parts;
+  mi += durationMinutes;
+  while (mi >= 60) { mi -= 60; h += 1; }
+  while (h >= 24) { h -= 24; d += 1; }
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const endStr = `${y}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(mi)}:00`;
 
   return start.timeZone
-    ? { dateTime: endIso, timeZone: start.timeZone }
-    : { dateTime: endIso };
+    ? { dateTime: endStr, timeZone: start.timeZone }
+    : { dateTime: endStr };
 }
 
 function extractConferenceLink(event: {

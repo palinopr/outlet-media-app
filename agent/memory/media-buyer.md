@@ -17,6 +17,9 @@ Can read campaign data, modify budgets, create/pause adsets, fix delivery issues
 Campaign name determines client slug for Supabase:
 - Contains "arjona" or "camila" or "alofoke" -> "zamora"
 - Contains "kybba" -> "kybba"
+- Contains "sienna" -> "sienna"
+- Contains "vaz vil" or "kiko blade" -> "vaz_vil"
+- Contains "don omar" -> "don_omar_bcn"
 - Contains "beamina" -> "beamina"
 - Contains "happy" or "paws" -> "happy_paws"
 - Default -> "unknown"
@@ -52,11 +55,25 @@ Always verify video status is `ready` before using in ads.
 - Don't reuse old adlabel names when creating new creative.
 - Meta rejects two image entries with same hash -- drop duplicate, don't strip crop.
 
-## Current Campaigns (Feb 25)
-- 5 ACTIVE: Alofoke (8.72x, $250/day), Camila Ana (3.81x, $100/day), Camila Sac (4.42x, $100/day), KYBBA (2.47x, $50/day), Houston ($0, $400/day)
-- 13 PAUSED
-- KYBBA adset swap executed Feb 24: PAUSED V9+V1, ACTIVATED V5+Asset1
-- Alofoke budget bumped $100->$250/day (under $2K client cap)
+## Current Campaigns (Mar 9 2026, Cycle #156)
+- **29 total** (8 ACTIVE, 21 PAUSED). Data from Mar 8 18:01 CST (>24h stale).
+
+### ACTIVE (8)
+- KYBBA Miami -- $2,703 spend, 2.47x ROAS, $100/day. Show Mar 22. **Delivery issue: only $2-6/day actual on $100/day budget.**
+- Camila Anaheim -- $1,541 spend, 4.16x ROAS, $100/day. Show Mar 14.
+- Camila Sacramento -- $1,539 spend, 4.92x ROAS, $100/day. Show Mar 15.
+- Camila Phoenix -- $1,771 spend, 3.02x ROAS, $500/day. Show Mar 8 PAST -- should be paused.
+- Arjona Salt Lake City -- $1,131 spend, 17.72x ROAS, $800/day. Show Mar 9 TODAY -- pause after show.
+- Arjona Palm Desert -- $320 spend, 3.35x ROAS, $500/day. Show Mar 12.
+- Arjona San Francisco -- $323 spend, 7.51x ROAS, $50/day. Show Mar 15.
+- Vaz Vil - Kiko Blade -- $197 spend, 0x ROAS, $50/day. 7+ consecutive 0x snapshots. Alert posted.
+
+### Notable PAUSED
+- Don Omar BCN -- $370, 6.73x ROAS, $600/day. PAUSED by Jaime. Concert Jul 23 via Vivaticket.
+- Sienna - Peace In Mind -- $776, $200/day. ViewContent optimization (music artist), 0x ROAS expected. PAUSED by Jaime ~Mar 8.
+- Camila Houston -- $2,977, 5.90x ROAS. Was reactivated and scaled ($2,700/day).
+- Camila Dallas -- $625, 19.02x ROAS. Was reactivated ($1,600/day).
+- Alofoke -- $1,448, 9.79x ROAS. Boston show Mar 2 past.
 
 ## Business Manager Users
 7 people: Jaime, Alexandra, Isabel Leal, Antonella, Cinzia, sofia, EL JD

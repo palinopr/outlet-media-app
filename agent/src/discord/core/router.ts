@@ -2,7 +2,7 @@
  * discord-router.ts -- Agent routing configuration.
  *
  * Maps Discord channel names to specialist agent configs.
- * See discord-restructure.ts for the full server layout (16 channels, 8 categories).
+ * See discord-restructure.ts for the full server layout.
  */
 
 export interface AgentConfig {
@@ -96,39 +96,6 @@ const AGENT_ROUTES: Record<string, AgentConfig> = {
     promptFile: "meeting-agent",
     maxTurns: 20,
     description: "meeting-agent",
-  },
-
-  // --- Internal growth pod supervisors ---
-  "growth": {
-    promptFile: "growth-supervisor",
-    maxTurns: 20,
-    description: "growth-supervisor",
-  },
-  "tiktok-ops": {
-    promptFile: "tiktok-supervisor",
-    maxTurns: 20,
-    description: "tiktok-supervisor",
-  },
-  "content-lab": {
-    promptFile: "content-finder",
-    maxTurns: 18,
-    description: "content-finder",
-  },
-  "lead-inbox": {
-    promptFile: "lead-qualifier",
-    maxTurns: 18,
-    description: "lead-qualifier",
-  },
-  "tiktok-publish": {
-    promptFile: "publisher-tiktok",
-    maxTurns: 18,
-    description: "publisher-tiktok",
-  },
-  "growth-dashboard": {
-    promptFile: "general",
-    maxTurns: 5,
-    description: "growth-dashboard",
-    readOnly: true,
   },
 
   // --- Internal customer liaison route (used for WhatsApp task handoffs) ---
@@ -324,51 +291,6 @@ export const AGENT_INTERNALS: Record<string, AgentInternals> = {
     skillsChannel: "meetings-skills",
     tools: ["calendar-meet.mjs", "Google Calendar API", "Google Meet conference creation"],
   },
-  "growth-supervisor": {
-    name: "Growth Supervisor",
-    memoryFile: "memory/growth-supervisor.md",
-    skillsDir: "skills/growth-supervisor",
-    promptFile: "growth-supervisor",
-    memoryChannel: "growth-memory",
-    skillsChannel: "growth-skills",
-    tools: ["growth-ledger.ts", "all agent delegation", "curl (Supabase REST)"],
-  },
-  "tiktok-supervisor": {
-    name: "TikTok Supervisor",
-    memoryFile: "memory/tiktok-supervisor.md",
-    skillsDir: "skills/tiktok-supervisor",
-    promptFile: "tiktok-supervisor",
-    memoryChannel: "tiktok-memory",
-    skillsChannel: "tiktok-skills",
-    tools: ["growth-ledger.ts", "curl (Supabase REST)", "creative/reporting delegation"],
-  },
-  "content-finder": {
-    name: "Content Finder",
-    memoryFile: "memory/content-finder.md",
-    skillsDir: "skills/content-finder",
-    promptFile: "content-finder",
-    memoryChannel: "content-lab-memory",
-    skillsChannel: "content-lab-skills",
-    tools: ["growth-ledger.ts", "curl (Supabase REST)", "growth/tiktok delegation"],
-  },
-  "lead-qualifier": {
-    name: "Lead Qualifier",
-    memoryFile: "memory/lead-qualifier.md",
-    skillsDir: "skills/lead-qualifier",
-    promptFile: "lead-qualifier",
-    memoryChannel: "lead-inbox-memory",
-    skillsChannel: "lead-inbox-skills",
-    tools: ["growth-ledger.ts", "curl (Supabase REST)", "growth/boss delegation"],
-  },
-  "publisher-tiktok": {
-    name: "TikTok Publisher",
-    memoryFile: "memory/publisher-tiktok.md",
-    skillsDir: "skills/publisher-tiktok",
-    promptFile: "publisher-tiktok",
-    memoryChannel: "tiktok-publish-memory",
-    skillsChannel: "tiktok-publish-skills",
-    tools: ["growth-ledger.ts", "approval-gated publish packets", "boss/growth delegation"],
-  },
 };
 
 /**
@@ -400,9 +322,4 @@ export const PROMPT_TO_AGENT: Record<string, string> = {
   "reporting-agent": "reporting",
   "email-agent": "email-agent",
   "meeting-agent": "meeting-agent",
-  "growth-supervisor": "growth-supervisor",
-  "tiktok-supervisor": "tiktok-supervisor",
-  "content-finder": "content-finder",
-  "lead-qualifier": "lead-qualifier",
-  "publisher-tiktok": "publisher-tiktok",
 };

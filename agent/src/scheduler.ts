@@ -202,6 +202,8 @@ export function triggerManualJob(jobName: string): void {
 }
 
 async function pingHeartbeat() {
+  resetStaleLocks(15 * 60 * 1000);
+
   if (!INGEST_URL) {
     console.error("[scheduler] INGEST_URL not set, skipping heartbeat");
     return;

@@ -42,14 +42,6 @@ export const TARGET_LAYOUT: Record<string, LayoutChannel[]> = {
     { name: "tm-data", topic: "Ticketmaster work (threads per task)" },
     { name: "creative", topic: "Ad creative work (threads per task)" },
   ],
-  "Growth": [
-    { name: "growth", topic: "Internal growth orchestration and acquisition planning" },
-    { name: "tiktok-ops", topic: "TikTok draft pipeline and supervisor handoffs" },
-    { name: "tiktok-publish", topic: "Approval-gated TikTok publishing and manual post packets" },
-    { name: "content-lab", topic: "Growth research, hooks, and idea capture" },
-    { name: "lead-inbox", topic: "Inbound qualification and next-step triage" },
-    { name: "growth-dashboard", topic: "Read-only growth pod updates and queue summaries" },
-  ],
   "Clients": [
     { name: "whatsapp-control", topic: "Customer WhatsApp control center and liaison tasks" },
     { name: "zamora", topic: "Zamora -- per-campaign posts with tags" },

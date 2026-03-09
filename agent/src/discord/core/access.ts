@@ -37,7 +37,6 @@ const OWNER_ONLY_CHANNELS = new Set([
 const READ_ONLY_CHANNELS = new Set([
   "morning-briefing",
   "agent-feed",
-  "growth-dashboard",
   "email-log",
   "audit-log",
 ]);

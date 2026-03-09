@@ -39,6 +39,11 @@ const pendingQueues = new Map<string, AgentTask[]>();
 /** All tasks (for lookup) */
 const taskRegistry = new Map<string, AgentTask>();
 
+/** Per-task timeout timers (task id -> timer handle) */
+const taskTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+const TASK_TIMEOUT_MS = 600_000; // 10 minutes
+
 /** Event bus for task lifecycle events */
 export const taskEvents = new EventEmitter();
 
@@ -219,6 +224,16 @@ function startTask(task: AgentTask): void {
   activeSlots.set(task.to, task);
   persistTask(task).catch(() => {});
   taskEvents.emit("started", task);
+
+  const timer = setTimeout(() => {
+    taskTimers.delete(task.id);
+    const current = taskRegistry.get(task.id);
+    if (current?.status === "running") {
+      failTask(task.id, `Task timed out after ${TASK_TIMEOUT_MS / 1000}s`);
+    }
+  }, TASK_TIMEOUT_MS);
+  taskTimers.set(task.id, timer);
+
   runTask(task);
 }
 
@@ -228,6 +243,9 @@ function startTask(task: AgentTask): void {
 export function completeTask(taskId: string, result: unknown): void {
   const task = taskRegistry.get(taskId);
   if (!task) return;
+
+  const timer = taskTimers.get(taskId);
+  if (timer) { clearTimeout(timer); taskTimers.delete(taskId); }
 
   task.status = "completed";
   task.completedAt = new Date();
@@ -248,6 +266,9 @@ export function completeTask(taskId: string, result: unknown): void {
 export function failTask(taskId: string, error: string): void {
   const task = taskRegistry.get(taskId);
   if (!task) return;
+
+  const timer = taskTimers.get(taskId);
+  if (timer) { clearTimeout(timer); taskTimers.delete(taskId); }
 
   task.status = "failed";
   task.completedAt = new Date();

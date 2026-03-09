@@ -151,3 +151,8 @@
 <!-- auto-learned 2026-03-09 -->
 - Gmail service account broken: invalid_grant/Invalid signature (Mar 9)
 - Fix: re-download JSON key from Google Cloud Console for service account
+
+<!-- auto-learned 2026-03-09 -->
+- Service account key exposed on GitHub; Google disabled it (root cause of invalid_grant)
+- TM pricing contact: Kelly Eastman (added by Melissa Cubit)
+- Mirna asks Jaime to explain 30% dynamic pricing strategy to TM team

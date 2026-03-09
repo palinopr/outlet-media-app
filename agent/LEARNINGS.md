@@ -581,3 +581,47 @@ Format:
   - **MEMORY.md needs update**: campaign count 18→29, Don Omar performance, new Camila cities.
 - **Action taken:** No new alerts (all flags previously raised). Logged findings.
 - **Next priority:** P3 — memory maintenance (MEMORY.md campaign count outdated, new campaigns need documenting)
+
+## 2026-03-09 — Cycle #156 (reconstructed — ran but didn't log itself)
+- **Priority chosen:** P3 — memory maintenance
+- **What I audited:** MEMORY.md (full file)
+- **Action taken:** Major MEMORY.md update — Data Pipeline Status verified, Known Issues updated, Campaign Landscape updated to 29 total / 8 ACTIVE, show dates corrected. Referenced as "Cycle #156" throughout MEMORY.md. **Did NOT log entry in LEARNINGS.md** (bug — reconstructed in Cycle #157).
+- **Next priority:** (not logged)
+
+## 2026-03-09 — Cycle #157
+- **Priority chosen:** P3 — memory maintenance (continuing from incomplete #156)
+- **What I audited:** MEMORY.md, LEARNINGS.md, Supabase meta_campaigns (29 rows), campaign_snapshots (latest Mar 8), agent_runtime_state (heartbeat + gmail_watch)
+- **Key findings:**
+  - **🔴 Heartbeat 23h stale** — last_seen Mar 8 23:05 UTC. No Mar 9 snapshots. Scheduler likely down. Promoted to Known Issue #1.
+  - **Phoenix still ACTIVE** post-show (Mar 8). No sync to confirm if Jaime paused. Stale data problem.
+  - **SLC show TODAY (Mar 9)** — still ACTIVE at $800/day, 17.7×. Expected. Should pause tonight.
+  - **Supabase spend values unchanged** from Cycle #155 — consistent with no new sync running.
+  - **Missing Cycle #156** — MEMORY.md referenced it but LEARNINGS.md had no entry. Reconstructed above.
+- **Action taken:**
+  - Reconstructed missing Cycle #156 LEARNINGS.md entry
+  - Updated MEMORY.md: heartbeat stale warning in pipeline status, scheduler-down promoted to Known Issue #1, KYBBA delivery noted 9+ cycles, show dates updated (Phoenix→PAST, SLC→TODAY), ROAS values refreshed in Upcoming Shows
+- **Next priority:** P4 — monitoring (need fresh data to check post-show pauses; if heartbeat still stale, draft owner note about scheduler)
+
+## 2026-03-09 — Cycle #158
+- **Priority chosen:** P4 — monitoring
+- **What I audited:** session/last-campaigns.json (fresh 18:00 today), Supabase meta_campaigns (29 rows), campaign_snapshots (Mar 7-9), agent_runtime_state
+- **Key findings:**
+  - **🟡 Heartbeat still stale** — last_seen Mar 8 23:05 UTC (~24h). But session cache updated 18:00 today — something ran sync. Either Jaime ran manually or scheduler recovered without updating heartbeat.
+  - **🟡 Phoenix + SLC: paused on Meta, stale ACTIVE in Supabase.** Session cache (18:00 today) has only 6 ACTIVE campaigns — Phoenix and SLC are NOT in it (Meta's ACTIVE filter didn't return them). But Supabase meta_campaigns still shows status=ACTIVE for both. **Data pipeline gap: ingest doesn't update status when campaigns are paused externally.** No Mar 9 snapshots for either.
+    - Phoenix final spend: $1,771 (was $1,456 on Mar 8). ~$315 show-day spend. Expected.
+    - SLC final spend: $1,131 (was $364 on Mar 8). ~$767 show-day spend at $800/day. Expected. SLC ROAS: 34.27× blended. Extraordinary.
+  - **🟡 Don Omar BCN: ACTIVE→PAUSED** — was ACTIVE last cycle ($370), now PAUSED at $370 in Supabase. Intentional pause by Jaime.
+  - **Marginal ROAS (Mar 8→9, consecutive-day caveat applies):**
+    - Palm Desert: +$302 spend, marginal **4.70×** ✅ (blended 2.76×, recovering from attribution lag)
+    - Anaheim: +$181 spend, marginal **4.18×** ✅
+    - Sacramento: +$182 spend, marginal **3.23×** ✅
+    - SF: +$79 spend, marginal **8.09×** ✅ Excellent
+    - KYBBA: +$2.20 spend — delivery still broken, 10th cycle. $2.20/day on $100/day budget.
+    - Vaz Vil: +$104 spend, marginal **0×** 🔴. Now $243 total, 0 purchases, 7 days running. Previously alerted Cycle #136.
+  - **No new actionable alerts.** All flags previously raised. Vaz Vil continuing to burn cash ($50/day) with zero returns — Jaime aware.
+- **Action taken:** Logged findings. No new alerts posted (all previously flagged).
+- **Persistent flags:**
+  - ⚠️ Vaz Vil: 7 days, $243, 0× ROAS — alerted Cycle #136
+  - ⚠️ KYBBA delivery: $2.20/day on $100/day budget — 10th cycle noting, not money-losing (2.72× blended)
+  - ⚠️ Supabase status stale for Phoenix/SLC — ingest doesn't sync PAUSED status back. Code fix needed (not agent prompt).
+- **Next priority:** P2 — new prompt audit (lead-qualifier.txt next, 3 of 6 remaining)

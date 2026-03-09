@@ -9,7 +9,11 @@
  */
 
 import cron, { type ScheduledTask } from "node-cron";
+import { readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { EmbedBuilder, type Client } from "discord.js";
+
+const SWEEP_STATE_PATH = join(import.meta.dirname ?? ".", "..", "..", "session", "sweep-state.json");
 
 const SCHEDULED_OWNER_NOTIFICATIONS = (process.env.SCHEDULED_OWNER_NOTIFICATIONS ?? "false").toLowerCase() === "true";
 const TM_SCHEDULER_ENABLED = (process.env.TM_SCHEDULER_ENABLED ?? "false").toLowerCase() === "true";
@@ -193,14 +197,34 @@ const JOBS: Record<string, ScheduleJob> = {
   },
 };
 
+function saveSweepState(): void {
+  const state: Record<string, boolean> = {};
+  for (const [key, job] of Object.entries(JOBS)) {
+    if (!CORE_JOB_KEYS.has(key)) state[key] = job.enabled;
+  }
+  try { writeFileSync(SWEEP_STATE_PATH, JSON.stringify(state, null, 2)); } catch { /* ignore */ }
+}
+
+function loadSweepState(): Record<string, boolean> {
+  try { return JSON.parse(readFileSync(SWEEP_STATE_PATH, "utf8")) as Record<string, boolean>; } catch { return {}; }
+}
+
 /**
  * Wire up job runners from scheduler.ts.
  * Called once during initialization.
+ * Restores previously-enabled sweep jobs from disk.
  */
 export function initScheduleJobs(runners: Record<string, () => void>): void {
   for (const [key, fn] of Object.entries(runners)) {
     if (JOBS[key]) {
       JOBS[key].runner = fn;
+    }
+  }
+
+  const saved = loadSweepState();
+  for (const [key, enabled] of Object.entries(saved)) {
+    if (enabled && JOBS[key] && !CORE_JOB_KEYS.has(key)) {
+      enableJob(key);
     }
   }
 }
@@ -312,6 +336,7 @@ function enableJob(jobKey: string): string {
     job.lastRun = new Date();
     job.runner();
   });
+  saveSweepState();
   postToFeed(`Schedule: enabled **${job.name}** (${job.cron})`).catch(() => {});
   return `Enabled **${job.name}** (${job.cron})`;
 }
@@ -327,6 +352,7 @@ function disableJob(jobKey: string): string {
     job.task.stop();
     job.task = null;
   }
+  saveSweepState();
   postToFeed(`Schedule: disabled **${job.name}**`).catch(() => {});
   return `Disabled **${job.name}**`;
 }
