@@ -9,3 +9,10 @@ root-next-artifact-2026-03-08-3
 .claude
 node_modules
 agent/node_modules
+
+# Credentials - NEVER commit
+agent/service-account.json
+**/service-account*.json
+**/*credentials*.json
+**/*.pem
+**/*.key
