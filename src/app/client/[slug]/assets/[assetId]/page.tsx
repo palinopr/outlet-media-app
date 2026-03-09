@@ -72,7 +72,7 @@ export default async function ClientAssetDetailPage({ params }: Props) {
   const { slug, assetId } = await params;
   const { scope, userId } = await requireClientAccess(slug, "assets");
 
-  const data = await getAssetOperatingData(assetId, [], scope);
+  const data = await getAssetOperatingData(assetId, [], scope, slug);
   if (!data || data.asset.client_slug !== slug) notFound();
 
   const [approvals, comments, events, agentOutcomes, followUpItems] = await Promise.all([

@@ -13,9 +13,10 @@
  */
 
 import { type Client, EmbedBuilder, type TextChannel, ChannelType } from "discord.js";
-import { enqueueTask, type AgentTask } from "../services/queue-service.js";
+import { enqueueTask, escalateTask, setTaskExecutor, type AgentTask } from "../services/queue-service.js";
 import { evaluateTier } from "../services/approval-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
+import { sendWhatsAppMessage } from "../services/whatsapp-runtime-service.js";
 import { runClaude } from "../runner.js";
 import { getAgentForChannel } from "../discord/core/router.js";
 import { WHITELISTED_CHANNELS } from "../discord/features/restructure.js";
@@ -40,6 +41,38 @@ interface ChannelMessageBlock {
   tier?: "green" | "yellow" | "red";
 }
 
+interface WhatsAppSendDirective {
+  approved?: boolean;
+  conversationId?: string;
+  message: string;
+  phoneNumberId?: string;
+  replyToMessageId?: string;
+  toWaId?: string;
+}
+
+interface WhatsAppSendBlock {
+  whatsapp: WhatsAppSendDirective;
+}
+
+interface DelegationProcessingOptions {
+  inheritedParams?: Record<string, unknown>;
+}
+
+interface CustomerFacingContext {
+  audience?: string;
+  delivery?: string;
+  disclosure?: string;
+}
+
+interface RoutingContext {
+  clientSlug?: string;
+  conversationId?: string;
+  messageId?: string;
+  phoneNumberId?: string;
+  replyToMessageId?: string;
+  toWaId?: string;
+}
+
 const CHANNEL_ALIASES: Record<string, string> = {
   "calendar": "meetings",
   "meeting": "meetings",
@@ -59,6 +92,16 @@ const CHANNEL_ALIASES: Record<string, string> = {
 /** Agent names that can receive delegations, mapped to channel names */
 const DELEGATE_TARGETS: Record<string, string> = {
   "boss": "boss",
+  "growth-supervisor": "growth",
+  "growth": "growth",
+  "tiktok-supervisor": "tiktok-ops",
+  "tiktok-ops": "tiktok-ops",
+  "content-finder": "content-lab",
+  "content-lab": "content-lab",
+  "lead-qualifier": "lead-inbox",
+  "lead-inbox": "lead-inbox",
+  "publisher-tiktok": "tiktok-publish",
+  "tiktok-publish": "tiktok-publish",
   "media-buyer": "media-buyer",
   "tm-agent": "tm-data",
   "tm-data": "tm-data",
@@ -74,22 +117,76 @@ const DELEGATE_TARGETS: Record<string, string> = {
   "meeting-agent": "meetings",
   "meetings": "meetings",
   "calendar": "meetings",
+  "customer-whatsapp-agent": "clients",
+  "clients": "clients",
   "zamora": "zamora",
   "kybba": "kybba",
 };
 
 const CHANNEL_HANDOFF_TARGETS: Record<string, string> = {
   "boss": "boss",
+  "growth": "growth-supervisor",
+  "tiktok-ops": "tiktok-supervisor",
+  "content-lab": "content-finder",
+  "lead-inbox": "lead-qualifier",
+  "tiktok-publish": "publisher-tiktok",
   "media-buyer": "media-buyer",
   "tm-data": "tm-agent",
   "don-omar-tickets": "don-omar-agent",
   "creative": "creative",
   "dashboard": "reporting",
+  "clients": "customer-whatsapp-agent",
   "zamora": "client-manager",
   "kybba": "client-manager",
   "email": "email-agent",
   "meetings": "meeting-agent",
 };
+
+const CUSTOMER_FACING_SOURCE_CHANNELS = new Set(["clients"]);
+const TASK_RUNTIME_SOURCE_CHANNEL_KEY = "_queueSourceChannel";
+const TASK_RUNTIME_DEPTH_KEY = "_queueDepth";
+const TASK_RUNTIME_NOTIFY_SOURCE_KEY = "_queueNotifySource";
+
+function stripTaskRuntimeParams(params: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(params).filter(
+      ([key]) =>
+        key !== TASK_RUNTIME_SOURCE_CHANNEL_KEY &&
+        key !== TASK_RUNTIME_DEPTH_KEY &&
+        key !== TASK_RUNTIME_NOTIFY_SOURCE_KEY,
+    ),
+  );
+}
+
+function attachTaskRuntimeParams(
+  params: Record<string, unknown>,
+  sourceChannel: string,
+  depth: number,
+  notifySource = true,
+): Record<string, unknown> {
+  return {
+    ...params,
+    [TASK_RUNTIME_SOURCE_CHANNEL_KEY]: sourceChannel,
+    [TASK_RUNTIME_DEPTH_KEY]: depth,
+    [TASK_RUNTIME_NOTIFY_SOURCE_KEY]: notifySource,
+  };
+}
+
+function getTaskSourceChannel(params: Record<string, unknown>): string {
+  return typeof params[TASK_RUNTIME_SOURCE_CHANNEL_KEY] === "string"
+    ? (params[TASK_RUNTIME_SOURCE_CHANNEL_KEY] as string)
+    : "boss";
+}
+
+function getTaskDepth(params: Record<string, unknown>): number {
+  const value = params[TASK_RUNTIME_DEPTH_KEY];
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function shouldNotifyTaskSource(params: Record<string, unknown>): boolean {
+  const value = params[TASK_RUNTIME_NOTIFY_SOURCE_KEY];
+  return typeof value === "boolean" ? value : true;
+}
 
 /**
  * Find inline JSON objects containing "delegate" and "action" keys using
@@ -108,10 +205,7 @@ function findInlineJsonBlocks(text: string): { match: string; index: number }[] 
         j++;
       }
       if (depth === 0) {
-        const candidate = text.slice(i, j);
-        if (candidate.includes('"delegate"') && candidate.includes('"action"')) {
-          results.push({ match: candidate, index: i });
-        }
+        results.push({ match: text.slice(i, j), index: i });
       }
     }
     i++;
@@ -134,6 +228,112 @@ function getReplyChannel(params: Record<string, unknown>): string | null {
   if (!raw) return null;
   const normalized = normalizeChannelName(raw);
   return WHITELISTED_CHANNELS.has(normalized) ? normalized : null;
+}
+
+function extractCustomerFacingContext(
+  params?: Record<string, unknown> | null,
+): CustomerFacingContext | null {
+  if (!params) return null;
+
+  const audience = typeof params.audience === "string" ? params.audience : undefined;
+  const delivery = typeof params.delivery === "string" ? params.delivery : undefined;
+  const disclosure = typeof params.disclosure === "string" ? params.disclosure : undefined;
+
+  if (!audience && !delivery && !disclosure) return null;
+  return { audience, delivery, disclosure };
+}
+
+function isCustomerFacingFlow(
+  sourceChannel: string,
+  params?: Record<string, unknown> | null,
+  inheritedParams?: Record<string, unknown> | null,
+): boolean {
+  return (
+    CUSTOMER_FACING_SOURCE_CHANNELS.has(sourceChannel) ||
+    extractCustomerFacingContext(params) !== null ||
+    extractCustomerFacingContext(inheritedParams) !== null
+  );
+}
+
+function applyCustomerFacingContext(
+  sourceChannel: string,
+  params: Record<string, unknown>,
+  inheritedParams?: Record<string, unknown> | null,
+): Record<string, unknown> {
+  const mergedParams = applyInheritedRoutingContext(params, inheritedParams);
+
+  if (!isCustomerFacingFlow(sourceChannel, params, inheritedParams)) {
+    return mergedParams;
+  }
+
+  const inheritedContext = extractCustomerFacingContext(inheritedParams);
+  const currentContext = extractCustomerFacingContext(params);
+
+  return {
+    ...mergedParams,
+    audience: currentContext?.audience ?? inheritedContext?.audience ?? "customer",
+    delivery: currentContext?.delivery ?? inheritedContext?.delivery ?? "whatsapp",
+    disclosure: currentContext?.disclosure ?? inheritedContext?.disclosure ?? "safe",
+  };
+}
+
+function extractRoutingContext(
+  params?: Record<string, unknown> | null,
+): RoutingContext | null {
+  if (!params) return null;
+
+  const context: RoutingContext = {};
+
+  const conversationId = stringParam(params.conversationId);
+  if (conversationId) context.conversationId = conversationId;
+
+  const messageId = stringParam(params.messageId);
+  if (messageId) context.messageId = messageId;
+
+  const replyToMessageId = stringParam(params.replyToMessageId);
+  if (replyToMessageId) context.replyToMessageId = replyToMessageId;
+
+  const toWaId = stringParam(params.toWaId);
+  if (toWaId) context.toWaId = toWaId;
+
+  const phoneNumberId = stringParam(params.phoneNumberId);
+  if (phoneNumberId) context.phoneNumberId = phoneNumberId;
+
+  const clientSlug = stringParam(params.clientSlug);
+  if (clientSlug) context.clientSlug = clientSlug;
+
+  return Object.keys(context).length > 0 ? context : null;
+}
+
+function applyInheritedRoutingContext(
+  params: Record<string, unknown>,
+  inheritedParams?: Record<string, unknown> | null,
+): Record<string, unknown> {
+  const inheritedContext = extractRoutingContext(inheritedParams);
+  if (!inheritedContext) return params;
+
+  return {
+    ...inheritedContext,
+    ...params,
+  };
+}
+
+function buildDelegatedTaskPrompt(task: AgentTask): string {
+  const visibleParams = stripTaskRuntimeParams(task.params);
+  const lines = [
+    `[DELEGATED TASK from ${task.from}]`,
+    `Action: ${task.action}`,
+    `Parameters: ${JSON.stringify(visibleParams)}`,
+  ];
+
+  const context = extractCustomerFacingContext(visibleParams);
+  if (context?.audience === "customer" || context?.delivery === "whatsapp") {
+    lines.push(
+      "Delivery context: this work feeds a client-facing WhatsApp response. Return only the customer-safe slice and avoid internal campaign structure, targeting, bid strategy, thresholds, or operator-only reasoning.",
+    );
+  }
+
+  return lines.join("\n");
 }
 
 /**
@@ -229,6 +429,136 @@ export function parseChannelMessageBlocks(text: string): {
   return { blocks: blocks.slice(0, MAX_DELEGATIONS_PER_RESPONSE), cleanText };
 }
 
+export function parseWhatsAppSendBlocks(text: string): {
+  blocks: WhatsAppSendBlock[];
+  cleanText: string;
+} {
+  const blocks: WhatsAppSendBlock[] = [];
+  let cleanText = text;
+
+  const fencedPattern = /```json\s*\n?\s*(\{[^`]*?"whatsapp"[^`]*?\})\s*\n?\s*```/g;
+  let match: RegExpExecArray | null;
+
+  while ((match = fencedPattern.exec(text)) !== null) {
+    try {
+      const raw: unknown = JSON.parse(match[1]);
+      if (raw && typeof raw === "object" && "whatsapp" in raw) {
+        const parsed = raw as WhatsAppSendBlock;
+        blocks.push(parsed);
+        cleanText = cleanText.replace(match[0], "").trim();
+      }
+    } catch {
+      // Invalid JSON, skip
+    }
+  }
+
+  for (const hit of findInlineJsonBlocks(text)) {
+    try {
+      const raw: unknown = JSON.parse(hit.match);
+      if (raw && typeof raw === "object" && "whatsapp" in raw) {
+        const parsed = raw as WhatsAppSendBlock;
+        const signature = JSON.stringify(parsed.whatsapp);
+        if (!blocks.some((block) => JSON.stringify(block.whatsapp) === signature)) {
+          blocks.push(parsed);
+          cleanText = cleanText.replace(hit.match, "").trim();
+        }
+      }
+    } catch {
+      // Invalid JSON, skip
+    }
+  }
+
+  cleanText = cleanText.replace(/\n{3,}/g, "\n\n").trim();
+
+  return { blocks: blocks.slice(0, MAX_DELEGATIONS_PER_RESPONSE), cleanText };
+}
+
+function stringParam(
+  value: unknown,
+): string | undefined {
+  return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
+}
+
+function resolveWhatsAppDirective(
+  block: WhatsAppSendBlock,
+  inheritedParams?: Record<string, unknown> | null,
+): WhatsAppSendDirective {
+  const payload = block.whatsapp ?? ({} as WhatsAppSendDirective);
+
+  return {
+    approved:
+      typeof payload.approved === "boolean"
+        ? payload.approved
+        : typeof inheritedParams?.approved === "boolean"
+        ? inheritedParams.approved
+        : undefined,
+    conversationId:
+      stringParam(payload.conversationId) ??
+      stringParam(inheritedParams?.conversationId),
+    message: payload.message,
+    phoneNumberId:
+      stringParam(payload.phoneNumberId) ??
+      stringParam(inheritedParams?.phoneNumberId),
+    replyToMessageId:
+      stringParam(payload.replyToMessageId) ??
+      stringParam(inheritedParams?.replyToMessageId) ??
+      stringParam(inheritedParams?.messageId),
+    toWaId:
+      stringParam(payload.toWaId) ??
+      stringParam(inheritedParams?.toWaId),
+  };
+}
+
+export async function processWhatsAppSends(
+  agentResponse: string,
+  sourceChannel: string = "clients",
+  options?: DelegationProcessingOptions,
+): Promise<{
+  cleanText: string;
+  errors: string[];
+  sent: number;
+}> {
+  const { blocks, cleanText } = parseWhatsAppSendBlocks(agentResponse);
+  if (blocks.length === 0) {
+    return { cleanText: agentResponse, errors: [], sent: 0 };
+  }
+
+  const errors: string[] = [];
+  let sent = 0;
+
+  for (const block of blocks) {
+    try {
+      const resolved = resolveWhatsAppDirective(block, options?.inheritedParams);
+      const message = resolved.message?.trim();
+      if (!message) {
+        throw new Error("WhatsApp send block is missing a message.");
+      }
+
+      if (!resolved.conversationId && !(resolved.phoneNumberId && resolved.toWaId)) {
+        throw new Error(
+          "WhatsApp send block requires conversationId or both phoneNumberId and toWaId.",
+        );
+      }
+
+      await sendWhatsAppMessage({
+        approved: resolved.approved,
+        body: message,
+        conversationId: resolved.conversationId,
+        phoneNumberId: resolved.phoneNumberId,
+        replyToMessageId: resolved.replyToMessageId,
+        toWaId: resolved.toWaId,
+      });
+      sent += 1;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      errors.push(message);
+      console.error(`[whatsapp-send] ${sourceChannel}:`, message);
+    }
+  }
+
+  return { cleanText, errors, sent };
+}
+
 /**
  * Process delegation blocks from an agent response.
  * Enqueues tasks via queue-service, posts notifications.
@@ -238,6 +568,7 @@ export async function processDelegations(
   agentResponse: string,
   sourceChannel: string = "boss",
   depth: number = 0,
+  options?: DelegationProcessingOptions,
 ): Promise<{ cleanText: string; delegated: number; targets: string[] }> {
   if (depth >= MAX_DELEGATION_DEPTH) {
     return { cleanText: agentResponse, delegated: 0, targets: [] };
@@ -268,11 +599,18 @@ export async function processDelegations(
     delegatedTargets.push(targetChannel);
 
     const tier = block.tier ?? "green";
+    const taskParams = applyCustomerFacingContext(
+      sourceChannel,
+      block.params ?? {},
+      options?.inheritedParams,
+    );
+    const queuedParams = attachTaskRuntimeParams(taskParams, sourceChannel, depth, true);
+
     const task = enqueueTask(
       fromAgent,
       block.delegate,
       block.action,
-      block.params ?? {},
+      queuedParams,
       tier,
     );
 
@@ -292,7 +630,7 @@ export async function processDelegations(
             { name: "Tier", value: tier.toUpperCase(), inline: true },
           )
           .setDescription(
-            block.params ? JSON.stringify(block.params, null, 2).slice(0, 1000) : "No parameters"
+            JSON.stringify(stripTaskRuntimeParams(queuedParams), null, 2).slice(0, 1000)
           )
           .setFooter({ text: `Task: ${task.id}` })
           .setTimestamp();
@@ -305,12 +643,9 @@ export async function processDelegations(
 
     // Evaluate tier and execute if green
     const decision = evaluateTier(task);
-    if (decision === "execute") {
-      executeDelegatedTask(client, task, sourceChannel, depth).catch(err => {
-        console.error(`[delegate] Task ${task.id} execution failed:`, err);
-      });
+    if (decision !== "execute") {
+      escalateTask(task.id);
     }
-    // If "escalate", the approval service will handle it via taskEvents
   }
 
   // Notify agent-feed
@@ -330,6 +665,7 @@ export async function processChannelMessages(
   agentResponse: string,
   sourceChannel: string = "boss",
   depth: number = 0,
+  options?: DelegationProcessingOptions,
 ): Promise<{
   cleanText: string;
   posted: number;
@@ -388,25 +724,30 @@ export async function processChannelMessages(
       }
 
       const tier = block.tier ?? "green";
-      const task = enqueueTask(
-        fromAgent,
-        delegateTarget,
-        "channel-handoff",
+      const handoffParams = applyCustomerFacingContext(
+        sourceChannel,
         {
           message: block.message,
           sourceChannel,
           targetChannel,
         },
+        options?.inheritedParams,
+      );
+      const queuedParams = attachTaskRuntimeParams(handoffParams, sourceChannel, depth, false);
+
+      const task = enqueueTask(
+        fromAgent,
+        delegateTarget,
+        "channel-handoff",
+        queuedParams,
         tier,
       );
 
       handoffTargets.push(targetChannel);
 
       const decision = evaluateTier(task);
-      if (decision === "execute") {
-        executeDelegatedTask(client, task, sourceChannel, depth + 1, { notifySource: false }).catch((err) => {
-          console.error(`[channel-action] Handoff ${task.id} execution failed:`, err);
-        });
+      if (decision !== "execute") {
+        escalateTask(task.id);
       }
     }
   }
@@ -423,7 +764,7 @@ export async function processChannelMessages(
 /**
  * Execute a delegated task by running Claude with the target agent's prompt.
  */
-async function executeDelegatedTask(
+export async function executeAgentTask(
   client: Client,
   task: AgentTask,
   sourceChannel: string,
@@ -431,21 +772,49 @@ async function executeDelegatedTask(
   options?: {
     notifySource?: boolean;
   },
-): Promise<void> {
+): Promise<string> {
   const { completeTask, failTask } = await import("../services/queue-service.js");
   const { notifyChannel } = await import("../discord/core/entry.js");
 
   const targetChannel = DELEGATE_TARGETS[task.to];
   if (!targetChannel) {
     failTask(task.id, `Unknown target agent: ${task.to}`);
-    return;
+    throw new Error(`Unknown target agent: ${task.to}`);
   }
 
   const agent = getAgentForChannel(targetChannel);
 
   try {
+    if (task.action === "scheduled-copy-swap") {
+      const { executeScheduledCopySwap } = await import("../services/meta-copy-swap-service.js");
+      const result = await executeScheduledCopySwap(task.id, task.params);
+      const deliveredText = result.text;
+
+      completeTask(task.id, result);
+
+      const summary = deliveredText.slice(0, 1900);
+      await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch(() => {});
+
+      if (options?.notifySource !== false) {
+        const shortSummary = deliveredText.slice(0, 500);
+        await notifyChannel(sourceChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch(() => {});
+      }
+
+      const replyChannel = getReplyChannel(task.params);
+      if (
+        replyChannel &&
+        replyChannel !== targetChannel &&
+        (options?.notifySource === false || replyChannel !== sourceChannel)
+      ) {
+        const shortSummary = deliveredText.slice(0, 500);
+        await notifyChannel(replyChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch(() => {});
+      }
+
+      return deliveredText;
+    }
+
     const result = await runClaude({
-      prompt: `[DELEGATED TASK from ${task.from}]\nAction: ${task.action}\nParameters: ${JSON.stringify(task.params)}`,
+      prompt: buildDelegatedTaskPrompt(task),
       systemPromptName: agent.promptFile,
       maxTurns: agent.maxTurns,
     });
@@ -453,7 +822,22 @@ async function executeDelegatedTask(
     let responseText = result.text || "No response.";
     const actionNotes: string[] = [];
 
-    const channelMessages = await processChannelMessages(client, responseText, targetChannel, depth + 1);
+    const whatsappSends = await processWhatsAppSends(responseText, targetChannel, {
+      inheritedParams: task.params,
+    });
+    responseText = whatsappSends.cleanText;
+    if (whatsappSends.sent > 0) {
+      actionNotes.push(
+        `Sent ${whatsappSends.sent} WhatsApp message${whatsappSends.sent === 1 ? "" : "s"}.`,
+      );
+    }
+    if (whatsappSends.errors.length > 0) {
+      actionNotes.push(`WhatsApp send failed: ${whatsappSends.errors.join(" | ")}`.slice(0, 500));
+    }
+
+    const channelMessages = await processChannelMessages(client, responseText, targetChannel, depth + 1, {
+      inheritedParams: task.params,
+    });
     responseText = channelMessages.cleanText;
     if (channelMessages.posted > 0) {
       const targets = channelMessages.targets.map((target) => `#${target}`).join(", ");
@@ -465,7 +849,9 @@ async function executeDelegatedTask(
     }
 
     // Check if the delegated agent also wants to delegate (recursive, depth-limited)
-    const delegations = await processDelegations(client, responseText, targetChannel, depth + 1);
+    const delegations = await processDelegations(client, responseText, targetChannel, depth + 1, {
+      inheritedParams: task.params,
+    });
     responseText = delegations.cleanText;
     if (delegations.delegated > 0) {
       const targets = delegations.targets.map((target) => `#${target}`).join(", ");
@@ -498,10 +884,21 @@ async function executeDelegatedTask(
       const shortSummary = deliveredText.slice(0, 500);
       await notifyChannel(replyChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch(() => {});
     }
+
+    return deliveredText;
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     failTask(task.id, errMsg);
     const failureChannel = options?.notifySource === false ? targetChannel : sourceChannel;
     await notifyChannel(failureChannel, `Delegation to ${task.to} failed: ${errMsg}`).catch(() => {});
+    throw err;
   }
+}
+
+export function bindDelegationTaskExecutor(client: Client): void {
+  setTaskExecutor(async (task) => {
+    await executeAgentTask(client, task, getTaskSourceChannel(task.params), getTaskDepth(task.params), {
+      notifySource: shouldNotifyTaskSource(task.params),
+    });
+  });
 }

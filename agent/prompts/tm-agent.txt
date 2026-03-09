@@ -12,6 +12,7 @@ Jaime talks to you via Discord.
 - "khans", "khan", "kybba" -> KYBBA
 - "sienna", "peace in mind" -> Sienna (new client, Feb 2026)
 - "vaz vil", "kiko blade" -> Vaz Vil (new client, Mar 2026)
+- "don omar", "don omar bcn", "barcelona" -> Don Omar BCN (tickets via Vivaticket/EATA, NOT Ticketmaster)
 - "beamina", "beam" -> Beamina
 - "happy paws", "paws" -> Happy Paws
 
@@ -93,6 +94,8 @@ Then navigate to `https://one.ticketmaster.com`. If you land on the dashboard (p
 Use `context.storageState({ path: 'session/tm1-storage-state.json' })` to persist cookies for next time.
 
 **Important:** The Google OAuth credentials (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN) must be in the .env file. The refresh token has `gmail.readonly` scope.
+
+**Alternative:** You can also use the service account via `session/google-auth.mjs` (domain-wide delegation, impersonates jaime@outletmedia.net). Import `getGmailAuth` and use the googleapis Gmail client instead of raw curl.
 
 ### Scraping Steps:
 1. Authenticate using the flow above
@@ -314,7 +317,7 @@ curl -s "${SUPABASE_URL}/rest/v1/event_snapshots?tm_id=eq.{TM_ID}&order=snapshot
   -H "apikey: ${SUPABASE_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
-Note: event_snapshots exist but TM One per-event data is currently static (identical values across dates). Velocity tracking will work once live ticket data flows.
+Note: TM One event_snapshots are currently static (identical values across dates) due to API permission restrictions. EATA event_snapshots (Don Omar BCN) are LIVE and updating. Velocity tracking for TM events will work once live ticket data flows.
 
 ### Campaign snapshots (for cross-referencing ad spend)
 ```bash
@@ -332,6 +335,23 @@ The Outlet Media TM One account (`app_caui` role) has restricted API access:
 - GraphQL events list: returns id, name, url, dates, venue, attractions — NO ticket metrics
 - `tickets_sold` values currently in DB came from earlier scraper runs or manual entry
 - Use the browser-based scraper approach for ticket data when needed
+
+---
+
+## EATA / Vivaticket (Don Omar BCN)
+
+Don Omar BCN tickets are sold through Vivaticket (entradasatualcance.com), NOT Ticketmaster. This is a separate ticketing platform.
+
+- **Client:** Don Omar BCN (slug: `don_omar_bcn`)
+- **Event:** DON OMAR BARCELONA (event ID 14948, tm_id=`eata_14948` in Supabase). Venue: Estadio Olimpico Lluis Companys. Date: Jul 23, 2026.
+- **Scripts:** `session/eata-cookie-refresh.mjs` (Playwright login for OAuth2 token), `session/eata-http-sync.mjs` (data fetch + ingest)
+- **Auth:** OAuth2 access_token stored in `session/eata-auth.json`. Token lifetime ~1-2h, refreshed by cookie-refresh script.
+- **API endpoints:** `/api/events` (list), `/api/events/{id}` (detail), `/api/events/{id}/report` (revenue/tickets)
+- **Scheduler:** `eata-sync` runs every 2h, `eata-cookie-refresh` every 6h. Manual trigger: `run eata sync` in Discord.
+- **Data:** Stored in `tm_events` (with `eata_` prefix on tm_id) and `event_snapshots`. Revenue in whole euros.
+- **Important:** EATA events use `eata_<id>` prefix for tm_id to prevent collisions with Ticketmaster alphanumeric IDs.
+
+When asked about Don Omar BCN ticket data, use EATA scripts and Supabase — do NOT look in TM One.
 
 ---
 

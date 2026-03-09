@@ -28,6 +28,7 @@ export interface AgentTask {
 
 const MAX_CONCURRENT = 3;
 let taskCounter = 0;
+const EXTERNAL_TASK_SOURCES = new Set(["web-admin", "gmail-push", "whatsapp-cloud"]);
 
 /** Active tasks per agent (agent key -> task or null) */
 const activeSlots = new Map<string, AgentTask | null>();
@@ -42,6 +43,61 @@ const taskRegistry = new Map<string, AgentTask>();
 export const taskEvents = new EventEmitter();
 
 let supabase: SupabaseClient | null = null;
+let taskExecutor: ((task: AgentTask) => Promise<void>) | null = null;
+
+interface PersistedTaskRow {
+  id: string;
+  from_agent: string;
+  to_agent: string;
+  action: string;
+  params: Record<string, unknown> | null;
+  tier: AgentTask["tier"] | null;
+  status: AgentTask["status"];
+  result: unknown;
+  error: string | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  discord_message_id: string | null;
+  approved_by: string | null;
+}
+
+function reviveTask(row: PersistedTaskRow): AgentTask {
+  return {
+    id: row.id,
+    from: row.from_agent,
+    to: row.to_agent,
+    action: row.action,
+    params: row.params ?? {},
+    tier: row.tier ?? "green",
+    status: row.status,
+    createdAt: new Date(row.created_at),
+    startedAt: row.started_at ? new Date(row.started_at) : undefined,
+    completedAt: row.completed_at ? new Date(row.completed_at) : undefined,
+    result: row.result ?? undefined,
+    error: row.error ?? undefined,
+    discordMessageId: row.discord_message_id ?? undefined,
+    approvedBy: row.approved_by ?? undefined,
+  };
+}
+
+function runTask(task: AgentTask): void {
+  if (!taskExecutor) return;
+
+  void taskExecutor(task).catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    const current = taskRegistry.get(task.id);
+    if (current?.status === "running") {
+      failTask(task.id, message);
+      return;
+    }
+    console.error(`[queue] task ${task.id} runner failed after state transition:`, message);
+  });
+}
+
+export function setTaskExecutor(executor: ((task: AgentTask) => Promise<void>) | null): void {
+  taskExecutor = executor;
+}
 
 export async function initQueue(): Promise<void> {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -59,6 +115,41 @@ export async function initQueue(): Promise<void> {
     if (data?.length) {
       await supabase.from("agent_tasks").update({ status: "failed", error: "recovered after bot restart" }).eq("status", "running");
       console.log(`[queue] Recovered ${data.length} orphaned running task(s)`);
+    }
+
+    const { data: pendingRows, error } = await supabase
+      .from("agent_tasks")
+      .select(
+        "id, from_agent, to_agent, action, params, tier, status, result, error, created_at, started_at, completed_at, discord_message_id, approved_by",
+      )
+      .eq("status", "pending")
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("[queue] Failed to recover pending task(s):", error.message);
+      return;
+    }
+
+    const recoverableRows = ((pendingRows ?? []) as PersistedTaskRow[]).filter(
+      (row) => !EXTERNAL_TASK_SOURCES.has(row.from_agent),
+    );
+
+    for (const row of recoverableRows) {
+      const task = reviveTask(row);
+      taskRegistry.set(task.id, task);
+
+      const agentSlot = activeSlots.get(task.to);
+      if (!agentSlot && countActive() < MAX_CONCURRENT) {
+        startTask(task);
+      } else {
+        if (!pendingQueues.has(task.to)) pendingQueues.set(task.to, []);
+        pendingQueues.get(task.to)!.push(task);
+        taskEvents.emit("queued", task);
+      }
+    }
+
+    if (recoverableRows.length > 0) {
+      console.log(`[queue] Recovered ${recoverableRows.length} pending delegated task(s)`);
     }
   }
 }
@@ -128,6 +219,7 @@ function startTask(task: AgentTask): void {
   activeSlots.set(task.to, task);
   persistTask(task).catch(() => {});
   taskEvents.emit("started", task);
+  runTask(task);
 }
 
 /**
@@ -170,6 +262,33 @@ export function failTask(taskId: string, error: string): void {
 }
 
 /**
+ * Escalate a task into approval flow without holding an active execution slot.
+ */
+export function escalateTask(taskId: string): void {
+  const task = taskRegistry.get(taskId);
+  if (!task) return;
+
+  task.status = "escalated";
+
+  const activeTask = activeSlots.get(task.to);
+  if (activeTask?.id === taskId) {
+    activeSlots.set(task.to, null);
+    processNextForAgent(task.to);
+  }
+
+  const queue = pendingQueues.get(task.to);
+  if (queue?.length) {
+    pendingQueues.set(
+      task.to,
+      queue.filter((queuedTask) => queuedTask.id !== taskId),
+    );
+  }
+
+  persistTask(task).catch(() => {});
+  taskEvents.emit("escalated", task);
+}
+
+/**
  * Approve a task (from #approvals).
  */
 export function approveTask(taskId: string, approvedBy: string): void {
@@ -201,6 +320,39 @@ export function rejectTask(taskId: string): void {
   taskEvents.emit("rejected", task);
 
   processNextForAgent(task.to);
+}
+
+export async function waitForTaskTerminal(taskId: string, timeoutMs = 300_000): Promise<AgentTask> {
+  const existing = taskRegistry.get(taskId);
+  if (existing && ["completed", "failed", "rejected", "expired"].includes(existing.status)) {
+    return existing;
+  }
+
+  return await new Promise<AgentTask>((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error(`Timed out waiting for task ${taskId} to finish.`));
+    }, timeoutMs);
+
+    function maybeResolve(task: AgentTask): void {
+      if (task.id !== taskId) return;
+      cleanup();
+      resolve(task);
+    }
+
+    function cleanup(): void {
+      clearTimeout(timeout);
+      taskEvents.off("completed", maybeResolve);
+      taskEvents.off("failed", maybeResolve);
+      taskEvents.off("rejected", maybeResolve);
+      taskEvents.off("expired", maybeResolve);
+    }
+
+    taskEvents.on("completed", maybeResolve);
+    taskEvents.on("failed", maybeResolve);
+    taskEvents.on("rejected", maybeResolve);
+    taskEvents.on("expired", maybeResolve);
+  });
 }
 
 /**

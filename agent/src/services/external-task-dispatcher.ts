@@ -1,5 +1,6 @@
 import { runClaude } from "../runner.js";
 import { runMetaSync, runTmCheck } from "../scheduler.js";
+import { getAgentForChannel } from "../discord/core/router.js";
 import { ResourceBusyError, withResourceLocks } from "../state.js";
 import { processGmailHistoryPush } from "./gmail-watch-service.js";
 import { getServiceSupabase } from "./supabase-service.js";
@@ -21,13 +22,27 @@ interface ExternalTaskRow {
   status: string;
 }
 
+const WEB_ADMIN_AGENT_CHANNELS: Record<string, string> = {
+  assistant: "boss",
+  "campaign-monitor": "dashboard",
+  "content-finder": "content-lab",
+  "growth-supervisor": "growth",
+  "lead-qualifier": "lead-inbox",
+  "publisher-tiktok": "tiktok-publish",
+  "tiktok-supervisor": "tiktok-ops",
+};
+
 function getPromptParam(task: ExternalTaskRow): string | null {
   const prompt = task.params?.prompt;
   return typeof prompt === "string" ? prompt : null;
 }
 
 function isExternalTask(task: ExternalTaskRow): boolean {
-  return task.from_agent === "web-admin" || task.from_agent === "gmail-push";
+  return (
+    task.from_agent === "web-admin" ||
+    task.from_agent === "gmail-push" ||
+    task.from_agent === "whatsapp-cloud"
+  );
 }
 
 async function claimPendingTask(): Promise<ExternalTaskRow | null> {
@@ -38,6 +53,7 @@ async function claimPendingTask(): Promise<ExternalTaskRow | null> {
     .from("agent_tasks")
     .select("id, from_agent, to_agent, action, params, status")
     .eq("status", "pending")
+    .in("from_agent", ["web-admin", "gmail-push", "whatsapp-cloud"])
     .order("started_at", { ascending: true, nullsFirst: true })
     .order("created_at", { ascending: true })
     .limit(20);
@@ -140,18 +156,10 @@ function getResourceBusyError(err: unknown): ResourceBusyError | null {
 async function executeWebAdminTask(task: ExternalTaskRow): Promise<string> {
   switch (task.to_agent) {
     case "assistant": {
-      const prompt =
-        getPromptParam(task) ??
-        "Give me a concise executive briefing across Outlet Media. Read MEMORY.md and session/activity-log.json first.";
-      const result = await runClaude({
-        prompt,
-        systemPromptName: "boss",
-        maxTurns: 15,
-      });
-      if (!result.success && result.error) {
-        throw new Error(result.error);
-      }
-      return result.text;
+      return await runWebAdminPromptTask(
+        task,
+        "Give me a concise executive briefing across Outlet Media. Read MEMORY.md and session/activity-log.json first.",
+      );
     }
     case "meta-ads": {
       return await runMetaSync({ notify: false, audit: false, source: "web-admin" });
@@ -160,22 +168,68 @@ async function executeWebAdminTask(task: ExternalTaskRow): Promise<string> {
       return await runTmCheck({ notify: false, audit: false, source: "web-admin" });
     }
     case "campaign-monitor": {
-      const prompt =
-        getPromptParam(task) ??
-        "Cross-reference current Meta spend against Ticketmaster sales and flag the campaigns or events that need action right now. Keep it concise and specific.";
-      const result = await runClaude({
-        prompt,
-        systemPromptName: "reporting-agent",
-        maxTurns: 15,
-      });
-      if (!result.success && result.error) {
-        throw new Error(result.error);
-      }
-      return result.text;
+      return await runWebAdminPromptTask(
+        task,
+        "Cross-reference current Meta spend against Ticketmaster sales and flag the campaigns or events that need action right now. Keep it concise and specific.",
+      );
+    }
+    case "growth-supervisor": {
+      return await runWebAdminPromptTask(
+        task,
+        "Review the internal growth backlog and recommend the next highest-leverage move.",
+      );
+    }
+    case "tiktok-supervisor": {
+      return await runWebAdminPromptTask(
+        task,
+        "Review the TikTok draft queue and produce the next best draft-only action.",
+      );
+    }
+    case "content-finder": {
+      return await runWebAdminPromptTask(
+        task,
+        "Research the next 3 internal growth content angles worth capturing in the ledger.",
+      );
+    }
+    case "lead-qualifier": {
+      return await runWebAdminPromptTask(
+        task,
+        "Review inbound growth signals and produce a concise qualification summary with the next manual step.",
+      );
+    }
+    case "publisher-tiktok": {
+      return await runWebAdminPromptTask(
+        task,
+        "Review the TikTok publish queue and prepare the next assisted manual post packet.",
+      );
     }
     default:
       throw new Error(`Unsupported web-admin task target: ${task.to_agent}`);
   }
+}
+
+async function runWebAdminPromptTask(
+  task: ExternalTaskRow,
+  fallbackPrompt: string,
+): Promise<string> {
+  const channelName = WEB_ADMIN_AGENT_CHANNELS[task.to_agent];
+  if (!channelName) {
+    throw new Error(`Unsupported web-admin prompt target: ${task.to_agent}`);
+  }
+
+  const prompt = getPromptParam(task) ?? fallbackPrompt;
+  const agent = getAgentForChannel(channelName);
+  const result = await runClaude({
+    prompt,
+    systemPromptName: agent.promptFile,
+    maxTurns: agent.maxTurns,
+  });
+
+  if (!result.success && result.error) {
+    throw new Error(result.error);
+  }
+
+  return result.text;
 }
 
 async function executeTask(task: ExternalTaskRow): Promise<string> {
@@ -194,6 +248,11 @@ async function executeTask(task: ExternalTaskRow): Promise<string> {
     return await withResourceLocks("gmail-push", ["gmail-inbox"], async () => {
       return await processGmailHistoryPush(historyId);
     });
+  }
+
+  if (task.from_agent === "whatsapp-cloud") {
+    const { processWhatsAppTask } = await import("./whatsapp-cloud-service.js");
+    return await processWhatsAppTask(task);
   }
 
   return await executeWebAdminTask(task);
@@ -249,7 +308,7 @@ export function startExternalTaskDispatcher(): void {
   timer.unref?.();
 
   void pumpQueue();
-  console.log("[external-dispatcher] Polling agent_tasks for web-admin and Gmail push work");
+  console.log("[external-dispatcher] Polling agent_tasks for web-admin, Gmail push, and WhatsApp Cloud work");
 }
 
 export function stopExternalTaskDispatcher(): void {

@@ -5,17 +5,20 @@ import { CreatePageSchema } from "@/lib/api-schemas";
 import { logSystemEvent } from "@/features/system-events/server";
 import { revalidateWorkspaceMutationTargets } from "@/features/workflow/revalidation";
 import { requireWorkspaceClientAccess } from "@/features/workspace/access";
+import { getWorkspaceReadClient } from "@/features/workspace/server";
 
 export async function GET(request: Request) {
   const { userId, error: authErr } = await authGuard();
   if (authErr) return authErr;
-  if (!supabaseAdmin) return apiError("DB not configured", 500);
 
   const { searchParams } = new URL(request.url);
   const access = await requireWorkspaceClientAccess(userId, searchParams.get("client_slug"));
   if (access instanceof Response) return access;
 
-  let query = supabaseAdmin
+  const readDb = await getWorkspaceReadClient(access.clientSlug);
+  if (!readDb) return apiError("DB not configured", 500);
+
+  let query = readDb
     .from("workspace_pages")
     .select("id, title, icon, parent_page_id, client_slug, is_archived, position, created_at, updated_at, created_by")
     .order("position", { ascending: true })

@@ -1,4 +1,5 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { currentUser } from "@clerk/nextjs/server";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
 import type { ScopeFilter } from "@/lib/member-access";
 import { centsToUsd } from "@/lib/formatters";
@@ -24,6 +25,39 @@ interface LinkedCampaignRow {
   clicks: number | null;
 }
 
+async function getEventDetailReadContext() {
+  if (!supabaseAdmin) return null;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return {
+        db: supabaseAdmin,
+        trustsCampaignRls: false,
+      };
+    }
+  } catch {
+    return {
+      db: supabaseAdmin,
+      trustsCampaignRls: false,
+    };
+  }
+
+  const userScopedClient = await createClerkSupabaseClient();
+  if (!userScopedClient) {
+    return {
+      db: supabaseAdmin,
+      trustsCampaignRls: false,
+    };
+  }
+
+  return {
+    db: userScopedClient,
+    trustsCampaignRls: true,
+  };
+}
+
 export async function getEventDetail(
   slug: string,
   eventId: string,
@@ -33,21 +67,32 @@ export async function getEventDetail(
     return null;
   }
 
-  if (!supabaseAdmin) return null;
+  const readContext = await getEventDetailReadContext();
+  if (!readContext) return null;
 
   // Campaigns query uses only eventId (a param), so launch in parallel with event fetch
   const [eventRes, campaignsRes] = await Promise.all([
-    supabaseAdmin
+    readContext.db
       .from("tm_events")
       .select("*")
       .eq("id", eventId)
       .eq("client_slug", slug)
-      .single(),
-    supabaseAdmin
+      .maybeSingle(),
+    readContext.db
       .from("meta_campaigns")
       .select("campaign_id, client_slug, name, status, spend, roas, impressions, clicks")
       .eq("tm_event_id", eventId),
   ]);
+
+  if (eventRes.error) {
+    console.error("[client-event-detail] event read failed:", eventRes.error.message);
+    return null;
+  }
+
+  if (campaignsRes.error) {
+    console.error("[client-event-detail] linked campaign read failed:", campaignsRes.error.message);
+    return null;
+  }
 
   if (!eventRes.data) return null;
 
@@ -56,16 +101,26 @@ export async function getEventDetail(
 
   // Snapshots and demographics depend on tm_id from the event row
   const [snapshotsRes, demosRes] = await Promise.all([
-    supabaseAdmin
+    readContext.db
       .from("event_snapshots")
       .select("snapshot_date, tickets_sold, tickets_available, gross")
       .eq("tm_id", tmEvent.tm_id)
       .order("snapshot_date", { ascending: true }),
-    supabaseAdmin
+    readContext.db
       .from("tm_event_demographics")
       .select("*")
       .eq("tm_id", tmEvent.tm_id),
   ]);
+
+  if (snapshotsRes.error) {
+    console.error("[client-event-detail] snapshot read failed:", snapshotsRes.error.message);
+    return null;
+  }
+
+  if (demosRes.error) {
+    console.error("[client-event-detail] audience read failed:", demosRes.error.message);
+    return null;
+  }
 
   const snapshots: TicketSnapshot[] = (snapshotsRes.data ?? []).map((s) => ({
     date: s.snapshot_date,
@@ -79,12 +134,14 @@ export async function getEventDetail(
     audience = buildAudienceProfile(demosRes.data as DemographicsRow[]);
   }
 
-  const linkedCampaignRows = await applyEffectiveCampaignClientSlugs(
-    ((campaignsRes.data ?? []) as LinkedCampaignRow[]),
-  );
+  const linkedCampaignRows = readContext.trustsCampaignRls
+    ? ((campaignsRes.data ?? []) as LinkedCampaignRow[])
+    : await applyEffectiveCampaignClientSlugs(
+        ((campaignsRes.data ?? []) as LinkedCampaignRow[]),
+      );
 
   const linkedCampaigns: LinkedCampaign[] = linkedCampaignRows
-    .filter((campaign) => campaign.client_slug === slug)
+    .filter((campaign) => readContext.trustsCampaignRls || campaign.client_slug === slug)
     .map((c) => ({
       campaignId: c.campaign_id,
       name: c.name ?? c.campaign_id,

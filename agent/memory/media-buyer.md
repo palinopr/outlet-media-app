@@ -135,3 +135,76 @@ Use daily snapshots for trend analysis, not intraday deltas.
 - CTA must always be "Shop Now" for event/ticket campaigns
 - Fan page: use artist's page, fallback to Zamora if unavailable
 - Advantage+ Creative enhancements: ALL set to 0 (disabled)
+
+<!-- auto-learned 2026-03-06 -->
+- Sienna now has age-split adsets: 18-24, 25-34, 35-44 (active); 65+/broad paused
+- Sienna 18-24 cost/ViewContent $2.98; 25-34 $2.15; broad $0.76-$0.86
+
+<!-- auto-learned 2026-03-06 -->
+- Sienna funnel: Ad → ToneIn landing → Spotify click = ViewContent
+- Sienna expanding to international markets (LATAM, SE Asia, Europe)
+- Sienna international adsets target 18-34 age range only
+
+<!-- auto-learned 2026-03-06 -->
+- Camila Phoenix show date: Mar 8 2026, ~$900 budget remaining
+- Camila Phoenix stats: $1,078 spent, 19 purchases, 2.67x ROAS, $56.74 CPA
+
+<!-- auto-learned 2026-03-06 -->
+- Sienna: 12 new ads added from Google Drive across 3 active adsets
+- Sienna vertical .mov (106MB) failed Meta upload; used story image fallback
+- Sienna creatives: album art img, podcast vid, dark listening vid, beige player vid
+
+<!-- auto-learned 2026-03-07 -->
+- KYBBA Miami at $2,712 spent, 59 purchases, 2.47x ROAS, 4.4 frequency
+
+<!-- auto-learned 2026-03-07 -->
+- KYBBA: video ads outperform static (~$34 CPA vs $82 CPA)
+- KYBBA best ad: video 11 ($749 spent, 22 purchases, 3.49x ROAS)
+- KYBBA video 12(b) highest ROAS at 4.35x, $32.51 CPA
+
+<!-- auto-learned 2026-03-07 -->
+- Don Omar BCN: $224 spent, 4 purchases, 6.53x ROAS, $56 CPA
+
+<!-- auto-learned 2026-03-07 -->
+- Don Omar BCN: video ad 16.69x ROAS/$27 CPA vs image 3.20x/$84 CPA
+- Don Omar BCN: 30 ATCs → 9 payment info → 4 purchases (13% ATC→purchase)
+- Don Omar BCN: plan to pause image ad, shift all budget to video
+
+<!-- auto-learned 2026-03-07 -->
+- Don Omar BCN image ad paused; now video-only (all $100/day to video)
+
+<!-- auto-learned 2026-03-07 -->
+- Camila Phoenix: $579 spent, 14 purchases, 3.51x ROAS, $41 CPA (Mar 7)
+- Camila Anaheim: 3 weak ads paused; Video 3 star (8.11x/$29 CPA)
+- Camila Sacramento: 2 weak ads paused; asset 2 fixed star (9.49x/$26 CPA)
+- Camila Phoenix show Mar 8; Anaheim Mar 14; Sacramento Mar 15
+
+<!-- auto-learned 2026-03-07 -->
+- Camila Anaheim: Video 6 paused ($84 CPA); adsets 5+6 paused (dead)
+- Camila Sacramento: video 3 paused ($60 CPA, 2.06x); Bay Area adset paused
+- Camila Anaheim: 3 active adsets remain (Video 3/4 + asset 2 fixed)
+- Camila Sacramento: 6 active adsets remain after cleanup
+
+<!-- auto-learned 2026-03-08 -->
+- Arjona Salt Lake City show date: Mar 9 2026, 34.28x ROAS, $800/day
+
+<!-- auto-learned 2026-03-08 -->
+- Arjona SLC: ad copy swap "Manana"→"Hoy" scheduled for show day
+
+<!-- auto-learned 2026-03-08 -->
+- Arjona SF: $284 spent, 8 purchases, 8.55x ROAS, $35.50 CPA, $50/day
+- Camila Sacramento frequency 3.66 — approaching fatigue, needs fresh creative
+- Camila Phoenix: pause tonight after Mar 8 show
+
+<!-- auto-learned 2026-03-08 -->
+- Don Omar BCN budget bumped from $100/day to $600/day (Mar 7)
+
+<!-- auto-learned 2026-03-08 -->
+- Arjona SLC Mar 8: $526 spent, 42 purchases, 17.74x ROAS, $12.53 CPA
+- Arjona Palm Desert: $50/day, 13.87x ROAS, show Mar 12
+- Vaz Vil: 6 straight days zero purchases, kill decision pending
+- Don Omar BCN campaign currently PAUSED
+- KYBBA Miami Mar 8: $18.69 CPA, 4.25x ROAS (best day recently)
+
+<!-- auto-learned 2026-03-08 -->
+- Arjona Palm Desert Mar 8: $320 spent, 4 purchases, 3.35x ROAS, $80 CPA

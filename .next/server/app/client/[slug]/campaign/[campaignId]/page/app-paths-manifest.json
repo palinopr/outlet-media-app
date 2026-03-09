@@ -1,0 +1,3 @@
+{
+  "/client/[slug]/campaign/[campaignId]/page": "app/client/[slug]/campaign/[campaignId]/page.js"
+}

@@ -1,0 +1,15 @@
+.git
+.next
+node_modules
+agent/node_modules
+agent/.next
+.playwright-mcp
+.worktrees
+.claude
+.local
+session
+root-next-artifact-2026-03-08
+root-next-artifact-2026-03-08-2
+root-next-artifact-2026-03-08-3
+coverage
+tmp

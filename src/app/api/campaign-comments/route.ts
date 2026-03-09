@@ -10,7 +10,7 @@ import {
   campaignBelongsToClientSlug,
   getEffectiveCampaignRowById,
 } from "@/lib/campaign-client-assignment";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import {
   canAccessCampaignComments,
   type CampaignCommentVisibility,
@@ -107,7 +107,11 @@ export async function GET(request: NextRequest) {
     return apiError("Campaign not found", 404);
   }
 
-  let query = supabaseAdmin
+  const commentsDb = !access.isAdmin
+    ? (await createClerkSupabaseClient()) ?? supabaseAdmin
+    : supabaseAdmin;
+
+  let query = commentsDb
     .from("campaign_comments")
     .select("*")
     .eq("campaign_id", campaignId)

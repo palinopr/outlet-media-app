@@ -262,7 +262,7 @@ Format:
 - 🟡 Event snapshots pipeline writes rows but TM One data source is frozen — zero velocity tracking capability.
 - ✅ All 10 Discord prompt files cross-consistent after Cycle #54 audit.
 - ⚠️ Pixel ID divergence between agent (879345548404130) and global project MEMORY.md (1553637492361321) — unresolved.
-- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), **#54-56 (#57)**
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), **#54-56 (#57)**
 
 ## 2026-03-04/05 — Cycles #57-61 Summary (Data Gap Recovery + Major Landscape Change)
 
@@ -359,7 +359,7 @@ Format:
 - **Cycle #89 (P2 — boss.txt audit):** 5 fixes, +20 lines (318→338). Added Don Omar alias, don-omar-agent to team table, EATA/Vivaticket Supabase queries, tm_events column naming, event_snapshots + demographics table refs.
 
 **Key findings preserved from Cycles #82-89:**
-- All 11 prompts now have Sienna/Vaz Vil/Don Omar aliases + EATA coverage (general.txt #84, boss.txt #89)
+- All 12 prompts now have Sienna/Vaz Vil/Don Omar aliases + EATA coverage (general.txt #84, boss.txt #89, meeting-agent.txt #109)
 - Proposals: A (Zero-Conversion Detector) > B (Show Proximity Gate) > C (Budget Cap) > D (Campaign-Event Link) > E (Marginal Dashboard) > F (Ad Health) > G (Change Journal) > H (EATA Velocity)
 - KYBBA marginal 4.67x stable 9+ cycles — definitively recovered
 - Persistent campaign flags: Phoenix 1.88x (show Mar 8), Sienna 0x, Palm Desert 0.39x
@@ -386,37 +386,6 @@ Format:
 - Prompt audit coverage: email-agent.txt (first-ever), reporting-agent.txt (last was Cycle #70)
 - Remaining unaudited by think loop: don-omar-agent.txt
 
-## 2026-03-06 — Cycle #103 (Business Monitoring)
-- **Priority chosen:** P4 — Business Monitoring (last cycle was P3 #102, rotation-compliant)
-- **What I audited:** session/last-campaigns.json (Mar 6 12:01, fresh), campaign_snapshots (Mar 5+6), meta_campaigns ACTIVE list
-- **P1 check:** No breakage. Session cache fresh. 9 ACTIVE campaigns confirmed in both cache and Supabase.
-- **Status changes:** None. Still 9 ACTIVE, same set as Cycles #97-102.
-- **Marginal ROAS (Mar 5→6, consecutive-day — treat as directional only):**
-  - SLC: 30.12x marginal (star performer, 20.20x blended)
-  - Camila Sac: 5.96x marginal, 4.81x blended — healthy
-  - SF: late attribution recovery 0x→3.45x blended (marginal N/A, was 0 on Mar 5)
-  - Phoenix: 1.11x marginal, blended dropped 2.26→1.88x (below 2.0). Show Mar 8 (2 days). Live cache shows 2.67x (attribution lag). Flagged since Cycle #74.
-  - Anaheim: 0.71x consecutive-day (confirmed noise — multi-day Feb 26→Mar 6 = 4.70x)
-  - Palm Desert: 0.69x marginal, 0.39x blended. Persistent flag.
-  - KYBBA: spend adjusted down slightly ($2721→$2710), marginal N/A for negative delta
-  - Sienna: 0x ($496 snapshot, $608 live). Expected — ViewContent pixel.
-  - Vaz Vil: 0x ($53 snapshot, $101 live). Early — 3 days old.
-- **ROAS trend (Phoenix):** Only 2 snapshots available (Mar 5, Mar 6). Declining: 2.26→1.88. Cannot confirm 3-point trend.
-- **No new anomalies** vs Cycles #97/100/102. All flags are persistent and already known to Jaime.
-- **No owner note** — no new actionable findings beyond persistent flags already communicated.
-- **Next priority:** P2 — Self-Improvement (prompt rotation). All 11 prompts audited in first pass; start second pass with command.txt.
-
-## 2026-03-06 — Cycle #102 (Memory Maintenance)
-- **Priority chosen:** P3 — Memory Maintenance (last cycle was P5/P6 #101, rotation-compliant)
-- **What I audited:** LEARNINGS.md (7 uncondensed entries #96-101), MEMORY.md (proposals section), session cache freshness
-- **P1 check:** No breakage. Session cache fresh (Mar 6 12:01). Snapshots current (Mar 6).
-- **Action taken:**
-  1. **Condensed Cycles #96-101** into single block (7 entries -> 1 summary). Preserved key findings: all 11 prompts audited, Anaheim marginal resolved (4.70x multi-day), Phoenix recovered 2.67x, 10 proposals A-J.
-  2. **Updated MEMORY.md Proposals Status** — was 8 proposals (A-H from Cycle #88), now 10 (A-J from Cycle #101). Added Post-Show Auto-Pause (C) and Snapshot Gap Backfill (J). Added implementation priority order note.
-  3. **Fixed proposals.md reference** in Things To Remember — was "9 ranked (G-I active)", now "10 ranked (A-J active)".
-- **No owner note** — routine memory maintenance
-- **Next priority:** P4 — Business Monitoring (rotation-compliant, check for new data/status changes)
-
 ## 2026-03-06 — Cycles #96-101 Summary (Full Day: Prompts + Monitoring + Memory + Proposals + Infra)
 
 > Condensed from 7 individual entries during Cycle #102 memory maintenance.
@@ -430,9 +399,185 @@ Format:
 - **Cycle #101b (P6 — infra):** All green. Endpoints alive, heartbeat current, CLI found. last-events.json 2 days stale (TM sync not running daily). EATA auth expired but refresh cron handles it.
 
 **Key findings preserved from Cycles #96-101:**
-- All 11 prompts audited — full coverage achieved (don-omar-agent.txt was last)
+- All 12 prompts audited — full coverage achieved (meeting-agent.txt was last, Cycle #109)
 - Anaheim marginal scare resolved: 4.70x multi-day vs 0.71x consecutive-day noise
 - Phoenix recovered to 2.67x live (1.88x snapshot lag). Show Mar 8.
 - 10 proposals now (A-J), with implementation priority order
 - Persistent flags unchanged: Palm Desert 0.31x, Sienna 0x (expected), Vaz Vil 0x (early)
 - Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), #63-67 (#68), #68-76 (#77), #77-81 (#82), #82-89 (#90), #90-95 (#96 block), **#96-101 (#102)**
+
+## 2026-03-06 — Cycles #102-105 Summary (Memory + Monitoring + Prompt + Monitoring)
+
+> Condensed from 4 detailed entries during Cycle #106 memory maintenance. See git history for originals.
+
+- **Cycle #102 (P3 — memory):** Condensed #96-101. Updated MEMORY.md proposals (8→10, A-J). Fixed proposals.md reference.
+- **Cycle #103 (P4 — monitoring):** 9 ACTIVE unchanged. Marginals (Mar 5→6, consecutive-day): SLC 30.12x, Sac 5.96x, Phoenix 1.11x (snapshot 1.88x, live 2.67x — attribution lag). Anaheim 0.71x confirmed noise (multi-day 4.70x). KYBBA spend adjusted down slightly. No new anomalies.
+- **Cycle #104 (P2 — command.txt 2nd pass):** 3 fixes, +20 lines (817→837). (1) Campaign Creation Rules missing (CTA=Shop Now, artist page, Advantage+ OFF, EU beneficiary) — critical gap fixed. (2) `purchases` added to ingest mapping. (3) `frequency` added to ingest + session cache format.
+- **Cycle #105 (P4 — monitoring):** Same data as #103. Column naming discovery: Supabase `daily_budget` (not `daily_budget_cents`), `lifetime_budget` = 0 (not null). EATA unchanged (30,052 tix).
+
+**Key findings preserved from Cycles #102-105:**
+- command.txt Campaign Creation Rules gap fixed (was in MEMORY.md but not in the prompt the agent reads)
+- Column naming: Supabase `daily_budget` vs session cache `daily_budget_cents`; `lifetime_budget` = 0 not null
+- 9 ACTIVE campaigns stable across all 4 cycles, no status changes
+- Persistent flags unchanged: Phoenix 2.67x live (show Mar 8), Palm Desert 0.31x, Sienna 0x (expected), Vaz Vil 0x (early)
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), #63-67 (#68), #68-76 (#77), #77-81 (#82), #82-89 (#90), #90-95 (#96 block), #96-101 (#102), **#102-105 (#106)**
+
+## 2026-03-06 — Cycles #106-109 Summary (Memory + Infra + Monitoring + Prompt)
+
+> Condensed from 4 detailed entries during Cycle #110 memory maintenance. See git history for originals.
+
+- **Cycle #106 (P3 — memory):** Condensed #102-105. Updated MEMORY.md: added `lifetime_budget = 0 (not null)` note.
+- **Cycle #107 (P6 — infra):** ALL GREEN. .env 38 vars, endpoints alive (ingest 400, alerts 401 — no Clerk regression), heartbeat current, CLI v2.1.69. last-events.json 2 days stale (persistent since Cycle #94).
+- **Cycle #108 (P4 — monitoring):** 9 ACTIVE, no status changes. KYBBA negative spend delta (Meta reporting correction). Phoenix 2.67x blended but 1.11x marginal, show Mar 8, $300/day — Jaime aware since Cycle #74. SLC 28.11x exceptional. SF 7.76x recovered. Palm Desert 0.31x persistent. Sienna/Vaz Vil 0x (expected/early). No new anomalies.
+- **Cycle #109 (P2 — meeting-agent.txt):** First-ever audit. +26 lines (90→116). Added: service account details, --send-updates options, --query/today docs, error handling section, cross-timezone section, context isolation rule.
+
+**Key findings preserved from Cycles #106-109:**
+- All 12 prompt files now audited by think loop (meeting-agent.txt was last)
+- Infrastructure all green, last-events.json staleness persistent (TM sync not daily)
+- 9 ACTIVE campaigns stable, no status changes
+- Persistent flags: Phoenix 1.11x marginal (show Mar 8), Palm Desert 0.31x, Sienna 0x (expected), Vaz Vil 0x (early)
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), #63-67 (#68), #68-76 (#77), #77-81 (#82), #82-89 (#90), #90-95 (#96 block), #96-101 (#102), #102-105 (#106), **#106-109 (#110)**
+
+## 2026-03-06/08 — Cycles #110-121 Summary (Monitoring + Prompts + Memory + Infra)
+
+> Condensed from 13 detailed entries during Cycle #122 memory maintenance. Note: cycle numbering was confused in this range (#112 and #113 each had duplicate entries with different priorities). See git history for originals.
+
+- **Cycle #110 (P3 — memory):** Condensed #106-109. Updated MEMORY.md (campaign counts, Don Omar BCN Meta campaign launched).
+- **Cycle #111 (P4 — monitoring):** 10 ACTIVE (was 9). Don Omar BCN NEW ($100/day, $0 spend). Phoenix budget $300->$500/day (show Mar 8). Sienna budget $100->$200/day. KYBBA spend corrected DOWN by Meta (blended 2.68->2.47x). Anaheim 3 consecutive blended ROAS declines (4.40->4.11->3.95).
+- **Cycle #112a (P3 — memory):** MEMORY.md refreshed: Don Omar BCN added, Phoenix/Sienna budgets updated, Known Issues reorganized, shows updated.
+- **Cycle #112b (P2 — media-buyer.txt):** 3 fixes: Don Omar BCN aliases, Sienna/Vaz Vil slug mappings, campaign count corrected.
+- **Cycle #113a (P4 — monitoring):** 10 ACTIVE. Marginal ROAS (Mar 5->7): SLC 36.18x, SF 11.71x, Sac 7.12x, Phoenix 3.09x (recovered), KYBBA 2.85x. Anaheim 1.28x marginal (declining). Palm Desert 0.47x. KYBBA blended dipped 2.68->2.47.
+- **Cycle #113b (P6 — infra):** ALL GREEN. .env OK, endpoints alive, heartbeat current, CLI found, snapshots healthy.
+- **Cycle #114 (P6 — infra):** ALL GREEN. Heartbeat 03:30 UTC, alerts 401 (no Clerk regression), snapshots Mar 7 present.
+- **Cycle #115 (P4 — monitoring):** Same 10 ACTIVE. Marginal (Mar 5->7, 2-day): SLC 42.46x, SF 24.71x, Sac 8.24x, Phoenix 3.09x. Anaheim declining (blended 3.95x, marginal 1.28x). KYBBA spend decreased (Meta revision). Palm Desert 0.47x persistent.
+- **Cycle #116 (P2 — general.txt):** 3 fixes: Don Omar BCN alias updated (now has Meta campaign), EATA section updated, "san antonio" alias added.
+- **Cycle #117 (P4 — monitoring):** Data 38h stale. Phoenix 2.67x (show Mar 8 today). KYBBA 2.47x (near threshold, show Mar 22). Anaheim 3.95x (3 consecutive declines). Phoenix marginal 5.02x (strong final push).
+- **Cycle #118 (P3 — memory):** Major MEMORY.md update: PAUSED campaign data was severely outdated. Dallas actually $625/19.02x (was "$0.30"), Houston $2,977/5.90x (was "$243/0x"), San Antonio $1,718/3.89x. Known Issues reorganized. Shows updated.
+- **Cycle #119 (P6 — infra):** ALL GREEN. Heartbeat 06:00 UTC, Gmail watch expires Mar 14, snapshots healthy.
+- **Cycle #120 (P2 — media-buyer.txt):** 4 fixes: Campaign Creation Rules section added (CTA, artist page, Advantage+ OFF, EU beneficiary), pixel selection parameterized, account total corrected.
+- **Cycle #121 (P4 — monitoring):** Same 10 ACTIVE. KYBBA trajectory 2.47->2.43->2.65->2.68->2.47 (not 3 consecutive declines but volatile). Anaheim 4th data point declining (3.95x). SLC 42.5x marginal (explosive). Phoenix 5.02x marginal (strong final push for Mar 8 show). Palm Desert ~0x marginal (dead weight).
+
+**Key findings preserved from Cycles #110-121:**
+- KYBBA blended volatile around 2.47x — not in freefall but close to 2.0 threshold. Show Mar 22.
+- Anaheim had 3 consecutive blended ROAS declines (4.40->4.11->3.95) but marginal improved short-term (1.87x).
+- Phoenix recovered to 2.67x blended / 5.02x marginal with $500/day for Mar 8 show.
+- PAUSED campaign data corrected: Dallas/Houston/San Antonio all ran significant spend after reactivation.
+- media-buyer.txt got Campaign Creation Rules + pixel parameterization (Cycle #120) — critical gap fixed.
+- general.txt updated for Don Omar BCN Meta campaign (Cycle #116).
+- Infrastructure consistently green across 3 infra checks (#113b, #114, #119).
+- Cycle numbering confused (#112 and #113 duplicated) — resolved by appending a/b suffixes in this summary.
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), #63-67 (#68), #68-76 (#77), #77-81 (#82), #82-89 (#90), #90-95 (#96 block), #96-101 (#102), #102-105 (#106), #106-109 (#110), **#110-121 (#122)**
+
+## 2026-03-07/08 — Cycles #122-129 Summary (Monitoring + Prompts + Infra + Proposals + Memory)
+
+> Condensed from 8 detailed entries during Cycle #130 memory maintenance. See git history for originals.
+
+- **Cycle #122 (P3 — memory):** Condensed #110-121. MEMORY.md verified, no updates needed.
+- **Cycle #123 (P4 — monitoring):** 10 ACTIVE. Palm Desert RECOVERED (0.31→2.11x, late attribution). SLC budget bumped to $800/day (34.27x ROAS). Don Omar BCN strong start (6.53x, 4 purchases, $224). Anaheim marginal 0.13x (alarming but blended 3.95x healthy). KYBBA 2.47x volatile near threshold.
+- **Cycle #124 (P2 — boss.txt):** +45 lines (438→483). Added: client manager channel routing note, agent system health queries, show proximity rules, pixel selection section.
+- **Cycle #125 (P4 — monitoring):** Phoenix show Mar 8 imminent ($500/day, 2.55x). Anaheim marginal IMPROVED 0.13→1.25x. Palm Desert attribution lag documented. Mar 5→7 marginals: SLC 36.17x, SF 11.72x, Sac 7.12x, Phoenix 3.09x.
+- **Cycle #126 (P6 — infra):** ALL GREEN. Endpoints alive, heartbeat current, Gmail watch expires Mar 14, CLI found.
+- **Cycle #127 (P5 — proposals):** +2 proposals: K (Daily Morning Digest) and L (Multi-Client Portfolio P&L). All existing proposals refreshed. 12 total (A-L). Priority: A→K→G→D→...
+- **Cycle #128 (P4 — monitoring):** **🔑 Attribution lag recovery confirmed across 3 campaigns**: Anaheim 0.13→5.95x, Palm Desert 0.47→12.88x, Sacramento 0.71→4.57x. SLC explosive 51.66x marginal. Phoenix 2.20x (show Mar 8, should pause soon). KYBBA spend delta too small for marginal.
+- **Cycle #129 (P2 — media-buyer.txt):** +56 lines (684→740). Added: `actions` array parsing example, `cost_per_action_type` field, multi-snapshot marginal ROAS query, show proximity rules.
+
+**Media Buyer Mistakes Log (from Jaime feedback, Mar 8):**
+1. Wrong day count: said SLC "2 days out" when actually 1 day. **Rule: days_to_show = show_date - today.**
+2. Didn't send scheme to #boss channel. **Rule: ALWAYS deliver plans to the requesting channel immediately.**
+
+**Key findings preserved from Cycles #122-129:**
+- 🔑 Attribution lag recovery confirmed: 2-day snapshot marginals can be extremely misleading for smaller-budget campaigns. Anaheim/Palm Desert/Sacramento all showed <1.0x marginal that fully reversed to 5-13x once conversions attributed.
+- 🔑 SLC exceptional: 34→51x marginal, $800/day budget justified.
+- 🔑 Don Omar BCN Meta campaign delivering (6.53x, 4 purchases from $224).
+- 🔑 Phoenix show Mar 8 — final push at $500/day, 2.55x blended.
+- boss.txt got show proximity rules + agent health queries (Cycle #124).
+- media-buyer.txt got actions parsing + marginal ROAS queries + show proximity rules (Cycle #129).
+- Proposals expanded to 12 (K: Daily Digest, L: Portfolio P&L).
+- Infrastructure all green (Cycle #126).
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), #63-67 (#68), #68-76 (#77), #77-81 (#82), #82-89 (#90), #90-95 (#96 block), #96-101 (#102), #102-105 (#106), #106-109 (#110), #110-121 (#122), **#122-129 (#130)**
+
+## 2026-03-07/08 — Cycles #130-136 Summary (Monitoring + Prompts + Infra + Memory)
+
+> Condensed from 7 detailed entries during Cycle #137 memory maintenance. See git history for originals.
+
+- **Cycle #130 (P3 — memory):** Condensed #122-129. MEMORY.md proposals refreshed (10→12, K+L added).
+- **Cycle #131 (P4 — monitoring):** 10 ACTIVE. **🚩 Sienna: $776/0x after 9 days** — alert posted. **⚠️ Phoenix: show Mar 8, still ACTIVE at $500/day** — alert posted. Vaz Vil $140/0x (4 days, monitoring). SLC 51.66x marginal (explosive). Palm Desert attribution lag pattern 0→0.39→0.31→2.11x.
+- **Cycle #132 (P2 — tm-agent.txt):** +34 lines (376→410). Added Don Omar BCN alias, EATA/Vivaticket section, service account MFA note, event_snapshots live vs static clarification.
+- **Cycle #133 (P4 — monitoring):** 10 ACTIVE unchanged. Persistent flags: Sienna 0x, Phoenix post-show, Vaz Vil approaching threshold. KYBBA only $5.65 daily delta (unreliable).
+- **Cycle #134 (P6 — infra):** ALL GREEN. Health endpoint now 200 ✅ (was 404). Ingest 400 ✅, Alerts 401 ✅, Production Railway all green. agent_jobs deprecated in favor of agent_runtime_state + agent_tasks.
+- **Cycle #135 (P2 — creative-agent.txt):** +43 lines (232→275). 6 fixes: Don Omar alias, CTA→"Shop Now" (was wrong), Advantage+ OFF section, artist pages, video upload gotcha, campaign-specific evaluation rules (Sienna ViewContent).
+- **Cycle #136 (P4 — monitoring):** **🚩 Vaz Vil alert posted** — $140/0x, 4 consecutive snapshots all 0x. Healthy: SLC 34.27x, SF 8.55x, Don Omar 6.53x, Sac 5.02x, Ana 4.09x, Palm Desert 2.11x, KYBBA 2.47x.
+
+**Key findings preserved from Cycles #130-136:**
+- 🚩 Sienna $776/0x after 10+ days — alerted Cycle #131. Expected (ViewContent, not purchases).
+- 🚩 Vaz Vil $140/0x after 5 days — alerted Cycle #136. 4 consecutive 0x snapshots.
+- ⚠️ Phoenix post-show (Mar 8) still ACTIVE at $500/day — alerted Cycle #131.
+- ✅ Health endpoint now returns 200 (improvement, Cycle #134).
+- ✅ creative-agent.txt CTA fixed: "Shop Now" always (was "GET_TICKETS" — wrong).
+- ✅ tm-agent.txt got full EATA/Vivaticket context (Cycle #132).
+- KYBBA 2.47x stable but daily spend delta too small for marginal analysis.
+- Infrastructure all green. agent_jobs table deprecated.
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), #63-67 (#68), #68-76 (#77), #77-81 (#82), #82-89 (#90), #90-95 (#96 block), #96-101 (#102), #102-105 (#106), #106-109 (#110), #110-121 (#122), #122-129 (#130), **#130-136 (#137)**
+
+## 2026-03-08 — Cycles #138-152 Summary (Full Day: Prompts + Monitoring + Memory + Infra)
+
+> Condensed from 15 detailed entries during Cycle #153 memory maintenance. See git history for originals.
+
+- **Cycle #138 (P2 — reporting-agent.txt):** 3 fixes: Don Omar BCN "no Meta campaigns" → WRONG (has $600/day campaign), added `actions` array parsing for purchase/CPA extraction, expanded EATA report template with Meta Ads USD section.
+- **Cycle #139 (P4 — monitoring):** 10 ACTIVE. Marginals healthy (SLC 47x, SF 19.75x, Sac 6.43x). Palm Desert attribution lag confirmed (0.31→2.11x blended, 5.79x marginal). KYBBA delivery issue persists ($2-6/day on $100/day budget). All flags previously raised.
+- **Cycle #140 (P3 — memory):** 3 MEMORY.md fixes: SLC show date corrected (was listed as PAST, actually tomorrow), proposals count 10→12, spend/ROAS values verified current.
+- **Cycle #141 (P2 — client-manager.txt):** 4 fixes: Don Omar BCN Meta campaign added ($600/day, 6.53x), Sienna budget corrected ($100→$200/day), Vaz Vil updated ($50/day, $197 spent, 0x), flagged Don Omar budget stale in MEMORY.md.
+- **Cycle #142 (P4 — monitoring):** **Sienna: ACTIVE → PAUSED** — Jaime paused after repeated 0x alerts. 9 ACTIVE now. Palm Desert attribution confirmed (12.87x marginal). Don Omar first meaningful snapshot ($224, 6.53x).
+- **Cycle #143 (P2 — email-agent.txt):** 3 fixes: added mark-read command to tool docs, added meeting/calendar handoff protocol, fixed pixel mislabel in email-agent memory (Don Omar Spain → San Diego Pechanga Arena).
+- **Cycle #144 (P6 — infra):** ALL GREEN. Health 200, Ingest 400, Alerts 401, heartbeat <1 min old, snapshots current, Claude CLI OK, EATA scripts present.
+- **Cycle #145 (P2 — meeting-agent.txt):** 3 fixes: added --end/--calendar/--no-meet flags, --end vs --duration clarification, email-agent handoff reception protocol. **All 11 original prompts fully audited.** Noted prompts/ now has 18 files (was 12).
+- **Cycle #146 (P4 — monitoring):** 9 ACTIVE stable. SLC 51.66x marginal 🚀. Phoenix show today, still ACTIVE. Palm Desert blended trajectory: 0x→0.39→0.31→2.11→3.35x (fully recovered). Don Omar $600/day, 6.73x.
+- **Cycle #147 (P3 — memory):** 10 MEMORY.md fixes: prompt count 12→18, Don Omar budget $100→$600/day, Sienna ACTIVE→PAUSED, campaign counts 10/17→9/18, SLC/Palm Desert/Phoenix/Anaheim/Sac/Vaz Vil spend+ROAS updates, session cache freshness.
+- **Cycle #149 (P2 — content-finder.txt):** First new-prompt audit. 2 fixes: context isolation strengthening, memory-first enforcement. Growth ledger script verified.
+- **Cycle #148,150,152 (P4 — monitoring ×3):** Repeated monitoring — 9 ACTIVE stable, no status changes. Phoenix still ACTIVE (show today), SLC exceptional final push (51.6x marginal). KYBBA delivery broken ($5.65/day on $100/day, 6-8th cycle noting). Vaz Vil 7-8th consecutive 0x. All flags previously raised, no new alerts.
+- **Cycle #151 (P2 — customer-whatsapp-agent.txt):** 2 fixes: context isolation warning, memory-first enforcement. Routing targets and JSON formats verified.
+
+**Key outcomes preserved from Cycles #138-152:**
+- ✅ All 11 original prompts completed full audit cycle (Cycle #145). New prompt rotation started: content-finder.txt (#149), customer-whatsapp-agent.txt (#151) done. 4 remaining: growth-supervisor.txt, lead-qualifier.txt, publisher-tiktok.txt, tiktok-supervisor.txt.
+- ✅ Sienna ACTIVE → PAUSED (Cycle #142) — Jaime paused after 0x alerts. Expected outcome.
+- ✅ MEMORY.md major update (Cycle #147) — 10 fixes including Don Omar $600/day, counts, spend/ROAS.
+- ✅ Infrastructure all green (Cycle #144).
+- ⚠️ Phoenix show Mar 8 — still ACTIVE at $500/day. Should be paused post-show.
+- ⚠️ SLC show Mar 9 — $800/day, 51.6x marginal. Exceptional. Should be paused post-show.
+- ⚠️ KYBBA delivery broken — $5.65/day on $100/day. Meta won't spend. Not a ROAS issue (2.47x blended). Noted 8 cycles, not alerted (not a money-losing problem).
+- ⚠️ Vaz Vil 8+ consecutive 0x snapshots, $197 total. Alerted Cycle #136.
+- ✅ Don Omar BCN strong start: $224, 6.53x ROAS, $600/day budget.
+- Palm Desert attribution lag pattern fully confirmed: 0x→0.39→0.31→2.11→3.35x blended, 12.87x marginal.
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), #63-67 (#68), #68-76 (#77), #77-81 (#82), #82-89 (#90), #90-95 (#96 block), #96-101 (#102), #102-105 (#106), #106-109 (#110), #110-121 (#122), #122-129 (#130), #130-136 (#137), **#138-152 (#153)**
+
+## 2026-03-08 — Cycle #153
+- **Priority chosen:** P3 — memory maintenance (condensation overdue — 15 uncondensed cycles)
+- **What I audited:** LEARNINGS.md (full read, 722 lines pre-condensation)
+- **Action taken:** Condensed Cycles #138-152 (15 individual entries, ~200 lines) into single summary block (~30 lines). Key outcomes preserved: all 11 original prompts audited, Sienna paused, MEMORY.md 10-fix update, infra all green, new prompt rotation started (2 of 6 done). Persistent flags preserved (Phoenix/SLC post-show, KYBBA delivery, Vaz Vil 0x, Don Omar strong start).
+- **Next priority:** P2 — new prompt audit (growth-supervisor.txt next, 4 of 6 new prompts remaining)
+
+## 2026-03-08 — Cycle #154
+- **Priority chosen:** P2 — new prompt audit (growth-supervisor.txt)
+- **What I audited:** `prompts/growth-supervisor.txt` (85 lines), `memory/growth-supervisor.md`, `scripts/growth-ledger.ts` existence verified
+- **Action taken:** 3 fixes applied:
+  1. Strengthened context isolation warning (added explicit "discard context bleed" rule matching content-finder.txt and customer-whatsapp-agent.txt patterns)
+  2. Added Business Context section — Outlet Media description, current client list, pointer to `session/last-campaigns.json` for grounding content ideas in real campaign data
+  3. Added `don-omar-agent` to delegation targets (was missing from the Available targets list)
+- **New prompt audit progress:** 3 of 6 done (content-finder #149, customer-whatsapp-agent #151, growth-supervisor #154). 3 remaining: lead-qualifier.txt, publisher-tiktok.txt, tiktok-supervisor.txt.
+- **Next priority:** P4 — monitoring (rotate away from P2, check post-show status for Phoenix/SLC)
+
+## 2026-03-08 — Cycle #155
+- **Priority chosen:** P4 — monitoring
+- **What I audited:** session/last-campaigns.json (fresh, 12:01 today), Supabase meta_campaigns (29 rows), campaign_snapshots (Mar 7→8)
+- **Key findings:**
+  - **11 new campaigns created** (29 total, was 18): Camila tour expansion (Houston, San Diego, Dallas, San Antonio) + Arjona new markets (Anaheim, San Diego) + Alofoke. All PAUSED with $0 spend — staged for activation.
+  - **Don Omar BCN first real performance**: $370 spent, 6.53× ROAS, 9 purchases in 2 days. Strong start on $600/day budget.
+  - **Phoenix show TODAY (Mar 8)**: ACTIVE at $500/day, 3.02× blended, 2.20× marginal. Appropriate for show-day push. Should pause tonight.
+  - **SLC show TOMORROW (Mar 9)**: ACTIVE at $800/day, 17.72× blended, 51.64× marginal. Explosive. Keep running until show.
+  - **Marginals (Mar 7→8)**: SF 13.52×, Palm Desert 12.87× (attribution recovery continuing), Anaheim 5.94×, Sac 4.57×. All healthy.
+  - **Vaz Vil**: Still 0× ($197, day 5). Already alerted Cycle #136.
+  - **KYBBA**: $5.65 daily delta on $100/day budget — delivery still broken. 9th cycle noting, not money-losing.
+  - **Sienna spend anomaly**: meta_campaigns shows spend=0 after PAUSED, but snapshots retain historical $776. Not a real issue — Meta API behavior when paused.
+  - **MEMORY.md needs update**: campaign count 18→29, Don Omar performance, new Camila cities.
+- **Action taken:** No new alerts (all flags previously raised). Logged findings.
+- **Next priority:** P3 — memory maintenance (MEMORY.md campaign count outdated, new campaigns need documenting)

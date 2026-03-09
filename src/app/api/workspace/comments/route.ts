@@ -7,6 +7,7 @@ import { logSystemEvent } from "@/features/system-events/server";
 import { createNotification } from "@/features/notifications/server";
 import { revalidateWorkspaceMutationTargets } from "@/features/workflow/revalidation";
 import { requireWorkspaceClientAccess } from "@/features/workspace/access";
+import { getWorkspaceReadClient } from "@/features/workspace/server";
 import type { NotificationType } from "@/lib/workspace-types";
 
 function excerpt(text: string, limit = 140) {
@@ -21,9 +22,13 @@ export async function GET(request: NextRequest) {
   if (!supabaseAdmin) return apiError("DB not configured");
 
   const pageId = request.nextUrl.searchParams.get("page_id");
+  const requestedClientSlug = request.nextUrl.searchParams.get("client_slug");
   if (!pageId) return apiError("page_id required", 400);
 
-  const { data: page } = await supabaseAdmin
+  const readDb = await getWorkspaceReadClient(requestedClientSlug ?? undefined);
+  if (!readDb) return apiError("DB not configured", 500);
+
+  const { data: page } = await readDb
     .from("workspace_pages")
     .select("client_slug")
     .eq("id", pageId)
@@ -33,7 +38,7 @@ export async function GET(request: NextRequest) {
   const access = await requireWorkspaceClientAccess(userId, page.client_slug as string | null);
   if (access instanceof Response) return access;
 
-  const { data, error: dbErr } = await supabaseAdmin
+  const { data, error: dbErr } = await readDb
     .from("workspace_comments")
     .select("*")
     .eq("page_id", pageId)

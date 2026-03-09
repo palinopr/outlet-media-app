@@ -28,6 +28,11 @@ export const AGENT_CONFIG: Record<string, AgentInfo> = {
   "tm-agent":         { name: "TM Data",          icon: Ticket,       accent: "text-emerald-400", description: "Ticketmaster One scraper -- extracts events, ticket counts, and demographics" },
   "creative":         { name: "Creative",         icon: Palette,      accent: "text-rose-400",    description: "Ad creative review and copy generation for Meta campaigns" },
   "reporting":        { name: "Reporting",        icon: BarChart3,    accent: "text-amber-400",   description: "Cross-references Meta spend against TM1 ticket sales and generates ROAS reports" },
+  "growth-supervisor": { name: "Growth Supervisor", icon: Cpu,        accent: "text-lime-400",    description: "Internal acquisition pod supervisor for lanes, ideas, and content jobs" },
+  "tiktok-supervisor": { name: "TikTok Supervisor", icon: Radar,      accent: "text-fuchsia-400", description: "Draft-only TikTok strategist for Outlet-owned growth content" },
+  "content-finder":   { name: "Content Finder",   icon: Palette,      accent: "text-cyan-400",    description: "Researches angles, hooks, and content opportunities for the growth pod" },
+  "lead-qualifier":   { name: "Lead Qualifier",   icon: Users,        accent: "text-emerald-400", description: "Scores inbound growth signals and recommends the next manual action" },
+  "publisher-tiktok": { name: "TikTok Publisher", icon: Bot,          accent: "text-pink-400",    description: "Assisted TikTok publisher that prepares manual post packets and logs publish outcomes" },
   "client-manager":   { name: "Client Manager",   icon: Users,        accent: "text-blue-400",    description: "Handles per-client communication channels and portal data" },
   "general-chat":     { name: "General Chat",     icon: MessageSquare, accent: "text-zinc-400",   description: "Default conversational agent for unrouted channels" },
   "schedule-control": { name: "Schedule Control", icon: Calendar,     accent: "text-teal-400",    description: "Manages cron schedules and manual job triggers" },
@@ -46,7 +51,7 @@ export const AGENT_CONFIG: Record<string, AgentInfo> = {
 
 /** Ordered keys for the settings agent-type grid. */
 export const AGENT_TYPE_KEYS = [
-  "boss", "media-buyer", "tm-agent", "creative", "reporting",
+  "boss", "growth-supervisor", "tiktok-supervisor", "content-finder", "lead-qualifier", "publisher-tiktok", "media-buyer", "tm-agent", "creative", "reporting",
   "client-manager", "general-chat", "schedule-control", "campaign-monitor", "tm-demographics",
 ] as const;
 

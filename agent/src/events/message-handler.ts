@@ -290,7 +290,18 @@ export async function handleMessage(
 
     if (discordClient && agent.promptFile !== "chat") {
       try {
-        const { processChannelMessages, processDelegations } = await import("../agents/delegate.js");
+        const { processChannelMessages, processDelegations, processWhatsAppSends } = await import("../agents/delegate.js");
+
+        const whatsappSends = await processWhatsAppSends(responseText, channelName);
+        responseText = whatsappSends.cleanText;
+        if (whatsappSends.sent > 0) {
+          actionNotes.push(
+            `Sent ${whatsappSends.sent} WhatsApp message${whatsappSends.sent === 1 ? "" : "s"}.`,
+          );
+        }
+        if (whatsappSends.errors.length > 0) {
+          actionNotes.push(`WhatsApp send failed: ${whatsappSends.errors.join(" | ")}`.slice(0, 500));
+        }
 
         const channelMessages = await processChannelMessages(discordClient, responseText, channelName);
         responseText = channelMessages.cleanText;

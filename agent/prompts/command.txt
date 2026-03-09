@@ -405,6 +405,20 @@ Returns `{"id": "VIDEO_ID"}` on success.
 
 ---
 
+## Campaign Creation Rules (from Jaime, Mar 6)
+
+Follow these EVERY time you create a campaign, adset, or ad creative:
+
+- **CTA: Always "Shop Now"** for any event or sales campaign
+- **Fan Page: Use the artist's page**, not Outlet Media's. Search for the artist's Facebook page and use that page ID + Instagram ID. If we don't have the artist's page, use **Zamora's page** as fallback (not Outlet Media).
+  - Known artist pages:
+    - Don Omar: Page ID `21608835481`, IG ID `17841400670290220`
+    - Default (Zamora/most clients): Page ID `175118299508364`, IG ID `17841402356610735`
+- **Advantage+ Creative Enhancements: ALL OFF (set to 0)**. Jaime wants zero enhancements enabled. Turn off: Text improvements, Enhance CTA, Flex media, Show summaries, Translate text, Add overlays, and all others.
+- **EU Beneficiary & Payer: Always "OUTLET MEDIA INC"**. Required for ad sets targeting EU audiences (e.g., Don Omar BCN). Set in Advertising Settings. Both beneficiary and payer = OUTLET MEDIA INC (same entity).
+
+---
+
 ## Ticketmaster One (TM1)
 
 URL: https://one.ticketmaster.com
@@ -467,7 +481,9 @@ The ingest endpoint expects these EXACT field names (see /api/ingest/route.ts):
 - `impressions`, `clicks`, `reach` — pass through as-is (integers)
 - `cpm`, `cpc` — pass through as-is (dollar values, NOT converted to cents). Meta returns these as dollar strings.
 - `ctr` — pass through as-is (percentage value, e.g. 1.48 means 1.48%). NOT a monetary value — do NOT multiply by 100.
+- `frequency` — pass through as-is (float). impressions/reach. Values >3-4 indicate ad fatigue.
 - `roas` — pass through as-is (float, e.g. 8.4)
+- `purchases` — integer from `actions` where `action_type=purchase`. Used for CPA calculations.
 - `start_time` — ISO8601 string from Meta campaign fields. MUST be included — pacing calculations depend on it
 
 **DO NOT omit `daily_budget`, `start_time`, or `lifetime_budget` from the ingest payload.**
@@ -548,7 +564,7 @@ Each campaign in last-campaigns.json should include ALL of these fields:
 - campaign_id, name, status, objective, client_slug
 - daily_budget_cents (from Meta daily_budget, already in cents), lifetime_budget_cents
 - spend (in DOLLARS — as received from Meta insights, NOT converted to cents)
-- impressions, clicks, reach, cpm, cpc, ctr, roas
+- impressions, clicks, reach, frequency, cpm, cpc, ctr, roas
 - purchases (integer — from `actions` where `action_type=purchase`. Used for CPA calculations)
 - start_time (ISO8601 string from Meta — needed for pacing calculations)
 

@@ -22,6 +22,7 @@ const OWNER_USER_IDS = new Set(
 
 const OWNER_ONLY_CHANNELS = new Set([
   "boss",
+  "whatsapp-boss",
   "email",
   "meetings",
   "email-log",
@@ -36,6 +37,7 @@ const OWNER_ONLY_CHANNELS = new Set([
 const READ_ONLY_CHANNELS = new Set([
   "morning-briefing",
   "agent-feed",
+  "growth-dashboard",
   "email-log",
   "audit-log",
 ]);
@@ -47,6 +49,7 @@ const OWNER_ONLY_COMMANDS = new Set([
   "dashboard",
   "schedule",
   "inspect",
+  "whatsapp",
 ]);
 
 const OWNER_SEND_PERMS = [

@@ -25,7 +25,12 @@ interface AgentOutcomesPanelProps {
 const AGENT_LABELS: Record<string, string> = {
   assistant: "Assistant",
   "campaign-monitor": "Campaign Monitor",
+  "content-finder": "Content Finder",
+  "growth-supervisor": "Growth Supervisor",
+  "lead-qualifier": "Lead Qualifier",
   "meta-ads": "Meta Ads",
+  "publisher-tiktok": "TikTok Publisher",
+  "tiktok-supervisor": "TikTok Supervisor",
   "tm-monitor": "TM Monitor",
   think: "Think",
 };

@@ -68,6 +68,7 @@ export function PageViewClient({ page, currentUserId, clientSlug }: PageViewClie
       </div>
 
       <CommentSidebar
+        clientSlug={clientSlug}
         pageId={page.id}
         isOpen={commentsOpen}
         onClose={() => setCommentsOpen(false)}

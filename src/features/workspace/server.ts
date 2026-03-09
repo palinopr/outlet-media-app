@@ -1,13 +1,33 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { currentUser } from "@clerk/nextjs/server";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import type { WorkspacePage, WorkspaceTask } from "@/lib/workspace-types";
+
+export async function getWorkspaceReadClient(clientSlug?: string) {
+  if (!clientSlug || clientSlug === "admin") {
+    return supabaseAdmin;
+  }
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
 
 export async function getWorkspacePages(clientSlug?: string): Promise<{
   pages: WorkspacePage[];
   fromDb: boolean;
 }> {
-  if (!supabaseAdmin) return { pages: [], fromDb: false };
+  const db = await getWorkspaceReadClient(clientSlug);
+  if (!db) return { pages: [], fromDb: false };
 
-  let query = supabaseAdmin
+  let query = db
     .from("workspace_pages")
     .select(
       "id, title, icon, parent_page_id, client_slug, created_by, is_archived, position, created_at, updated_at",
@@ -32,9 +52,10 @@ export async function getWorkspacePage(
   pageId: string,
   clientSlug?: string,
 ): Promise<WorkspacePage | null> {
-  if (!supabaseAdmin) return null;
+  const db = await getWorkspaceReadClient(clientSlug);
+  if (!db) return null;
 
-  let query = supabaseAdmin
+  let query = db
     .from("workspace_pages")
     .select("*")
     .eq("id", pageId);
@@ -51,9 +72,10 @@ export async function getWorkspacePage(
 export async function getWorkspaceTasks(
   clientSlug?: string,
 ): Promise<WorkspaceTask[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getWorkspaceReadClient(clientSlug);
+  if (!db) return [];
 
-  let query = supabaseAdmin
+  let query = db
     .from("workspace_tasks")
     .select("*")
     .order("position", { ascending: true });

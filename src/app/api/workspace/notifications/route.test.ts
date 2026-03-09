@@ -1,12 +1,28 @@
 import type { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { authGuard, currentUser, getMemberAccessForSlug, listNotificationsForUser, supabaseAdmin } =
+const {
+  authGuard,
+  createClerkSupabaseClient,
+  currentUser,
+  getMemberAccessForSlug,
+  listNotificationsForUser,
+  notificationsDb,
+  supabaseAdmin,
+} =
   vi.hoisted(() => ({
     authGuard: vi.fn(),
+    createClerkSupabaseClient: vi.fn(),
     currentUser: vi.fn(),
     getMemberAccessForSlug: vi.fn(),
     listNotificationsForUser: vi.fn(),
+    notificationsDb: {
+      from: vi.fn(() => ({
+        eq: vi.fn().mockReturnThis(),
+        in: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+      })),
+    },
     supabaseAdmin: {
       from: vi.fn(() => ({
         eq: vi.fn().mockReturnThis(),
@@ -35,6 +51,7 @@ vi.mock("@/features/notifications/server", () => ({
 }));
 
 vi.mock("@/lib/supabase", () => ({
+  createClerkSupabaseClient,
   supabaseAdmin,
 }));
 
@@ -55,10 +72,13 @@ function makePatchRequest(body: Record<string, unknown>) {
 describe("workspace notifications route", () => {
   beforeEach(() => {
     authGuard.mockReset();
+    createClerkSupabaseClient.mockReset();
     currentUser.mockReset();
     getMemberAccessForSlug.mockReset();
     listNotificationsForUser.mockReset();
+    notificationsDb.from.mockClear();
     supabaseAdmin.from.mockClear();
+    createClerkSupabaseClient.mockResolvedValue(notificationsDb);
   });
 
   it("blocks client viewers from fetching an unscoped inbox", async () => {
@@ -111,5 +131,17 @@ describe("workspace notifications route", () => {
 
     expect(response.status).toBe(403);
     expect(listNotificationsForUser).not.toHaveBeenCalled();
+  });
+
+  it("marks admin notifications read through the Clerk-scoped client", async () => {
+    authGuard.mockResolvedValue({ error: null, userId: "user_admin" });
+    currentUser.mockResolvedValue({ publicMetadata: { role: "admin" } });
+
+    const { PATCH } = await import("./route");
+    const response = await PATCH(makePatchRequest({ id: "notif_1" }));
+
+    expect(response.status).toBe(200);
+    expect(notificationsDb.from).toHaveBeenCalledWith("notifications");
+    expect(supabaseAdmin.from).not.toHaveBeenCalled();
   });
 });

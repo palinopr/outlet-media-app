@@ -1,6 +1,7 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { currentUser } from "@clerk/nextjs/server";
 import type { ScopeFilter } from "@/lib/member-access";
 import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import {
@@ -82,6 +83,26 @@ interface GetEventsWorkflowDataOptions {
 export interface EventsWorkflowData {
   actionCenter: DashboardActionCenter;
   agentOutcomes: AgentOutcomeView[];
+}
+
+async function getEventReadClient(options: {
+  clientSlug?: string | null;
+  mode: "admin" | "client";
+}) {
+  if (!supabaseAdmin) return null;
+  if (options.mode !== "client" || !options.clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
 }
 
 function mapEventRow(row: Record<string, unknown>): EventOperatingRecord {
@@ -222,7 +243,8 @@ export async function getEventsWorkflowData(
 export async function getEventOperationsSummary(
   options: GetEventOperationsSummaryOptions,
 ) {
-  if (!supabaseAdmin) {
+  const db = await getEventReadClient(options);
+  if (!db) {
     return buildEventOperationsSummary({
       comments: [],
       events: [],
@@ -245,20 +267,20 @@ export async function getEventOperationsSummary(
 
   const recentSince = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
-  let eventsQuery = supabaseAdmin
+  let eventsQuery = db
     .from("tm_events")
     .select("id, client_slug, name, artist, date, venue, status")
     .order("date", { ascending: true })
     .limit(250);
 
-  let followUpsQuery = supabaseAdmin
+  let followUpsQuery = db
     .from("event_follow_up_items" as never)
     .select("event_id, client_slug, priority, updated_at")
     .neq("status", "done")
     .order("updated_at", { ascending: false })
     .limit(500);
 
-  let commentsQuery = supabaseAdmin
+  let commentsQuery = db
     .from("event_comments")
     .select("event_id, client_slug, created_at")
     .eq("resolved", false)

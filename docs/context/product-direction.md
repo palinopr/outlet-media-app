@@ -68,6 +68,21 @@ Core first-class areas:
 - Activity / audit trail
 - Agents / automations
 
+## Current Customer Packaging
+
+The long-term product can expose more first-class apps, but the current customer-facing packaging should stay narrow and excellent.
+
+For now, the client-facing web surface should center on:
+- campaigns
+- events
+
+That means:
+- campaign and event pages should be the primary place clients read analytics, status, blockers, approvals, activity, and next steps
+- supporting concepts such as assets, discussions, approvals, and agent follow-through should usually appear as embedded panels inside those pages before they earn their own client navigation item
+- CRM, WhatsApp, approvals, assets, reports, workspace, and other deeper operating tools can remain admin-first until customers clearly need them as standalone client surfaces
+
+Admin users should still operate on the broader system. The customer-facing simplification is about packaging and trust, not about throwing away the shared backbone.
+
 ## Design Principle
 
 Everything should stay attached to the right context.

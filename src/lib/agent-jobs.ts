@@ -37,6 +37,11 @@ const DISPLAYABLE_TO_AGENTS = new Set([
   "think",
   "email-agent",
   "don-omar-agent",
+  "growth-supervisor",
+  "tiktok-supervisor",
+  "content-finder",
+  "lead-qualifier",
+  "publisher-tiktok",
 ]);
 
 const DISPLAYABLE_FROM_AGENTS = new Set([

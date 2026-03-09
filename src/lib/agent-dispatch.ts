@@ -4,7 +4,16 @@ import { supabaseAdmin } from "@/lib/supabase";
 interface EnqueueExternalAgentTaskInput {
   action: string;
   prompt: string;
-  toAgent: "assistant" | "campaign-monitor" | "meta-ads" | "tm-monitor";
+  toAgent:
+    | "assistant"
+    | "campaign-monitor"
+    | "meta-ads"
+    | "tm-monitor"
+    | "growth-supervisor"
+    | "tiktok-supervisor"
+    | "content-finder"
+    | "lead-qualifier"
+    | "publisher-tiktok";
 }
 
 export async function enqueueExternalAgentTask(

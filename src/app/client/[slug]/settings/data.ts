@@ -1,6 +1,5 @@
-import { supabaseAdmin } from "@/lib/supabase";
-import { auth } from "@clerk/nextjs/server";
-import { clerkClient } from "@clerk/nextjs/server";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
 import { listActionableInvitations } from "@/features/invitations/server";
 import type { ConnectedAccount } from "@/features/settings/connected-accounts";
 
@@ -25,6 +24,22 @@ export async function getConnectedAccounts(
   }
 
   return (data ?? []) as ConnectedAccount[];
+}
+
+async function getSettingsReadClient() {
+  if (!supabaseAdmin) return null;
+
+  try {
+    const viewer = await currentUser();
+    const viewerRole = (viewer?.publicMetadata as { role?: string } | null)?.role;
+    if (viewerRole === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
 }
 
 // ─── Team Members ────────────────────────────────────────────────────────────
@@ -60,14 +75,17 @@ export async function getSettingsData(slug: string): Promise<SettingsData | null
   const { userId } = await auth();
   if (!userId) return null;
 
-  const { data: client } = await supabaseAdmin
+  const settingsDb = await getSettingsReadClient();
+  if (!settingsDb) return null;
+
+  const { data: client } = await settingsDb
     .from("clients")
     .select("id, name, slug")
     .eq("slug", slug)
     .single();
   if (!client) return null;
 
-  const { data: members } = await supabaseAdmin
+  const { data: members } = await settingsDb
     .from("client_members")
     .select("id, clerk_user_id, role, created_at")
     .eq("client_id", client.id)

@@ -12,7 +12,7 @@ import {
   listEffectiveCampaignRowsForClientSlug,
 } from "@/lib/campaign-client-assignment";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import type { AssetRow } from "./types";
 
 const CONCURRENCY = 4;
@@ -195,6 +195,45 @@ async function listClientCampaignsForAssets(clientSlug: string): Promise<AssetSc
   }));
 }
 
+async function getAssetReadContext(clientSlug?: string | null) {
+  if (!supabaseAdmin) return null;
+  if (!clientSlug) {
+    return {
+      db: supabaseAdmin,
+      usesClerkScopedReads: false,
+    };
+  }
+
+  try {
+    const user = await currentUser();
+    const meta = (user?.publicMetadata ?? {}) as { role?: string };
+    if (meta.role === "admin") {
+      return {
+        db: supabaseAdmin,
+        usesClerkScopedReads: false,
+      };
+    }
+  } catch {
+    return {
+      db: supabaseAdmin,
+      usesClerkScopedReads: false,
+    };
+  }
+
+  const userScopedClient = await createClerkSupabaseClient();
+  if (!userScopedClient) {
+    return {
+      db: supabaseAdmin,
+      usesClerkScopedReads: false,
+    };
+  }
+
+  return {
+    db: userScopedClient,
+    usesClerkScopedReads: true,
+  };
+}
+
 export async function listVisibleAssetIdsForScope(
   clientSlug: string,
   assetIds: string[],
@@ -245,14 +284,15 @@ export async function listAssets(
   clientSlug: string,
   scope?: ScopeFilter,
 ): Promise<AssetRow[]> {
-  if (!supabaseAdmin) throw new Error("DB not configured");
+  const readContext = await getAssetReadContext(clientSlug);
+  if (!readContext) throw new Error("DB not configured");
 
   const [assetsRes, campaigns] = await Promise.all([
-    supabaseAdmin
-    .from("ad_assets")
-    .select(ASSET_OPERATING_SELECT)
-    .eq("client_slug", clientSlug)
-    .order("created_at", { ascending: false }),
+    readContext.db
+      .from("ad_assets")
+      .select(ASSET_OPERATING_SELECT)
+      .eq("client_slug", clientSlug)
+      .order("created_at", { ascending: false }),
     listClientCampaignsForAssets(clientSlug),
   ]);
 
@@ -268,10 +308,11 @@ export async function listAssets(
 
 export async function getAssetRecordById(
   assetId: string,
+  db: typeof supabaseAdmin = supabaseAdmin,
 ): Promise<AssetOperatingRecord | null> {
-  if (!supabaseAdmin) throw new Error("DB not configured");
+  if (!db) throw new Error("DB not configured");
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await db
     .from("ad_assets")
     .select(ASSET_OPERATING_SELECT)
     .eq("id", assetId)
@@ -353,9 +394,10 @@ export async function listAssetLibrary(
   limit = 72,
   scope?: ScopeFilter,
 ): Promise<AssetLibraryRecord[]> {
-  if (!supabaseAdmin) throw new Error("DB not configured");
+  const readContext = await getAssetReadContext(clientSlug);
+  if (!readContext || !supabaseAdmin) throw new Error("DB not configured");
 
-  let assetsQuery = supabaseAdmin
+  let assetsQuery = readContext.db
     .from("ad_assets")
     .select(ASSET_OPERATING_SELECT)
     .order("created_at", { ascending: false })
@@ -439,9 +481,14 @@ export async function getAssetOperatingData(
   assetId: string,
   explicitCampaignIds: Iterable<string> = [],
   scope?: ScopeFilter,
+  clientSlug?: string | null,
 ): Promise<AssetOperatingData | null> {
-  const asset = await getAssetRecordById(assetId);
+  const readContext = await getAssetReadContext(clientSlug);
+  if (!readContext) throw new Error("DB not configured");
+
+  const asset = await getAssetRecordById(assetId, readContext.db);
   if (!asset) return null;
+  if (clientSlug && asset.client_slug !== clientSlug) return null;
 
   if (!supabaseAdmin) throw new Error("DB not configured");
 
@@ -517,12 +564,13 @@ export async function listCampaignAssets(
   campaignName: string,
   limit = 8,
 ): Promise<AssetRow[]> {
-  if (!supabaseAdmin) throw new Error("DB not configured");
+  const readContext = await getAssetReadContext(clientSlug);
+  if (!readContext) throw new Error("DB not configured");
 
   const normalizedCampaign = normalizeCampaignName(campaignName);
   if (!normalizedCampaign) return [];
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await readContext.db
     .from("ad_assets")
     .select(ASSET_SELECT)
     .eq("client_slug", clientSlug)

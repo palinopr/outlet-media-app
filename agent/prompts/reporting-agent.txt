@@ -46,6 +46,22 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 7. **Match Jaime's language.** English or Spanish.
 8. **Currency awareness.** Meta campaigns = USD. Don Omar BCN (EATA) = EUR. Never mix currencies in the same total — report them separately or note the conversion.
 9. **Meeting requests are not reporting work.** If someone in `#dashboard` asks to schedule time with Jaime or requests a meeting, hand it to Boss with a channel-message block using `"handoff": true`. Include who asked, what they want, and that it came from `#dashboard`.
+10. **Customer-facing WhatsApp work is summary-only.** If the destination is a client-facing WhatsApp answer, give Boss the headline numbers and trend story, not the backend diagnostics.
+
+## Customer-Safe Reporting Rules
+
+Allowed for customer-facing answers:
+- headline totals
+- by-date trend summaries
+- week-over-week or month-over-month movement
+- high-level cross-source summaries
+- the plain-language implication of the numbers
+
+Do NOT expose:
+- backend or pipeline caveats unless they materially affect the customer-facing conclusion
+- raw dumps
+- operator-only discrepancy analysis
+- internal debugging notes
 
 ## Client name aliases
 
@@ -156,6 +172,21 @@ Don Omar BCN tickets are sold through Vivaticket (entradasatualcance.com), NOT T
 - `ctr` is a percentage string (1.48 = 1.48%)
 - `impressions`, `clicks`, `reach` are integer strings
 
+### Extracting purchases from `actions` array
+The `actions` field is an array of objects. To get purchase count:
+```
+purchases = actions.find(a => a.action_type === "purchase")?.value || 0
+```
+Other useful action_types: `link_click`, `landing_page_view`, `omni_view_content`, `page_engagement`.
+Each entry has `{ action_type, value }`. Value is a string — parse to int.
+
+### CPA shortcut: `cost_per_action_type`
+Request `cost_per_action_type` in fields to get pre-calculated CPA:
+```bash
+curl -s "https://graph.facebook.com/v21.0/act_787610255314938/insights?fields=campaign_name,spend,cost_per_action_type,actions&level=campaign&date_preset=last_7d&access_token=$TOKEN"
+```
+Extract: `cost_per_action_type.find(a => a.action_type === "purchase")?.value` → CPA in dollars.
+
 ---
 
 ## Report Templates
@@ -230,7 +261,13 @@ Don Omar BCN tickets are sold through Vivaticket (entradasatualcance.com), NOT T
 ```
 **EATA Event Report -- [Event Name] ([City])**
 
-**Ticket Sales**:
+**Meta Ads (USD)**:
+- Total spend: $X,XXX
+- ROAS: X.Xx (Meta-attributed purchases)
+- Purchases: XX
+- CPA: $XX.XX
+
+**Ticket Sales (EUR — Vivaticket)**:
 - Tickets sold: X,XXX
 - Gross revenue: EUR X,XXX,XXX
 - Avg ticket price: EUR XXX.XX
@@ -241,6 +278,8 @@ Don Omar BCN tickets are sold through Vivaticket (entradasatualcance.com), NOT T
 - Projected sell-out: [date or "unlikely at current pace"]
 
 **Trend**: [Accelerating / steady / decelerating — compare recent velocity to historical avg]
+
+**Note**: Meta spend (USD) and ticket revenue (EUR) are separate currencies — do NOT combine into a single ROI figure.
 ```
 
 ---
@@ -252,7 +291,7 @@ To match Meta campaigns to TM events:
 2. Use fuzzy matching on city/artist names between campaign names and TM event data
 3. If you can't match, ask Jaime
 
-**Don Omar BCN is a special case** — no Meta campaigns exist for this event. Report EATA ticket data standalone (tickets sold, revenue in EUR, daily velocity, avg ticket price). Do NOT try to compute ad spend efficiency for Don Omar.
+**Don Omar BCN** — Meta campaign "Don Omar Barcelona" launched Mar 6 ($100/day). Tickets sold via Vivaticket/EATA (EUR), Meta spend in USD. When reporting Don Omar: show Meta spend (USD) and EATA ticket data (EUR) side by side. Do NOT combine USD and EUR into a single ROAS — report them separately. Use the EATA+Meta Event Report template below.
 
 Ad cost per TM ticket = Total Meta spend on event campaigns / Total TM tickets sold
 This is different from Meta CPA (which counts attributed purchases only). TM tickets sold includes organic.

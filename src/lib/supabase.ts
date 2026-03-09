@@ -1,6 +1,8 @@
+import { auth } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!url) {
@@ -14,3 +16,26 @@ if (!url) {
 export const supabaseAdmin = url && serviceKey
   ? createClient(url, serviceKey)
   : null;
+
+export async function createClerkSupabaseClient() {
+  if (!url || !anonKey) return null;
+
+  try {
+    const { userId } = await auth();
+    if (!userId) return null;
+
+    return createClient(url, anonKey, {
+      accessToken: async () => {
+        const { getToken } = await auth();
+        return getToken();
+      },
+      auth: {
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+        persistSession: false,
+      },
+    });
+  } catch {
+    return null;
+  }
+}

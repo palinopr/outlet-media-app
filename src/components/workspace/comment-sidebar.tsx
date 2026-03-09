@@ -8,13 +8,20 @@ import { CommentThread } from "./comment-thread";
 import type { WorkspaceComment } from "@/lib/workspace-types";
 
 interface CommentSidebarProps {
+  clientSlug?: string;
   pageId: string;
   isOpen: boolean;
   onClose: () => void;
   currentUserId: string;
 }
 
-export function CommentSidebar({ pageId, isOpen, onClose, currentUserId }: CommentSidebarProps) {
+export function CommentSidebar({
+  clientSlug,
+  pageId,
+  isOpen,
+  onClose,
+  currentUserId,
+}: CommentSidebarProps) {
   const [comments, setComments] = useState<WorkspaceComment[]>([]);
   const [loading, setLoading] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -24,7 +31,11 @@ export function CommentSidebar({ pageId, isOpen, onClose, currentUserId }: Comme
     if (!pageId) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/workspace/comments?page_id=${pageId}`);
+      const params = new URLSearchParams({ page_id: pageId });
+      if (clientSlug) {
+        params.set("client_slug", clientSlug);
+      }
+      const res = await fetch(`/api/workspace/comments?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
         setComments(data.comments ?? []);
@@ -34,7 +45,7 @@ export function CommentSidebar({ pageId, isOpen, onClose, currentUserId }: Comme
     } finally {
       setLoading(false);
     }
-  }, [pageId]);
+  }, [clientSlug, pageId]);
 
   useEffect(() => {
     if (isOpen) fetchComments();

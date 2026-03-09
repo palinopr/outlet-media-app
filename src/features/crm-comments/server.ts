@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { getMemberAccessForSlug } from "@/lib/member-access";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 
 export type CrmCommentVisibility = "admin_only" | "shared";
 
@@ -56,10 +56,27 @@ function mapCrmComment(row: Record<string, unknown>): CrmComment {
   };
 }
 
-export async function listCrmComments(options: ListCrmCommentsOptions): Promise<CrmComment[]> {
-  if (!supabaseAdmin) return [];
+async function getCrmCommentsReadClient(clientSlug?: string | null) {
+  if (!supabaseAdmin || !clientSlug) return supabaseAdmin;
 
-  let query = supabaseAdmin
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
+
+export async function listCrmComments(options: ListCrmCommentsOptions): Promise<CrmComment[]> {
+  const db = await getCrmCommentsReadClient(options.clientSlug);
+  if (!db) return [];
+
+  let query = db
     .from("crm_comments")
     .select(
       "id, contact_id, client_slug, content, visibility, author_id, author_name, parent_comment_id, resolved, created_at, updated_at",
@@ -84,9 +101,10 @@ export async function listCrmComments(options: ListCrmCommentsOptions): Promise<
 export async function listCrmDiscussionThreads(
   options: ListCrmDiscussionThreadsOptions = {},
 ): Promise<CrmDiscussionThread[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getCrmCommentsReadClient(options.clientSlug);
+  if (!db) return [];
 
-  let query = supabaseAdmin
+  let query = db
     .from("crm_comments")
     .select("id, contact_id, client_slug, author_name, content, created_at")
     .eq("resolved", false)
@@ -113,7 +131,7 @@ export async function listCrmDiscussionThreads(
   const contactNames = new Map<string, string>();
 
   if (contactIds.length > 0) {
-    const { data: contactRows, error: contactError } = await supabaseAdmin
+    const { data: contactRows, error: contactError } = await db
       .from("crm_contacts" as never)
       .select("id, full_name")
       .in("id", contactIds);

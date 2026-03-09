@@ -1,0 +1,3 @@
+{
+  "/api/meta/campaigns/[id]/status/route": "app/api/meta/campaigns/[id]/status/route.js"
+}

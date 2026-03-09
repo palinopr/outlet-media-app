@@ -1,0 +1,3 @@
+{
+  "/client/[slug]/crm/[contactId]/page": "app/client/[slug]/crm/[contactId]/page.js"
+}

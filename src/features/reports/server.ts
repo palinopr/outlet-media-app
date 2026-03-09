@@ -1,8 +1,9 @@
+import { currentUser } from "@clerk/nextjs/server";
 import { buildTrendData } from "@/app/client/[slug]/lib";
 import type { TmEvent } from "@/app/client/[slug]/types";
 import type { ScopeFilter } from "@/lib/member-access";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import {
@@ -112,9 +113,27 @@ export interface ReportsWorkflowData {
   opsSummary: DashboardOpsSummary;
 }
 
+async function getReportsReadClient(options: { clientSlug?: string | null }) {
+  if (!supabaseAdmin) return null;
+  if (!options.clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
+
 export async function getReportsData(
   options: GetReportsDataOptions = {},
 ): Promise<ReportsData> {
+  const reportsDb = await getReportsReadClient(options);
   const result = await fetchAllCampaigns("30", options.clientSlug ?? null);
 
   let campaigns = result.campaigns.map(toReportsCampaign);
@@ -134,7 +153,7 @@ export async function getReportsData(
       campaign_id: row.campaignId,
     }));
 
-  let eventsQuery = supabaseAdmin
+  let eventsQuery = reportsDb
     ?.from("tm_events")
     .select("*")
     .order("date", { ascending: true })

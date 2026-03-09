@@ -1,0 +1,1 @@
+{"version":3,"sources":["../../../../src/app/client/%5Bslug%5D/reports/loading.tsx"],"sourcesContent":["export { default } from \"@/components/client/loading-skeleton\";\n"],"names":[],"mappings":"wCAAA,IAAA,EAAA,EAAA,CAAA,CAAA"}

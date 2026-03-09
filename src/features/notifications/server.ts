@@ -1,4 +1,4 @@
-import { clerkClient } from "@clerk/nextjs/server";
+import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import {
   approvalMatchesCampaignOwnership,
@@ -6,7 +6,7 @@ import {
 } from "@/features/campaigns/ownership-sync";
 import type { ScopeFilter } from "@/lib/member-access";
 import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import type { AppNotification, CreateNotificationInput } from "./types";
 
 interface ListNotificationsForUserOptions {
@@ -71,6 +71,27 @@ function mapNotificationRow(row: Record<string, unknown>): AppNotification {
   };
 }
 
+async function getNotificationHelperReadClient(options: {
+  clientSlug?: string | null;
+  db: NonNullable<typeof supabaseAdmin>;
+}) {
+  if (!options.clientSlug) {
+    return supabaseAdmin;
+  }
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return options.db;
+}
+
 export async function createNotification(data: CreateNotificationInput) {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
@@ -96,10 +117,17 @@ export async function listNotificationsForUser(
   userId: string,
   options: ListNotificationsForUserOptions = {},
 ): Promise<AppNotification[]> {
-  if (!supabaseAdmin || !userId) return [];
+  if (!userId) return [];
+
+  const notificationsDb = (await createClerkSupabaseClient()) ?? supabaseAdmin;
+  if (!notificationsDb) return [];
+  const helperDb = await getNotificationHelperReadClient({
+    clientSlug: options.clientSlug,
+    db: notificationsDb,
+  });
 
   const requestedLimit = options.limit ?? 50;
-  let query = supabaseAdmin
+  let query = notificationsDb
     .from("notifications" as never)
     .select(NOTIFICATION_SELECT)
     .eq("user_id", userId)
@@ -122,6 +150,7 @@ export async function listNotificationsForUser(
   if (options.clientSlug) {
     const fallbackNotifications = await listCampaignOwnedNotificationsForClient({
       clientSlug: options.clientSlug,
+      db: helperDb,
       existingNotificationIds: new Set(notifications.map((notification) => notification.id)),
       limit: Math.max(requestedLimit * 4, 50),
       userId,
@@ -134,10 +163,10 @@ export async function listNotificationsForUser(
 
   const visibleNotifications =
     options.clientSlug && options.scope
-      ? await filterNotificationsByScope(notifications, options.clientSlug, options.scope)
+      ? await filterNotificationsByScope(notifications, options.clientSlug, options.scope, helperDb)
       : notifications;
 
-  return enrichNotificationsForRouting(visibleNotifications.slice(0, requestedLimit));
+  return enrichNotificationsForRouting(visibleNotifications.slice(0, requestedLimit), helperDb);
 }
 
 export async function listClientNotificationRecipients(
@@ -409,8 +438,8 @@ async function mapScopedEntityRelations(
   idField: string,
   relationField: string,
   entityIds: string[],
+  db: typeof supabaseAdmin = supabaseAdmin,
 ): Promise<Map<string, string>> {
-  const db = supabaseAdmin;
   if (!db || entityIds.length === 0) return new Map();
 
   const { data, error } = await db
@@ -437,8 +466,15 @@ async function mapNotificationRouteRelations(
   relationField: string,
   routeEntityType: "asset" | "campaign" | "crm_contact" | "event",
   entityIds: string[],
+  db: typeof supabaseAdmin = supabaseAdmin,
 ): Promise<Map<string, NotificationRouteContext>> {
-  const mapping = await mapScopedEntityRelations(table, idField, relationField, entityIds);
+  const mapping = await mapScopedEntityRelations(
+    table,
+    idField,
+    relationField,
+    entityIds,
+    db,
+  );
 
   return new Map(
     Array.from(mapping.entries()).map(([id, routeEntityId]) => [
@@ -452,8 +488,10 @@ async function mapNotificationRouteRelations(
   );
 }
 
-async function resolveNotificationRouteMaps(notifications: AppNotification[]) {
-  const db = supabaseAdmin;
+async function resolveNotificationRouteMaps(
+  notifications: AppNotification[],
+  db: typeof supabaseAdmin = supabaseAdmin,
+) {
   if (!db || notifications.length === 0) return new Map<string, NotificationRouteContext>();
 
   const campaignCommentIds: string[] = [];
@@ -518,6 +556,7 @@ async function resolveNotificationRouteMaps(notifications: AppNotification[]) {
       "campaign_id",
       "campaign",
       campaignCommentIds,
+      db,
     ),
     mapNotificationRouteRelations(
       "campaign_action_items",
@@ -525,30 +564,55 @@ async function resolveNotificationRouteMaps(notifications: AppNotification[]) {
       "campaign_id",
       "campaign",
       campaignActionItemIds,
+      db,
     ),
-    mapNotificationRouteRelations("event_comments", "id", "event_id", "event", eventCommentIds),
+    mapNotificationRouteRelations(
+      "event_comments",
+      "id",
+      "event_id",
+      "event",
+      eventCommentIds,
+      db,
+    ),
     mapNotificationRouteRelations(
       "event_follow_up_items",
       "id",
       "event_id",
       "event",
       eventFollowUpIds,
+      db,
     ),
-    mapNotificationRouteRelations("asset_comments", "id", "asset_id", "asset", assetCommentIds),
+    mapNotificationRouteRelations(
+      "asset_comments",
+      "id",
+      "asset_id",
+      "asset",
+      assetCommentIds,
+      db,
+    ),
     mapNotificationRouteRelations(
       "asset_follow_up_items",
       "id",
       "asset_id",
       "asset",
       assetFollowUpIds,
+      db,
     ),
-    mapNotificationRouteRelations("crm_comments", "id", "contact_id", "crm_contact", crmCommentIds),
+    mapNotificationRouteRelations(
+      "crm_comments",
+      "id",
+      "contact_id",
+      "crm_contact",
+      crmCommentIds,
+      db,
+    ),
     mapNotificationRouteRelations(
       "crm_follow_up_items",
       "id",
       "contact_id",
       "crm_contact",
       crmFollowUpIds,
+      db,
     ),
   ]);
 
@@ -564,7 +628,12 @@ async function resolveNotificationRouteMaps(notifications: AppNotification[]) {
   ]);
 
   if (approvalIds.length > 0) {
-    const { data, error } = await db
+    const approvalDb = supabaseAdmin ?? db;
+    if (!approvalDb) {
+      return routeMap;
+    }
+
+    const { data, error } = await approvalDb
       .from("approval_requests" as never)
       .select("id, entity_type, entity_id, metadata, page_id, task_id")
       .in("id", approvalIds);
@@ -583,8 +652,9 @@ async function resolveNotificationRouteMaps(notifications: AppNotification[]) {
 
 async function enrichNotificationsForRouting(
   notifications: AppNotification[],
+  db: typeof supabaseAdmin = supabaseAdmin,
 ): Promise<AppNotification[]> {
-  const routeMap = await resolveNotificationRouteMaps(notifications);
+  const routeMap = await resolveNotificationRouteMaps(notifications, db);
   if (routeMap.size === 0) return notifications;
 
   return notifications.map((notification) => {
@@ -687,8 +757,8 @@ async function resolveNotificationScopeMaps(
   notifications: AppNotification[],
   clientSlug: string,
   scope: ScopeFilter,
+  db: typeof supabaseAdmin = supabaseAdmin,
 ): Promise<NotificationScopeMaps> {
-  const db = supabaseAdmin;
   const maps = buildNotificationScopeMaps(scope);
   if (!db) return maps;
   const campaignCommentIds: string[] = [];
@@ -735,15 +805,28 @@ async function resolveNotificationScopeMaps(
 
   const [campaignComments, campaignActionItems, eventComments, eventFollowUps] =
     await Promise.all([
-      mapScopedEntityRelations("campaign_comments", "id", "campaign_id", campaignCommentIds),
+      mapScopedEntityRelations(
+        "campaign_comments",
+        "id",
+        "campaign_id",
+        campaignCommentIds,
+        db,
+      ),
       mapScopedEntityRelations(
         "campaign_action_items",
         "id",
         "campaign_id",
         campaignActionItemIds,
+        db,
       ),
-      mapScopedEntityRelations("event_comments", "id", "event_id", eventCommentIds),
-      mapScopedEntityRelations("event_follow_up_items", "id", "event_id", eventFollowUpIds),
+      mapScopedEntityRelations("event_comments", "id", "event_id", eventCommentIds, db),
+      mapScopedEntityRelations(
+        "event_follow_up_items",
+        "id",
+        "event_id",
+        eventFollowUpIds,
+        db,
+      ),
     ]);
 
   for (const [id, campaignId] of campaignComments) {
@@ -774,8 +857,14 @@ async function resolveNotificationScopeMaps(
     ...assetIds,
     ...(
       await Promise.all([
-        mapScopedEntityRelations("asset_comments", "id", "asset_id", assetCommentIds),
-        mapScopedEntityRelations("asset_follow_up_items", "id", "asset_id", assetFollowUpIds),
+        mapScopedEntityRelations("asset_comments", "id", "asset_id", assetCommentIds, db),
+        mapScopedEntityRelations(
+          "asset_follow_up_items",
+          "id",
+          "asset_id",
+          assetFollowUpIds,
+          db,
+        ),
       ])
     ).flatMap((mapping) => Array.from(mapping.values())),
   ];
@@ -788,8 +877,14 @@ async function resolveNotificationScopeMaps(
   maps.allowedAssetIds = allowedAssetIds;
 
   const [assetCommentMap, assetFollowUpMap] = await Promise.all([
-    mapScopedEntityRelations("asset_comments", "id", "asset_id", assetCommentIds),
-    mapScopedEntityRelations("asset_follow_up_items", "id", "asset_id", assetFollowUpIds),
+    mapScopedEntityRelations("asset_comments", "id", "asset_id", assetCommentIds, db),
+    mapScopedEntityRelations(
+      "asset_follow_up_items",
+      "id",
+      "asset_id",
+      assetFollowUpIds,
+      db,
+    ),
   ]);
 
   for (const [id, assetId] of assetCommentMap) {
@@ -880,25 +975,28 @@ export async function filterNotificationsByScope(
   notifications: AppNotification[],
   clientSlug: string,
   scope: ScopeFilter,
+  db: typeof supabaseAdmin = supabaseAdmin,
 ): Promise<AppNotification[]> {
-  const maps = await resolveNotificationScopeMaps(notifications, clientSlug, scope);
+  const maps = await resolveNotificationScopeMaps(notifications, clientSlug, scope, db);
   return notifications.filter((notification) => notificationMatchesScope(notification, maps));
 }
 
 async function listCampaignOwnedNotificationsForClient(options: {
   clientSlug: string;
+  db: typeof supabaseAdmin;
   existingNotificationIds: Set<string>;
   limit: number;
   userId: string;
 }) {
-  if (!supabaseAdmin) return [];
+  const notificationsDb = options.db ?? supabaseAdmin;
+  if (!notificationsDb) return [];
 
   const effectiveCampaignIds = new Set(
     await listEffectiveCampaignIdsForClientSlug(options.clientSlug),
   );
   if (effectiveCampaignIds.size === 0) return [];
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await notificationsDb
     .from("notifications" as never)
     .select(NOTIFICATION_SELECT)
     .eq("user_id", options.userId)
@@ -939,12 +1037,19 @@ async function listCampaignOwnedNotificationsForClient(options: {
   }
 
   const [campaignComments, campaignActionItems, approvalRows] = await Promise.all([
-    mapScopedEntityRelations("campaign_comments", "id", "campaign_id", campaignCommentIds),
+    mapScopedEntityRelations(
+      "campaign_comments",
+      "id",
+      "campaign_id",
+      campaignCommentIds,
+      notificationsDb,
+    ),
     mapScopedEntityRelations(
       "campaign_action_items",
       "id",
       "campaign_id",
       campaignActionItemIds,
+      notificationsDb,
     ),
     listApprovalRowsForClientSlug(options.clientSlug, approvalIds),
   ]);

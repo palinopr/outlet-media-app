@@ -34,6 +34,22 @@ Examples:
 
 If a workflow depends on "someone noticing something," look for the missing event.
 
+Event-driven does not just mean "write a log row."
+
+For product-critical events, store enough envelope data to make the event safe later:
+- `event_version` so event shape changes do not break older consumers
+- `occurred_at` so business time is explicit
+- `source` so the producer is explicit
+- `correlation_id` and `causation_id` so cross-step traces can be reconstructed
+- `idempotency_key` when the producer or consumer may retry
+
+Consumers must be safe to replay.
+
+If the same event is delivered twice, the second pass should be a no-op instead of creating duplicate work, duplicate notifications, or duplicate external actions.
+
+If a database mutation and an external side effect both matter, do not rely on "write state now, enqueue later if nothing fails."
+Write the business change and the outbound work record in the same transaction through an outbox-style pattern.
+
 ## 3. Build The Audit Trail In By Default
 
 Important actions should be traceable.
@@ -72,6 +88,15 @@ Agents should not:
 - rely on hidden context
 - become the only place business logic lives
 
+Production agents need more than a prompt.
+
+Ship autonomous workflows with:
+- narrow tool scope
+- structured inputs and outputs where possible
+- explicit approval gates for risky actions
+- visible failure paths
+- eval or fixture coverage before enabling real outbound side effects
+
 ## 6. Design For Multi-Tenant Visibility
 
 For every new surface, ask:
@@ -81,6 +106,21 @@ For every new surface, ask:
 - what should agents be allowed to do?
 
 Permissions should be explicit, composable, and tied to real domain rules.
+
+App-level checks are necessary but not sufficient.
+
+Important tenant boundaries should also be enforced in the database layer.
+Prefer Clerk/Supabase claim-backed RLS for tenant reads and writes where practical, and reserve service-role access for tightly controlled server paths.
+For user-facing server reads, prefer a Clerk-scoped Supabase client so those RLS policies are actually exercised in production paths instead of only documented. Keep service-role reads only for internal/admin-global surfaces that do not yet have an equivalent admin-safe RLS model.
+Do not partially migrate a loader that joins multiple tables unless every user-facing table in that read path has compatible RLS. Mixed permission models force hidden service-role fallbacks and make the access story harder to reason about.
+Use the database to enforce the tenant boundary first, and keep finer campaign or event scope filters in app loaders when the row model does not encode that scope directly.
+For workflow rows linked to a parent entity, derive tenant access from the parent when that parent is the real owner. Do not trust a copied `client_slug` alone if the parent record can be reassigned later.
+For campaign-owned workflow rows, derive access from the effective campaign owner, including explicit overrides, before falling back to copied row-level client fields.
+For background worker ledgers such as `agent_tasks`, do not grant direct broad reads just because the runtime needs access. Client-facing reads should inherit from the shared product event or owning entity that requested the work.
+Keep credential-bearing tables such as OAuth token stores server-only. Expose them through safe server queries or views, not direct user-readable tables.
+Do not put secrets in member-readable config tables. If a setting must be readable by client members for feature gating, keep it non-secret or split the secret part into a separate server-only table.
+For shared roster tables such as `client_members`, member-readable RLS is acceptable when the surface explicitly needs same-client team visibility. Keep those rows limited to non-secret identity and role metadata.
+When adding Postgres helper functions, set an explicit `search_path` instead of relying on the session default so security linting stays clean and function resolution cannot drift.
 
 ## 7. Put Cross-App Workflows First
 
@@ -198,3 +238,33 @@ Prefer primary sources and concrete examples over memory when:
 - a library API is unclear
 - a framework behavior is version-sensitive
 - a pattern choice would affect architecture or production behavior
+
+## 16. Earn Standalone Surfaces
+
+Do not promote every capability into its own top-level page.
+
+Prefer to:
+- start with the primary operating context such as campaign detail, event detail, admin CRM, or the admin client/account hub
+- embed supporting workflow panels inside that context first
+- add a standalone navigation item only when current users clearly need to manage that capability directly and the surface will not duplicate existing workflow logic
+
+Current packaging rule:
+- client-facing top-level web should stay focused on campaigns and events until another surface has clearly earned its way in
+- deeper capabilities such as approvals, conversations, assets, agent follow-through, and CRM should usually be embedded first instead of immediately becoming separate client tabs
+
+## 17. Remove Dead Paths And Duplicate Flows
+
+Dead code and dead UI both create product drag.
+
+Do not ship:
+- dead nav items
+- parked placeholder routes
+- old and new versions of the same workflow exposed at the same time by default
+- separate loaders and mutations for the same business concept when one shared feature module should exist
+
+When replacing or narrowing a surface:
+- remove the old navigation entry
+- redirect or gate the direct route in the same pass
+- delete the replaced code after the new path is stable instead of letting it linger indefinitely
+
+"Maybe later" is not enough reason to keep a weak or duplicate surface alive.

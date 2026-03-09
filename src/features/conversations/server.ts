@@ -1,5 +1,6 @@
+import { currentUser } from "@clerk/nextjs/server";
 import type { ScopeFilter } from "@/lib/member-access";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import {
@@ -22,6 +23,23 @@ export interface ConversationsCenter {
   threads: ConversationThread[];
 }
 
+async function getConversationReadClient(options: GetConversationsCenterOptions) {
+  if (!supabaseAdmin) return null;
+  if (options.mode !== "client" || !options.clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
+
 function stringValue(value: unknown) {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
@@ -41,7 +59,8 @@ export function matchesConversationKinds(
 export async function listConversationThreads(
   options: GetConversationsCenterOptions,
 ): Promise<ConversationThread[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getConversationReadClient(options);
+  if (!db) return [];
 
   const limitPerKind = Math.max((options.limit ?? 12) * 4, 24);
   const effectiveClientCampaignIds = options.clientSlug
@@ -50,7 +69,7 @@ export async function listConversationThreads(
   const allowedCampaignIds = options.scope?.allowedCampaignIds ?? effectiveClientCampaignIds;
   const allowedEventIds = options.scope?.allowedEventIds ?? null;
 
-  let campaignQuery = supabaseAdmin
+  let campaignQuery = db
     .from("campaign_comments")
     .select("id, campaign_id, client_slug, author_name, content, created_at")
     .eq("resolved", false)
@@ -58,7 +77,7 @@ export async function listConversationThreads(
     .order("created_at", { ascending: false })
     .limit(limitPerKind);
 
-  let crmQuery = supabaseAdmin
+  let crmQuery = db
     .from("crm_comments")
     .select("id, contact_id, client_slug, author_name, content, created_at")
     .eq("resolved", false)
@@ -66,7 +85,7 @@ export async function listConversationThreads(
     .order("created_at", { ascending: false })
     .limit(limitPerKind);
 
-  let assetQuery = supabaseAdmin
+  let assetQuery = db
     .from("asset_comments" as never)
     .select("id, asset_id, client_slug, author_name, content, created_at")
     .eq("resolved", false)
@@ -74,7 +93,7 @@ export async function listConversationThreads(
     .order("created_at", { ascending: false })
     .limit(limitPerKind);
 
-  let eventQuery = supabaseAdmin
+  let eventQuery = db
     .from("event_comments" as never)
     .select("id, event_id, client_slug, author_name, content, created_at")
     .eq("resolved", false)
@@ -181,52 +200,52 @@ export async function listConversationThreads(
     linkedEventItemRows,
   ] = await Promise.all([
     campaignIds.length > 0
-      ? supabaseAdmin
+      ? db
           .from("meta_campaigns")
           .select("campaign_id, name")
           .in("campaign_id", campaignIds)
       : Promise.resolve({ data: [] }),
     contactIds.length > 0
-      ? supabaseAdmin
+      ? db
           .from("crm_contacts" as never)
           .select("id, full_name")
           .in("id", contactIds)
       : Promise.resolve({ data: [] }),
     assetIds.length > 0
-      ? supabaseAdmin
+      ? db
           .from("ad_assets")
           .select("id, file_name")
           .in("id", assetIds)
       : Promise.resolve({ data: [] }),
     eventIds.length > 0
-      ? supabaseAdmin
+      ? db
           .from("tm_events")
           .select("id, name, artist")
           .in("id", eventIds)
       : Promise.resolve({ data: [] }),
     campaignCommentIds.length > 0
-      ? supabaseAdmin
+      ? db
           .from("campaign_action_items")
           .select("id, source_entity_id")
           .eq("source_entity_type", "campaign_comment")
           .in("source_entity_id", campaignCommentIds)
       : Promise.resolve({ data: [] }),
     crmCommentIds.length > 0
-      ? supabaseAdmin
+      ? db
           .from("crm_follow_up_items" as never)
           .select("id, source_entity_id")
           .eq("source_entity_type", "crm_comment")
           .in("source_entity_id", crmCommentIds)
       : Promise.resolve({ data: [] }),
     assetCommentIds.length > 0
-      ? supabaseAdmin
+      ? db
           .from("asset_follow_up_items" as never)
           .select("id, source_entity_id")
           .eq("source_entity_type", "asset_comment")
           .in("source_entity_id", assetCommentIds)
       : Promise.resolve({ data: [] }),
     eventCommentIds.length > 0
-      ? supabaseAdmin
+      ? db
           .from("event_follow_up_items" as never)
           .select("id, source_entity_id")
           .eq("source_entity_type", "event_comment")

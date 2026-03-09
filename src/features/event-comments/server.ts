@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 
 export type EventCommentVisibility = "admin_only" | "shared";
 
@@ -39,12 +39,32 @@ function mapEventComment(row: Record<string, unknown>): EventComment {
   };
 }
 
+async function getEventCommentsReadClient(options: {
+  audience?: "all" | EventCommentVisibility;
+}) {
+  if (!supabaseAdmin) return null;
+  if (options.audience !== "shared") return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
+
 export async function listEventComments(
   options: ListEventCommentsOptions,
 ): Promise<EventComment[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getEventCommentsReadClient(options);
+  if (!db) return [];
 
-  let query = supabaseAdmin
+  let query = db
     .from("event_comments" as never)
     .select(
       "id, event_id, client_slug, content, visibility, author_id, author_name, parent_comment_id, resolved, created_at, updated_at",

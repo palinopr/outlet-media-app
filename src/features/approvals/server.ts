@@ -2,7 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import {
   createSystemCampaignActionItem,
@@ -141,14 +141,13 @@ function mapApproval(row: Record<string, unknown>): ApprovalRequest {
 }
 
 function buildApprovalListQuery(
+  db: NonNullable<typeof supabaseAdmin>,
   requestedLimit: number,
   shouldOverfetchForScope: boolean,
   options: ListApprovalRequestsOptions,
   clientSlug?: string | null,
 ) {
-  if (!supabaseAdmin) return null;
-
-  let query = supabaseAdmin
+  let query = db
     .from("approval_requests")
     .select(APPROVAL_SELECT)
     .order("created_at", { ascending: false })
@@ -179,6 +178,23 @@ function buildApprovalListQuery(
   }
 
   return query;
+}
+
+async function getApprovalReadClient(options: ListApprovalRequestsOptions) {
+  if (!supabaseAdmin) return null;
+  if (!options.clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
 }
 
 function shouldEnqueueApprovalTriage(approval: ApprovalRequest) {
@@ -453,7 +469,8 @@ export async function canAccessApprovalRequest(userId: string, approval: Approva
 export async function listApprovalRequests(
   options: ListApprovalRequestsOptions = {},
 ): Promise<ApprovalRequest[]> {
-  if (!supabaseAdmin) return [];
+  const approvalReadDb = await getApprovalReadClient(options);
+  if (!approvalReadDb || !supabaseAdmin) return [];
 
   const requestedLimit = options.limit ?? 8;
   const shouldOverfetchForScope =
@@ -463,10 +480,17 @@ export async function listApprovalRequests(
     ? await listEffectiveCampaignIdsForClientSlug(options.clientSlug)
     : [];
   const [primaryRes, campaignLinkedRes] = await Promise.all([
-    buildApprovalListQuery(requestedLimit, shouldOverfetchForScope, options, options.clientSlug) ??
+    buildApprovalListQuery(
+      approvalReadDb,
+      requestedLimit,
+      shouldOverfetchForScope,
+      options,
+      options.clientSlug,
+    ) ??
       Promise.resolve({ data: [], error: null }),
     options.clientSlug && effectiveCampaignIds.length > 0
       ? buildApprovalListQuery(
+          supabaseAdmin,
           Math.max(requestedLimit * 8, 40),
           shouldOverfetchForScope,
           options,

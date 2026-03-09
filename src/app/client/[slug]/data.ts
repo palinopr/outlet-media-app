@@ -1,4 +1,5 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { currentUser } from "@clerk/nextjs/server";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { type DateRange, RANGE_LABELS } from "@/lib/constants";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
 import { computeBlendedRoas } from "@/lib/formatters";
@@ -37,6 +38,22 @@ const EMPTY: ClientData = {
   rangeLabel: "Last 7 days",
   trendData: [],
 };
+
+async function getClientPortalReadClient() {
+  if (!supabaseAdmin) return null;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
 
 // --- Map shared MetaCampaignCard to client portal CampaignCard ---
 
@@ -145,7 +162,9 @@ export async function getEventsPageData(
   slug: string,
   scope?: ScopeFilter,
 ): Promise<EventsPageData> {
-  let query = supabaseAdmin
+  const db = await getClientPortalReadClient();
+
+  let query = db
     ?.from("tm_events")
     .select("*")
     .eq("client_slug", slug)
@@ -180,8 +199,10 @@ export async function getData(
   range: DateRange,
   scope?: ScopeFilter,
 ): Promise<ClientData> {
+  const db = await getClientPortalReadClient();
+
   // Build events query (independent of Meta API)
-  let eventsQuery = supabaseAdmin
+  let eventsQuery = db
     ?.from("tm_events")
     .select("*")
     .eq("client_slug", slug)
@@ -224,9 +245,9 @@ export async function getData(
 
   // Demographics depend on event tm_ids
   let audience: AudienceProfile | null = null;
-  if (tmEvents.length > 0 && supabaseAdmin) {
+  if (tmEvents.length > 0 && db) {
     const tmIds = tmEvents.map((e) => e.tm_id);
-    const { data: demoRows } = await supabaseAdmin
+    const { data: demoRows } = await db
       .from("tm_event_demographics")
       .select("*")
       .in("tm_id", tmIds);

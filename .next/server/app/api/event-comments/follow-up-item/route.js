@@ -1,0 +1,10 @@
+var R=require("../../../../chunks/[turbopack]_runtime.js")("server/app/api/event-comments/follow-up-item/route.js")
+R.c("server/chunks/[root-of-the-server]__1e68ffd6._.js")
+R.c("server/chunks/node_modules_next_dist_79f1aee4._.js")
+R.c("server/chunks/_bec815dc._.js")
+R.c("server/chunks/[root-of-the-server]__d7355d04._.js")
+R.c("server/chunks/node_modules_eebf5144._.js")
+R.c("server/chunks/src_lib_supabase_ts_791d4253._.js")
+R.c("server/chunks/ce889_server_app_api_event-comments_follow-up-item_route_actions_b119457e.js")
+R.m(878424)
+module.exports=R.m(878424).exports

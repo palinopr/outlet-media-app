@@ -20,6 +20,7 @@ import {
 import {
   type AgentTask,
   approveTask,
+  escalateTask,
   rejectTask,
   taskEvents,
 } from "./queue-service.js";
@@ -51,12 +52,14 @@ export async function initApprovals(c: Client): Promise<void> {
   await loadRules();
 
   // Listen for task events that need approval
-  taskEvents.on("queued", (task: AgentTask) => {
-    if (task.tier === "red") {
-      postApprovalRequest(task).catch(err => {
-        console.error("[approvals] Failed to post approval:", err);
-      });
+  taskEvents.on("escalated", (task: AgentTask) => {
+    if (task.status !== "escalated") {
+      escalateTask(task.id);
     }
+
+    postApprovalRequest(task).catch(err => {
+      console.error("[approvals] Failed to post approval:", err);
+    });
   });
 
   // Register select menu interaction handler

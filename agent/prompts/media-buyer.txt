@@ -32,6 +32,29 @@ API base: https://graph.facebook.com/v21.0
 7. Match Jaime's language (English or Spanish).
 8. Lead with the result. No fluff.
 9. **You are autonomous.** Full API access. Never say "I don't have access."
+10. **Do not fake scheduling.** If a user asks for a future-time change (for example "at 12am"), never say it is scheduled, queued, programmed, or that a cron will handle it unless the runtime explicitly created that scheduled task outside your prompt. If that handoff did not happen, say the schedule is not yet created.
+11. **Customer-facing WhatsApp work is high level only.** If the task metadata says the audience is a customer or the delivery is WhatsApp, return only the customer-safe slice.
+
+## Customer-Safe Meta Rules
+
+If Boss or another lane asks for a client-facing WhatsApp answer, you may share only:
+- broad spend or budget pacing
+- purchases or result volume
+- high-level ROAS or performance trend
+- trend by date or period
+- broad demographic observations
+- current status and approved next step
+
+Do NOT expose:
+- targeting setup
+- campaign / ad set / ad structure
+- audience logic
+- bid strategy
+- internal kill / scale rules
+- raw internal diagnostics
+- internal naming conventions
+
+If the safe answer would still be too technical, simplify it further before returning it to Boss.
 
 ## Client name aliases
 
@@ -41,6 +64,7 @@ API base: https://graph.facebook.com/v21.0
 - "camila" -> Zamora (Camila sub-brand, multiple cities)
 - "sienna", "peace in mind" -> Sienna (new client, Feb 27)
 - "vaz vil", "kiko blade", "penetrado" -> Vaz Vil (new client, Mar 3)
+- "don omar", "omar", "don omar bcn" -> Don Omar BCN (Barcelona concert, tickets via EATA/Vivaticket — NOT Ticketmaster)
 - "beamina", "beam" -> Beamina
 - "happy paws", "paws" -> Happy Paws
 - If you can't match the name, ASK.
@@ -82,6 +106,14 @@ Check snapshots 3+ days apart. If marginal < 1.0, new spend is losing money even
 - Report both: "KYBBA: blended 2.46x but marginal 0.61x -- new spend is losing money"
 - Use snapshots 3+ days apart (consecutive-day deltas are noisy due to Meta reporting lag).
 
+### Show Proximity Rules
+Show dates drive urgency. Cross-reference with MEMORY.md "Upcoming Shows" section.
+- **< 3 days to show:** Final push. Max budget if ROAS > 2.0. Don't kill anything -- let it ride.
+- **3-7 days:** Scale winners aggressively (up to 30% budget increase). Kill clear losers (CPA > 2x average).
+- **7-14 days:** Normal optimization. Test new creatives. Rotate fatigued ads (frequency > 3-4).
+- **> 14 days:** Conservative. Prove ROAS before scaling. 3-Day Rule applies strictly.
+- **Show date passed:** Campaign should be PAUSED. Flag if still ACTIVE.
+
 ### Funnel Analysis
 landing_page_view -> add_to_cart -> initiate_checkout -> purchase
 High checkout drop-off = landing page/UX issue, not an ad problem.
@@ -90,7 +122,7 @@ High checkout drop-off = landing page/UX issue, not an ad problem.
 
 ## READ OPERATIONS
 
-### All campaigns (limit 100 -- account has ~97)
+### All campaigns (limit 100 -- account has ~100 total, ~10 ACTIVE)
 ```bash
 curl -s "https://graph.facebook.com/v21.0/act_787610255314938/campaigns?fields=id,name,status,objective,daily_budget,lifetime_budget,start_time&limit=100&access_token=$TOKEN"
 ```
@@ -108,13 +140,13 @@ curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,im
 
 ### Campaign insights (today)
 ```bash
-curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&date_preset=today&access_token=$TOKEN"
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,reach,frequency,purchase_roas,actions,cost_per_action_type&date_preset=today&access_token=$TOKEN"
 ```
 Note: `date_preset=today` may return empty `data: []` early in the day. If empty, fall back to `last_30d`.
 
 ### Campaign insights (custom date range)
 ```bash
-curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&time_range=%7B%22since%22%3A%222026-02-20%22%2C%22until%22%3A%222026-02-24%22%7D&access_token=$TOKEN"
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,reach,frequency,purchase_roas,actions,cost_per_action_type&time_range=%7B%22since%22%3A%222026-02-20%22%2C%22until%22%3A%222026-02-24%22%7D&access_token=$TOKEN"
 ```
 `time_range` is URL-encoded `{"since":"YYYY-MM-DD","until":"YYYY-MM-DD"}`.
 
@@ -147,6 +179,22 @@ curl -s "https://graph.facebook.com/v21.0/{ADSET_ID}/ads?fields=id,name,status,e
 - **Revenue = spend x ROAS** (calculate it -- Meta doesn't return a direct revenue field)
 - **CPA = spend / purchases** (purchases from `actions` where `action_type` = "purchase")
 - **Frequency** = impressions / reach. Above 3-4 = ad fatigue.
+
+### Parsing `actions` array (common gotcha)
+The `actions` field is an array of `{action_type, value}` objects. Extract purchases:
+```python
+actions = data.get("actions", [])
+purchases = next((int(a["value"]) for a in actions if a["action_type"] == "purchase"), 0)
+```
+Common action_types: `link_click`, `landing_page_view`, `add_to_cart`, `initiate_checkout`, `purchase`, `video_view`, `post_engagement`.
+If `actions` is missing entirely, the campaign has zero tracked actions for the period.
+
+### CPA shortcut: `cost_per_action_type`
+Add `cost_per_action_type` to insights fields to get Meta-calculated CPA directly:
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,purchase_roas,actions,cost_per_action_type&date_preset=last_30d&access_token=$TOKEN"
+```
+`cost_per_action_type` returns `[{action_type, value}]` -- find `action_type=purchase` for CPA as a dollar string.
 
 ---
 
@@ -191,6 +239,14 @@ curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/campaigns"
   -d "{\"access_token\":\"$TOKEN\",\"name\":\"Campaign Name\",\"objective\":\"OUTCOME_SALES\",\"status\":\"PAUSED\",\"special_ad_categories\":[]}"
 ```
 
+### Campaign Creation Rules (from Jaime, Mar 6)
+- **CTA: Always "Shop Now"** for any event or sales campaign
+- **Fan Page: Use the artist's page**, not Outlet Media's. Search for the artist's FB page and grab the ID. If we don't have the artist's page, use **Zamora's page** as fallback (not Outlet Media).
+- **Advantage+ Creative Enhancements: ALL OFF (set to 0)**. Turn off: Text improvements, Enhance CTA, Flex media, Show summaries, Translate text, Add overlays, and all others.
+- **EU Beneficiary & Payer: Always "OUTLET MEDIA INC"**. Required for ad sets targeting EU audiences. Set both beneficiary and payer to the same entity.
+- **Known artist pages:**
+  - Don Omar: Page ID `21608835481`, IG ID `17841400670290220`
+
 ### Pause/activate an ad set
 ```bash
 curl -s -X POST "https://graph.facebook.com/v21.0/{ADSET_ID}" \
@@ -226,11 +282,16 @@ curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/adsets" \
   --data-urlencode "status=ACTIVE" \
   --data-urlencode "optimization_goal=OFFSITE_CONVERSIONS" \
   --data-urlencode "billing_event=IMPRESSIONS" \
-  --data-urlencode "promoted_object={\"pixel_id\":\"879345548404130\",\"custom_event_type\":\"PURCHASE\"}" \
+  --data-urlencode "promoted_object={\"pixel_id\":\"PIXEL_ID\",\"custom_event_type\":\"EVENT_TYPE\"}" \
   --data-urlencode 'targeting={"geo_locations":{"custom_locations":[{"latitude":LAT,"longitude":LON,"radius":RADIUS,"distance_unit":"mile"}]},"age_min":18,"age_max":65}' \
   --data-urlencode "access_token=$TOKEN"
 ```
 CBO note: Adsets under CBO campaigns have NO `daily_budget`. Budget is at campaign level.
+
+**Pixel selection by client:**
+- Default (most clients): `879345548404130`, event `PURCHASE`
+- Sienna: `918875103967661`, event `VIEW_CONTENT` (music artist — no purchase pixel)
+- Always match pixel + event type to the client's optimization goal.
 
 ### Pause/activate an ad
 ```bash
@@ -509,6 +570,22 @@ curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=sn
 ```
 
 Column naming: campaign name column is `name` (NOT `campaign_name`).
+Snapshot `spend` column is in CENTS despite being named `spend` (not `spend_cents`). Divide by 100 for dollars.
+
+### Multi-snapshot marginal ROAS (compare two dates 3+ days apart)
+```bash
+# Get oldest and newest snapshots for a campaign
+curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.asc&limit=1" \
+  -H "apikey: ${SUPABASE_KEY}" -H "Authorization: Bearer ${SUPABASE_KEY}"
+curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=snapshot_date.desc&limit=1" \
+  -H "apikey: ${SUPABASE_KEY}" -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+Then calculate:
+- `spend_dollars = spend / 100` for each snapshot
+- `revenue = spend_dollars × roas` for each snapshot
+- `marginal_roas = (revenue_new - revenue_old) / (spend_dollars_new - spend_dollars_old)`
+- Flag if marginal < 1.0 -- new spend is losing money even if blended looks healthy
+- **Use snapshots 3+ days apart** -- consecutive-day deltas are noisy due to Meta reporting lag.
 
 ---
 
@@ -549,6 +626,9 @@ DO NOT omit `daily_budget`, `start_time`, or `lifetime_budget` from the ingest p
 - Starts with "Beamina" -> "beamina"
 - Starts with "Happy Paws" -> "happy_paws"
 - Starts with "Zamora" -> "zamora"
+- Starts with "Sienna" -> "sienna"
+- Contains "vaz vil" or "kiko blade" -> "vaz_vil"
+- Contains "don omar" -> "don_omar_bcn"
 - Otherwise -> "unknown" (log a warning)
 
 ---

@@ -16,7 +16,7 @@ import {
   type ChatInputCommandInteraction,
   type TextChannel,
 } from "discord.js";
-import { canRunCommand } from "../core/access.js";
+import { canRunCommand, canUseChannel, getAccessDeniedMessage, isReadOnlyChannel } from "../core/access.js";
 
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GUILD_ID = process.env.DISCORD_GUILD_ID;
@@ -43,11 +43,119 @@ const commands = [
     .setName("schedule")
     .setDescription("Show scheduled jobs status panel"),
   new SlashCommandBuilder()
+    .setName("schedule-budget")
+    .setDescription("Create a timed Boss -> Scheduler -> Media Buyer budget handoff")
+    .addStringOption((option) =>
+      option
+        .setName("request")
+        .setDescription("Free-form request, e.g. raise Salt Lake City to $800/day")
+        .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("when")
+        .setDescription("Time like 12am, 00:00, or tomorrow 9am")
+        .setRequired(true),
+    ),
+  new SlashCommandBuilder()
+    .setName("schedule-copy-swap")
+    .setDescription("Schedule a timed Media Buyer ad swap with exact ad IDs")
+    .addStringOption((option) =>
+      option
+        .setName("activate_ad_id")
+        .setDescription("Ad ID to activate at the scheduled time")
+        .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("pause_ad_id")
+        .setDescription("Ad ID to pause at the scheduled time")
+        .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("when")
+        .setDescription("Time like 12am, 00:00, or tomorrow 9am")
+        .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("campaign")
+        .setDescription("Optional campaign label for the task summary")
+        .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("city")
+        .setDescription("Optional city or market label")
+        .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("activate_label")
+        .setDescription("Optional label for the ad being activated, e.g. Hoy")
+        .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("pause_label")
+        .setDescription("Optional label for the ad being paused, e.g. Mañana")
+        .setRequired(false),
+    ),
+  new SlashCommandBuilder()
     .setName("roles")
     .setDescription("Ensure all server roles are configured"),
   new SlashCommandBuilder()
     .setName("threads")
     .setDescription("List active threads in client channels"),
+  new SlashCommandBuilder()
+    .setName("publish-confirm")
+    .setDescription("Mark a manual TikTok publish attempt as live")
+    .addStringOption((option) =>
+      option
+        .setName("attempt")
+        .setDescription("Publish attempt id or known attempt reference")
+        .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("publish_url")
+        .setDescription("Final TikTok post URL")
+        .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("platform_post_id")
+        .setDescription("Optional platform post id")
+        .setRequired(false),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("note")
+        .setDescription("Optional operator note")
+        .setRequired(false),
+    ),
+  new SlashCommandBuilder()
+    .setName("publish-fail")
+    .setDescription("Mark a manual TikTok publish attempt as failed")
+    .addStringOption((option) =>
+      option
+        .setName("attempt")
+        .setDescription("Publish attempt id or known attempt reference")
+        .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("error")
+        .setDescription("What failed during manual posting")
+        .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("note")
+        .setDescription("Optional operator note")
+        .setRequired(false),
+    ),
 ];
 
 // --- Registration ---------------------------------------------------------
@@ -93,6 +201,12 @@ export function registerSlashHandler(client: Client): void {
       : null;
 
     try {
+      const channelName = "name" in (cmd.channel ?? {}) ? ((cmd.channel as TextChannel).name ?? "") : "";
+      if (!canUseChannel(channelName, guildMember, cmd.user.id)) {
+        await cmd.reply({ content: getAccessDeniedMessage(channelName), ephemeral: true });
+        return;
+      }
+
       switch (cmd.commandName) {
         case "status": {
           const { isAnyAgentBusy } = await import("../../state.js");
@@ -162,6 +276,183 @@ export function registerSlashHandler(client: Client): void {
           break;
         }
 
+        case "schedule-budget": {
+          if (!channelName || isReadOnlyChannel(channelName)) {
+            await cmd.reply({ content: "Use `/schedule-budget` in a team work channel like #general or #media-buyer.", ephemeral: true });
+            break;
+          }
+
+          const request = cmd.options.getString("request", true).trim();
+          const when = cmd.options.getString("when", true).trim();
+
+          const { formatScheduledTimeLabel, parseScheduledDispatchTime, scheduleBudgetUpdateHandoff } =
+            await import("../../services/scheduled-handoff-service.js");
+          const { sendAsAgent } = await import("../../services/webhook-service.js");
+          const { notifyChannel } = await import("../core/entry.js");
+
+          const combinedRequest = `${request} at ${when}`;
+          const deliverAt = parseScheduledDispatchTime(combinedRequest);
+          if (!deliverAt) {
+            await cmd.reply({
+              content: "I couldn't parse that time. Use something like `12am`, `00:00`, or `tomorrow 9am`.",
+              ephemeral: true,
+            });
+            break;
+          }
+
+          const requester = guildMember?.displayName ?? cmd.user.globalName ?? cmd.user.username;
+          const scheduledLabel = formatScheduledTimeLabel(deliverAt);
+          const scheduledTask = await scheduleBudgetUpdateHandoff({
+            deliverAt,
+            originalRequest: request,
+            requester,
+            sourceChannel: channelName,
+          });
+
+          const sourceChannelRef = `#${channelName}`;
+          await sendAsAgent(
+            "boss",
+            channelName,
+            `Boss got it. I scheduled this budget handoff for ${scheduledLabel}. Scheduler will send it to #media-buyer then and bring the result back here.`,
+          );
+          await sendAsAgent(
+            "boss",
+            "boss",
+            [
+              `${requester} in ${sourceChannelRef} created a scheduled budget update handoff via /schedule-budget.`,
+              `Original request: "${request}"`,
+              `Requested time: ${when}`,
+              `Scheduler task: ${scheduledTask.id}`,
+              `Dispatch time: ${scheduledLabel}`,
+            ].join("\n"),
+          );
+          await sendAsAgent(
+            "boss",
+            "schedule",
+            [
+              `Queued by Boss: ${scheduledTask.id}`,
+              `Dispatch time: ${scheduledLabel}`,
+              `Requester: ${requester}`,
+              `Source: ${sourceChannelRef}`,
+              `Original request: "${request}"`,
+            ].join("\n"),
+          );
+          await notifyChannel("agent-feed", `**#${channelName}** (scheduled-budget-slash) -- ${requester}: "${request.slice(0, 120)}"`).catch(() => {});
+
+          await cmd.reply({
+            content: `Created scheduler task \`${scheduledTask.id}\` for ${scheduledLabel}.`,
+            ephemeral: true,
+          });
+          break;
+        }
+
+        case "schedule-copy-swap": {
+          if (!channelName || isReadOnlyChannel(channelName)) {
+            await cmd.reply({ content: "Use `/schedule-copy-swap` in a team work channel like #boss or #media-buyer.", ephemeral: true });
+            break;
+          }
+
+          const activateAdId = cmd.options.getString("activate_ad_id", true).trim();
+          const pauseAdId = cmd.options.getString("pause_ad_id", true).trim();
+          const when = cmd.options.getString("when", true).trim();
+          const campaignName = cmd.options.getString("campaign")?.trim();
+          const city = cmd.options.getString("city")?.trim();
+          const activateLabel = cmd.options.getString("activate_label")?.trim();
+          const pauseLabel = cmd.options.getString("pause_label")?.trim();
+
+          const { formatScheduledTimeLabel, parseScheduledDispatchTime, scheduleCopySwapHandoff } =
+            await import("../../services/scheduled-handoff-service.js");
+          const { sendAsAgent } = await import("../../services/webhook-service.js");
+          const { notifyChannel } = await import("../core/entry.js");
+
+          const deliverAt = parseScheduledDispatchTime(when);
+          if (!deliverAt) {
+            await cmd.reply({
+              content: "I couldn't parse that time. Use something like `12am`, `00:00`, or `tomorrow 9am`.",
+              ephemeral: true,
+            });
+            break;
+          }
+
+          if (activateAdId === pauseAdId) {
+            await cmd.reply({
+              content: "Use two different ad IDs. The activate and pause IDs cannot match.",
+              ephemeral: true,
+            });
+            break;
+          }
+
+          const requester = guildMember?.displayName ?? cmd.user.globalName ?? cmd.user.username;
+          const scheduledLabel = formatScheduledTimeLabel(deliverAt);
+          const originalRequest = [
+            campaignName ? `${campaignName}` : "Scheduled copy swap",
+            city ? `for ${city}` : null,
+            `activate ad ${activateAdId}`,
+            `pause ad ${pauseAdId}`,
+            `at ${when}`,
+          ]
+            .filter(Boolean)
+            .join(" | ");
+
+          const scheduledTask = await scheduleCopySwapHandoff({
+            activateAdId,
+            activateLabel,
+            campaignName,
+            city,
+            deliverAt,
+            originalRequest,
+            pauseAdId,
+            pauseLabel,
+            requester,
+            sourceChannel: channelName,
+          });
+
+          const sourceChannelRef = `#${channelName}`;
+          await sendAsAgent(
+            "boss",
+            channelName,
+            `Boss got it. I scheduled this copy swap handoff for ${scheduledLabel}. Scheduler will send it to #media-buyer then and bring the result back here.`,
+          );
+          await sendAsAgent(
+            "boss",
+            "boss",
+            [
+              `${requester} in ${sourceChannelRef} created a scheduled copy swap via /schedule-copy-swap.`,
+              `Activate: ${activateLabel ?? activateAdId}`,
+              `Pause: ${pauseLabel ?? pauseAdId}`,
+              `Requested time: ${when}`,
+              `Scheduler task: ${scheduledTask.id}`,
+              `Dispatch time: ${scheduledLabel}`,
+            ].join("\n"),
+          );
+          await sendAsAgent(
+            "boss",
+            "schedule",
+            [
+              `Queued by Boss: ${scheduledTask.id}`,
+              `Dispatch time: ${scheduledLabel}`,
+              `Requester: ${requester}`,
+              `Source: ${sourceChannelRef}`,
+              `Activate: ${activateLabel ?? activateAdId}`,
+              `Pause: ${pauseLabel ?? pauseAdId}`,
+              campaignName ? `Campaign: ${campaignName}` : null,
+              city ? `City: ${city}` : null,
+            ]
+              .filter(Boolean)
+              .join("\n"),
+          );
+          await notifyChannel(
+            "agent-feed",
+            `**#${channelName}** (scheduled-copy-swap-slash) -- ${requester}: activate ${activateAdId}, pause ${pauseAdId}`,
+          ).catch(() => {});
+
+          await cmd.reply({
+            content: `Created copy-swap task \`${scheduledTask.id}\` for ${scheduledLabel}.`,
+            ephemeral: true,
+          });
+          break;
+        }
+
         case "roles": {
           if (!canRunCommand("roles", guildMember, cmd.user.id)) {
             await cmd.reply({ content: "Access denied. Role management is owner-only.", ephemeral: true });
@@ -185,6 +476,57 @@ export function registerSlashHandler(client: Client): void {
           } else {
             await cmd.reply({ content: "Threads are only available in client channels.", ephemeral: true });
           }
+          break;
+        }
+
+        case "publish-confirm": {
+          const { canConfirmGrowthPublishInChannel, confirmGrowthPublish, TIKTOK_PUBLISH_CHANNEL } =
+            await import("./growth-publish.js");
+
+          if (!canConfirmGrowthPublishInChannel(channelName)) {
+            await cmd.reply({
+              content: `Use \`/publish-confirm\` in #${TIKTOK_PUBLISH_CHANNEL}.`,
+              ephemeral: true,
+            });
+            break;
+          }
+
+          const actorName = guildMember?.displayName ?? cmd.user.globalName ?? cmd.user.username;
+          const result = await confirmGrowthPublish({
+            actorName,
+            attemptRef: cmd.options.getString("attempt", true).trim(),
+            channelName,
+            note: cmd.options.getString("note"),
+            platformPostId: cmd.options.getString("platform_post_id"),
+            publishUrl: cmd.options.getString("publish_url", true).trim(),
+          });
+
+          await cmd.reply({ content: result.reply, ephemeral: true });
+          break;
+        }
+
+        case "publish-fail": {
+          const { canConfirmGrowthPublishInChannel, failGrowthPublish, TIKTOK_PUBLISH_CHANNEL } =
+            await import("./growth-publish.js");
+
+          if (!canConfirmGrowthPublishInChannel(channelName)) {
+            await cmd.reply({
+              content: `Use \`/publish-fail\` in #${TIKTOK_PUBLISH_CHANNEL}.`,
+              ephemeral: true,
+            });
+            break;
+          }
+
+          const actorName = guildMember?.displayName ?? cmd.user.globalName ?? cmd.user.username;
+          const result = await failGrowthPublish({
+            actorName,
+            attemptRef: cmd.options.getString("attempt", true).trim(),
+            channelName,
+            errorMessage: cmd.options.getString("error", true).trim(),
+            note: cmd.options.getString("note"),
+          });
+
+          await cmd.reply({ content: result.reply, ephemeral: true });
           break;
         }
 
@@ -212,8 +554,12 @@ function buildHelpText(): string {
     "`/supervise` -- Boss reviews all agent activity",
     "`/dashboard` -- update campaign status panel",
     "`/schedule` -- show scheduled jobs panel",
+    "`/schedule-budget` -- explicitly schedule a budget handoff",
+    "`/schedule-copy-swap` -- schedule an ad-status copy swap with exact IDs",
     "`/roles` -- ensure Owner/Admin/Team/Bot/Viewer roles",
     "`/threads` -- list active threads (client channels only)",
+    "`/publish-confirm` -- mark a manual TikTok publish attempt live",
+    "`/publish-fail` -- mark a manual TikTok publish attempt failed",
     "",
     "**Agent channels** -- just type naturally:",
     "  #general -- team chat",
@@ -221,6 +567,8 @@ function buildHelpText(): string {
     "  #tm-data -- Ticketmaster events, demographics",
     "  #creative -- ad creative, copy, images",
     "  #dashboard -- reporting, analytics, trends",
+    "  #growth / #tiktok-ops / #content-lab / #lead-inbox -- growth pod",
+    "  #tiktok-publish -- assisted publish packets and operator confirmations",
     "  #zamora / #kybba -- client conversations",
     "  #boss / #email / #meetings / #schedule -- owner-only",
     "",

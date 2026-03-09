@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { getMemberAccessForSlug } from "@/lib/member-access";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 
 export type AssetCommentVisibility = "admin_only" | "shared";
 
@@ -40,12 +40,29 @@ function mapAssetComment(row: Record<string, unknown>): AssetComment {
   };
 }
 
+async function getAssetCommentsReadClient(clientSlug?: string | null) {
+  if (!supabaseAdmin || !clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
+
 export async function listAssetComments(
   options: ListAssetCommentsOptions,
 ): Promise<AssetComment[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getAssetCommentsReadClient(options.clientSlug);
+  if (!db) return [];
 
-  let query = supabaseAdmin
+  let query = db
     .from("asset_comments" as never)
     .select(
       "id, asset_id, client_slug, content, visibility, author_id, author_name, parent_comment_id, resolved, created_at, updated_at",

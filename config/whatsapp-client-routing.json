@@ -1,0 +1,26 @@
+[
+  {
+    "clientSlug": "zamora",
+    "discordChannel": "zamora",
+    "agentKey": "customer-whatsapp-agent",
+    "threadPrefix": "Zamora"
+  },
+  {
+    "clientSlug": "kybba",
+    "discordChannel": "kybba",
+    "agentKey": "customer-whatsapp-agent",
+    "threadPrefix": "KYBBA"
+  },
+  {
+    "clientSlug": "don_omar",
+    "discordChannel": "don-omar-tickets",
+    "agentKey": "customer-whatsapp-agent",
+    "threadPrefix": "Don Omar"
+  },
+  {
+    "clientSlug": "don_omar_bcn",
+    "discordChannel": "don-omar-tickets",
+    "agentKey": "customer-whatsapp-agent",
+    "threadPrefix": "Don Omar BCN"
+  }
+]

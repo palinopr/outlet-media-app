@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 
 export type SystemEventName =
   | "agent_action_requested"
@@ -40,6 +40,8 @@ export type SystemEventName =
   | "event_follow_up_item_deleted"
   | "event_follow_up_item_updated"
   | "event_updated"
+  | "whatsapp_message_received"
+  | "whatsapp_message_sent"
   | "workspace_comment_added"
   | "workspace_comment_deleted"
   | "workspace_comment_resolved"
@@ -55,22 +57,29 @@ export type SystemEventName =
 
 export type SystemEventVisibility = "admin_only" | "shared";
 export type SystemEventActorType = "agent" | "system" | "user";
+export type SystemEventSource = "app" | "backfill" | "webhook" | "worker" | (string & {});
 
 export interface SystemEvent {
   id: string;
   createdAt: string;
+  occurredAt: string;
   eventName: SystemEventName | string;
+  eventVersion: number;
   visibility: SystemEventVisibility;
   actorType: SystemEventActorType;
   actorId: string | null;
   actorName: string | null;
   clientSlug: string | null;
+  source: SystemEventSource;
   summary: string;
   detail: string | null;
   entityType: string | null;
   entityId: string | null;
   pageId: string | null;
   taskId: string | null;
+  correlationId: string | null;
+  causationId: string | null;
+  idempotencyKey: string | null;
   metadata: Record<string, unknown>;
 }
 
@@ -83,13 +92,19 @@ interface ActorInput {
 interface LogSystemEventInput extends ActorInput {
   eventName: SystemEventName;
   summary: string;
+  eventVersion?: number;
   detail?: string | null;
+  occurredAt?: Date | string | null;
   clientSlug?: string | null;
   visibility?: SystemEventVisibility;
+  source?: SystemEventSource | null;
   entityType?: string | null;
   entityId?: string | null;
   pageId?: string | null;
   taskId?: string | null;
+  correlationId?: string | null;
+  causationId?: string | null;
+  idempotencyKey?: string | null;
   metadata?: Record<string, unknown>;
 }
 
@@ -135,6 +150,12 @@ interface ListEventSystemEventsOptions {
   limit?: number;
 }
 
+const LEGACY_SYSTEM_EVENT_SELECT =
+  "id, created_at, event_name, visibility, actor_type, actor_id, actor_name, client_slug, summary, detail, entity_type, entity_id, page_id, task_id, metadata";
+
+const SYSTEM_EVENT_SELECT =
+  `${LEGACY_SYSTEM_EVENT_SELECT}, event_version, occurred_at, source, correlation_id, causation_id, idempotency_key`;
+
 function eventMatchesCampaign(event: SystemEvent, campaignId: string) {
   if (event.entityType === "campaign" && event.entityId === campaignId) return true;
   return event.metadata.campaignId === campaignId;
@@ -168,6 +189,139 @@ function systemEventAssetId(event: SystemEvent) {
 function normalizeScopeSet(values?: Iterable<string> | null) {
   if (values == null) return null;
   return values instanceof Set ? values : new Set(values);
+}
+
+function metadataString(metadata: Record<string, unknown> | undefined, key: string) {
+  const value = metadata?.[key];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function normalizeOccurredAt(value?: Date | string | null) {
+  if (value == null) return new Date().toISOString();
+  return value instanceof Date ? value.toISOString() : value;
+}
+
+function agentTaskEventId(input: LogSystemEventInput, metadata: Record<string, unknown>) {
+  if (input.eventName !== "agent_action_requested") return null;
+  if (input.entityType === "agent_task" && input.entityId) return input.entityId;
+  return input.taskId ?? metadataString(metadata, "taskId");
+}
+
+function resolveEventSource(input: LogSystemEventInput, metadata: Record<string, unknown>): SystemEventSource {
+  return (input.source ?? metadataString(metadata, "source") ?? "app") as SystemEventSource;
+}
+
+function resolveCorrelationId(input: LogSystemEventInput, metadata: Record<string, unknown>) {
+  return input.correlationId ?? metadataString(metadata, "correlationId") ?? agentTaskEventId(input, metadata);
+}
+
+function resolveCausationId(input: LogSystemEventInput, metadata: Record<string, unknown>) {
+  return input.causationId ?? metadataString(metadata, "causationId");
+}
+
+function resolveIdempotencyKey(input: LogSystemEventInput, metadata: Record<string, unknown>) {
+  const explicit = input.idempotencyKey ?? metadataString(metadata, "idempotencyKey");
+  if (explicit) return explicit;
+
+  const agentTaskId = agentTaskEventId(input, metadata);
+  return agentTaskId ? `${input.eventName}:${agentTaskId}` : null;
+}
+
+function isEnvelopeSchemaError(error: { message?: string | null; details?: string | null } | null) {
+  if (!error) return false;
+
+  const text = `${error.message ?? ""} ${error.details ?? ""}`;
+  if (!text) return false;
+
+  return [
+    "event_version",
+    "occurred_at",
+    "source",
+    "correlation_id",
+    "causation_id",
+    "idempotency_key",
+  ].some((field) => text.includes(field));
+}
+
+function isSystemEventIdempotencyConflict(error: { code?: string | null; message?: string | null } | null) {
+  if (!error) return false;
+  return (
+    error.code === "23505" &&
+    (error.message?.includes("idx_system_events_source_idempotency_key") ?? false)
+  );
+}
+
+function mapSystemEventRow(row: Record<string, unknown>): SystemEvent {
+  return {
+    id: row.id as string,
+    createdAt: row.created_at as string,
+    occurredAt: (row.occurred_at as string | null) ?? (row.created_at as string),
+    eventName: row.event_name as SystemEventName | string,
+    eventVersion: (row.event_version as number | null) ?? 1,
+    visibility: row.visibility as SystemEventVisibility,
+    actorType: row.actor_type as SystemEventActorType,
+    actorId: (row.actor_id as string | null) ?? null,
+    actorName: (row.actor_name as string | null) ?? null,
+    clientSlug: (row.client_slug as string | null) ?? null,
+    source: ((row.source as SystemEventSource | null) ?? "app") as SystemEventSource,
+    summary: row.summary as string,
+    detail: (row.detail as string | null) ?? null,
+    entityType: (row.entity_type as string | null) ?? null,
+    entityId: (row.entity_id as string | null) ?? null,
+    pageId: (row.page_id as string | null) ?? null,
+    taskId: (row.task_id as string | null) ?? null,
+    correlationId: (row.correlation_id as string | null) ?? null,
+    causationId: (row.causation_id as string | null) ?? null,
+    idempotencyKey: (row.idempotency_key as string | null) ?? null,
+    metadata: ((row.metadata as Record<string, unknown> | null) ?? {}) as Record<string, unknown>,
+  };
+}
+
+function buildSystemEventsQuery(
+  db: NonNullable<typeof supabaseAdmin>,
+  selectClause: string,
+  options: ListSystemEventsOptions,
+) {
+  let query = db
+    .from("system_events")
+    .select(selectClause)
+    .order("created_at", { ascending: false })
+    .limit(options.limit ?? 12);
+
+  if (options.clientSlug) {
+    query = query.eq("client_slug", options.clientSlug);
+  }
+
+  if (options.entityType) {
+    query = query.eq("entity_type", options.entityType);
+  }
+
+  if (options.entityId) {
+    query = query.eq("entity_id", options.entityId);
+  }
+
+  if (options.audience && options.audience !== "all") {
+    query = query.eq("visibility", options.audience);
+  }
+
+  return query;
+}
+
+async function getSystemEventsReadClient(options: ListSystemEventsOptions) {
+  if (!supabaseAdmin) return null;
+  if (!options.clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
 }
 
 export function isCrmSystemEvent(event: SystemEvent) {
@@ -266,22 +420,55 @@ export async function logSystemEvent(input: LogSystemEventInput): Promise<void> 
   if (!supabaseAdmin) return;
 
   const actor = await resolveActor(input);
-
-  const { error } = await supabaseAdmin.from("system_events").insert({
+  const metadata = input.metadata ?? {};
+  const row = {
     event_name: input.eventName,
+    event_version: input.eventVersion ?? 1,
+    occurred_at: normalizeOccurredAt(input.occurredAt),
     visibility: input.visibility ?? "shared",
     actor_type: actor.actorType,
     actor_id: actor.actorId,
     actor_name: actor.actorName,
     client_slug: input.clientSlug ?? null,
+    source: resolveEventSource(input, metadata),
     summary: input.summary,
     detail: input.detail ?? null,
     entity_type: input.entityType ?? null,
     entity_id: input.entityId ?? null,
     page_id: input.pageId ?? null,
     task_id: input.taskId ?? null,
-    metadata: input.metadata ?? {},
-  });
+    correlation_id: resolveCorrelationId(input, metadata),
+    causation_id: resolveCausationId(input, metadata),
+    idempotency_key: resolveIdempotencyKey(input, metadata),
+    metadata,
+  };
+
+  let { error } = await supabaseAdmin.from("system_events").insert(row);
+
+  if (isSystemEventIdempotencyConflict(error)) {
+    return;
+  }
+
+  if (isEnvelopeSchemaError(error)) {
+    const legacyRow = {
+      event_name: row.event_name,
+      visibility: row.visibility,
+      actor_type: row.actor_type,
+      actor_id: row.actor_id,
+      actor_name: row.actor_name,
+      client_slug: row.client_slug,
+      summary: row.summary,
+      detail: row.detail,
+      entity_type: row.entity_type,
+      entity_id: row.entity_id,
+      page_id: row.page_id,
+      task_id: row.task_id,
+      metadata: row.metadata,
+    };
+
+    const legacyInsert = await supabaseAdmin.from("system_events").insert(legacyRow);
+    error = legacyInsert.error;
+  }
 
   if (error) {
     console.error("[system-events] Failed to write event:", error.message);
@@ -291,58 +478,23 @@ export async function logSystemEvent(input: LogSystemEventInput): Promise<void> 
 export async function listSystemEvents(
   options: ListSystemEventsOptions = {},
 ): Promise<SystemEvent[]> {
-  if (!supabaseAdmin) return [];
+  const eventReadDb = await getSystemEventsReadClient(options);
+  if (!eventReadDb) return [];
 
-  let query = supabaseAdmin
-    .from("system_events")
-    .select(
-      "id, created_at, event_name, visibility, actor_type, actor_id, actor_name, client_slug, summary, detail, entity_type, entity_id, page_id, task_id, metadata",
-    )
-    .order("created_at", { ascending: false })
-    .limit(options.limit ?? 12);
+  let { data, error } = await buildSystemEventsQuery(eventReadDb, SYSTEM_EVENT_SELECT, options);
 
-  if (options.clientSlug) {
-    query = query.eq("client_slug", options.clientSlug);
+  if (isEnvelopeSchemaError(error)) {
+    const legacyResult = await buildSystemEventsQuery(eventReadDb, LEGACY_SYSTEM_EVENT_SELECT, options);
+    data = legacyResult.data;
+    error = legacyResult.error;
   }
 
-  if (options.entityType) {
-    query = query.eq("entity_type", options.entityType);
-  }
-
-  if (options.entityId) {
-    query = query.eq("entity_id", options.entityId);
-  }
-
-  if (options.audience && options.audience !== "all") {
-    query = query.eq("visibility", options.audience);
-  }
-
-  const { data, error } = await query;
   if (error) {
     console.error("[system-events] Failed to list events:", error.message);
     return [];
   }
 
-  return (data ?? []).map((row) => ({
-    id: row.id as string,
-    createdAt: row.created_at as string,
-    eventName: row.event_name as SystemEventName | string,
-    visibility: row.visibility as SystemEventVisibility,
-    actorType: row.actor_type as SystemEventActorType,
-    actorId: (row.actor_id as string | null) ?? null,
-    actorName: (row.actor_name as string | null) ?? null,
-    clientSlug: (row.client_slug as string | null) ?? null,
-    summary: row.summary as string,
-    detail: (row.detail as string | null) ?? null,
-    entityType: (row.entity_type as string | null) ?? null,
-    entityId: (row.entity_id as string | null) ?? null,
-    pageId: (row.page_id as string | null) ?? null,
-    taskId: (row.task_id as string | null) ?? null,
-    metadata: ((row.metadata as Record<string, unknown> | null) ?? {}) as Record<
-      string,
-      unknown
-    >,
-  }));
+  return ((data ?? []) as unknown[]).map((row) => mapSystemEventRow(row as Record<string, unknown>));
 }
 
 export async function listCampaignSystemEvents(

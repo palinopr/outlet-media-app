@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 
 export type CampaignCommentVisibility = "admin_only" | "shared";
 
@@ -40,12 +40,33 @@ function mapCampaignComment(row: Record<string, unknown>): CampaignComment {
   };
 }
 
+async function getCampaignCommentsReadClient(options: {
+  audience?: "all" | CampaignCommentVisibility;
+  clientSlug: string;
+}) {
+  if (!supabaseAdmin) return null;
+  if (options.audience !== "shared" || !options.clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
+
 export async function listCampaignComments(
   options: ListCampaignCommentsOptions,
 ): Promise<CampaignComment[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getCampaignCommentsReadClient(options);
+  if (!db) return [];
 
-  let query = supabaseAdmin
+  let query = db
     .from("campaign_comments")
     .select(
       "id, campaign_id, client_slug, content, visibility, author_id, author_name, parent_comment_id, resolved, created_at, updated_at",

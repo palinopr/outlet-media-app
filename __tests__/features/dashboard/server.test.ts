@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { state, supabaseAdmin } = vi.hoisted(() => {
+const { createClerkSupabaseClient, currentUser, state, supabaseAdmin } = vi.hoisted(() => {
   const state = {
     approval_requests: [] as Record<string, unknown>[],
     campaign_client_overrides: [] as Record<string, unknown>[],
@@ -61,15 +61,29 @@ const { state, supabaseAdmin } = vi.hoisted(() => {
     },
   };
 
-  return { state, supabaseAdmin };
+  return {
+    createClerkSupabaseClient: vi.fn(),
+    currentUser: vi.fn(),
+    state,
+    supabaseAdmin,
+  };
 });
 
 vi.mock("@/lib/supabase", () => ({
+  createClerkSupabaseClient,
   supabaseAdmin,
+}));
+
+vi.mock("@clerk/nextjs/server", () => ({
+  currentUser,
 }));
 
 vi.mock("@/features/conversations/server", () => ({
   listConversationThreads: vi.fn(),
+}));
+
+vi.mock("@/features/approvals/server", () => ({
+  listApprovalRequests: vi.fn(),
 }));
 
 vi.mock("@/features/crm-follow-up-items/server", () => ({
@@ -85,11 +99,14 @@ vi.mock("@/features/assets/summary", () => ({
 }));
 
 import { listConversationThreads } from "@/features/conversations/server";
+import { listApprovalRequests } from "@/features/approvals/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getDashboardActionCenter } from "@/features/dashboard/server";
 
 describe("getDashboardActionCenter", () => {
   beforeEach(() => {
+    createClerkSupabaseClient.mockReset();
+    currentUser.mockReset();
     state.meta_campaigns = [
       {
         campaign_id: "cmp_override",
@@ -117,6 +134,32 @@ describe("getDashboardActionCenter", () => {
         audience: "shared",
       },
     ];
+    vi.mocked(listApprovalRequests).mockResolvedValue([
+      {
+        id: "approval_override",
+        title: "Campaign approval",
+        summary: "Needs review",
+        createdAt: "2026-03-06T12:00:00.000Z",
+        updatedAt: "2026-03-06T12:00:00.000Z",
+        clientSlug: "legacy",
+        audience: "shared",
+        requestType: "generic",
+        status: "pending",
+        entityId: "cmp_override",
+        entityType: "campaign",
+        pageId: null,
+        taskId: null,
+        requestedById: null,
+        requestedByName: null,
+        decidedById: null,
+        decidedByName: null,
+        decidedAt: null,
+        decisionNote: null,
+        metadata: {},
+      },
+    ]);
+    currentUser.mockResolvedValue({ publicMetadata: { role: "member" } });
+    createClerkSupabaseClient.mockResolvedValue(null);
     vi.mocked(listConversationThreads).mockResolvedValue([]);
     vi.mocked(listCrmFollowUpItems).mockResolvedValue([]);
   });

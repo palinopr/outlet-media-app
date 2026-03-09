@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { state, supabaseAdmin } = vi.hoisted(() => {
+const { createClerkSupabaseClient, currentUser, state, supabaseAdmin } = vi.hoisted(() => {
   const state = {
     campaign_action_items: [] as Record<string, unknown>[],
     campaign_client_overrides: [] as Record<string, unknown>[],
@@ -81,10 +81,20 @@ const { state, supabaseAdmin } = vi.hoisted(() => {
     },
   };
 
-  return { state, supabaseAdmin };
+  return {
+    createClerkSupabaseClient: vi.fn(),
+    currentUser: vi.fn(),
+    state,
+    supabaseAdmin,
+  };
 });
 
+vi.mock("@clerk/nextjs/server", () => ({
+  currentUser,
+}));
+
 vi.mock("@/lib/supabase", () => ({
+  createClerkSupabaseClient,
   supabaseAdmin,
 }));
 
@@ -108,6 +118,8 @@ import {
 
 describe("campaign action item ownership", () => {
   beforeEach(() => {
+    createClerkSupabaseClient.mockReset();
+    currentUser.mockReset();
     state.meta_campaigns = [
       {
         campaign_id: "cmp_1",
@@ -142,6 +154,8 @@ describe("campaign action item ownership", () => {
         updated_at: "2026-03-06T10:00:00.000Z",
       },
     ];
+    currentUser.mockResolvedValue({ publicMetadata: { role: "member" } });
+    createClerkSupabaseClient.mockResolvedValue(null);
   });
 
   it("lists campaign action items by campaign ownership instead of stored client slug", async () => {

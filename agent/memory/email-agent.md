@@ -3,7 +3,7 @@
 ## Account
 - Email: jaime@outletmedia.net
 - Auth: Service account with domain-wide delegation (google-auth.mjs)
-- Tools: session/gmail-reader.mjs, session/gmail-sender.mjs, session/gmail-admin.mjs
+- Tools: session/gmail-reader.mjs (search/read), session/gmail-sender.mjs (send/reply), session/gmail-admin.mjs (labels/filters/archive/mark-read)
 - Event backbone: `email_events` (triage ledger), `email_drafts` (suggested replies), `email_reply_examples` (Jaime's sent-mail style memory)
 
 ## Contact Directory
@@ -42,7 +42,7 @@
 
 ## Pixel IDs
 - Ricardo Arjona: 879345548404130
-- Don Omar Spain: 2005949343681464
+- San Diego (Pechanga Arena / AXS): 2005949343681464
 - Sienna (purchase optimization): 1553637492361321
 - Sienna pixel: 918875103967661
 
@@ -122,3 +122,21 @@
 - Chase Center (SF) pixel added via text msg to Steph Krutolow — confirmed done
 - San Diego Pechanga: Taylor Henderson submitted to AXS Mar 5, 4-5 day wait
 - Puerto Rico pixel: no email thread exists yet, status unknown
+
+<!-- auto-learned 2026-03-06 -->
+- Amazon Seller Central: credit card update needed, payments suspended
+- Arjona SD: Jesus Guzman approved iHeartMedia radio buy ($2500 split 50/50 Pechanga/Zamora)
+- Arjona SD: influencer proposal — Hispanic TikToker 17K followers wants 2 GA tix for giveaway+video
+
+<!-- auto-learned 2026-03-07 -->
+- TM One account username: jaime@outletmedia.net (sent to Melissa Cubit & Ashley Weltner on Mar 7)
+- TM One permissions upgrade pending: Mirna asked Jaime to send account details to TM team (Mar 7)
+- Arjona SD: Edgar Gallego (Channel 33 Tijuana, 38K IG) offered 2 tix for social push
+- iHeartMedia SD radio spots running Mar 7–12 (pre-logs received)
+- Facebook data access renewal completed for Outlet Media Method
+
+<!-- auto-learned 2026-03-09 -->
+- San Diego Pechanga pixel confirmed live Mar 9 (Taylor Henderson rushed it)
+- All Arjona tour venue pixels now confirmed placed
+- Amazon Developer account identity verification needed (jaime@outletmedia.net)
+- Amazon Seller bank account updated successfully (US, CA, MX)

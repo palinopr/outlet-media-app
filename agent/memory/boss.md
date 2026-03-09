@@ -124,3 +124,11 @@ ALL SCHEDULED JOBS DISABLED. Manual triggers only via Discord channels.
 
 <!-- auto-learned 2026-03-06 -->
 - SF Arjona venue (Golden State) denied pixel — legal blocked it
+
+<!-- auto-learned 2026-03-07 -->
+- Salt Lake Arjona daily budget bumped to $800/day (scheduled Mar 7)
+
+<!-- auto-learned 2026-03-08 -->
+- SLC Arjona copy swap: "Hoy" ad 120243055587590525 replacing "Mañana"
+- Swap scheduled midnight MT (1AM CST) — activate Hoy, pause Mañana
+- Ariel Rivas is Don Omar WhatsApp contact (likely don_omar_bcn)

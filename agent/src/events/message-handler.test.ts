@@ -40,6 +40,11 @@ vi.mock("../discord/core/entry.js", () => ({ notifyChannel: vi.fn() }));
 vi.mock("../discord/commands/admin.js", () => ({ buildAdminPrompt: vi.fn() }));
 vi.mock("../discord/features/skills.js", () => ({ maybeCreateSkill: vi.fn() }));
 vi.mock("../agents/delegate.js", () => ({
+  processWhatsAppSends: vi.fn().mockResolvedValue({
+    cleanText: "agent response",
+    errors: [],
+    sent: 0,
+  }),
   processChannelMessages: vi.fn().mockResolvedValue({
     cleanText: "agent response",
     posted: 0,
@@ -57,7 +62,7 @@ import { isAgentFree } from "../services/queue-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { runClaude } from "../runner.js";
 import type { Message } from "discord.js";
-import { processChannelMessages, processDelegations } from "../agents/delegate.js";
+import { processChannelMessages, processDelegations, processWhatsAppSends } from "../agents/delegate.js";
 
 // --------------- helpers ---------------
 
@@ -241,6 +246,11 @@ describe("handleMessage", () => {
         targets: ["boss"],
         handedOff: 1,
         handoffTargets: ["boss"],
+      });
+      vi.mocked(processWhatsAppSends).mockResolvedValue({
+        cleanText: "I'll route this now.",
+        errors: [],
+        sent: 0,
       });
       vi.mocked(processDelegations).mockResolvedValue({
         cleanText: "I'll route this now.",

@@ -1,3 +1,4 @@
+import { currentUser } from "@clerk/nextjs/server";
 import {
   TASK_PRIORITY_LABELS,
   TASK_STATUS_LABELS,
@@ -6,7 +7,7 @@ import {
 } from "@/lib/workspace-types";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import {
   logSystemEvent,
   summarizeChangedFields,
@@ -140,12 +141,15 @@ function eventFollowUpItemTriagePrompt(item: EventFollowUpItem) {
     .join("\n");
 }
 
-async function listEventInfo(eventIds: string[]) {
-  if (!supabaseAdmin || eventIds.length === 0) {
+async function listEventInfo(
+  db: NonNullable<typeof supabaseAdmin>,
+  eventIds: string[],
+) {
+  if (eventIds.length === 0) {
     return new Map<string, { date: string | null; name: string | null; venue: string | null }>();
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await db
     .from("tm_events")
     .select("id, name, artist, date, venue")
     .in("id", eventIds);
@@ -168,6 +172,25 @@ async function listEventInfo(eventIds: string[]) {
       ];
     }),
   );
+}
+
+async function getEventFollowUpItemsReadClient(options: {
+  audience?: "all" | EventFollowUpItemVisibility;
+}) {
+  if (!supabaseAdmin) return null;
+  if (options.audience !== "shared") return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
 }
 
 function mapEventFollowUpItem(
@@ -204,9 +227,10 @@ function mapEventFollowUpItem(
 export async function listEventFollowUpItems(
   options: ListEventFollowUpItemsOptions,
 ): Promise<EventFollowUpItem[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getEventFollowUpItemsReadClient(options);
+  if (!db) return [];
 
-  let query = supabaseAdmin
+  let query = db
     .from("event_follow_up_items" as never)
     .select(EVENT_FOLLOW_UP_ITEM_SELECT)
     .order("position", { ascending: true })
@@ -240,6 +264,7 @@ export async function listEventFollowUpItems(
 
   const rows = (data ?? []) as Record<string, unknown>[];
   const eventInfo = await listEventInfo(
+    db,
     [...new Set(rows.map((row) => String(row.event_id)).filter(Boolean))],
   );
 
@@ -267,7 +292,10 @@ export async function findEventFollowUpItemBySource(
 
   if (!data) return null;
 
-  const eventInfo = await listEventInfo([String((data as Record<string, unknown>).event_id)]);
+  const eventInfo = await listEventInfo(
+    supabaseAdmin,
+    [String((data as Record<string, unknown>).event_id)],
+  );
   return mapEventFollowUpItem(data as Record<string, unknown>, eventInfo);
 }
 
@@ -287,7 +315,10 @@ export async function getEventFollowUpItemById(itemId: string): Promise<EventFol
 
   if (!data) return null;
 
-  const eventInfo = await listEventInfo([String((data as Record<string, unknown>).event_id)]);
+  const eventInfo = await listEventInfo(
+    supabaseAdmin,
+    [String((data as Record<string, unknown>).event_id)],
+  );
   return mapEventFollowUpItem(data as Record<string, unknown>, eventInfo);
 }
 

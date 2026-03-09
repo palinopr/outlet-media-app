@@ -1,8 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { authGuard, apiError } from "@/lib/api-helpers";
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import type { MentionUser } from "@/lib/workspace-types";
+
+async function getMentionsReadClient(options: { clientSlug: string | null; isAdmin: boolean }) {
+  if (!supabaseAdmin) return null;
+  if (options.isAdmin || !options.clientSlug) {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
 
 export async function GET(request: NextRequest) {
   const { userId, error } = await authGuard();
@@ -35,7 +44,12 @@ export async function GET(request: NextRequest) {
     return apiError("Client scope required", 403);
   }
 
-  const { data: client } = await supabaseAdmin
+  const mentionsDb = await getMentionsReadClient({ clientSlug, isAdmin });
+  if (!mentionsDb) {
+    return apiError("DB not configured", 500);
+  }
+
+  const { data: client } = await mentionsDb
     .from("clients")
     .select("id")
     .eq("slug", clientSlug)
@@ -46,7 +60,7 @@ export async function GET(request: NextRequest) {
   }
 
   if (!isAdmin) {
-    const { data: membership } = await supabaseAdmin
+    const { data: membership } = await mentionsDb
       .from("client_members")
       .select("id")
       .eq("client_id", client.id)
@@ -60,7 +74,7 @@ export async function GET(request: NextRequest) {
 
   const clerk = await clerkClient();
   const { data: clerkUsers } = await clerk.users.getUserList({ query: q, limit: 20 });
-  const { data: members } = await supabaseAdmin
+  const { data: members } = await mentionsDb
     .from("client_members")
     .select("clerk_user_id")
     .eq("client_id", client.id);

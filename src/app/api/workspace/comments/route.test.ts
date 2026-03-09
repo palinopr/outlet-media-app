@@ -5,57 +5,104 @@ const {
   authGuard,
   createNotification,
   currentUser,
+  getWorkspaceReadClient,
   logSystemEvent,
+  readState,
+  readWorkspaceClient,
   requireWorkspaceClientAccess,
   revalidateWorkspaceMutationTargets,
   supabaseAdmin,
   validateRequest,
-} = vi.hoisted(() => ({
-  authGuard: vi.fn(),
-  createNotification: vi.fn(),
-  currentUser: vi.fn(),
-  logSystemEvent: vi.fn(),
-  requireWorkspaceClientAccess: vi.fn(),
-  revalidateWorkspaceMutationTargets: vi.fn(),
-  supabaseAdmin: {
-    from: vi.fn((table: string) => {
-      if (table === "workspace_pages") {
-        return {
-          select: vi.fn(() => ({
-            eq: vi.fn(() => ({
-              single: vi.fn().mockResolvedValue({
-                data: {
-                  client_slug: "zamora",
-                  created_by: "owner_1",
-                  title: "Launch brief",
-                },
-                error: null,
-              }),
-            })),
-          })),
-        };
-      }
+} = vi.hoisted(() => {
+  const readState = {
+    workspace_comments: [] as Record<string, unknown>[],
+    workspace_pages: [] as Record<string, unknown>[],
+  };
 
-      if (table === "workspace_comments") {
-        return {
-          insert: vi.fn(() => ({
+  const readWorkspaceClient = {
+    from(table: string) {
+      const filters: Array<{ field: string; value: unknown }> = [];
+      const query = {
+        select() {
+          return this;
+        },
+        eq(field: string, value: unknown) {
+          filters.push({ field, value });
+          return this;
+        },
+        order() {
+          return this;
+        },
+        async single() {
+          const rows = (readState[table as keyof typeof readState] ?? []).filter((row) =>
+            filters.every((filter) => row[filter.field] === filter.value),
+          );
+          return { data: rows[0] ?? null, error: null };
+        },
+        then(
+          resolve: (value: { data: Record<string, unknown>[]; error: null }) => unknown,
+        ) {
+          const rows = (readState[table as keyof typeof readState] ?? []).filter((row) =>
+            filters.every((filter) => row[filter.field] === filter.value),
+          );
+          return Promise.resolve({ data: rows, error: null }).then(resolve);
+        },
+      };
+
+      return query;
+    },
+  };
+
+  return {
+    authGuard: vi.fn(),
+    createNotification: vi.fn(),
+    currentUser: vi.fn(),
+    getWorkspaceReadClient: vi.fn(),
+    logSystemEvent: vi.fn(),
+    readState,
+    readWorkspaceClient,
+    requireWorkspaceClientAccess: vi.fn(),
+    revalidateWorkspaceMutationTargets: vi.fn(),
+    supabaseAdmin: {
+      from: vi.fn((table: string) => {
+        if (table === "workspace_pages") {
+          return {
             select: vi.fn(() => ({
-              single: vi.fn().mockResolvedValue({
-                data: {
-                  id: "comment_1",
-                },
-                error: null,
-              }),
+              eq: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    client_slug: "zamora",
+                    created_by: "owner_1",
+                    title: "Launch brief",
+                  },
+                  error: null,
+                }),
+              })),
             })),
-          })),
-        };
-      }
+          };
+        }
 
-      return {};
-    }),
-  },
-  validateRequest: vi.fn(),
-}));
+        if (table === "workspace_comments") {
+          return {
+            insert: vi.fn(() => ({
+              select: vi.fn(() => ({
+                single: vi.fn().mockResolvedValue({
+                  data: {
+                    id: "comment_1",
+                  },
+                  error: null,
+                }),
+              })),
+            })),
+          };
+        }
+
+        return {};
+      }),
+    },
+    validateRequest: vi.fn(),
+  };
+});
 
 vi.mock("@/lib/api-helpers", () => ({
   apiError: (message: string, status = 500) =>
@@ -84,6 +131,10 @@ vi.mock("@/features/workspace/access", () => ({
   requireWorkspaceClientAccess,
 }));
 
+vi.mock("@/features/workspace/server", () => ({
+  getWorkspaceReadClient,
+}));
+
 vi.mock("@/lib/supabase", () => ({
   supabaseAdmin,
 }));
@@ -94,11 +145,39 @@ describe("workspace comments route", () => {
     authGuard.mockReset();
     createNotification.mockReset();
     currentUser.mockReset();
+    getWorkspaceReadClient.mockReset();
     logSystemEvent.mockReset();
+    readState.workspace_comments = [];
+    readState.workspace_pages = [];
     requireWorkspaceClientAccess.mockReset();
     revalidateWorkspaceMutationTargets.mockReset();
     supabaseAdmin.from.mockClear();
     validateRequest.mockReset();
+    getWorkspaceReadClient.mockResolvedValue(readWorkspaceClient);
+  });
+
+  it("uses the workspace read client for comment lists", async () => {
+    authGuard.mockResolvedValue({ error: null, userId: "user_1" });
+    requireWorkspaceClientAccess.mockResolvedValue({ clientSlug: "zamora" });
+    readState.workspace_pages = [{ client_slug: "zamora", id: "page_1" }];
+    readState.workspace_comments = [
+      { author_id: "user_1", id: "comment_1", page_id: "page_1" },
+      { author_id: "user_2", id: "comment_2", page_id: "page_2" },
+    ];
+
+    const { GET } = await import("./route");
+    const response = await GET(
+      {
+        nextUrl: new URL(
+          "https://example.com/api/workspace/comments?page_id=page_1&client_slug=zamora",
+        ),
+      } as NextRequest,
+    );
+    const payload = (await response.json()) as { comments: Array<{ id: string }> };
+
+    expect(response.status).toBe(200);
+    expect(payload.comments.map((comment) => comment.id)).toEqual(["comment_1"]);
+    expect(getWorkspaceReadClient).toHaveBeenCalledWith("zamora");
   });
 
   it("notifies the page owner and revalidates workspace surfaces on comment create", async () => {

@@ -2,7 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
 import { authGuard, apiError } from "@/lib/api-helpers";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { listNotificationsForUser } from "@/features/notifications/server";
 
 async function getViewerRole() {
@@ -70,6 +70,9 @@ export async function PATCH(request: NextRequest) {
   if (error) return error;
   if (!supabaseAdmin) return apiError("DB not configured");
 
+  const notificationsDb = (await createClerkSupabaseClient()) ?? supabaseAdmin;
+  if (!notificationsDb) return apiError("DB not configured");
+
   let body: { clientSlug?: string; id?: string; markAll?: boolean };
   try {
     body = await request.json();
@@ -101,7 +104,7 @@ export async function PATCH(request: NextRequest) {
         return NextResponse.json({ success: true });
       }
 
-      const { error: dbErr } = await supabaseAdmin
+      const { error: dbErr } = await notificationsDb
         .from("notifications")
         .update({ read: true })
         .eq("user_id", userId)
@@ -111,7 +114,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: true });
     }
 
-    let query = supabaseAdmin
+    let query = notificationsDb
       .from("notifications")
       .update({ read: true })
       .eq("user_id", userId)
@@ -146,7 +149,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    const { error: dbErr } = await supabaseAdmin
+    const { error: dbErr } = await notificationsDb
       .from("notifications")
       .update({ read: true })
       .eq("id", body.id)

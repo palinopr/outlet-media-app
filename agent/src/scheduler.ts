@@ -3,7 +3,7 @@ import { readFileSync, existsSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import { runClaude } from "./runner.js";
-import { notifyChannel } from "./discord/core/entry.js";
+import { discordClient, notifyChannel } from "./discord/core/entry.js";
 import {
   ResourceBusyError,
   clearAgentBusy,
@@ -17,6 +17,7 @@ import { ensureManagedEmailLabels, sweepUnreadInboxDetailed } from "./services/e
 import { createLedgerTask, updateLedgerTask, type LedgerTask } from "./services/ledger-service.js";
 import { notifyOwner, notifyOwnerEmailAlert, notifyOwnerImportant } from "./services/owner-discord-service.js";
 import { ensureGmailWatch, pollGmailHistory } from "./services/gmail-watch-service.js";
+import { dispatchDueScheduledHandoffs } from "./services/scheduled-handoff-service.js";
 
 const SESSION_DIR = join(import.meta.dirname ?? ".", "..", "session");
 const TM_SYNC_SCRIPT = join(SESSION_DIR, "tm1-http-sync.mjs");
@@ -34,6 +35,7 @@ const EATA_CRON = "10 */2 * * *";
 const EATA_COOKIE_CRON = "10 */6 * * *";
 const EMAIL_HISTORY_POLL_CRON = process.env.EMAIL_HISTORY_POLL_CRON ?? "*/1 8-22 * * *";
 const EMAIL_WATCH_RENEW_CRON = "0 */6 * * *";
+const SCHEDULED_HANDOFF_CRON = "*/1 * * * *";
 
 const EMAIL_NOTIFY_DISCORD = (process.env.EMAIL_NOTIFY_DISCORD ?? "false").toLowerCase() === "true";
 const SCHEDULED_OWNER_NOTIFICATIONS = (process.env.SCHEDULED_OWNER_NOTIFICATIONS ?? "false").toLowerCase() === "true";
@@ -106,6 +108,7 @@ export function startScheduler(): void {
   cron.schedule(META_CRON, () => { void runMetaSync({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); });
   cron.schedule(THINK_CRON, () => { void runThinkCycle({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); }, { timezone: "America/Los_Angeles" });
   cron.schedule(DISCORD_HEALTH_CRON, () => { void runDiscordHealthCheck(); });
+  cron.schedule(SCHEDULED_HANDOFF_CRON, () => { void dispatchDueScheduledHandoffs(discordClient); });
 
   if (TM_SCHEDULER_ENABLED) {
     cron.schedule(CHECK_CRON, () => { void runTmCheck({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); });
@@ -148,6 +151,7 @@ export function startScheduler(): void {
     EATA_SCHEDULER_ENABLED ? "eata" : null,
     EATA_SCHEDULER_ENABLED ? "eata-cookie" : null,
     GMAIL_PUSH_ENABLED ? "gmail-watch" : "email-history-poll",
+    "scheduled-handoffs",
   ].filter(Boolean).join(", ");
 
   console.log(`[scheduler] Core jobs started (${coreJobs})`);

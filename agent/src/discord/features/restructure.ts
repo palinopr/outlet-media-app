@@ -30,6 +30,7 @@ interface LayoutChannel {
 export const TARGET_LAYOUT: Record<string, LayoutChannel[]> = {
   "Owner": [
     { name: "boss", topic: "Private orchestrator, supervision, delegation" },
+    { name: "whatsapp-boss", topic: "Private owner lane for WhatsApp approvals, routing, and liaison supervision" },
     { name: "email", topic: "Private owner email operations and drafts" },
     { name: "meetings", topic: "Private owner meeting scheduling and Google Meet control" },
     { name: "email-log", topic: "Silent owner-only log of every email action" },
@@ -41,7 +42,16 @@ export const TARGET_LAYOUT: Record<string, LayoutChannel[]> = {
     { name: "tm-data", topic: "Ticketmaster work (threads per task)" },
     { name: "creative", topic: "Ad creative work (threads per task)" },
   ],
+  "Growth": [
+    { name: "growth", topic: "Internal growth orchestration and acquisition planning" },
+    { name: "tiktok-ops", topic: "TikTok draft pipeline and supervisor handoffs" },
+    { name: "tiktok-publish", topic: "Approval-gated TikTok publishing and manual post packets" },
+    { name: "content-lab", topic: "Growth research, hooks, and idea capture" },
+    { name: "lead-inbox", topic: "Inbound qualification and next-step triage" },
+    { name: "growth-dashboard", topic: "Read-only growth pod updates and queue summaries" },
+  ],
   "Clients": [
+    { name: "whatsapp-control", topic: "Customer WhatsApp control center and liaison tasks" },
     { name: "zamora", topic: "Zamora -- per-campaign posts with tags" },
     { name: "kybba", topic: "KYBBA -- per-campaign posts with tags" },
     { name: "don-omar-tickets", topic: "Don Omar BCN ticket sales (EATA/Vivaticket)" },

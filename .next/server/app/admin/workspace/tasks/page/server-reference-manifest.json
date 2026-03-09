@@ -1,0 +1,185 @@
+{
+  "node": {
+    "00ab4a993c1fc1d78d1d079e12b39229d6d8546a64": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "detectKeylessEnvDriftAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "rsc"
+      },
+      "exportedName": "detectKeylessEnvDriftAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "001ff50a0035dace00c44b089633ca59ce49bb8032": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "invalidateCacheAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "action-browser"
+      },
+      "exportedName": "invalidateCacheAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js"
+    },
+    "00e2626d6630da1d7139c503ef72b72f6089e90143": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "createOrReadKeylessAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "rsc"
+      },
+      "exportedName": "createOrReadKeylessAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "00c5cd61a6f492997a677718ce54d2f0538ab8c41e": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "collectKeylessMetadata",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/server/keyless-custom-headers.js"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "rsc"
+      },
+      "exportedName": "collectKeylessMetadata",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/server/keyless-custom-headers.js"
+    },
+    "40b024e0fdf18d57e5bd16c6e3bfed3c623d5a3d77": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "formatMetadataHeaders",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/server/keyless-custom-headers.js"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "rsc"
+      },
+      "exportedName": "formatMetadataHeaders",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/server/keyless-custom-headers.js"
+    },
+    "00dfce79a6a0ff13280dd4eefd4007e5c69269f22b": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "deleteKeylessAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "action-browser"
+      },
+      "exportedName": "deleteKeylessAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "408c255de36809cf96a0cce4600af079acc573ee03": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "syncKeylessConfigAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "action-browser"
+      },
+      "exportedName": "syncKeylessConfigAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "00f06ec15510a5dcf8ebee5b00353049b6b6c8e28b": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "fetchSearchableRecords",
+          "filename": "src/app/admin/actions/search.ts"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "action-browser"
+      },
+      "exportedName": "fetchSearchableRecords",
+      "filename": "src/app/admin/actions/search.ts"
+    },
+    "40ec4636a79e036561c97180312aca9dd7a5491718": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "createTask",
+          "filename": "src/app/admin/workspace/actions/tasks.ts"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "action-browser"
+      },
+      "exportedName": "createTask",
+      "filename": "src/app/admin/workspace/actions/tasks.ts"
+    },
+    "40532fc09c2c809b495b2227f5f0278c618918d817": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "updateTask",
+          "filename": "src/app/admin/workspace/actions/tasks.ts"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "action-browser"
+      },
+      "exportedName": "updateTask",
+      "filename": "src/app/admin/workspace/actions/tasks.ts"
+    },
+    "40658341b6744199d4525eeada221dd1242f9ac7a7": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "deleteTask",
+          "filename": "src/app/admin/workspace/actions/tasks.ts"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "action-browser"
+      },
+      "exportedName": "deleteTask",
+      "filename": "src/app/admin/workspace/actions/tasks.ts"
+    },
+    "40048e3836967a8b567666bf564599c84d62f65912": {
+      "workers": {
+        "app/admin/workspace/tasks/page": {
+          "moduleId": 809030,
+          "async": false,
+          "exportedName": "reorderTask",
+          "filename": "src/app/admin/workspace/actions/tasks.ts"
+        }
+      },
+      "layer": {
+        "app/admin/workspace/tasks/page": "action-browser"
+      },
+      "exportedName": "reorderTask",
+      "filename": "src/app/admin/workspace/actions/tasks.ts"
+    }
+  },
+  "edge": {}
+}

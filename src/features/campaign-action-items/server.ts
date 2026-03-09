@@ -1,3 +1,4 @@
+import { currentUser } from "@clerk/nextjs/server";
 import {
   TASK_PRIORITY_LABELS,
   TASK_STATUS_LABELS,
@@ -5,7 +6,7 @@ import {
   type TaskStatus,
 } from "@/lib/workspace-types";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   logSystemEvent,
@@ -157,12 +158,33 @@ function mapCampaignActionItem(row: Record<string, unknown>): CampaignActionItem
   };
 }
 
+async function getCampaignActionItemReadClient(options: {
+  audience?: "all" | CampaignActionItemVisibility;
+  clientSlug: string;
+}) {
+  if (!supabaseAdmin) return null;
+  if (options.audience !== "shared" || !options.clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
+
 export async function listCampaignActionItems(
   options: ListCampaignActionItemsOptions,
 ): Promise<CampaignActionItem[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getCampaignActionItemReadClient(options);
+  if (!db) return [];
 
-  let query = supabaseAdmin
+  let query = db
     .from("campaign_action_items")
     .select(CAMPAIGN_ACTION_ITEM_SELECT)
     .eq("campaign_id", options.campaignId)

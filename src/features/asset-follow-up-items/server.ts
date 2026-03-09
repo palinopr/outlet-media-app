@@ -1,3 +1,4 @@
+import { currentUser } from "@clerk/nextjs/server";
 import {
   TASK_PRIORITY_LABELS,
   TASK_STATUS_LABELS,
@@ -5,7 +6,7 @@ import {
   type TaskStatus,
 } from "@/lib/workspace-types";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   logSystemEvent,
@@ -157,6 +158,22 @@ async function listAssetNames(assetIds: string[]) {
   );
 }
 
+async function getAssetFollowUpReadClient(clientSlug?: string | null) {
+  if (!supabaseAdmin || !clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
+
 function mapAssetFollowUpItem(
   row: Record<string, unknown>,
   assetNames: Map<string, string>,
@@ -188,9 +205,10 @@ function mapAssetFollowUpItem(
 export async function listAssetFollowUpItems(
   options: ListAssetFollowUpItemsOptions,
 ): Promise<AssetFollowUpItem[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getAssetFollowUpReadClient(options.clientSlug);
+  if (!db) return [];
 
-  let query = supabaseAdmin
+  let query = db
     .from("asset_follow_up_items" as never)
     .select(ASSET_FOLLOW_UP_ITEM_SELECT)
     .order("position", { ascending: true })
@@ -219,9 +237,27 @@ export async function listAssetFollowUpItems(
   }
 
   const rows = (data ?? []) as Record<string, unknown>[];
-  const assetNames = await listAssetNames(
-    [...new Set(rows.map((row) => String(row.asset_id)).filter(Boolean))],
-  );
+  const assetIds = [...new Set(rows.map((row) => String(row.asset_id)).filter(Boolean))];
+  const assetNames =
+    assetIds.length === 0
+      ? new Map<string, string>()
+      : await db
+          .from("ad_assets")
+          .select("id, file_name")
+          .in("id", assetIds)
+          .then(({ data: assetRows, error: assetError }) => {
+            if (assetError) {
+              console.error("[asset-follow-up-items] asset lookup failed:", assetError.message);
+              return new Map<string, string>();
+            }
+
+            return new Map(
+              (assetRows ?? []).map((row) => [
+                String((row as Record<string, unknown>).id),
+                String((row as Record<string, unknown>).file_name ?? ""),
+              ]),
+            );
+          });
 
   return rows.map((row) => mapAssetFollowUpItem(row, assetNames));
 }

@@ -1,0 +1,976 @@
+[00:00:04.138] Server  LOG     ✓ Ready in 3.2s
+[00:07:07.232] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[00:07:07.237] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[00:16:06.092] Server  LOG       Reload env: .env.local
+[00:18:38.142] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:18:43.587] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:18:55.412] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:19:12.319] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:19:50.057] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:21:10.561] Server  ERROR   [whatsapp] message update failed: "new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:22:15.159] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:22:21.266] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:22:33.207] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:22:49.804] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:23:34.016] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:24:47.633] Server  ERROR   [whatsapp] message update failed: "new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:26:41.917] Server  ERROR   [whatsapp] message update failed: "new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:28:00.347] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:28:06.603] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:28:16.694] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:28:38.927] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:29:15.682] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:29:15.683] Server  ERROR   Error: [whatsapp] message insert failed: new row for relation "whatsapp_messages" violates check constraint "whatsapp_messages_status_check"
+    at upsertInboundMessage (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2599:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2943:30)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:3415:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[00:30:02.568] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:30:02.569] Server  ERROR   Error: [whatsapp] message insert failed: new row for relation "whatsapp_messages" violates check constraint "whatsapp_messages_status_check"
+    at upsertInboundMessage (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2599:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2943:30)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:3415:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[00:30:07.978] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:30:07.978] Server  ERROR   Error: [whatsapp] message insert failed: new row for relation "whatsapp_messages" violates check constraint "whatsapp_messages_status_check"
+    at upsertInboundMessage (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2599:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2943:30)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:3415:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[00:30:20.222] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:30:20.223] Server  ERROR   Error: [whatsapp] message insert failed: new row for relation "whatsapp_messages" violates check constraint "whatsapp_messages_status_check"
+    at upsertInboundMessage (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2599:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2943:30)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:3415:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[00:30:36.846] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:30:36.848] Server  ERROR   Error: [whatsapp] message insert failed: new row for relation "whatsapp_messages" violates check constraint "whatsapp_messages_status_check"
+    at upsertInboundMessage (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2599:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2943:30)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:3415:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[00:30:42.797] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:30:42.797] Server  ERROR   Error: [whatsapp] message insert failed: new row for relation "whatsapp_messages" violates check constraint "whatsapp_messages_status_check"
+    at upsertInboundMessage (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2599:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2943:30)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:3415:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[00:31:14.062] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] message insert failed: new row for relation \"whatsapp_messages\" violates check constraint \"whatsapp_messages_status_check\""
+[00:31:14.062] Server  ERROR   Error: [whatsapp] message insert failed: new row for relation "whatsapp_messages" violates check constraint "whatsapp_messages_status_check"
+    at upsertInboundMessage (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2599:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:2943:30)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__d9badb5b._.js:3415:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[03:02:40.201] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[03:02:40.202] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[03:02:41.200] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[03:02:41.201] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[03:02:59.516] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[03:02:59.516] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processImmediate (node:internal/timers:453:9)
+    at process.callbackTrampoline (node:internal/async_hooks:130:17)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[03:02:59.521] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[03:02:59.521] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[03:03:17.716] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[03:03:17.716] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[03:15:53.243] Server  LOG     ✓ Compiled in 64ms
+[04:25:25.989] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: <!DOCTYPE html>\n<!--[if lt IE 7]> <html class=\"no-js ie6 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 7]>    <html class=\"no-js ie7 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if IE 8]>    <html class=\"no-js ie8 oldie\" lang=\"en-US\"> <![endif]-->\n<!--[if gt IE 8]><!--> <html class=\"no-js\" lang=\"en-US\"> <!--<![endif]-->\n<head>\n\n<title> | 502: Bad gateway</title>\n<meta charset=\"UTF-8\" />\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\" />\n<meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\" />\n<meta name=\"robots\" content=\"noindex, nofollow\" />\n<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n<link rel=\"stylesheet\" id=\"cf_styles-css\" href=\"/cdn-cgi/styles/main.css\" />\n</head>\n<body>\n<div id=\"cf-wrapper\">\n    <div id=\"cf-error-details\" class=\"p-0\">\n        <header class=\"mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8\">\n            <h1 class=\"inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-2\">\n                <span class=\"inline-block\">Bad gateway</span>\n                <span class=\"code-label\">Error code 502</span>\n            </h1>\n            <div>\n                Visit <a href=\"https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&utm_campaign=dbznwsnteogovicllean.supabase.co\" target=\"_blank\" rel=\"noopener noreferrer\">cloudflare.com</a> for more information.\n            </div>\n            <div class=\"mt-3\">2026-03-08 01:13:56 UTC</div>\n        </header>\n        <div class=\"my-8 bg-gradient-gray\">\n            <div class=\"w-240 lg:w-full mx-auto\">\n                <div class=\"clearfix md:px-8\">\n                    <div id=\"cf-browser-status\" class=\" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center\">\n  <div class=\"relative mb-10 md:m-0\">\n    \n    <span class=\"cf-icon-browser block md:hidden h-20 bg-center bg-no-repeat\"></span>\n    <span class=\"cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4\"></span>\n    \n  </div>\n  <span class=\"md:block w-full truncate\">You</span>\n  <h3 class=\"md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3\">\n  \n    Browser\n  \n  </h3>\n  \n  <span class=\"leading-1.3 text-2xl text-green-success\">Working</span>\n  \n</div>\n                    <div id=\"cf-cloudflare-status\" class=\" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center\">\n  <div class=\"relative mb-10 md:m-0\">\n    <a href=\"https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&#38;utm_campaign=dbznwsnteogovicllean.supabase.co\" target=\"_blank\" rel=\"noopener noreferrer\">\n    <span class=\"cf-icon-cloud block md:hidden h-20 bg-center bg-no-repeat\"></span>\n    <span class=\"cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4\"></span>\n    </a>\n  </div>\n  <span class=\"md:block w-full truncate\">Dallas</span>\n  <h3 class=\"md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3\">\n  <a href=\"https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&utm_campaign=dbznwsnteogovicllean.supabase.co\" target=\"_blank\" rel=\"noopener noreferrer\">\n    Cloudflare\n  </a>\n  </h3>\n  \n  <span class=\"leading-1.3 text-2xl text-green-success\">Working</span>\n  \n</div>\n                    <div id=\"cf-host-status\" class=\"cf-error-source relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center\">\n  <div class=\"relative mb-10 md:m-0\">\n    \n    <span class=\"cf-icon-server block md:hidden h-20 bg-center bg-no-repeat\"></span>\n    <span class=\"cf-icon-error w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4\"></span>\n    \n  </div>\n  <span class=\"md:block w-full truncate\">dbznwsnteogovicllean.supabase.co</span>\n  <h3 class=\"md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3\">\n  \n    Host\n  \n  </h3>\n  \n  <span class=\"leading-1.3 text-2xl text-red-error\">Error</span>\n  \n</div>\n                </div>\n            </div>\n        </div>\n\n        <div class=\"w-240 lg:w-full mx-auto mb-8 lg:px-8\">\n            <div class=\"clearfix\">\n                <div class=\"w-1/2 md:w-full float-left pr-6 md:pb-10 md:pr-0 leading-relaxed\">\n                    <h2 class=\"text-3xl font-normal leading-1.3 mb-4\">What happened?</h2>\n                    <p>The web server reported a bad gateway error.</p>\n                </div>\n                <div class=\"w-1/2 md:w-full float-left leading-relaxed\">\n                    <h2 class=\"text-3xl font-normal leading-1.3 mb-4\">What can I do?</h2>\n                    <p class=\"mb-6\">Please try again in a few minutes.</p>\n                </div>\n            </div>\n        </div>\n\n        <div class=\"cf-error-footer cf-wrapper w-240 lg:w-full py-10 sm:py-4 sm:px-8 mx-auto text-center sm:text-left border-solid border-0 border-t border-gray-300\">\n    <p class=\"text-13\">\n      <span class=\"cf-footer-item sm:block sm:mb-1\">Cloudflare Ray ID: <strong class=\"font-semibold\">9d8dfaf04ee4d7a0</strong></span>\n      <span class=\"cf-footer-separator sm:hidden\">&bull;</span>\n      <span id=\"cf-footer-item-ip\" class=\"cf-footer-item hidden sm:block sm:mb-1\">\n        Your IP:\n        <button type=\"button\" id=\"cf-footer-ip-reveal\" class=\"cf-footer-ip-reveal-btn\">Click to reveal</button>\n        <span class=\"hidden\" id=\"cf-footer-ip\">70.140.4.246</span>\n        <span class=\"cf-footer-separator sm:hidden\">&bull;</span>\n      </span>\n      <span class=\"cf-footer-item sm:block sm:mb-1\"><span>Performance &amp; security by</span> <a rel=\"noopener noreferrer\" href=\"https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&#38;utm_campaign=dbznwsnteogovicllean.supabase.co\" id=\"brand_link\" target=\"_blank\">Cloudflare</a></span>\n      \n    </p>\n    <script>(function(){function d(){var b=a.getElementById(\"cf-footer-item-ip\"),c=a.getElementById(\"cf-footer-ip-reveal\");b&&\"classList\"in b&&(b.classList.remove(\"hidden\"),c.addEventListener(\"click\",function(){c.classList.add(\"hidden\");a.getElementById(\"cf-footer-ip\").classList.remove(\"hidden\")}))}var a=document;document.addEventListener&&a.addEventListener(\"DOMContentLoaded\",d)})();</script>\n  </div><!-- /.error-footer -->\n\n    </div>\n</div>\n</body>\n</html>"
+[04:25:25.990] Server  ERROR   Error: [whatsapp] account lookup failed: <!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js ie8 oldie" lang="en-US"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en-US"> <!--<![endif]-->
+<head>
+
+<title> | 502: Bad gateway</title>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+<meta name="robots" content="noindex, nofollow" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" id="cf_styles-css" href="/cdn-cgi/styles/main.css" />
+</head>
+<body>
+<div id="cf-wrapper">
+    <div id="cf-error-details" class="p-0">
+        <header class="mx-auto pt-10 lg:pt-6 lg:px-8 w-240 lg:w-full mb-8">
+            <h1 class="inline-block sm:block sm:mb-2 font-light text-60 lg:text-4xl text-black-dark leading-tight mr-2">
+                <span class="inline-block">Bad gateway</span>
+                <span class="code-label">Error code 502</span>
+            </h1>
+            <div>
+                Visit <a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&utm_campaign=dbznwsnteogovicllean.supabase.co" target="_blank" rel="noopener noreferrer">cloudflare.com</a> for more information.
+            </div>
+            <div class="mt-3">2026-03-08 01:13:56 UTC</div>
+        </header>
+        <div class="my-8 bg-gradient-gray">
+            <div class="w-240 lg:w-full mx-auto">
+                <div class="clearfix md:px-8">
+                    <div id="cf-browser-status" class=" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center">
+  <div class="relative mb-10 md:m-0">
+    
+    <span class="cf-icon-browser block md:hidden h-20 bg-center bg-no-repeat"></span>
+    <span class="cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"></span>
+    
+  </div>
+  <span class="md:block w-full truncate">You</span>
+  <h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3">
+  
+    Browser
+  
+  </h3>
+  
+  <span class="leading-1.3 text-2xl text-green-success">Working</span>
+  
+</div>
+                    <div id="cf-cloudflare-status" class=" relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center">
+  <div class="relative mb-10 md:m-0">
+    <a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&#38;utm_campaign=dbznwsnteogovicllean.supabase.co" target="_blank" rel="noopener noreferrer">
+    <span class="cf-icon-cloud block md:hidden h-20 bg-center bg-no-repeat"></span>
+    <span class="cf-icon-ok w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"></span>
+    </a>
+  </div>
+  <span class="md:block w-full truncate">Dallas</span>
+  <h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3">
+  <a href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&utm_campaign=dbznwsnteogovicllean.supabase.co" target="_blank" rel="noopener noreferrer">
+    Cloudflare
+  </a>
+  </h3>
+  
+  <span class="leading-1.3 text-2xl text-green-success">Working</span>
+  
+</div>
+                    <div id="cf-host-status" class="cf-error-source relative w-1/3 md:w-full py-15 md:p-0 md:py-8 md:text-left md:border-solid md:border-0 md:border-b md:border-gray-400 overflow-hidden float-left md:float-none text-center">
+  <div class="relative mb-10 md:m-0">
+    
+    <span class="cf-icon-server block md:hidden h-20 bg-center bg-no-repeat"></span>
+    <span class="cf-icon-error w-12 h-12 absolute left-1/2 md:left-auto md:right-0 md:top-0 -ml-6 -bottom-4"></span>
+    
+  </div>
+  <span class="md:block w-full truncate">dbznwsnteogovicllean.supabase.co</span>
+  <h3 class="md:inline-block mt-3 md:mt-0 text-2xl text-gray-600 font-light leading-1.3">
+  
+    Host
+  
+  </h3>
+  
+  <span class="leading-1.3 text-2xl text-red-error">Error</span>
+  
+</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-240 lg:w-full mx-auto mb-8 lg:px-8">
+            <div class="clearfix">
+                <div class="w-1/2 md:w-full float-left pr-6 md:pb-10 md:pr-0 leading-relaxed">
+                    <h2 class="text-3xl font-normal leading-1.3 mb-4">What happened?</h2>
+                    <p>The web server reported a bad gateway error.</p>
+                </div>
+                <div class="w-1/2 md:w-full float-left leading-relaxed">
+                    <h2 class="text-3xl font-normal leading-1.3 mb-4">What can I do?</h2>
+                    <p class="mb-6">Please try again in a few minutes.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="cf-error-footer cf-wrapper w-240 lg:w-full py-10 sm:py-4 sm:px-8 mx-auto text-center sm:text-left border-solid border-0 border-t border-gray-300">
+    <p class="text-13">
+      <span class="cf-footer-item sm:block sm:mb-1">Cloudflare Ray ID: <strong class="font-semibold">9d8dfaf04ee4d7a0</strong></span>
+      <span class="cf-footer-separator sm:hidden">&bull;</span>
+      <span id="cf-footer-item-ip" class="cf-footer-item hidden sm:block sm:mb-1">
+        Your IP:
+        <button type="button" id="cf-footer-ip-reveal" class="cf-footer-ip-reveal-btn">Click to reveal</button>
+        <span class="hidden" id="cf-footer-ip">70.140.4.246</span>
+        <span class="cf-footer-separator sm:hidden">&bull;</span>
+      </span>
+      <span class="cf-footer-item sm:block sm:mb-1"><span>Performance &amp; security by</span> <a rel="noopener noreferrer" href="https://www.cloudflare.com/5xx-error-landing?utm_source=errorcode_502&#38;utm_campaign=dbznwsnteogovicllean.supabase.co" id="brand_link" target="_blank">Cloudflare</a></span>
+      
+    </p>
+    <script>(function(){function d(){var b=a.getElementById("cf-footer-item-ip"),c=a.getElementById("cf-footer-ip-reveal");b&&"classList"in b&&(b.classList.remove("hidden"),c.addEventListener("click",function(){c.classList.add("hidden");a.getElementById("cf-footer-ip").classList.remove("hidden")}))}var a=document;document.addEventListener&&a.addEventListener("DOMContentLoaded",d)})();</script>
+  </div><!-- /.error-footer -->
+
+    </div>
+</div>
+</body>
+</html>
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[06:24:40.314] Server  ERROR   [heartbeat] insert failed: "TypeError: fetch failed"
+[06:24:47.819] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[06:24:47.820] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processImmediate (node:internal/timers:453:9)
+    at process.callbackTrampoline (node:internal/async_hooks:130:17)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[06:24:47.823] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[06:24:47.823] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[06:25:06.417] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[06:25:06.417] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[09:13:43.229] Server  LOG     Ingest: upserted 10 Meta campaigns, 10 snapshots
+[10:06:23.803] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[10:06:23.803] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processImmediate (node:internal/timers:453:9)
+    at process.callbackTrampoline (node:internal/async_hooks:130:17)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[10:06:23.805] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[10:06:23.805] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[10:06:40.860] Server  ERROR   [heartbeat] insert failed: "TypeError: fetch failed"
+[13:58:23.328] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[13:58:23.329] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processImmediate (node:internal/timers:453:9)
+    at process.callbackTrampoline (node:internal/async_hooks:130:17)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[13:58:23.332] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[13:58:23.333] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[13:58:40.210] Server  ERROR   [heartbeat] insert failed: "TypeError: fetch failed"
+[14:13:04.702] Server  LOG     Ingest: upserted 17 Meta campaigns, 17 snapshots
+[17:49:57.275] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[17:49:57.276] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processImmediate (node:internal/timers:453:9)
+    at process.callbackTrampoline (node:internal/async_hooks:130:17)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[17:49:57.279] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[17:49:57.280] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[17:50:17.314] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[17:50:17.315] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processImmediate (node:internal/timers:453:9)
+    at process.callbackTrampoline (node:internal/async_hooks:130:17)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[17:50:17.318] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[17:50:17.326] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[17:50:35.426] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[17:50:35.427] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[20:12:50.800] Server  LOG     Ingest: upserted 9 Meta campaigns, 9 snapshots
+[21:35:41.461] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[21:35:41.462] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[21:35:59.562] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[21:35:59.563] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processImmediate (node:internal/timers:453:9)
+    at process.callbackTrampoline (node:internal/async_hooks:130:17)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[21:35:59.566] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[21:35:59.567] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[25:17:14.756] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[25:17:14.757] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processImmediate (node:internal/timers:453:9)
+    at process.callbackTrampoline (node:internal/async_hooks:130:17)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[25:17:14.760] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[25:17:14.761] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[25:17:32.956] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[25:17:32.957] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at runNextTicks (node:internal/process/task_queues:69:3)
+    at process.processImmediate (node:internal/timers:453:9)
+    at process.callbackTrampoline (node:internal/async_hooks:130:17)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[25:17:32.961] Server  ERROR   [whatsapp-evolution-webhook] ingest failed: "[whatsapp] account lookup failed: TypeError: fetch failed"
+[25:17:32.962] Server  ERROR   Error: [whatsapp] account lookup failed: TypeError: fetch failed
+    at ensureAccount (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:2412:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async ingestEvolutionWebhook (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3063:21)
+    at async POST (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/[root-of-the-server]__cd0dcbc9._.js:3564:24)
+    at async AppRouteRouteModule.do (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:37866)
+    at async AppRouteRouteModule.handle (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:5:45156)
+    at async responseGenerator (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:15969:38)
+    at async AppRouteRouteModule.handleResponse (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.dev.js:1:191938)
+    at async handleResponse (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16032:32)
+    at async Module.handler (/Users/jaimeortiz/outlet-media-app/.next/dev/server/chunks/node_modules_next_42dd021a._.js:16085:13)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1442:9)
+    at async DevServer.renderPageComponent (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1494:24)
+    at async DevServer.renderToResponseImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1544:32)
+    at async DevServer.pipeImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:1038:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/next-server.js:395:17)
+    at async DevServer.handleRequestImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/base-server.js:929:17)
+    at async /Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:387:20
+    at async Span.traceAsyncFn (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/trace/trace.js:157:20)
+    at async DevServer.handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/dev/next-dev-server.js:383:24)
+    at async invokeRender (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:248:21)
+    at async handleRequest (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:447:24)
+    at async requestHandlerImpl (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/router-server.js:496:13)
+    at async Server.requestListener (/Users/jaimeortiz/outlet-media-app/node_modules/next/dist/server/lib/start-server.js:226:13)
+[25:17:39.465] Server  ERROR   [heartbeat] insert failed: "TypeError: fetch failed"
+[26:13:20.256] Server  LOG     Ingest: marked 1 campaign(s) PAUSED (absent from sync): ["120243011364360525"]
+[26:13:20.257] Server  LOG     Ingest: upserted 8 Meta campaigns, 8 snapshots

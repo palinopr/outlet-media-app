@@ -12,9 +12,11 @@ import {
   WebhookClient,
   type WebhookMessageCreateOptions,
   ChannelType,
+  MessageFlags,
 } from "discord.js";
 
 const WEBHOOK_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
+const WEBHOOK_INIT_TIMEOUT_MS = 8_000;
 
 interface AgentWebhook {
   id: string;
@@ -27,7 +29,8 @@ interface AgentWebhook {
 
 /** Agent display config: name, avatar, primary channel */
 const AGENT_PROFILES: Record<string, { name: string; avatar: string; channels: string[] }> = {
-  boss:            { name: "Boss",           avatar: "https://i.imgur.com/7ZGDfqr.png", channels: ["boss"] },
+  boss:            { name: "Boss",           avatar: "https://i.imgur.com/7ZGDfqr.png", channels: ["boss", "whatsapp-boss"] },
+  scheduler:       { name: "Scheduler",      avatar: "https://i.imgur.com/NqRPmBL.png", channels: ["schedule", "media-buyer"] },
   "media-buyer":   { name: "Media Buyer",    avatar: "https://i.imgur.com/Qj8YXBK.png", channels: ["media-buyer"] },
   "tm-agent":      { name: "TM Data",        avatar: "https://i.imgur.com/3JzGKvN.png", channels: ["tm-data"] },
   creative:        { name: "Creative",       avatar: "https://i.imgur.com/WfVlJEK.png", channels: ["creative"] },
@@ -36,6 +39,36 @@ const AGENT_PROFILES: Record<string, { name: string; avatar: string; channels: s
   "reporting-agent": { name: "Reporting",    avatar: "https://i.imgur.com/NqRPmBL.png", channels: ["dashboard"] },
   "email-agent":   { name: "Email Agent",    avatar: "https://i.imgur.com/LqJHpGH.png", channels: ["email"] },
   "meeting-agent": { name: "Meeting Agent",  avatar: "https://i.imgur.com/NqRPmBL.png", channels: ["meetings"] },
+  "growth-supervisor": {
+    name: "Growth Supervisor",
+    avatar: "https://i.imgur.com/7ZGDfqr.png",
+    channels: ["growth"],
+  },
+  "tiktok-supervisor": {
+    name: "TikTok Supervisor",
+    avatar: "https://i.imgur.com/Qj8YXBK.png",
+    channels: ["tiktok-ops"],
+  },
+  "content-finder": {
+    name: "Content Finder",
+    avatar: "https://i.imgur.com/WfVlJEK.png",
+    channels: ["content-lab"],
+  },
+  "lead-qualifier": {
+    name: "Lead Qualifier",
+    avatar: "https://i.imgur.com/8FxTGnA.png",
+    channels: ["lead-inbox"],
+  },
+  "publisher-tiktok": {
+    name: "TikTok Publisher",
+    avatar: "https://i.imgur.com/7ZGDfqr.png",
+    channels: ["tiktok-publish"],
+  },
+  "customer-whatsapp-agent": {
+    name: "Client Liaison",
+    avatar: "https://i.imgur.com/8FxTGnA.png",
+    channels: ["dashboard", "zamora", "kybba", "don-omar-tickets"],
+  },
   "client-manager":{ name: "Client Manager", avatar: "https://i.imgur.com/8FxTGnA.png", channels: ["zamora", "kybba"] },
 };
 
@@ -43,6 +76,21 @@ const AGENT_PROFILES: Record<string, { name: string; avatar: string; channels: s
 const webhookCache = new Map<string, Map<string, AgentWebhook>>();
 
 let discordClient: Client | null = null;
+
+async function withWebhookInitTimeout<T>(
+  promise: Promise<T>,
+  context: string,
+): Promise<T | null> {
+  return await Promise.race([
+    promise,
+    new Promise<null>((resolve) => {
+      setTimeout(() => {
+        console.warn(`[webhooks] Timed out during ${context}; continuing startup`);
+        resolve(null);
+      }, WEBHOOK_INIT_TIMEOUT_MS);
+    }),
+  ]);
+}
 
 /**
  * Initialize webhooks for all agents in their primary channels.
@@ -67,7 +115,10 @@ export async function initWebhooks(client: Client): Promise<void> {
         continue;
       }
 
-      await ensureWebhook(channel, agentKey, profile.name, profile.avatar);
+      await withWebhookInitTimeout(
+        ensureWebhook(channel, agentKey, profile.name, profile.avatar),
+        `${agentKey} in #${channel.name}`,
+      );
     }
   }
 
@@ -146,8 +197,11 @@ export async function sendAsAgent(
   }
 
   const content: WebhookMessageCreateOptions = typeof options === "string"
-    ? { content: options }
-    : options;
+    ? { content: options, flags: [MessageFlags.SuppressNotifications] }
+    : {
+        ...options,
+        flags: [MessageFlags.SuppressNotifications],
+      };
 
   if (wh) {
     try {
@@ -185,7 +239,7 @@ export async function sendAsAgent(
       }
 
       // Last resort: send as bot
-      await channel.send(content.content ?? "").catch(() => {});
+      await channel.send(content).catch(() => {});
     }
   }
 }

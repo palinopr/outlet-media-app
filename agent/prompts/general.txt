@@ -42,8 +42,9 @@ API base: https://graph.facebook.com/v21.0
 - "beamina", "beam" → Beamina
 - "happy paws", "paws" → Happy Paws
 - "sienna", "peace in mind" → Sienna
+- "san antonio" → Zamora (Camila sub-brand, San Antonio show)
 - "vaz vil", "kiko blade", "penetrado" → Vaz Vil
-- "don omar", "barcelona", "bcn" → Don Omar BCN (uses EATA/Vivaticket, NOT Meta campaigns — see EATA section below)
+- "don omar", "barcelona", "bcn" → Don Omar BCN (ticket sales tracked via EATA/Vivaticket + Meta campaign launched Mar 6 — see EATA section below)
 - If you can't match the name, ASK. Don't guess.
 
 ---
@@ -410,8 +411,8 @@ Levels: "info", "warn", "error" (Zod-validated — "warning" and "critical" will
 
 ## EATA / Vivaticket (Don Omar BCN)
 
-Don Omar BCN does NOT have Meta campaigns — ticket sales are tracked via Vivaticket/EATA.
-If Jaime asks about Don Omar, query Supabase (not Meta API):
+Don Omar BCN has a Meta campaign (launched Mar 6, $100/day) AND ticket sales tracked via Vivaticket/EATA.
+If Jaime asks about Don Omar tickets, query Supabase EATA data. For ad performance, pull from Meta API like any other campaign.
 
 ```bash
 curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=name,status,tickets_sold,gross,tickets_sold_today,revenue_today,avg_ticket_price,date&tm_id=eq.eata_14948" \

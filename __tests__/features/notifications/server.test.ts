@@ -1,6 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { state, supabaseAdmin } = vi.hoisted(() => {
+const {
+  clerkClient,
+  createClerkSupabaseClient,
+  currentUser,
+  state,
+  supabaseAdmin,
+  userScopedState,
+  userScopedSupabase,
+} = vi.hoisted(() => {
   const state = {
     approval_requests: [] as Record<string, unknown>[],
     asset_comments: [] as Record<string, unknown>[],
@@ -15,6 +23,17 @@ const { state, supabaseAdmin } = vi.hoisted(() => {
     event_comments: [] as Record<string, unknown>[],
     event_follow_up_items: [] as Record<string, unknown>[],
     meta_campaigns: [] as Record<string, unknown>[],
+    notifications: [] as Record<string, unknown>[],
+  };
+
+  const userScopedState = {
+    approval_requests: [] as Record<string, unknown>[],
+    asset_comments: [] as Record<string, unknown>[],
+    asset_follow_up_items: [] as Record<string, unknown>[],
+    campaign_action_items: [] as Record<string, unknown>[],
+    campaign_comments: [] as Record<string, unknown>[],
+    event_comments: [] as Record<string, unknown>[],
+    event_follow_up_items: [] as Record<string, unknown>[],
     notifications: [] as Record<string, unknown>[],
   };
 
@@ -91,10 +110,79 @@ const { state, supabaseAdmin } = vi.hoisted(() => {
     },
   };
 
-  return { state, supabaseAdmin };
+  const userScopedSupabase = {
+    from(table: string) {
+      const filters: Array<{ field: string; type: "eq" | "in" | "neq" | "not-null"; value: unknown }> = [];
+      let limitValue: number | null = null;
+
+      const query = {
+        select() {
+          return this;
+        },
+        eq(field: string, value: unknown) {
+          filters.push({ field, type: "eq", value });
+          return this;
+        },
+        in(field: string, value: unknown[]) {
+          filters.push({ field, type: "in", value });
+          return this;
+        },
+        neq(field: string, value: unknown) {
+          filters.push({ field, type: "neq", value });
+          return this;
+        },
+        not(field: string, operator: string, value: unknown) {
+          if (operator === "is" && value === null) {
+            filters.push({ field, type: "not-null", value });
+          }
+          return this;
+        },
+        order() {
+          return this;
+        },
+        limit(value: number) {
+          limitValue = value;
+          return this;
+        },
+        async maybeSingle() {
+          const rows = applyFilters(
+            (userScopedState[table as keyof typeof userScopedState] ?? []) as Record<string, unknown>[],
+            filters,
+          );
+          return { data: rows[0] ?? null, error: null };
+        },
+        then(resolve: (value: { data: Record<string, unknown>[]; error: null }) => unknown) {
+          const rows = applyFilters(
+            (userScopedState[table as keyof typeof userScopedState] ?? []) as Record<string, unknown>[],
+            filters,
+          );
+          const data = limitValue == null ? rows : rows.slice(0, limitValue);
+          return Promise.resolve({ data, error: null }).then(resolve);
+        },
+      };
+
+      return query;
+    },
+  };
+
+  return {
+    clerkClient: vi.fn(),
+    createClerkSupabaseClient: vi.fn(),
+    currentUser: vi.fn(),
+    state,
+    supabaseAdmin,
+    userScopedState,
+    userScopedSupabase,
+  };
 });
 
+vi.mock("@clerk/nextjs/server", () => ({
+  clerkClient,
+  currentUser,
+}));
+
 vi.mock("@/lib/supabase", () => ({
+  createClerkSupabaseClient,
   supabaseAdmin,
 }));
 
@@ -112,6 +200,9 @@ const mockedListVisibleAssetIdsForScope = vi.mocked(listVisibleAssetIdsForScope)
 
 describe("listNotificationsForUser", () => {
   beforeEach(() => {
+    clerkClient.mockReset();
+    createClerkSupabaseClient.mockReset();
+    currentUser.mockReset();
     state.notifications = [];
     state.campaign_comments = [];
     state.campaign_action_items = [];
@@ -126,7 +217,47 @@ describe("listNotificationsForUser", () => {
     state.asset_comments = [];
     state.asset_follow_up_items = [];
     state.approval_requests = [];
+    userScopedState.approval_requests = [];
+    userScopedState.asset_comments = [];
+    userScopedState.asset_follow_up_items = [];
+    userScopedState.campaign_action_items = [];
+    userScopedState.campaign_comments = [];
+    userScopedState.event_comments = [];
+    userScopedState.event_follow_up_items = [];
+    userScopedState.notifications = [];
     mockedListVisibleAssetIdsForScope.mockReset();
+    createClerkSupabaseClient.mockResolvedValue(null);
+    currentUser.mockResolvedValue({ publicMetadata: { role: "member" } });
+  });
+
+  it("prefers the Clerk-scoped notifications client when it is available", async () => {
+    state.notifications = [
+      {
+        id: "notif_service_role",
+        user_id: "user_1",
+        title: "Service role row",
+        type: "comment",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:00:00.000Z",
+      },
+    ];
+    userScopedState.notifications = [
+      {
+        id: "notif_rls",
+        user_id: "user_1",
+        title: "RLS row",
+        type: "comment",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:01:00.000Z",
+      },
+    ];
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
+
+    const notifications = await listNotificationsForUser("user_1");
+
+    expect(notifications.map((notification) => notification.id)).toEqual(["notif_rls"]);
   });
 
   it("filters scoped client notifications by campaign, event, asset, and approval context", async () => {
@@ -378,6 +509,139 @@ describe("listNotificationsForUser", () => {
         }),
       ]),
     );
+  });
+
+  it("uses Clerk-scoped relation reads when enriching client notification routes", async () => {
+    state.notifications = [
+      {
+        id: "notif_campaign_comment",
+        user_id: "user_1",
+        title: "Campaign thread",
+        type: "comment",
+        entity_type: "campaign_comment",
+        entity_id: "campaign_comment_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:00:00.000Z",
+      },
+    ];
+    state.campaign_comments = [{ id: "campaign_comment_1", campaign_id: "cmp_service" }];
+    userScopedState.notifications = [
+      {
+        id: "notif_campaign_comment",
+        user_id: "user_1",
+        title: "Campaign thread",
+        type: "comment",
+        entity_type: "campaign_comment",
+        entity_id: "campaign_comment_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:00:00.000Z",
+      },
+    ];
+    userScopedState.campaign_comments = [{ id: "campaign_comment_1", campaign_id: "cmp_rls" }];
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
+
+    const notifications = await listNotificationsForUser("user_1", {
+      clientSlug: "zamora",
+    });
+
+    expect(notifications).toEqual([
+      expect.objectContaining({
+        id: "notif_campaign_comment",
+        routeEntityId: "cmp_rls",
+        routeEntityType: "campaign",
+      }),
+    ]);
+  });
+
+  it("uses Clerk-scoped relation reads when filtering client notification scope", async () => {
+    state.notifications = [
+      {
+        id: "notif_event_comment",
+        user_id: "user_1",
+        title: "Event thread",
+        type: "comment",
+        entity_type: "event_comment",
+        entity_id: "event_comment_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:00:00.000Z",
+      },
+    ];
+    state.event_comments = [{ id: "event_comment_1", event_id: "evt_blocked" }];
+    userScopedState.notifications = [
+      {
+        id: "notif_event_comment",
+        user_id: "user_1",
+        title: "Event thread",
+        type: "comment",
+        entity_type: "event_comment",
+        entity_id: "event_comment_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:00:00.000Z",
+      },
+    ];
+    userScopedState.event_comments = [{ id: "event_comment_1", event_id: "evt_allowed" }];
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
+    mockedListVisibleAssetIdsForScope.mockResolvedValue(new Set());
+
+    const notifications = await listNotificationsForUser("user_1", {
+      clientSlug: "zamora",
+      scope: {
+        allowedCampaignIds: [],
+        allowedEventIds: ["evt_allowed"],
+      },
+    });
+
+    expect(notifications.map((notification) => notification.id)).toEqual([
+      "notif_event_comment",
+    ]);
+  });
+
+  it("keeps admin client inbox helper reads on the service role", async () => {
+    currentUser.mockResolvedValue({ publicMetadata: { role: "admin" } });
+    state.notifications = [
+      {
+        id: "notif_campaign_comment",
+        user_id: "user_1",
+        title: "Campaign thread",
+        type: "comment",
+        entity_type: "campaign_comment",
+        entity_id: "campaign_comment_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:00:00.000Z",
+      },
+    ];
+    state.campaign_comments = [{ id: "campaign_comment_1", campaign_id: "cmp_service" }];
+    userScopedState.notifications = [
+      {
+        id: "notif_campaign_comment",
+        user_id: "user_1",
+        title: "Campaign thread",
+        type: "comment",
+        entity_type: "campaign_comment",
+        entity_id: "campaign_comment_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:00:00.000Z",
+      },
+    ];
+    userScopedState.campaign_comments = [{ id: "campaign_comment_1", campaign_id: "cmp_rls" }];
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
+
+    const notifications = await listNotificationsForUser("user_1", {
+      clientSlug: "zamora",
+    });
+
+    expect(notifications).toEqual([
+      expect.objectContaining({
+        id: "notif_campaign_comment",
+        routeEntityId: "cmp_service",
+      }),
+    ]);
   });
 
   it("backfills reassigned campaign notifications that still carry the old client slug", async () => {

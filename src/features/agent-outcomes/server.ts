@@ -1,6 +1,7 @@
-import { supabaseAdmin } from "@/lib/supabase";
+import { currentUser } from "@clerk/nextjs/server";
 import type { Json } from "@/lib/database.types";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import {
   buildAgentOutcomeView,
   type AgentOutcomeRequestRecord,
@@ -29,6 +30,23 @@ export interface AgentOutcomeContext {
   linkedEventFollowUpItemId: string | null;
   request: AgentOutcomeRequestRecord;
   task: AgentOutcomeTaskRecord | null;
+}
+
+async function getAgentOutcomeReadClient(options: ListAgentOutcomesOptions) {
+  if (!supabaseAdmin) return null;
+  if (options.audience !== "shared" || !options.clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
 }
 
 function mapRequestRow(row: Record<string, unknown>): AgentOutcomeRequestRecord {
@@ -109,11 +127,12 @@ export function matchesContext(
 export async function listAgentOutcomes(
   options: ListAgentOutcomesOptions = {},
 ): Promise<AgentOutcomeView[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getAgentOutcomeReadClient(options);
+  if (!db) return [];
   const scopeCampaignIds = options.scopeCampaignIds ? new Set(options.scopeCampaignIds) : null;
   const scopeEventIds = options.scopeEventIds ? new Set(options.scopeEventIds) : null;
 
-  let eventsQuery = supabaseAdmin
+  let eventsQuery = db
     .from("system_events")
     .select("entity_id, created_at, client_slug, summary, detail, metadata, visibility")
     .eq("event_name", "agent_action_requested")
@@ -180,28 +199,28 @@ export async function listAgentOutcomes(
     { data: linkedCrmRows, error: linkedCrmError },
   ] =
     await Promise.all([
-      supabaseAdmin
+      db
         .from("agent_tasks")
         .select(
           "id, action, from_agent, to_agent, params, result, error, status, created_at, started_at, completed_at",
         )
         .in("id", taskIds),
-      supabaseAdmin
+      db
         .from("campaign_action_items")
         .select("id, source_entity_id")
         .eq("source_entity_type", "agent_task")
         .in("source_entity_id", taskIds),
-      supabaseAdmin
+      db
         .from("asset_follow_up_items" as never)
         .select("id, source_entity_id")
         .eq("source_entity_type", "agent_task")
         .in("source_entity_id", taskIds),
-      supabaseAdmin
+      db
         .from("event_follow_up_items" as never)
         .select("id, source_entity_id")
         .eq("source_entity_type", "agent_task")
         .in("source_entity_id", taskIds),
-      supabaseAdmin
+      db
         .from("crm_follow_up_items" as never)
         .select("id, source_entity_id")
         .eq("source_entity_type", "agent_task")

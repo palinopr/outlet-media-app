@@ -103,7 +103,17 @@ export const AlertPatchSchema = z.object({
 
 // ─── Agents schemas ─────────────────────────────────────────────────────────
 
-export const VALID_AGENTS = ["tm-monitor", "meta-ads", "campaign-monitor", "assistant"] as const;
+export const VALID_AGENTS = [
+  "tm-monitor",
+  "meta-ads",
+  "campaign-monitor",
+  "assistant",
+  "growth-supervisor",
+  "tiktok-supervisor",
+  "content-finder",
+  "lead-qualifier",
+  "publisher-tiktok",
+] as const;
 
 export const AgentPostSchema = z.object({
   agent: z.enum(VALID_AGENTS),
@@ -154,6 +164,29 @@ export const ChangeClientMemberRoleSchema = z.object({
 export const HeartbeatPayloadSchema = z.object({
   secret: z.string().min(1),
 });
+
+// ─── WhatsApp runtime schemas ───────────────────────────────────────────────
+
+export const WhatsAppSendSchema = z
+  .object({
+    body: z.string().trim().min(1).max(4096),
+    conversationId: z.string().uuid().optional(),
+    phoneNumberId: z.string().trim().min(1).optional(),
+    previewUrl: z.boolean().optional(),
+    replyToMessageId: z.string().trim().min(1).optional(),
+    secret: z.string().min(1),
+    toWaId: z.string().trim().min(1).optional(),
+    approved: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (!value.conversationId && !(value.phoneNumberId && value.toWaId)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Either conversationId or both phoneNumberId and toWaId are required.",
+        path: ["conversationId"],
+      });
+    }
+  });
 
 // ─── Campaign creation schema ──────────────────────────────────────────────
 

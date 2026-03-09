@@ -1,3 +1,4 @@
+import { currentUser } from "@clerk/nextjs/server";
 import {
   TASK_PRIORITY_LABELS,
   TASK_STATUS_LABELS,
@@ -5,7 +6,7 @@ import {
   type TaskStatus,
 } from "@/lib/workspace-types";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   logSystemEvent,
@@ -134,6 +135,22 @@ async function listContactNames(contactIds: string[]) {
   );
 }
 
+async function getCrmFollowUpReadClient(clientSlug?: string | null) {
+  if (!supabaseAdmin || !clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
+
 function mapCrmFollowUpItem(
   row: Record<string, unknown>,
   contactNames: Map<string, string>,
@@ -165,9 +182,10 @@ function mapCrmFollowUpItem(
 export async function listCrmFollowUpItems(
   options: ListCrmFollowUpItemsOptions,
 ): Promise<CrmFollowUpItem[]> {
-  if (!supabaseAdmin) return [];
+  const db = await getCrmFollowUpReadClient(options.clientSlug);
+  if (!db) return [];
 
-  let query = supabaseAdmin
+  let query = db
     .from("crm_follow_up_items" as never)
     .select(CRM_FOLLOW_UP_ITEM_SELECT)
     .order("position", { ascending: true })
@@ -196,9 +214,27 @@ export async function listCrmFollowUpItems(
   }
 
   const rows = (data ?? []) as Record<string, unknown>[];
-  const contactNames = await listContactNames(
-    [...new Set(rows.map((row) => String(row.contact_id)).filter(Boolean))],
-  );
+  const contactIds = [...new Set(rows.map((row) => String(row.contact_id)).filter(Boolean))];
+  const contactNames =
+    contactIds.length === 0
+      ? new Map<string, string>()
+      : await db
+          .from("crm_contacts" as never)
+          .select("id, full_name")
+          .in("id", contactIds)
+          .then(({ data: contactRows, error: contactError }) => {
+            if (contactError) {
+              console.error("[crm-follow-up-items] contact lookup failed:", contactError.message);
+              return new Map<string, string>();
+            }
+
+            return new Map(
+              (contactRows ?? []).map((row) => [
+                String((row as Record<string, unknown>).id),
+                String((row as Record<string, unknown>).full_name ?? ""),
+              ]),
+            );
+          });
 
   return rows.map((row) => mapCrmFollowUpItem(row, contactNames));
 }

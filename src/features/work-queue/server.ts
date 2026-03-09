@@ -1,5 +1,6 @@
+import { currentUser } from "@clerk/nextjs/server";
 import type { ScopeFilter } from "@/lib/member-access";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import { buildWorkQueueSummary, type WorkQueueItem } from "./summary";
@@ -73,8 +74,26 @@ export function matchesWorkQueueKinds(
   return kinds.includes(item.kind);
 }
 
+async function getWorkQueueReadClient(options: GetWorkQueueOptions) {
+  if (!supabaseAdmin) return null;
+  if (options.mode !== "client" || !options.clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+}
+
 export async function getWorkQueue(options: GetWorkQueueOptions) {
-  if (!supabaseAdmin) {
+  const db = await getWorkQueueReadClient(options);
+  if (!db || !supabaseAdmin) {
     return buildWorkQueueSummary([], { limit: options.limit });
   }
 
@@ -84,28 +103,28 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
     : null;
   const allowedCampaignIds = options.scope?.allowedCampaignIds ?? effectiveClientCampaignIds;
 
-  let campaignQuery = supabaseAdmin
+  let campaignQuery = db
     .from("campaign_action_items")
     .select("id, campaign_id, client_slug, title, description, status, priority, assignee_name, due_date, updated_at")
     .neq("status", "done")
     .order("updated_at", { ascending: false })
     .limit(100);
 
-  let crmQuery = supabaseAdmin
+  let crmQuery = db
     .from("crm_follow_up_items" as never)
     .select("id, contact_id, client_slug, title, description, status, priority, assignee_name, due_date, updated_at")
     .neq("status", "done")
     .order("updated_at", { ascending: false })
     .limit(100);
 
-  let eventQuery = supabaseAdmin
+  let eventQuery = db
     .from("event_follow_up_items" as never)
     .select("id, event_id, client_slug, title, description, status, priority, assignee_name, due_date, updated_at")
     .neq("status", "done")
     .order("updated_at", { ascending: false })
     .limit(100);
 
-  let assetQuery = supabaseAdmin
+  let assetQuery = db
     .from("asset_follow_up_items" as never)
     .select("id, asset_id, client_slug, title, description, status, priority, assignee_name, due_date, updated_at")
     .neq("status", "done")
@@ -170,7 +189,7 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
 
   const [campaignNamesRes, contactNamesRes, eventNamesRes, assetNamesRes] = await Promise.all([
     filteredCampaignRows.length > 0
-      ? supabaseAdmin
+      ? db
           .from("meta_campaigns")
           .select("campaign_id, name")
           .in(
@@ -179,19 +198,19 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
           )
       : Promise.resolve({ data: [] }),
     crmRows.length > 0
-      ? supabaseAdmin
+      ? db
           .from("crm_contacts" as never)
           .select("id, full_name")
           .in("id", [...new Set(crmRows.map((row) => String(row.contact_id)))])
       : Promise.resolve({ data: [] }),
     filteredEventRows.length > 0
-      ? supabaseAdmin
+      ? db
           .from("tm_events")
           .select("id, name, artist")
           .in("id", [...new Set(filteredEventRows.map((row) => String(row.event_id)))])
       : Promise.resolve({ data: [] }),
     assetRows.length > 0
-      ? supabaseAdmin
+      ? db
           .from("ad_assets")
           .select("id, file_name")
           .in("id", [...new Set(assetRows.map((row) => String(row.asset_id)))])

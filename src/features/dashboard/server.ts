@@ -1,10 +1,12 @@
+import { currentUser } from "@clerk/nextjs/server";
 import type { TaskPriority } from "@/lib/workspace-types";
 import type { ScopeFilter } from "@/lib/member-access";
 import {
   applyEffectiveCampaignClientSlugs,
   listEffectiveCampaignIdsForClientSlug,
 } from "@/lib/campaign-client-assignment";
-import { supabaseAdmin } from "@/lib/supabase";
+import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { listApprovalRequests } from "@/features/approvals/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { listConversationThreads } from "@/features/conversations/server";
 import type { ConversationThread } from "@/features/conversations/summary";
@@ -73,6 +75,26 @@ export interface DashboardActionCenter {
   approvals: DashboardActionCenterApproval[];
   crmFollowUps: DashboardActionCenterCrmFollowUp[];
   discussions: DashboardActionCenterDiscussion[];
+}
+
+async function getDashboardReadClient(options: {
+  clientSlug?: string;
+  mode: DashboardSummaryMode;
+}) {
+  if (!supabaseAdmin) return null;
+  if (options.mode !== "client" || !options.clientSlug) return supabaseAdmin;
+
+  try {
+    const user = await currentUser();
+    const role = (user?.publicMetadata as { role?: string } | null)?.role;
+    if (role === "admin") {
+      return supabaseAdmin;
+    }
+  } catch {
+    return supabaseAdmin;
+  }
+
+  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
 }
 
 function emptySummary(mode: DashboardSummaryMode, limit?: number): DashboardOpsSummary {
@@ -150,7 +172,8 @@ function resolveEventName(
 export async function getDashboardOpsSummary(
   options: GetDashboardOpsSummaryOptions,
 ): Promise<DashboardOpsSummary> {
-  if (!supabaseAdmin) return emptySummary(options.mode, options.limit);
+  const db = await getDashboardReadClient(options);
+  if (!db) return emptySummary(options.mode, options.limit);
 
   const effectiveClientCampaignIds = options.clientSlug
     ? await listEffectiveCampaignIdsForClientSlug(options.clientSlug)
@@ -162,26 +185,19 @@ export async function getDashboardOpsSummary(
 
   const recentSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  let campaignsQuery = supabaseAdmin
+  let campaignsQuery = db
     .from("meta_campaigns")
     .select("campaign_id, client_slug, name, status")
     .limit(600);
 
-  let approvalsQuery = supabaseAdmin
-    .from("approval_requests")
-    .select("client_slug, created_at, entity_id, entity_type, metadata")
-    .eq("status", "pending")
-    .order("created_at", { ascending: false })
-    .limit(500);
-
-  let actionItemsQuery = supabaseAdmin
+  let actionItemsQuery = db
     .from("campaign_action_items")
     .select("campaign_id, client_slug, priority, status, updated_at")
     .neq("status", "done")
     .order("updated_at", { ascending: false })
     .limit(500);
 
-  let commentsQuery = supabaseAdmin
+  let commentsQuery = db
     .from("campaign_comments")
     .select("campaign_id, client_slug, created_at")
     .eq("resolved", false)
@@ -189,7 +205,7 @@ export async function getDashboardOpsSummary(
     .order("created_at", { ascending: false })
     .limit(500);
 
-  let eventsQuery = supabaseAdmin
+  let eventsQuery = db
     .from("system_events")
     .select("client_slug, created_at, entity_id, entity_type, metadata")
     .gte("created_at", recentSince)
@@ -207,15 +223,23 @@ export async function getDashboardOpsSummary(
   }
 
   if (options.mode === "client") {
-    approvalsQuery = approvalsQuery.in("audience", ["shared", "client"]);
     actionItemsQuery = actionItemsQuery.eq("visibility", "shared");
     commentsQuery = commentsQuery.eq("visibility", "shared");
     eventsQuery = eventsQuery.eq("visibility", "shared");
   }
 
-  const [campaignsRes, approvalsRes, actionItemsRes, commentsRes, eventsRes] = await Promise.all([
+  const [campaignsRes, approvals, actionItemsRes, commentsRes, eventsRes] = await Promise.all([
     campaignsQuery,
-    approvalsQuery,
+    listApprovalRequests({
+      audience: "all",
+      clientSlug: options.clientSlug,
+      limit: 500,
+      scope:
+        scopeIds != null
+          ? { allowedCampaignIds: scopeIds, allowedEventIds: null }
+          : null,
+      status: "pending",
+    }),
     actionItemsQuery,
     commentsQuery,
     eventsQuery,
@@ -244,13 +268,13 @@ export async function getDashboardOpsSummary(
       status: (row.status as string) ?? "unknown",
     }));
 
-  const approvals: DashboardApprovalRecord[] = (approvalsRes.data ?? [])
+  const approvalRecords: DashboardApprovalRecord[] = approvals
     .map((row) => ({
-      clientSlug: row.client_slug as string,
-      createdAt: row.created_at as string,
-      entityId: (row.entity_id as string | null) ?? null,
-      entityType: (row.entity_type as string | null) ?? null,
-      metadata: ((row.metadata as Record<string, unknown> | null) ?? {}) as Record<string, unknown>,
+      clientSlug: row.clientSlug,
+      createdAt: row.createdAt,
+      entityId: row.entityId,
+      entityType: row.entityType,
+      metadata: row.metadata,
     }))
     .filter((row) => {
       const campaignId =
@@ -306,7 +330,7 @@ export async function getDashboardOpsSummary(
 
   return buildDashboardOpsSummary({
     actionItems,
-    approvals,
+    approvals: approvalRecords,
     campaigns,
     comments,
     events,
@@ -329,7 +353,8 @@ export async function getDashboardAssetSummary(
 export async function getDashboardActionCenter(
   options: GetDashboardActionCenterOptions,
 ): Promise<DashboardActionCenter> {
-  if (!supabaseAdmin) {
+  const db = await getDashboardReadClient(options);
+  if (!db) {
     return { approvals: [], crmFollowUps: [], discussions: [] };
   }
 
@@ -342,29 +367,30 @@ export async function getDashboardActionCenter(
     return { approvals: [], crmFollowUps: [], discussions: [] };
   }
 
-  let campaignsQuery = supabaseAdmin
+  let campaignsQuery = db
     .from("meta_campaigns")
     .select("campaign_id, client_slug, name")
     .limit(600);
-
-  let approvalsQuery = supabaseAdmin
-    .from("approval_requests")
-    .select("id, title, summary, created_at, client_slug, entity_id, entity_type, metadata")
-    .eq("status", "pending")
-    .order("created_at", { ascending: false })
-    .limit(Math.max((options.limit ?? 4) * 4, 12));
 
   if (scopeIds && scopeIds.length > 0) {
     campaignsQuery = campaignsQuery.in("campaign_id", scopeIds);
   }
 
-  if (options.mode === "client") {
-    approvalsQuery = approvalsQuery.in("audience", ["shared", "client"]);
-  }
-
-  const [campaignsRes, approvalsRes, discussions, crmFollowUpItems] = await Promise.all([
+  const [campaignsRes, approvals, discussions, crmFollowUpItems] = await Promise.all([
     campaignsQuery,
-    approvalsQuery,
+    listApprovalRequests({
+      audience: "all",
+      clientSlug: options.clientSlug,
+      limit: Math.max((options.limit ?? 4) * 4, 12),
+      scope:
+        options.scopeCampaignIds != null || options.scopeEventIds != null
+          ? {
+              allowedCampaignIds: options.scopeCampaignIds ?? null,
+              allowedEventIds: options.scopeEventIds ?? null,
+            }
+          : null,
+      status: "pending",
+    }),
     listConversationThreads({
       clientSlug: options.clientSlug,
       limit: Math.max((options.limit ?? 4) * 4, 12),
@@ -404,39 +430,36 @@ export async function getDashboardActionCenter(
 
   const allowedEventIdSet = scopeEventIds ? new Set(scopeEventIds) : null;
 
-  const approvals: DashboardActionCenterApproval[] = (approvalsRes.data ?? [])
+  const approvalRows: DashboardActionCenterApproval[] = approvals
     .map((row) => {
-      const metadata = ((row.metadata as Record<string, unknown> | null) ?? {}) as Record<
-        string,
-        unknown
-      >;
+      const metadata = row.metadata;
       const campaignId = resolveCampaignId(
-        (row.entity_type as string | null) ?? null,
-        (row.entity_id as string | null) ?? null,
+        row.entityType ?? null,
+        row.entityId ?? null,
         metadata,
       );
       const eventId = resolveEventId(
-        (row.entity_type as string | null) ?? null,
-        (row.entity_id as string | null) ?? null,
+        row.entityType ?? null,
+        row.entityId ?? null,
         metadata,
       );
 
       return {
         assetId: resolveAssetId(
-          (row.entity_type as string | null) ?? null,
-          (row.entity_id as string | null) ?? null,
+          row.entityType ?? null,
+          row.entityId ?? null,
           metadata,
         ),
         assetName: resolveAssetName(metadata),
         campaignId,
         campaignName: resolveCampaignName(campaignId, metadata, campaignNames),
-        clientSlug: row.client_slug as string,
-        createdAt: row.created_at as string,
+        clientSlug: row.clientSlug,
+        createdAt: row.createdAt,
         eventId,
         eventName: resolveEventName(eventId, metadata, new Map<string, string>()),
-        id: row.id as string,
-        summary: (row.summary as string | null) ?? null,
-        title: row.title as string,
+        id: row.id,
+        summary: row.summary,
+        title: row.title,
       };
     })
     .filter((row) => {
@@ -457,14 +480,14 @@ export async function getDashboardActionCenter(
 
   const eventIds = [
     ...new Set(
-      approvals
+      approvalRows
         .map((row) => row.eventId)
         .filter((value): value is string => typeof value === "string" && value.length > 0),
     ),
   ];
 
   if (eventIds.length > 0) {
-    const { data: eventRows } = await supabaseAdmin
+    const { data: eventRows } = await db
       .from("tm_events")
       .select("id, name, artist")
       .in("id", eventIds);
@@ -477,7 +500,7 @@ export async function getDashboardActionCenter(
       );
     }
 
-    for (const approval of approvals) {
+    for (const approval of approvalRows) {
       approval.eventName = approval.eventName ?? resolveEventName(approval.eventId, {}, eventNames);
     }
   }
@@ -503,7 +526,7 @@ export async function getDashboardActionCenter(
     }));
 
   return {
-    approvals,
+    approvals: approvalRows,
     crmFollowUps,
     discussions: discussions.slice(0, options.limit ?? 4),
   };

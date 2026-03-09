@@ -1,0 +1,89 @@
+%%{init: {"flowchart": {"nodeSpacing": 40, "rankSpacing": 60}, "themeVariables": {"fontSize": "20px"}} }%%
+flowchart TB
+    A["Owner / Human Approval"] --> B["Boss Supervisor"]
+
+    subgraph SUP["Pod Supervisors"]
+        direction TB
+        C["Growth Supervisor"]
+        D["Creative Supervisor"]
+        E["Paid Media Supervisor"]
+        F["Lead Ops Supervisor"]
+        G["Analytics Supervisor"]
+        H["Ops / Automation Supervisor"]
+    end
+
+    B --> C
+    B --> D
+    B --> E
+    B --> F
+    B --> G
+    B --> H
+
+    subgraph GROWTH["Growth Pod"]
+        direction TB
+        C --> C1["TikTok Supervisor"]
+        C --> C2["YouTube Supervisor"]
+        C --> C3["Instagram Supervisor"]
+        C --> C4["X / LinkedIn Supervisor"]
+
+        subgraph TIKTOK["TikTok Squad"]
+            direction TB
+            C1 --> C11["Trend Scout"]
+            C1 --> C12["Content Finder"]
+            C1 --> C13["Hook Strategist"]
+            C1 --> C14["Community Manager"]
+            C1 --> C15["Platform Analyst"]
+        end
+
+        subgraph YOUTUBE["YouTube Squad"]
+            direction TB
+            C2 --> C21["Topic Researcher"]
+            C2 --> C22["Series Planner"]
+            C2 --> C23["Thumbnail Strategist"]
+            C2 --> C24["Comment Manager"]
+            C2 --> C25["Platform Analyst"]
+        end
+    end
+
+    subgraph CREATIVE["Creative Pod"]
+        direction TB
+        D --> D1["Scriptwriter"]
+        D --> D2["Video Creator"]
+        D --> D3["Image / Photo Creator"]
+        D --> D4["Editor / Packager"]
+        D --> D5["Creative QA"]
+    end
+
+    subgraph MEDIA["Paid Media Pod"]
+        direction TB
+        E --> E1["Media Strategist"]
+        E --> E2["Campaign Planner"]
+        E --> E3["Ad Set Builder"]
+        E --> E4["Creative Matcher"]
+        E --> E5["Platform Executor"]
+        E --> E6["Performance Monitor"]
+        E --> E7["Budget Manager"]
+    end
+
+    subgraph LEADS["Lead Ops Pod"]
+        direction TB
+        F --> F1["Inbound Triage"]
+        F --> F2["Lead Qualifier"]
+        F --> F3["CRM Handoff"]
+        F --> F4["Appointment Setter"]
+    end
+
+    subgraph ANALYTICS["Analytics Pod"]
+        direction TB
+        G --> G1["Reporting Analyst"]
+        G --> G2["Experiment Analyst"]
+        G --> G3["Attribution Analyst"]
+    end
+
+    subgraph OPS["Ops / Automation Pod"]
+        direction TB
+        H --> H1["Task Dispatcher"]
+        H --> H2["Publisher Agents"]
+        H --> H3["Browser Executor"]
+        H --> H4["Compliance / Risk Guard"]
+    end

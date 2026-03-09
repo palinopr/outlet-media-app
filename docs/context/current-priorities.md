@@ -8,25 +8,69 @@ Outlet is being built as a client-facing autonomous agency operating system.
 
 The short-term focus is:
 
-1. Make the workspace feel coherent across admin and client views.
-2. Turn campaigns, assets, approvals, reports, CRM, and activity into first-class product areas.
-3. Build the event backbone that lets agents react to real system activity.
-4. Improve customer visibility so clients can follow work, comment, approve, and understand progress.
-5. Preserve a familiar dashboard/reporting layer with charts and summaries for traditional users.
-6. Keep adding apps that fit the same shared operating environment instead of building isolated tools.
+1. Make the client portal feel extremely clear and trustworthy for current customers.
+2. Keep the customer-facing web surface focused on campaigns and events.
+3. Make campaign and event analytics strong enough that clients do not need extra tabs to understand performance.
+4. Keep admin as the broader operating surface for CRM, approvals, assets, account management, and internal workflow.
+5. Build the event backbone that lets agents react to real system activity.
+6. Preserve the shared operating-system backbone so more surfaces can be exposed later without rebuilding the model.
+
+## Current Surface Packaging
+
+Until current customers prove otherwise, treat the product packaging like this:
+
+- Client web:
+  - campaigns
+  - events
+- Admin web:
+  - campaigns
+  - events
+  - CRM
+  - approvals
+  - assets
+  - client/account operations
+- Discord/internal control plane:
+  - owner email
+  - meetings
+  - customer WhatsApp operations
+  - internal autonomous teams
+
+Implications:
+
+- Do not keep broad client navigation just because the backend supports it.
+- Client analytics, approvals, conversations, activity, assets, and agent follow-through should usually be embedded inside campaign and event views first.
+- CRM is admin-first right now.
+- Evolution/WhatsApp should enrich CRM and client/account context through durable records, routing, and summaries, but should not become a separate public client inbox.
+- If admin needs WhatsApp visibility in the web app, prefer CRM-linked conversation context and account health views over a second standalone chat surface that duplicates Discord operations.
 
 ## Near-Term Architecture Focus
 
+- Keep the current customer-facing packaging narrow: client portal top-level navigation should stay focused on campaigns and events until another surface is clearly justified by live customer use.
+- Make client campaign and event pages the primary analytics and collaboration surfaces instead of spreading customer value across many top-level tabs.
+- Keep admin CRM and client/account hubs as the main web operating surfaces for relationship management, including CRM state that may be informed by WhatsApp/Evolution communication history.
+- Keep customer WhatsApp transport and operator handling Discord-first even if the admin web later shows CRM-linked WhatsApp summaries, statuses, or recent-message context. The current default transport is Evolution on a phone-linked WhatsApp account, not Twilio.
+- When simplifying a shipped surface, remove or redirect the old client routes too. Do not leave broad direct-route access alive behind a simplified sidebar.
+- Prefer deleting or hard-gating replaced client surfaces after stabilization instead of carrying dead pages indefinitely.
+- Do not expose placeholder, low-confidence, or weakly integrated top-level pages just because the data exists.
 - Keep the Notion-like workspace shell, but do not let generic documents become the only product model.
 - Treat the workspace home as an operating shell, not only a page list, so queue pressure, approvals, activity, and agent follow-through stay visible next to the docs layer.
 - Prefer feature modules around domain areas such as `campaigns`, `assets`, `crm`, `workspace`, and `agents`.
 - Record meaningful system actions as structured events.
 - Use `system_events` as the shared activity backbone instead of creating separate ad hoc logs per feature.
+- Harden `system_events` into a replay-safe event envelope before more automation depends on it. That means version, source, occurred-at time, correlation, causation, and idempotency data instead of a summary-only event row.
 - Use `approval_requests` for explicit decision flows with audience-aware visibility (`admin`, `client`, `shared`).
-- Treat approvals as a first-class app surface with dedicated admin/client routes instead of only embedding approval panels inside other pages.
+- Treat approvals as a first-class app surface for admin, and keep client approval context embedded inside campaign and event views until a dedicated client approval center is clearly justified.
 - Keep approval visibility scope-aware for assigned client members, so limited members only see campaign/event-linked approvals that match their allowed scope when context exists.
 - Use campaign-native action items for campaign next steps instead of forcing campaign operations into only the generic workspace task board.
 - Design agents as bounded workers attached to those events.
+- Keep new internal growth and customer-acquisition teams Discord-first too, so content operations, publishing, lead routing, and internal platform execution use the same control-plane and ledger model as email and WhatsApp instead of fragmenting into ad hoc scripts or premature web apps.
+- Build new internal autonomous teams as pods with supervisor, worker, executor, and evaluator roles instead of one undifferentiated swarm, so decision rights and side effects stay controllable as the team grows.
+- Reuse the email-agent learning pattern across new pods: durable event/draft/example/correction/outcome/playbook ledgers behind Discord, with markdown memory files only as secondary notes.
+- Build new autonomous systems one vertical slice at a time. Once a slice has intake, routing, approvals, execution, and visible outcomes connected, stop adding breadth and switch to stabilization, evals, and operational testing before cloning the pattern to more pods or platforms.
+- Push tenant enforcement downward. Route-level auth checks are not enough by themselves for long-term safety; important client boundaries should also be enforced through Clerk-aware or claim-aware database policies where practical.
+- Treat `clients`, `client_members`, `client_member_campaigns`, and `client_member_events` as the tenant access backbone. Harden those membership tables before relying on RLS in downstream client-facing tables.
+- Move user-facing server reads off `supabaseAdmin` incrementally once the matching RLS exists. Use a Clerk-scoped Supabase client for those reads, and keep service-role access only on admin-global or backend-only paths until equivalent admin-safe policies exist.
+- Keep new autonomous workflows in shadow, draft-only, or assisted mode until logs and evals show they are stable enough for live outbound actions.
 - Keep admin and client experiences on the same backbone with different permissions and visibility.
 - Keep traditional dashboards as first-class surfaces, not as an afterthought layered on top of workflow views.
 - Make traditional reporting surfaces pull from the same workflow backbone too, so graphs and summaries stay connected to next steps.
@@ -43,7 +87,7 @@ The short-term focus is:
 - Treat asset follow-up items as first-class workflow objects so creative review notes, agent outcomes, and production next steps become visible work instead of passive comments.
 - Treat the assets index pages as operating surfaces too, not only file libraries, so creative discussions, follow-up work, and agent recommendations stay visible before users drill into a single asset.
 - Reuse the shared conversations, work queue, and agent follow-through modules on asset surfaces instead of creating asset-only summary logic that drifts from campaigns, CRM, and events.
-- Keep client asset visibility scope-aware for assigned members, so asset lists, asset detail routes, asset summaries, and asset discussion APIs only expose creative linked to the campaigns or events that member is actually allowed to see.
+- Keep any client-facing asset context scope-aware for assigned members, so embedded asset panels, linked asset detail routes, summaries, and asset discussion APIs only expose creative tied to the campaigns or events that member is actually allowed to see.
 - Keep shared client loaders asset-scope-aware too, so conversations, work queues, approvals, and activity feeds do not leak asset-linked work outside the member's allowed campaign or event context.
 - Keep shared client agent follow-through asset-scope-aware too, so dashboard and updates surfaces do not leak asset-only agent work outside the member's allowed campaign or event context.
 - On client campaign and event detail routes, prove the entity belongs to that client and matches assigned scope before loading detailed data, so a guessed id cannot bypass tenant or scope boundaries.
@@ -53,17 +97,17 @@ The short-term focus is:
 - Treat `/admin/activity` as the shared operations center, not only a legacy audit table, so admins can manage approvals, discussions, agent follow-through, and cross-app activity from one place.
 - Treat `/admin/agents` as an operating surface too, not only chat plus raw run history, so runtime health, actionable agent follow-through, and urgent agent runs are visible together in one command center.
 - Keep `/admin/agents` triage-first too, so actionable follow-through is grouped by surface and automated run history can be filtered quickly down to failures or in-flight work instead of forcing operators to scan a flat mixed table.
-- Keep the admin operations center and client updates center event-aware too, so show-level pressure is visible on the queue-first surfaces and not only inside the dedicated events app.
-- Keep the operations center and client updates center queue-first too, so users can move from visibility into the actual cross-app next steps without leaving those surfaces.
+- Keep the admin operations center event-aware too, so show-level pressure is visible on queue-first admin surfaces and not only inside the dedicated events app.
+- Keep the admin operations center queue-first too, so operators can move from visibility into the actual cross-app next steps without leaving that surface.
 - Keep `admin_activity` as a secondary audit trail behind the operations center instead of letting low-level page-view logs become the main operating surface.
 - Keep asset review pressure visible on the regular dashboards too, so summary-first users can spot creative bottlenecks without opening the full asset app first.
 - Derive dashboard workflow summaries from the same campaign-native approvals, action items, comments, and `system_events` backbone instead of introducing separate summary-only state.
 - Make dashboard-first users actionable by surfacing pending approvals and unresolved campaign discussion directly on the dashboard.
-- Give clients a dedicated updates surface, not just dashboards, so they can follow approvals, discussion, agent follow-through, and shared activity without hunting across tabs.
-- Treat the client settings and connect path as a real account center, not only a member list, so portal users can manage team access and connected Meta accounts from one coherent flow.
-- Keep pending client-team invites visible inside the client settings account center too, so owners can see who has been invited and clean up stale access setup without detouring into admin-only surfaces.
-- Treat pending and expired invites as the same actionable access-governance class, so admin users, admin client hubs, and client owner settings all dedupe stale invites the same way and can re-invite safely with `ignoreExisting`.
-- Surface client-side Meta connection health inside that same account center, so owners can spot stale, expiring, or disconnected ad account links before campaign workflow silently breaks.
+- Do not give clients a dedicated updates surface yet. Keep approvals, discussion, agent follow-through, and shared activity visible inside campaign and event views until a separate updates center is clearly justified by live customer use.
+- Do not prioritize a broad standalone client settings/connect center while the client portal is intentionally narrowed to campaigns and events.
+- Keep invite cleanup, member access governance, and connected-account management primarily on admin users, admin settings, and admin client/account hubs.
+- If limited client-owner account controls remain exposed, keep them minimal, safety-focused, and consistent with the same invite-governance rules used by admin surfaces.
+- Keep Meta connection health primarily visible on admin client/account hubs before exposing it as a broader client-facing management surface.
 - Keep Meta connect/disconnect owner-gated on both the client UI and the server routes, so non-owner client members can see connection health without being able to change the client account wiring.
 - Keep Meta campaign and creative mutation routes owner-or-admin gated too, so authenticated client members cannot create, edit, pause, or upload creative against a client ad account just by knowing its slug and account id.
 - Treat the admin users page as an access-governance surface, not only a roster, so admins can spot pending invites, unassigned client users, and client accounts with weak coverage before access problems grow.
@@ -78,11 +122,11 @@ The short-term focus is:
 - Treat notifications as first-class inbox surfaces on both admin and client, not only a bell popover, so users can work through routed updates in a full-screen flow.
 - Keep the dedicated inbox pages connected to approvals and assigned work too, so notifications remain an execution surface instead of a dead-end message list.
 - On client surfaces, load notifications with client-slug scoping so client users and admin previews never pull unrelated admin notifications into the client portal.
-- Keep client inbox notifications assignment-scope-aware too, so limited client members only see campaign, event, asset, and approval updates tied to the campaigns, events, and assets they are actually allowed to see.
+- Keep any client notification reads assignment-scope-aware, whether they appear in embedded campaign/event context or a future dedicated inbox, so limited client members only see campaign, event, asset, and approval updates tied to the work they are actually allowed to see.
 - Keep client-side people search and mention autocomplete client-slug scoped too, so workspace collaboration surfaces never fall back to global user lookup for non-admin users.
 - Keep workspace page, comment, and task APIs client-scoped too, and treat the admin workspace as its own internal `admin` tenant instead of defaulting those routes to all signed-in users or all workspace pages.
 - Keep the live workspace page/comment APIs on the same notification and revalidation path as the older workspace server actions, so the real editor flows refresh workspace shells and inboxes instead of drifting out of parity.
-- Keep access-management mutations on shared revalidation too, so admin users/settings/client-detail member surfaces and client settings stay in sync after invite, membership, or access-role changes.
+- Keep access-management mutations on shared revalidation too, so admin users/settings/client-detail member surfaces stay in sync after invite, membership, or access-role changes, and any future client-owner controls inherit the same behavior.
 - Treat `campaign_client_overrides` as part of the real campaign ownership model, not as an admin-only bulk-edit side table, so loaders that group or authorize campaigns use the effective client slug instead of trusting raw `meta_campaigns.client_slug`.
 - Keep campaign-aware asset classification on that same effective ownership model, so uploads and folder imports can still match reassigned campaigns instead of falling back to stale raw `meta_campaigns.client_slug` data.
 - When a campaign is reassigned, migrate the linked campaign workflow rows with it too, so campaign comments, action items, approvals, notifications, and shared activity do not stay attached to the previous client slug after ownership changes.
@@ -102,7 +146,7 @@ The short-term focus is:
 - Keep approval creation and resolution on that same shared revalidation path too, so direct approval actions and system-created approvals from uploads refresh approvals centers, inboxes, dashboards, reports, workspace shells, and linked entity views without relying on individual callers.
 - Prefer the shared workflow revalidation helpers over handwritten `revalidatePath` lists in admin mutations, so conversations, notifications, updates, and workspace surfaces do not drift out of sync as more product areas are added.
 - Use layout-aware workspace revalidation for page, comment, and task mutations too, so admin/client workspace sidebars, page detail views, task boards, inboxes, and activity surfaces stay coherent after workspace changes.
-- Treat conversations as a first-class app surface on both admin and client, not only as dashboard widgets or detail-page side panels, so unresolved discussion can be managed in one place.
+- Treat conversations as a first-class admin app surface. On client, keep unresolved discussion attached to campaign and event context until a standalone cross-context conversation surface is clearly justified.
 - Keep admin conversations actionable too, so operators can create linked action or follow-up items directly from open campaign, CRM, asset, and event threads without detouring into each detail page first.
 - Reuse the shared conversations feature module anywhere open discussion is summarized, instead of re-querying each comment table per route and letting discussion logic drift.
 - When client members have assigned scope, shared workflow loaders should honor both campaign scope and event scope so dashboards, conversations, notifications, and agent follow-through stay complete without leaking unrelated work.
@@ -136,6 +180,7 @@ When choosing what to build next, bias toward:
 - campaign-native comments and discussion
 - event-driven automation
 - first-class business objects over generic page abstractions
+- finishing and testing the current slice before adding the next pod or platform
 - fully owned, production-ready slices with verification and durable context updates
 
 Bias away from:
@@ -143,4 +188,5 @@ Bias away from:
 - isolated UI polish with no operational payoff
 - one-off route logic that duplicates domain behavior
 - agent features that are just chat without structured triggers or outcomes
+- expanding into new pods, platforms, or channels before the current slice has been proven end to end
 - preserving weak architecture just because it already exists

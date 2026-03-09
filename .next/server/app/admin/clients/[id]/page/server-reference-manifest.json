@@ -1,0 +1,215 @@
+{
+  "node": {
+    "00ab4a993c1fc1d78d1d079e12b39229d6d8546a64": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "detectKeylessEnvDriftAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "rsc"
+      },
+      "exportedName": "detectKeylessEnvDriftAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "001ff50a0035dace00c44b089633ca59ce49bb8032": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "invalidateCacheAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "action-browser"
+      },
+      "exportedName": "invalidateCacheAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js"
+    },
+    "00e2626d6630da1d7139c503ef72b72f6089e90143": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "createOrReadKeylessAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "rsc"
+      },
+      "exportedName": "createOrReadKeylessAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "00c5cd61a6f492997a677718ce54d2f0538ab8c41e": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "collectKeylessMetadata",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/server/keyless-custom-headers.js"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "rsc"
+      },
+      "exportedName": "collectKeylessMetadata",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/server/keyless-custom-headers.js"
+    },
+    "40b024e0fdf18d57e5bd16c6e3bfed3c623d5a3d77": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "formatMetadataHeaders",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/server/keyless-custom-headers.js"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "rsc"
+      },
+      "exportedName": "formatMetadataHeaders",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/server/keyless-custom-headers.js"
+    },
+    "00dfce79a6a0ff13280dd4eefd4007e5c69269f22b": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "deleteKeylessAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "action-browser"
+      },
+      "exportedName": "deleteKeylessAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "408c255de36809cf96a0cce4600af079acc573ee03": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "syncKeylessConfigAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "action-browser"
+      },
+      "exportedName": "syncKeylessConfigAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "00f06ec15510a5dcf8ebee5b00353049b6b6c8e28b": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "fetchSearchableRecords",
+          "filename": "src/app/admin/actions/search.ts"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "action-browser"
+      },
+      "exportedName": "fetchSearchableRecords",
+      "filename": "src/app/admin/actions/search.ts"
+    },
+    "4074779b5afcf93964c4e7a21613bfb41d5585aa41": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "removeClientMember",
+          "filename": "src/app/admin/actions/clients.ts"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "action-browser"
+      },
+      "exportedName": "removeClientMember",
+      "filename": "src/app/admin/actions/clients.ts"
+    },
+    "40a0fc6ffa9bcac57fdf4921b3c8404c24553f961c": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "changeClientMemberRole",
+          "filename": "src/app/admin/actions/clients.ts"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "action-browser"
+      },
+      "exportedName": "changeClientMemberRole",
+      "filename": "src/app/admin/actions/clients.ts"
+    },
+    "408c525a63065627d909881891fdae16cabf45a211": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "changeClientMemberScope",
+          "filename": "src/app/admin/actions/clients.ts"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "action-browser"
+      },
+      "exportedName": "changeClientMemberScope",
+      "filename": "src/app/admin/actions/clients.ts"
+    },
+    "40a8dd439321ae8ee97bcf083a310482a5de259d9a": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "updateMemberCampaigns",
+          "filename": "src/app/admin/actions/clients.ts"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "action-browser"
+      },
+      "exportedName": "updateMemberCampaigns",
+      "filename": "src/app/admin/actions/clients.ts"
+    },
+    "40d08d7be877479759569361e89366ee010a851749": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "updateMemberEvents",
+          "filename": "src/app/admin/actions/clients.ts"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "action-browser"
+      },
+      "exportedName": "updateMemberEvents",
+      "filename": "src/app/admin/actions/clients.ts"
+    },
+    "407c829ce79228e50e98b83557ec43e1b7f63250ec": {
+      "workers": {
+        "app/admin/clients/[id]/page": {
+          "moduleId": 398670,
+          "async": false,
+          "exportedName": "toggleService",
+          "filename": "src/app/admin/actions/clients.ts"
+        }
+      },
+      "layer": {
+        "app/admin/clients/[id]/page": "action-browser"
+      },
+      "exportedName": "toggleService",
+      "filename": "src/app/admin/actions/clients.ts"
+    }
+  },
+  "edge": {}
+}

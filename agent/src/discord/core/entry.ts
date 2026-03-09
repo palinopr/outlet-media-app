@@ -33,6 +33,15 @@ import { handleMessage, isChannelLocked, cleanForDiscord, chunkText } from "../.
 import { initWebhooks, sendAsAgent } from "../../services/webhook-service.js";
 import { initQueue } from "../../services/queue-service.js";
 import { initApprovals } from "../../services/approval-service.js";
+import {
+  extractScheduledCopySwapParams,
+  formatScheduledTimeLabel,
+  looksLikeScheduledBudgetRequest,
+  looksLikeScheduledCopySwapRequest,
+  parseScheduledDispatchTime,
+  scheduleCopySwapHandoff,
+  scheduleBudgetUpdateHandoff,
+} from "../../services/scheduled-handoff-service.js";
 import { buildPromptFromDiscordMessage } from "./message-prompt.js";
 
 const token = process.env.DISCORD_TOKEN;
@@ -123,6 +132,11 @@ const MEETING_HANDOFF_CHANNELS = new Set([
   "don-omar-tickets",
 ]);
 
+const SCHEDULED_MEDIA_BUYER_HANDOFF_CHANNELS = new Set([
+  ...MEETING_HANDOFF_CHANNELS,
+  "boss",
+]);
+
 const CONFIGURED_OWNER_USER_IDS = (process.env.DISCORD_OWNER_USER_IDS ?? "")
   .split(",")
   .map((id) => id.trim())
@@ -198,6 +212,211 @@ async function handoffMeetingRequestToBoss(
   ).catch(() => {});
 }
 
+async function handoffScheduledBudgetRequestToBoss(
+  msg: Message,
+  channelName: string,
+  content: string,
+): Promise<boolean> {
+  const deliverAt = parseScheduledDispatchTime(content);
+  if (!deliverAt) return false;
+
+  const requester = msg.member?.displayName || msg.author.globalName || msg.author.username;
+  const sourceChannelRef = `#${channelName}`;
+  const scheduledLabel = formatScheduledTimeLabel(deliverAt);
+
+  const scheduledTask = await scheduleBudgetUpdateHandoff({
+    deliverAt,
+    originalRequest: content,
+    requester,
+    sourceChannel: channelName,
+  });
+
+  await sendAsAgent(
+    "boss",
+    channelName,
+    `Boss got it. I scheduled this budget handoff for ${scheduledLabel}. Scheduler will send it to #media-buyer then and bring the result back here.`,
+  );
+
+  const scheduleBrief = [
+    `Queued by Boss: ${scheduledTask.id}`,
+    `Dispatch time: ${scheduledLabel}`,
+    `Requester: ${requester}`,
+    `Source: ${sourceChannelRef}`,
+    `Original request: "${content}"`,
+  ].join("\n");
+
+  if (channelName !== "boss") {
+    const bossBrief = [
+      `${requester} in ${sourceChannelRef} requested a scheduled budget update handoff.`,
+      `Original request: "${content}"`,
+      `Scheduler task: ${scheduledTask.id}`,
+      `Dispatch time: ${scheduledLabel}`,
+      `The scheduler will hand this to #media-buyer at the due time and reply back in ${sourceChannelRef}.`,
+    ].join("\n");
+
+    await sendAsAgent("boss", "boss", bossBrief);
+  }
+  await sendAsAgent("boss", "schedule", scheduleBrief);
+
+  const timestamp = new Date().toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  await notifyChannel(
+    "agent-feed",
+    `\`${timestamp}\` **#${channelName}** (scheduled-budget) -- ${requester}: "${content.slice(0, 120)}"`,
+  ).catch(() => {});
+
+  return true;
+}
+
+async function handoffScheduledCopySwapRequestToBoss(
+  msg: Message,
+  channelName: string,
+  content: string,
+): Promise<boolean> {
+  const deliverAt = parseScheduledDispatchTime(content);
+  if (!deliverAt) return false;
+
+  const requester = msg.member?.displayName || msg.author.globalName || msg.author.username;
+  const sourceChannelRef = `#${channelName}`;
+  const scheduledLabel = formatScheduledTimeLabel(deliverAt);
+  const swapParams = extractScheduledCopySwapParams(content);
+
+  if (!swapParams) {
+    await sendAsAgent(
+      "boss",
+      channelName,
+      "Boss can schedule this copy swap, but I need the exact ad IDs to activate and pause. Use `/schedule-copy-swap` or say `activate ad <new_id> and pause ad <old_id> at 12am`.",
+    );
+    return true;
+  }
+
+  const scheduledTask = await scheduleCopySwapHandoff({
+    ...swapParams,
+    deliverAt,
+    originalRequest: content,
+    requester,
+    sourceChannel: channelName,
+  });
+
+  await sendAsAgent(
+    "boss",
+    channelName,
+    `Boss got it. I scheduled this copy swap handoff for ${scheduledLabel}. Scheduler will send it to #media-buyer then and bring the result back here.`,
+  );
+
+  const scheduleBrief = [
+    `Queued by Boss: ${scheduledTask.id}`,
+    `Dispatch time: ${scheduledLabel}`,
+    `Requester: ${requester}`,
+    `Source: ${sourceChannelRef}`,
+    `Original request: "${content}"`,
+  ].join("\n");
+
+  if (channelName !== "boss") {
+    const bossBrief = [
+      `${requester} in ${sourceChannelRef} requested a scheduled copy swap handoff.`,
+      `Original request: "${content}"`,
+      `Scheduler task: ${scheduledTask.id}`,
+      `Dispatch time: ${scheduledLabel}`,
+      `The scheduler will hand this to #media-buyer at the due time and reply back in ${sourceChannelRef}.`,
+    ].join("\n");
+
+    await sendAsAgent("boss", "boss", bossBrief);
+  }
+  await sendAsAgent("boss", "schedule", scheduleBrief);
+
+  const timestamp = new Date().toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  await notifyChannel(
+    "agent-feed",
+    `\`${timestamp}\` **#${channelName}** (scheduled-copy-swap) -- ${requester}: "${content.slice(0, 120)}"`,
+  ).catch(() => {});
+
+  return true;
+}
+
+async function handleWhatsAppCommand(msg: Message, content: string): Promise<boolean> {
+  const normalized = content.trim();
+  if (!/^(!|\/)whatsapp\b/i.test(normalized)) {
+    return false;
+  }
+
+  if (!canRunCommand("whatsapp", msg.member, msg.author.id)) {
+    await msg.reply("Access denied. WhatsApp controls are owner-only.");
+    return true;
+  }
+
+  const parts = normalized.split(/\s+/);
+  const action = parts[1]?.toLowerCase();
+  const explicitConversationId = parts[2];
+
+  const {
+    actorNameForApproval,
+    formatConversationApprovalSummary,
+    loadConversationRecord,
+    resolveConversationIdForMessage,
+    setConversationAccessStatus,
+  } = await import("../../services/whatsapp-policy-service.js");
+
+  if (!action || !["allow", "deny", "status"].includes(action)) {
+    await msg.reply("Usage: `!whatsapp allow <conversationId>`, `!whatsapp deny <conversationId>`, or `!whatsapp status <conversationId>`. If you're inside a WhatsApp thread, the id is optional.");
+    return true;
+  }
+
+  const conversationId = await resolveConversationIdForMessage(msg, explicitConversationId);
+  if (!conversationId) {
+    await msg.reply("Could not resolve a WhatsApp conversation here. Provide the conversation id or run the command inside the linked WhatsApp thread.");
+    return true;
+  }
+
+  if (action === "status") {
+    const record = await loadConversationRecord(conversationId);
+    const policyLine =
+      record.policy.chatKind === "group"
+        ? `Group policy: ${record.policy.groupPolicy}`
+        : "Direct chat";
+    await msg.reply([
+      `WhatsApp ${formatConversationApprovalSummary(record)}`,
+      `Access: ${record.policy.accessStatus}`,
+      `Mode: ${record.mode ?? "unknown"}`,
+      policyLine,
+      `Conversation: ${record.id}`,
+    ].join("\n"));
+    return true;
+  }
+
+  const status = action === "allow" ? "approved" : "denied";
+  const actorName = actorNameForApproval(msg);
+  const record = await setConversationAccessStatus(conversationId, status, actorName);
+  const summary = formatConversationApprovalSummary(record);
+  const updateText =
+    status === "approved"
+      ? `Jaime approved this WhatsApp ${record.policy.chatKind}. ${record.policy.chatKind === "group" ? "Group policy is mention_only." : "The liaison can work this chat now."} Conversation mode is now ${record.mode ?? "live"}.`
+      : "Jaime denied this WhatsApp chat. The liaison will stay blocked.";
+
+  await msg.reply(`${status === "approved" ? "Allowed" : "Denied"} ${summary}.`);
+
+  const targetChannel = record.discordChannelName ?? "dashboard";
+  await sendAsAgent(
+    "boss",
+    targetChannel,
+    record.discordThreadId
+      ? {
+          content: `**Owner decision**\n${updateText}`,
+          threadId: record.discordThreadId,
+        }
+      : `**Owner decision**\n${updateText}`,
+  ).catch(() => {});
+
+  return true;
+}
+
 export function startDiscordBot(): void {
   if (!discordClient) {
     console.warn("[discord] DISCORD_TOKEN not set -- Discord bot disabled");
@@ -208,10 +427,33 @@ export function startDiscordBot(): void {
     console.log(`Discord bot online: ${c.user.tag}`);
 
     // Initialize core services
+    const { bindDelegationTaskExecutor } = await import("../../agents/delegate.js");
+    bindDelegationTaskExecutor(discordClient!);
+
     await initQueue();
-    await initWebhooks(discordClient!);
-    await initApprovals(discordClient!);
-    console.log("[discord] Core services initialized (queue, webhooks, approvals)");
+    console.log("[discord] Queue initialized");
+
+    const { startExternalTaskDispatcher } = await import("../../services/external-task-dispatcher.js");
+    startExternalTaskDispatcher();
+    console.log("[discord] External task dispatcher initialized");
+
+    void initWebhooks(discordClient!)
+      .then(() => {
+        console.log("[discord] Webhook service initialized");
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("[discord] Webhook init failed:", message);
+      });
+
+    void initApprovals(discordClient!)
+      .then(() => {
+        console.log("[discord] Approval service initialized");
+      })
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("[discord] Approval init failed:", message);
+      });
 
     // Initialize event-driven triggers and agent spawner
     const { initTriggers } = await import("../../events/trigger-handler.js");
@@ -232,10 +474,6 @@ export function startDiscordBot(): void {
     const { getJobRunners } = await import("../../scheduler.js");
     initScheduleJobs(getJobRunners());
     console.log("[discord] Schedule job runners initialized");
-
-    const { startExternalTaskDispatcher } = await import("../../services/external-task-dispatcher.js");
-    startExternalTaskDispatcher();
-    console.log("[discord] External task dispatcher initialized");
 
     // Register interactive button handler
     const { registerButtonHandler } = await import("../features/buttons.js");
@@ -270,7 +508,9 @@ export function startDiscordBot(): void {
 
     // Resolve channel name for routing
     const channelName = "name" in msg.channel
-      ? (msg.channel as TextChannel).name
+      ? ("isThread" in msg.channel && msg.channel.isThread()
+          ? (msg.channel.parent?.name ?? msg.channel.name)
+          : (msg.channel as TextChannel).name)
       : "";
 
     if (!canUseChannel(channelName, msg.member, msg.author.id)) {
@@ -299,7 +539,9 @@ export function startDiscordBot(): void {
         "  #tm-data -- Ticketmaster events, demographics",
         "  #creative -- ad creative, copy, images",
         "  #dashboard -- reporting, analytics, trends",
+        "  #whatsapp-control -- customer WhatsApp liaison tasks",
         "  #zamora / #kybba -- client forums",
+        "  #whatsapp-boss -- owner-only WhatsApp approvals and supervision",
         "  #boss / #email / #meetings / #email-log / #schedule -- owner-only",
         "",
         "**Manual triggers:**",
@@ -314,6 +556,8 @@ export function startDiscordBot(): void {
         "**Admin:**",
         "  `!supervise` -- Boss reviews all agent activity",
         "  `!dashboard` -- update campaign status panel",
+        "  `!whatsapp allow|deny|status <conversationId>` -- owner WhatsApp access control",
+        "  `/schedule-copy-swap` -- explicitly schedule an activate/pause ad swap with exact IDs",
         "  `!roles` -- ensure Owner/Admin/Team/Bot/Viewer roles",
         "  `!restructure` -- enforce full server layout",
         "",
@@ -331,6 +575,10 @@ export function startDiscordBot(): void {
     if (content === "!reset" || content === "/reset") {
       channelSessions.delete(msg.channelId);
       await msg.reply("Conversation reset. Starting fresh.");
+      return;
+    }
+
+    if (await handleWhatsAppCommand(msg, content)) {
       return;
     }
 
@@ -448,6 +696,16 @@ export function startDiscordBot(): void {
       return;
     }
 
+    if (SCHEDULED_MEDIA_BUYER_HANDOFF_CHANNELS.has(channelName) && looksLikeScheduledBudgetRequest(content)) {
+      const handled = await handoffScheduledBudgetRequestToBoss(msg, channelName, content);
+      if (handled) return;
+    }
+
+    if (SCHEDULED_MEDIA_BUYER_HANDOFF_CHANNELS.has(channelName) && looksLikeScheduledCopySwapRequest(content)) {
+      const handled = await handoffScheduledCopySwapRequestToBoss(msg, channelName, content);
+      if (handled) return;
+    }
+
     if (content.toLowerCase().startsWith("thread:") || content.toLowerCase().startsWith("new thread:")) {
       const { maybeCreateThread } = await import("../features/threads.js");
       const thread = await maybeCreateThread(msg, channelName);
@@ -554,9 +812,6 @@ async function resolveChannelId(channelName: string): Promise<string | null> {
   return channelId || null;
 }
 
-/** Channels that send silent (no push/desktop notification) */
-const SILENT_CHANNELS = new Set(["agent-feed", "audit-log", "email-log"]);
-
 /**
  * Send a message to a specific channel by route name.
  */
@@ -567,17 +822,13 @@ export async function notifyChannel(target: string, text: string): Promise<void>
   const resolvedId = await resolveChannelId(channelName);
   if (!resolvedId) return;
 
-  const silent = SILENT_CHANNELS.has(channelName);
-
   try {
     const channel = await discordClient.channels.fetch(resolvedId);
     if (channel && channel.isTextBased()) {
       const chunks = chunkText(cleanForDiscord(text), 1900);
       for (const chunk of chunks) {
         await (channel as TextChannel).send(
-          silent
-            ? { content: chunk, flags: [MessageFlags.SuppressNotifications] }
-            : chunk
+          { content: chunk, flags: [MessageFlags.SuppressNotifications] }
         );
       }
     }

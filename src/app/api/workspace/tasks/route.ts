@@ -1,13 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
 import { authGuard, apiError } from "@/lib/api-helpers";
-import { supabaseAdmin } from "@/lib/supabase";
 import { requireWorkspaceClientAccess } from "@/features/workspace/access";
+import { getWorkspaceReadClient } from "@/features/workspace/server";
 
 export async function GET(request: NextRequest) {
   const { userId, error } = await authGuard();
   if (error) return error;
-
-  if (!supabaseAdmin) return apiError("DB not configured", 500);
 
   const { searchParams } = request.nextUrl;
   const clientSlug = searchParams.get("client_slug");
@@ -19,7 +17,10 @@ export async function GET(request: NextRequest) {
   const access = await requireWorkspaceClientAccess(userId, clientSlug);
   if (access instanceof Response) return access;
 
-  let query = supabaseAdmin
+  const readDb = await getWorkspaceReadClient(access.clientSlug);
+  if (!readDb) return apiError("DB not configured", 500);
+
+  let query = readDb
     .from("workspace_tasks")
     .select("*")
     .eq("client_slug", access.clientSlug)

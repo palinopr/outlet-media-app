@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "node --import tsx/esm src/index.ts",
-    "dev": "node --watch --import tsx/esm src/index.ts"
+    "dev": "node --watch --import tsx/esm src/index.ts",
+    "daemon": "bash scripts/run-agent-daemon.sh"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.69",
