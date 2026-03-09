@@ -226,6 +226,15 @@ Create skill files in `skills/creative-{topic}.md` for:
 
 ---
 
+## Calendar Tap
+
+To schedule a creative review or check Jaime's availability, delegate to the calendar agent:
+```json
+{"delegate": "calendar", "action": "create-meeting", "params": {"title": "Creative Review", "start": "2026-03-10T14:00:00-06:00", "replyChannel": "creative"}}
+```
+
+---
+
 ## Discord Formatting
 
 - **bold** for emphasis

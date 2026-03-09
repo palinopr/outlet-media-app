@@ -16,6 +16,7 @@ import { getSweepRunners } from "./jobs/cron-sweeps.js";
 import { ensureManagedEmailLabels, sweepUnreadInboxDetailed } from "./services/email-intelligence-service.js";
 import { createLedgerTask, updateLedgerTask, type LedgerTask } from "./services/ledger-service.js";
 import { notifyOwner, notifyOwnerEmailAlert, notifyOwnerImportant } from "./services/owner-discord-service.js";
+import { checkMeetingReminders } from "./services/calendar-service.js";
 import { ensureGmailWatch, pollGmailHistory } from "./services/gmail-watch-service.js";
 import { dispatchDueScheduledHandoffs } from "./services/scheduled-handoff-service.js";
 
@@ -36,6 +37,7 @@ const EATA_COOKIE_CRON = "10 */6 * * *";
 const EMAIL_HISTORY_POLL_CRON = process.env.EMAIL_HISTORY_POLL_CRON ?? "*/1 8-22 * * *";
 const EMAIL_WATCH_RENEW_CRON = "0 */6 * * *";
 const SCHEDULED_HANDOFF_CRON = "*/1 * * * *";
+const MEETING_REMINDER_CRON = "*/1 * * * *";
 
 const EMAIL_NOTIFY_DISCORD = (process.env.EMAIL_NOTIFY_DISCORD ?? "false").toLowerCase() === "true";
 const SCHEDULED_OWNER_NOTIFICATIONS = (process.env.SCHEDULED_OWNER_NOTIFICATIONS ?? "false").toLowerCase() === "true";
@@ -109,6 +111,7 @@ export function startScheduler(): void {
   cron.schedule(THINK_CRON, () => { void runThinkCycle({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); }, { timezone: "America/Los_Angeles" });
   cron.schedule(DISCORD_HEALTH_CRON, () => { void runDiscordHealthCheck(); });
   cron.schedule(SCHEDULED_HANDOFF_CRON, () => { void dispatchDueScheduledHandoffs(discordClient); });
+  cron.schedule(MEETING_REMINDER_CRON, () => { void runMeetingReminder(); }, { timezone: "America/Chicago" });
 
   if (TM_SCHEDULER_ENABLED) {
     cron.schedule(CHECK_CRON, () => { void runTmCheck({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); });
@@ -152,6 +155,7 @@ export function startScheduler(): void {
     EATA_SCHEDULER_ENABLED ? "eata-cookie" : null,
     GMAIL_PUSH_ENABLED ? "gmail-watch" : "email-history-poll",
     "scheduled-handoffs",
+    "meeting-reminder",
   ].filter(Boolean).join(", ");
 
   console.log(`[scheduler] Core jobs started (${coreJobs})`);
@@ -182,6 +186,9 @@ export function triggerManualJob(jobName: string): void {
       break;
     case "email-history-poll":
       void runEmailHistoryPoll();
+      break;
+    case "meeting-reminder":
+      void runMeetingReminder();
       break;
     default: {
       const sweeps = getSweepRunners();
@@ -541,8 +548,21 @@ export function getJobRunners(): Record<string, () => void> {
     "eata-cookie-refresh": () => { void refreshEataCookies(); },
     "email-check": () => { void runEmailCheck(); },
     "email-history-poll": () => { void runEmailHistoryPoll(); },
+    "meeting-reminder": () => { void runMeetingReminder(); },
     ...sweeps,
   };
+}
+
+async function runMeetingReminder(): Promise<void> {
+  try {
+    const result = await checkMeetingReminders();
+    if (result && !result.includes("No upcoming")) {
+      console.log("[scheduler]", result);
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("[scheduler] Meeting reminder check failed:", message);
+  }
 }
 
 async function runDiscordHealthCheck() {

@@ -70,6 +70,7 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - Facebook > Instagram for purchases
 - Retargeting = 5x ROAS typically
 - NEVER kill a city/show entirely — find new strategy (new creative, expand radius, retargeting)
+- **Post-show auto-pause:** After a show date passes, always verify the campaign is PAUSED with $0 spend. If still ACTIVE or spending, pause it immediately — no confirmation needed. Jaime may pause adsets but the campaign can remain on; always check campaign-level status.
 - ROAS below 2.0 = flag for review, not automatic kill
 - Urgency creatives in the final week before show date
 

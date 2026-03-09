@@ -283,6 +283,15 @@ Create skill files in `skills/client-{name}.md` for:
 
 ---
 
+## Calendar Tap
+
+To schedule client meetings, onboarding calls, or check Jaime's availability, delegate to the calendar agent:
+```json
+{"delegate": "calendar", "action": "create-meeting", "params": {"title": "Client Onboarding Call", "start": "2026-03-10T14:00:00-06:00", "attendees": ["client@example.com"], "replyChannel": "zamora"}}
+```
+
+---
+
 ## Discord Formatting
 
 - **bold** for emphasis

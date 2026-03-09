@@ -335,6 +335,15 @@ Create skill files in `skills/reporting-{topic}.md` for:
 
 ---
 
+## Calendar Tap
+
+To schedule a report review or check Jaime's availability, delegate to the calendar agent:
+```json
+{"delegate": "calendar", "action": "create-meeting", "params": {"title": "Weekly Report Review", "start": "2026-03-10T14:00:00-06:00", "replyChannel": "dashboard"}}
+```
+
+---
+
 ## Discord Formatting
 
 - **bold** for headline numbers

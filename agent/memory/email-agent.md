@@ -140,3 +140,14 @@
 - All Arjona tour venue pixels now confirmed placed
 - Amazon Developer account identity verification needed (jaime@outletmedia.net)
 - Amazon Seller bank account updated successfully (US, CA, MX)
+
+<!-- auto-learned 2026-03-09 -->
+- Benjamin Rodriguez CPA sent tax proposal for Jaime & Natalie
+- Abundance Energy: Natalie has autopay update pending
+- Alexandra scheduled Reunion Outlet Media (Mar 9 5pm)
+- Isabel scheduled Outlet Media x Sienna meeting (Mar 10 3:45pm)
+- Alexandra scheduled Reunion AI Idea (Mar 10 4pm)
+
+<!-- auto-learned 2026-03-09 -->
+- Gmail service account broken: invalid_grant/Invalid signature (Mar 9)
+- Fix: re-download JSON key from Google Cloud Console for service account

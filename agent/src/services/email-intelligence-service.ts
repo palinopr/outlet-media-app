@@ -138,6 +138,14 @@ interface EmailDraftPlan {
   language: string | null;
   confidence: string | null;
   topic: string | null;
+  meeting_details: {
+    title: string;
+    start_iso: string;
+    duration_minutes: number;
+    location: string | null;
+    attendee_emails: string[];
+    meeting_link: string | null;
+  } | null;
 }
 
 export interface EmailProcessResult {
@@ -626,11 +634,31 @@ function coerceDraftPlan(
       language: null,
       confidence: null,
       topic: fallback.topic,
+      meeting_details: null,
     };
   }
 
   try {
     const parsed = JSON.parse(jsonText) as Partial<EmailDraftPlan>;
+    const rawMeeting = parsed.meeting_details;
+    const meetingDetails = (
+      rawMeeting &&
+      typeof rawMeeting === "object" &&
+      typeof rawMeeting.title === "string" &&
+      typeof rawMeeting.start_iso === "string"
+    )
+      ? {
+          title: rawMeeting.title,
+          start_iso: rawMeeting.start_iso,
+          duration_minutes: typeof rawMeeting.duration_minutes === "number" ? rawMeeting.duration_minutes : 30,
+          location: typeof rawMeeting.location === "string" ? rawMeeting.location : null,
+          attendee_emails: Array.isArray(rawMeeting.attendee_emails)
+            ? (rawMeeting.attendee_emails as string[]).filter((e): e is string => typeof e === "string")
+            : [],
+          meeting_link: typeof rawMeeting.meeting_link === "string" ? rawMeeting.meeting_link : null,
+        }
+      : null;
+
     return {
       why_it_matters: typeof parsed.why_it_matters === "string"
         ? stripLegacyCodeFormatting(parsed.why_it_matters)
@@ -654,6 +682,7 @@ function coerceDraftPlan(
       language: typeof parsed.language === "string" ? parsed.language : null,
       confidence: typeof parsed.confidence === "string" ? parsed.confidence : null,
       topic: typeof parsed.topic === "string" ? parsed.topic : fallback.topic,
+      meeting_details: meetingDetails,
     };
   } catch {
     return {
@@ -669,6 +698,7 @@ function coerceDraftPlan(
       language: null,
       confidence: null,
       topic: fallback.topic,
+      meeting_details: null,
     };
   }
 }
@@ -1364,7 +1394,8 @@ function buildInboundPrompt(
     '  "needs_reply": boolean,',
     '  "language": string | null,',
     '  "confidence": string | null,',
-    '  "topic": string | null',
+    '  "topic": string | null,',
+    '  "meeting_details": { "title": string, "start_iso": string (ISO-8601 with timezone), "duration_minutes": number, "location": string|null, "attendee_emails": [string], "meeting_link": string|null } | null',
     "}",
     "",
     `From: ${message.from?.name ? `${message.from.name} <${replyAddress}>` : replyAddress}`,
@@ -1396,6 +1427,7 @@ function buildInboundPrompt(
     JSON.stringify(triage, null, 2),
     "",
     "Keep Jaime's style short, direct, and low-fluff. Never mention internal systems. Only suggest replies if the ask is obvious and low-risk.",
+    "If this email is about a meeting, calendar invite, or scheduling, extract the meeting details into meeting_details. Include all attendees you can identify. Use ISO-8601 format with timezone for start_iso (e.g. 2026-03-10T15:45:00-06:00). If no meeting details are identifiable, set meeting_details to null.",
     "If the right label, archive decision, or notify level is unclear, ask Jaime one short direct question instead of guessing silently.",
   ].join("\n");
 }
@@ -1716,12 +1748,36 @@ async function processInboundMessage(message: EmailMessageDetail): Promise<Email
     await archiveMessage(message.id);
   }
 
+  let calendarEventCreated = false;
+  if (plan.meeting_details?.title && plan.meeting_details?.start_iso) {
+    try {
+      const { createCalendarEvent } = await import("./calendar-service.js");
+      const calEvent = await createCalendarEvent({
+        title: plan.meeting_details.title,
+        startIso: plan.meeting_details.start_iso,
+        durationMinutes: plan.meeting_details.duration_minutes || 30,
+        location: plan.meeting_details.location ?? plan.meeting_details.meeting_link ?? undefined,
+        attendeeEmails: plan.meeting_details.attendee_emails?.filter(Boolean),
+        description: plan.meeting_details.meeting_link
+          ? `Meeting link: ${plan.meeting_details.meeting_link}`
+          : undefined,
+        noMeet: Boolean(plan.meeting_details.meeting_link),
+      });
+      calendarEventCreated = true;
+      console.log(`[email-agent] Created calendar event: ${calEvent.summary} (${calEvent.eventId})`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("[email-agent] Failed to create calendar event:", msg);
+    }
+  }
+
   const metadata = {
     attachment_names: message.attachmentNames,
     headers: message.headers,
     rationale: plan.rationale,
     confidence: plan.confidence,
     topic: plan.topic,
+    calendar_event_created: calendarEventCreated,
   };
 
   const needsOwnerAttention = shouldPushOwnerAlert(message, plan, triage);

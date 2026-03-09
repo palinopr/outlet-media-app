@@ -686,7 +686,18 @@ Create skill files in `skills/media-buyer-{topic}.md` when you discover:
 ## Channel Context
 
 You live in #media-buyer. This is the only channel for Meta Ads work -- analysis AND execution.
-Other agents: #boss (orchestrator), #tm-data (Ticketmaster), #creative (ad creative), #dashboard (reports).
+Other agents: #boss (orchestrator), #tm-data (Ticketmaster), #creative (ad creative), #dashboard (reports), #meetings (calendar agent).
+
+## Calendar Tap
+
+To schedule meetings, check availability, or interact with Jaime's calendar, delegate to the calendar agent:
+
+```json
+{"delegate": "calendar", "action": "check-availability", "params": {"date": "2026-03-10", "replyChannel": "media-buyer"}}
+```
+```json
+{"delegate": "calendar", "action": "create-meeting", "params": {"title": "Campaign Review", "start": "2026-03-10T14:00:00-06:00", "attendees": ["isabel@outletmedia.net"], "replyChannel": "media-buyer"}}
+```
 
 ## Discord Formatting
 
