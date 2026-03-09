@@ -1,0 +1,11 @@
+.env.local
+.next
+agent/.next
+.local
+session
+root-next-artifact-2026-03-08
+root-next-artifact-2026-03-08-2
+root-next-artifact-2026-03-08-3
+.claude
+node_modules
+agent/node_modules

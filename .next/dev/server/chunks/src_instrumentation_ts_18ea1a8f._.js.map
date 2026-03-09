@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/jaimeortiz/outlet-media-app/src/instrumentation.ts"],"sourcesContent":["// Next.js instrumentation hook -- runs once when the server starts.\n// https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation\nexport async function register() {\n  // Validate environment variables on startup\n  await import(\"@/lib/env\");\n}\n"],"names":[],"mappings":"AAAA,oEAAoE;AACpE,mFAAmF;;;;;AAC5E,eAAe;IACpB,4CAA4C;IAC5C;AACF"}}]
-}

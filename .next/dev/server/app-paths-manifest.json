@@ -1,8 +1,0 @@
-{
-  "/api/agents/heartbeat/route": "app/api/agents/heartbeat/route.js",
-  "/api/alerts/route": "app/api/alerts/route.js",
-  "/api/health/route": "app/api/health/route.js",
-  "/api/ingest/route": "app/api/ingest/route.js",
-  "/api/whatsapp/evolution/route": "app/api/whatsapp/evolution/route.js",
-  "/api/whatsapp/send/route": "app/api/whatsapp/send/route.js"
-}

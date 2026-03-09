@@ -1,3 +1,0 @@
-module.exports=[188789,a=>{"use strict";var b=a.i(187924),c=a.i(417949),d=a.i(119967);function e({clients:a}){let[e,f]=(0,c.useQueryState)("client",c.parseAsString.withDefault("all").withOptions({shallow:!1}));return(0,b.jsxs)("select",{value:e,onChange:a=>{let b=a.target.value;f("all"===b?null:b)},className:"text-xs bg-background border border-border/60 rounded px-2.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring",children:[(0,b.jsx)("option",{value:"all",children:"All clients"}),a.map(a=>(0,b.jsx)("option",{value:a,children:(0,d.slugToLabel)(a)},a))]})}a.s(["ClientFilter",()=>e])}];
-
-//# sourceMappingURL=src_components_admin_campaigns_client-filter_tsx_5fe84ec9._.js.map
