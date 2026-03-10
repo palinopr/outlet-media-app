@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Megaphone } from "lucide-react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Search, Megaphone, ChevronRight } from "lucide-react";
 import { fmtUsd, fmtNum, roasColor } from "@/lib/formatters";
 import { getCampaignStatusCfg } from "@/lib/status";
 import type { CampaignCard } from "../types";
 
-export function CampaignsTable({ campaigns }: { campaigns: CampaignCard[] }) {
+export function CampaignsTable({ campaigns, slug }: { campaigns: CampaignCard[]; slug: string }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
 
   const queryLower = query.toLowerCase();
@@ -86,13 +89,14 @@ export function CampaignsTable({ campaigns }: { campaigns: CampaignCard[] }) {
                   return (
                     <tr
                       key={c.campaignId}
-                      className="border-b border-white/[0.06] last:border-0 hover:bg-white/[0.02] transition-colors"
+                      onClick={() => router.push(`/client/${slug}/campaign/${c.campaignId}`)}
+                      className="border-b border-white/[0.06] last:border-0 hover:bg-white/[0.04] transition-colors cursor-pointer group"
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
                           <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusCfg.dot}`} />
                           <div>
-                            <p className="text-sm text-white/90 font-medium">{c.name}</p>
+                            <p className="text-sm text-white/90 font-medium group-hover:text-white transition-colors">{c.name}</p>
                             <p className="text-xs text-white/40">{statusCfg.label}</p>
                           </div>
                         </div>
@@ -115,7 +119,10 @@ export function CampaignsTable({ campaigns }: { campaigns: CampaignCard[] }) {
                         {c.ctr != null ? c.ctr.toFixed(2) + "%" : "--"}
                       </td>
                       <td className="text-right px-4 py-3 text-sm text-white/50 tabular-nums">
-                        {c.cpc != null ? "$" + c.cpc.toFixed(2) : "--"}
+                        <span className="flex items-center justify-end gap-1">
+                          {c.cpc != null ? "$" + c.cpc.toFixed(2) : "--"}
+                          <ChevronRight className="h-3.5 w-3.5 text-white/20 group-hover:text-white/50 transition-colors" />
+                        </span>
                       </td>
                     </tr>
                   );
@@ -129,7 +136,7 @@ export function CampaignsTable({ campaigns }: { campaigns: CampaignCard[] }) {
             {filtered.map((c) => {
               const statusCfg = getCampaignStatusCfg(c.status);
               return (
-                <div key={c.campaignId} className="px-4 py-3">
+                <Link key={c.campaignId} href={`/client/${slug}/campaign/${c.campaignId}`} className="block px-4 py-3 hover:bg-white/[0.04] transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusCfg.dot}`} />
                     <p className="text-sm text-white/90 font-medium truncate">{c.name}</p>
@@ -167,7 +174,7 @@ export function CampaignsTable({ campaigns }: { campaigns: CampaignCard[] }) {
                       </span>
                     </div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

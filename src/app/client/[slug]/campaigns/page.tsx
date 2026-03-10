@@ -199,7 +199,7 @@ export default async function ClientCampaigns({ params }: Props) {
       )}
 
       {/* -- Campaigns Table -- */}
-      <CampaignsTable campaigns={campaigns} />
+      <CampaignsTable campaigns={campaigns} slug={slug} />
 
       {/* -- Footer -- */}
       <ClientPortalFooter dataSource={dataSource} />
