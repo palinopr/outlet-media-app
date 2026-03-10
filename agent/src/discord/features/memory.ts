@@ -31,7 +31,9 @@ async function serializedAppend(path: string, data: string): Promise<void> {
       console.warn("[memory] previous write failed:", toErrorMessage(err));
       return appendFile(path, data);
     },
-  );
+  ).finally(() => {
+    if (writeLocks.get(path) === next) writeLocks.delete(path);
+  });
   writeLocks.set(path, next);
   await next;
 }

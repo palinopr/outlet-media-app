@@ -296,6 +296,9 @@ async function pumpQueue(): Promise<void> {
     }
   } finally {
     pumping = false;
+    if (activeWorkers < MAX_CONCURRENT_TASKS) {
+      void pumpQueue();
+    }
   }
 }
 

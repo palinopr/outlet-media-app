@@ -84,7 +84,7 @@ async function handleTaskFailure(task: AgentTask): Promise<void> {
 
   // Auto-retry once for transient errors
   if (task.error && isTransientError(task.error)) {
-    const retryCount = (task.params._retryCount as number) ?? 0;
+    const retryCount = Number(task.params._retryCount ?? 0);
 
     if (retryCount < 1) {
       console.log(`[triggers] Auto-retrying ${task.action} (attempt ${retryCount + 1})`);

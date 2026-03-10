@@ -505,7 +505,11 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
       await msg.reply("Access denied. Schedule controls are owner-only.");
       return;
     }
-    const schedResult = await handleScheduleCommand(content, discordClient!, channelName);
+    if (!discordClient) {
+      await msg.reply("Bot client not connected.");
+      return;
+    }
+    const schedResult = await handleScheduleCommand(content, discordClient, channelName);
     if (schedResult) {
       if (schedResult.text) await msg.reply(schedResult.text);
       if (schedResult.embed) {

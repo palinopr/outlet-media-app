@@ -53,10 +53,14 @@ import {
 // ---------------------------------------------------------------------------
 
 function readServiceAccount() {
-  return JSON.parse(readFileSync(SERVICE_ACCOUNT_PATH, "utf-8")) as {
-    client_email: string;
-    private_key: string;
-  };
+  try {
+    return JSON.parse(readFileSync(SERVICE_ACCOUNT_PATH, "utf-8")) as {
+      client_email: string;
+      private_key: string;
+    };
+  } catch (err) {
+    throw new Error(`Service account key not found at ${SERVICE_ACCOUNT_PATH}: ${err instanceof Error ? err.message : String(err)}`);
+  }
 }
 
 function getGmailAuth() {
@@ -167,16 +171,22 @@ async function listUnreadInboxMessageIds(maxResults = MANUAL_SWEEP_LIMIT): Promi
 
 export async function listUnhandledUnreadInboxMessageIds(maxResults = MANUAL_SWEEP_LIMIT): Promise<string[]> {
   const messageIds = await listUnreadInboxMessageIds(maxResults);
-  const pending: string[] = [];
+  if (messageIds.length === 0) return [];
 
-  for (const messageId of messageIds) {
-    const existing = await findExistingEmailEvent(messageId);
-    if (!existing || existing.status === "received") {
-      pending.push(messageId);
-    }
-  }
+  const supabase = getServiceSupabase();
+  if (!supabase) return messageIds;
 
-  return pending;
+  const { data } = await supabase
+    .from("email_events")
+    .select("message_id,status")
+    .in("message_id", messageIds);
+
+  const known = new Map((data ?? []).map((r: { message_id: string; status: string }) => [r.message_id, r.status]));
+
+  return messageIds.filter(id => {
+    const status = known.get(id);
+    return !status || status === "received";
+  });
 }
 
 export function getPushRecoveryLimit(): number {
