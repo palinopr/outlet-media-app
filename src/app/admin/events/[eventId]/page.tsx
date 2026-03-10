@@ -22,7 +22,7 @@ import { listEventComments } from "@/features/event-comments/server";
 import { listEventFollowUpItems } from "@/features/event-follow-up-items/server";
 import { getEventOperatingData } from "@/features/events/server";
 import { listEventSystemEvents } from "@/features/system-events/server";
-import { fmtDate, fmtNum, fmtUsd, slugToLabel } from "@/lib/formatters";
+import { computeBlendedRoas, fmtDate, fmtNum, fmtUsd, slugToLabel } from "@/lib/formatters";
 
 interface Props {
   params: Promise<{ eventId: string }>;
@@ -78,11 +78,9 @@ export default async function AdminEventDetailPage({ params }: Props) {
     (sum, campaign) => sum + ((campaign.spend ?? 0) / 100),
     0,
   );
-  const averageRoas =
-    linkedCampaigns.length > 0
-      ? linkedCampaigns.reduce((sum, campaign) => sum + (campaign.roas ?? 0), 0) /
-        linkedCampaigns.length
-      : null;
+  const averageRoas = computeBlendedRoas(
+    linkedCampaigns.map((c) => ({ spend: c.spend ?? 0, roas: c.roas })),
+  );
   const sellThrough = eventSellThrough(event.ticketsSold, event.ticketsAvailable);
 
   return (
@@ -215,7 +213,7 @@ export default async function AdminEventDetailPage({ params }: Props) {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-medium text-[#2f2f2f]">
-                        {fmtUsd(((campaign.spend ?? 0) / 100) || null)}
+                        {fmtUsd((campaign.spend ?? 0) / 100)}
                       </p>
                       <p className="mt-1 text-xs text-[#9b9a97]">
                         {campaign.roas != null ? `${campaign.roas.toFixed(1)}x ROAS` : "No ROAS yet"}

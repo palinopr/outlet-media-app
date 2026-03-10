@@ -14,14 +14,7 @@ export interface AgentLastRun {
   finishedAt: string | null;
 }
 
-export interface Alert {
-  id: string;
-  message: string;
-  level: string;
-  created_at: string;
-}
-
-export interface SnapshotRow {
+interface SnapshotRow {
   snapshot_date: string;
   roas: number | null;
   spend: number | null;
@@ -38,10 +31,8 @@ export interface DashboardData {
   campaigns: MetaCampaign[];
   allCampaigns: Pick<MetaCampaign, "name" | "status" | "spend" | "roas" | "client_slug">[];
   agentRuns: AgentLastRun[];
-  alerts: Alert[];
   trendData: Array<{ date: string; roas: number; spend: number }>;
   velocityData: Array<{ date: string; sold: number }>;
-  snapshotsByCampaign: Record<string, SnapshotRow[]>;
   marginalRoasByCampaign: Record<string, number | null>;
   fromDb: boolean;
 }
@@ -51,10 +42,8 @@ const EMPTY: DashboardData = {
   campaigns: [],
   allCampaigns: [],
   agentRuns: [],
-  alerts: [],
   trendData: [],
   velocityData: [],
-  snapshotsByCampaign: {},
   marginalRoasByCampaign: {},
   fromDb: false,
 };
@@ -66,7 +55,7 @@ export async function getData(): Promise<DashboardData> {
     .toISOString()
     .slice(0, 10);
 
-  const [eventsRes, campaignsRes, allCampaignsRes, agentRunsRes, alertsRes, snapshotsRes, dailyRes] =
+  const [eventsRes, campaignsRes, allCampaignsRes, agentRunsRes, snapshotsRes, dailyRes] =
     await Promise.all([
       supabaseAdmin.from("tm_events").select("*").order("date", { ascending: true }).limit(200),
       supabaseAdmin.from("meta_campaigns").select("*").eq("status", "ACTIVE").order("spend", { ascending: false }).limit(5),
@@ -78,12 +67,6 @@ export async function getData(): Promise<DashboardData> {
         .in("status", ["completed", "failed", "running", "pending"])
         .order("completed_at", { ascending: false })
         .limit(20),
-      supabaseAdmin
-        .from("agent_alerts")
-        .select("id, message, level, created_at")
-        .is("read_at", null)
-        .order("created_at", { ascending: false })
-        .limit(5),
       supabaseAdmin
         .from("campaign_snapshots")
         .select("campaign_id, snapshot_date, roas, spend")
@@ -105,7 +88,6 @@ export async function getData(): Promise<DashboardData> {
   const allCampaigns = await applyEffectiveCampaignClientSlugs(
     ((allCampaignsRes.data ?? []) as Pick<MetaCampaign, "name" | "status" | "spend" | "roas" | "client_slug" | "campaign_id">[]),
   ) as Pick<MetaCampaign, "name" | "status" | "spend" | "roas" | "client_slug">[];
-  const alerts = (alertsRes.data ?? []) as Alert[];
   const snapshots = (snapshotsRes.data ?? []) as SnapshotRow[];
   const dailyRows = (dailyRes.data ?? []) as DailyRow[];
 
@@ -144,5 +126,5 @@ export async function getData(): Promise<DashboardData> {
     marginalRoasByCampaign[c.campaign_id] = computeMarginalRoas(pts);
   }
 
-  return { events, campaigns, allCampaigns, agentRuns, alerts, trendData, velocityData, snapshotsByCampaign, marginalRoasByCampaign, fromDb: Boolean(campaigns.length) };
+  return { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb: Boolean(campaigns.length) };
 }
