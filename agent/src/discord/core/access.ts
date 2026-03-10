@@ -4,6 +4,7 @@ import {
   type Guild,
   type GuildMember,
 } from "discord.js";
+import { OWNER_USER_IDS as OWNER_IDS_LIST } from "../../services/owner-discord-service.js";
 
 export type ChannelAccessProfile = "owner" | "team" | "readonly";
 
@@ -13,12 +14,7 @@ const TEAM_ROLE_NAME = process.env.DISCORD_TEAM_ROLE_NAME ?? "Team";
 const VIEWER_ROLE_NAME = process.env.DISCORD_VIEWER_ROLE_NAME ?? "Viewer";
 const BOT_ROLE_NAME = process.env.DISCORD_BOT_ROLE_NAME ?? "Bot";
 
-const OWNER_USER_IDS = new Set(
-  (process.env.DISCORD_OWNER_USER_IDS ?? "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter(Boolean),
-);
+const OWNER_USER_IDS = new Set(OWNER_IDS_LIST);
 
 const OWNER_ONLY_CHANNELS = new Set([
   "boss",

@@ -169,7 +169,7 @@ async function logActivity(
 
   const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" });
   const feedMsg = `\`${timestamp}\` **#${channel}** (${agent}) -- ${user}: "${message.slice(0, 80)}"`;
-  notifyChannel("agent-feed", feedMsg);
+  void notifyChannel("agent-feed", feedMsg);
 }
 
 /**

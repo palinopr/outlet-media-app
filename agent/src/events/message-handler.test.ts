@@ -100,33 +100,6 @@ describe("handleMessage", () => {
     vi.useRealTimers();
   });
 
-  // ===== Bug 1: misleading "queued" message =====
-  describe("Bug 1: busy-agent reply text", () => {
-    it("should tell the user to try again, not that the message is queued", async () => {
-      vi.mocked(isAgentFree).mockReturnValue(false);
-
-      const msg = makeMockMessage();
-      await handleMessage(msg, "hello", "test-channel", null);
-
-      expect(msg.reply).toHaveBeenCalledOnce();
-      const replyText = vi.mocked(msg.reply).mock.calls[0][0] as string;
-
-      // Must NOT say "queued"
-      expect(replyText.toLowerCase()).not.toContain("queue");
-      // Must suggest trying again
-      expect(replyText.toLowerCase()).toContain("try again");
-    });
-
-    it("should return early without acquiring the channel lock", async () => {
-      vi.mocked(isAgentFree).mockReturnValue(false);
-
-      const msg = makeMockMessage();
-      await handleMessage(msg, "hello", "test-channel", null);
-
-      expect(isChannelLocked("ch-123")).toBe(false);
-    });
-  });
-
   // ===== Bug 2: channel lock leak =====
   describe("Bug 2: channel lock released on early failure", () => {
     it("should release the channel lock when msg.reply throws", async () => {

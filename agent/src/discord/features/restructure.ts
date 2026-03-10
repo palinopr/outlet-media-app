@@ -17,6 +17,7 @@ import {
 import { isAgentBusy, setAgentBusy, clearAgentBusy } from "../../state.js";
 import { toErrorMessage } from "../../utils/error-helpers.js";
 import { buildChannelOverwrites, getChannelAccessProfile } from "../core/access.js";
+import { OWNER_USER_IDS } from "../../services/owner-discord-service.js";
 
 interface LayoutChannel {
   name: string;
@@ -127,12 +128,7 @@ const TARGET_ROLES: { name: string; color: number; perms: bigint[] }[] = [
 ];
 
 function getConfiguredOwnerIds(guild: Guild): string[] {
-  const configured = (process.env.DISCORD_OWNER_USER_IDS ?? "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter(Boolean);
-
-  return Array.from(new Set([guild.ownerId, ...configured]));
+  return Array.from(new Set([guild.ownerId, ...OWNER_USER_IDS]));
 }
 
 async function syncOwnerRoleAssignments(guild: Guild, ownerRole: Role, log: string[]): Promise<void> {

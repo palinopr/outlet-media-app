@@ -36,7 +36,7 @@ function assertTikTokPublishUrl(publishUrl: string): void {
   }
 
   const hostname = parsed.hostname.toLowerCase();
-  if (!hostname.endsWith("tiktok.com")) {
+  if (hostname !== "tiktok.com" && !hostname.endsWith(".tiktok.com")) {
     throw new Error("Publish URL must point to TikTok.");
   }
 }

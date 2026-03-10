@@ -1,6 +1,7 @@
 import { ChannelType, ThreadAutoArchiveDuration, type GuildTextBasedChannel } from "discord.js";
 import { discordClient } from "../discord/core/entry.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
+import { OWNER_USER_IDS } from "./owner-discord-service.js";
 import { processChannelMessages, processDelegations, processWhatsAppSends } from "../agents/delegate.js";
 import { runClaude } from "../runner.js";
 import { getServiceSupabase } from "./supabase-service.js";
@@ -405,12 +406,7 @@ async function notifyApprovalBlock(
   threadId: string | null,
 ): Promise<string> {
   const refreshed = await requestConversationApproval(context.id);
-  const ownerMentions = (process.env.DISCORD_OWNER_USER_IDS ?? "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter(Boolean)
-    .map((id) => `<@${id}>`)
-    .join(" ");
+  const ownerMentions = OWNER_USER_IDS.map((id) => `<@${id}>`).join(" ");
 
   const approvalSummary = formatConversationApprovalSummary(refreshed);
   const instructions = `Use \`!whatsapp allow ${context.id}\` or \`!whatsapp deny ${context.id}\` in #${WHATSAPP_BOSS_CHANNEL}.`;
