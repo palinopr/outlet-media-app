@@ -17,6 +17,7 @@ import {
   type TextChannel,
 } from "discord.js";
 import { canRunCommand, canUseChannel, getAccessDeniedMessage, isReadOnlyChannel } from "../core/access.js";
+import { toErrorMessage } from "../../utils/error-helpers.js";
 
 const CLIENT_ID = process.env.DISCORD_CLIENT_ID;
 const GUILD_ID = process.env.DISCORD_GUILD_ID;
@@ -180,7 +181,7 @@ export async function registerSlashCommands(token: string): Promise<void> {
     );
     console.log(`[slash] Registered ${commands.length} commands`);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = toErrorMessage(err);
     console.error("[slash] Failed to register commands:", msg);
   }
 }
@@ -534,11 +535,11 @@ export function registerSlashHandler(client: Client): void {
           await cmd.reply({ content: "Unknown command.", ephemeral: true });
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = toErrorMessage(err);
       if (cmd.deferred || cmd.replied) {
-        await cmd.editReply(`Error: ${msg}`).catch((e) => console.warn("[slash] reply failed:", e instanceof Error ? e.message : String(e)));
+        await cmd.editReply(`Error: ${msg}`).catch((e) => console.warn("[slash] reply failed:", toErrorMessage(e)));
       } else {
-        await cmd.reply({ content: `Error: ${msg}`, ephemeral: true }).catch((e) => console.warn("[slash] reply failed:", e instanceof Error ? e.message : String(e)));
+        await cmd.reply({ content: `Error: ${msg}`, ephemeral: true }).catch((e) => console.warn("[slash] reply failed:", toErrorMessage(e)));
       }
     }
   });

@@ -43,6 +43,7 @@ import {
   notifyChannel,
 } from "./entry.js";
 import { OWNER_USER_IDS } from "../../services/owner-discord-service.js";
+import { toErrorMessage } from "../../utils/error-helpers.js";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -338,7 +339,7 @@ async function handleWhatsAppCommand(msg: Message, content: string): Promise<boo
           threadId: record.discordThreadId,
         }
       : `**Owner decision**\n${updateText}`,
-  ).catch((e) => console.warn("[router] notify failed:", e instanceof Error ? e.message : String(e)));
+  ).catch((e) => console.warn("[router] notify failed:", toErrorMessage(e)));
 
   return true;
 }
@@ -374,7 +375,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
     : "";
 
   if (!canUseChannel(channelName, msg.member, msg.author.id)) {
-    await msg.reply(getAccessDeniedMessage(channelName)).catch((e) => console.warn("[router] reply failed:", e instanceof Error ? e.message : String(e)));
+    await msg.reply(getAccessDeniedMessage(channelName)).catch((e) => console.warn("[router] reply failed:", toErrorMessage(e)));
     return;
   }
 
@@ -547,7 +548,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
   }
 
   if (isReadOnlyChannel(channelName)) {
-    await msg.reply(`This channel is read-only. Use a work channel instead of #${channelName}.`).catch((e) => console.warn("[router] reply failed:", e instanceof Error ? e.message : String(e)));
+    await msg.reply(`This channel is read-only. Use a work channel instead of #${channelName}.`).catch((e) => console.warn("[router] reply failed:", toErrorMessage(e)));
     return;
   }
 
@@ -604,7 +605,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
     const promptResult = await buildPromptFromDiscordMessage(content, msg.attachments.values());
     if (!promptResult.prompt) {
       if (promptResult.fallbackMessage) {
-        await msg.reply(promptResult.fallbackMessage).catch((e) => console.warn("[router] reply failed:", e instanceof Error ? e.message : String(e)));
+        await msg.reply(promptResult.fallbackMessage).catch((e) => console.warn("[router] reply failed:", toErrorMessage(e)));
       }
       return;
     }

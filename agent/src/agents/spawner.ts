@@ -19,6 +19,7 @@ import {
 import { taskEvents, type AgentTask } from "../services/queue-service.js";
 import { registerAgentWebhook } from "../services/webhook-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 import { registerRoute, type AgentConfig } from "../discord/core/router.js";
 
 const AGENT_DIR = process.cwd();
@@ -118,7 +119,7 @@ export async function spawnAgent(spec: SpawnSpec): Promise<void> {
           registerRoute(spec.key, routeConfig);
           log.push(`Registered route: ${spec.key}`);
         } catch (whErr) {
-          const whMsg = whErr instanceof Error ? whErr.message : String(whErr);
+          const whMsg = toErrorMessage(whErr);
           console.warn(`[spawner] Webhook registration failed for ${spec.key}: ${whMsg}`);
           log.push(`WARNING: Webhook registration failed: ${whMsg}`);
 
@@ -127,7 +128,7 @@ export async function spawnAgent(spec: SpawnSpec): Promise<void> {
             const created = guild.channels.cache.find(c => c.name === spec.key);
             if (created) {
               await created.delete(`Cleanup: webhook registration failed for ${spec.key}`).catch((delErr: unknown) => {
-                const delMsg = delErr instanceof Error ? delErr.message : String(delErr);
+                const delMsg = toErrorMessage(delErr);
                 console.error(`[spawner] Failed to cleanup channel #${spec.key}: ${delMsg}`);
                 log.push(`ERROR: Channel #${spec.key} exists but has no webhook and cleanup failed`);
               });
@@ -151,7 +152,7 @@ export async function spawnAgent(spec: SpawnSpec): Promise<void> {
       .setFooter({ text: "Agent spawned by Boss" });
 
     await sendAsAgent("boss", "agent-feed", { embeds: [intro] }).catch((e) => {
-      console.warn("[spawner] sendAsAgent failed:", e instanceof Error ? e.message : String(e));
+      console.warn("[spawner] sendAsAgent failed:", toErrorMessage(e));
       notifyChannel("agent-feed", `**New Agent**: ${spec.name} -- ${spec.description}`);
     });
 
@@ -162,7 +163,7 @@ export async function spawnAgent(spec: SpawnSpec): Promise<void> {
 
     console.log(`[spawner] Agent ${spec.name} spawned successfully`);
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = toErrorMessage(err);
     console.error(`[spawner] Failed to spawn ${spec.key}:`, msg);
     await notifyChannel("ops", `**Spawn Failed**: ${spec.key} -- ${msg}`);
     throw err;

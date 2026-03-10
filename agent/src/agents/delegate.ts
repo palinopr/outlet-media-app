@@ -19,6 +19,7 @@ import { sendAsAgent } from "../services/webhook-service.js";
 import { sendWhatsAppMessage } from "../services/whatsapp-runtime-service.js";
 import { runClaude } from "../runner.js";
 import { getAgentForChannel } from "../discord/core/router.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 import { WHITELISTED_CHANNELS } from "../discord/features/restructure.js";
 
 /** Max delegations per response to prevent runaway chains */
@@ -550,7 +551,7 @@ export async function processWhatsAppSends(
       });
       sent += 1;
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       errors.push(message);
       console.error(`[whatsapp-send] ${sourceChannel}:`, message);
     }
@@ -636,8 +637,8 @@ export async function processDelegations(
           .setTimestamp();
 
         await sendAsAgent(fromAgent, targetChannel, { embeds: [embed] }).catch((e) => {
-          console.warn("[delegate] sendAsAgent failed:", e instanceof Error ? e.message : String(e));
-          channel.send({ embeds: [embed] }).catch((e2) => console.warn("[delegate] channel.send failed:", e2 instanceof Error ? e2.message : String(e2)));
+          console.warn("[delegate] sendAsAgent failed:", toErrorMessage(e));
+          channel.send({ embeds: [embed] }).catch((e2) => console.warn("[delegate] channel.send failed:", toErrorMessage(e2)));
         });
       }
     }
@@ -794,7 +795,7 @@ export async function executeAgentTask(
       completeTask(task.id, result);
 
       const summary = deliveredText.slice(0, 1900);
-      await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch((e) => console.warn("[delegate] sendAsAgent failed:", e instanceof Error ? e.message : String(e)));
+      await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch((e) => console.warn("[delegate] sendAsAgent failed:", toErrorMessage(e)));
 
       if (options?.notifySource !== false) {
         const shortSummary = deliveredText.slice(0, 500);
@@ -868,7 +869,7 @@ export async function executeAgentTask(
 
     // Post result to target channel via webhook
     const summary = deliveredText.slice(0, 1900);
-    await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch((e) => console.warn("[delegate] sendAsAgent failed:", e instanceof Error ? e.message : String(e)));
+    await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch((e) => console.warn("[delegate] sendAsAgent failed:", toErrorMessage(e)));
 
     // Notify source
     if (options?.notifySource !== false) {
@@ -888,7 +889,7 @@ export async function executeAgentTask(
 
     return deliveredText;
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+    const errMsg = toErrorMessage(err);
     failTask(task.id, errMsg);
     const failureChannel = options?.notifySource === false ? targetChannel : sourceChannel;
     await notifyChannel(failureChannel, `Delegation to ${task.to} failed: ${errMsg}`);

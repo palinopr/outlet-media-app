@@ -1,4 +1,5 @@
 import type { Client } from "discord.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 import { createLedgerTask, updateLedgerTask, type LedgerTask } from "./ledger-service.js";
 import { getServiceSupabase } from "./supabase-service.js";
 import { enqueueTask, waitForTaskTerminal } from "./queue-service.js";
@@ -387,9 +388,9 @@ async function dispatchScheduledTask(client: Client, scheduledTask: ScheduledTas
     "scheduler",
     "schedule",
     `Dispatching ${scheduledTask.id} to #${targetChannel} for ${formatScheduledTimeLabel(deliverAt)}.`,
-  ).catch((e) => console.warn("[handoff] dispatch notify failed:", e instanceof Error ? e.message : String(e)));
+  ).catch((e) => console.warn("[handoff] dispatch notify failed:", toErrorMessage(e)));
 
-  await sendAsAgent("scheduler", targetChannel, buildSchedulerDispatchMessage(scheduledTask, deliverAt)).catch((e) => console.warn("[handoff] dispatch message failed:", e instanceof Error ? e.message : String(e)));
+  await sendAsAgent("scheduler", targetChannel, buildSchedulerDispatchMessage(scheduledTask, deliverAt)).catch((e) => console.warn("[handoff] dispatch message failed:", toErrorMessage(e)));
 
   const delegatedTask = enqueueTask(
     "scheduler",
@@ -439,7 +440,7 @@ async function dispatchScheduledTask(client: Client, scheduledTask: ScheduledTas
       status: "completed",
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     await updateLedgerTask(scheduledTask.id, {
       completed_at: new Date().toISOString(),
       error: message,

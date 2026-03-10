@@ -19,6 +19,7 @@ import { notifyOwner, notifyOwnerEmailAlert, notifyOwnerImportant } from "./serv
 import { checkMeetingReminders } from "./services/calendar-service.js";
 import { ensureGmailWatch, pollGmailHistory } from "./services/gmail-watch-service.js";
 import { dispatchDueScheduledHandoffs } from "./services/scheduled-handoff-service.js";
+import { toErrorMessage } from "./utils/error-helpers.js";
 
 const SESSION_DIR = join(import.meta.dirname ?? ".", "..", "session");
 const TM_SYNC_SCRIPT = join(SESSION_DIR, "tm1-http-sync.mjs");
@@ -229,7 +230,7 @@ async function pingHeartbeat() {
       body: JSON.stringify({ secret: process.env.INGEST_SECRET }),
     });
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = toErrorMessage(err);
     console.warn("[scheduler] heartbeat failed:", msg);
   }
 }
@@ -253,7 +254,7 @@ async function renewGmailWatch(): Promise<void> {
       console.log(`[scheduler] Gmail watch renewal deferred; busy resources: ${err.blockers.join(", ")}`);
       return;
     }
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     console.error("[scheduler] Gmail watch renewal failed:", message);
     if (SCHEDULED_OWNER_NOTIFICATIONS) {
       await notifyOwnerImportant(`[Email Watch -- failed]\n${message}`, { channel: "email" });
@@ -325,7 +326,7 @@ async function runExternalSync(cfg: SyncConfig, options?: JobRunOptions): Promis
       return message;
     }
 
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     await finishAuditTask(auditTask, "failed", message);
 
     if (job.notify) {
@@ -360,7 +361,7 @@ async function runTokenRefresh(
       console.log(`[scheduler] ${label} auth refresh deferred; busy resources: ${err.blockers.join(", ")}`);
       return;
     }
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     console.error(`[scheduler] ${label} auth refresh failed:`, message);
     await notifyChannel("agent-alerts", `**${label} auth refresh failed**\n${message.slice(0, 200)}`);
   }
@@ -459,7 +460,7 @@ export async function runEmailCheck(options?: JobRunOptions): Promise<string> {
       await finishAuditTask(auditTask, "completed", message);
       return message;
     }
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     await finishAuditTask(auditTask, "failed", message);
     if (job.notify) {
       await notifyChannel("agent-alerts", `**Email check failed**\n${message.slice(0, 200)}`);
@@ -491,7 +492,7 @@ export async function runEmailHistoryPoll(options?: JobRunOptions): Promise<stri
       await finishAuditTask(auditTask, "completed", message);
       return message;
     }
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     await finishAuditTask(auditTask, "failed", message);
     if (job.notify) {
       await notifyChannel("agent-alerts", `**Email history poll failed**\n${message.slice(0, 200)}`);
@@ -543,7 +544,7 @@ export async function runMetaSync(options?: JobRunOptions): Promise<string> {
 
     return message;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     await finishAuditTask(auditTask, "failed", message);
     if (job.notify) {
       await notifyChannel("active-jobs", `x **Meta Ads sync** failed: ${message.slice(0, 200)}`);
@@ -583,7 +584,7 @@ async function runMeetingReminder(): Promise<void> {
       console.log("[scheduler]", result);
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     console.error("[scheduler] Meeting reminder check failed:", message);
   }
 }
@@ -595,7 +596,7 @@ async function runDiscordHealthCheck() {
     const { runChannelHealthCheck } = await import("./discord/commands/admin.js");
     await runChannelHealthCheck();
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     console.error("[scheduler] Discord health check failed:", message);
   }
 }
@@ -649,7 +650,7 @@ export async function runThinkCycle(options?: JobRunOptions): Promise<string> {
       await finishAuditTask(auditTask, "completed", message);
       return message;
     }
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     await finishAuditTask(auditTask, "failed", message);
     if (job.notify) {
       await notifyChannel("active-jobs", `x **Think loop** failed: ${message.slice(0, 200)}`);

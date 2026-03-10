@@ -9,6 +9,7 @@
 
 import { taskEvents, type AgentTask, enqueueTask } from "../services/queue-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 
 
 /**
@@ -75,7 +76,7 @@ async function handleTaskFailure(task: AgentTask): Promise<void> {
   await sendAsAgent("boss", "boss",
     `**Task Failed**: ${task.action} (assigned to ${task.to})\nError: ${task.error?.slice(0, 300) ?? "unknown"}\nTask ID: ${task.id}`
   ).catch((e) => {
-    console.warn("[triggers] sendAsAgent failed:", e instanceof Error ? e.message : String(e));
+    console.warn("[triggers] sendAsAgent failed:", toErrorMessage(e));
     notifyChannel("boss",
       `**Task Failed**: ${task.action} (${task.to}) -- ${task.error?.slice(0, 200) ?? "unknown"}`
     );

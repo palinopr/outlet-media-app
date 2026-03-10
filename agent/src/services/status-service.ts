@@ -12,6 +12,7 @@ import {
   type TextChannel,
   ChannelType,
 } from "discord.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 import { getActiveTasks, getQueueDepth } from "./queue-service.js";
 import { getAgentKeys, getAgentProfile } from "./webhook-service.js";
 
@@ -135,10 +136,10 @@ export async function updateAgentStatus(channelName: string): Promise<void> {
   // Create new status message and pin it
   try {
     const msg = await channel.send({ embeds: [embed] });
-    await msg.pin().catch((e) => console.warn("[status] pin failed:", e instanceof Error ? e.message : String(e)));
+    await msg.pin().catch((e) => console.warn("[status] pin failed:", toErrorMessage(e)));
     statusMessageIds.set(channelName, msg.id);
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+    const errMsg = toErrorMessage(err);
     console.warn(`[status] Failed to post status in #${channelName}: ${errMsg}`);
   }
 }

@@ -17,6 +17,7 @@ import {
   type Client,
 } from "discord.js";
 import { canRunCommand } from "../core/access.js";
+import { toErrorMessage } from "../../utils/error-helpers.js";
 
 // --- Button Row Builders --------------------------------------------------
 
@@ -141,11 +142,11 @@ export function registerButtonHandler(client: Client): void {
           await btn.reply({ content: "Unknown button.", ephemeral: true });
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = toErrorMessage(err);
       if (btn.deferred || btn.replied) {
-        await btn.editReply(`Error: ${msg}`).catch((e) => console.warn("[buttons] reply failed:", e instanceof Error ? e.message : String(e)));
+        await btn.editReply(`Error: ${msg}`).catch((e) => console.warn("[buttons] reply failed:", toErrorMessage(e)));
       } else {
-        await btn.reply({ content: `Error: ${msg}`, ephemeral: true }).catch((e) => console.warn("[buttons] reply failed:", e instanceof Error ? e.message : String(e)));
+        await btn.reply({ content: `Error: ${msg}`, ephemeral: true }).catch((e) => console.warn("[buttons] reply failed:", toErrorMessage(e)));
       }
     }
   });

@@ -12,6 +12,7 @@ import { isAgentBusy, setAgentBusy, clearAgentBusy } from "../state.js";
 import { runClaude } from "../runner.js";
 import { enqueueTask, completeTask, failTask } from "../services/queue-service.js";
 import { todayCST, yesterdayCST } from "../utils/date-helpers.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 import { loadEvents, loadCampaigns, categorizeEvents } from "../utils/session-loader.js";
 import { campaignsSummary, eventsSummary } from "../utils/prompt-formatters.js";
 
@@ -56,7 +57,7 @@ async function withRoutineLock(
     completeTask(task.id, { text: result });
     await postToFeed(`ok **${name}** finished`);
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = toErrorMessage(err);
     failTask(task.id, msg);
     console.error(`[sweeps] ${name} failed:`, msg);
     await postToFeed(`x **${name}** failed: ${msg.slice(0, 200)}`);

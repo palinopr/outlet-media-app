@@ -4,6 +4,8 @@
  * with custom avatar and embed.
  */
 
+const toErrorMessage = (e: unknown): string => e instanceof Error ? e.message : String(e);
+
 const GUILD_ID = "1340092028280770693";
 const AGENT_NAME = "Asset Agent";
 const AGENT_AVATAR = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f916.png";
@@ -89,7 +91,7 @@ function dispatchWebhookMessage(botToken: string, payload: object): void {
       );
       if (res.status === 401 || res.status === 404) invalidateWebhookCache();
     })
-    .catch((e) => console.warn("[notify-creative] webhook post failed:", e instanceof Error ? e.message : String(e)));
+    .catch((e) => console.warn("[notify-creative] webhook post failed:", toErrorMessage(e)));
 }
 
 /**

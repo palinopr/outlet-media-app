@@ -14,6 +14,7 @@ import {
   ChannelType,
   MessageFlags,
 } from "discord.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 
 const WEBHOOK_CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 const WEBHOOK_INIT_TIMEOUT_MS = 8_000;
@@ -154,7 +155,7 @@ async function ensureWebhook(
 
     return wh;
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = toErrorMessage(err);
     console.error(`[webhooks] Failed to init webhook for ${agentKey} in #${channel.name}: ${msg}`);
     return null;
   }
@@ -194,7 +195,7 @@ export async function sendAsAgent(
       });
       return;
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
+      const errMsg = toErrorMessage(err);
       console.warn(`[webhooks] Webhook send failed for ${agentKey} in #${channelName}: ${errMsg}`);
       channelWebhooks?.delete(agentKey);
     }
@@ -222,7 +223,7 @@ export async function sendAsAgent(
       }
 
       // Last resort: send as bot
-      await channel.send(content).catch((e) => console.warn("[webhooks] fallback send failed:", e instanceof Error ? e.message : String(e)));
+      await channel.send(content).catch((e) => console.warn("[webhooks] fallback send failed:", toErrorMessage(e)));
     }
   }
 }

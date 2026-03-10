@@ -18,6 +18,7 @@ import { getAgentForChannel, type AgentConfig } from "../discord/core/router.js"
 import { isAgentFree } from "../services/queue-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { loadAgentMemory } from "../discord/features/memory.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 
 /** Per-channel processing lock to prevent concurrent agent calls */
 const channelLocks = new Set<string>();
@@ -213,12 +214,12 @@ async function deliverResponse(
 ): Promise<void> {
   try {
     await sendAsAgent(agentKey, channelName, chunks[0] || "Done.");
-    await working.delete().catch((e) => console.warn("[message-handler] delete failed:", e instanceof Error ? e.message : String(e)));
+    await working.delete().catch((e) => console.warn("[message-handler] delete failed:", toErrorMessage(e)));
     for (const chunk of chunks.slice(1)) {
       await sendAsAgent(agentKey, channelName, chunk);
     }
   } catch {
-    await working.edit(chunks[0] || "Done.").catch((e) => console.warn("[message-handler] edit failed:", e instanceof Error ? e.message : String(e)));
+    await working.edit(chunks[0] || "Done.").catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
     for (const chunk of chunks.slice(1)) {
       if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
     }
@@ -235,13 +236,13 @@ function postProcess(
   prompt: string,
   responseText: string,
 ): void {
-  logActivity(channelName, username, prompt, agent.description, responseText).catch((e) => console.warn("[message-handler] log failed:", e instanceof Error ? e.message : String(e)));
+  logActivity(channelName, username, prompt, agent.description, responseText).catch((e) => console.warn("[message-handler] log failed:", toErrorMessage(e)));
   import("../discord/features/memory.js")
     .then(({ maybeUpdateMemory }) => maybeUpdateMemory(agent.promptFile, prompt, responseText))
-    .catch((e) => console.warn("[message-handler] memory update failed:", e instanceof Error ? e.message : String(e)));
+    .catch((e) => console.warn("[message-handler] memory update failed:", toErrorMessage(e)));
   import("../discord/features/skills.js")
     .then(({ maybeCreateSkill }) => maybeCreateSkill(agent.promptFile, prompt, responseText))
-    .catch((e) => console.warn("[message-handler] skill creation failed:", e instanceof Error ? e.message : String(e)));
+    .catch((e) => console.warn("[message-handler] skill creation failed:", toErrorMessage(e)));
 }
 
 /**
@@ -288,7 +289,7 @@ export async function handleMessage(
         buffer += chunk;
         if (Date.now() - lastEdit > 1500 && buffer.trim()) {
           const preview = cleanForDiscord(buffer.slice(-1900));
-          await working?.edit(preview || "...").catch((e) => console.warn("[message-handler] edit failed:", e instanceof Error ? e.message : String(e)));
+          await working?.edit(preview || "...").catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
           lastEdit = Date.now();
         }
       },
@@ -330,7 +331,7 @@ export async function handleMessage(
           actionNotes.push(`Queued for ${targets}.`);
         }
       } catch (err) {
-        const errMsg = err instanceof Error ? err.message : String(err);
+        const errMsg = toErrorMessage(err);
         console.warn(`[message-handler] action processing failed: ${errMsg}`);
       }
     }
@@ -344,9 +345,9 @@ export async function handleMessage(
     await deliverResponse(agentKey, channelName, chunks, working, msg);
     postProcess(agent, channelName, msg.author.username, prompt, deliveredText);
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+    const errMsg = toErrorMessage(err);
     if (working) {
-      await working.edit(`Something went wrong: ${errMsg}`).catch((e) => console.warn("[message-handler] edit failed:", e instanceof Error ? e.message : String(e)));
+      await working.edit(`Something went wrong: ${errMsg}`).catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
     }
   } finally {
     if (typingInterval) clearInterval(typingInterval);

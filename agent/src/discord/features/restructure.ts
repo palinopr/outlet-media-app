@@ -15,6 +15,7 @@ import {
   PermissionFlagsBits,
 } from "discord.js";
 import { isAgentBusy, setAgentBusy, clearAgentBusy } from "../../state.js";
+import { toErrorMessage } from "../../utils/error-helpers.js";
 import { buildChannelOverwrites, getChannelAccessProfile } from "../core/access.js";
 
 interface LayoutChannel {
@@ -143,7 +144,7 @@ async function syncOwnerRoleAssignments(guild: Guild, ownerRole: Role, log: stri
       await member.roles.add(ownerRole, "Ensure owner role assignment");
       log.push(`Assigned ${OWNER_ROLE_NAME} role to ${member.user.username}`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = toErrorMessage(err);
       log.push(`Failed to assign ${OWNER_ROLE_NAME} role to ${ownerId}: ${msg}`);
     }
   }
@@ -170,7 +171,7 @@ async function syncTeamRoleAssignments(guild: Guild, teamRole: Role, log: string
       await member.roles.add(teamRole, "Ensure employee workspace access");
       log.push(`Assigned ${TEAM_ROLE_NAME} role to ${member.user.username}`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = toErrorMessage(err);
       log.push(`Failed to assign ${TEAM_ROLE_NAME} role to ${member.user.username}: ${msg}`);
     }
   }
@@ -264,7 +265,7 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
         log.push(`Created category: ${categoryName}`);
       } else if (category.name !== categoryName) {
         const previousName = category.name;
-        await category.setName(categoryName).catch((e) => console.warn("[restructure] setName failed:", e instanceof Error ? e.message : String(e)));
+        await category.setName(categoryName).catch((e) => console.warn("[restructure] setName failed:", toErrorMessage(e)));
         log.push(`Renamed category ${previousName} -> ${categoryName}`);
       }
 
@@ -277,14 +278,14 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
 
         if (existing) {
           if (existing.parentId !== category.id) {
-            await (existing as TextChannel).setParent(category.id).catch((e) => console.warn("[restructure] setParent failed:", e instanceof Error ? e.message : String(e)));
+            await (existing as TextChannel).setParent(category.id).catch((e) => console.warn("[restructure] setParent failed:", toErrorMessage(e)));
             log.push(`Moved #${channelConfig.name} -> ${categoryName}`);
           }
 
-          await (existing as TextChannel).setTopic(channelConfig.topic).catch((e) => console.warn("[restructure] setTopic failed:", e instanceof Error ? e.message : String(e)));
+          await (existing as TextChannel).setTopic(channelConfig.topic).catch((e) => console.warn("[restructure] setTopic failed:", toErrorMessage(e)));
           await (existing as TextChannel).permissionOverwrites
             .set(permissionOverwrites)
-            .catch((e) => console.warn("[restructure] setPermissions failed:", e instanceof Error ? e.message : String(e)));
+            .catch((e) => console.warn("[restructure] setPermissions failed:", toErrorMessage(e)));
           continue;
         }
 
@@ -317,7 +318,7 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
           await channel.delete();
           log.push(`Deleted ${typeLabel} #${channel.name} (was in ${parent})`);
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
+          const msg = toErrorMessage(err);
           log.push(`Failed to delete #${channel.name}: ${msg}`);
         }
       }
@@ -347,7 +348,7 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
           await category.delete();
           log.push(`Deleted category: ${category.name}`);
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
+          const msg = toErrorMessage(err);
           log.push(`Failed to delete category ${category.name}: ${msg}`);
         }
       }
@@ -365,7 +366,7 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
           await role.delete("Server restructure -- not in target layout");
           log.push(`Deleted role: ${role.name}`);
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
+          const msg = toErrorMessage(err);
           log.push(`Failed to delete role ${role.name}: ${msg}`);
         }
       }

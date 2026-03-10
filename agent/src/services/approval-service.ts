@@ -8,6 +8,7 @@
 
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { toErrorMessage } from "../utils/error-helpers.js";
 import {
   EmbedBuilder,
   ActionRowBuilder,
@@ -227,7 +228,7 @@ async function postApprovalRequest(task: AgentTask): Promise<void> {
     msg.edit({
       content: "Expired (no response in 24h)",
       components: [],
-    }).catch((e) => console.warn("[approvals] edit expired message failed:", e instanceof Error ? e.message : String(e)));
+    }).catch((e) => console.warn("[approvals] edit expired message failed:", toErrorMessage(e)));
     pendingApprovals.delete(task.id);
     console.log(`[approvals] Task ${task.id} auto-expired after 24h`);
   }, APPROVAL_EXPIRY_MS);
