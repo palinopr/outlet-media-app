@@ -1,20 +1,18 @@
 import {
   DollarSign,
-  TrendingUp,
   Users,
   Megaphone,
   Clock,
   Sparkles,
   Target,
   Ticket,
+  ListChecks,
 } from "lucide-react";
 import { currentUser } from "@clerk/nextjs/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
-import { fmtUsd, fmtNum, roasColor, slugToLabel, fmtTodayLong } from "@/lib/formatters";
-import { roasLabel, DATE_OPTIONS, generateInsights } from "./lib";
+import { fmtUsd, fmtNum, slugToLabel, fmtTodayLong } from "@/lib/formatters";
+import { DATE_OPTIONS, generateInsights } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
 import { DateRangePicker } from "./components/date-range-picker";
 import { InsightsPanel } from "./components/insights-panel";
@@ -23,6 +21,8 @@ import { CampaignSection } from "./components/campaign-section";
 import { EventCard } from "./components/event-card";
 import { AudienceSection } from "./components/audience-section";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { getDashboardOpsSummary } from "@/features/dashboard/server";
+import { OverviewCampaignJumpSection } from "./components/overview-campaign-jump-section";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -35,18 +35,28 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const range = parseRange(rangeParam);
 
   const { scope } = await requireClientAccess(slug);
-  const dashboardData = await getData(slug, range, scope);
-  const { heroStats, campaigns, events, audience, dataSource, rangeLabel, trendData } = dashboardData;
+  const [dashboardData, opsSummary, user] = await Promise.all([
+    getData(slug, range, scope),
+    getDashboardOpsSummary({
+      clientSlug: slug,
+      limit: 6,
+      mode: "client",
+      scopeCampaignIds: scope?.allowedCampaignIds,
+    }),
+    currentUser().catch(() => null),
+  ]);
+  const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = dashboardData;
   const insights = generateInsights(heroStats, campaigns, events, audience);
 
   const clientName = slugToLabel(slug);
 
   let displayName = clientName;
-  try {
-    const user = await currentUser();
-    if (user?.firstName) displayName = user.firstName;
-  } catch { /* Clerk unavailable -- fall back to slug label */ }
+  if (user?.firstName) displayName = user.firstName;
   const now = fmtTodayLong();
+  const metricsByKey = new Map(opsSummary.metrics.map((metric) => [metric.key, metric]));
+  const pendingApprovals = metricsByKey.get("pending_approvals")?.value ?? 0;
+  const openNextSteps = metricsByKey.get("action_items")?.value ?? 0;
+  const openThreads = metricsByKey.get("open_discussions")?.value ?? 0;
 
   return (
     <div className="space-y-6">
@@ -90,21 +100,9 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
             {fmtUsd(heroStats.totalSpend)}
           </p>
-        </div>
-
-        <div className="glass-card hero-stat-card stat-glow p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/20">
-              <TrendingUp className="h-3.5 w-3.5 text-violet-400" />
-            </div>
-            <span className="text-xs font-semibold tracking-wider uppercase text-white/60">ROAS</span>
-          </div>
-          <p className={`text-2xl sm:text-3xl font-extrabold tracking-tighter leading-none ${roasColor(heroStats.blendedRoas)}`}>
-            {heroStats.blendedRoas != null ? `${heroStats.blendedRoas.toFixed(1)}x` : "--"}
+          <p className="text-xs text-white/45 mt-2">
+            {rangeLabel.toLowerCase()}
           </p>
-          {heroStats.blendedRoas != null && (
-            <p className={`text-xs mt-2 font-medium ${roasColor(heroStats.blendedRoas)}`}>{roasLabel(heroStats.blendedRoas)}</p>
-          )}
         </div>
 
         <div className="glass-card hero-stat-card stat-glow p-5">
@@ -124,6 +122,27 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
 
         <div className="glass-card hero-stat-card stat-glow p-5">
           <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/20">
+              <ListChecks className="h-3.5 w-3.5 text-violet-400" />
+            </div>
+            <span className="text-xs font-semibold tracking-wider uppercase text-white/60">Needs Attention</span>
+          </div>
+          <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
+            {opsSummary.campaignsNeedingAttention}
+          </p>
+          <p className="text-xs text-white/45 mt-2">
+            {pendingApprovals > 0
+              ? `${pendingApprovals} approvals awaiting review`
+              : openNextSteps > 0
+                ? `${openNextSteps} campaign next steps open`
+                : openThreads > 0
+                  ? `${openThreads} discussion threads active`
+                  : "Nothing urgent right now"}
+          </p>
+        </div>
+
+        <div className="glass-card hero-stat-card stat-glow p-5">
+          <div className="flex items-center gap-2 mb-3">
             <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-blue-500/10 ring-1 ring-blue-500/20">
               <Megaphone className="h-3.5 w-3.5 text-blue-400" />
             </div>
@@ -138,35 +157,18 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         </div>
       </div>
 
+      {campaigns.length > 0 && (
+        <OverviewCampaignJumpSection
+          attentionCampaigns={opsSummary.attentionCampaigns}
+          campaigns={campaigns}
+          metrics={opsSummary.metrics}
+          range={range}
+          slug={slug}
+        />
+      )}
+
       {/* -- Smart Insights -- */}
       <InsightsPanel insights={insights} />
-
-      {trendData.length > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-3.5 w-3.5 text-white/50" />
-              <span className="section-label">ROAS Trend</span>
-            </div>
-            <span className="text-xs text-white/45">{rangeLabel}</span>
-          </div>
-          <div className="glass-card p-5">
-            <Card className="border-white/10 bg-transparent shadow-none">
-              <CardHeader className="px-0 pt-0 pb-3">
-                <CardTitle className="text-sm font-semibold text-white">
-                  Campaign performance trend
-                </CardTitle>
-                <p className="text-xs text-white/50">
-                  A familiar chart view for quick readouts before opening deeper workflow details.
-                </p>
-              </CardHeader>
-              <CardContent className="px-0 pb-0">
-                <RoasTrendChart data={trendData} />
-              </CardContent>
-            </Card>
-          </div>
-        </section>
-      )}
 
 
       {/* -- Campaign Cards with Filter -- */}
