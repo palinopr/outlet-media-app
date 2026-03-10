@@ -336,11 +336,18 @@ export function rejectTask(taskId: string): void {
 
   task.status = "rejected";
   task.completedAt = new Date();
-  activeSlots.set(task.to, null);
+
+  const currentActive = activeSlots.get(task.to);
+  if (currentActive?.id === task.id) {
+    activeSlots.set(task.to, null);
+  }
+
   persistTask(task).catch(() => {});
   taskEvents.emit("rejected", task);
 
-  processNextForAgent(task.to);
+  if (!activeSlots.get(task.to)) {
+    processNextForAgent(task.to);
+  }
 }
 
 export async function waitForTaskTerminal(taskId: string, timeoutMs = 300_000): Promise<AgentTask> {
@@ -473,8 +480,10 @@ export function pruneTaskRegistry(): void {
   if (taskRegistry.size > 200) {
     const entries = [...taskRegistry.entries()]
       .sort((a, b) => b[1].createdAt.getTime() - a[1].createdAt.getTime());
+    const liveStatuses = new Set(["pending", "running", "escalated", "approved"]);
     const toDelete = entries.slice(200);
-    for (const [id] of toDelete) {
+    for (const [id, t] of toDelete) {
+      if (liveStatuses.has(t.status)) continue;
       taskRegistry.delete(id);
       pruned++;
     }

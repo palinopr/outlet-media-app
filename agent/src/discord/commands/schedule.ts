@@ -105,6 +105,24 @@ const JOBS: Record<string, ScheduleJob> = {
     lastRun: null,
     runner: () => {},
   },
+  "tm-cookie-refresh": {
+    name: "TM Cookie Refresh",
+    description: "Refresh TM One authentication cookies via Playwright",
+    cron: "0 */6 * * *",
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
+  "email-check": {
+    name: "Email Check",
+    description: "Sweep unread Gmail inbox, auto-draft replies, alert on important mail",
+    cron: "*/15 8-22 * * *",
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
 
   // --- Autonomous Routines (from discord-routines.ts) ---
   "morning-briefing": {
@@ -197,6 +215,15 @@ const JOBS: Record<string, ScheduleJob> = {
     lastRun: null,
     runner: () => {},
   },
+  "creative-classify": {
+    name: "Creative Classify",
+    description: "Classify newly uploaded ad assets by type and placement",
+    cron: "0 */6 * * *",
+    enabled: false,
+    task: null,
+    lastRun: null,
+    runner: () => {},
+  },
 };
 
 function saveSweepState(): void {
@@ -234,7 +261,7 @@ export function initScheduleJobs(runners: Record<string, () => void>): void {
 // --- Job Control ----------------------------------------------------------
 
 /** Core jobs started unconditionally by scheduler.ts -- cannot be toggled via the schedule UI. */
-const CORE_JOB_KEYS = new Set(["heartbeat", "tm-sync", "meta-sync", "think", "health-check", "eata-sync", "eata-cookie-refresh"]);
+const CORE_JOB_KEYS = new Set(["heartbeat", "tm-sync", "meta-sync", "think", "health-check", "eata-sync", "eata-cookie-refresh", "tm-cookie-refresh", "email-check"]);
 
 function isCoreJob(jobKey: string): boolean {
   return CORE_JOB_KEYS.has(jobKey);
@@ -262,6 +289,8 @@ function buildRuntimeManagedNote(jobKey: string): string {
       return EATA_SCHEDULER_ENABLED
         ? "Runtime-managed core cron is active."
         : "Runtime-managed core cron is paused by env; this job is manual-only.";
+    case "email-check":
+      return "Runtime-managed core cron is active.";
     case "meta-sync":
     case "think":
       return SCHEDULED_OWNER_NOTIFICATIONS

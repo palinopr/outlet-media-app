@@ -91,13 +91,10 @@ function computeEnd(startIso: string, durationMinutes: number): { dateTime: stri
   const match = start.dateTime.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
   if (!match) throw new Error(`Invalid start datetime: ${startIso}`);
 
-  const parts = match.slice(1).map(Number);
-  let [y, mo, d, h, mi] = parts;
-  mi += durationMinutes;
-  while (mi >= 60) { mi -= 60; h += 1; }
-  while (h >= 24) { h -= 24; d += 1; }
+  const [y, mo, d, h, mi, s] = match.slice(1).map(Number);
+  const dt = new Date(y, mo - 1, d, h, mi + durationMinutes, s);
   const pad = (n: number) => String(n).padStart(2, "0");
-  const endStr = `${y}-${pad(mo)}-${pad(d)}T${pad(h)}:${pad(mi)}:00`;
+  const endStr = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
 
   return start.timeZone
     ? { dateTime: endStr, timeZone: start.timeZone }

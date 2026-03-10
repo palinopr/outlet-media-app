@@ -37,7 +37,7 @@ async function withRoutineLock(
   agentKey: string,
   fn: () => Promise<string>,
 ): Promise<void> {
-  const lockId = `sweep:${agentKey}`;
+  const lockId = `sweep:${name.toLowerCase().replace(/\s+/g, "-")}`;
   if (isAgentBusy(lockId)) {
     console.log(`[sweeps] Skipping ${name} -- ${lockId} is already running`);
     return;

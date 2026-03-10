@@ -72,6 +72,20 @@ export function isChannelLocked(channelId: string): boolean {
   return channelLocks.has(channelId);
 }
 
+export function forceReleaseChannelLock(channelId: string): void {
+  channelLocks.delete(channelId);
+}
+
+export function acquireChannelLock(channelId: string): boolean {
+  if (channelLocks.has(channelId)) return false;
+  channelLocks.add(channelId);
+  return true;
+}
+
+export function releaseChannelLock(channelId: string): void {
+  channelLocks.delete(channelId);
+}
+
 /**
  * Fetch recent channel messages and format as conversation context.
  */

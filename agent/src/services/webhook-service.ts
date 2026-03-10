@@ -46,6 +46,11 @@ const AGENT_PROFILES: Record<string, { name: string; avatar: string; channels: s
     channels: ["dashboard", "zamora", "kybba", "don-omar-tickets"],
   },
   "client-manager":{ name: "Client Manager", avatar: "https://cdn.discordapp.com/avatars/1476648626007838894/a885030673dee1ac45739239f3cb1da7.png?size=512", channels: ["zamora", "kybba"] },
+  general: {
+    name: "Outlet Agent",
+    avatar: "https://cdn.discordapp.com/avatars/1476648616188968991/caf49673430a14325a2e65ebbe81c702.png?size=512",
+    channels: ["general"],
+  },
 };
 
 /** channelName -> agentKey -> AgentWebhook */

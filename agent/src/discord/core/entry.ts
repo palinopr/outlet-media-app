@@ -29,7 +29,7 @@ import {
 import { handleScheduleCommand, initScheduleJobs } from "../commands/schedule.js";
 import { handleSuperviseCommand } from "../commands/supervisor.js";
 import { handleDashboardCommand } from "../commands/dashboard.js";
-import { handleMessage, isChannelLocked, cleanForDiscord, chunkText } from "../../events/message-handler.js";
+import { handleMessage, isChannelLocked, forceReleaseChannelLock, acquireChannelLock, releaseChannelLock, cleanForDiscord, chunkText } from "../../events/message-handler.js";
 import { initWebhooks, sendAsAgent } from "../../services/webhook-service.js";
 import { initQueue } from "../../services/queue-service.js";
 import { initApprovals } from "../../services/approval-service.js";
@@ -98,6 +98,7 @@ function checkAndReleaseStaleLock(channelId: string): boolean {
     `[discord] Stale channel lock on ${channelId} -- held for ${heldSec}s (max ${CHANNEL_LOCK_MAX_AGE_MS / 1000}s). Force-releasing.`,
   );
   channelLockTimestamps.delete(channelId);
+  forceReleaseChannelLock(channelId);
   return true;
 }
 
@@ -154,7 +155,7 @@ function markProcessed(msgId: string): boolean {
 
 function looksLikeMeetingRequest(content: string): boolean {
   const lower = content.toLowerCase();
-  const mentionsMeeting = /\bgoogle meet\b|\bmeeting\b|\bmeet\b|\breunion\b|\breunión\b|\bzoom\b/.test(lower);
+  const mentionsMeeting = /\bgoogle meet\b|\bmeeting\b|\breunion\b|\breunión\b|\bzoom\b/.test(lower);
   if (!mentionsMeeting) return false;
 
   const hasAction = /\bpuedes\b|\bpodrias\b|\bpodrías\b|\bcreate\b|\bcrear\b|\bschedule\b|\bagendar\b|\binvite\b|\binvitar\b|\bquiere\b|\bwants\b|\bhacer\b/.test(lower);
@@ -731,22 +732,27 @@ export function startDiscordBot(): void {
         console.log(`[discord] Channel ${channelName} already processing, skipping msg ${msg.id}`);
         return;
       }
-      // Stale lock was force-released, proceed with this message
     }
 
-    // Track lock acquisition time and route to the correct agent
-    const promptResult = await buildPromptFromDiscordMessage(content, msg.attachments.values());
-    if (!promptResult.prompt) {
-      if (promptResult.fallbackMessage) {
-        await msg.reply(promptResult.fallbackMessage).catch(() => {});
-      }
+    // Acquire lock atomically before async work to prevent TOCTOU race
+    if (!acquireChannelLock(msg.channelId)) {
+      console.log(`[discord] Channel ${channelName} lock race, skipping msg ${msg.id}`);
       return;
     }
-
     markChannelLockAcquired(msg.channelId);
+
     try {
+      const promptResult = await buildPromptFromDiscordMessage(content, msg.attachments.values());
+      if (!promptResult.prompt) {
+        if (promptResult.fallbackMessage) {
+          await msg.reply(promptResult.fallbackMessage).catch(() => {});
+        }
+        return;
+      }
+
       await handleMessage(msg, promptResult.prompt, channelName, discordClient);
     } finally {
+      releaseChannelLock(msg.channelId);
       markChannelLockReleased(msg.channelId);
     }
   });

@@ -201,17 +201,38 @@ export function parseScheduledDispatchTime(content: string, now: Date = new Date
     }
   }
 
-  const target = new Date(now);
-  target.setSeconds(0, 0);
-  target.setHours(hours, minutes, 0, 0);
+  // Get today's date in target timezone
+  const dateFmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: DEFAULT_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
+  });
+  let dateStr = dateFmt.format(now);
 
   const wantsTomorrow = /\btomorrow\b|\bmanana\b/.test(lower);
   const wantsToday = /\btoday\b|\btonight\b|\bhoy\b|\besta noche\b/.test(lower);
 
   if (wantsTomorrow) {
-    target.setDate(target.getDate() + 1);
-  } else if (!wantsToday && target.getTime() <= now.getTime()) {
-    target.setDate(target.getDate() + 1);
+    dateStr = dateFmt.format(new Date(now.getTime() + 86_400_000));
+  }
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const isoLike = `${dateStr}T${pad(hours)}:${pad(minutes)}:00`;
+
+  // Get current UTC offset for the target timezone
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: DEFAULT_TIME_ZONE, timeZoneName: "shortOffset",
+  }).formatToParts(now);
+  const offsetVal = parts.find(p => p.type === "timeZoneName")?.value ?? "GMT";
+  const offMatch = offsetVal.match(/GMT([+-]?)(\d{1,2})(?::?(\d{2}))?/);
+  let tzSuffix = "Z";
+  if (offMatch) {
+    const sign = offMatch[1] || "+";
+    tzSuffix = `${sign}${offMatch[2].padStart(2, "0")}:${(offMatch[3] ?? "0").padStart(2, "0")}`;
+  }
+
+  const target = new Date(`${isoLike}${tzSuffix}`);
+
+  if (!wantsTomorrow && !wantsToday && target.getTime() <= now.getTime()) {
+    target.setTime(target.getTime() + 86_400_000);
   }
 
   return target;

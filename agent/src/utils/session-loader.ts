@@ -2,7 +2,12 @@
 
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { todayCST, yesterdayCST, tomorrowCST } from "./date-helpers.js";
+
+const __dir = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
+const SESSION_DIR = join(__dir, "..", "..", "session");
 
 export interface EventData {
   name: string;
@@ -35,10 +40,10 @@ export interface CampaignData {
 }
 
 export async function loadEvents(): Promise<EventData[]> {
-  const path = "session/last-events.json";
-  if (!existsSync(path)) return [];
+  const filePath = join(SESSION_DIR, "last-events.json");
+  if (!existsSync(filePath)) return [];
   try {
-    const raw = await readFile(path, "utf-8");
+    const raw = await readFile(filePath, "utf-8");
     const parsed: unknown = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed as EventData[];
     if (
@@ -56,10 +61,10 @@ export async function loadEvents(): Promise<EventData[]> {
 }
 
 export async function loadCampaigns(): Promise<CampaignData[]> {
-  const path = "session/last-campaigns.json";
-  if (!existsSync(path)) return [];
+  const filePath = join(SESSION_DIR, "last-campaigns.json");
+  if (!existsSync(filePath)) return [];
   try {
-    const raw = await readFile(path, "utf-8");
+    const raw = await readFile(filePath, "utf-8");
     const parsed: unknown = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed as CampaignData[];
     if (
