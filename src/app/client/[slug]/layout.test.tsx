@@ -101,4 +101,19 @@ describe("ClientLayout navigation links", () => {
     await renderLayout("acme");
     expect(screen.getByTestId("child")).toBeInTheDocument();
   });
+
+  it("renders the floating AI helper with a support mailto link", async () => {
+    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    await renderLayout("acme");
+    const helperLink = screen.getByRole("link", { name: "Open AI helper" });
+    expect(helperLink).toBeInTheDocument();
+    expect(helperLink).toHaveAttribute(
+      "href",
+      expect.stringContaining("mailto:hello@outletmedia.io")
+    );
+    expect(helperLink).toHaveAttribute(
+      "href",
+      expect.stringContaining(encodeURIComponent("Outlet AI Helper | Acme | Client Overview"))
+    );
+  });
 });

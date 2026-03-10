@@ -1,5 +1,5 @@
 import { BarChart3, CalendarDays, Globe2, Layers, Sparkles } from "lucide-react";
-import { fmtUsd } from "@/lib/formatters";
+import { fmtNum, fmtUsd } from "@/lib/formatters";
 import type {
   AgeGenderBreakdown,
   PlacementBreakdown,
@@ -8,8 +8,14 @@ import type {
   HourlyBreakdown,
   DailyPoint,
 } from "../types";
-import { AGE_BRACKETS, DAY_LABELS } from "../types";
-import { findBestHour, findTopCreative, findTopMarket } from "../lib";
+import { AGE_BRACKETS } from "../types";
+import {
+  findBestDayOfWeek,
+  findBestHour,
+  findTopCreative,
+  findTopMarket,
+  summarizeDayOfWeekPerformance,
+} from "../lib";
 import {
   AgeDistributionChart,
   GenderDonutChart,
@@ -67,18 +73,30 @@ export function CampaignAnalytics({
     .filter((age) => byAge.has(age))
     .map((age) => ({ age, ...byAge.get(age)! }));
 
-  const byGender = new Map<string, number>();
+  const byGender = new Map<string, { impressions: number; clicks: number }>();
   for (const row of ageGender) {
-    byGender.set(row.gender, (byGender.get(row.gender) ?? 0) + row.impressions);
+    const prev = byGender.get(row.gender) ?? { impressions: 0, clicks: 0 };
+    byGender.set(row.gender, {
+      impressions: prev.impressions + row.impressions,
+      clicks: prev.clicks + row.clicks,
+    });
   }
 
-  const genderChartData: GenderRow[] = Array.from(byGender.entries())
-    .map(([gender, impressions]) => ({
+  const genderMetrics = Array.from(byGender.entries())
+    .map(([gender, stats]) => ({
       gender,
-      impressions,
-      pct: totalImp > 0 ? (impressions / totalImp) * 100 : 0,
+      impressions: stats.impressions,
+      clicks: stats.clicks,
+      pct: totalImp > 0 ? (stats.impressions / totalImp) * 100 : 0,
+      ctr: stats.impressions > 0 ? (stats.clicks / stats.impressions) * 100 : null,
     }))
     .sort((a, b) => b.impressions - a.impressions);
+
+  const genderChartData: GenderRow[] = genderMetrics.map(({ gender, impressions, pct }) => ({
+    gender,
+    impressions,
+    pct,
+  }));
 
   const heatmapData: AgeGenderCell[] = ageGender.map((row) => ({
     age: row.age,
@@ -132,53 +150,69 @@ export function CampaignAnalytics({
     };
   });
 
-  const dowMap = new Map<number, { impressions: number; clicks: number }>();
-  for (const row of daily) {
-    const prev = dowMap.get(row.dayOfWeek) ?? { impressions: 0, clicks: 0 };
-    dowMap.set(row.dayOfWeek, {
-      impressions: prev.impressions + row.impressions,
-      clicks: prev.clicks + row.clicks,
-    });
-  }
+  const dayPerformance = summarizeDayOfWeekPerformance(daily);
+  const dowData: DayOfWeekRow[] = dayPerformance.map((row) => ({
+    day: row.label,
+    impressions: row.impressions,
+    clicks: row.clicks,
+  }));
 
-  const dowData: DayOfWeekRow[] = [1, 2, 3, 4, 5, 6, 0]
-    .filter((day) => dowMap.has(day))
-    .map((day) => ({
-      day: DAY_LABELS[day],
-      impressions: dowMap.get(day)!.impressions,
-      clicks: dowMap.get(day)!.clicks,
-    }));
-
-  const topAudience = ageGender.length > 0
-    ? [...ageGender].sort((a, b) => b.impressions - a.impressions)[0]
-    : null;
+  const topAge = getTopAgeBracket(ageChartData, totalImp);
+  const leadingGender = genderMetrics[0] ?? null;
+  const bestDay = findBestDayOfWeek(daily);
   const topMarket = findTopMarket(geography);
   const bestHour = findBestHour(hourly);
   const topCreative = findTopCreative(ads);
 
   return (
     <div className="flex flex-col gap-6">
-      {(topAudience || topMarket || bestHour || topCreative) && (
+      {(topAge || leadingGender || bestDay || topMarket || bestHour || topCreative) && (
         <section>
           <div className="mb-4 flex items-center gap-2">
             <Sparkles className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Performance Signals</span>
+            <span className="section-label">Decision Signals</span>
             <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {topAudience && (
+          <p className="mb-4 max-w-3xl text-xs leading-5 text-white/45">
+            The fastest read on who is responding, when the campaign gets attention, and which
+            market or creative is setting the pace.
+          </p>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {topAge && (
               <SignalCard
-                label="Top Audience"
-                value={`${topAudience.gender} ${topAudience.age}`}
-                detail={`${Math.round((topAudience.impressions / Math.max(totalImp, 1)) * 100)}% of reach`}
-                note={topAudience.ctr != null ? `${topAudience.ctr.toFixed(2)}% CTR` : "Highest delivery share"}
+                label="Top Age Bracket"
+                value={topAge.age}
+                detail={`${Math.round((topAge.impressions / Math.max(totalImp, 1)) * 100)}% of campaign reach`}
+                note={topAge.ctr != null ? `${topAge.ctr.toFixed(2)}% CTR` : "Largest share of delivery"}
+              />
+            )}
+            {leadingGender && (
+              <SignalCard
+                label="Leading Gender"
+                value={leadingGender.gender}
+                detail={`${leadingGender.pct.toFixed(0)}% of total impressions`}
+                note={leadingGender.ctr != null ? `${leadingGender.ctr.toFixed(2)}% CTR` : "Largest reach share"}
+              />
+            )}
+            {bestDay && (
+              <SignalCard
+                label="Best Day"
+                value={formatDay(bestDay.label)}
+                detail={`${fmtNum(bestDay.impressions)} impressions and ${fmtNum(bestDay.clicks)} clicks`}
+                note={
+                  bestDay.roas != null
+                    ? `${bestDay.roas.toFixed(2)}x ROAS`
+                    : bestDay.ctr != null
+                      ? `${bestDay.ctr.toFixed(2)}% CTR`
+                      : "Strongest day in the selected window"
+                }
               />
             )}
             {topMarket && (
               <SignalCard
                 label="Top Market"
                 value={topMarket.market}
-                detail={`${topMarket.clicks.toLocaleString()} clicks`}
+                detail={`${fmtNum(topMarket.impressions)} impressions and ${fmtNum(topMarket.clicks)} clicks`}
                 note={topMarket.ctr != null ? `${topMarket.ctr.toFixed(2)}% CTR` : "Leading geography"}
               />
             )}
@@ -186,7 +220,7 @@ export function CampaignAnalytics({
               <SignalCard
                 label="Best Hour"
                 value={formatHour(bestHour.hour)}
-                detail={`${bestHour.impressions.toLocaleString()} impressions`}
+                detail={`${fmtNum(bestHour.impressions)} impressions and ${fmtNum(bestHour.clicks)} clicks`}
                 note={bestHour.ctr != null ? `${bestHour.ctr.toFixed(2)}% CTR` : "Highest activity window"}
               />
             )}
@@ -292,4 +326,37 @@ function formatHour(hour: number): string {
   if (hour === 0) return "12 AM";
   if (hour === 12) return "12 PM";
   return hour < 12 ? `${hour} AM` : `${hour - 12} PM`;
+}
+
+function formatDay(day: string): string {
+  const fullDayMap: Record<string, string> = {
+    Sun: "Sunday",
+    Mon: "Monday",
+    Tue: "Tuesday",
+    Wed: "Wednesday",
+    Thu: "Thursday",
+    Fri: "Friday",
+    Sat: "Saturday",
+  };
+
+  return fullDayMap[day] ?? day;
+}
+
+function getTopAgeBracket(ageRows: AgeRow[], totalImpressions: number): AgeRow | null {
+  if (ageRows.length === 0) return null;
+
+  const meaningfulThreshold = Math.max(100, Math.round(totalImpressions * 0.08));
+  const candidates = ageRows.filter((row) => row.impressions >= meaningfulThreshold);
+  const pool = candidates.length > 0 ? candidates : ageRows;
+
+  const withCtr = pool.filter((row) => row.ctr != null);
+  if (withCtr.length > 0) {
+    return [...withCtr].sort((a, b) => {
+      if ((b.ctr ?? 0) !== (a.ctr ?? 0)) return (b.ctr ?? 0) - (a.ctr ?? 0);
+      if (b.clicks !== a.clicks) return b.clicks - a.clicks;
+      return b.impressions - a.impressions;
+    })[0];
+  }
+
+  return [...pool].sort((a, b) => b.impressions - a.impressions)[0] ?? null;
 }

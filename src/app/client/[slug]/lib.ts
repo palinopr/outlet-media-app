@@ -364,6 +364,114 @@ export function findBestHour(hourly: HourlyBreakdown[]): HourlyBreakdown | null 
   return [...pool].sort((a, b) => b.impressions - a.impressions)[0] ?? null;
 }
 
+export interface DayOfWeekPerformance {
+  dayOfWeek: number;
+  label: string;
+  spend: number;
+  revenue: number | null;
+  roas: number | null;
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+}
+
+export function summarizeDayOfWeekPerformance(daily: DailyPoint[]): DayOfWeekPerformance[] {
+  const byDay = new Map<number, {
+    spend: number;
+    revenue: number;
+    revenueSeen: boolean;
+    roasWeightedSum: number;
+    roasWeight: number;
+    impressions: number;
+    clicks: number;
+  }>();
+
+  for (const row of daily) {
+    const prev = byDay.get(row.dayOfWeek) ?? {
+      spend: 0,
+      revenue: 0,
+      revenueSeen: false,
+      roasWeightedSum: 0,
+      roasWeight: 0,
+      impressions: 0,
+      clicks: 0,
+    };
+
+    prev.spend += row.spend;
+    if (row.revenue != null) {
+      prev.revenue += row.revenue;
+      prev.revenueSeen = true;
+    }
+    if (row.roas != null && row.spend > 0) {
+      prev.roasWeightedSum += row.roas * row.spend;
+      prev.roasWeight += row.spend;
+    }
+    prev.impressions += row.impressions;
+    prev.clicks += row.clicks;
+
+    byDay.set(row.dayOfWeek, prev);
+  }
+
+  return [1, 2, 3, 4, 5, 6, 0]
+    .filter((day) => byDay.has(day))
+    .map((day) => {
+      const totals = byDay.get(day)!;
+      const revenue = totals.revenueSeen ? totals.revenue : null;
+      const ctr = totals.impressions > 0 ? (totals.clicks / totals.impressions) * 100 : null;
+      const roas =
+        revenue != null && totals.spend > 0
+          ? revenue / totals.spend
+          : totals.roasWeight > 0
+            ? totals.roasWeightedSum / totals.roasWeight
+            : null;
+
+      return {
+        dayOfWeek: day,
+        label: DAY_LABELS[day],
+        spend: totals.spend,
+        revenue,
+        roas,
+        impressions: totals.impressions,
+        clicks: totals.clicks,
+        ctr,
+      } satisfies DayOfWeekPerformance;
+    });
+}
+
+export function findBestDayOfWeek(daily: DailyPoint[]): DayOfWeekPerformance | null {
+  const summary = summarizeDayOfWeekPerformance(daily);
+  if (summary.length === 0) return null;
+
+  const totalImpressions = summary.reduce((sum, row) => sum + row.impressions, 0);
+  const meaningfulThreshold = Math.max(100, Math.round(totalImpressions * 0.08));
+  const candidates = summary.filter((row) => row.impressions >= meaningfulThreshold);
+  const pool = candidates.length > 0 ? candidates : summary;
+
+  const withRoas = pool.filter((row) => row.roas != null);
+  if (withRoas.length > 0) {
+    return [...withRoas].sort((a, b) => {
+      if ((b.roas ?? 0) !== (a.roas ?? 0)) return (b.roas ?? 0) - (a.roas ?? 0);
+      if ((b.revenue ?? 0) !== (a.revenue ?? 0)) return (b.revenue ?? 0) - (a.revenue ?? 0);
+      if (b.clicks !== a.clicks) return b.clicks - a.clicks;
+      return b.impressions - a.impressions;
+    })[0];
+  }
+
+  const withCtr = pool.filter((row) => row.ctr != null);
+  if (withCtr.length > 0) {
+    return [...withCtr].sort((a, b) => {
+      if ((b.ctr ?? 0) !== (a.ctr ?? 0)) return (b.ctr ?? 0) - (a.ctr ?? 0);
+      if (b.clicks !== a.clicks) return b.clicks - a.clicks;
+      return b.impressions - a.impressions;
+    })[0];
+  }
+
+  return [...pool].sort((a, b) => {
+    if (b.clicks !== a.clicks) return b.clicks - a.clicks;
+    return b.impressions - a.impressions;
+  })[0] ?? null;
+}
+
 export function findTopMarket(geography: GeographyBreakdown[]): GeographyBreakdown | null {
   if (geography.length === 0) return null;
 
@@ -516,21 +624,22 @@ export function generateRecommendations(
   }
 
   // Best day of week
-  if (daily.length >= 7) {
-    const byDay = new Map<number, { impressions: number; clicks: number }>();
-    for (const d of daily) {
-      const prev = byDay.get(d.dayOfWeek) ?? { impressions: 0, clicks: 0 };
-      byDay.set(d.dayOfWeek, { impressions: prev.impressions + d.impressions, clicks: prev.clicks + d.clicks });
-    }
-    const dayRanked = Array.from(byDay.entries())
-      .map(([dow, v]) => ({ dow, ...v }))
-      .sort((a, b) => b.impressions - a.impressions);
-    if (dayRanked.length >= 2) {
-      const bestDay = DAY_LABELS[dayRanked[0].dow];
-      const worstDay = DAY_LABELS[dayRanked[dayRanked.length - 1].dow];
+  if (daily.length >= 3) {
+    const bestDay = findBestDayOfWeek(daily);
+    const dayBreakdown = summarizeDayOfWeekPerformance(daily);
+
+    if (bestDay && dayBreakdown.length >= 2) {
+      const worstDay = [...dayBreakdown].sort((a, b) => a.impressions - b.impressions)[0];
+      const bestDayLabel = formatWeekday(bestDay.label);
+      const worstDayLabel = formatWeekday(worstDay.label);
       recs.push({
-        title: `${bestDay}s are your best day`,
-        detail: `${bestDay} consistently sees the highest activity, while ${worstDay} is the quietest. Schedule key launches and pushes mid-week.`,
+        title: `${bestDayLabel} is delivering the strongest response`,
+        detail:
+          bestDay.roas != null
+            ? `${bestDayLabel} is leading at ${bestDay.roas.toFixed(2)}x ROAS. ${worstDayLabel} is the softest day for delivery in this window.`
+            : bestDay.ctr != null
+              ? `${bestDayLabel} is leading at ${bestDay.ctr.toFixed(2)}% CTR. ${worstDayLabel} is the softest day for delivery in this window.`
+              : `${bestDayLabel} is producing the strongest delivery volume, while ${worstDayLabel} is the quietest day in this window.`,
         type: "info",
       });
     }
@@ -555,4 +664,18 @@ function formatHour(h: number): string {
   if (h === 0) return "12 AM";
   if (h === 12) return "12 PM";
   return h < 12 ? `${h} AM` : `${h - 12} PM`;
+}
+
+function formatWeekday(day: string): string {
+  const fullDayMap: Record<string, string> = {
+    Sun: "Sunday",
+    Mon: "Monday",
+    Tue: "Tuesday",
+    Wed: "Wednesday",
+    Thu: "Thursday",
+    Fri: "Friday",
+    Sat: "Saturday",
+  };
+
+  return fullDayMap[day] ?? day;
 }

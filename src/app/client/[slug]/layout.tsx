@@ -10,6 +10,7 @@ import { getEnabledServices } from "@/lib/client-services";
 import { ClientNav } from "./components/client-nav";
 import { MobileNav } from "./components/mobile-nav";
 import { CompleteProfileModal } from "./components/complete-profile-modal";
+import { ClientHelperFab } from "./components/client-helper-fab";
 
 interface Props {
   children: ReactNode;
@@ -144,6 +145,7 @@ export default async function ClientLayout({ children, params }: Props) {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">{children}</div>
         </main>
       </div>
+      <ClientHelperFab slug={slug} clientName={clientName} />
       {needsName && <CompleteProfileModal needsName />}
     </div>
   );
