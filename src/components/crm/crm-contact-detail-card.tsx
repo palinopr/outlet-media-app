@@ -30,10 +30,6 @@ interface CrmContactDetailCardProps {
 function detailTone(variant: "admin" | "client") {
   return {
     ...tone(variant),
-    card:
-      variant === "client"
-        ? "rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4"
-        : "rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4",
     input:
       variant === "client"
         ? "w-full rounded-xl border border-white/[0.1] bg-white/[0.04] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-400/40"

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Bot, CircleAlert, Clock3, LoaderCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { timeAgo } from "@/lib/formatters";
+import { excerpt } from "@/lib/text-utils";
 import { cn } from "@/lib/utils";
 import { tone } from "@/lib/tone-styles";
 import type { AgentOutcomeStatus, AgentOutcomeView } from "@/features/agent-outcomes/summary";
@@ -85,13 +86,9 @@ function surfaceTone(variant: "admin" | "client") {
   };
 }
 
-function truncate(value: string, max = 220) {
-  return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
-}
-
 function outcomeMessage(outcome: AgentOutcomeView) {
-  if (outcome.errorText) return truncate(outcome.errorText, 240);
-  if (outcome.resultText) return truncate(outcome.resultText, 240);
+  if (outcome.errorText) return excerpt(outcome.errorText, 240);
+  if (outcome.resultText) return excerpt(outcome.resultText, 240);
   if (outcome.status === "running") return "Agent is working on this request now.";
   if (outcome.status === "pending") return "Queued and waiting for the agent worker to pick it up.";
   return "Completed without a displayable result.";

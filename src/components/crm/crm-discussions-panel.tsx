@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, MessageSquareMore } from "lucide-react";
 import type { CrmDiscussionThread } from "@/features/crm-comments/server";
 import { timeAgo } from "@/lib/formatters";
+import { excerpt } from "@/lib/text-utils";
 import { tone } from "@/lib/tone-styles";
 
 interface CrmDiscussionsPanelProps {
@@ -12,10 +13,6 @@ interface CrmDiscussionsPanelProps {
   showClientSlug?: boolean;
   title?: string;
   variant: "admin" | "client";
-}
-
-function truncate(value: string, max = 160) {
-  return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
 }
 
 function panelTone(variant: "admin" | "client") {
@@ -74,7 +71,7 @@ export function CrmDiscussionsPanel({
                     {discussion.contactName ?? "CRM contact"}
                   </p>
                   <p className={`mt-1 text-sm ${styles.muted}`}>
-                    {truncate(discussion.content)}
+                    {excerpt(discussion.content, 160)}
                   </p>
                   <div className="mt-3">
                     <Link

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, CheckSquare, MessageSquareMore } from "lucide-react";
 import { timeAgo } from "@/lib/formatters";
+import { excerpt } from "@/lib/text-utils";
 import { cn } from "@/lib/utils";
 import type { DashboardActionCenter } from "@/features/dashboard/server";
 
@@ -16,10 +17,6 @@ interface DashboardActionCenterProps {
   showCrmFollowUps?: boolean;
   showDiscussions?: boolean;
   variant: "admin" | "client";
-}
-
-function truncate(value: string, max = 140) {
-  return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
 }
 
 function panelTone(variant: "admin" | "client") {
@@ -118,7 +115,7 @@ export function DashboardActionCenterSection({
                     <p className={cn("mt-1 text-sm font-medium", tone.title)}>{approval.title}</p>
                     {approval.summary ? (
                       <p className={cn("mt-1 text-sm", tone.muted)}>
-                        {truncate(approval.summary, 160)}
+                        {excerpt(approval.summary, 160)}
                       </p>
                     ) : null}
                     {approval.campaignId || approval.assetId || approval.eventId ? (
@@ -297,7 +294,7 @@ export function DashboardActionCenterSection({
                               : "CRM relationship")}
                       </p>
                       <p className={cn("mt-1 text-sm", tone.muted)}>
-                        {truncate(discussion.content, 160)}
+                        {excerpt(discussion.content, 160)}
                       </p>
                       {href ? (
                         <div className="mt-3">

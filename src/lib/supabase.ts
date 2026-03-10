@@ -1,5 +1,8 @@
+import { cache } from "react";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { createClient } from "@supabase/supabase-js";
+
+const getCachedUser = cache(() => currentUser());
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -56,7 +59,7 @@ export async function getFeatureReadClient(useClientScope: boolean) {
   if (!useClientScope) return supabaseAdmin;
 
   try {
-    const user = await currentUser();
+    const user = await getCachedUser();
     const role = (user?.publicMetadata as { role?: string } | null)?.role;
     if (role === "admin") {
       return supabaseAdmin;

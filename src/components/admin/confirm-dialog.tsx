@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -17,7 +17,7 @@ export function ConfirmDialog({ trigger, title, description, confirmLabel = "Con
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
-  const titleId = "confirm-dialog-title";
+  const titleId = useId();
 
   useEffect(() => {
     if (!open) return;

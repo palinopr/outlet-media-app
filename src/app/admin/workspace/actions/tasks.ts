@@ -2,7 +2,7 @@
 
 import { currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { adminGuard } from "@/lib/api-helpers";
+import { adminGuard, getAuthorName } from "@/lib/api-helpers";
 import { CreateTaskSchema, UpdateTaskSchema } from "@/lib/api-schemas";
 import {
   type NotificationType,
@@ -82,7 +82,7 @@ export async function createTask(formData: {
 
   // Notify assignee if assigned to someone else
   if (parsed.assignee_id && parsed.assignee_id !== user.id) {
-    const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Someone";
+    const userName = getAuthorName(user);
     const notifType: NotificationType = "assignment";
     await createNotification({
       clientSlug: parsed.client_slug,
@@ -168,7 +168,7 @@ export async function updateTask(formData: {
     parsed.assignee_id !== existing.assignee_id &&
     parsed.assignee_id !== user.id
   ) {
-    const userName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Someone";
+    const userName = getAuthorName(user);
     const notifType: NotificationType = "assignment";
     await createNotification({
       clientSlug: existing.client_slug,

@@ -8,10 +8,3 @@ export function excerpt(text: string, limit = 140): string {
   if (normalized.length <= limit) return normalized;
   return `${normalized.slice(0, limit - 1)}\u2026`;
 }
-
-/** Truncate text to `limit` characters (default 240), normalizing whitespace. */
-export function compactText(text: string, limit = 240): string {
-  const normalized = text.trim().replace(/\s+/g, " ");
-  if (normalized.length <= limit) return normalized;
-  return `${normalized.slice(0, limit - 1)}\u2026`;
-}

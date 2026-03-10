@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminGuard, apiError, dbError, parseJsonBody } from "@/lib/api-helpers";
-import { compactText } from "@/lib/text-utils";
+import { excerpt } from "@/lib/text-utils";
 import {
   createSystemAssetFollowUpItem,
   findAssetFollowUpItemBySource,
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
   const item = await createSystemAssetFollowUpItem({
     assetId: comment.asset_id as string,
     clientSlug: comment.client_slug as string,
-    description: compactText(comment.content as string, 2000),
+    description: excerpt(comment.content as string, 2000),
     priority: "medium",
     sourceEntityId: commentId,
     sourceEntityType: "asset_comment",

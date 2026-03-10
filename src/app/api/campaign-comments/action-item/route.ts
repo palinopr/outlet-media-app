@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminGuard, apiError, dbError, parseJsonBody } from "@/lib/api-helpers";
-import { compactText } from "@/lib/text-utils";
+import { excerpt } from "@/lib/text-utils";
 import { getEffectiveCampaignRowById } from "@/lib/campaign-client-assignment";
 import {
   createSystemCampaignActionItem,
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   const item = await createSystemCampaignActionItem({
     campaignId: comment.campaign_id as string,
     clientSlug: effectiveClientSlug,
-    description: compactText(comment.content as string, 2000),
+    description: excerpt(comment.content as string, 2000),
     priority: "medium",
     sourceEntityId: commentId,
     sourceEntityType: "campaign_comment",

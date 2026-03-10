@@ -15,6 +15,7 @@ import type {
   ConversationThreadKind,
 } from "@/features/conversations/summary";
 import { timeAgo } from "@/lib/formatters";
+import { excerpt } from "@/lib/text-utils";
 import { cn } from "@/lib/utils";
 
 interface ConversationsCenterProps {
@@ -87,10 +88,6 @@ function threadTargetName(thread: ConversationThread) {
     case "event":
       return "Event discussion";
   }
-}
-
-function truncate(value: string, max = 180) {
-  return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
 }
 
 function tone(variant: "admin" | "client") {
@@ -213,7 +210,7 @@ export function ConversationsCenter({
                         {threadTargetName(thread)}
                       </p>
                       <p className={cn("mt-1 text-sm", styles.muted)}>
-                        {truncate(thread.content)}
+                        {excerpt(thread.content, 180)}
                       </p>
 
                       {href || canCreateFollowUps ? (

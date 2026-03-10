@@ -51,6 +51,12 @@ let sweepInterval: ReturnType<typeof setInterval> | null = null;
 /** Pending approval tasks: task ID -> { timeout handle, created timestamp } */
 const pendingApprovals = new Map<string, { timeout: ReturnType<typeof setTimeout>; createdAt: number }>();
 
+function clearPendingApproval(taskId: string): void {
+  const entry = pendingApprovals.get(taskId);
+  if (entry) clearTimeout(entry.timeout);
+  pendingApprovals.delete(taskId);
+}
+
 export async function initApprovals(c: Client): Promise<void> {
   client = c;
   await loadRules();
@@ -84,18 +90,14 @@ export async function initApprovals(c: Client): Promise<void> {
         content: `Approved by ${interaction.user.username}`,
         components: [],
       });
-      const entry = pendingApprovals.get(taskId);
-      if (entry) clearTimeout(entry.timeout);
-      pendingApprovals.delete(taskId);
+      clearPendingApproval(taskId);
     } else if (value === "reject") {
       rejectTask(taskId);
       await interaction.update({
         content: `Rejected by ${interaction.user.username}`,
         components: [],
       });
-      const entry = pendingApprovals.get(taskId);
-      if (entry) clearTimeout(entry.timeout);
-      pendingApprovals.delete(taskId);
+      clearPendingApproval(taskId);
     }
   });
 

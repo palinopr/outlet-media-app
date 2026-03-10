@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
+import { excerpt } from "@/lib/text-utils";
 import { getCurrentActor } from "@/features/system-events/server";
 import { getAgentOutcomeContext } from "@/features/agent-outcomes/server";
 import { jsonToText } from "@/features/agent-outcomes/summary";
@@ -14,12 +15,6 @@ import {
   getEventWorkflowPaths,
   revalidateWorkflowPaths,
 } from "@/features/workflow/revalidation";
-
-function compactText(value: string, limit = 240) {
-  const normalized = value.trim().replace(/\s+/g, " ");
-  if (normalized.length <= limit) return normalized;
-  return `${normalized.slice(0, limit - 1)}…`;
-}
 
 function metadataString(metadata: Record<string, unknown>, key: string) {
   const value = metadata[key];
@@ -75,12 +70,12 @@ function buildActionItemDescription(
 ) {
   const outcomeText = context.task?.error ?? jsonToText(context.task?.result ?? null);
   const sections = [
-    `Request: ${compactText(context.request.summary, 300)}`,
-    context.request.detail ? `Request detail: ${compactText(context.request.detail, 600)}` : null,
+    `Request: ${excerpt(context.request.summary, 300)}`,
+    context.request.detail ? `Request detail: ${excerpt(context.request.detail, 600)}` : null,
     context.task
       ? `Agent: ${agentLabel(context.task.toAgent)} (${context.task.action})`
       : "Agent task record is not available yet.",
-    outcomeText ? `Outcome: ${compactText(outcomeText, 1600)}` : null,
+    outcomeText ? `Outcome: ${excerpt(outcomeText, 1600)}` : null,
   ];
 
   return sections.filter(Boolean).join("\n\n");

@@ -2,6 +2,7 @@
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getAuthorName } from "@/lib/api-helpers";
 import type { NotificationType } from "@/lib/workspace-types";
 import { createNotification } from "@/features/notifications/server";
 import { revalidateWorkspaceMutationTargets } from "@/features/workflow/revalidation";
@@ -22,7 +23,7 @@ export async function createComment(formData: {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
   const user = await currentUser();
-  const authorName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown";
+  const authorName = getAuthorName(user);
 
   const { data: comment, error } = await supabaseAdmin
     .from("workspace_comments")

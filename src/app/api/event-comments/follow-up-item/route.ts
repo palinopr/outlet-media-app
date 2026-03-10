@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminGuard, apiError, dbError, parseJsonBody } from "@/lib/api-helpers";
-import { compactText } from "@/lib/text-utils";
+import { excerpt } from "@/lib/text-utils";
 import {
   createSystemEventFollowUpItem,
   findEventFollowUpItemBySource,
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     actorType: "system",
     actorName: "Outlet Events",
     clientSlug: ((comment as Record<string, unknown>).client_slug as string | null) ?? null,
-    description: compactText((comment as Record<string, unknown>).content as string, 2000),
+    description: excerpt((comment as Record<string, unknown>).content as string, 2000),
     eventId: (comment as Record<string, unknown>).event_id as string,
     priority: "medium",
     sourceEntityId: commentId,
