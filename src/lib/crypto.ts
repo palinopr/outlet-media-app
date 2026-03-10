@@ -9,6 +9,7 @@ function getKey(): Buffer {
   if (!key || key.length < 32) {
     throw new Error("TOKEN_ENCRYPTION_KEY must be at least 32 characters");
   }
+  // Key is treated as raw ASCII (not hex/base64). Env var must be >= 32 ASCII chars.
   return Buffer.from(key.slice(0, 32), "utf8");
 }
 
@@ -30,7 +31,9 @@ export function encrypt(plaintext: string): string {
 }
 
 export function decrypt(ciphertext: string): string {
-  const [ivHex, authTagHex, encryptedHex] = ciphertext.split(":");
+  const parts = ciphertext.split(":");
+  if (parts.length !== 3) throw new Error("Invalid ciphertext format: expected iv:authTag:data");
+  const [ivHex, authTagHex, encryptedHex] = parts;
   const iv = Buffer.from(ivHex, "hex");
   const authTag = Buffer.from(authTagHex, "hex");
   const encrypted = Buffer.from(encryptedHex, "hex");

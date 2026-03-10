@@ -34,16 +34,17 @@ export async function getMemberships(clerkUserId: string): Promise<MemberAccess[
 
   if (!data?.length) return [];
 
-  return data.map((row) => {
-    const client = row.clients as unknown as { slug: string; name: string };
-    return {
+  return data.flatMap((row) => {
+    const client = row.clients as unknown as { slug: string; name: string } | null;
+    if (!client) return [];
+    return [{
       memberId: row.id,
       clientId: row.client_id,
       clientSlug: client.slug,
       clientName: client.name,
       role: row.role,
       scope: row.scope as "all" | "assigned",
-    };
+    }];
   });
 }
 

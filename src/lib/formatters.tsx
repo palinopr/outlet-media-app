@@ -19,7 +19,7 @@ export function fmtUsd(n: number | null): string {
   if (n == null) return "--";
   if (Math.abs(n) >= 1_000_000) return "$" + (n / 1_000_000).toFixed(1) + "M";
   if (Math.abs(n) >= 1_000) return "$" + (n / 1_000).toFixed(1) + "K";
-  return "$" + Math.round(n).toLocaleString("en-US");
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 /** Format a number with K/M abbreviation. */
@@ -35,7 +35,9 @@ export function fmtNum(n: number | null): string {
 /** Format an ISO date string as "Jan 5, 2025". */
 export function fmtDate(d: string | null): string {
   if (!d) return "--";
-  return new Date(d).toLocaleDateString("en-US", {
+  // Append noon to date-only strings to avoid UTC midnight off-by-one in western timezones
+  const date = new Date(d.includes("T") ? d : d + "T12:00:00");
+  return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -118,6 +120,7 @@ export function computeMarginalRoas(points: MarginalRoasPoint[]): number | null 
   if (points.length < 2) return null;
   const sorted = [...points].sort((a, b) => a.date.localeCompare(b.date));
   const first = sorted[0], last = sorted[sorted.length - 1];
+  if (first.date === last.date) return null;
   if (first.spend == null || last.spend == null || first.roas == null || last.roas == null) return null;
   const deltaSpend = last.spend - first.spend;
   if (deltaSpend <= 0) return null;

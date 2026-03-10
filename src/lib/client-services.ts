@@ -14,12 +14,16 @@ export const getEnabledServices = cache(
   async (slug: string): Promise<ServiceKey[] | null> => {
     if (!supabaseAdmin) return null;
 
-    const { data } = await supabaseAdmin
+    const { data, error } = await supabaseAdmin
       .from("client_services")
       .select("service_key, clients!inner(slug)")
       .eq("clients.slug", slug)
       .eq("enabled", true);
 
+    if (error) {
+      console.error("[client-services] getEnabledServices failed:", error.message);
+      return null;
+    }
     if (!data || data.length === 0) return null;
 
     return data.map((r) => r.service_key as ServiceKey);

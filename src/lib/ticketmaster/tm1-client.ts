@@ -728,7 +728,7 @@ export function createTm1ClientFromEnv(): Tm1Client {
     defaultEventStartDate: process.env.TM1_DEFAULT_EVENT_START,
     defaultEventEndDate: process.env.TM1_DEFAULT_EVENT_END,
     eventbaseApiPrefix: process.env.TM1_EVENTBASE_API_PREFIX,
-    timeoutMs: process.env.TM1_TIMEOUT_MS ? Number(process.env.TM1_TIMEOUT_MS) : undefined,
+    timeoutMs: process.env.TM1_TIMEOUT_MS && Number.isFinite(Number(process.env.TM1_TIMEOUT_MS)) ? Number(process.env.TM1_TIMEOUT_MS) : undefined,
     tcode,
     xsrfToken: process.env.TM1_XSRF_TOKEN,
   });

@@ -258,9 +258,9 @@ export async function fetchAllCampaigns(
         revenue: roas != null ? spend * roas : null,
         impressions: insight ? parseInt(insight.impressions) || 0 : 0,
         clicks: insight ? parseInt(insight.clicks) || 0 : 0,
-        ctr: insight ? parseFloat(insight.ctr) || null : null,
-        cpc: insight ? parseFloat(insight.cpc) || null : null,
-        cpm: insight ? parseFloat(insight.cpm) || null : null,
+        ctr: insight ? (Number.isFinite(parseFloat(insight.ctr)) ? parseFloat(insight.ctr) : null) : null,
+        cpc: insight ? (Number.isFinite(parseFloat(insight.cpc)) ? parseFloat(insight.cpc) : null) : null,
+        cpm: insight ? (Number.isFinite(parseFloat(insight.cpm)) ? parseFloat(insight.cpm) : null) : null,
         dailyBudget: c.daily_budget ? parseInt(c.daily_budget) / 100 : null,
         startTime: c.start_time ?? null,
       };

@@ -94,7 +94,7 @@ export type IngestPayload = z.infer<typeof IngestPayloadSchema>;
 export const AlertPostSchema = z.object({
   secret: z.string().min(1),
   message: z.string().trim().min(1).max(5000),
-  level: z.enum(["info", "warn", "error"]).optional(),
+  level: z.enum(["info", "warning", "critical"]).optional(),
 });
 
 export const AlertPatchSchema = z.object({

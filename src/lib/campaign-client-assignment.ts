@@ -27,13 +27,15 @@ export async function getCampaignClientOverrideMap(
 
   if (uniqueCampaignIds.length > 0) {
     query = query.in("campaign_id", uniqueCampaignIds);
+  } else {
+    query = query.limit(1000);
   }
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
 
   for (const row of data ?? []) {
-    if (row.client_slug) {
+    if (row.campaign_id && row.client_slug) {
       overrides.set(row.campaign_id as string, row.client_slug as string);
     }
   }

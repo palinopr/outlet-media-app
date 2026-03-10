@@ -52,8 +52,8 @@ export async function adminGuard(): Promise<Response | null> {
   return null;
 }
 
-/** Parse JSON body with error handling. Returns parsed data or a 400 Response. */
-export async function parseJsonBody<T>(request: Request): Promise<T | Response> {
+/** Parse JSON body with error handling. Returns parsed data or a 400 NextResponse. */
+export async function parseJsonBody<T>(request: Request): Promise<T | NextResponse> {
   try {
     return (await request.json()) as T;
   } catch {
@@ -70,7 +70,7 @@ export async function validateRequest<T>(
   schema: ZodType<T>,
 ): Promise<{ data: T; error: null } | { data: null; error: NextResponse }> {
   const raw = await parseJsonBody<unknown>(request);
-  if (raw instanceof Response) return { data: null, error: raw as NextResponse };
+  if (raw instanceof NextResponse) return { data: null, error: raw };
 
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {

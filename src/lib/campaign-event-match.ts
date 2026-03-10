@@ -42,7 +42,7 @@ export function matchedCampaigns<T extends MatchableCampaign>(
   const eventCity   = (event.city ?? "").toLowerCase();
   return campaigns.filter((c) => {
     const cArtist = campaignArtist(c.name)?.toLowerCase();
-    if (!cArtist || !eventArtist.includes(cArtist.split(" ")[0])) return false;
+    if (!cArtist || !eventArtist.includes(cArtist)) return false;
     const cCity = campaignCity(c.name);
     if (cCity) return eventCity.includes(cCity.toLowerCase());
     return true; // no city → matches all events of that artist

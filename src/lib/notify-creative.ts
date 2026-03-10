@@ -66,6 +66,11 @@ async function getOrCreateWebhook(botToken: string, channelId: string): Promise<
   return cachedWebhook;
 }
 
+/** Invalidate cached webhook (call on 404/401 from Discord). */
+function invalidateWebhookCache() {
+  cachedWebhook = null;
+}
+
 /**
  * Notify #creative that new assets were imported and need classification.
  * The creative agent picks these up on its next sweep.
@@ -79,9 +84,9 @@ export function notifyCreativeNewAssets(clientSlug: string, count: number): void
       if (!channelId) return;
       return getOrCreateWebhook(botToken, channelId);
     })
-    .then((webhook) => {
+    .then(async (webhook) => {
       if (!webhook) return;
-      return fetch(
+      const res = await fetch(
         `https://discord.com/api/v10/webhooks/${webhook.id}/${webhook.token}`,
         {
           method: "POST",
@@ -99,6 +104,7 @@ export function notifyCreativeNewAssets(clientSlug: string, count: number): void
           }),
         },
       );
+      if (res.status === 401 || res.status === 404) invalidateWebhookCache();
     })
     .catch((e) => console.warn("[notify-creative] webhook post failed:", e));
 }
@@ -114,9 +120,9 @@ export function notifyCreative(payload: NotifyPayload): void {
       if (!channelId) return;
       return getOrCreateWebhook(botToken, channelId);
     })
-    .then((webhook) => {
+    .then(async (webhook) => {
       if (!webhook) return;
-      return fetch(
+      const res = await fetch(
         `https://discord.com/api/v10/webhooks/${webhook.id}/${webhook.token}`,
         {
           method: "POST",
@@ -164,6 +170,7 @@ export function notifyCreative(payload: NotifyPayload): void {
           }),
         },
       );
+      if (res.status === 401 || res.status === 404) invalidateWebhookCache();
     })
     .catch((e) => console.warn("[notify-creative] webhook post failed:", e));
 }

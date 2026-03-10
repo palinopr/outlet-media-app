@@ -93,8 +93,6 @@ export async function downloadDropboxFile(
 
 let cachedAccessToken: { token: string; expiresAt: number } | null = null;
 
-/** Which method succeeded for listing -- downloads should use the same one. */
-let lastGDriveMethod: "oauth" | "apikey" | null = null;
 
 async function getGDriveAccessToken(): Promise<string | null> {
   const clientId = process.env.GOOGLE_CLIENT_ID;
@@ -161,7 +159,6 @@ async function listGDriveOAuth(folderId: string): Promise<CloudFile[] | null> {
   );
 
   if (!res.ok) return null;
-  lastGDriveMethod = "oauth";
   return parseGDriveFiles(await res.json());
 }
 
@@ -177,7 +174,6 @@ async function listGDriveApiKey(folderId: string): Promise<CloudFile[] | null> {
   );
 
   if (!res.ok) return null;
-  lastGDriveMethod = "apikey";
   return parseGDriveFiles(await res.json());
 }
 
