@@ -10,7 +10,7 @@ import { getEnabledServices } from "@/lib/client-services";
 import { ClientNav } from "./components/client-nav";
 import { MobileNav } from "./components/mobile-nav";
 import { CompleteProfileModal } from "./components/complete-profile-modal";
-import { ClientHelperFab } from "./components/client-helper-fab";
+import { getClientPortalTheme } from "@/features/client-portal/theme";
 
 interface Props {
   children: ReactNode;
@@ -111,12 +111,27 @@ export default async function ClientLayout({ children, params }: Props) {
 
   const clientName = slugToLabel(slug);
   const enabledServices = await getEnabledServices(slug);
+  const theme = getClientPortalTheme(slug);
 
   return (
-    <div className="dark flex h-screen overflow-hidden bg-background text-foreground">
-      <aside className="hidden lg:flex w-60 border-r border-white/[0.04] bg-[oklch(0.12_0_0)] flex-col shrink-0 relative">
+    <div
+      className="dark flex h-screen overflow-hidden text-foreground"
+      style={{
+        ...theme.style,
+        backgroundImage: theme.shellBackground,
+      }}
+    >
+      <aside
+        className="hidden lg:flex w-60 border-r border-white/[0.04] flex-col shrink-0 relative"
+        style={{ backgroundImage: theme.sidebarBackground }}
+      >
         {/* Subtle gradient accent on the edge */}
-        <div className="absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-cyan-500/20 via-violet-500/10 to-transparent" />
+        <div
+          className="absolute top-0 right-0 bottom-0 w-px"
+          style={{
+            backgroundImage: `linear-gradient(180deg, rgba(${theme.accentRgb}, 0.28), rgba(${theme.secondaryRgb}, 0.12), transparent)`,
+          }}
+        />
         <div className="px-5 pt-6 pb-5 shrink-0">
           <div className="flex items-center gap-3 mb-5">
             <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={36} height={36} className="h-9 w-9 shrink-0" />
@@ -125,6 +140,17 @@ export default async function ClientLayout({ children, params }: Props) {
               <p className="text-[10px] text-white/30 font-medium tracking-wide">Client Portal</p>
             </div>
           </div>
+          {theme.brandLogoSrc ? (
+            <div className="mb-5 rounded-2xl border border-white/[0.08] bg-white/95 p-3 shadow-[0_18px_48px_rgba(0,0,0,0.22)]">
+              <Image
+                src={theme.brandLogoSrc}
+                alt={theme.brandLogoAlt ?? clientName}
+                width={theme.brandLogoWidth ?? 240}
+                height={theme.brandLogoHeight ?? 120}
+                className="h-12 w-full object-contain"
+              />
+            </div>
+          ) : null}
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -145,7 +171,6 @@ export default async function ClientLayout({ children, params }: Props) {
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">{children}</div>
         </main>
       </div>
-      <ClientHelperFab slug={slug} clientName={clientName} />
       {needsName && <CompleteProfileModal needsName />}
     </div>
   );

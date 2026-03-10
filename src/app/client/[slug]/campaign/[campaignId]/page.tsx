@@ -3,24 +3,32 @@ import {
   ArrowLeft,
   BarChart3,
   Calendar,
-  Eye,
-  MousePointer,
-  Target,
   Image as ImageIcon,
-  Activity,
   Lightbulb,
+  Globe2,
 } from "lucide-react";
 import { parseRange } from "@/lib/constants";
 import { fmtDate, fmtUsd, fmtNum } from "@/lib/formatters";
-import type { AdCard, CampaignCard, DailyPoint, GeographyBreakdown, HourlyBreakdown } from "../../types";
+import type {
+  AdCard,
+  AgeGenderBreakdown,
+  CampaignCard,
+  DailyPoint,
+  GeographyBreakdown,
+  HourlyBreakdown,
+} from "../../types";
 import { getCampaignDetail } from "./data";
 import { AdsPreview } from "@/components/client/ads-preview";
-import { RecommendationsList } from "@/components/client/recommendations";
+import {
+  HourlyHeatmap,
+  MarketPerformanceTable,
+  PerformanceTrendTabs,
+  PlacementTable,
+} from "@/components/client/charts";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
-import { StatCard } from "../../components/stat-card";
 import { CampaignDetailHeader } from "../../components/campaign-detail-header";
-import { CampaignAnalytics } from "../../components/campaign-analytics";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { getClientPortalTheme } from "@/features/client-portal/theme";
 import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket, roasLabel } from "../../lib";
 
 interface Props {
@@ -35,6 +43,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const range = parseRange(rangeParam, "7");
 
   const data = await getCampaignDetail(slug, campaignId, range, scope);
+  const theme = getClientPortalTheme(slug);
 
   if (!data) {
     return (
@@ -65,9 +74,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 
   const trackedDays = daily.length;
   const totalDailySpend = daily.reduce((sum, row) => sum + row.spend, 0);
-  const totalDailyRevenue = daily.reduce((sum, row) => sum + (row.revenue ?? 0), 0);
   const avgDailySpend = trackedDays > 0 ? totalDailySpend / trackedDays : null;
-  const avgDailyRevenue = trackedDays > 0 && totalDailyRevenue > 0 ? totalDailyRevenue / trackedDays : null;
   const pacePct =
     c.dailyBudget != null && avgDailySpend != null && c.dailyBudget > 0
       ? (avgDailySpend / c.dailyBudget) * 100
@@ -78,6 +85,8 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const bestHour = findBestHour(hourly);
   const topCreative = findTopCreative(ads);
   const topMarket = findTopMarket(geography);
+  const topAge = findTopAge(ageGender);
+  const leadingGender = findLeadingGender(ageGender);
   const brief = buildCampaignBrief({
     campaign: c,
     rangeLabel,
@@ -90,135 +99,230 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
     topMarket,
   });
 
-  const overviewCards = [
-    daysLive != null
+  const snapshotCards = [
+    topAge
       ? {
-          label: "Days Live",
-          value: daysLive.toLocaleString(),
-          sub: c.startTime ? `Since ${fmtDate(c.startTime)}` : "Campaign lifetime so far",
+          label: "Best Age",
+          value: topAge.age,
+          detail:
+            topAge.ctr != null
+              ? `${topAge.ctr.toFixed(2)}% CTR`
+              : `${fmtNum(topAge.impressions)} impressions`,
         }
       : null,
-    c.dailyBudget != null
+    leadingGender
       ? {
-          label: "Daily Budget",
-          value: fmtUsd(c.dailyBudget),
-          sub: "Current Meta daily budget",
+          label: "Leading Gender",
+          value: leadingGender.gender,
+          detail:
+            leadingGender.ctr != null
+              ? `${leadingGender.ctr.toFixed(2)}% CTR`
+              : `${leadingGender.pct.toFixed(0)}% of reach`,
         }
       : null,
-    avgDailySpend != null
+    topMarket
       ? {
-          label: "Avg Daily Spend",
-          value: fmtUsd(avgDailySpend),
-          sub:
-            pacePct != null
-              ? `${pacePct.toFixed(0)}% of current daily budget`
-              : `Average across ${trackedDays} tracked day${trackedDays === 1 ? "" : "s"}`,
+          label: "Best Market",
+          value: topMarket.market,
+          detail:
+            topMarket.ctr != null
+              ? `${topMarket.ctr.toFixed(2)}% CTR`
+              : `${fmtNum(topMarket.impressions)} impressions`,
         }
       : null,
-    avgDailyRevenue != null
+    bestDay
       ? {
-          label: "Avg Daily Revenue",
-          value: fmtUsd(avgDailyRevenue),
-          sub: `Attributed revenue across ${trackedDays} tracked day${trackedDays === 1 ? "" : "s"}`,
+          label: "Best Day",
+          value: formatDay(bestDay.label),
+          detail:
+            bestDay.roas != null
+              ? `${bestDay.roas.toFixed(2)}x ROAS`
+              : `${fmtNum(bestDay.clicks)} clicks`,
         }
-      : trackedDays > 0
+      : null,
+    bestHour
+      ? {
+          label: "Best Hour",
+          value: formatHour(bestHour.hour),
+          detail:
+            bestHour.ctr != null
+              ? `${bestHour.ctr.toFixed(2)}% CTR`
+              : `${fmtNum(bestHour.impressions)} impressions`,
+        }
+      : null,
+    topCreative
+      ? {
+          label: "Top Creative",
+          value: topCreative.name,
+          detail:
+            topCreative.roas != null
+              ? `${topCreative.roas.toFixed(1)}x ROAS`
+              : `${fmtNum(topCreative.clicks)} clicks`,
+        }
+      : null,
+    pacePct != null
+      ? {
+          label: "Budget Pace",
+          value: `${pacePct.toFixed(0)}%`,
+          detail: avgDailySpend != null ? `${fmtUsd(avgDailySpend)}/day avg` : "Average daily pace",
+        }
+      : daysLive != null
         ? {
-            label: "Tracked Days",
-            value: trackedDays.toLocaleString(),
-            sub: `${rangeLabel} of hourly and daily campaign history`,
+            label: "Days Live",
+            value: daysLive.toLocaleString(),
+            detail: c.startTime ? `Since ${fmtDate(c.startTime)}` : "Campaign lifetime so far",
           }
         : null,
-  ].filter((card): card is { label: string; value: string; sub: string } => card != null);
+  ].filter(
+    (
+      card,
+    ): card is {
+      label: string;
+      value: string;
+      detail: string;
+    } => card != null,
+  );
+
+  const trendData = daily.map((row) => {
+    const date = new Date(`${row.date}T12:00:00`);
+    return {
+      date: row.date,
+      label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      spend: row.spend,
+      revenue: row.revenue,
+      roas: row.roas,
+      impressions: row.impressions,
+      clicks: row.clicks,
+      ctr: row.ctr,
+    };
+  });
+
+  const totalPlacementImp = placements.reduce((sum, row) => sum + row.impressions, 0);
+  const placementData = placements.map((row) => ({
+    platform: row.platform,
+    position: row.position,
+    impressions: row.impressions,
+    clicks: row.clicks,
+    ctr: row.ctr,
+    pct: totalPlacementImp > 0 ? (row.impressions / totalPlacementImp) * 100 : 0,
+  }));
+
+  const totalMarketImp = geography.reduce((sum, row) => sum + row.impressions, 0);
+  const marketData = geography.map((row) => ({
+    market: row.market,
+    spend: row.spend,
+    impressions: row.impressions,
+    clicks: row.clicks,
+    ctr: row.ctr,
+    cpc: row.cpc,
+    pct: totalMarketImp > 0 ? (row.impressions / totalMarketImp) * 100 : 0,
+  }));
+
+  const hourlyData = hourly.map((row) => ({
+    hour: row.hour,
+    spend: row.spend,
+    impressions: row.impressions,
+    clicks: row.clicks,
+    ctr: row.ctr,
+  }));
+
+  const operatingRecommendations =
+    recommendations.length > 0
+      ? recommendations.map((item) => ({
+          title: item.title,
+          detail: item.detail,
+        }))
+      : brief.watchItems.map((item) => ({
+          title: item.label,
+          detail: item.detail,
+        }));
 
   return (
-    <div className="space-y-6">
-      <CampaignDetailHeader slug={slug} range={range} rangeLabel={rangeLabel} campaign={c} />
+    <div className="space-y-5">
+      <CampaignDetailHeader
+        slug={slug}
+        range={range}
+        rangeLabel={rangeLabel}
+        campaign={c}
+        theme={theme}
+      />
 
-      <CampaignIntelligenceBrief brief={brief} />
+      <CampaignIntelligenceBrief brief={brief} campaign={c} theme={theme} />
 
-      {overviewCards.length > 0 && (
+      {snapshotCards.length > 0 && (
         <section>
-          <div className="mb-4 flex items-center gap-2">
-            <Calendar className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Budget & Pace</span>
+          <div className="mb-3 flex items-center gap-2">
+            <BarChart3 className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Audience Snapshot</span>
+            <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {overviewCards.map((card) => (
-              <OverviewCard key={card.label} label={card.label} value={card.value} sub={card.sub} />
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {snapshotCards.map((card) => (
+              <SnapshotCard key={card.label} {...card} theme={theme} />
             ))}
           </div>
         </section>
       )}
 
-      {hasWindowDelivery && (
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_320px]">
         <section>
-          <div className="mb-4 flex items-center gap-2">
-            <BarChart3 className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Delivery Health</span>
+          <div className="mb-3 flex items-center gap-2">
+            <Calendar className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Performance Timeline</span>
             <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <StatCard
-              icon={MousePointer}
-              iconColor="bg-amber-500/10 ring-1 ring-amber-500/20 text-amber-400"
-              label="Clicks"
-              value={fmtNum(c.clicks)}
-              sub={`${fmtNum(c.impressions)} impressions in window`}
-            />
-            <StatCard
-              icon={Activity}
-              iconColor="bg-cyan-500/10 ring-1 ring-cyan-500/20 text-cyan-400"
-              label="CTR"
-              value={c.ctr != null ? `${c.ctr.toFixed(2)}%` : "--"}
-              sub="Click-through rate across the selected window"
-            />
-            <StatCard
-              icon={Target}
-              iconColor="bg-violet-500/10 ring-1 ring-violet-500/20 text-violet-400"
-              label="CPC"
-              value={c.cpc != null ? fmtUsd(c.cpc) : "--"}
-              sub="Average cost per click"
-            />
-            <StatCard
-              icon={Eye}
-              iconColor="bg-blue-500/10 ring-1 ring-blue-500/20 text-blue-400"
-              label="CPM"
-              value={c.cpm != null ? fmtUsd(c.cpm) : "--"}
-              sub="Average cost per thousand impressions"
-            />
-          </div>
+          <PerformanceTrendTabs data={trendData} />
         </section>
-      )}
 
-      <CampaignAnalytics
-        ageGender={ageGender}
-        placements={placements}
-        geography={geography}
-        ads={ads}
-        hourly={hourly}
-        daily={daily}
-        rangeLabel={rangeLabel}
-      />
-      {/* -- Recommendations -- */}
-      {recommendations.length > 0 && (
         <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Lightbulb className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Insights & Recommendations</span>
+          <div className="mb-3 flex items-center gap-2">
+            <BarChart3 className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Top Performing Times</span>
           </div>
-          <RecommendationsList items={recommendations} />
+          {hourlyData.length > 0 ? (
+            <HourlyHeatmap data={hourlyData} />
+          ) : (
+            <FallbackCard
+              title="Top Performing Times"
+              detail="Hourly delivery data is not available for this selected range yet."
+            />
+          )}
         </section>
-      )}
+      </div>
 
-      {/* -- Ads -- */}
-      {ads.length > 0 && (
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_320px]">
         <section>
-          <div className="flex items-center gap-2 mb-4">
+          <div className="mb-3 flex items-center gap-2">
             <ImageIcon className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Ad Performance</span>
-            <span className="text-xs text-white/45 ml-auto">{ads.length} ads</span>
+            <span className="ml-auto text-xs text-white/45">
+              {ads.length > 0 ? `${ads.length} ads` : "No ad previews"}
+            </span>
           </div>
-          <AdsPreview ads={ads} />
+          {ads.length > 0 ? (
+            <AdsPreview ads={ads} />
+          ) : (
+            <FallbackCard
+              title="Ad Performance"
+              detail="Creative-level previews are not available from the current data source."
+            />
+          )}
+        </section>
+
+        <OperatingRecommendations items={operatingRecommendations} />
+      </div>
+
+      {(marketData.length > 0 || placementData.length > 0) && (
+        <section>
+          <div className="mb-3 flex items-center gap-2">
+            <Globe2 className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Markets & Placements</span>
+            <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
+          </div>
+          <div className="grid gap-4 xl:grid-cols-2">
+            {marketData.length > 0 ? <MarketPerformanceTable data={marketData} /> : null}
+            {placementData.length > 0 ? <PlacementTable data={placementData} /> : null}
+          </div>
         </section>
       )}
 
@@ -237,25 +341,135 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   );
 }
 
-function OverviewCard({
+function SnapshotCard({
   label,
   value,
-  sub,
+  detail,
+  theme,
 }: {
   label: string;
   value: string;
-  sub: string;
+  detail: string;
+  theme: ReturnType<typeof getClientPortalTheme>;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
-      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] via-cyan-500/[0.03] to-transparent" />
+    <div className="relative overflow-hidden rounded-[24px] border border-white/[0.06] bg-white/[0.03] p-4">
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `linear-gradient(135deg, rgba(${theme.accentRgb}, 0.1), rgba(${theme.secondaryRgb}, 0.04) 58%, transparent 100%)`,
+        }}
+      />
       <div className="relative">
         <p className="text-[10px] uppercase tracking-[0.22em] text-white/30">{label}</p>
         <p className="mt-2 text-2xl font-bold tracking-tight text-white">{value}</p>
-        <p className="mt-2 text-xs text-white/45">{sub}</p>
+        <p className="mt-2 text-xs text-white/45">{detail}</p>
       </div>
     </div>
   );
+}
+
+function FallbackCard({ title, detail }: { title: string; detail: string }) {
+  return (
+    <div className="glass-card p-5">
+      <p className="text-xs font-semibold text-white/65">{title}</p>
+      <p className="mt-2 text-xs leading-6 text-white/42">{detail}</p>
+    </div>
+  );
+}
+
+function OperatingRecommendations({
+  items,
+}: {
+  items: Array<{ title: string; detail: string }>;
+}) {
+  return (
+    <section>
+      <div className="mb-3 flex items-center gap-2">
+        <Lightbulb className="h-3.5 w-3.5 text-white/50" />
+        <span className="section-label">Recommendations</span>
+      </div>
+      <div className="glass-card p-5">
+        {items.length > 0 ? (
+          <div className="space-y-4">
+            {items.slice(0, 4).map((item, index) => (
+              <div key={`${item.title}-${index}`} className="flex items-start gap-3">
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-white/88">{item.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-white/45">{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs leading-6 text-white/42">
+            Recommendations will appear here once the campaign has enough signal for a confident
+            next step.
+          </p>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function findTopAge(rows: AgeGenderBreakdown[]) {
+  if (rows.length === 0) return null;
+
+  const byAge = new Map<string, { age: string; impressions: number; clicks: number; ctr: number | null }>();
+  for (const row of rows) {
+    const existing = byAge.get(row.age) ?? {
+      age: row.age,
+      impressions: 0,
+      clicks: 0,
+      ctr: null,
+    };
+    const impressions = existing.impressions + row.impressions;
+    const clicks = existing.clicks + row.clicks;
+    byAge.set(row.age, {
+      age: row.age,
+      impressions,
+      clicks,
+      ctr: impressions > 0 ? (clicks / impressions) * 100 : null,
+    });
+  }
+
+  return Array.from(byAge.values()).sort((a, b) => {
+    if ((b.ctr ?? 0) !== (a.ctr ?? 0)) return (b.ctr ?? 0) - (a.ctr ?? 0);
+    if (b.clicks !== a.clicks) return b.clicks - a.clicks;
+    return b.impressions - a.impressions;
+  })[0] ?? null;
+}
+
+function findLeadingGender(rows: AgeGenderBreakdown[]) {
+  if (rows.length === 0) return null;
+
+  const totalImpressions = rows.reduce((sum, row) => sum + row.impressions, 0);
+  const byGender = new Map<string, { gender: string; impressions: number; clicks: number; ctr: number | null; pct: number }>();
+
+  for (const row of rows) {
+    const existing = byGender.get(row.gender) ?? {
+      gender: row.gender,
+      impressions: 0,
+      clicks: 0,
+      ctr: null,
+      pct: 0,
+    };
+    const impressions = existing.impressions + row.impressions;
+    const clicks = existing.clicks + row.clicks;
+    byGender.set(row.gender, {
+      gender: row.gender,
+      impressions,
+      clicks,
+      ctr: impressions > 0 ? (clicks / impressions) * 100 : null,
+      pct: totalImpressions > 0 ? (impressions / totalImpressions) * 100 : 0,
+    });
+  }
+
+  return Array.from(byGender.values()).sort((a, b) => {
+    if (b.impressions !== a.impressions) return b.impressions - a.impressions;
+    return (b.ctr ?? 0) - (a.ctr ?? 0);
+  })[0] ?? null;
 }
 
 function getDaysLive(startTime: string | null): number | null {
@@ -268,6 +482,8 @@ function getDaysLive(startTime: string | null): number | null {
 
 function CampaignIntelligenceBrief({
   brief,
+  campaign,
+  theme,
 }: {
   brief: {
     headline: string;
@@ -275,52 +491,60 @@ function CampaignIntelligenceBrief({
     highlights: Array<{ label: string; value: string; detail: string }>;
     watchItems: Array<{ label: string; detail: string }>;
   };
+  campaign: CampaignCard;
+  theme: ReturnType<typeof getClientPortalTheme>;
 }) {
   return (
-    <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(300px,0.8fr)]">
-      <div className="relative overflow-hidden rounded-[28px] border border-white/[0.06] bg-white/[0.03] p-6 sm:p-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/[0.1] via-violet-500/[0.04] to-transparent" />
-        <div className="relative">
-          <p className="text-[10px] uppercase tracking-[0.24em] text-cyan-300/75">
-            Campaign Intelligence Brief
-          </p>
-          <h2 className="mt-3 max-w-3xl text-2xl font-semibold tracking-tight text-white sm:text-[2rem]">
-            {brief.headline}
-          </h2>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-white/55">{brief.body}</p>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {brief.highlights.map((item) => (
-              <div
-                key={item.label}
-                className="rounded-2xl border border-white/[0.08] bg-black/10 p-4 backdrop-blur-sm"
+    <section
+      className="relative overflow-hidden rounded-[32px] border border-white/[0.08] bg-white/[0.03] p-6 sm:p-8"
+      style={{
+        backgroundImage: `linear-gradient(135deg, rgba(${theme.accentRgb}, 0.14), rgba(${theme.secondaryRgb}, 0.08) 52%, rgba(${theme.highlightRgb}, 0.06) 100%)`,
+      }}
+    >
+      <div className="relative">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-3xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <p
+                className="text-[10px] uppercase tracking-[0.24em]"
+                style={{ color: `rgba(${theme.accentRgb}, 0.92)` }}
               >
-                <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">{item.label}</p>
-                <p className="mt-2 text-lg font-semibold tracking-tight text-white">{item.value}</p>
-                <p className="mt-2 text-xs leading-5 text-white/45">{item.detail}</p>
-              </div>
-            ))}
+                Campaign Intelligence Brief
+              </p>
+              <span className="rounded-full border border-white/[0.08] bg-black/12 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/52">
+                {theme.brandBadge}
+              </span>
+            </div>
+            <h2 className="mt-4 max-w-3xl text-2xl font-semibold tracking-tight text-white sm:text-[2.25rem]">
+              {brief.headline}
+            </h2>
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/62">{brief.body}</p>
+          </div>
+
+          <div className="w-full max-w-xs rounded-[28px] border border-white/[0.08] bg-black/16 p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)]">
+            <p className="text-[10px] uppercase tracking-[0.24em] text-white/38">Overall ROAS</p>
+            <p className="mt-3 text-5xl font-semibold tracking-tight text-white">
+              {campaign.roas != null ? `${campaign.roas.toFixed(1)}x` : "--"}
+            </p>
+            <p className="mt-2 text-xs text-white/52">{roasLabel(campaign.roas)}</p>
+            <div className="mt-4 rounded-[20px] border border-white/[0.08] bg-white/[0.04] p-3">
+              <p className="text-[10px] uppercase tracking-[0.2em] text-white/32">Daily Budget</p>
+              <p className="mt-2 text-lg font-semibold text-white">
+                {campaign.dailyBudget != null ? `${fmtUsd(campaign.dailyBudget)}/day` : "--"}
+              </p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="glass-card p-5 sm:p-6">
-        <p className="text-[10px] uppercase tracking-[0.24em] text-white/30">What To Watch</p>
-        <div className="mt-4 space-y-3">
-          {brief.watchItems.map((item, index) => (
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          {brief.highlights.map((item) => (
             <div
               key={item.label}
-              className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4"
+              className="rounded-[24px] border border-white/[0.08] bg-black/10 p-4 backdrop-blur-sm"
             >
-              <div className="flex items-start gap-3">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.04] text-[10px] font-semibold text-white/55">
-                  {index + 1}
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">{item.label}</p>
-                  <p className="mt-1 text-xs leading-5 text-white/50">{item.detail}</p>
-                </div>
-              </div>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">{item.label}</p>
+              <p className="mt-2 text-lg font-semibold tracking-tight text-white">{item.value}</p>
+              <p className="mt-2 text-xs leading-5 text-white/45">{item.detail}</p>
             </div>
           ))}
         </div>
