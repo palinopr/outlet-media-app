@@ -3,8 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { fmtNum, fmtUsd, roasColor } from "@/lib/formatters";
-import { getCampaignStatusCfg } from "@/lib/status";
 
 export interface AdPreview {
   adId: string;
@@ -18,90 +16,61 @@ export interface AdPreview {
   clicks: number;
   reach: number | null;
   ctr: number | null;
+  cpc: number | null;
   roas: number | null;
   revenue: number | null;
 }
 
-function AdCardUI({ ad }: { ad: AdPreview }) {
-  const cfg = getCampaignStatusCfg(ad.status);
+function AdCardUI({ ad, isTopPerformer }: { ad: AdPreview; isTopPerformer: boolean }) {
+  const cpaStr = ad.cpc != null ? `$${ad.cpc.toFixed(2)}` : "--";
+  const ctrStr = ad.ctr != null ? `${ad.ctr.toFixed(1)}%` : "--";
+  const roasStr = ad.roas != null ? `${ad.roas.toFixed(1)}x` : "--";
+
   return (
-    <div className="glass-card p-4 flex flex-col">
+    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] hover:bg-white/[0.05] hover:border-white/[0.12] transition-all">
       {/* Thumbnail */}
-      {ad.thumbnailUrl && (
-        <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-3 bg-white/[0.03]">
+      <div className="relative w-full aspect-video rounded-t-2xl overflow-hidden bg-white/[0.03]">
+        {ad.thumbnailUrl ? (
           <Image
             src={ad.thumbnailUrl}
             alt={ad.name}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 100vw, 50vw"
             className="object-cover"
             unoptimized={!ad.thumbnailUrl.includes("fbcdn.net")}
           />
-        </div>
-      )}
-      {!ad.thumbnailUrl && (
-        <div className="w-full aspect-video rounded-lg mb-3 bg-gradient-to-br from-white/[0.03] to-white/[0.01] flex items-center justify-center">
-          <span className="text-white/10 text-xs">No preview</span>
-        </div>
-      )}
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-white/[0.01] flex items-center justify-center">
+            <span className="text-white/10 text-xs">No preview</span>
+          </div>
+        )}
 
-      {/* Name and status */}
-      <div className="flex items-start justify-between gap-2 mb-1">
-        <p className="text-xs font-semibold text-white/80 leading-tight line-clamp-2">{ad.name}</p>
-        <span className={`badge-status ${cfg.text} ${cfg.bg} shrink-0`}>
-          <span className={`inline-block h-1.5 w-1.5 rounded-full ${cfg.dot}`} />
-          {cfg.label}
-        </span>
+        {isTopPerformer && (
+          <span className="absolute top-2.5 left-2.5 inline-flex items-center gap-1 rounded-full bg-emerald-600/90 px-2.5 py-0.5 text-[10px] font-semibold text-white shadow-lg backdrop-blur-sm">
+            &#9733; Top Performer
+          </span>
+        )}
       </div>
 
-      {ad.creativeTitle && (
-        <p className="text-[10px] text-white/25 mb-2 line-clamp-1">{ad.creativeTitle}</p>
-      )}
+      {/* Content */}
+      <div className="px-4 py-3">
+        <p className="text-sm font-medium text-white/80 truncate">{ad.name}</p>
 
-      {/* Metrics */}
-      <div className="grid grid-cols-2 gap-x-3 gap-y-2 mt-auto pt-3 border-t border-white/[0.06]">
-        {ad.roas != null && (
-          <div>
-            <p className="text-[9px] text-white/25">ROAS</p>
-            <p className={`text-sm font-bold ${roasColor(ad.roas)}`}>{ad.roas.toFixed(1)}x</p>
-          </div>
-        )}
-        <div>
-          <p className="text-[9px] text-white/25">Spend</p>
-          <p className="text-xs font-semibold text-white/60">{fmtUsd(ad.spend)}</p>
-        </div>
-        {ad.revenue != null && (
-          <div>
-            <p className="text-[9px] text-white/25">Revenue</p>
-            <p className="text-xs font-semibold text-emerald-300">{fmtUsd(ad.revenue)}</p>
-          </div>
-        )}
-        <div>
-          <p className="text-[9px] text-white/25">Impressions</p>
-          <p className="text-xs font-semibold text-white/60">{fmtNum(ad.impressions)}</p>
-        </div>
-        <div>
-          <p className="text-[9px] text-white/25">Clicks</p>
-          <p className="text-xs font-semibold text-white/60">{fmtNum(ad.clicks)}</p>
-        </div>
-        {ad.reach != null && (
-          <div>
-            <p className="text-[9px] text-white/25">Reach</p>
-            <p className="text-xs font-semibold text-white/60">{fmtNum(ad.reach)}</p>
-          </div>
-        )}
-        {ad.ctr != null && (
-          <div>
-            <p className="text-[9px] text-white/25">CTR</p>
-            <p className="text-xs font-semibold text-white/60">{ad.ctr.toFixed(2)}%</p>
-          </div>
+        <p className="mt-1 text-xs text-white/45">
+          Avg. CPA {cpaStr}, Conv. Rate {ctrStr}, ROAS {roasStr}
+        </p>
+
+        {ad.creativeBody && (
+          <p className="mt-1.5 text-[11px] leading-snug text-white/25 line-clamp-2">
+            {ad.creativeBody}
+          </p>
         )}
       </div>
     </div>
   );
 }
 
-const PREVIEW_COUNT = 3;
+const PREVIEW_COUNT = 4;
 
 export function AdsPreview({ ads }: { ads: AdPreview[] }) {
   const [expanded, setExpanded] = useState(false);
@@ -112,14 +81,23 @@ export function AdsPreview({ ads }: { ads: AdPreview[] }) {
     if ((b.revenue ?? -1) !== (a.revenue ?? -1)) return (b.revenue ?? -1) - (a.revenue ?? -1);
     return b.impressions - a.impressions;
   });
+
+  const topPerformerIds = new Set(
+    sorted.slice(0, 2).map((ad) => ad.adId)
+  );
+
   const visible = expanded ? sorted : sorted.slice(0, PREVIEW_COUNT);
   const hasMore = sorted.length > PREVIEW_COUNT;
 
   return (
     <div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {visible.map((ad) => (
-          <AdCardUI key={ad.adId} ad={ad} />
+          <AdCardUI
+            key={ad.adId}
+            ad={ad}
+            isTopPerformer={topPerformerIds.has(ad.adId)}
+          />
         ))}
       </div>
 

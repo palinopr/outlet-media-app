@@ -396,8 +396,10 @@ function OperatingRecommendations({
               <div key={`${item.title}-${index}`} className="flex items-start gap-3">
                 <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-white/88">{item.title}</p>
-                  <p className="mt-1 text-xs leading-5 text-white/45">{item.detail}</p>
+                  <p className="text-xs leading-5 text-white/45">
+                    <span className="font-semibold text-white/80">Strategy:</span>{" "}
+                    {item.detail}
+                  </p>
                 </div>
               </div>
             ))}
