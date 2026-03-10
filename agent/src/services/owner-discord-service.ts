@@ -1,6 +1,6 @@
 import { notifyChannel } from "../discord/core/entry.js";
 
-const OWNER_USER_IDS = (process.env.DISCORD_OWNER_USER_IDS ?? "")
+export const OWNER_USER_IDS = (process.env.DISCORD_OWNER_USER_IDS ?? "")
   .split(",")
   .map((value) => value.trim())
   .filter(Boolean);

@@ -42,6 +42,7 @@ import {
   checkAndReleaseStaleLock,
   notifyChannel,
 } from "./entry.js";
+import { OWNER_USER_IDS } from "../../services/owner-discord-service.js";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -62,11 +63,6 @@ const SCHEDULED_MEDIA_BUYER_HANDOFF_CHANNELS = new Set([
   ...MEETING_HANDOFF_CHANNELS,
   "boss",
 ]);
-
-const CONFIGURED_OWNER_USER_IDS = (process.env.DISCORD_OWNER_USER_IDS ?? "")
-  .split(",")
-  .map((id) => id.trim())
-  .filter(Boolean);
 
 // ---------------------------------------------------------------------------
 // Dedup guard
@@ -104,10 +100,18 @@ function looksLikeMeetingRequest(content: string): boolean {
   return hasAction || hasTime || hasAttendees;
 }
 
+function feedTimestamp(): string {
+  return new Date().toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 function getOwnerMentions(msg: Message): string {
   const ids = new Set<string>();
   if (msg.guild?.ownerId) ids.add(msg.guild.ownerId);
-  for (const id of CONFIGURED_OWNER_USER_IDS) ids.add(id);
+  for (const id of OWNER_USER_IDS) ids.add(id);
   return [...ids].map((id) => `<@${id}>`).join(" ").trim();
 }
 
@@ -138,14 +142,9 @@ async function handoffMeetingRequestToBoss(
 
   await sendAsAgent("boss", "boss", bossBrief);
 
-  const timestamp = new Date().toLocaleTimeString("en-US", {
-    hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
-  });
   await notifyChannel(
     "agent-feed",
-    `\`${timestamp}\` **#${channelName}** (boss-intake) -- ${requester}: "${content.slice(0, 120)}"`,
+    `\`${feedTimestamp()}\` **#${channelName}** (boss-intake) -- ${requester}: "${content.slice(0, 120)}"`,
   ).catch(() => {});
 }
 
@@ -195,14 +194,9 @@ async function handoffScheduledBudgetRequestToBoss(
   }
   await sendAsAgent("boss", "schedule", scheduleBrief);
 
-  const timestamp = new Date().toLocaleTimeString("en-US", {
-    hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
-  });
   await notifyChannel(
     "agent-feed",
-    `\`${timestamp}\` **#${channelName}** (scheduled-budget) -- ${requester}: "${content.slice(0, 120)}"`,
+    `\`${feedTimestamp()}\` **#${channelName}** (scheduled-budget) -- ${requester}: "${content.slice(0, 120)}"`,
   ).catch(() => {});
 
   return true;
@@ -265,14 +259,9 @@ async function handoffScheduledCopySwapRequestToBoss(
   }
   await sendAsAgent("boss", "schedule", scheduleBrief);
 
-  const timestamp = new Date().toLocaleTimeString("en-US", {
-    hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
-  });
   await notifyChannel(
     "agent-feed",
-    `\`${timestamp}\` **#${channelName}** (scheduled-copy-swap) -- ${requester}: "${content.slice(0, 120)}"`,
+    `\`${feedTimestamp()}\` **#${channelName}** (scheduled-copy-swap) -- ${requester}: "${content.slice(0, 120)}"`,
   ).catch(() => {});
 
   return true;
