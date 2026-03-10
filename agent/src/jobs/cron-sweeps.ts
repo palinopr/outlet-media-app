@@ -16,7 +16,12 @@ import { loadEvents, loadCampaigns, categorizeEvents } from "../utils/session-lo
 import { campaignsSummary, eventsSummary } from "../utils/prompt-formatters.js";
 
 // Lazy imports to avoid circular deps
-async function postToChannel(target: string, text: string): Promise<void> {
+async function postToChannel(target: string, text: string, agentKey?: string): Promise<void> {
+  if (agentKey && target !== "agent-feed") {
+    const { sendAsAgent } = await import("../services/webhook-service.js");
+    await sendAsAgent(agentKey, target, text);
+    return;
+  }
   const { notifyChannel } = await import("../discord/core/entry.js");
   await notifyChannel(target, text);
 }
@@ -99,8 +104,9 @@ Keep it under 1500 characters. Be direct, no fluff.`;
       await postToChannel(
         "morning-briefing",
         `**Morning Briefing -- ${todayCST()}**\n\n${text}`,
+        "boss",
       );
-      await postToChannel("boss", `Morning briefing posted to #morning-briefing.`);
+      await postToChannel("boss", `Morning briefing posted to #morning-briefing.`, "boss");
     }
     return text;
   });
@@ -143,10 +149,12 @@ Report all changes to this channel. Be specific about what you changed.`;
       await postToChannel(
         "media-buyer",
         `**Show-Day Automation -- ${todayCST()}**\n\n${text}`,
+        "media-buyer",
       );
       await postToChannel(
         "boss",
         `Show-day automation ran for ${today.length} show(s). Check #media-buyer.`,
+        "scheduler",
       );
     }
     return text;
@@ -183,7 +191,7 @@ Keep the response concise.`;
       maxTurns: 15,
     });
     const text = result.text?.trim() || "";
-    if (text) await postToChannel("media-buyer", `**Show-Day Monitor**\n\n${text}`);
+    if (text) await postToChannel("media-buyer", `**Show-Day Monitor**\n\n${text}`, "media-buyer");
     return text;
   });
 }
@@ -223,10 +231,12 @@ Format as a Discord message with bold headers.`;
       await postToChannel(
         "boss",
         `**Post-Show Recap -- ${yesterdayCST()}**\n\n${text}`,
+        "reporting",
       );
       await postToChannel(
         "dashboard",
         `**Post-Show Recap -- ${yesterdayCST()}**\n\n${text}`,
+        "reporting",
       );
     }
     return text;
@@ -260,6 +270,7 @@ Format as a polished Discord message.`;
       await postToChannel(
         "boss",
         `**Weekly Report -- Week of ${todayCST()}**\n\n${text}`,
+        "reporting",
       );
     }
     return text;
@@ -296,8 +307,8 @@ Only report if you find actual fatigue signals.`;
         !text.toLowerCase().includes("everything looks healthy") &&
         !text.toLowerCase().includes("no fatigue");
       if (hasFindings) {
-        await postToChannel("creative", `**Creative Fatigue Alert**\n\n${text}`);
-        await postToChannel("boss", `Creative fatigue detected -- check #creative.`);
+        await postToChannel("creative", `**Creative Fatigue Alert**\n\n${text}`, "creative");
+        await postToChannel("boss", `Creative fatigue detected -- check #creative.`, "creative");
       } else {
         await postToFeed(`Creative fatigue check: all healthy`);
       }
@@ -343,8 +354,8 @@ Keep response concise. Only flag actual pacing issues.`;
         text.toLowerCase().includes("underpacing") ||
         text.toLowerCase().includes("overpacing");
       if (hasIssue) {
-        await postToChannel("media-buyer", `**Budget Pacing Alert**\n\n${text}`);
-        await postToChannel("boss", `Budget pacing issue -- check #media-buyer.`);
+        await postToChannel("media-buyer", `**Budget Pacing Alert**\n\n${text}`, "media-buyer");
+        await postToChannel("boss", `Budget pacing issue -- check #media-buyer.`, "media-buyer");
       } else {
         await postToFeed(`Budget pacing: all on track`);
       }
@@ -382,9 +393,9 @@ Keep response concise.`;
     });
     const text = result.text?.trim() || "";
     if (text) {
-      await postToChannel("tm-data", `**Ticket Velocity Check**\n\n${text}`);
+      await postToChannel("tm-data", `**Ticket Velocity Check**\n\n${text}`, "tm-agent");
       if (text.toLowerCase().includes("80%") || text.toLowerCase().includes("alert")) {
-        await postToChannel("boss", `Ticket velocity alert -- check #tm-data.`);
+        await postToChannel("boss", `Ticket velocity alert -- check #tm-data.`, "tm-agent");
       }
     }
     return text;
@@ -421,7 +432,7 @@ Keep response concise and actionable.`;
     });
     const text = result.text?.trim() || "";
     if (text) {
-      await postToChannel("boss", `**Client Pulse -- ${todayCST()}**\n\n${text}`);
+      await postToChannel("boss", `**Client Pulse -- ${todayCST()}**\n\n${text}`, "client-manager");
     }
     return text;
   });
@@ -447,7 +458,7 @@ Keep response concise. Only flag actual issues.`;
     const result = await runClaude({ prompt, systemPromptName: "boss", maxTurns: 15 });
     const text = result.text?.trim() || "";
     if (text) {
-      await postToChannel("boss", `**Supervision Report**\n\n${text}`);
+      await postToChannel("boss", `**Supervision Report**\n\n${text}`, "boss");
     }
     return text;
   });

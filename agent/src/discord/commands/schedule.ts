@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 import { EmbedBuilder, type Client } from "discord.js";
 
 const __dirname = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
-const SWEEP_STATE_PATH = join(__dirname, "..", "..", "session", "sweep-state.json");
+const SWEEP_STATE_PATH = join(__dirname, "..", "..", "..", "session", "sweep-state.json");
 
 const SCHEDULED_OWNER_NOTIFICATIONS = (process.env.SCHEDULED_OWNER_NOTIFICATIONS ?? "false").toLowerCase() === "true";
 const TM_SCHEDULER_ENABLED = (process.env.TM_SCHEDULER_ENABLED ?? "false").toLowerCase() === "true";
