@@ -143,9 +143,9 @@ export function registerButtonHandler(client: Client): void {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (btn.deferred || btn.replied) {
-        await btn.editReply(`Error: ${msg}`).catch(() => {});
+        await btn.editReply(`Error: ${msg}`).catch((e) => console.warn("[buttons] reply failed:", e));
       } else {
-        await btn.reply({ content: `Error: ${msg}`, ephemeral: true }).catch(() => {});
+        await btn.reply({ content: `Error: ${msg}`, ephemeral: true }).catch((e) => console.warn("[buttons] reply failed:", e));
       }
     }
   });

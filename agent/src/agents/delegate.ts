@@ -635,8 +635,9 @@ export async function processDelegations(
           .setFooter({ text: `Task: ${task.id}` })
           .setTimestamp();
 
-        await sendAsAgent(fromAgent, targetChannel, { embeds: [embed] }).catch(() => {
-          channel.send({ embeds: [embed] }).catch(() => {});
+        await sendAsAgent(fromAgent, targetChannel, { embeds: [embed] }).catch((e) => {
+          console.warn("[delegate] send failed:", e);
+          channel.send({ embeds: [embed] }).catch((e2) => console.warn("[delegate] send failed:", e2));
         });
       }
     }
@@ -651,7 +652,7 @@ export async function processDelegations(
   // Notify agent-feed
   const { notifyChannel } = await import("../discord/core/entry.js");
   const targets = blocks.map(b => b.delegate).join(", ");
-  await notifyChannel("agent-feed", `**${fromAgent}** delegated ${blocks.length} task(s) to: ${targets}`).catch(() => {});
+  await notifyChannel("agent-feed", `**${fromAgent}** delegated ${blocks.length} task(s) to: ${targets}`).catch((e) => console.warn("[delegate] notify failed:", e));
 
   return { cleanText, delegated: blocks.length, targets: delegatedTargets };
 }
@@ -793,11 +794,11 @@ export async function executeAgentTask(
       completeTask(task.id, result);
 
       const summary = deliveredText.slice(0, 1900);
-      await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch(() => {});
+      await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch((e) => console.warn("[delegate] send failed:", e));
 
       if (options?.notifySource !== false) {
         const shortSummary = deliveredText.slice(0, 500);
-        await notifyChannel(sourceChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch(() => {});
+        await notifyChannel(sourceChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch((e) => console.warn("[delegate] notify failed:", e));
       }
 
       const replyChannel = getReplyChannel(task.params);
@@ -807,7 +808,7 @@ export async function executeAgentTask(
         (options?.notifySource === false || replyChannel !== sourceChannel)
       ) {
         const shortSummary = deliveredText.slice(0, 500);
-        await notifyChannel(replyChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch(() => {});
+        await notifyChannel(replyChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch((e) => console.warn("[delegate] notify failed:", e));
       }
 
       return deliveredText;
@@ -867,12 +868,12 @@ export async function executeAgentTask(
 
     // Post result to target channel via webhook
     const summary = deliveredText.slice(0, 1900);
-    await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch(() => {});
+    await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch((e) => console.warn("[delegate] send failed:", e));
 
     // Notify source
     if (options?.notifySource !== false) {
       const shortSummary = deliveredText.slice(0, 500);
-      await notifyChannel(sourceChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch(() => {});
+      await notifyChannel(sourceChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch((e) => console.warn("[delegate] notify failed:", e));
     }
 
     const replyChannel = getReplyChannel(task.params);
@@ -882,7 +883,7 @@ export async function executeAgentTask(
       (options?.notifySource === false || replyChannel !== sourceChannel)
     ) {
       const shortSummary = deliveredText.slice(0, 500);
-      await notifyChannel(replyChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch(() => {});
+      await notifyChannel(replyChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`).catch((e) => console.warn("[delegate] notify failed:", e));
     }
 
     return deliveredText;
@@ -890,7 +891,7 @@ export async function executeAgentTask(
     const errMsg = err instanceof Error ? err.message : String(err);
     failTask(task.id, errMsg);
     const failureChannel = options?.notifySource === false ? targetChannel : sourceChannel;
-    await notifyChannel(failureChannel, `Delegation to ${task.to} failed: ${errMsg}`).catch(() => {});
+    await notifyChannel(failureChannel, `Delegation to ${task.to} failed: ${errMsg}`).catch((e) => console.warn("[delegate] notify failed:", e));
     throw err;
   }
 }

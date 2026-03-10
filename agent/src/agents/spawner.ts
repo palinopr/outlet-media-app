@@ -150,20 +150,21 @@ export async function spawnAgent(spec: SpawnSpec): Promise<void> {
       .setTimestamp()
       .setFooter({ text: "Agent spawned by Boss" });
 
-    await sendAsAgent("boss", "agent-feed", { embeds: [intro] }).catch(() => {
-      notifyChannel("agent-feed", `**New Agent**: ${spec.name} -- ${spec.description}`).catch(() => {});
+    await sendAsAgent("boss", "agent-feed", { embeds: [intro] }).catch((e) => {
+      console.warn("[spawner] notify failed:", e);
+      notifyChannel("agent-feed", `**New Agent**: ${spec.name} -- ${spec.description}`).catch((e2) => console.warn("[spawner] notify failed:", e2));
     });
 
     // Log to audit
     await notifyChannel("audit-log",
       `Agent spawned: **${spec.name}** (${spec.key})\n${log.map(l => `- ${l}`).join("\n")}`
-    ).catch(() => {});
+    ).catch((e) => console.warn("[spawner] notify failed:", e));
 
     console.log(`[spawner] Agent ${spec.name} spawned successfully`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`[spawner] Failed to spawn ${spec.key}:`, msg);
-    await notifyChannel("ops", `**Spawn Failed**: ${spec.key} -- ${msg}`).catch(() => {});
+    await notifyChannel("ops", `**Spawn Failed**: ${spec.key} -- ${msg}`).catch((e) => console.warn("[spawner] notify failed:", e));
     throw err;
   }
 }

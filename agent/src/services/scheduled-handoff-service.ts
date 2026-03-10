@@ -387,9 +387,9 @@ async function dispatchScheduledTask(client: Client, scheduledTask: ScheduledTas
     "scheduler",
     "schedule",
     `Dispatching ${scheduledTask.id} to #${targetChannel} for ${formatScheduledTimeLabel(deliverAt)}.`,
-  ).catch(() => {});
+  ).catch((e) => console.warn("[handoff] dispatch notify failed:", e));
 
-  await sendAsAgent("scheduler", targetChannel, buildSchedulerDispatchMessage(scheduledTask, deliverAt)).catch(() => {});
+  await sendAsAgent("scheduler", targetChannel, buildSchedulerDispatchMessage(scheduledTask, deliverAt)).catch((e) => console.warn("[handoff] dispatch message failed:", e));
 
   const delegatedTask = enqueueTask(
     "scheduler",

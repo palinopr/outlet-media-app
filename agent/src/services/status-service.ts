@@ -135,7 +135,7 @@ export async function updateAgentStatus(channelName: string): Promise<void> {
   // Create new status message and pin it
   try {
     const msg = await channel.send({ embeds: [embed] });
-    await msg.pin().catch(() => {});
+    await msg.pin().catch((e) => console.warn("[status] pin failed:", e));
     statusMessageIds.set(channelName, msg.id);
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);

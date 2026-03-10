@@ -227,7 +227,7 @@ async function postApprovalRequest(task: AgentTask): Promise<void> {
     msg.edit({
       content: "Expired (no response in 24h)",
       components: [],
-    }).catch(() => {});
+    }).catch((e) => console.warn("[approvals] edit expired message failed:", e));
     pendingApprovals.delete(task.id);
     console.log(`[approvals] Task ${task.id} auto-expired after 24h`);
   }, APPROVAL_EXPIRY_MS);
@@ -235,11 +235,6 @@ async function postApprovalRequest(task: AgentTask): Promise<void> {
   pendingApprovals.set(task.id, { timeout, createdAt: Date.now() });
 }
 
-/**
- * Sweep pending approvals and expire any older than 24h.
- * Catches approvals that survived a bot restart (their setTimeout was lost).
- * Called periodically from a setInterval in initApprovals.
- */
 export function stopApprovals(): void {
   if (sweepInterval) {
     clearInterval(sweepInterval);
@@ -247,6 +242,11 @@ export function stopApprovals(): void {
   }
 }
 
+/**
+ * Sweep pending approvals and expire any older than 24h.
+ * Catches approvals that survived a bot restart (their setTimeout was lost).
+ * Called periodically from a setInterval in initApprovals.
+ */
 function sweepExpiredApprovals(): void {
   const now = Date.now();
   for (const [taskId, entry] of pendingApprovals) {

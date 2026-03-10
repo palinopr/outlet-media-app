@@ -145,7 +145,7 @@ async function handoffMeetingRequestToBoss(
   await notifyChannel(
     "agent-feed",
     `\`${feedTimestamp()}\` **#${channelName}** (boss-intake) -- ${requester}: "${content.slice(0, 120)}"`,
-  ).catch(() => {});
+  ).catch((e) => console.warn("[router] notify failed:", e));
 }
 
 async function handoffScheduledBudgetRequestToBoss(
@@ -197,7 +197,7 @@ async function handoffScheduledBudgetRequestToBoss(
   await notifyChannel(
     "agent-feed",
     `\`${feedTimestamp()}\` **#${channelName}** (scheduled-budget) -- ${requester}: "${content.slice(0, 120)}"`,
-  ).catch(() => {});
+  ).catch((e) => console.warn("[router] notify failed:", e));
 
   return true;
 }
@@ -262,7 +262,7 @@ async function handoffScheduledCopySwapRequestToBoss(
   await notifyChannel(
     "agent-feed",
     `\`${feedTimestamp()}\` **#${channelName}** (scheduled-copy-swap) -- ${requester}: "${content.slice(0, 120)}"`,
-  ).catch(() => {});
+  ).catch((e) => console.warn("[router] notify failed:", e));
 
   return true;
 }
@@ -338,7 +338,7 @@ async function handleWhatsAppCommand(msg: Message, content: string): Promise<boo
           threadId: record.discordThreadId,
         }
       : `**Owner decision**\n${updateText}`,
-  ).catch(() => {});
+  ).catch((e) => console.warn("[router] notify failed:", e));
 
   return true;
 }
@@ -374,7 +374,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
     : "";
 
   if (!canUseChannel(channelName, msg.member, msg.author.id)) {
-    await msg.reply(getAccessDeniedMessage(channelName)).catch(() => {});
+    await msg.reply(getAccessDeniedMessage(channelName)).catch((e) => console.warn("[router] reply failed:", e));
     return;
   }
 
@@ -547,7 +547,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
   }
 
   if (isReadOnlyChannel(channelName)) {
-    await msg.reply(`This channel is read-only. Use a work channel instead of #${channelName}.`).catch(() => {});
+    await msg.reply(`This channel is read-only. Use a work channel instead of #${channelName}.`).catch((e) => console.warn("[router] reply failed:", e));
     return;
   }
 
@@ -604,7 +604,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
     const promptResult = await buildPromptFromDiscordMessage(content, msg.attachments.values());
     if (!promptResult.prompt) {
       if (promptResult.fallbackMessage) {
-        await msg.reply(promptResult.fallbackMessage).catch(() => {});
+        await msg.reply(promptResult.fallbackMessage).catch((e) => console.warn("[router] reply failed:", e));
       }
       return;
     }

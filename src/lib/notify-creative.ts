@@ -100,7 +100,7 @@ export function notifyCreativeNewAssets(clientSlug: string, count: number): void
         },
       );
     })
-    .catch(() => {});
+    .catch((e) => console.warn("[notify-creative] webhook post failed:", e));
 }
 
 export function notifyCreative(payload: NotifyPayload): void {
@@ -165,5 +165,5 @@ export function notifyCreative(payload: NotifyPayload): void {
         },
       );
     })
-    .catch(() => {});
+    .catch((e) => console.warn("[notify-creative] webhook post failed:", e));
 }

@@ -219,7 +219,7 @@ export async function checkMeetingReminders(): Promise<string> {
 
     await Promise.all([
       notifyOwnerImportant(message, { channel: "boss" }),
-      notifyChannel("meetings", message).catch(() => {}),
+      notifyChannel("meetings", message).catch((e) => console.warn("[calendar] notify meetings failed:", e)),
     ]);
     notifiedEventIds.set(dedupKey(event), Date.now());
     notifications.push(event.summary ?? "(no title)");
