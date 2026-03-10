@@ -13,12 +13,13 @@
  */
 
 import { type Client, EmbedBuilder, type TextChannel, ChannelType } from "discord.js";
-import { enqueueTask, escalateTask, setTaskExecutor, type AgentTask } from "../services/queue-service.js";
+import { enqueueTask, escalateTask, completeTask, failTask, setTaskExecutor, type AgentTask } from "../services/queue-service.js";
 import { evaluateTier } from "../services/approval-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { sendWhatsAppMessage } from "../services/whatsapp-runtime-service.js";
 import { runClaude } from "../runner.js";
 import { getAgentForChannel } from "../discord/core/router.js";
+import { notifyChannel } from "../discord/core/entry.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
 import { WHITELISTED_CHANNELS } from "../discord/features/restructure.js";
 
@@ -207,6 +208,8 @@ function findInlineJsonBlocks(text: string): { match: string; index: number }[] 
       }
       if (depth === 0) {
         results.push({ match: text.slice(i, j), index: i });
+        i = j;
+        continue;
       }
     }
     i++;
@@ -363,7 +366,7 @@ export function parseDelegationBlocks(text: string): { blocks: DelegationBlock[]
   }
 
   // Also match inline JSON (no fences) as fallback, using balanced-braces walker
-  for (const hit of findInlineJsonBlocks(text)) {
+  for (const hit of findInlineJsonBlocks(cleanText)) {
     try {
       const raw: unknown = JSON.parse(hit.match);
       if (raw && typeof raw === "object" && "delegate" in raw && "action" in raw) {
@@ -410,7 +413,7 @@ export function parseChannelMessageBlocks(text: string): {
     }
   }
 
-  for (const hit of findInlineJsonBlocks(text)) {
+  for (const hit of findInlineJsonBlocks(cleanText)) {
     try {
       const raw: unknown = JSON.parse(hit.match);
       if (raw && typeof raw === "object" && "channel" in raw && "message" in raw) {
@@ -453,7 +456,7 @@ export function parseWhatsAppSendBlocks(text: string): {
     }
   }
 
-  for (const hit of findInlineJsonBlocks(text)) {
+  for (const hit of findInlineJsonBlocks(cleanText)) {
     try {
       const raw: unknown = JSON.parse(hit.match);
       if (raw && typeof raw === "object" && "whatsapp" in raw) {
@@ -607,13 +610,26 @@ export async function processDelegations(
     );
     const queuedParams = attachTaskRuntimeParams(taskParams, sourceChannel, depth, true);
 
-    const task = enqueueTask(
-      fromAgent,
-      block.delegate,
-      block.action,
-      queuedParams,
+    // Evaluate tier BEFORE enqueue to prevent race condition
+    const preTask = {
+      id: "",
+      from: fromAgent,
+      to: block.delegate,
+      action: block.action,
+      params: queuedParams,
       tier,
-    );
+      status: "pending" as const,
+      createdAt: new Date(),
+    };
+    const decision = evaluateTier(preTask);
+
+    let task: ReturnType<typeof enqueueTask>;
+    if (decision === "execute") {
+      task = enqueueTask(fromAgent, block.delegate, block.action, queuedParams, "green");
+    } else {
+      task = enqueueTask(fromAgent, block.delegate, block.action, queuedParams, tier);
+      escalateTask(task.id);
+    }
 
     // Post delegation notification to target channel
     if (guild) {
@@ -643,17 +659,13 @@ export async function processDelegations(
       }
     }
 
-    // Evaluate tier and execute if green
-    const decision = evaluateTier(task);
-    if (decision !== "execute") {
-      escalateTask(task.id);
-    }
   }
 
-  // Notify agent-feed
-  const { notifyChannel } = await import("../discord/core/entry.js");
-  const targets = blocks.map(b => b.delegate).join(", ");
-  await notifyChannel("agent-feed", `**${fromAgent}** delegated ${blocks.length} task(s) to: ${targets}`);
+  // Notify agent-feed (only if we actually delegated something)
+  if (delegatedTargets.length > 0) {
+    const targets = delegatedTargets.join(", ");
+    await notifyChannel("agent-feed", `**${fromAgent}** delegated ${delegatedTargets.length} task(s) to: ${targets}`);
+  }
 
   return { cleanText, delegated: blocks.length, targets: delegatedTargets };
 }
@@ -703,7 +715,6 @@ export async function processChannelMessages(
     }
 
     await sendAsAgent(fromAgent, targetChannel, block.message).catch(async () => {
-      const { notifyChannel } = await import("../discord/core/entry.js");
       await notifyChannel(targetChannel, block.message);
     });
     postedTargets.push(targetChannel);
@@ -737,20 +748,26 @@ export async function processChannelMessages(
       );
       const queuedParams = attachTaskRuntimeParams(handoffParams, sourceChannel, depth, false);
 
-      const task = enqueueTask(
-        fromAgent,
-        delegateTarget,
-        "channel-handoff",
-        queuedParams,
+      const preTask = {
+        id: "",
+        from: fromAgent,
+        to: delegateTarget,
+        action: "channel-handoff",
+        params: queuedParams,
         tier,
-      );
+        status: "pending" as const,
+        createdAt: new Date(),
+      };
+      const decision = evaluateTier(preTask);
 
-      handoffTargets.push(targetChannel);
-
-      const decision = evaluateTier(task);
-      if (decision !== "execute") {
+      if (decision === "execute") {
+        enqueueTask(fromAgent, delegateTarget, "channel-handoff", queuedParams, "green");
+      } else {
+        const task = enqueueTask(fromAgent, delegateTarget, "channel-handoff", queuedParams, tier);
         escalateTask(task.id);
       }
+
+      handoffTargets.push(targetChannel);
     }
   }
 
@@ -775,9 +792,6 @@ export async function executeAgentTask(
     notifySource?: boolean;
   },
 ): Promise<string> {
-  const { completeTask, failTask } = await import("../services/queue-service.js");
-  const { notifyChannel } = await import("../discord/core/entry.js");
-
   const targetChannel = DELEGATE_TARGETS[task.to];
   if (!targetChannel) {
     failTask(task.id, `Unknown target agent: ${task.to}`);
@@ -821,7 +835,7 @@ export async function executeAgentTask(
       maxTurns: agent.maxTurns,
     });
 
-    let responseText = result.text || "No response.";
+    let responseText = result.text ?? "No response.";
     const actionNotes: string[] = [];
 
     const whatsappSends = await processWhatsAppSends(responseText, targetChannel, {
