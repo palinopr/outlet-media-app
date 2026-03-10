@@ -129,8 +129,6 @@ export default async function ClientEventsPage({ params, searchParams }: Props) 
 
       <DashboardActionCenterSection
         actionCenter={workflow.actionCenter}
-        assetHrefPrefix={`/client/${slug}/assets`}
-        assetLibraryHref={`/client/${slug}/assets`}
         campaignHrefPrefix={`/client/${slug}/campaign`}
         description="Open event approvals and shared event threads that still need a response."
         eventHrefPrefix={`/client/${slug}/event`}
@@ -139,10 +137,8 @@ export default async function ClientEventsPage({ params, searchParams }: Props) 
       />
 
       <AgentOutcomesPanel
-        assetHrefPrefix={`/client/${slug}/assets`}
         campaignHrefPrefix={`/client/${slug}/campaign`}
-        crmHrefPrefix={`/client/${slug}/crm`}
-        description="Agent work connected to event operations, so show-level recommendations stay visible alongside ticket updates."
+        description="Agent work connected to event operations."
         eventHrefPrefix={`/client/${slug}/event`}
         outcomes={workflow.agentOutcomes}
         title="Event agent follow-through"

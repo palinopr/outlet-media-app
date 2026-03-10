@@ -15,21 +15,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
-import { DashboardAssetsSection } from "@/components/dashboard/dashboard-assets-section";
-import { DashboardCrmSection } from "@/components/dashboard/dashboard-crm-section";
 import { EventOperationsSection } from "@/components/events/event-operations-section";
 import {
   getDashboardActionCenter,
-  getDashboardAssetSummary,
   getDashboardOpsSummary,
 } from "@/features/dashboard/server";
 import { getEventOperationsSummary } from "@/features/events/server";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
-import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
-import { getCrmOverview } from "@/features/crm/server";
-import { WorkQueueSection } from "@/components/workflow/work-queue-section";
-import { getWorkQueue } from "@/features/work-queue/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
 import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
@@ -41,7 +34,6 @@ import { CampaignSection } from "./components/campaign-section";
 import { EventCard } from "./components/event-card";
 import { AudienceSection } from "./components/audience-section";
 import { requireClientAccess } from "@/features/client-portal/access";
-import { getEnabledServices } from "@/lib/client-services";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -64,8 +56,8 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam);
 
-  const { scope, userId } = await requireClientAccess(slug);
-  const [dashboardData, opsSummary, actionCenter, assetSummary, eventOperations, agentOutcomes, assignedWorkQueue, enabledServices, crm, crmFollowUpItems] = await Promise.all([
+  const { scope } = await requireClientAccess(slug);
+  const [dashboardData, opsSummary, actionCenter, eventOperations, agentOutcomes] = await Promise.all([
     getData(slug, range, scope),
     getDashboardOpsSummary({
       clientSlug: slug,
@@ -80,11 +72,6 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       scopeCampaignIds: scope?.allowedCampaignIds,
       scopeEventIds: scope?.allowedEventIds,
     }),
-    getDashboardAssetSummary({
-      clientSlug: slug,
-      limit: 4,
-      scope,
-    }),
     getEventOperationsSummary({
       clientSlug: slug,
       limit: 5,
@@ -98,31 +85,8 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       scopeCampaignIds: scope?.allowedCampaignIds,
       scopeEventIds: scope?.allowedEventIds,
     }),
-    getWorkQueue({
-      assigneeId: userId,
-      clientSlug: slug,
-      limit: 4,
-      mode: "client",
-      scope,
-    }),
-    getEnabledServices(slug),
-    getCrmOverview({
-      audience: "shared",
-      clientSlug: slug,
-    }),
-    listCrmFollowUpItems({
-      audience: "shared",
-      clientSlug: slug,
-      limit: 6,
-    }),
   ]);
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel, trendData } = dashboardData;
-  const showCrm = enabledServices?.includes("crm") || crm.summary.totalContacts > 0;
-  const showAssets =
-    enabledServices?.includes("assets") ||
-    (assetSummary.metrics.find((metric) => metric.key === "total_assets")?.value ?? 0) > 0;
-  const crmContacts =
-    crm.upcomingFollowUps.length > 0 ? crm.upcomingFollowUps.slice(0, 4) : crm.recentContacts.slice(0, 4);
 
   const clientName = slugToLabel(slug);
 
@@ -266,39 +230,10 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
 
       <DashboardActionCenterSection
         actionCenter={actionCenter}
-        assetLibraryHref={`/client/${slug}/assets`}
         campaignHrefPrefix={`/client/${slug}/campaign`}
-        crmHrefPrefix={`/client/${slug}/crm`}
         eventHrefPrefix={`/client/${slug}/event`}
         variant="client"
       />
-
-      {showAssets ? (
-        <DashboardAssetsSection
-          href={`/client/${slug}/assets`}
-          libraryHrefLabel="Open assets"
-          summary={assetSummary}
-          title="Creative snapshot"
-          description="A simple readout of uploaded creative, what still needs review, and what is already linked into campaign work."
-          emptyState="No creative review pressure right now."
-          variant="client"
-        />
-      ) : null}
-
-      {showCrm ? (
-        <DashboardCrmSection
-          contacts={crmContacts}
-          detailHrefPrefix={`/client/${slug}/crm`}
-          followUpHrefPrefix={`/client/${slug}/crm`}
-          followUpItems={crmFollowUpItems.filter((item) => item.status !== "done").slice(0, 4)}
-          href={`/client/${slug}/crm`}
-          summary={crm.summary}
-          title="CRM snapshot"
-          description="A simple CRM readout for hot contacts and due follow-ups tied to your account."
-          emptyState="No CRM contacts are visible yet."
-          variant="client"
-        />
-      ) : null}
 
       <EventOperationsSection
         description="A simple events readout for what needs promotion follow-through, responses, or ticketing attention."
@@ -308,25 +243,15 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         variant="client"
       />
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <WorkQueueSection
-          description="The cross-app work already assigned to you across campaigns, CRM, events, and creative workflow."
-          emptyState="Nothing is directly assigned to you right now."
-          showMetrics={false}
-          summary={assignedWorkQueue}
-          title="Assigned to you"
-          variant="client"
-        />
-        <AgentOutcomesPanel
-          outcomes={agentOutcomes}
-          title="Agent follow-through"
-          description="A simple readout of the latest shared agent reviews and recommendations tied to your campaigns."
-          emptyState="No shared agent follow-through is available yet."
-          variant="client"
-          campaignHrefPrefix={`/client/${slug}/campaign`}
-          eventHrefPrefix={`/client/${slug}/event`}
-        />
-      </div>
+      <AgentOutcomesPanel
+        outcomes={agentOutcomes}
+        title="Agent follow-through"
+        description="Latest shared agent reviews and recommendations tied to your campaigns."
+        emptyState="No shared agent follow-through is available yet."
+        variant="client"
+        campaignHrefPrefix={`/client/${slug}/campaign`}
+        eventHrefPrefix={`/client/${slug}/event`}
+      />
 
       {/* -- Campaign Cards with Filter -- */}
       {campaigns.length > 0 && (

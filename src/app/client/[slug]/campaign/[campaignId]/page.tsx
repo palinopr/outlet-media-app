@@ -21,15 +21,12 @@ import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approv
 import { CampaignActionItemsPanel } from "@/components/campaigns/campaign-action-items-panel";
 import { CampaignCommentsPanel } from "@/components/campaigns/campaign-comments-panel";
 import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
-import { mapAssetRows } from "@/features/assets/lib";
-import { listCampaignAssets } from "@/features/assets/server";
 import { listCampaignActionItems } from "@/features/campaign-action-items/server";
 import { listCampaignAgentOutcomes } from "@/features/agent-outcomes/server";
 import { listCampaignComments } from "@/features/campaign-comments/server";
 import { listCampaignApprovalRequests } from "@/features/approvals/server";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { StatCard } from "../../components/stat-card";
-import { CampaignAssetsPanel } from "../../components/campaign-assets-panel";
 import { CampaignDetailHeader } from "../../components/campaign-detail-header";
 import { CampaignAnalytics } from "../../components/campaign-analytics";
 import { requireClientAccess } from "@/features/client-portal/access";
@@ -100,8 +97,6 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
     dataSource,
     rangeLabel,
   } = data;
-
-  const campaignAssets = mapAssetRows(await listCampaignAssets(slug, c.name, 6));
 
   const adsPreviewData: AdPreview[] = ads.map((ad) => ({
     adId: ad.adId,
@@ -209,10 +204,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           />
           <WorkspaceActivityFeed
             events={events}
-            basePath={`/client/${slug}/workspace`}
             campaignHrefPrefix={`/client/${slug}/campaign`}
-            crmHrefPrefix={`/client/${slug}/crm`}
-            assetHrefPrefix={`/client/${slug}/assets`}
             eventHrefPrefix={`/client/${slug}/event`}
             title="Campaign activity"
             description="Visible campaign changes logged across the shared system."
@@ -227,8 +219,6 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           variant="client"
         />
       </section>
-
-      <CampaignAssetsPanel assets={campaignAssets} slug={slug} />
 
       {/* -- Recommendations -- */}
       {recsData.length > 0 && (

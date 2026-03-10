@@ -10,7 +10,6 @@ import { getEnabledServices } from "@/lib/client-services";
 import { ClientNav } from "./components/client-nav";
 import { MobileNav } from "./components/mobile-nav";
 import { CompleteProfileModal } from "./components/complete-profile-modal";
-import { NotificationBell } from "@/components/workspace/notification-bell";
 
 interface Props {
   children: ReactNode;
@@ -38,11 +37,9 @@ export default async function ClientLayout({ children, params }: Props) {
   const { slug } = await params;
   const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   let needsName = false;
-  let clerkUserId = "";
 
   if (clerkEnabled) {
     const { userId } = await auth();
-    clerkUserId = userId ?? "";
     if (!userId) redirect("/sign-in");
 
     let user: Awaited<ReturnType<typeof currentUser>> = null;
@@ -143,14 +140,6 @@ export default async function ClientLayout({ children, params }: Props) {
       {/* Mobile header */}
       <MobileNav slug={slug} clientName={clientName} enabledServices={enabledServices} />
       <div className="flex flex-col flex-1 min-w-0">
-        <div className="flex items-center justify-end px-4 py-2 lg:px-6">
-          {clerkUserId && (
-            <NotificationBell
-              fallbackClientSlug={slug}
-              viewer="client"
-            />
-          )}
-        </div>
         <main className="flex-1 overflow-auto lg:pt-0 pt-14">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">{children}</div>
         </main>

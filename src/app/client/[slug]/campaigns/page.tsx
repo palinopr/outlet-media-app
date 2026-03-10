@@ -169,8 +169,6 @@ export default async function ClientCampaigns({ params }: Props) {
 
       <DashboardActionCenterSection
         actionCenter={workflow.actionCenter}
-        assetHrefPrefix={`/client/${slug}/assets`}
-        assetLibraryHref={`/client/${slug}/assets`}
         campaignHrefPrefix={`/client/${slug}/campaign`}
         description="Open campaign approvals and shared campaign threads that still need a response."
         eventHrefPrefix={`/client/${slug}/event`}
@@ -179,10 +177,8 @@ export default async function ClientCampaigns({ params }: Props) {
       />
 
       <AgentOutcomesPanel
-        assetHrefPrefix={`/client/${slug}/assets`}
         campaignHrefPrefix={`/client/${slug}/campaign`}
-        crmHrefPrefix={`/client/${slug}/crm`}
-        description="Agent work connected to campaign operations, so recommendations stay visible alongside the performance view."
+        description="Agent work connected to campaign operations."
         eventHrefPrefix={`/client/${slug}/event`}
         outcomes={workflow.agentOutcomes}
         title="Campaign agent follow-through"

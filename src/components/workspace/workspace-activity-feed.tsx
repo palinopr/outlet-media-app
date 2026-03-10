@@ -19,7 +19,7 @@ interface WorkspaceActivityFeedProps {
   campaignHrefPrefix?: string;
   crmHrefPrefix?: string;
   events: SystemEvent[];
-  basePath: string;
+  basePath?: string;
   description?: string;
   emptyState?: string;
   eventHrefPrefix?: string;
@@ -55,7 +55,7 @@ function getEventIcon(eventName: string) {
 
 function getEventHref(
   event: SystemEvent,
-  basePath: string,
+  basePath: string | undefined,
   assetHrefPrefix?: string,
   campaignHrefPrefix?: string,
   crmHrefPrefix?: string,
@@ -80,14 +80,15 @@ function getEventHref(
   if (campaignHrefPrefix && campaignId) return `${campaignHrefPrefix}/${campaignId}`;
   if (eventHrefPrefix && eventId) return `${eventHrefPrefix}/${eventId}`;
   if (crmHrefPrefix && crmContactId) return `${crmHrefPrefix}/${crmContactId}`;
-  if (event.pageId) return `${basePath}/${event.pageId}`;
+  if (basePath && event.pageId) return `${basePath}/${event.pageId}`;
   if (
+    basePath &&
     (event.entityType === "event_comment" || event.entityType === "event_follow_up_item") &&
     metadataString(event, "eventId")
   ) {
     return `${basePath}/${metadataString(event, "eventId")}`;
   }
-  if (event.taskId) return `${basePath}/tasks`;
+  if (basePath && event.taskId) return `${basePath}/tasks`;
   return null;
 }
 

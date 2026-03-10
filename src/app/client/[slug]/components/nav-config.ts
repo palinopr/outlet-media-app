@@ -1,15 +1,7 @@
 import {
-  BadgeCheck,
-  BellRing,
-  MessageSquareMore,
   LayoutDashboard,
   Megaphone,
   Ticket,
-  BarChart3,
-  Users,
-  Image as ImageIcon,
-  FileText,
-  Settings,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { ServiceKey } from "@/lib/service-registry";
@@ -24,16 +16,8 @@ export interface NavLink {
 
 const NAV_LINKS: Omit<NavLink, "href">[] = [
   { label: "Overview", icon: LayoutDashboard, matchExact: true },
-  { label: "Updates", icon: BellRing },
-  { label: "Conversations", icon: MessageSquareMore },
-  { label: "Approvals", icon: BadgeCheck },
   { label: "Campaigns", icon: Megaphone, requiredService: "meta_ads" },
   { label: "Events", icon: Ticket, requiredService: ["ticketmaster", "eata"] },
-  { label: "Reports", icon: BarChart3, requiredService: "meta_ads" },
-  { label: "CRM", icon: Users, requiredService: "crm" },
-  { label: "Assets", icon: ImageIcon, requiredService: "assets" },
-  { label: "Workspace", icon: FileText, requiredService: "workspace" },
-  { label: "Settings", icon: Settings },
 ];
 
 function routeSegment(label: string): string {
