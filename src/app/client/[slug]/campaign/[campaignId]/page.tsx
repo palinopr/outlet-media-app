@@ -6,6 +6,7 @@ import {
   Image as ImageIcon,
   Lightbulb,
   Globe2,
+  Users,
 } from "lucide-react";
 import { parseRange } from "@/lib/constants";
 import { fmtDate, fmtUsd, fmtNum } from "@/lib/formatters";
@@ -20,10 +21,11 @@ import type {
 import { getCampaignDetail } from "./data";
 import { AdsPreview } from "@/components/client/ads-preview";
 import {
+  AudienceDemographics,
   HourlyHeatmap,
   MarketPerformanceTable,
   PerformanceTrendTabs,
-  PlacementTable,
+  PlacementBarChart,
 } from "@/components/client/charts";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { CampaignDetailHeader } from "../../components/campaign-detail-header";
@@ -239,6 +241,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 
   return (
     <div className="space-y-4">
+      {/* -- Header -- */}
       <CampaignDetailHeader
         slug={slug}
         range={range}
@@ -247,28 +250,24 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         theme={theme}
       />
 
-      <CampaignIntelligenceBrief brief={brief} campaign={c} theme={theme} />
+      {/* -- Intelligence Brief (simple text) -- */}
+      <CampaignIntelligenceBrief brief={brief} theme={theme} />
 
+      {/* -- Audience Snapshot (horizontal row) -- */}
       {snapshotCards.length > 0 && (
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <BarChart3 className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Audience Snapshot</span>
-            <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
-            {snapshotCards.map((card) => (
-              <SnapshotCard key={card.label} {...card} theme={theme} />
-            ))}
-          </div>
-        </section>
+        <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+          {snapshotCards.map((card) => (
+            <SnapshotCard key={card.label} {...card} />
+          ))}
+        </div>
       )}
 
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_320px]">
+      {/* -- Row 2: Performance Timeline | Daypart Heatmap | Audience Demographics -- */}
+      <div className="grid gap-3 xl:grid-cols-3">
         <section>
           <div className="mb-2 flex items-center gap-2">
             <Calendar className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Performance Timeline</span>
+            <span className="section-label">Strong performance timeline</span>
             <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
           </div>
           <PerformanceTrendTabs data={trendData} />
@@ -277,54 +276,72 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         <section>
           <div className="mb-2 flex items-center gap-2">
             <BarChart3 className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Top Performing Times</span>
+            <span className="section-label">True daypart heatmap</span>
           </div>
           {hourlyData.length > 0 ? (
             <HourlyHeatmap data={hourlyData} />
           ) : (
             <FallbackCard
-              title="Top Performing Times"
+              title="Daypart Heatmap"
               detail="Hourly delivery data is not available for this selected range yet."
             />
           )}
         </section>
-      </div>
 
-      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_320px]">
         <section>
           <div className="mb-2 flex items-center gap-2">
-            <ImageIcon className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Ad Performance</span>
-            <span className="ml-auto text-xs text-white/45">
-              {ads.length > 0 ? `${ads.length} ads` : "No ad previews"}
-            </span>
+            <Users className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Audience demographics</span>
           </div>
-          {ads.length > 0 ? (
-            <AdsPreview ads={ads} />
+          {ageGender.length > 0 ? (
+            <AudienceDemographics data={ageGender} />
           ) : (
             <FallbackCard
-              title="Ad Performance"
-              detail="Creative-level previews are not available from the current data source."
+              title="Audience Demographics"
+              detail="Demographic breakdowns are not available from the current data source."
             />
           )}
         </section>
-
-        <OperatingRecommendations items={operatingRecommendations} />
       </div>
 
-      {(marketData.length > 0 || placementData.length > 0) && (
-        <section>
-          <div className="mb-3 flex items-center gap-2">
-            <Globe2 className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Markets & Placements</span>
-            <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
-          </div>
-          <div className="grid gap-4 xl:grid-cols-2">
-            {marketData.length > 0 ? <MarketPerformanceTable data={marketData} /> : null}
-            {placementData.length > 0 ? <PlacementTable data={placementData} /> : null}
-          </div>
-        </section>
-      )}
+      {/* -- Row 3: Markets & Placements | Ad Performance + Recommendations -- */}
+      <div className="grid gap-3 xl:grid-cols-2">
+        {(marketData.length > 0 || placementData.length > 0) && (
+          <section>
+            <div className="mb-2 flex items-center gap-2">
+              <Globe2 className="h-3.5 w-3.5 text-white/50" />
+              <span className="section-label">Markets & placements</span>
+              <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
+            </div>
+            <div className="grid gap-3 lg:grid-cols-2">
+              {marketData.length > 0 ? <MarketPerformanceTable data={marketData} /> : null}
+              {placementData.length > 0 ? <PlacementBarChart data={placementData} /> : null}
+            </div>
+          </section>
+        )}
+
+        <div className="space-y-3">
+          <section>
+            <div className="mb-2 flex items-center gap-2">
+              <ImageIcon className="h-3.5 w-3.5 text-white/50" />
+              <span className="section-label">Ad performance</span>
+              <span className="ml-auto text-xs text-white/45">
+                {ads.length > 0 ? `${ads.length} ads` : "No ad previews"}
+              </span>
+            </div>
+            {ads.length > 0 ? (
+              <AdsPreview ads={ads} />
+            ) : (
+              <FallbackCard
+                title="Ad Performance"
+                detail="Creative-level previews are not available from the current data source."
+              />
+            )}
+          </section>
+
+          <OperatingRecommendations items={operatingRecommendations} />
+        </div>
+      </div>
 
       {/* -- Empty state -- */}
       {dataSource === "supabase" && ageGender.length === 0 && ads.length === 0 && (
@@ -344,27 +361,15 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 function SnapshotCard({
   label,
   value,
-  detail,
-  theme,
 }: {
   label: string;
   value: string;
   detail: string;
-  theme: ReturnType<typeof getClientPortalTheme>;
 }) {
   return (
-    <div className="relative shrink-0 min-w-[140px] flex-1 overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `linear-gradient(135deg, rgba(${theme.accentRgb}, 0.08), transparent 70%)`,
-        }}
-      />
-      <div className="relative">
-        <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
-        <p className="mt-1.5 text-lg font-bold tracking-tight text-white leading-tight truncate">{value}</p>
-        <p className="mt-1 text-[11px] text-white/40 truncate">{detail}</p>
-      </div>
+    <div className="shrink-0 min-w-[130px] flex-1 rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
+      <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
+      <p className="mt-1.5 text-lg font-bold tracking-tight text-white leading-tight truncate">{value}</p>
     </div>
   );
 }
@@ -484,7 +489,6 @@ function getDaysLive(startTime: string | null): number | null {
 
 function CampaignIntelligenceBrief({
   brief,
-  campaign,
   theme,
 }: {
   brief: {
@@ -493,63 +497,18 @@ function CampaignIntelligenceBrief({
     highlights: Array<{ label: string; value: string; detail: string }>;
     watchItems: Array<{ label: string; detail: string }>;
   };
-  campaign: CampaignCard;
   theme: ReturnType<typeof getClientPortalTheme>;
 }) {
   return (
     <section
-      className="relative overflow-hidden rounded-[28px] border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6"
+      className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] px-6 py-5"
       style={{
-        backgroundImage: `linear-gradient(135deg, rgba(${theme.accentRgb}, 0.14), rgba(${theme.secondaryRgb}, 0.08) 52%, rgba(${theme.highlightRgb}, 0.06) 100%)`,
+        backgroundImage: `linear-gradient(135deg, rgba(${theme.accentRgb}, 0.10), rgba(${theme.secondaryRgb}, 0.05) 60%, transparent 100%)`,
       }}
     >
       <div className="relative">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <p
-                className="text-[10px] uppercase tracking-[0.24em]"
-                style={{ color: `rgba(${theme.accentRgb}, 0.92)` }}
-              >
-                Campaign Intelligence Brief
-              </p>
-              <span className="rounded-full border border-white/[0.08] bg-black/12 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/52">
-                {theme.brandBadge}
-              </span>
-            </div>
-            <h2 className="mt-4 max-w-3xl text-2xl font-semibold tracking-tight text-white sm:text-[2.25rem]">
-              {brief.headline}
-            </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/62">{brief.body}</p>
-          </div>
-
-          <div className="w-full max-w-xs rounded-[28px] border border-white/[0.08] bg-black/16 p-5 shadow-[0_18px_48px_rgba(0,0,0,0.22)]">
-            <p className="text-[10px] uppercase tracking-[0.24em] text-white/38">Overall ROAS</p>
-            <p className="mt-3 text-5xl font-semibold tracking-tight text-white">
-              {campaign.roas != null ? `${campaign.roas.toFixed(1)}x` : "--"}
-            </p>
-            <p className="mt-2 text-xs text-white/52">{roasLabel(campaign.roas)}</p>
-            <div className="mt-4 rounded-[20px] border border-white/[0.08] bg-white/[0.04] p-3">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-white/32">Daily Budget</p>
-              <p className="mt-2 text-lg font-semibold text-white">
-                {campaign.dailyBudget != null ? `${fmtUsd(campaign.dailyBudget)}/day` : "--"}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          {brief.highlights.map((item) => (
-            <div
-              key={item.label}
-              className="rounded-[24px] border border-white/[0.08] bg-black/10 p-4 backdrop-blur-sm"
-            >
-              <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">{item.label}</p>
-              <p className="mt-2 text-lg font-semibold tracking-tight text-white">{item.value}</p>
-              <p className="mt-2 text-xs leading-5 text-white/45">{item.detail}</p>
-            </div>
-          ))}
-        </div>
+        <p className="text-sm font-semibold text-white/80">Campaign Intelligence Brief</p>
+        <p className="mt-2 text-sm leading-6 text-white/50">{brief.body}</p>
       </div>
     </section>
   );
