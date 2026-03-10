@@ -550,78 +550,35 @@ Format:
 - Palm Desert attribution lag pattern fully confirmed: 0x→0.39→0.31→2.11→3.35x blended, 12.87x marginal.
 - Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), #63-67 (#68), #68-76 (#77), #77-81 (#82), #82-89 (#90), #90-95 (#96 block), #96-101 (#102), #102-105 (#106), #106-109 (#110), #110-121 (#122), #122-129 (#130), #130-136 (#137), **#138-152 (#153)**
 
-## 2026-03-08 — Cycle #153
-- **Priority chosen:** P3 — memory maintenance (condensation overdue — 15 uncondensed cycles)
-- **What I audited:** LEARNINGS.md (full read, 722 lines pre-condensation)
-- **Action taken:** Condensed Cycles #138-152 (15 individual entries, ~200 lines) into single summary block (~30 lines). Key outcomes preserved: all 11 original prompts audited, Sienna paused, MEMORY.md 10-fix update, infra all green, new prompt rotation started (2 of 6 done). Persistent flags preserved (Phoenix/SLC post-show, KYBBA delivery, Vaz Vil 0x, Don Omar strong start).
-- **Next priority:** P2 — new prompt audit (growth-supervisor.txt next, 4 of 6 new prompts remaining)
+## 2026-03-08/09 — Cycles #153-163 Summary (Prompt Audit Completion + Post-Show Monitoring + Infra)
 
-## 2026-03-08 — Cycle #154
-- **Priority chosen:** P2 — new prompt audit (growth-supervisor.txt)
-- **What I audited:** `prompts/growth-supervisor.txt` (85 lines), `memory/growth-supervisor.md`, `scripts/growth-ledger.ts` existence verified
-- **Action taken:** 3 fixes applied:
-  1. Strengthened context isolation warning (added explicit "discard context bleed" rule matching content-finder.txt and customer-whatsapp-agent.txt patterns)
-  2. Added Business Context section — Outlet Media description, current client list, pointer to `session/last-campaigns.json` for grounding content ideas in real campaign data
-  3. Added `don-omar-agent` to delegation targets (was missing from the Available targets list)
-- **New prompt audit progress:** 3 of 6 done (content-finder #149, customer-whatsapp-agent #151, growth-supervisor #154). 3 remaining: lead-qualifier.txt, publisher-tiktok.txt, tiktok-supervisor.txt.
-- **Next priority:** P4 — monitoring (rotate away from P2, check post-show status for Phoenix/SLC)
+> Condensed from 11 individual entries during Cycle #164 memory maintenance.
 
-## 2026-03-08 — Cycle #155
-- **Priority chosen:** P4 — monitoring
-- **What I audited:** session/last-campaigns.json (fresh, 12:01 today), Supabase meta_campaigns (29 rows), campaign_snapshots (Mar 7→8)
-- **Key findings:**
-  - **11 new campaigns created** (29 total, was 18): Camila tour expansion (Houston, San Diego, Dallas, San Antonio) + Arjona new markets (Anaheim, San Diego) + Alofoke. All PAUSED with $0 spend — staged for activation.
-  - **Don Omar BCN first real performance**: $370 spent, 6.53× ROAS, 9 purchases in 2 days. Strong start on $600/day budget.
-  - **Phoenix show TODAY (Mar 8)**: ACTIVE at $500/day, 3.02× blended, 2.20× marginal. Appropriate for show-day push. Should pause tonight.
-  - **SLC show TOMORROW (Mar 9)**: ACTIVE at $800/day, 17.72× blended, 51.64× marginal. Explosive. Keep running until show.
-  - **Marginals (Mar 7→8)**: SF 13.52×, Palm Desert 12.87× (attribution recovery continuing), Anaheim 5.94×, Sac 4.57×. All healthy.
-  - **Vaz Vil**: Still 0× ($197, day 5). Already alerted Cycle #136.
-  - **KYBBA**: $5.65 daily delta on $100/day budget — delivery still broken. 9th cycle noting, not money-losing.
-  - **Sienna spend anomaly**: meta_campaigns shows spend=0 after PAUSED, but snapshots retain historical $776. Not a real issue — Meta API behavior when paused.
-  - **MEMORY.md needs update**: campaign count 18→29, Don Omar performance, new Camila cities.
-- **Action taken:** No new alerts (all flags previously raised). Logged findings.
-- **Next priority:** P3 — memory maintenance (MEMORY.md campaign count outdated, new campaigns need documenting)
+- **Prompt audits (P2: #154, #159, #161, #163):** Completed final 4 of 6 new prompts: growth-supervisor.txt (#154), lead-qualifier.txt (#159), publisher-tiktok.txt (#161), tiktok-supervisor.txt (#163). All received same 3-fix pattern: context isolation warning, memory-first enforcement, Business Context section. lead-qualifier also got explicit Score Ranges (0-100). don-omar-agent added to delegation targets in growth-supervisor, publisher-tiktok, tiktok-supervisor. **🎉 All 17 prompt files now audited by think loop** (original 11 by Cycle #145, 6 new by Cycle #163).
+- **Memory maintenance (P3: #153, #156, #157):** Cycle #153 condensed Cycles #138-152. Cycle #156 did major MEMORY.md update (29 campaigns, show dates, Known Issues) but failed to log itself — reconstructed in #157. Cycle #157 promoted heartbeat staleness to Known Issue #1, updated show dates (Phoenix→PAST, SLC→TODAY).
+- **Monitoring (P4: #155, #158, #162):** Campaign landscape evolved: 29 total (11 new staged), 8→6 ACTIVE (Phoenix+SLC paused post-show, Don Omar BCN paused by Jaime). Phoenix final $1,771, SLC final $1,131 (34.27× ROAS — extraordinary). Marginal ROAS healthy across Arjona/Camila campaigns (SF 8-10×, Palm Desert 4.7×, Anaheim 4-6×, Sacramento 3-4×). **Data pipeline gap discovered**: ingest doesn't update Supabase status when campaigns paused externally on Meta. Camila Anaheim Mar 8 snapshot anomaly (spend=0 while other dates show $2977).
+- **Infrastructure (P6: #160):** INGEST_URL = localhost:3002 (alerts silently dropped when dev server down — architectural, not bug). Heartbeat stale 25h+ but scheduler partially running (snapshots + gmail_watch updating). TM sync stale 5 days. All .env vars present. Claude CLI OK.
 
-## 2026-03-09 — Cycle #156 (reconstructed — ran but didn't log itself)
-- **Priority chosen:** P3 — memory maintenance
-- **What I audited:** MEMORY.md (full file)
-- **Action taken:** Major MEMORY.md update — Data Pipeline Status verified, Known Issues updated, Campaign Landscape updated to 29 total / 8 ACTIVE, show dates corrected. Referenced as "Cycle #156" throughout MEMORY.md. **Did NOT log entry in LEARNINGS.md** (bug — reconstructed in Cycle #157).
-- **Next priority:** (not logged)
+**Persistent flags (as of Cycle #163):**
+- ⚠️ Vaz Vil: 7+ days, $243, 0× ROAS — alerted Cycle #136
+- ⚠️ KYBBA delivery: ~$2/day on $100/day budget — 11 cycles noting, not money-losing (2.72× blended)
+- ⚠️ Heartbeat stale since Mar 8 — scheduler partially functional (syncs run, heartbeat cron broken)
+- ⚠️ Supabase status stale for paused campaigns — ingest doesn't sync PAUSED status back (code fix needed)
 
-## 2026-03-09 — Cycle #157
-- **Priority chosen:** P3 — memory maintenance (continuing from incomplete #156)
-- **What I audited:** MEMORY.md, LEARNINGS.md, Supabase meta_campaigns (29 rows), campaign_snapshots (latest Mar 8), agent_runtime_state (heartbeat + gmail_watch)
-- **Key findings:**
-  - **🔴 Heartbeat 23h stale** — last_seen Mar 8 23:05 UTC. No Mar 9 snapshots. Scheduler likely down. Promoted to Known Issue #1.
-  - **Phoenix still ACTIVE** post-show (Mar 8). No sync to confirm if Jaime paused. Stale data problem.
-  - **SLC show TODAY (Mar 9)** — still ACTIVE at $800/day, 17.7×. Expected. Should pause tonight.
-  - **Supabase spend values unchanged** from Cycle #155 — consistent with no new sync running.
-  - **Missing Cycle #156** — MEMORY.md referenced it but LEARNINGS.md had no entry. Reconstructed above.
-- **Action taken:**
-  - Reconstructed missing Cycle #156 LEARNINGS.md entry
-  - Updated MEMORY.md: heartbeat stale warning in pipeline status, scheduler-down promoted to Known Issue #1, KYBBA delivery noted 9+ cycles, show dates updated (Phoenix→PAST, SLC→TODAY), ROAS values refreshed in Upcoming Shows
-- **Next priority:** P4 — monitoring (need fresh data to check post-show pauses; if heartbeat still stale, draft owner note about scheduler)
+## 2026-03-09 — Cycles #164-167 Summary (Memory + Monitoring + Prompt + Monitoring)
 
-## 2026-03-09 — Cycle #158
-- **Priority chosen:** P4 — monitoring
-- **What I audited:** session/last-campaigns.json (fresh 18:00 today), Supabase meta_campaigns (29 rows), campaign_snapshots (Mar 7-9), agent_runtime_state
-- **Key findings:**
-  - **🟡 Heartbeat still stale** — last_seen Mar 8 23:05 UTC (~24h). But session cache updated 18:00 today — something ran sync. Either Jaime ran manually or scheduler recovered without updating heartbeat.
-  - **🟡 Phoenix + SLC: paused on Meta, stale ACTIVE in Supabase.** Session cache (18:00 today) has only 6 ACTIVE campaigns — Phoenix and SLC are NOT in it (Meta's ACTIVE filter didn't return them). But Supabase meta_campaigns still shows status=ACTIVE for both. **Data pipeline gap: ingest doesn't update status when campaigns are paused externally.** No Mar 9 snapshots for either.
-    - Phoenix final spend: $1,771 (was $1,456 on Mar 8). ~$315 show-day spend. Expected.
-    - SLC final spend: $1,131 (was $364 on Mar 8). ~$767 show-day spend at $800/day. Expected. SLC ROAS: 34.27× blended. Extraordinary.
-  - **🟡 Don Omar BCN: ACTIVE→PAUSED** — was ACTIVE last cycle ($370), now PAUSED at $370 in Supabase. Intentional pause by Jaime.
-  - **Marginal ROAS (Mar 8→9, consecutive-day caveat applies):**
-    - Palm Desert: +$302 spend, marginal **4.70×** ✅ (blended 2.76×, recovering from attribution lag)
-    - Anaheim: +$181 spend, marginal **4.18×** ✅
-    - Sacramento: +$182 spend, marginal **3.23×** ✅
-    - SF: +$79 spend, marginal **8.09×** ✅ Excellent
-    - KYBBA: +$2.20 spend — delivery still broken, 10th cycle. $2.20/day on $100/day budget.
-    - Vaz Vil: +$104 spend, marginal **0×** 🔴. Now $243 total, 0 purchases, 7 days running. Previously alerted Cycle #136.
-  - **No new actionable alerts.** All flags previously raised. Vaz Vil continuing to burn cash ($50/day) with zero returns — Jaime aware.
-- **Action taken:** Logged findings. No new alerts posted (all previously flagged).
-- **Persistent flags:**
-  - ⚠️ Vaz Vil: 7 days, $243, 0× ROAS — alerted Cycle #136
-  - ⚠️ KYBBA delivery: $2.20/day on $100/day budget — 10th cycle noting, not money-losing (2.72× blended)
-  - ⚠️ Supabase status stale for Phoenix/SLC — ingest doesn't sync PAUSED status back. Code fix needed (not agent prompt).
-- **Next priority:** P2 — new prompt audit (lead-qualifier.txt next, 3 of 6 remaining)
+> Condensed from 4 detailed entries during Cycle #168 memory maintenance. See git history for originals.
+
+- **Cycle #164 (P3 — memory):** Condensed #153-163. LEARNINGS.md 695→~570 lines.
+- **Cycle #165 (P4 — monitoring):** Session cache expanded 29→299 campaigns (all historical now included). 8→6 ACTIVE: Phoenix+SLC PAUSED post-show (expected). Marginals (Mar 7→10, 3-day): Anaheim 4.81x, Sac 3.67x, Palm Desert 4.70x, SF 9.88x — all healthy. Palm Desert budget 10x'd ($50→$500/day), spend $240→$542. KYBBA delivery still broken ($2.67/day on $100/day, 12+ cycles). Vaz Vil 0x persistent (9+ snapshots).
+- **Cycle #166 (P2 — command.txt):** 4 fixes: campaign count ~97→~300, Supabase snapshot spend=CENTS note, Advantage+ `degrees_of_freedom_spec` API syntax, snapshot query CENTS reminder.
+- **Cycle #167 (P4 — monitoring):** 6 ACTIVE stable. Marginals (Mar 8→10, 2-day): Anaheim 4.19x, Sac 3.20x, Palm Desert 3.45x, SF 8.07x — all healthy. Sacramento marginal dipped below blended (3.20 vs 4.82) but still well above 2.0.
+
+**Key findings preserved from Cycles #164-167:**
+- Campaign cache now ~300 (all historical included in sync since Mar 9)
+- Palm Desert budget 10x'd to $500/day, marginal 3.45-4.70x confirms profitable scaling
+- Sacramento marginal dipped to 3.20x — worth watching but healthy
+- All 6 ACTIVE campaigns profitable on incremental spend
+- Persistent flags: Vaz Vil 0x ($244, 10+ snapshots), KYBBA delivery broken (~$2/day on $100/day)
+- command.txt got Advantage+ API syntax (was missing — agent couldn't enforce the rule programmatically)
+- Condensation history: #0-3, #4-7, #8-9, #10-11 (#14), #12-17 (#20), #18-21 (#24), #22-28 (#29), #30-34 (#35), #35-38 (#39), #39-45 (#46), #46-53 (#58), #54-56 (#57), #57-61 (#62), #63-67 (#68), #68-76 (#77), #77-81 (#82), #82-89 (#90), #90-95 (#96 block), #96-101 (#102), #102-105 (#106), #106-109 (#110), #110-121 (#122), #122-129 (#130), #130-136 (#137), #138-152 (#153), #153-163 (#164), **#164-167 (#168)**

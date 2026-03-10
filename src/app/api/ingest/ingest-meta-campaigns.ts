@@ -35,7 +35,6 @@ export async function ingestMetaCampaigns(body: IngestPayload) {
     .upsert(rows, { onConflict: "campaign_id" });
 
   if (error) {
-    console.error("Supabase upsert error (meta_campaigns):", error);
     return dbError(error);
   }
 

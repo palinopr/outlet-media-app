@@ -63,7 +63,7 @@ curl -s "https://graph.facebook.com/v21.0/{AD_ACCOUNT_ID}/campaigns?fields=id,na
 curl -s "https://graph.facebook.com/v21.0/{AD_ACCOUNT_ID}/campaigns?fields=id,name,status,objective,daily_budget,lifetime_budget,start_time&effective_status=%5B%22ACTIVE%22%5D&limit=100&access_token={TOKEN}"
 ```
 Note: The filter parameter is `effective_status` (NOT `status`). Value must be a URL-encoded JSON array: `%5B%22ACTIVE%22%5D` = `["ACTIVE"]`.
-Meta defaults to 25 results per page — always use `&limit=100`. If `paging.next` appears in the response, follow it to get more results. There are ~97 campaigns in this account.
+Meta defaults to 25 results per page — always use `&limit=100`. If `paging.next` appears in the response, follow it to get more results. There are ~300 campaigns in this account (most are PAUSED historical campaigns). Use `effective_status` filter when you only need ACTIVE ones.
 
 ### Get campaign insights (last 30 days):
 ```bash
@@ -414,7 +414,16 @@ Follow these EVERY time you create a campaign, adset, or ad creative:
   - Known artist pages:
     - Don Omar: Page ID `21608835481`, IG ID `17841400670290220`
     - Default (Zamora/most clients): Page ID `175118299508364`, IG ID `17841402356610735`
-- **Advantage+ Creative Enhancements: ALL OFF (set to 0)**. Jaime wants zero enhancements enabled. Turn off: Text improvements, Enhance CTA, Flex media, Show summaries, Translate text, Add overlays, and all others.
+- **Advantage+ Creative Enhancements: ALL OFF**. Jaime wants zero enhancements enabled.
+  When creating ad creatives via API, include `degrees_of_freedom_spec` to disable all enhancements:
+  ```json
+  "degrees_of_freedom_spec": {
+    "creative_features_spec": {
+      "standard_enhancements": {"enroll_status": "OPT_OUT"}
+    }
+  }
+  ```
+  Pass this as a top-level field on the adcreative POST alongside `asset_feed_spec`. This disables: text improvements, CTA enhancement, flex media, summaries, translations, overlays.
 - **EU Beneficiary & Payer: Always "OUTLET MEDIA INC"**. Required for ad sets targeting EU audiences (e.g., Don Omar BCN). Set in Advertising Settings. Both beneficiary and payer = OUTLET MEDIA INC (same entity).
 
 ---
@@ -516,7 +525,9 @@ Levels: "info", "warn", "error" (Zod-validated — "warning" and "critical" will
 
 Get SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from .env or ../.env.local.
 
-**Column naming note:** The campaign name column is `name` (NOT `campaign_name`). Use `select=campaign_id,name,status,...` in queries.
+**Column naming gotchas:**
+- `meta_campaigns`: name column is `name` (NOT `campaign_name`). Use `select=campaign_id,name,status,...`
+- `campaign_snapshots`: spend column is `spend` — value is in CENTS despite the generic name. Divide by 100 for dollars. `roas` is a float.
 
 ### Read all campaigns:
 ```bash
@@ -538,7 +549,7 @@ curl -s "${SUPABASE_URL}/rest/v1/campaign_snapshots?campaign_id=eq.{ID}&order=sn
   -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
 ```
-Snapshots are created automatically by the ingest on each sync (UNIQUE campaign_id + snapshot_date). Use for ROAS trend and daily spend analysis.
+Snapshots are created automatically by the ingest on each sync (UNIQUE campaign_id + snapshot_date, ON CONFLICT DO NOTHING = write-once). Use for ROAS trend and daily spend analysis. **Remember: `spend` in snapshots is in CENTS** — divide by 100 before comparing to Meta dollar values or computing marginal ROAS.
 
 ### Read events:
 ```bash

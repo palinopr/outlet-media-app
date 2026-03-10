@@ -74,6 +74,7 @@
 
 ## Learned Patterns
 - **ALWAYS read the full thread from start to finish before summarizing or replying.** Never skim or skip earlier messages. Understand the full context — who started it, what was asked, what was answered — before saying anything. This is non-negotiable.
+- **"I revised" = Jaime sent a reply himself.** When he says this: (1) read his sent mail to learn his tone/style, (2) archive the thread, (3) mark as read. Do NOT ask what he revised — just find and process it.
 - Mirna introduces Jaime to venues, then Jaime shares pixel ID
 - Venue asks "what pixel?" -> reply with Meta pixel ID, short and clean
 - When venue asks about OTT/OOH -> "My role is strictly on the media buying side"
@@ -156,3 +157,14 @@
 - Service account key exposed on GitHub; Google disabled it (root cause of invalid_grant)
 - TM pricing contact: Kelly Eastman (added by Melissa Cubit)
 - Mirna asks Jaime to explain 30% dynamic pricing strategy to TM team
+- Jaime replied to Melissa Cubit (Mar 9): explained 30% dynamic pricing (open 30% capacity, dynamically release seats as sold), requested same TM1 scopes as Mirna, asked about API access to shows
+- TM contacts on this thread: Melissa Cubit, Ashley Weltner, Kelly Eastman (pricing)
+
+<!-- auto-learned 2026-03-10 -->
+- "I revised" rule: agent must read sent reply + archive thread, no questions
+
+<!-- auto-learned 2026-03-10 -->
+- Vercel payment failed, shutdown warning (needs payment method update)
+- Amazon Seller credit card update needed + balance due
+- DistroKid billing info update needed
+- Emily Sharp: Arjona Anaheim press thread (ball on Mirna)
