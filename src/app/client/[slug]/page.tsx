@@ -9,24 +9,15 @@ import {
   Sparkles,
   Target,
   Ticket,
+  Lightbulb,
 } from "lucide-react";
 import { currentUser } from "@clerk/nextjs/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
-import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
-import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
-import { EventOperationsSection } from "@/components/events/event-operations-section";
-import {
-  getDashboardActionCenter,
-  getDashboardOpsSummary,
-} from "@/features/dashboard/server";
-import { getEventOperationsSummary } from "@/features/events/server";
-import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
-import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
 import { fmtUsd, fmtNum, roasColor, slugToLabel, fmtTodayLong } from "@/lib/formatters";
-import { roasLabel, DATE_OPTIONS } from "./lib";
+import { roasLabel, DATE_OPTIONS, generateInsights } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
 import { DateRangePicker } from "./components/date-range-picker";
 import { ClientPortalFooter } from "./components/client-portal-footer";
@@ -57,36 +48,9 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const range = parseRange(rangeParam);
 
   const { scope } = await requireClientAccess(slug);
-  const [dashboardData, opsSummary, actionCenter, eventOperations, agentOutcomes] = await Promise.all([
-    getData(slug, range, scope),
-    getDashboardOpsSummary({
-      clientSlug: slug,
-      limit: 5,
-      mode: "client",
-      scopeCampaignIds: scope?.allowedCampaignIds,
-    }),
-    getDashboardActionCenter({
-      clientSlug: slug,
-      limit: 4,
-      mode: "client",
-      scopeCampaignIds: scope?.allowedCampaignIds,
-      scopeEventIds: scope?.allowedEventIds,
-    }),
-    getEventOperationsSummary({
-      clientSlug: slug,
-      limit: 5,
-      mode: "client",
-      scope,
-    }),
-    listAgentOutcomes({
-      audience: "shared",
-      clientSlug: slug,
-      limit: 4,
-      scopeCampaignIds: scope?.allowedCampaignIds,
-      scopeEventIds: scope?.allowedEventIds,
-    }),
-  ]);
+  const dashboardData = await getData(slug, range, scope);
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel, trendData } = dashboardData;
+  const insights = generateInsights(heroStats, campaigns, events, audience);
 
   const clientName = slugToLabel(slug);
 
@@ -192,14 +156,24 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         </div>
       </div>
 
-      <DashboardOpsSummarySection
-        campaignHrefPrefix={`/client/${slug}/campaign`}
-        description="A simple summary of the approvals, next steps, open threads, and recent updates that need attention across your campaigns."
-        emptyState="Your shared campaign workflows look clear right now."
-        summary={opsSummary}
-        title="What needs attention"
-        variant="client"
-      />
+      {/* -- Smart Insights -- */}
+      {insights.length > 0 && (
+        <div className="glass-card p-5 space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Lightbulb className="h-3.5 w-3.5 text-amber-400/70" />
+            <span className="section-label">Insights</span>
+          </div>
+          {insights.map((insight, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <span className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${
+                insight.type === "positive" ? "bg-emerald-400" :
+                insight.type === "warning" ? "bg-amber-400" : "bg-white/40"
+              }`} />
+              <p className="text-sm text-white/70 leading-relaxed">{insight.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {trendData.length > 0 && (
         <section>
@@ -228,30 +202,6 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
         </section>
       )}
 
-      <DashboardActionCenterSection
-        actionCenter={actionCenter}
-        campaignHrefPrefix={`/client/${slug}/campaign`}
-        eventHrefPrefix={`/client/${slug}/event`}
-        variant="client"
-      />
-
-      <EventOperationsSection
-        description="A simple events readout for what needs promotion follow-through, responses, or ticketing attention."
-        hrefPrefix={`/client/${slug}/event`}
-        summary={eventOperations}
-        title="Event snapshot"
-        variant="client"
-      />
-
-      <AgentOutcomesPanel
-        outcomes={agentOutcomes}
-        title="Agent follow-through"
-        description="Latest shared agent reviews and recommendations tied to your campaigns."
-        emptyState="No shared agent follow-through is available yet."
-        variant="client"
-        campaignHrefPrefix={`/client/${slug}/campaign`}
-        eventHrefPrefix={`/client/${slug}/event`}
-      />
 
       {/* -- Campaign Cards with Filter -- */}
       {campaigns.length > 0 && (

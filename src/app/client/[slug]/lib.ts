@@ -252,7 +252,7 @@ export function generateInsights(
   // Best performing campaign
   const withRoas = campaigns.filter((c) => c.roas != null && c.spend > 0);
   if (withRoas.length >= 2) {
-    const best = withRoas.sort((a, b) => (b.roas ?? 0) - (a.roas ?? 0))[0];
+    const best = [...withRoas].sort((a, b) => (b.roas ?? 0) - (a.roas ?? 0))[0];
     out.push({
       text: `"${best.name}" is your top performer at ${best.roas?.toFixed(1)}x ROAS.`,
       type: "positive",
@@ -303,6 +303,44 @@ export function generateInsights(
   }
 
   return out.slice(0, 3);
+}
+
+// --- Campaign-page insights (spending efficiency + audience engagement) ---
+
+export function generateCampaignInsights(campaigns: CampaignCard[]): Insight[] {
+  const out: Insight[] = [];
+  const totalSpend = campaigns.reduce((a, c) => a + c.spend, 0);
+  const totalRevenue = campaigns.reduce((a, c) => a + (c.revenue ?? 0), 0);
+  const totalClicks = campaigns.reduce((a, c) => a + c.clicks, 0);
+  const totalImpressions = campaigns.reduce((a, c) => a + c.impressions, 0);
+
+  const withRoas = campaigns.filter((c) => c.roas != null && c.spend > 10);
+  if (withRoas.length >= 2) {
+    const sorted = [...withRoas].sort((a, b) => (b.roas ?? 0) - (a.roas ?? 0));
+    out.push({
+      text: `"${sorted[0].name}" leads at ${sorted[0].roas?.toFixed(1)}x ROAS -- consider increasing its budget.`,
+      type: "positive",
+    });
+  }
+
+  const active = campaigns.filter((c) => c.status === "ACTIVE");
+  const under = active.filter((c) => c.roas != null && c.roas < 1 && c.spend > 10);
+  if (under.length > 0) {
+    out.push({
+      text: `${under.length} active campaign${under.length > 1 ? "s" : ""} below 1x ROAS. Review targeting or pause to reallocate budget.`,
+      type: "warning",
+    });
+  }
+
+  const avgCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : null;
+  if (avgCtr != null) {
+    const msg = avgCtr >= 1.5
+      ? "Ads are resonating with the audience."
+      : "Testing new creatives could boost engagement.";
+    out.push({ text: `Average click-through rate is ${avgCtr.toFixed(2)}%. ${msg}`, type: avgCtr >= 1.5 ? "positive" : "neutral" });
+  }
+
+  return out.slice(0, 4);
 }
 
 // --- Campaign detail recommendations ---

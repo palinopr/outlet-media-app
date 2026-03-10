@@ -1,13 +1,18 @@
 import type { Metadata } from "next";
-import { DollarSign, Megaphone, TrendingUp, MousePointerClick, Sparkles, Clock } from "lucide-react";
-import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
+import {
+  DollarSign,
+  Megaphone,
+  TrendingUp,
+  MousePointerClick,
+  Sparkles,
+  Clock,
+  Lightbulb,
+  BarChart3,
+} from "lucide-react";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
-import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
-import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
-import { getCampaignsWorkflowData } from "@/features/campaigns/server";
 import { fmtUsd, fmtNum, roasColor, slugToLabel, fmtTodayLong } from "@/lib/formatters";
 import { getCampaignsPageData } from "../data";
-import { buildTrendData } from "../lib";
+import { buildTrendData, roasLabel, generateCampaignInsights } from "../lib";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { CampaignsTable } from "./campaigns-table";
 import { requireClientAccess } from "@/features/client-portal/access";
@@ -25,30 +30,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// --- Page ---
-
 export default async function ClientCampaigns({ params }: Props) {
   const { slug } = await params;
   const { scope } = await requireClientAccess(slug, "meta_ads");
   const clientName = slugToLabel(slug);
 
-  const [{ campaigns, snapshots, dataSource }, workflow] = await Promise.all([
-    getCampaignsPageData(slug, scope),
-    getCampaignsWorkflowData({
-      clientSlug: slug,
-      limit: 4,
-      mode: "client",
-      scope,
-    }),
-  ]);
+  const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug, scope);
   const trendData = buildTrendData(snapshots);
 
   const totalSpend       = campaigns.reduce((a, c) => a + c.spend, 0);
   const totalRevenue     = campaigns.reduce((a, c) => a + (c.revenue ?? 0), 0);
   const totalImpressions = campaigns.reduce((a, c) => a + c.impressions, 0);
+  const totalClicks      = campaigns.reduce((a, c) => a + c.clicks, 0);
   const blendedRoas      = totalSpend > 0 ? totalRevenue / totalSpend : null;
   const hasData          = campaigns.length > 0;
+  const avgCtr           = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : null;
+  const avgCpc           = totalClicks > 0 ? totalSpend / totalClicks : null;
+  const avgCpm           = totalImpressions > 0 ? (totalSpend / totalImpressions) * 1000 : null;
 
+  const insights = generateCampaignInsights(campaigns);
   const now = fmtTodayLong();
 
   const heroStats = [
@@ -64,7 +64,9 @@ export default async function ClientCampaigns({ params }: Props) {
     {
       label: "Ad Revenue",
       value: fmtUsd(totalRevenue),
-      sub: "attributed to campaigns",
+      sub: blendedRoas != null
+        ? `$${blendedRoas.toFixed(2)} return per dollar`
+        : "attributed to campaigns",
       icon: TrendingUp,
       iconBg: "bg-violet-500/10",
       iconRing: "ring-violet-500/20",
@@ -74,16 +76,16 @@ export default async function ClientCampaigns({ params }: Props) {
       label: "Blended ROAS",
       value: blendedRoas != null ? blendedRoas.toFixed(1) + "x" : "--",
       valueColor: roasColor(blendedRoas),
-      sub: "return on ad spend",
+      sub: roasLabel(blendedRoas),
       icon: Megaphone,
       iconBg: "bg-emerald-500/10",
       iconRing: "ring-emerald-500/20",
       iconColor: "text-emerald-400",
     },
     {
-      label: "Total Impressions",
+      label: "Audience Reach",
       value: fmtNum(totalImpressions),
-      sub: "across all campaigns",
+      sub: `${fmtNum(totalClicks)} clicks`,
       icon: MousePointerClick,
       iconBg: "bg-rose-500/10",
       iconRing: "ring-rose-500/20",
@@ -113,10 +115,7 @@ export default async function ClientCampaigns({ params }: Props) {
           </div>
 
           <div className="flex items-center gap-3 self-start flex-wrap">
-            <a
-              href={`/client/${slug}`}
-              className="text-xs text-white/50 hover:text-white/80 transition-colors"
-            >
+            <a href={`/client/${slug}`} className="text-xs text-white/50 hover:text-white/80 transition-colors">
               Back to overview
             </a>
             <div className="flex items-center gap-2">
@@ -156,32 +155,54 @@ export default async function ClientCampaigns({ params }: Props) {
         ))}
       </div>
 
-      <DashboardOpsSummarySection
-        campaignHrefPrefix={`/client/${slug}/campaign`}
-        description="Keep campaign performance tied to the approvals, next steps, and conversations that still need attention."
-        emptyState="Your shared campaign workflow looks clear right now."
-        summary={workflow.opsSummary}
-        title="Campaign workflow summary"
-        variant="client"
-      />
+      {/* -- Reach & Efficiency -- */}
+      {hasData && (
+        <div className="grid grid-cols-3 gap-3">
+          <div className="glass-card p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <BarChart3 className="h-3 w-3 text-white/40" />
+              <span className="text-xs font-semibold tracking-wider uppercase text-white/50">CPM</span>
+            </div>
+            <p className="text-lg font-bold text-white">{avgCpm != null ? fmtUsd(avgCpm) : "--"}</p>
+            <p className="text-xs text-white/35 mt-1">cost per 1,000 views</p>
+          </div>
+          <div className="glass-card p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <MousePointerClick className="h-3 w-3 text-white/40" />
+              <span className="text-xs font-semibold tracking-wider uppercase text-white/50">CPC</span>
+            </div>
+            <p className="text-lg font-bold text-white">{avgCpc != null ? fmtUsd(avgCpc) : "--"}</p>
+            <p className="text-xs text-white/35 mt-1">cost per click</p>
+          </div>
+          <div className="glass-card p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-3 w-3 text-white/40" />
+              <span className="text-xs font-semibold tracking-wider uppercase text-white/50">Click Rate</span>
+            </div>
+            <p className="text-lg font-bold text-white">{avgCtr != null ? avgCtr.toFixed(2) + "%" : "--"}</p>
+            <p className="text-xs text-white/35 mt-1">of viewers who clicked</p>
+          </div>
+        </div>
+      )}
 
-      <DashboardActionCenterSection
-        actionCenter={workflow.actionCenter}
-        campaignHrefPrefix={`/client/${slug}/campaign`}
-        description="Open campaign approvals and shared campaign threads that still need a response."
-        eventHrefPrefix={`/client/${slug}/event`}
-        showCrmFollowUps={false}
-        variant="client"
-      />
-
-      <AgentOutcomesPanel
-        campaignHrefPrefix={`/client/${slug}/campaign`}
-        description="Agent work connected to campaign operations."
-        eventHrefPrefix={`/client/${slug}/event`}
-        outcomes={workflow.agentOutcomes}
-        title="Campaign agent follow-through"
-        variant="client"
-      />
+      {/* -- Performance Insights -- */}
+      {insights.length > 0 && (
+        <div className="glass-card p-5 space-y-3">
+          <div className="flex items-center gap-2 mb-1">
+            <Lightbulb className="h-3.5 w-3.5 text-amber-400/70" />
+            <span className="text-xs font-semibold tracking-wider uppercase text-white/60">Performance Insights</span>
+          </div>
+          {insights.map((insight, i) => (
+            <div key={i} className="flex items-start gap-3">
+              <span className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${
+                insight.type === "positive" ? "bg-emerald-400" :
+                insight.type === "warning" ? "bg-amber-400" : "bg-white/40"
+              }`} />
+              <p className="text-sm text-white/70 leading-relaxed">{insight.text}</p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* -- Trend Charts -- */}
       {hasData && trendData.length > 1 && (
@@ -203,7 +224,7 @@ export default async function ClientCampaigns({ params }: Props) {
         </div>
       )}
 
-      {/* -- Campaigns Table with Search -- */}
+      {/* -- Campaigns Table -- */}
       <CampaignsTable campaigns={campaigns} />
 
       {/* -- Footer -- */}
