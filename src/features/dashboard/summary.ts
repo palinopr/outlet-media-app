@@ -142,7 +142,11 @@ function buildMetrics(
       key: "recent_updates",
       label: "Recent updates",
       value: recentUpdates,
-      detail: describeCount(recentUpdates, "update in the last 7 days"),
+      detail: describeCount(
+        recentUpdates,
+        "update in the last 7 days",
+        "updates in the last 7 days",
+      ),
     },
   ];
 }

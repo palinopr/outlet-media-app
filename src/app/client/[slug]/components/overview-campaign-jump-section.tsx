@@ -104,6 +104,7 @@ export function OverviewCampaignJumpSection({
     attentionCampaigns.map((campaign) => [campaign.campaignId, campaign]),
   );
   const [search, setSearch] = useState("");
+  const hasReviewMetrics = metrics.some((metric) => metric.value > 0);
 
   const query = search.trim().toLowerCase();
   const sortedCampaigns = [...campaigns].sort((left, right) =>
@@ -136,7 +137,7 @@ export function OverviewCampaignJumpSection({
         : "Recent active campaigns";
 
   return (
-    <section className="grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+    <section className={hasReviewMetrics ? "grid gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]" : ""}>
       <div className="glass-card p-5 sm:p-6">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
@@ -229,45 +230,47 @@ export function OverviewCampaignJumpSection({
         )}
       </div>
 
-      <div className="glass-card p-5 sm:p-6">
-        <div className="flex items-center gap-2">
-          <ListChecks className="h-3.5 w-3.5 text-white/50" />
-          <span className="section-label">What Needs Review</span>
-        </div>
-        <p className="mt-2 text-sm text-white/55">
-          A quick breakdown of the work that is most likely to send you into a campaign page.
-        </p>
+      {hasReviewMetrics && (
+        <div className="glass-card p-5 sm:p-6">
+          <div className="flex items-center gap-2">
+            <ListChecks className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">What Needs Review</span>
+          </div>
+          <p className="mt-2 text-sm text-white/55">
+            A quick breakdown of the work that is most likely to send you into a campaign page.
+          </p>
 
-        <div className="mt-4 space-y-3">
-          {metrics.map((metric) => {
-            const tone = summaryTone(metric.key);
-            const Icon = tone.icon;
-            return (
-              <div
-                key={metric.key}
-                className={`rounded-2xl border ${tone.border} ${tone.bg} p-4`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-white/50">
-                      {metric.label}
-                    </p>
-                    <p className="mt-1 text-xs text-white/55">
-                      {metric.detail}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <Icon className={`h-3.5 w-3.5 ${tone.accent}`} />
-                    <span className={`text-xl font-bold ${tone.accent}`}>
-                      {metric.value}
-                    </span>
+          <div className="mt-4 space-y-3">
+            {metrics.map((metric) => {
+              const tone = summaryTone(metric.key);
+              const Icon = tone.icon;
+              return (
+                <div
+                  key={metric.key}
+                  className={`rounded-2xl border ${tone.border} ${tone.bg} p-4`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-white/50">
+                        {metric.label}
+                      </p>
+                      <p className="mt-1 text-xs text-white/55">
+                        {metric.detail}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Icon className={`h-3.5 w-3.5 ${tone.accent}`} />
+                      <span className={`text-xl font-bold ${tone.accent}`}>
+                        {metric.value}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
     </section>
   );
 }
