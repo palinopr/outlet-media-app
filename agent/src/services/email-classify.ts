@@ -10,11 +10,9 @@ import type {
   EmailTriageDecision,
   BusinessContext,
   StyleExample,
-  ManagedLabel,
 } from "./email-types.js";
 import {
   MY_EMAIL,
-  MAX_BODY_CHARS,
   IMPORTANCE_RANK,
   TEAM_DOMAINS,
   CLIENT_DOMAINS,
@@ -22,7 +20,6 @@ import {
   FINANCE_DOMAINS,
   TECH_ALERT_DOMAINS,
   VIP_SENDERS,
-  getManagedLabels,
 } from "./email-types.js";
 
 // ---------------------------------------------------------------------------

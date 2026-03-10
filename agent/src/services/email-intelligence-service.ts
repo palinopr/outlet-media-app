@@ -13,6 +13,7 @@ export {
 
 import { runClaude } from "../runner.js";
 import type {
+  EmailMessageDetail,
   EmailProcessResult,
   EmailSweepResult,
   EmailLogRecord,
@@ -38,7 +39,6 @@ import {
 import {
   findExistingEmailEvent,
   readMessageDetail,
-  listUnhandledUnreadInboxMessageIds as _listUnhandled,
   readThreadMessages,
   applyLabels,
   archiveMessage,
@@ -59,7 +59,7 @@ import { getServiceSupabase } from "./supabase-service.js";
 // Processing
 // ---------------------------------------------------------------------------
 
-async function processInboundMessage(message: ReturnType<typeof readMessageDetail> extends Promise<infer T> ? T : never): Promise<EmailProcessResult> {
+async function processInboundMessage(message: EmailMessageDetail): Promise<EmailProcessResult> {
   const triage = classifyInboundMessage(message);
   const [threadMessages, businessContext, activityContext, styleExamples, ownerCorrections] = await Promise.all([
     readThreadMessages(message.threadId),
@@ -180,7 +180,7 @@ async function processInboundMessage(message: ReturnType<typeof readMessageDetai
   };
 }
 
-async function processOutboundMessage(message: ReturnType<typeof readMessageDetail> extends Promise<infer T> ? T : never): Promise<EmailProcessResult> {
+async function processOutboundMessage(message: EmailMessageDetail): Promise<EmailProcessResult> {
   const triage = classifyOutboundMessage(message);
   await upsertEmailEvent(
     message,

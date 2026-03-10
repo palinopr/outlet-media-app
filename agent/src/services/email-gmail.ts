@@ -4,7 +4,6 @@ import { fileURLToPath } from "node:url";
 import { google, gmail_v1 } from "googleapis";
 import { getServiceSupabase } from "./supabase-service.js";
 import type {
-  EmailAddress,
   EmailClassification,
   EmailDirection,
   EmailImportance,
@@ -17,7 +16,6 @@ import type {
   EventSnapshot,
   StyleExample,
   OwnerEmailCorrection,
-  EmailLogRecord,
 } from "./email-types.js";
 import {
   SERVICE_ACCOUNT_PATH,
@@ -31,6 +29,7 @@ import {
   MANUAL_SWEEP_LIMIT,
   PUSH_RECOVERY_LIMIT,
   WATCHED_MAILBOX_LABELS,
+  getManagedLabels,
 } from "./email-types.js";
 import {
   clip,
@@ -201,8 +200,6 @@ export async function readThreadMessages(threadId: string): Promise<EmailMessage
 // ---------------------------------------------------------------------------
 // Label management
 // ---------------------------------------------------------------------------
-
-import { getManagedLabels } from "./email-types.js";
 
 async function ensureManagedLabels(): Promise<Map<string, string>> {
   const gmail = getGmailClient();
