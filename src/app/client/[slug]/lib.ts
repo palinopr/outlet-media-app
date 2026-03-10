@@ -347,6 +347,10 @@ export function findBestHour(hourly: HourlyBreakdown[]): HourlyBreakdown | null 
   if (hourly.length === 0) return null;
 
   const totalImpressions = hourly.reduce((sum, row) => sum + row.impressions, 0);
+  const totalClicks = hourly.reduce((sum, row) => sum + row.clicks, 0);
+  const totalSpend = hourly.reduce((sum, row) => sum + row.spend, 0);
+  if (totalImpressions <= 0 && totalClicks <= 0 && totalSpend <= 0) return null;
+
   const meaningfulThreshold = Math.max(50, Math.round(totalImpressions * 0.04));
   const candidates = hourly.filter((row) => row.impressions >= meaningfulThreshold);
 
@@ -443,6 +447,13 @@ export function findBestDayOfWeek(daily: DailyPoint[]): DayOfWeekPerformance | n
   if (summary.length === 0) return null;
 
   const totalImpressions = summary.reduce((sum, row) => sum + row.impressions, 0);
+  const totalClicks = summary.reduce((sum, row) => sum + row.clicks, 0);
+  const totalSpend = summary.reduce((sum, row) => sum + row.spend, 0);
+  const totalRevenue = summary.reduce((sum, row) => sum + (row.revenue ?? 0), 0);
+  if (totalImpressions <= 0 && totalClicks <= 0 && totalSpend <= 0 && totalRevenue <= 0) {
+    return null;
+  }
+
   const meaningfulThreshold = Math.max(100, Math.round(totalImpressions * 0.08));
   const candidates = summary.filter((row) => row.impressions >= meaningfulThreshold);
   const pool = candidates.length > 0 ? candidates : summary;
@@ -476,6 +487,10 @@ export function findTopMarket(geography: GeographyBreakdown[]): GeographyBreakdo
   if (geography.length === 0) return null;
 
   const totalImpressions = geography.reduce((sum, row) => sum + row.impressions, 0);
+  const totalClicks = geography.reduce((sum, row) => sum + row.clicks, 0);
+  const totalSpend = geography.reduce((sum, row) => sum + row.spend, 0);
+  if (totalImpressions <= 0 && totalClicks <= 0 && totalSpend <= 0) return null;
+
   const meaningfulThreshold = Math.max(100, Math.round(totalImpressions * 0.08));
   const candidates = geography.filter((row) => row.impressions >= meaningfulThreshold);
   const pool = candidates.length > 0 ? candidates : geography;
@@ -495,8 +510,24 @@ export function findTopMarket(geography: GeographyBreakdown[]): GeographyBreakdo
 export function findTopCreative(ads: AdCard[]): AdCard | null {
   if (ads.length === 0) return null;
 
-  const meaningful = ads.filter((ad) => ad.spend >= 10 || ad.impressions >= 500);
-  const pool = meaningful.length > 0 ? meaningful : ads;
+  const measurable = ads.filter(
+    (ad) =>
+      ad.spend > 0 ||
+      ad.impressions > 0 ||
+      ad.clicks > 0 ||
+      (ad.revenue ?? 0) > 0 ||
+      ad.roas != null,
+  );
+  if (measurable.length === 0) return null;
+
+  const meaningful = measurable.filter(
+    (ad) =>
+      ad.spend >= 10 ||
+      ad.impressions >= 500 ||
+      ad.clicks >= 5 ||
+      (ad.revenue ?? 0) > 0,
+  );
+  const pool = meaningful.length > 0 ? meaningful : measurable;
   const withRoas = pool.filter((ad) => ad.roas != null);
 
   if (withRoas.length > 0) {
@@ -556,14 +587,16 @@ export function generateRecommendations(
   // Best audience segment
   if (ageGender.length > 0) {
     const totalImp = ageGender.reduce((s, r) => s + r.impressions, 0);
-    const sorted = [...ageGender].sort((a, b) => b.impressions - a.impressions);
-    const top = sorted[0];
-    const topPct = totalImp > 0 ? ((top.impressions / totalImp) * 100).toFixed(0) : "0";
-    recs.push({
-      title: `${top.gender} ${top.age} is your strongest segment`,
-      detail: `This group accounts for ${topPct}% of impressions. Consider tailoring creative messaging to this demographic.`,
-      type: "info",
-    });
+    if (totalImp > 0) {
+      const sorted = [...ageGender].sort((a, b) => b.impressions - a.impressions);
+      const top = sorted[0];
+      const topPct = ((top.impressions / totalImp) * 100).toFixed(0);
+      recs.push({
+        title: `${top.gender} ${top.age} is your strongest segment`,
+        detail: `This group accounts for ${topPct}% of impressions. Consider tailoring creative messaging to this demographic.`,
+        type: "info",
+      });
+    }
 
     // CTR comparison between genders
     const genderCtr = new Map<string, { clicks: number; impressions: number }>();
@@ -586,13 +619,17 @@ export function generateRecommendations(
   // Best placement
   if (placements.length > 1) {
     const totalImp = placements.reduce((s, r) => s + r.impressions, 0);
-    const byCtr = [...placements].filter((p) => p.impressions > totalImp * 0.05).sort((a, b) => (b.ctr ?? 0) - (a.ctr ?? 0));
-    if (byCtr.length > 0 && byCtr[0].ctr != null) {
-      recs.push({
-        title: `${byCtr[0].platform} ${byCtr[0].position} drives highest engagement`,
-        detail: `CTR of ${byCtr[0].ctr.toFixed(2)}% in this placement. Allocating more delivery here could improve overall performance.`,
-        type: "opportunity",
-      });
+    if (totalImp > 0) {
+      const byCtr = [...placements]
+        .filter((p) => p.impressions > totalImp * 0.05)
+        .sort((a, b) => (b.ctr ?? 0) - (a.ctr ?? 0));
+      if (byCtr.length > 0 && byCtr[0].ctr != null) {
+        recs.push({
+          title: `${byCtr[0].platform} ${byCtr[0].position} drives highest engagement`,
+          detail: `CTR of ${byCtr[0].ctr.toFixed(2)}% in this placement. Allocating more delivery here could improve overall performance.`,
+          type: "opportunity",
+        });
+      }
     }
   }
 
