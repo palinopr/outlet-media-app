@@ -194,7 +194,15 @@ export async function checkMeetingReminders(): Promise<string> {
   });
 
   const events = response.data.items ?? [];
-  const newEvents = events.filter((ev) => ev.id && !notifiedEventIds.has(ev.id));
+  // Only notify for events that haven't started yet (filters out in-progress events)
+  const futureEvents = events.filter((ev) => {
+    const startStr = ev.start?.dateTime ?? ev.start?.date;
+    if (!startStr) return false;
+    return new Date(startStr).getTime() > now.getTime();
+  });
+  const dedupKey = (ev: { id?: string | null; start?: { dateTime?: string | null } }) =>
+    `${ev.id ?? ""}:${ev.start?.dateTime ?? ""}`;
+  const newEvents = futureEvents.filter((ev) => ev.id && !notifiedEventIds.has(dedupKey(ev)));
 
   if (newEvents.length === 0) {
     return "No upcoming meetings in the next few minutes.";
@@ -215,9 +223,8 @@ export async function checkMeetingReminders(): Promise<string> {
     await Promise.all([
       notifyOwnerImportant(message, { channel: "boss" }),
       notifyChannel("meetings", message).catch(() => {}),
-      notifyChannel("general", message).catch(() => {}),
     ]);
-    notifiedEventIds.set(event.id, Date.now());
+    notifiedEventIds.set(dedupKey(event), Date.now());
     notifications.push(event.summary ?? "(no title)");
   }
 
