@@ -120,6 +120,11 @@ async function loadAllClientSlugs(): Promise<string[]> {
   return data?.map((r) => r.slug).filter(Boolean) ?? [];
 }
 
+function safeParseFloat(s: string | null | undefined): number | null {
+  const n = parseFloat(s ?? "");
+  return Number.isFinite(n) ? n : null;
+}
+
 function buildCampaignFilter(ids: string[]): string {
   return JSON.stringify([
     { field: "campaign.id", operator: "IN", value: ids },
@@ -258,9 +263,9 @@ export async function fetchAllCampaigns(
         revenue: roas != null ? spend * roas : null,
         impressions: insight ? parseInt(insight.impressions) || 0 : 0,
         clicks: insight ? parseInt(insight.clicks) || 0 : 0,
-        ctr: insight ? (Number.isFinite(parseFloat(insight.ctr)) ? parseFloat(insight.ctr) : null) : null,
-        cpc: insight ? (Number.isFinite(parseFloat(insight.cpc)) ? parseFloat(insight.cpc) : null) : null,
-        cpm: insight ? (Number.isFinite(parseFloat(insight.cpm)) ? parseFloat(insight.cpm) : null) : null,
+        ctr: insight ? safeParseFloat(insight.ctr) : null,
+        cpc: insight ? safeParseFloat(insight.cpc) : null,
+        cpm: insight ? safeParseFloat(insight.cpm) : null,
         dailyBudget: c.daily_budget ? parseInt(c.daily_budget) / 100 : null,
         startTime: c.start_time ?? null,
       };

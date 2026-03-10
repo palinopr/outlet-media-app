@@ -71,6 +71,27 @@ function invalidateWebhookCache() {
   cachedWebhook = null;
 }
 
+function dispatchWebhookMessage(botToken: string, payload: object): void {
+  getChannelId(botToken)
+    .then((channelId) => {
+      if (!channelId) return;
+      return getOrCreateWebhook(botToken, channelId);
+    })
+    .then(async (webhook) => {
+      if (!webhook) return;
+      const res = await fetch(
+        `https://discord.com/api/v10/webhooks/${webhook.id}/${webhook.token}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
+      if (res.status === 401 || res.status === 404) invalidateWebhookCache();
+    })
+    .catch((e) => console.warn("[notify-creative] webhook post failed:", e instanceof Error ? e.message : String(e)));
+}
+
 /**
  * Notify #creative that new assets were imported and need classification.
  * The creative agent picks these up on its next sweep.
@@ -79,34 +100,17 @@ export function notifyCreativeNewAssets(clientSlug: string, count: number): void
   const botToken = process.env.DISCORD_TOKEN;
   if (!botToken) return;
 
-  getChannelId(botToken)
-    .then((channelId) => {
-      if (!channelId) return;
-      return getOrCreateWebhook(botToken, channelId);
-    })
-    .then(async (webhook) => {
-      if (!webhook) return;
-      const res = await fetch(
-        `https://discord.com/api/v10/webhooks/${webhook.id}/${webhook.token}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: AGENT_NAME,
-            avatar_url: AGENT_AVATAR,
-            embeds: [{
-              color: 0x4CAF50,
-              title: `${count} new asset${count !== 1 ? "s" : ""} imported`,
-              description: `**Client:** \`${clientSlug}\`\nReady for classification. Run \`run creative-classify\` or wait for the next sweep.`,
-              footer: { text: "Asset Agent" },
-              timestamp: new Date().toISOString(),
-            }],
-          }),
-        },
-      );
-      if (res.status === 401 || res.status === 404) invalidateWebhookCache();
-    })
-    .catch((e) => console.warn("[notify-creative] webhook post failed:", e instanceof Error ? e.message : String(e)));
+  dispatchWebhookMessage(botToken, {
+    username: AGENT_NAME,
+    avatar_url: AGENT_AVATAR,
+    embeds: [{
+      color: 0x4CAF50,
+      title: `${count} new asset${count !== 1 ? "s" : ""} imported`,
+      description: `**Client:** \`${clientSlug}\`\nReady for classification. Run \`run creative-classify\` or wait for the next sweep.`,
+      footer: { text: "Asset Agent" },
+      timestamp: new Date().toISOString(),
+    }],
+  });
 }
 
 export function notifyCreative(payload: NotifyPayload): void {
@@ -115,62 +119,45 @@ export function notifyCreative(payload: NotifyPayload): void {
 
   const providerLabel = payload.provider === "gdrive" ? "Google Drive" : "Dropbox";
 
-  getChannelId(botToken)
-    .then((channelId) => {
-      if (!channelId) return;
-      return getOrCreateWebhook(botToken, channelId);
-    })
-    .then(async (webhook) => {
-      if (!webhook) return;
-      const res = await fetch(
-        `https://discord.com/api/v10/webhooks/${webhook.id}/${webhook.token}`,
+  dispatchWebhookMessage(botToken, {
+    username: AGENT_NAME,
+    avatar_url: AGENT_AVATAR,
+    embeds: [{
+      color: 0xFF6B35,
+      author: {
+        name: "Asset Import System",
+        icon_url: AGENT_AVATAR,
+      },
+      title: "Import failed -- needs manual fix",
+      description: [
+        `I tried all available methods to access this folder but couldn't get through.`,
+        ``,
+        `**Client:** \`${payload.clientSlug}\``,
+        `**Provider:** ${providerLabel}`,
+        `**Folder:** [link](${payload.folderUrl})`,
+      ].join("\n"),
+      fields: [
         {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            username: AGENT_NAME,
-            avatar_url: AGENT_AVATAR,
-            embeds: [{
-              color: 0xFF6B35,
-              author: {
-                name: "Asset Import System",
-                icon_url: AGENT_AVATAR,
-              },
-              title: "Import failed -- needs manual fix",
-              description: [
-                `I tried all available methods to access this folder but couldn't get through.`,
-                ``,
-                `**Client:** \`${payload.clientSlug}\``,
-                `**Provider:** ${providerLabel}`,
-                `**Folder:** [link](${payload.folderUrl})`,
-              ].join("\n"),
-              fields: [
-                {
-                  name: "What I tried",
-                  value: payload.provider === "gdrive"
-                    ? "1. OAuth access token\n2. API key (public folders)"
-                    : "1. Dropbox API token",
-                },
-                {
-                  name: "Error",
-                  value: `\`\`\`${payload.error.slice(0, 200)}\`\`\``,
-                },
-                {
-                  name: "How to fix",
-                  value: payload.provider === "gdrive"
-                    ? "`node agent/session/gdrive-token-refresh.mjs`\nor check if the folder is shared"
-                    : "Check `DROPBOX_ACCESS_TOKEN` in env vars",
-                },
-              ],
-              footer: {
-                text: "Asset Agent -- all fallbacks exhausted",
-              },
-              timestamp: new Date().toISOString(),
-            }],
-          }),
+          name: "What I tried",
+          value: payload.provider === "gdrive"
+            ? "1. OAuth access token\n2. API key (public folders)"
+            : "1. Dropbox API token",
         },
-      );
-      if (res.status === 401 || res.status === 404) invalidateWebhookCache();
-    })
-    .catch((e) => console.warn("[notify-creative] webhook post failed:", e instanceof Error ? e.message : String(e)));
+        {
+          name: "Error",
+          value: `\`\`\`${payload.error.slice(0, 200)}\`\`\``,
+        },
+        {
+          name: "How to fix",
+          value: payload.provider === "gdrive"
+            ? "`node agent/session/gdrive-token-refresh.mjs`\nor check if the folder is shared"
+            : "Check `DROPBOX_ACCESS_TOKEN` in env vars",
+        },
+      ],
+      footer: {
+        text: "Asset Agent -- all fallbacks exhausted",
+      },
+      timestamp: new Date().toISOString(),
+    }],
+  });
 }

@@ -10,21 +10,23 @@ export async function fetchMetaApi<T = Record<string, unknown>>(
   method: "POST" | "DELETE" = "POST",
   body?: Record<string, string>,
 ): Promise<T> {
-  // DELETE: Meta expects token as query param, not in request body
-  const targetUrl = new URL(url);
+  let targetUrl = url;
   const fetchInit: RequestInit = { method };
   if (method === "DELETE") {
-    targetUrl.searchParams.set("access_token", token);
+    // DELETE: Meta expects token as query param, not in request body
+    const parsed = new URL(url);
+    parsed.searchParams.set("access_token", token);
+    targetUrl = parsed.toString();
     if (body && Object.keys(body).length > 0) {
-      fetchInit.headers = { "Content-Type": "application/x-www-form-urlencoded" };
       fetchInit.body = new URLSearchParams(body);
     }
   } else {
-    const params = new URLSearchParams({ access_token: token, ...body });
-    fetchInit.headers = { "Content-Type": "application/x-www-form-urlencoded" };
-    fetchInit.body = params;
+    fetchInit.body = new URLSearchParams({ access_token: token, ...body });
   }
-  const res = await fetch(targetUrl.toString(), fetchInit);
+  if (fetchInit.body) {
+    fetchInit.headers = { "Content-Type": "application/x-www-form-urlencoded" };
+  }
+  const res = await fetch(targetUrl, fetchInit);
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
