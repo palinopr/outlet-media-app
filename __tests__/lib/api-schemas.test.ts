@@ -79,12 +79,12 @@ describe("AlertPostSchema", () => {
   });
 
   it("accepts with level", () => {
-    const result = AlertPostSchema.safeParse({ secret: "s", message: "x", level: "error" });
+    const result = AlertPostSchema.safeParse({ secret: "s", message: "x", level: "critical" });
     expect(result.success).toBe(true);
   });
 
   it("rejects invalid level", () => {
-    const result = AlertPostSchema.safeParse({ secret: "s", message: "x", level: "critical" });
+    const result = AlertPostSchema.safeParse({ secret: "s", message: "x", level: "error" });
     expect(result.success).toBe(false);
   });
 

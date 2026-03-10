@@ -1,6 +1,14 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { apiError, authGuard, dbError, validateRequest } from "@/lib/api-helpers";
+import {
+  apiError,
+  authGuard,
+  dbError,
+  getAuthorName,
+  shouldEnqueueCommentTriage,
+  validateRequest,
+} from "@/lib/api-helpers";
+import { excerpt } from "@/lib/text-utils";
 import {
   CreateCampaignCommentSchema,
   ResolveCommentSchema,
@@ -23,12 +31,6 @@ import {
   revalidateWorkflowPaths,
 } from "@/features/workflow/revalidation";
 
-function excerpt(text: string, limit = 140) {
-  const normalized = text.trim().replace(/\s+/g, " ");
-  if (normalized.length <= limit) return normalized;
-  return `${normalized.slice(0, limit - 1)}…`;
-}
-
 async function getCampaignName(campaignId: string) {
   if (!supabaseAdmin) return null;
   const { data } = await supabaseAdmin
@@ -46,19 +48,6 @@ async function getCampaignContext(campaignId: string) {
     client_slug: string | null;
     name: string | null;
   }>(campaignId, "campaign_id, client_slug, name");
-}
-
-async function getAuthorName() {
-  const user = await currentUser();
-  return [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown";
-}
-
-function shouldEnqueueCampaignCommentTriage(options: {
-  isAdmin: boolean;
-  parentCommentId?: string;
-  visibility: CampaignCommentVisibility;
-}) {
-  return !options.isAdmin && !options.parentCommentId && options.visibility === "shared";
 }
 
 function campaignCommentTriagePrompt(input: {
@@ -167,7 +156,8 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const authorName = await getAuthorName();
+  const user = await currentUser();
+  const authorName = getAuthorName(user);
   const { data, error: dbErr } = await supabaseAdmin
     .from("campaign_comments")
     .insert({
@@ -215,7 +205,7 @@ export async function POST(request: NextRequest) {
   });
 
   if (
-    shouldEnqueueCampaignCommentTriage({
+    shouldEnqueueCommentTriage({
       isAdmin: access.isAdmin,
       parentCommentId: body.parent_comment_id,
       visibility,

@@ -29,7 +29,7 @@ describe("fmtUsd", () => {
   });
 
   it("formats small amounts", () => {
-    expect(fmtUsd(42)).toBe("$42");
+    expect(fmtUsd(42)).toBe("$42.00");
   });
 
   it("formats thousands with K", () => {
@@ -45,7 +45,7 @@ describe("fmtUsd", () => {
   });
 
   it("handles zero", () => {
-    expect(fmtUsd(0)).toBe("$0");
+    expect(fmtUsd(0)).toBe("$0.00");
   });
 
   it("formats exactly 1000 as K", () => {

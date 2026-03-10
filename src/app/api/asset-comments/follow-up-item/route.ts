@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { adminGuard, apiError, dbError, parseJsonBody } from "@/lib/api-helpers";
+import { compactText } from "@/lib/text-utils";
 import {
   createSystemAssetFollowUpItem,
   findAssetFollowUpItemBySource,
@@ -9,12 +10,6 @@ import {
   revalidateWorkflowPaths,
 } from "@/features/workflow/revalidation";
 import { supabaseAdmin } from "@/lib/supabase";
-
-function compactText(value: string, limit = 240) {
-  const normalized = value.trim().replace(/\s+/g, " ");
-  if (normalized.length <= limit) return normalized;
-  return `${normalized.slice(0, limit - 1)}…`;
-}
 
 export async function POST(request: NextRequest) {
   const guard = await adminGuard();

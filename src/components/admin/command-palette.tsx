@@ -3,21 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  LayoutDashboard,
-  BarChart3,
   Megaphone,
   CalendarDays,
   BriefcaseBusiness,
-  BadgeCheck,
-  BellRing,
-  MessageSquareMore,
-  Bot,
   Users,
-  UserCog,
-  Activity,
-  Settings,
   Image as ImageIcon,
 } from "lucide-react";
+import { adminNavItems } from "./nav-config";
 import {
   CommandDialog,
   CommandEmpty,
@@ -31,23 +23,6 @@ import {
   fetchSearchableRecords,
   type SearchableRecord,
 } from "@/app/admin/actions/search";
-
-const pages = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/reports", label: "Reports", icon: BarChart3 },
-  { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
-  { href: "/admin/events", label: "Events", icon: CalendarDays },
-  { href: "/admin/assets", label: "Assets", icon: ImageIcon },
-  { href: "/admin/crm", label: "CRM", icon: BriefcaseBusiness },
-  { href: "/admin/approvals", label: "Approvals", icon: BadgeCheck },
-  { href: "/admin/notifications", label: "Notifications", icon: BellRing },
-  { href: "/admin/conversations", label: "Conversations", icon: MessageSquareMore },
-  { href: "/admin/agents", label: "Agents", icon: Bot },
-  { href: "/admin/clients", label: "Clients", icon: Users },
-  { href: "/admin/users", label: "Users", icon: UserCog },
-  { href: "/admin/activity", label: "Activity", icon: Activity },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
-] as const;
 
 const typeIcon: Record<SearchableRecord["type"], typeof Megaphone> = {
   asset: ImageIcon,
@@ -115,7 +90,7 @@ export function CommandPalette() {
         <CommandEmpty>No results found.</CommandEmpty>
 
         <CommandGroup heading="Pages">
-          {pages.map(({ href, label, icon: Icon }) => (
+          {adminNavItems.map(({ href, label, icon: Icon }) => (
             <CommandItem
               key={href}
               value={label}

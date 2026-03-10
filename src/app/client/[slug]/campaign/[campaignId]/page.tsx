@@ -41,7 +41,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const { slug, campaignId } = await params;
   const { scope, userId } = await requireClientAccess(slug, "meta_ads");
   const { range: rangeParam } = await searchParams;
-  const range = parseRange(rangeParam);
+  const range = parseRange(rangeParam, "7");
 
   const [data, events, approvals, actionItems, comments, agentOutcomes] = await Promise.all([
     getCampaignDetail(slug, campaignId, range, scope),
@@ -90,6 +90,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
     campaign: c,
     ageGender,
     placements,
+    geography,
     ads,
     hourly,
     daily,
@@ -144,6 +145,8 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       <CampaignAnalytics
         ageGender={ageGender}
         placements={placements}
+        geography={geography}
+        ads={ads}
         hourly={hourly}
         daily={daily}
         rangeLabel={rangeLabel}
@@ -216,7 +219,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         <section>
           <div className="flex items-center gap-2 mb-4">
             <ImageIcon className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Ad Creatives</span>
+            <span className="section-label">Ad Performance</span>
             <span className="text-xs text-white/45 ml-auto">{ads.length} ads</span>
           </div>
           <AdsPreview ads={ads} />

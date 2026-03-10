@@ -41,6 +41,13 @@ export const TASK_PRIORITY_LABELS: Record<TaskPriority, string> = {
   urgent: "Urgent",
 };
 
+export const TASK_PRIORITY_COLORS: Record<TaskPriority, string> = {
+  low: "bg-slate-500/20 text-slate-300 border-slate-500/30",
+  medium: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+  high: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+  urgent: "bg-red-500/20 text-red-300 border-red-500/30",
+};
+
 // Mention user for combobox
 export interface MentionUser {
   id: string;

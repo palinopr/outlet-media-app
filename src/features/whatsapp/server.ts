@@ -813,7 +813,7 @@ export function verifyEvolutionWebhookRequest(
   }
 
   const configuredApiKey = process.env.EVOLUTION_API_KEY?.trim();
-  if (!configuredApiKey) return true;
+  if (!configuredApiKey) return false;
 
   const requestApiKey =
     headers.get("apikey")?.trim() ??

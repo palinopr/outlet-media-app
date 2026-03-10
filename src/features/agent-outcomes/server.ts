@@ -1,7 +1,6 @@
-import { currentUser } from "@clerk/nextjs/server";
 import type { Json } from "@/lib/database.types";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import {
   buildAgentOutcomeView,
   type AgentOutcomeRequestRecord,
@@ -32,22 +31,6 @@ export interface AgentOutcomeContext {
   task: AgentOutcomeTaskRecord | null;
 }
 
-async function getAgentOutcomeReadClient(options: ListAgentOutcomesOptions) {
-  if (!supabaseAdmin) return null;
-  if (options.audience !== "shared" || !options.clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 function mapRequestRow(row: Record<string, unknown>): AgentOutcomeRequestRecord {
   return {
@@ -127,7 +110,7 @@ export function matchesContext(
 export async function listAgentOutcomes(
   options: ListAgentOutcomesOptions = {},
 ): Promise<AgentOutcomeView[]> {
-  const db = await getAgentOutcomeReadClient(options);
+  const db = await getFeatureReadClient(options.audience === "shared" && !!options.clientSlug);
   if (!db) return [];
   const scopeCampaignIds = options.scopeCampaignIds ? new Set(options.scopeCampaignIds) : null;
   const scopeEventIds = options.scopeEventIds ? new Set(options.scopeEventIds) : null;

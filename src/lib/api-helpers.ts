@@ -84,3 +84,27 @@ export async function validateRequest<T>(
   }
   return { data: parsed.data, error: null };
 }
+
+// ─── Shared helpers (extracted from comment + approval routes) ──────────
+
+/** Extract a display name from a Clerk user object. Returns "Unknown" if no name parts exist. */
+export function getAuthorName(user: {
+  firstName?: string | null;
+  lastName?: string | null;
+} | null): string {
+  return [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown";
+}
+
+/** Determine whether a new comment thread needs agent triage/review. */
+export function shouldEnqueueCommentTriage(options: {
+  isAdmin: boolean;
+  parentCommentId?: string;
+  visibility: string;
+}): boolean {
+  return !options.isAdmin && !options.parentCommentId && options.visibility === "shared";
+}
+
+/** Check whether a role value represents an admin. */
+export function isAdminRole(role: unknown): boolean {
+  return typeof role === "string" && role === "admin";
+}

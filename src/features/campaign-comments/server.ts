@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 
 export type CampaignCommentVisibility = "admin_only" | "shared";
 
@@ -40,30 +40,11 @@ function mapCampaignComment(row: Record<string, unknown>): CampaignComment {
   };
 }
 
-async function getCampaignCommentsReadClient(options: {
-  audience?: "all" | CampaignCommentVisibility;
-  clientSlug: string;
-}) {
-  if (!supabaseAdmin) return null;
-  if (options.audience !== "shared" || !options.clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 export async function listCampaignComments(
   options: ListCampaignCommentsOptions,
 ): Promise<CampaignComment[]> {
-  const db = await getCampaignCommentsReadClient(options);
+  const db = await getFeatureReadClient(options.audience === "shared" && !!options.clientSlug);
   if (!db) return [];
 
   let query = db

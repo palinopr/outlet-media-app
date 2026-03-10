@@ -1,5 +1,3 @@
-import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import { google } from "googleapis";
 import {
   getPushRecoveryLimit,
@@ -9,12 +7,11 @@ import {
   processWatchedMessage,
   type EmailProcessResult,
 } from "./email-intelligence-service.js";
+import { getGmailAuth } from "./email-gmail.js";
 import { notifyOwner, notifyOwnerEmailAlert } from "./owner-discord-service.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
 import { getRuntimeState, setRuntimeState } from "./runtime-state.js";
 
-const SERVICE_ACCOUNT_PATH = fileURLToPath(new URL("../../service-account.json", import.meta.url));
-const GMAIL_IMPERSONATE_USER = process.env.GMAIL_IMPERSONATE_USER ?? "jaime@outletmedia.net";
 const GMAIL_PUBSUB_TOPIC = process.env.GMAIL_PUBSUB_TOPIC ?? "";
 const WATCH_STATE_KEY = "gmail_watch";
 const WATCH_LABEL_IDS = (process.env.GMAIL_PUSH_LABEL_IDS ?? "INBOX,SENT")
@@ -28,24 +25,6 @@ interface GmailWatchState {
   updatedAt: string;
   topic: string;
   labels: string[];
-}
-
-function getGmailAuth() {
-  const key = JSON.parse(readFileSync(SERVICE_ACCOUNT_PATH, "utf-8")) as {
-    client_email: string;
-    private_key: string;
-  };
-
-  return new google.auth.JWT({
-    email: key.client_email,
-    key: key.private_key,
-    scopes: [
-      "https://www.googleapis.com/auth/gmail.modify",
-      "https://www.googleapis.com/auth/gmail.readonly",
-      "https://www.googleapis.com/auth/gmail.settings.basic",
-    ],
-    subject: GMAIL_IMPERSONATE_USER,
-  });
 }
 
 function toIsoExpiration(expiration?: string | null): string | null {

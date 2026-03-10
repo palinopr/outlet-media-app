@@ -108,11 +108,6 @@ export const VALID_AGENTS = [
   "meta-ads",
   "campaign-monitor",
   "assistant",
-  "growth-supervisor",
-  "tiktok-supervisor",
-  "content-finder",
-  "lead-qualifier",
-  "publisher-tiktok",
 ] as const;
 
 export const AgentPostSchema = z.object({
@@ -230,8 +225,6 @@ export const CampaignCreateSchema = z.object({
     link_url: z.string().url().optional(),
   }),
 });
-
-export type CampaignCreatePayload = z.infer<typeof CampaignCreateSchema>;
 
 // ─── Contact form ────────────────────────────────────────────────────────────
 

@@ -1,3 +1,5 @@
+import { describeCount } from "@/lib/formatters";
+
 export type ConversationThreadKind = "asset" | "campaign" | "crm" | "event";
 
 export interface ConversationThread {
@@ -27,10 +29,6 @@ export interface ConversationMetric {
 export interface ConversationsSummary {
   metrics: ConversationMetric[];
   totalThreads: number;
-}
-
-function describeCount(value: number, singular: string, plural = `${singular}s`) {
-  return `${value} ${value === 1 ? singular : plural}`;
 }
 
 export function buildConversationsSummary(threads: ConversationThread[]): ConversationsSummary {

@@ -1,101 +1,63 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { mockFrom } from "../setup";
+
+const { adminGuard, listAgentJobs } = vi.hoisted(() => ({
+  adminGuard: vi.fn(),
+  listAgentJobs: vi.fn(),
+}));
+
+vi.mock("@/lib/api-helpers", () => ({
+  adminGuard,
+  apiError: (message: string, status = 500) =>
+    Response.json({ error: message }, { status }),
+}));
+
+vi.mock("@/lib/agent-jobs", () => ({
+  listAgentJobs,
+}));
 
 describe("GET /api/agents/jobs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    adminGuard.mockResolvedValue(null);
   });
 
   it("returns jobs array on success", async () => {
     const mockJobs = [
-      { id: 1, agent_id: "meta-ads", status: "done", prompt: null, result: "ok", error: null, created_at: "2026-03-01", started_at: null, finished_at: null },
+      { id: "1", agent_id: "meta-ads", status: "done", prompt: null, result: "ok", error: null, created_at: "2026-03-01", started_at: null, finished_at: null },
     ];
 
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        neq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({ data: mockJobs, error: null }),
-          }),
-        }),
-      }),
-    });
+    listAgentJobs.mockResolvedValue(mockJobs);
 
     const { GET } = await import("@/app/api/agents/jobs/route");
     const res = await GET();
     const body = await res.json();
 
     expect(res.status).toBe(200);
-    expect(body.jobs).toEqual(mockJobs);
+    expect(body.jobs).toEqual([...mockJobs].reverse());
   });
 
-  it("excludes heartbeat rows from results", async () => {
-    const mockNeq = vi.fn().mockReturnValue({
-      order: vi.fn().mockReturnValue({
-        limit: vi.fn().mockResolvedValue({ data: [], error: null }),
-      }),
-    });
-
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        neq: mockNeq,
-      }),
-    });
+  it("calls listAgentJobs with limit 30", async () => {
+    listAgentJobs.mockResolvedValue([]);
 
     const { GET } = await import("@/app/api/agents/jobs/route");
     await GET();
 
-    expect(mockNeq).toHaveBeenCalledWith("agent_id", "heartbeat");
+    expect(listAgentJobs).toHaveBeenCalledWith(30);
   });
 
-  it("limits results to 30 rows", async () => {
-    const mockLimit = vi.fn().mockResolvedValue({ data: [], error: null });
-
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        neq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: mockLimit,
-          }),
-        }),
-      }),
-    });
-
-    const { GET } = await import("@/app/api/agents/jobs/route");
-    await GET();
-
-    expect(mockLimit).toHaveBeenCalledWith(30);
-  });
-
-  it("returns 500 with error message on database failure", async () => {
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        neq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({ data: null, error: { message: "timeout" } }),
-          }),
-        }),
-      }),
-    });
+  it("returns 500 with generic error on failure", async () => {
+    listAgentJobs.mockRejectedValue(new Error("timeout"));
 
     const { GET } = await import("@/app/api/agents/jobs/route");
     const res = await GET();
     const body = await res.json();
 
     expect(res.status).toBe(500);
-    expect(body.error).toBe("timeout");
+    expect(body.error).toBe("Failed to fetch jobs");
   });
 
-  it("returns empty jobs array when data is null", async () => {
-    mockFrom.mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        neq: vi.fn().mockReturnValue({
-          order: vi.fn().mockReturnValue({
-            limit: vi.fn().mockResolvedValue({ data: null, error: null }),
-          }),
-        }),
-      }),
-    });
+  it("returns empty jobs array when listAgentJobs returns empty", async () => {
+    listAgentJobs.mockResolvedValue([]);
 
     const { GET } = await import("@/app/api/agents/jobs/route");
     const res = await GET();
@@ -103,17 +65,13 @@ describe("GET /api/agents/jobs", () => {
 
     expect(body.jobs).toEqual([]);
   });
-});
 
-describe("GET /api/agents/jobs — supabase unavailable", () => {
-  it("returns empty jobs array when supabaseAdmin is null", async () => {
-    vi.resetModules();
-    vi.doMock("@/lib/supabase", () => ({ supabaseAdmin: null }));
+  it("returns 403 when admin guard fails", async () => {
+    adminGuard.mockResolvedValue(Response.json({ error: "Forbidden" }, { status: 403 }));
 
     const { GET } = await import("@/app/api/agents/jobs/route");
     const res = await GET();
-    const body = await res.json();
 
-    expect(body.jobs).toEqual([]);
+    expect(res.status).toBe(403);
   });
 });

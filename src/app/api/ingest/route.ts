@@ -32,6 +32,6 @@ export async function GET(request: Request) {
     ok: true,
     message: "Ingest endpoint ready. POST scraped data here.",
     supabase_connected: !!supabaseAdmin,
-    sources: ["ticketmaster_one", "meta"],
+    sources: ["ticketmaster_one", "meta", "tm_demographics"],
   });
 }

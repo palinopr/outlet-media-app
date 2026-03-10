@@ -4,14 +4,7 @@ import { Draggable } from "@hello-pangea/dnd";
 import { Calendar, GripVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import type { WorkspaceTask, TaskPriority } from "@/lib/workspace-types";
-import { TASK_PRIORITY_LABELS } from "@/lib/workspace-types";
-
-const priorityColors: Record<TaskPriority, string> = {
-  low: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-  medium: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  high: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-  urgent: "bg-red-500/20 text-red-300 border-red-500/30",
-};
+import { TASK_PRIORITY_COLORS, TASK_PRIORITY_LABELS } from "@/lib/workspace-types";
 
 interface TaskCardProps {
   task: WorkspaceTask;
@@ -51,7 +44,7 @@ export function TaskCard({ task, index, onClick }: TaskCardProps) {
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 <Badge
                   variant="outline"
-                  className={`text-[10px] px-1.5 py-0 ${priorityColors[priority] ?? priorityColors.medium}`}
+                  className={`text-[10px] px-1.5 py-0 ${TASK_PRIORITY_COLORS[priority] ?? TASK_PRIORITY_COLORS.medium}`}
                 >
                   {TASK_PRIORITY_LABELS[priority] ?? priority}
                 </Badge>

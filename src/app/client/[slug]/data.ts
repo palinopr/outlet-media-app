@@ -29,7 +29,6 @@ const EMPTY: ClientData = {
     totalClicks: 0,
     activeCampaigns: 0,
     totalCampaigns: 0,
-    spendDelta: null,
   },
   campaigns: [],
   events: [],
@@ -49,10 +48,10 @@ async function getClientPortalReadClient() {
       return supabaseAdmin;
     }
   } catch {
-    return supabaseAdmin;
+    return null;
   }
 
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+  return (await createClerkSupabaseClient()) ?? null;
 }
 
 // --- Map shared MetaCampaignCard to client portal CampaignCard ---
@@ -100,7 +99,6 @@ function buildHeroStats(campaigns: CampaignCard[]): HeroStats {
     totalClicks,
     activeCampaigns: active,
     totalCampaigns: campaigns.length,
-    spendDelta: null,
   };
 }
 

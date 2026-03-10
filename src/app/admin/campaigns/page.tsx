@@ -130,7 +130,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
           </p>
           <div className="flex items-center gap-2">
             <Suspense>
-              <DateRangeFilter selected={range} />
+              <DateRangeFilter />
             </Suspense>
             <Suspense>
               <ClientFilter clients={clients} />

@@ -29,6 +29,7 @@ export interface PlacementRow {
 
 export interface HourlyRow {
   hour: number;
+  spend: number;
   impressions: number;
   clicks: number;
   ctr: number | null;
@@ -47,6 +48,27 @@ export interface DayOfWeekRow {
   day: string;
   impressions: number;
   clicks: number;
+}
+
+export interface PerformanceTrendRow {
+  date: string;
+  label: string;
+  spend: number;
+  revenue: number | null;
+  roas: number | null;
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+}
+
+export interface MarketRow {
+  market: string;
+  spend: number;
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+  cpc: number | null;
+  pct: number;
 }
 
 export const tooltipStyle = {

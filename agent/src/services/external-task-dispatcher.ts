@@ -26,11 +26,6 @@ interface ExternalTaskRow {
 const WEB_ADMIN_AGENT_CHANNELS: Record<string, string> = {
   assistant: "boss",
   "campaign-monitor": "dashboard",
-  "content-finder": "content-lab",
-  "growth-supervisor": "growth",
-  "lead-qualifier": "lead-inbox",
-  "publisher-tiktok": "tiktok-publish",
-  "tiktok-supervisor": "tiktok-ops",
 };
 
 function getPromptParam(task: ExternalTaskRow): string | null {
@@ -174,36 +169,6 @@ async function executeWebAdminTask(task: ExternalTaskRow): Promise<string> {
         "Cross-reference current Meta spend against Ticketmaster sales and flag the campaigns or events that need action right now. Keep it concise and specific.",
       );
     }
-    case "growth-supervisor": {
-      return await runWebAdminPromptTask(
-        task,
-        "Review the internal growth backlog and recommend the next highest-leverage move.",
-      );
-    }
-    case "tiktok-supervisor": {
-      return await runWebAdminPromptTask(
-        task,
-        "Review the TikTok draft queue and produce the next best draft-only action.",
-      );
-    }
-    case "content-finder": {
-      return await runWebAdminPromptTask(
-        task,
-        "Research the next 3 internal growth content angles worth capturing in the ledger.",
-      );
-    }
-    case "lead-qualifier": {
-      return await runWebAdminPromptTask(
-        task,
-        "Review inbound growth signals and produce a concise qualification summary with the next manual step.",
-      );
-    }
-    case "publisher-tiktok": {
-      return await runWebAdminPromptTask(
-        task,
-        "Review the TikTok publish queue and prepare the next assisted manual post packet.",
-      );
-    }
     default:
       throw new Error(`Unsupported web-admin task target: ${task.to_agent}`);
   }
@@ -296,9 +261,6 @@ async function pumpQueue(): Promise<void> {
     }
   } finally {
     pumping = false;
-    if (activeWorkers < MAX_CONCURRENT_TASKS) {
-      void pumpQueue();
-    }
   }
 }
 

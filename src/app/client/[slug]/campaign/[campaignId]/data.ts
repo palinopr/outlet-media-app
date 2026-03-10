@@ -3,9 +3,19 @@ import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { getEffectiveCampaignRowById } from "@/lib/campaign-client-assignment";
 import type { ScopeFilter } from "@/lib/member-access";
 import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
+import { centsToUsd } from "@/lib/formatters";
 import { metaGet, metaInsightsUrl, metaUrl } from "@/lib/meta-api";
 import { allowsCampaignInScope } from "@/features/client-portal/scope";
-import type { CampaignCard, CampaignDetailData, AgeGenderBreakdown, PlacementBreakdown, AdCard, HourlyBreakdown, DailyPoint } from "../../types";
+import type {
+  CampaignCard,
+  CampaignDetailData,
+  AgeGenderBreakdown,
+  PlacementBreakdown,
+  GeographyBreakdown,
+  AdCard,
+  HourlyBreakdown,
+  DailyPoint,
+} from "../../types";
 import { DAY_LABELS } from "../../types";
 import { generateRecommendations } from "../../lib";
 
@@ -55,7 +65,48 @@ interface MetaInsightRow {
   cpm: string;
   reach?: string;
   frequency?: string;
-  purchase_roas?: Array<{ action_type: string; value: string }>;
+  purchase_roas?: MetaActionMetric[];
+  action_values?: MetaActionMetric[];
+}
+
+interface MetaActionMetric {
+  action_type: string;
+  value: string;
+}
+
+const PURCHASE_ACTION_TYPES = [
+  "omni_purchase",
+  "purchase",
+  "offsite_conversion.fb_pixel_purchase",
+  "onsite_web_purchase",
+];
+
+function extractPurchaseMetric(metrics?: MetaActionMetric[]): number | null {
+  if (!metrics?.length) return null;
+
+  for (const actionType of PURCHASE_ACTION_TYPES) {
+    const match = metrics.find((metric) => metric.action_type === actionType);
+    if (!match) continue;
+    const value = parseFloat(match.value);
+    if (Number.isFinite(value)) return value;
+  }
+
+  const fallback = metrics.find((metric) => metric.action_type.includes("purchase"));
+  if (!fallback) return null;
+
+  const value = parseFloat(fallback.value);
+  return Number.isFinite(value) ? value : null;
+}
+
+function deriveRevenue(
+  spend: number,
+  roas: number | null,
+  actionValues?: MetaActionMetric[],
+): number | null {
+  const directValue = extractPurchaseMetric(actionValues);
+  if (directValue != null) return directValue;
+  if (roas != null) return spend * roas;
+  return null;
 }
 
 async function fetchCampaignOverview(
@@ -69,7 +120,7 @@ async function fetchCampaignOverview(
   // Campaign insights
   const insightsUrl = metaInsightsUrl(
     campaignId, creds.token,
-    "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,purchase_roas",
+    "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,purchase_roas,action_values",
     { datePreset: META_PRESETS[range] },
   );
 
@@ -179,6 +230,7 @@ function formatPosition(p: string): string {
 
 interface MetaHourlyRow {
   hourly_stats_aggregated_by_advertiser_time_zone: string; // "00:00:00" - "23:00:00"
+  spend?: string;
   impressions: string;
   clicks: string;
   ctr: string;
@@ -189,7 +241,7 @@ async function fetchHourly(
   range: DateRange,
   creds: { token: string; accountId: string },
 ): Promise<HourlyBreakdown[]> {
-  const url = metaInsightsUrl(campaignId, creds.token, "impressions,clicks,ctr", {
+  const url = metaInsightsUrl(campaignId, creds.token, "impressions,clicks,ctr,spend", {
     datePreset: META_PRESETS[range],
     breakdowns: "hourly_stats_aggregated_by_advertiser_time_zone",
     limit: 50,
@@ -200,6 +252,7 @@ async function fetchHourly(
 
   return res.data.map((r) => ({
     hour: parseInt(r.hourly_stats_aggregated_by_advertiser_time_zone) || 0,
+    spend: r.spend ? parseFloat(r.spend) || 0 : 0,
     impressions: parseInt(r.impressions) || 0,
     clicks: parseInt(r.clicks) || 0,
     ctr: parseFloat(r.ctr) || null,
@@ -211,6 +264,9 @@ async function fetchHourly(
 interface MetaDailyRow {
   date_start: string;
   date_stop: string;
+  spend: string;
+  purchase_roas?: MetaActionMetric[];
+  action_values?: MetaActionMetric[];
   impressions: string;
   clicks: string;
   ctr: string;
@@ -222,26 +278,91 @@ async function fetchDaily(
   creds: { token: string; accountId: string },
 ): Promise<DailyPoint[]> {
   // time_increment=1 gives day-by-day breakdown
-  const url = metaInsightsUrl(campaignId, creds.token, "impressions,clicks,ctr", {
-    datePreset: META_PRESETS[range],
-    timeIncrement: "1",
-    limit: 90,
-  });
+  const url = metaInsightsUrl(
+    campaignId,
+    creds.token,
+    "spend,impressions,clicks,ctr,purchase_roas,action_values",
+    {
+      datePreset: META_PRESETS[range],
+      timeIncrement: "1",
+      limit: 90,
+    },
+  );
 
   const res = await metaGet<{ data: MetaDailyRow[] }>(url, "daily");
   if (!res?.data) return [];
 
   return res.data.map((r) => {
     const d = new Date(r.date_start + "T12:00:00");
+    const spend = parseFloat(r.spend) || 0;
+    const roas = extractPurchaseMetric(r.purchase_roas);
     return {
       date: r.date_start,
       dayOfWeek: d.getDay(),
       dayLabel: DAY_LABELS[d.getDay()],
+      spend,
+      revenue: deriveRevenue(spend, roas, r.action_values),
+      roas,
       impressions: parseInt(r.impressions) || 0,
       clicks: parseInt(r.clicks) || 0,
       ctr: parseFloat(r.ctr) || null,
     };
   }).sort((a, b) => a.date.localeCompare(b.date));
+}
+
+interface MetaGeographyRow {
+  region?: string;
+  country?: string;
+  spend?: string;
+  impressions: string;
+  clicks: string;
+  ctr: string;
+  cpc?: string;
+}
+
+async function fetchGeography(
+  campaignId: string,
+  range: DateRange,
+  creds: { token: string; accountId: string },
+): Promise<GeographyBreakdown[]> {
+  const attempts: Array<{
+    breakdowns: "region" | "country";
+    labelKey: "region" | "country";
+  }> = [
+    { breakdowns: "region", labelKey: "region" },
+    { breakdowns: "country", labelKey: "country" },
+  ];
+
+  for (const attempt of attempts) {
+    const url = metaInsightsUrl(campaignId, creds.token, "spend,impressions,clicks,ctr,cpc", {
+      datePreset: META_PRESETS[range],
+      breakdowns: attempt.breakdowns,
+      limit: 100,
+    });
+
+    const res = await metaGet<{ data: MetaGeographyRow[] }>(url, `geography-${attempt.breakdowns}`);
+    const rows = (res?.data ?? [])
+      .map((row) => {
+        const market = row[attempt.labelKey]?.trim();
+        if (!market) return null;
+
+        return {
+          market,
+          marketType: attempt.breakdowns,
+          spend: row.spend ? parseFloat(row.spend) || 0 : 0,
+          impressions: parseInt(row.impressions) || 0,
+          clicks: parseInt(row.clicks) || 0,
+          ctr: parseFloat(row.ctr) || null,
+          cpc: row.cpc ? parseFloat(row.cpc) || null : null,
+        } satisfies GeographyBreakdown;
+      })
+      .filter((row): row is GeographyBreakdown => row != null)
+      .sort((a, b) => b.impressions - a.impressions);
+
+    if (rows.length > 0) return rows;
+  }
+
+  return [];
 }
 
 // --- Fetch ads with creative info ---
@@ -263,7 +384,8 @@ interface MetaAdRow {
       reach?: string;
       ctr: string;
       cpc: string;
-      purchase_roas?: Array<{ action_type: string; value: string }>;
+      purchase_roas?: MetaActionMetric[];
+      action_values?: MetaActionMetric[];
     }>;
   };
 }
@@ -274,7 +396,7 @@ async function fetchAds(
   creds: { token: string; accountId: string },
 ): Promise<AdCard[]> {
   const url = new URL(metaUrl(`${campaignId}/ads`, creds.token, {
-    fields: `id,name,status,creative{thumbnail_url,title,body},insights.date_preset(${META_PRESETS[range]}){spend,impressions,clicks,reach,ctr,cpc,purchase_roas}`,
+    fields: `id,name,status,creative{thumbnail_url,title,body},insights.date_preset(${META_PRESETS[range]}){spend,impressions,clicks,reach,ctr,cpc,purchase_roas,action_values}`,
     limit: "50",
   }));
 
@@ -284,10 +406,7 @@ async function fetchAds(
   return res.data.map((ad) => {
     const ins = ad.insights?.data?.[0];
     const spend = ins ? parseFloat(ins.spend) || 0 : 0;
-    const roasVal = ins?.purchase_roas?.find(
-      (r) => r.action_type === "omni_purchase",
-    )?.value;
-    const roas = roasVal ? parseFloat(roasVal) : null;
+    const roas = extractPurchaseMetric(ins?.purchase_roas);
 
     return {
       adId: ad.id,
@@ -303,7 +422,7 @@ async function fetchAds(
       ctr: ins ? parseFloat(ins.ctr) || null : null,
       cpc: ins ? parseFloat(ins.cpc) || null : null,
       roas,
-      revenue: roas != null ? spend * roas : null,
+      revenue: deriveRevenue(spend, roas, ins?.action_values),
     };
   });
 }
@@ -323,18 +442,12 @@ async function getCampaignDetailReadContext() {
       };
     }
   } catch {
-    return {
-      db: supabaseAdmin,
-      trustsCampaignRls: false,
-    };
+    return null;
   }
 
   const userScopedClient = await createClerkSupabaseClient();
   if (!userScopedClient) {
-    return {
-      db: supabaseAdmin,
-      trustsCampaignRls: false,
-    };
+    return null;
   }
 
   return {
@@ -388,10 +501,11 @@ export async function getCampaignDetail(
 
   // Try Meta API first (parallel calls for speed)
   if (creds) {
-    const [overview, ageGender, placements, ads, hourly, daily] = await Promise.all([
+    const [overview, ageGender, placements, geography, ads, hourly, daily] = await Promise.all([
       fetchCampaignOverview(campaignId, range, creds),
       fetchAgeGender(campaignId, range, creds),
       fetchPlacements(campaignId, range, creds),
+      fetchGeography(campaignId, range, creds),
       fetchAds(campaignId, range, creds),
       fetchHourly(campaignId, range, creds),
       fetchDaily(campaignId, range, creds),
@@ -399,10 +513,7 @@ export async function getCampaignDetail(
 
     if (overview.info) {
       const spend = overview.insights ? parseFloat(overview.insights.spend) || 0 : 0;
-      const roasVal = overview.insights?.purchase_roas?.find(
-        (r) => r.action_type === "omni_purchase",
-      )?.value;
-      const roas = roasVal ? parseFloat(roasVal) : null;
+      const roas = extractPurchaseMetric(overview.insights?.purchase_roas);
 
       const campaign: CampaignCard = {
         campaignId,
@@ -410,14 +521,14 @@ export async function getCampaignDetail(
         status: overview.info.status,
         spend,
         roas,
-        revenue: roas != null ? spend * roas : null,
+        revenue: deriveRevenue(spend, roas, overview.insights?.action_values),
         impressions: overview.insights ? parseInt(overview.insights.impressions) || 0 : 0,
         clicks: overview.insights ? parseInt(overview.insights.clicks) || 0 : 0,
         ctr: overview.insights ? parseFloat(overview.insights.ctr) || null : null,
         cpc: overview.insights ? parseFloat(overview.insights.cpc) || null : null,
         cpm: overview.insights ? parseFloat(overview.insights.cpm) || null : null,
         dailyBudget: overview.info.daily_budget
-          ? parseInt(overview.info.daily_budget) / 100
+          ? centsToUsd(parseInt(overview.info.daily_budget))
           : null,
         startTime: overview.info.start_time ?? null,
       };
@@ -426,6 +537,7 @@ export async function getCampaignDetail(
         campaign,
         ageGender,
         placements,
+        geography,
         ads,
         hourly,
         daily,
@@ -435,6 +547,7 @@ export async function getCampaignDetail(
         campaign,
         ageGender,
         placements,
+        geography,
         ads,
         hourly,
         daily,
@@ -446,7 +559,7 @@ export async function getCampaignDetail(
   }
 
   // Fallback: Supabase (no breakdowns or ads available)
-  const spend = (row.spend ?? 0) / 100;
+  const spend = centsToUsd(row.spend ?? 0) as number;
   const roas = row.roas != null ? Number(row.roas) : null;
 
   return {
@@ -462,11 +575,12 @@ export async function getCampaignDetail(
       ctr: row.ctr != null ? Number(row.ctr) : null,
       cpc: row.cpc != null ? Number(row.cpc) : null,
       cpm: row.cpm != null ? Number(row.cpm) : null,
-      dailyBudget: row.daily_budget != null ? row.daily_budget / 100 : null,
+      dailyBudget: centsToUsd(row.daily_budget),
       startTime: row.start_time,
     },
     ageGender: [],
     placements: [],
+    geography: [],
     ads: [],
     hourly: [],
     daily: [],

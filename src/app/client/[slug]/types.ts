@@ -32,7 +32,6 @@ export interface HeroStats {
   totalClicks: number;
   activeCampaigns: number;
   totalCampaigns: number;
-  spendDelta: number | null;
 }
 
 // --- Ticket platform (derived from tm_id) ---
@@ -134,6 +133,7 @@ export interface AdCard {
 
 export interface HourlyBreakdown {
   hour: number; // 0-23
+  spend: number;
   impressions: number;
   clicks: number;
   ctr: number | null;
@@ -143,9 +143,22 @@ export interface DailyPoint {
   date: string; // YYYY-MM-DD
   dayOfWeek: number; // 0=Sun .. 6=Sat
   dayLabel: string; // "Mon", "Tue", etc.
+  spend: number;
+  revenue: number | null;
+  roas: number | null;
   impressions: number;
   clicks: number;
   ctr: number | null;
+}
+
+export interface GeographyBreakdown {
+  market: string;
+  marketType: "region" | "country";
+  spend: number;
+  impressions: number;
+  clicks: number;
+  ctr: number | null;
+  cpc: number | null;
 }
 
 export interface Recommendation {
@@ -158,6 +171,7 @@ export interface CampaignDetailData {
   campaign: CampaignCard;
   ageGender: AgeGenderBreakdown[];
   placements: PlacementBreakdown[];
+  geography: GeographyBreakdown[];
   ads: AdCard[];
   hourly: HourlyBreakdown[];
   daily: DailyPoint[];

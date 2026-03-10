@@ -12,7 +12,7 @@ import cron, { type ScheduledTask } from "node-cron";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { EmbedBuilder, type Client } from "discord.js";
+import { EmbedBuilder } from "discord.js";
 
 const __dirname = import.meta.dirname ?? dirname(fileURLToPath(import.meta.url));
 const SWEEP_STATE_PATH = join(__dirname, "..", "..", "..", "session", "sweep-state.json");
@@ -445,7 +445,6 @@ function buildScheduleEmbed(): EmbedBuilder {
  */
 export async function handleScheduleCommand(
   content: string,
-  client: Client,
   channelName: string,
 ): Promise<{ text?: string; embed?: EmbedBuilder; buttons?: boolean } | null> {
   // Only respond in #schedule

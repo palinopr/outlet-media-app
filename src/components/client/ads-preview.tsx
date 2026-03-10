@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import { fmtNum, roasColor } from "@/lib/formatters";
+import { fmtNum, fmtUsd, roasColor } from "@/lib/formatters";
 import { getCampaignStatusCfg } from "@/lib/status";
 
 export interface AdPreview {
@@ -13,11 +13,13 @@ export interface AdPreview {
   thumbnailUrl: string | null;
   creativeTitle: string | null;
   creativeBody: string | null;
+  spend: number;
   impressions: number;
   clicks: number;
   reach: number | null;
   ctr: number | null;
   roas: number | null;
+  revenue: number | null;
 }
 
 function AdCardUI({ ad }: { ad: AdPreview }) {
@@ -56,12 +58,22 @@ function AdCardUI({ ad }: { ad: AdPreview }) {
         <p className="text-[10px] text-white/25 mb-2 line-clamp-1">{ad.creativeTitle}</p>
       )}
 
-      {/* Metrics -- no spend */}
+      {/* Metrics */}
       <div className="grid grid-cols-2 gap-x-3 gap-y-2 mt-auto pt-3 border-t border-white/[0.06]">
         {ad.roas != null && (
           <div>
             <p className="text-[9px] text-white/25">ROAS</p>
             <p className={`text-sm font-bold ${roasColor(ad.roas)}`}>{ad.roas.toFixed(1)}x</p>
+          </div>
+        )}
+        <div>
+          <p className="text-[9px] text-white/25">Spend</p>
+          <p className="text-xs font-semibold text-white/60">{fmtUsd(ad.spend)}</p>
+        </div>
+        {ad.revenue != null && (
+          <div>
+            <p className="text-[9px] text-white/25">Revenue</p>
+            <p className="text-xs font-semibold text-emerald-300">{fmtUsd(ad.revenue)}</p>
           </div>
         )}
         <div>
@@ -95,8 +107,11 @@ export function AdsPreview({ ads }: { ads: AdPreview[] }) {
   const [expanded, setExpanded] = useState(false);
   if (ads.length === 0) return null;
 
-  // Sort by impressions (highest first) since we're not showing spend
-  const sorted = [...ads].sort((a, b) => b.impressions - a.impressions);
+  const sorted = [...ads].sort((a, b) => {
+    if ((b.roas ?? -1) !== (a.roas ?? -1)) return (b.roas ?? -1) - (a.roas ?? -1);
+    if ((b.revenue ?? -1) !== (a.revenue ?? -1)) return (b.revenue ?? -1) - (a.revenue ?? -1);
+    return b.impressions - a.impressions;
+  });
   const visible = expanded ? sorted : sorted.slice(0, PREVIEW_COUNT);
   const hasMore = sorted.length > PREVIEW_COUNT;
 

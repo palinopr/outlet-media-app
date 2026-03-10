@@ -1,6 +1,7 @@
 import cron, { type ScheduledTask } from "node-cron";
 import { readFileSync, existsSync, unlinkSync } from "node:fs";
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { join } from "node:path";
 import { runClaude } from "./runner.js";
 import { discordClient, notifyChannel } from "./discord/core/entry.js";
@@ -20,6 +21,8 @@ import { checkMeetingReminders } from "./services/calendar-service.js";
 import { ensureGmailWatch, pollGmailHistory } from "./services/gmail-watch-service.js";
 import { dispatchDueScheduledHandoffs } from "./services/scheduled-handoff-service.js";
 import { toErrorMessage } from "./utils/error-helpers.js";
+
+const execFileAsync = promisify(execFile);
 
 const SESSION_DIR = join(import.meta.dirname ?? ".", "..", "session");
 const TM_SYNC_SCRIPT = join(SESSION_DIR, "tm1-http-sync.mjs");
@@ -279,19 +282,21 @@ async function runExternalSync(cfg: SyncConfig, options?: JobRunOptions): Promis
     return await withResourceLocks(cfg.lockKey, cfg.resources ?? [], async () => {
       let output: string;
       try {
-        output = execFileSync("node", [cfg.scriptPath], {
-          timeout: 60_000, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
+        const result = await execFileAsync("node", [cfg.scriptPath], {
+          timeout: 60_000, encoding: "utf-8",
         });
+        output = result.stdout;
       } catch (execErr: unknown) {
-        const err = execErr as { status?: number; stdout?: string; stderr?: string };
-        if (err.status === 2) {
+        const err = execErr as { code?: number; stdout?: string; stderr?: string };
+        if (err.code === 2) {
           if (job.notify) {
             await notifyChannel("active-jobs", `>> **${cfg.label}** refreshing auth...`);
           }
           await cfg.refreshFn();
-          output = execFileSync("node", [cfg.scriptPath], {
-            timeout: 60_000, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
+          const retryResult = await execFileAsync("node", [cfg.scriptPath], {
+            timeout: 60_000, encoding: "utf-8",
           });
+          output = retryResult.stdout;
         } else {
           throw new Error(err.stderr || err.stdout || `${cfg.label} failed`);
         }
@@ -352,8 +357,8 @@ async function runTokenRefresh(
   console.log(`[scheduler] Refreshing ${label} auth...`);
   try {
     await withResourceLocks(ownerId, resources, async () => {
-      execFileSync("node", [scriptPath], {
-        timeout: 120_000, encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"],
+      await execFileAsync("node", [scriptPath], {
+        timeout: 120_000, encoding: "utf-8",
       });
     });
   } catch (err) {

@@ -25,9 +25,11 @@ import {
   rejectTask,
   taskEvents,
 } from "./queue-service.js";
+import { getServiceSupabase } from "./supabase-service.js";
 
 const RULES_PATH = join(process.cwd(), "rules.json");
 const APPROVALS_CHANNEL = "approvals";
+const OWNER_IDS = new Set(OWNER_USER_IDS);
 const APPROVAL_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours expiry
 
 interface Rules {
@@ -52,6 +54,7 @@ const pendingApprovals = new Map<string, { timeout: ReturnType<typeof setTimeout
 export async function initApprovals(c: Client): Promise<void> {
   client = c;
   await loadRules();
+  await rehydrateEscalatedTasks();
 
   // Listen for task events that need approval
   taskEvents.on("escalated", (task: AgentTask) => {
@@ -67,8 +70,7 @@ export async function initApprovals(c: Client): Promise<void> {
     if (!interaction.customId.startsWith("approval_")) return;
 
     // Owner-only gate
-    const ownerIds = new Set(OWNER_USER_IDS);
-    if (!ownerIds.has(interaction.user.id)) {
+    if (!OWNER_IDS.has(interaction.user.id)) {
       await interaction.reply({ content: "You do not have permission to approve tasks.", ephemeral: true });
       return;
     }
@@ -130,6 +132,52 @@ async function loadRules(): Promise<void> {
   }
 }
 
+async function rehydrateEscalatedTasks(): Promise<void> {
+  const supabase = getServiceSupabase();
+  if (!supabase) return;
+
+  try {
+    const { data, error } = await supabase
+      .from("agent_tasks")
+      .select("id, created_at")
+      .eq("status", "escalated");
+
+    if (error) {
+      console.error("[approvals] Failed to rehydrate escalated tasks:", error.message);
+      return;
+    }
+
+    if (!data || data.length === 0) return;
+
+    const now = Date.now();
+    let rehydrated = 0;
+    for (const row of data) {
+      if (pendingApprovals.has(row.id)) continue;
+      const createdAt = new Date(row.created_at).getTime();
+      const age = now - createdAt;
+      if (age > APPROVAL_EXPIRY_MS) {
+        rejectTask(row.id);
+        console.log(`[approvals] Expired stale escalated task on rehydrate: ${row.id}`);
+        continue;
+      }
+      const remaining = APPROVAL_EXPIRY_MS - age;
+      const timeout = setTimeout(() => {
+        rejectTask(row.id);
+        pendingApprovals.delete(row.id);
+        console.log(`[approvals] Task ${row.id} auto-expired after 24h (rehydrated)`);
+      }, remaining);
+      pendingApprovals.set(row.id, { timeout, createdAt });
+      rehydrated++;
+    }
+
+    if (rehydrated > 0) {
+      console.log(`[approvals] Rehydrated ${rehydrated} escalated task(s) from Supabase`);
+    }
+  } catch (err) {
+    console.error("[approvals] rehydrate error:", toErrorMessage(err));
+  }
+}
+
 /**
  * Evaluate a task's tier and decide what to do.
  * Returns "execute" if the task can proceed, "escalate" if it needs approval.
@@ -151,7 +199,7 @@ export function evaluateTier(task: AgentTask): "execute" | "escalate" {
 
     // Budget change check
     if (task.action === "change-budget") {
-      const amount = (params.amount_cents as number) ?? 0;
+      const amount = Number(params.amount_cents) || 0;
       if (Math.abs(amount) <= rules.yellow.max_budget_change_cents) {
         return "execute";
       }

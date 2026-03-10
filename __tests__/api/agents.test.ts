@@ -107,11 +107,11 @@ describe("POST /api/agents", () => {
     expect(res.status).toBe(200);
   });
 
-  it("inserts a pending job with prompt", async () => {
+  it("inserts a pending task with prompt", async () => {
     const mockInsert = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
         single: vi.fn().mockResolvedValue({
-          data: { id: 5, agent_id: "tm-monitor", status: "pending", created_at: "2026-03-01" },
+          data: { id: "web_abc", from_agent: "web-admin", to_agent: "tm-monitor", action: "run", params: { prompt: "check sales" }, tier: "green", status: "pending", result: null, error: null, created_at: "2026-03-01", started_at: null, completed_at: null },
           error: null,
         }),
       }),
@@ -125,18 +125,23 @@ describe("POST /api/agents", () => {
     });
     await POST(req);
 
-    expect(mockInsert).toHaveBeenCalledWith({
-      agent_id: "tm-monitor",
-      status: "pending",
-      prompt: "check sales",
-    });
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        from_agent: "web-admin",
+        to_agent: "tm-monitor",
+        action: "run",
+        params: { prompt: "check sales" },
+        tier: "green",
+        status: "pending",
+      }),
+    );
   });
 
-  it("sets prompt to null when not provided", async () => {
+  it("sets params to empty object when no prompt provided", async () => {
     const mockInsert = vi.fn().mockReturnValue({
       select: vi.fn().mockReturnValue({
         single: vi.fn().mockResolvedValue({
-          data: { id: 6, agent_id: "tm-monitor", status: "pending", created_at: "2026-03-01" },
+          data: { id: "web_def", from_agent: "web-admin", to_agent: "tm-monitor", action: "run", params: {}, tier: "green", status: "pending", result: null, error: null, created_at: "2026-03-01", started_at: null, completed_at: null },
           error: null,
         }),
       }),
@@ -150,19 +155,34 @@ describe("POST /api/agents", () => {
     });
     await POST(req);
 
-    expect(mockInsert).toHaveBeenCalledWith({
-      agent_id: "tm-monitor",
-      status: "pending",
-      prompt: null,
-    });
+    expect(mockInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to_agent: "tm-monitor",
+        params: {},
+        status: "pending",
+      }),
+    );
   });
 
-  it("returns the created job on success", async () => {
-    const jobData = { id: 7, agent_id: "tm-monitor", status: "pending", created_at: "2026-03-01" };
+  it("returns the created job on success (mapped via mapTaskToJob)", async () => {
+    const taskRow = {
+      id: "web_ghi",
+      from_agent: "web-admin",
+      to_agent: "tm-monitor",
+      action: "run",
+      params: {},
+      tier: "green",
+      status: "pending",
+      result: null,
+      error: null,
+      created_at: "2026-03-01",
+      started_at: null,
+      completed_at: null,
+    };
     mockFrom.mockReturnValue({
       insert: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({ data: jobData, error: null }),
+          single: vi.fn().mockResolvedValue({ data: taskRow, error: null }),
         }),
       }),
     });
@@ -175,7 +195,11 @@ describe("POST /api/agents", () => {
     const res = await POST(req);
     const body = await res.json();
 
-    expect(body.job).toEqual(jobData);
+    expect(body.job).toEqual(expect.objectContaining({
+      id: "web_ghi",
+      agent_id: "tm-monitor",
+      status: "pending",
+    }));
   });
 
   it("returns 500 when database insert fails", async () => {
@@ -200,7 +224,7 @@ describe("POST /api/agents", () => {
     expect(res.status).toBe(500);
   });
 
-  it("returns error message when insert fails", async () => {
+  it("returns generic error message when insert fails", async () => {
     mockFrom.mockReturnValue({
       insert: vi.fn().mockReturnValue({
         select: vi.fn().mockReturnValue({
@@ -220,7 +244,7 @@ describe("POST /api/agents", () => {
     const res = await POST(req);
     const body = await res.json();
 
-    expect(body.error).toBe("duplicate key");
+    expect(body.error).toBe("Database error");
   });
 });
 
@@ -271,7 +295,7 @@ describe("GET /api/agents", () => {
 
   it("maps latest job status per agent", async () => {
     const dbRows = [
-      { agent_id: "tm-monitor", status: "done", result: "synced 10 events", error: null, finished_at: "2026-03-01T10:00:00Z" },
+      { id: "task_1", from_agent: "web-admin", to_agent: "tm-monitor", action: "run", params: {}, status: "completed", result: { text: "synced 10 events" }, error: null, created_at: "2026-03-01T10:00:00Z", started_at: "2026-03-01T10:00:01Z", completed_at: "2026-03-01T10:00:30Z" },
     ];
 
     mockFrom.mockReturnValue({
@@ -291,7 +315,7 @@ describe("GET /api/agents", () => {
     expect(tmAgent.last_result).toBe("synced 10 events");
   });
 
-  it("defaults to idle status for agents with no jobs", async () => {
+  it("defaults to pending status for agents with no jobs", async () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
@@ -305,12 +329,12 @@ describe("GET /api/agents", () => {
     const body = await res.json();
 
     for (const agent of body.agents) {
-      expect(agent.status).toBe("idle");
+      expect(agent.status).toBe("pending");
       expect(agent.last_run).toBeNull();
     }
   });
 
-  it("returns 500 when database query fails", async () => {
+  it("returns 200 with default statuses when database query fails", async () => {
     mockFrom.mockReturnValue({
       select: vi.fn().mockReturnValue({
         order: vi.fn().mockReturnValue({
@@ -321,13 +345,18 @@ describe("GET /api/agents", () => {
 
     const { GET } = await import("@/app/api/agents/route");
     const res = await GET();
+    const body = await res.json();
 
-    expect(res.status).toBe(500);
+    expect(res.status).toBe(200);
+    expect(body.agents).toHaveLength(4);
+    for (const agent of body.agents) {
+      expect(agent.status).toBe("pending");
+    }
   });
 });
 
 describe("GET /api/agents — supabase unavailable", () => {
-  it("returns idle stubs for all agents when supabaseAdmin is null", async () => {
+  it("returns pending stubs for all agents when supabaseAdmin is null", async () => {
     vi.resetModules();
     vi.doMock("@/lib/supabase", () => ({ supabaseAdmin: null }));
 
@@ -337,7 +366,7 @@ describe("GET /api/agents — supabase unavailable", () => {
 
     expect(body.agents).toHaveLength(4);
     for (const agent of body.agents) {
-      expect(agent.status).toBe("idle");
+      expect(agent.status).toBe("pending");
     }
   });
 });

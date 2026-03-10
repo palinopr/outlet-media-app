@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Image as ImageIcon, Link2, ShieldCheck, Video } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tone } from "@/lib/tone-styles";
 import { slugToLabel, timeAgo } from "@/lib/formatters";
 import type {
   AssetAttentionItem,
@@ -19,31 +20,15 @@ interface DashboardAssetsSectionProps {
   variant: "admin" | "client";
 }
 
-function tone(variant: "admin" | "client") {
-  if (variant === "client") {
-    return {
-      body: "rounded-[28px] border border-white/[0.08] bg-white/[0.04] p-5",
-      card: "rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3",
-      empty:
-        "rounded-2xl border border-dashed border-white/[0.1] bg-white/[0.02] px-4 py-6 text-sm text-white/50",
-      muted: "text-white/50",
-      text: "text-white",
-      link: "text-cyan-300 hover:text-cyan-200",
-      metric: "bg-white/[0.04] text-white/75",
-      chip: "bg-white/[0.06] text-white/75",
-    };
-  }
-
+function sectionTone(variant: "admin" | "client") {
+  const isClient = variant === "client";
   return {
-    body: "rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]",
-    card: "rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-3",
-    empty:
-      "rounded-2xl border border-dashed border-[#e7e0d3] bg-[#faf8f5] px-4 py-6 text-sm text-[#9b9a97]",
-    muted: "text-[#9b9a97]",
-    text: "text-[#2f2f2f]",
-    link: "text-[#0f7b6c] hover:text-[#0b5e52]",
-    metric: "bg-[#f7f5f1] text-[#6f6a63]",
-    chip: "bg-[#f1ece4] text-[#6f6a63]",
+    ...tone(variant),
+    card: isClient
+      ? "rounded-2xl border border-white/[0.08] bg-white/[0.03] p-3"
+      : "rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-3",
+    metric: isClient ? "bg-white/[0.04] text-white/75" : "bg-[#f7f5f1] text-[#6f6a63]",
+    chip: isClient ? "bg-white/[0.06] text-white/75" : "bg-[#f1ece4] text-[#6f6a63]",
   };
 }
 
@@ -74,7 +59,7 @@ export function DashboardAssetsSection({
   title = "Asset snapshot",
   variant,
 }: DashboardAssetsSectionProps) {
-  const styles = tone(variant);
+  const styles = sectionTone(variant);
 
   return (
     <section className={styles.body}>

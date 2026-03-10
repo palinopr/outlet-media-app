@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { X, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +12,7 @@ interface PageCoverProps {
 }
 
 export function PageCover({ pageId, coverImage, onRemove }: PageCoverProps) {
+  const router = useRouter();
   const [hover, setHover] = useState(false);
 
   if (!coverImage) {
@@ -26,7 +28,7 @@ export function PageCover({ pageId, coverImage, onRemove }: PageCoverProps) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ cover_image: url.trim() }),
           });
-          if (res.ok) window.location.reload();
+          if (res.ok) router.refresh();
         }}
       >
         <ImageIcon className="h-3.5 w-3.5" />

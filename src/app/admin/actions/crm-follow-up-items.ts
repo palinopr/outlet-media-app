@@ -17,8 +17,8 @@ import {
   TASK_PRIORITIES,
   TASK_PRIORITY_LABELS,
   TASK_STATUSES,
-  TASK_STATUS_LABELS,
 } from "@/lib/workspace-types";
+import { FIELD_LABELS, taskStatusLabel } from "@/lib/action-item-labels";
 import { logSystemEvent, summarizeChangedFields } from "@/features/system-events/server";
 import { logAudit } from "./audit";
 
@@ -47,21 +47,6 @@ const UpdateCrmFollowUpItemSchema = z.object({
   assigneeName: z.string().max(200).optional().nullable(),
   dueDate: z.string().optional().nullable(),
 });
-
-const FIELD_LABELS: Record<string, string> = {
-  assigneeId: "assignee",
-  assigneeName: "assignee name",
-  description: "description",
-  dueDate: "due date",
-  priority: "priority",
-  status: "status",
-  title: "title",
-  visibility: "visibility",
-};
-
-function taskStatusLabel(status: string) {
-  return TASK_STATUS_LABELS[status as keyof typeof TASK_STATUS_LABELS] ?? status;
-}
 
 export async function createCrmFollowUpItem(formData: {
   contactId: string;

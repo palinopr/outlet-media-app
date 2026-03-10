@@ -178,3 +178,14 @@ export function statusBadge(s: string) {
     </span>
   );
 }
+
+// ─── Pluralization ──────────────────────────────────────────────────────
+
+/** Return a human-readable count string like "3 items" or "1 item". */
+export function describeCount(
+  n: number,
+  singular: string,
+  plural = `${singular}s`,
+): string {
+  return `${n} ${n === 1 ? singular : plural}`;
+}

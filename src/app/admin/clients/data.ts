@@ -4,7 +4,7 @@ import {
   listEffectiveCampaignRowsForClientSlug,
 } from "@/lib/campaign-client-assignment";
 import { clerkClient } from "@clerk/nextjs/server";
-import { computeBlendedRoas } from "@/lib/formatters";
+import { centsToUsd, computeBlendedRoas } from "@/lib/formatters";
 import { getClientServices } from "@/lib/client-services";
 import { buildClientWorkflowHealth } from "@/features/clients/summary";
 import { listActionableInvitations } from "@/features/invitations/server";
@@ -225,11 +225,11 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
   return clientsRes.data.map((client) => {
     const campaigns = campaignsBySlug[client.slug] ?? [];
     const totalSpend = campaigns.reduce(
-      (s, c) => s + (c.spend ?? 0) / 100,
+      (s, c) => s + (centsToUsd(c.spend ?? 0) as number),
       0,
     );
     const totalRevenue = campaigns.reduce(
-      (s, c) => s + ((c.spend ?? 0) / 100) * (c.roas ?? 0),
+      (s, c) => s + (centsToUsd(c.spend ?? 0) as number) * (c.roas ?? 0),
       0,
     );
     const activeCampaigns = campaigns.filter(
@@ -446,7 +446,7 @@ export async function getClientDetail(
     id: c.campaign_id ?? c.id,
     name: c.name ?? c.campaign_id ?? c.id,
     status: c.status ?? "unknown",
-    spend: (c.spend ?? 0) / 100,
+    spend: centsToUsd(c.spend ?? 0) as number,
     roas: c.roas ?? 0,
   }));
   const clientCampaignIds = new Set(campaigns.map((campaign) => campaign.id));

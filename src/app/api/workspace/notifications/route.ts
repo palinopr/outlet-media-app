@@ -14,10 +14,11 @@ async function getViewerRole() {
 async function getClientNotificationScope(
   userId: string,
   clientSlug: string,
+  role?: string | null,
 ): Promise<{ error: NextResponse | null; scope: ScopeFilter | undefined }> {
-  const role = await getViewerRole();
+  const resolvedRole = role ?? (await getViewerRole());
 
-  if (role === "admin") {
+  if (resolvedRole === "admin") {
     return { error: null, scope: undefined };
   }
 
@@ -53,7 +54,7 @@ export async function GET(request: NextRequest) {
 
   let scope: ScopeFilter | undefined;
   if (clientSlug) {
-    const access = await getClientNotificationScope(userId, clientSlug);
+    const access = await getClientNotificationScope(userId, clientSlug, role);
     if (access.error) return access.error;
     scope = access.scope;
   }
@@ -73,6 +74,8 @@ export async function PATCH(request: NextRequest) {
   const notificationsDb = (await createClerkSupabaseClient()) ?? supabaseAdmin;
   if (!notificationsDb) return apiError("DB not configured");
 
+  const role = await getViewerRole();
+
   let body: { clientSlug?: string; id?: string; markAll?: boolean };
   try {
     body = await request.json();
@@ -83,11 +86,10 @@ export async function PATCH(request: NextRequest) {
   if (body.markAll) {
     let scope: ScopeFilter | undefined;
     if (body.clientSlug) {
-      const access = await getClientNotificationScope(userId, body.clientSlug);
+      const access = await getClientNotificationScope(userId, body.clientSlug, role);
       if (access.error) return access.error;
       scope = access.scope;
     } else {
-      const role = await getViewerRole();
       if (role !== "admin") {
         return apiError("Client inbox requests require a client scope", 403);
       }
@@ -131,7 +133,7 @@ export async function PATCH(request: NextRequest) {
 
   if (body.id) {
     if (body.clientSlug) {
-      const access = await getClientNotificationScope(userId, body.clientSlug);
+      const access = await getClientNotificationScope(userId, body.clientSlug, role);
       if (access.error) return access.error;
 
       const visibleNotifications = await listNotificationsForUser(userId, {
@@ -143,7 +145,6 @@ export async function PATCH(request: NextRequest) {
         return apiError("Notification not found", 404);
       }
     } else {
-      const role = await getViewerRole();
       if (role !== "admin") {
         return apiError("Client inbox requests require a client scope", 403);
       }

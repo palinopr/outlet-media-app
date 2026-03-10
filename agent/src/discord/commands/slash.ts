@@ -267,7 +267,7 @@ export function registerSlashHandler(client: Client): void {
           }
           await cmd.deferReply();
           const { handleScheduleCommand } = await import("./schedule.js");
-          const result = await handleScheduleCommand("!schedule list", client, "schedule");
+          const result = await handleScheduleCommand("!schedule list", "schedule");
           if (result?.embed) {
             const { scheduleButtons } = await import("../features/buttons.js");
             await cmd.editReply({ embeds: [result.embed], components: [scheduleButtons()] });
@@ -576,8 +576,6 @@ function buildHelpText(): string {
     "  #tm-data -- Ticketmaster events, demographics",
     "  #creative -- ad creative, copy, images",
     "  #dashboard -- reporting, analytics, trends",
-    "  #growth / #tiktok-ops / #content-lab / #lead-inbox -- growth pod",
-    "  #tiktok-publish -- assisted publish packets and operator confirmations",
     "  #zamora / #kybba -- client conversations",
     "  #boss / #email / #meetings / #schedule -- owner-only",
     "",

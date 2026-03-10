@@ -1,12 +1,11 @@
-import { currentUser } from "@clerk/nextjs/server";
 import {
   TASK_PRIORITY_LABELS,
-  TASK_STATUS_LABELS,
   type TaskPriority,
   type TaskStatus,
 } from "@/lib/workspace-types";
+import { taskStatusLabel } from "@/lib/action-item-labels";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   logSystemEvent,
@@ -74,10 +73,6 @@ interface CreateSystemCrmFollowUpItemInput extends CrmFollowUpItemActor {
 const CRM_FOLLOW_UP_ITEM_SELECT =
   "id, contact_id, client_slug, title, description, status, priority, visibility, assignee_id, assignee_name, due_date, created_by, position, source_entity_type, source_entity_id, created_at, updated_at";
 
-function taskStatusLabel(status: TaskStatus) {
-  return TASK_STATUS_LABELS[status] ?? status;
-}
-
 function shouldEnqueueCrmFollowUpItemTriage(
   item: CrmFollowUpItem,
   previous?: CrmFollowUpItemTriagePreviousState,
@@ -135,21 +130,6 @@ async function listContactNames(contactIds: string[]) {
   );
 }
 
-async function getCrmFollowUpReadClient(clientSlug?: string | null) {
-  if (!supabaseAdmin || !clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 function mapCrmFollowUpItem(
   row: Record<string, unknown>,
@@ -182,7 +162,7 @@ function mapCrmFollowUpItem(
 export async function listCrmFollowUpItems(
   options: ListCrmFollowUpItemsOptions,
 ): Promise<CrmFollowUpItem[]> {
-  const db = await getCrmFollowUpReadClient(options.clientSlug);
+  const db = await getFeatureReadClient(!!options.clientSlug);
   if (!db) return [];
 
   let query = db

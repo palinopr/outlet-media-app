@@ -1,13 +1,12 @@
-import { currentUser } from "@clerk/nextjs/server";
 import {
   TASK_PRIORITY_LABELS,
-  TASK_STATUS_LABELS,
   type TaskPriority,
   type TaskStatus,
 } from "@/lib/workspace-types";
+import { FIELD_LABELS, taskStatusLabel } from "@/lib/action-item-labels";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import {
   logSystemEvent,
   summarizeChangedFields,
@@ -88,21 +87,6 @@ interface UpdateSystemEventFollowUpItemInput extends EventFollowUpItemActor {
 const EVENT_FOLLOW_UP_ITEM_SELECT =
   "id, event_id, client_slug, title, description, status, priority, visibility, assignee_id, assignee_name, due_date, created_by, position, source_entity_type, source_entity_id, created_at, updated_at";
 
-const FIELD_LABELS: Record<string, string> = {
-  assigneeId: "assignee",
-  assigneeName: "assignee name",
-  description: "description",
-  dueDate: "due date",
-  priority: "priority",
-  status: "status",
-  title: "title",
-  visibility: "visibility",
-};
-
-function taskStatusLabel(status: TaskStatus) {
-  return TASK_STATUS_LABELS[status] ?? status;
-}
-
 function shouldEnqueueEventFollowUpItemTriage(
   item: EventFollowUpItem,
   previous?: EventFollowUpItemTriagePreviousState,
@@ -174,24 +158,6 @@ async function listEventInfo(
   );
 }
 
-async function getEventFollowUpItemsReadClient(options: {
-  audience?: "all" | EventFollowUpItemVisibility;
-}) {
-  if (!supabaseAdmin) return null;
-  if (options.audience !== "shared") return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 function mapEventFollowUpItem(
   row: Record<string, unknown>,
@@ -227,7 +193,7 @@ function mapEventFollowUpItem(
 export async function listEventFollowUpItems(
   options: ListEventFollowUpItemsOptions,
 ): Promise<EventFollowUpItem[]> {
-  const db = await getEventFollowUpItemsReadClient(options);
+  const db = await getFeatureReadClient(options.audience === "shared");
   if (!db) return [];
 
   let query = db
@@ -466,8 +432,8 @@ export async function updateSystemEventFollowUpItem(
 
   const existingRow = existing as Record<string, unknown>;
   const nextValues = {
-    assigneeId: input.assigneeId ?? existingRow.assignee_id ?? null,
-    assigneeName: input.assigneeName ?? existingRow.assignee_name ?? null,
+    assigneeId: "assigneeId" in input ? input.assigneeId : ((existingRow.assignee_id as string | null) ?? null),
+    assigneeName: "assigneeName" in input ? input.assigneeName : ((existingRow.assignee_name as string | null) ?? null),
     description:
       "description" in input ? input.description ?? null : ((existingRow.description as string | null) ?? null),
     dueDate: "dueDate" in input ? input.dueDate ?? null : ((existingRow.due_date as string | null) ?? null),

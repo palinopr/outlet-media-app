@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { authGuard, apiError, dbError, validateRequest } from "@/lib/api-helpers";
+import { authGuard, apiError, dbError, getAuthorName, validateRequest } from "@/lib/api-helpers";
+import { excerpt } from "@/lib/text-utils";
 import { supabaseAdmin } from "@/lib/supabase";
 import { CreateCommentSchema, ResolveCommentSchema } from "@/lib/api-schemas";
 import { currentUser } from "@clerk/nextjs/server";
@@ -9,12 +10,6 @@ import { revalidateWorkspaceMutationTargets } from "@/features/workflow/revalida
 import { requireWorkspaceClientAccess } from "@/features/workspace/access";
 import { getWorkspaceReadClient } from "@/features/workspace/server";
 import type { NotificationType } from "@/lib/workspace-types";
-
-function excerpt(text: string, limit = 140) {
-  const normalized = text.trim().replace(/\s+/g, " ");
-  if (normalized.length <= limit) return normalized;
-  return `${normalized.slice(0, limit - 1)}…`;
-}
 
 export async function GET(request: NextRequest) {
   const { userId, error } = await authGuard();
@@ -57,7 +52,7 @@ export async function POST(request: NextRequest) {
   if (valErr) return valErr;
 
   const user = await currentUser();
-  const authorName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown";
+  const authorName = getAuthorName(user);
   const [{ data: page }, parentResult] = await Promise.all([
     supabaseAdmin
       .from("workspace_pages")

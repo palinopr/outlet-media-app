@@ -105,7 +105,7 @@ export function registerButtonHandler(client: Client): void {
           }
           await btn.deferReply({ ephemeral: true });
           const { handleScheduleCommand } = await import("../commands/schedule.js");
-          const result = await handleScheduleCommand("!enable-all", client, "schedule");
+          const result = await handleScheduleCommand("!enable-all", "schedule");
           await btn.editReply(result?.text || "All jobs enabled.");
           break;
         }
@@ -117,7 +117,7 @@ export function registerButtonHandler(client: Client): void {
           }
           await btn.deferReply({ ephemeral: true });
           const { handleScheduleCommand } = await import("../commands/schedule.js");
-          const result = await handleScheduleCommand("!disable-all", client, "schedule");
+          const result = await handleScheduleCommand("!disable-all", "schedule");
           await btn.editReply(result?.text || "All jobs disabled.");
           break;
         }
@@ -129,7 +129,7 @@ export function registerButtonHandler(client: Client): void {
           }
           await btn.deferReply({ ephemeral: true });
           const { handleScheduleCommand } = await import("../commands/schedule.js");
-          const result = await handleScheduleCommand("!schedule list", client, "schedule");
+          const result = await handleScheduleCommand("!schedule list", "schedule");
           if (result?.embed) {
             await btn.editReply({ embeds: [result.embed] });
           } else {

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { createClerkSupabaseClient, currentUser, state, supabaseAdmin } = vi.hoisted(() => {
+const { createClerkSupabaseClient, currentUser, getFeatureReadClient, state, supabaseAdmin } = vi.hoisted(() => {
   const state = {
     approval_requests: [] as Record<string, unknown>[],
     campaign_client_overrides: [] as Record<string, unknown>[],
@@ -61,9 +61,25 @@ const { createClerkSupabaseClient, currentUser, state, supabaseAdmin } = vi.hois
     },
   };
 
+  const createClerkSupabaseClientFn = vi.fn();
+  const currentUserFn = vi.fn();
+
+  const getFeatureReadClientFn = vi.fn(async (useClientScope: boolean) => {
+    if (!useClientScope) return supabaseAdmin;
+    try {
+      const user = await currentUserFn();
+      const role = (user?.publicMetadata as { role?: string } | null)?.role;
+      if (role === "admin") return supabaseAdmin;
+    } catch {
+      return supabaseAdmin;
+    }
+    return (await createClerkSupabaseClientFn()) ?? supabaseAdmin;
+  });
+
   return {
-    createClerkSupabaseClient: vi.fn(),
-    currentUser: vi.fn(),
+    createClerkSupabaseClient: createClerkSupabaseClientFn,
+    currentUser: currentUserFn,
+    getFeatureReadClient: getFeatureReadClientFn,
     state,
     supabaseAdmin,
   };
@@ -71,6 +87,7 @@ const { createClerkSupabaseClient, currentUser, state, supabaseAdmin } = vi.hois
 
 vi.mock("@/lib/supabase", () => ({
   createClerkSupabaseClient,
+  getFeatureReadClient,
   supabaseAdmin,
 }));
 

@@ -7,7 +7,7 @@ import { ExternalLink } from "lucide-react";
 import { ColumnHeader } from "@/components/admin/data-table/column-header";
 import { StatusSelect } from "@/components/admin/status-select";
 import { InlineEdit } from "@/components/admin/inline-edit";
-import { fmtDate, fmtUsd, slugToLabel } from "@/lib/formatters";
+import { centsToUsd, fmtDate, fmtUsd, slugToLabel } from "@/lib/formatters";
 import { matchedCampaigns } from "@/lib/campaign-event-match";
 import {
   updateEventStatus,
@@ -166,7 +166,7 @@ export function getEventColumns(opts: EventColumnsOptions): ColumnDef<TmEventRow
           return <span className="text-xs text-muted-foreground">paused</span>;
         }
         const avgRoas = active.reduce((s, c) => s + (c.roas ?? 0), 0) / active.length;
-        const totalSpend = active.reduce((s, c) => s + ((c.spend ?? 0) / 100), 0);
+        const totalSpend = active.reduce((s, c) => s + (centsToUsd(c.spend ?? 0) as number), 0);
         return (
           <div>
             <span className="text-xs font-medium text-emerald-400">{active.length} active</span>

@@ -27,12 +27,14 @@ export async function POST(request: Request) {
 
   const confirmationCode = `del_${randomBytes(12).toString("hex")}`;
 
-  if (supabaseAdmin) {
-    await supabaseAdmin
-      .from("client_accounts")
-      .delete()
-      .eq("meta_user_id", payload.user_id);
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
+
+  await supabaseAdmin
+    .from("client_accounts")
+    .delete()
+    .eq("meta_user_id", payload.user_id);
 
   return NextResponse.json({
     url: `${appUrl}/deletion-status/${confirmationCode}`,

@@ -11,17 +11,15 @@ const DATE_OPTIONS = [
   { value: "lifetime", label: "Lifetime" },
 ];
 
-export function DateRangeFilter({ selected }: { selected: string }) {
+export function DateRangeFilter() {
   const [range, setRange] = useQueryState(
     "range",
     parseAsString.withDefault("today").withOptions({ shallow: false }),
   );
 
-  const value = range || selected;
-
   return (
     <select
-      value={value}
+      value={range}
       onChange={(e) => {
         const v = e.target.value;
         setRange(v === "today" ? null : v);

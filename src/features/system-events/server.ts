@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 
 export type SystemEventName =
   | "agent_action_requested"
@@ -307,22 +307,6 @@ function buildSystemEventsQuery(
   return query;
 }
 
-async function getSystemEventsReadClient(options: ListSystemEventsOptions) {
-  if (!supabaseAdmin) return null;
-  if (!options.clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 export function isCrmSystemEvent(event: SystemEvent) {
   return (
@@ -478,7 +462,7 @@ export async function logSystemEvent(input: LogSystemEventInput): Promise<void> 
 export async function listSystemEvents(
   options: ListSystemEventsOptions = {},
 ): Promise<SystemEvent[]> {
-  const eventReadDb = await getSystemEventsReadClient(options);
+  const eventReadDb = await getFeatureReadClient(!!options.clientSlug);
   if (!eventReadDb) return [];
 
   let { data, error } = await buildSystemEventsQuery(eventReadDb, SYSTEM_EVENT_SELECT, options);

@@ -1,6 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { supabaseAdmin } from "@/lib/supabase";
-import { createClerkSupabaseClient } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import {
   getCurrentActor,
@@ -185,21 +183,6 @@ function buildCrmFollowUpPrompt(contact: CrmContact, reason: string) {
   ].join("\n");
 }
 
-async function getCrmReadClient(clientSlug?: string | null) {
-  if (!supabaseAdmin || !clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 async function queueCrmFollowUpTriage(contact: CrmContact, reason: string) {
   const taskId = await enqueueExternalAgentTask({
@@ -235,7 +218,7 @@ async function queueCrmFollowUpTriage(contact: CrmContact, reason: string) {
 export async function listCrmContacts(
   options: ListCrmContactsOptions = {},
 ): Promise<CrmContact[]> {
-  const db = await getCrmReadClient(options.clientSlug);
+  const db = await getFeatureReadClient(!!options.clientSlug);
   if (!db) return [];
 
   let query = db
@@ -268,7 +251,7 @@ export async function getCrmContactById(
   contactId: string,
   options: GetCrmContactOptions = {},
 ): Promise<CrmContact | null> {
-  const db = await getCrmReadClient(options.clientSlug);
+  const db = await getFeatureReadClient(!!options.clientSlug);
   if (!db) return null;
 
   let query = db

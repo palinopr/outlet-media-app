@@ -3,6 +3,7 @@ import {
   getCampaignClientOverrideMap,
   resolveEffectiveCampaignClientSlug,
 } from "./campaign-client-assignment";
+import { centsToUsd } from "./formatters";
 import { supabaseAdmin } from "./supabase";
 
 export interface MetaCampaignCard {
@@ -266,7 +267,7 @@ export async function fetchAllCampaigns(
         ctr: insight ? safeParseFloat(insight.ctr) : null,
         cpc: insight ? safeParseFloat(insight.cpc) : null,
         cpm: insight ? safeParseFloat(insight.cpm) : null,
-        dailyBudget: c.daily_budget ? parseInt(c.daily_budget) / 100 : null,
+        dailyBudget: c.daily_budget ? centsToUsd(parseInt(c.daily_budget)) : null,
         startTime: c.start_time ?? null,
       };
     });

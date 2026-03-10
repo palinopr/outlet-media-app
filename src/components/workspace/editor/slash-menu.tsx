@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, type ComponentType } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { PlateElementProps } from "platejs/react";
 import type { TComboboxInputElement } from "platejs";
 import { useEditorRef, PlateElement } from "platejs/react";

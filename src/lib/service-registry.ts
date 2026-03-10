@@ -106,16 +106,3 @@ export const SERVICE_PRESETS: ServicePreset[] = [
   },
 ];
 
-export const ALWAYS_VISIBLE_ROUTES = ["", "settings"];
-
-export function routeRequiresService(routeSegment: string): ServiceKey[] | null {
-  if (ALWAYS_VISIBLE_ROUTES.includes(routeSegment)) return null;
-
-  const required: ServiceKey[] = [];
-  for (const [key, def] of Object.entries(SERVICE_REGISTRY)) {
-    if (def.portalRoutes.includes(routeSegment)) {
-      required.push(key as ServiceKey);
-    }
-  }
-  return required.length > 0 ? required : null;
-}

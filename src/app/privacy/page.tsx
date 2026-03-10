@@ -4,6 +4,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
+    <div className="dark min-h-screen bg-background text-foreground">
     <div className="max-w-3xl mx-auto px-6 py-12 prose prose-invert">
       <h1>Privacy Policy</h1>
       <p className="text-muted-foreground">Last updated: March 2, 2026</p>
@@ -61,6 +62,7 @@ export default function PrivacyPage() {
 
       <h2>8. Changes to This Policy</h2>
       <p>We will update this page when our practices change. The "last updated" date at the top reflects the most recent revision.</p>
+    </div>
     </div>
   );
 }

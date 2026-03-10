@@ -901,7 +901,9 @@ export async function deleteAssetById(assetId: string): Promise<{
 
   if (!asset) throw new Error("Asset not found");
 
-  await supabaseAdmin.storage.from("ad-assets").remove([asset.storage_path]);
+  if (asset.storage_path) {
+    await supabaseAdmin.storage.from("ad-assets").remove([asset.storage_path]);
+  }
 
   const { error } = await supabaseAdmin
     .from("ad_assets")

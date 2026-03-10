@@ -1,3 +1,4 @@
+import { describeCount } from "@/lib/formatters";
 import type { AppNotification } from "./types";
 
 export type NotificationFilterKey =
@@ -23,10 +24,6 @@ export interface NotificationFilterOption {
 export interface NotificationsCenterSummary {
   filters: NotificationFilterOption[];
   metrics: NotificationSummaryMetric[];
-}
-
-function describeCount(value: number, singular: string, plural = `${singular}s`) {
-  return `${value} ${value === 1 ? singular : plural}`;
 }
 
 function isCommentNotification(notification: AppNotification) {

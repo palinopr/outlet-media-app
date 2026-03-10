@@ -1,7 +1,6 @@
-import { currentUser } from "@clerk/nextjs/server";
 import type { ScopeFilter } from "@/lib/member-access";
 import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import {
@@ -85,25 +84,6 @@ export interface EventsWorkflowData {
   agentOutcomes: AgentOutcomeView[];
 }
 
-async function getEventReadClient(options: {
-  clientSlug?: string | null;
-  mode: "admin" | "client";
-}) {
-  if (!supabaseAdmin) return null;
-  if (options.mode !== "client" || !options.clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 function mapEventRow(row: Record<string, unknown>): EventOperatingRecord {
   return {
@@ -243,7 +223,7 @@ export async function getEventsWorkflowData(
 export async function getEventOperationsSummary(
   options: GetEventOperationsSummaryOptions,
 ) {
-  const db = await getEventReadClient(options);
+  const db = await getFeatureReadClient(options.mode === "client" && !!options.clientSlug);
   if (!db) {
     return buildEventOperationsSummary({
       comments: [],

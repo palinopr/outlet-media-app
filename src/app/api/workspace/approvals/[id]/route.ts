@@ -1,16 +1,12 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
+import { authGuard, apiError, isAdminRole, validateRequest } from "@/lib/api-helpers";
 import { ResolveApprovalRequestSchema } from "@/lib/api-schemas";
 import {
   canAccessApprovalRequest,
   getApprovalRequestById,
   resolveApprovalRequest,
 } from "@/features/approvals/server";
-
-function isAdminRole(role: unknown): boolean {
-  return typeof role === "string" && role === "admin";
-}
 
 export async function PATCH(
   request: NextRequest,

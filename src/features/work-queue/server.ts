@@ -1,6 +1,5 @@
-import { currentUser } from "@clerk/nextjs/server";
 import type { ScopeFilter } from "@/lib/member-access";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import { buildWorkQueueSummary, type WorkQueueItem } from "./summary";
@@ -74,25 +73,9 @@ export function matchesWorkQueueKinds(
   return kinds.includes(item.kind);
 }
 
-async function getWorkQueueReadClient(options: GetWorkQueueOptions) {
-  if (!supabaseAdmin) return null;
-  if (options.mode !== "client" || !options.clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 export async function getWorkQueue(options: GetWorkQueueOptions) {
-  const db = await getWorkQueueReadClient(options);
+  const db = await getFeatureReadClient(options.mode === "client" && !!options.clientSlug);
   if (!db || !supabaseAdmin) {
     return buildWorkQueueSummary([], { limit: options.limit });
   }

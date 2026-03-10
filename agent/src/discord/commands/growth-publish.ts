@@ -81,7 +81,7 @@ export async function confirmGrowthPublish(
     .join("\n");
 
   await sendAsAgent("publisher-tiktok", input.channelName, channelMessage);
-  await notifyChannel("growth-dashboard", dashboardMessage);
+  await notifyChannel("dashboard", dashboardMessage);
 
   return {
     attemptId: updated.id,
@@ -121,7 +121,7 @@ export async function failGrowthPublish(
     .join("\n");
 
   await sendAsAgent("publisher-tiktok", input.channelName, channelMessage);
-  await notifyChannel("growth-dashboard", dashboardMessage);
+  await notifyChannel("dashboard", dashboardMessage);
 
   return {
     attemptId: updated.id,

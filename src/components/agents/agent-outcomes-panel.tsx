@@ -7,6 +7,7 @@ import { ArrowRight, Bot, CircleAlert, Clock3, LoaderCircle, Sparkles } from "lu
 import { Button } from "@/components/ui/button";
 import { timeAgo } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { tone } from "@/lib/tone-styles";
 import type { AgentOutcomeStatus, AgentOutcomeView } from "@/features/agent-outcomes/summary";
 
 interface AgentOutcomesPanelProps {
@@ -75,24 +76,12 @@ function statusTone(status: AgentOutcomeStatus, variant: "admin" | "client") {
 }
 
 function surfaceTone(variant: "admin" | "client") {
-  if (variant === "client") {
-    return {
-      body: "rounded-[28px] border border-white/[0.08] bg-white/[0.04] p-5",
-      empty:
-        "rounded-2xl border border-dashed border-white/[0.1] bg-white/[0.02] px-4 py-6 text-sm text-white/50",
-      item: "rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4",
-      muted: "text-white/50",
-      text: "text-white",
-    };
-  }
-
   return {
-    body: "rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]",
-    empty:
-      "rounded-2xl border border-dashed border-[#e7e0d3] bg-[#faf8f5] px-4 py-6 text-sm text-[#9b9a97]",
-    item: "rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4",
-    muted: "text-[#9b9a97]",
-    text: "text-[#2f2f2f]",
+    ...tone(variant),
+    item:
+      variant === "client"
+        ? "rounded-2xl border border-white/[0.08] bg-white/[0.03] p-4"
+        : "rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4",
   };
 }
 

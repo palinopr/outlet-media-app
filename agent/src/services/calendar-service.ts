@@ -92,8 +92,21 @@ function computeEnd(startIso: string, durationMinutes: number): { dateTime: stri
   const endMs = startMs + durationMinutes * 60_000;
   const endDate = new Date(endMs);
 
-  const pad = (n: number) => String(n).padStart(2, "0");
-  const endStr = `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:${pad(endDate.getSeconds())}`;
+  const tz = start.timeZone ?? DEFAULT_TIMEZONE;
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(endDate);
+
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((p) => p.type === type)?.value ?? "00";
+  const endStr = `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}`;
 
   return start.timeZone
     ? { dateTime: endStr, timeZone: start.timeZone }

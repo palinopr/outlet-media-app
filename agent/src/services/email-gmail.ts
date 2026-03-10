@@ -63,7 +63,7 @@ function readServiceAccount() {
   }
 }
 
-function getGmailAuth() {
+export function getGmailAuth() {
   const key = readServiceAccount();
   return new google.auth.JWT({
     email: key.client_email,

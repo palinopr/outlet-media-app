@@ -94,16 +94,6 @@ const CHANNEL_ALIASES: Record<string, string> = {
 /** Agent names that can receive delegations, mapped to channel names */
 const DELEGATE_TARGETS: Record<string, string> = {
   "boss": "boss",
-  "growth-supervisor": "growth",
-  "growth": "growth",
-  "tiktok-supervisor": "tiktok-ops",
-  "tiktok-ops": "tiktok-ops",
-  "content-finder": "content-lab",
-  "content-lab": "content-lab",
-  "lead-qualifier": "lead-inbox",
-  "lead-inbox": "lead-inbox",
-  "publisher-tiktok": "tiktok-publish",
-  "tiktok-publish": "tiktok-publish",
   "media-buyer": "media-buyer",
   "tm-agent": "tm-data",
   "tm-data": "tm-data",
@@ -127,11 +117,6 @@ const DELEGATE_TARGETS: Record<string, string> = {
 
 const CHANNEL_HANDOFF_TARGETS: Record<string, string> = {
   "boss": "boss",
-  "growth": "growth-supervisor",
-  "tiktok-ops": "tiktok-supervisor",
-  "content-lab": "content-finder",
-  "lead-inbox": "lead-qualifier",
-  "tiktok-publish": "publisher-tiktok",
   "media-buyer": "media-buyer",
   "tm-data": "tm-agent",
   "don-omar-tickets": "don-omar-agent",
@@ -611,14 +596,14 @@ export async function processDelegations(
     const queuedParams = attachTaskRuntimeParams(taskParams, sourceChannel, depth, true);
 
     // Evaluate tier BEFORE enqueue to prevent race condition
-    const preTask = {
+    const preTask: AgentTask = {
       id: "",
       from: fromAgent,
       to: block.delegate,
       action: block.action,
       params: queuedParams,
       tier,
-      status: "pending" as const,
+      status: "pending",
       createdAt: new Date(),
     };
     const decision = evaluateTier(preTask);
@@ -748,14 +733,14 @@ export async function processChannelMessages(
       );
       const queuedParams = attachTaskRuntimeParams(handoffParams, sourceChannel, depth, false);
 
-      const preTask = {
+      const preTask: AgentTask = {
         id: "",
         from: fromAgent,
         to: delegateTarget,
         action: "channel-handoff",
         params: queuedParams,
         tier,
-        status: "pending" as const,
+        status: "pending",
         createdAt: new Date(),
       };
       const decision = evaluateTier(preTask);

@@ -58,6 +58,7 @@ export function HourlyHeatmap({ data }: { data: HourlyRow[] }) {
                   <span className="text-[10px] text-white/70">
                     {imp > 0 ? `${imp.toLocaleString()} imp` : "No data"}
                     {row?.clicks ? ` / ${row.clicks.toLocaleString()} clicks` : ""}
+                    {row?.spend ? ` / $${Math.round(row.spend).toLocaleString()} spend` : ""}
                   </span>
                 </div>
               </div>

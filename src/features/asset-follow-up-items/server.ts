@@ -1,12 +1,11 @@
-import { currentUser } from "@clerk/nextjs/server";
 import {
   TASK_PRIORITY_LABELS,
-  TASK_STATUS_LABELS,
   type TaskPriority,
   type TaskStatus,
 } from "@/lib/workspace-types";
+import { FIELD_LABELS, taskStatusLabel } from "@/lib/action-item-labels";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   logSystemEvent,
@@ -86,21 +85,6 @@ interface UpdateSystemAssetFollowUpItemInput extends AssetFollowUpItemActor {
 const ASSET_FOLLOW_UP_ITEM_SELECT =
   "id, asset_id, client_slug, title, description, status, priority, visibility, assignee_id, assignee_name, due_date, created_by, position, source_entity_type, source_entity_id, created_at, updated_at";
 
-const FIELD_LABELS: Record<string, string> = {
-  assigneeId: "assignee",
-  assigneeName: "assignee name",
-  description: "description",
-  dueDate: "due date",
-  priority: "priority",
-  status: "status",
-  title: "title",
-  visibility: "visibility",
-};
-
-function taskStatusLabel(status: TaskStatus) {
-  return TASK_STATUS_LABELS[status] ?? status;
-}
-
 function shouldEnqueueAssetFollowUpItemTriage(
   item: AssetFollowUpItem,
   previous?: AssetFollowUpItemTriagePreviousState,
@@ -158,21 +142,6 @@ async function listAssetNames(assetIds: string[]) {
   );
 }
 
-async function getAssetFollowUpReadClient(clientSlug?: string | null) {
-  if (!supabaseAdmin || !clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 function mapAssetFollowUpItem(
   row: Record<string, unknown>,
@@ -205,7 +174,7 @@ function mapAssetFollowUpItem(
 export async function listAssetFollowUpItems(
   options: ListAssetFollowUpItemsOptions,
 ): Promise<AssetFollowUpItem[]> {
-  const db = await getAssetFollowUpReadClient(options.clientSlug);
+  const db = await getFeatureReadClient(!!options.clientSlug);
   if (!db) return [];
 
   let query = db

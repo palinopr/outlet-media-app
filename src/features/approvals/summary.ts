@@ -1,3 +1,4 @@
+import { describeCount } from "@/lib/formatters";
 import type { ScopeFilter } from "@/lib/member-access";
 import type { ApprovalRequest } from "./server";
 
@@ -81,10 +82,6 @@ export function filterApprovalRequestsByScope(
   allowedAssetIds?: Iterable<string> | null,
 ) {
   return approvals.filter((approval) => approvalIsWithinScope(approval, scope, allowedAssetIds));
-}
-
-function describeCount(value: number, singular: string, plural = `${singular}s`) {
-  return `${value} ${value === 1 ? singular : plural}`;
 }
 
 export function buildApprovalCenterSummary(

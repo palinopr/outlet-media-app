@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { getMemberAccessForSlug } from "@/lib/member-access";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 
 export type CrmCommentVisibility = "admin_only" | "shared";
 
@@ -56,24 +56,9 @@ function mapCrmComment(row: Record<string, unknown>): CrmComment {
   };
 }
 
-async function getCrmCommentsReadClient(clientSlug?: string | null) {
-  if (!supabaseAdmin || !clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 export async function listCrmComments(options: ListCrmCommentsOptions): Promise<CrmComment[]> {
-  const db = await getCrmCommentsReadClient(options.clientSlug);
+  const db = await getFeatureReadClient(!!options.clientSlug);
   if (!db) return [];
 
   let query = db
@@ -101,7 +86,7 @@ export async function listCrmComments(options: ListCrmCommentsOptions): Promise<
 export async function listCrmDiscussionThreads(
   options: ListCrmDiscussionThreadsOptions = {},
 ): Promise<CrmDiscussionThread[]> {
-  const db = await getCrmCommentsReadClient(options.clientSlug);
+  const db = await getFeatureReadClient(!!options.clientSlug);
   if (!db) return [];
 
   let query = db

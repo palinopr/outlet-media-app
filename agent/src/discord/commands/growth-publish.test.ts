@@ -68,7 +68,7 @@ describe("growth publish commands", () => {
       expect.stringContaining("Manual TikTok publish confirmed."),
     );
     expect(notifyChannel).toHaveBeenCalledWith(
-      "growth-dashboard",
+      "dashboard",
       expect.stringContaining("TikTok publish live"),
     );
     expect(result.reply).toContain("published");
@@ -104,7 +104,7 @@ describe("growth publish commands", () => {
       expect.stringContaining("TikTok publish attempt failed."),
     );
     expect(notifyChannel).toHaveBeenCalledWith(
-      "growth-dashboard",
+      "dashboard",
       expect.stringContaining("TikTok publish failed"),
     );
     expect(result.reply).toContain("failed");

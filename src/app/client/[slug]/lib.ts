@@ -1,3 +1,4 @@
+import { centsToUsd } from "@/lib/formatters";
 import type {
   TmEvent,
   DemographicsRow,
@@ -8,6 +9,7 @@ import type {
   Insight,
   AgeGenderBreakdown,
   PlacementBreakdown,
+  GeographyBreakdown,
   AdCard,
   HourlyBreakdown,
   DailyPoint,
@@ -39,7 +41,7 @@ export function buildTrendData(
     const d = s.snapshot_date;
     if (!byDate[d]) byDate[d] = { roasSum: 0, roasCount: 0, spendSum: 0 };
     if (s.roas != null) { byDate[d].roasSum += s.roas; byDate[d].roasCount++; }
-    if (s.spend != null) byDate[d].spendSum += s.spend / 100;
+    if (s.spend != null) byDate[d].spendSum += centsToUsd(s.spend) as number;
   }
   return Object.entries(byDate)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -341,12 +343,79 @@ export function generateCampaignInsights(campaigns: CampaignCard[]): Insight[] {
   return out.slice(0, 4);
 }
 
+export function findBestHour(hourly: HourlyBreakdown[]): HourlyBreakdown | null {
+  if (hourly.length === 0) return null;
+
+  const totalImpressions = hourly.reduce((sum, row) => sum + row.impressions, 0);
+  const meaningfulThreshold = Math.max(50, Math.round(totalImpressions * 0.04));
+  const candidates = hourly.filter((row) => row.impressions >= meaningfulThreshold);
+
+  const pool = candidates.length > 0 ? candidates : hourly;
+  const withCtr = pool.filter((row) => row.ctr != null);
+
+  if (withCtr.length > 0) {
+    return [...withCtr].sort((a, b) => {
+      if ((b.ctr ?? 0) !== (a.ctr ?? 0)) return (b.ctr ?? 0) - (a.ctr ?? 0);
+      if (b.clicks !== a.clicks) return b.clicks - a.clicks;
+      return b.impressions - a.impressions;
+    })[0];
+  }
+
+  return [...pool].sort((a, b) => b.impressions - a.impressions)[0] ?? null;
+}
+
+export function findTopMarket(geography: GeographyBreakdown[]): GeographyBreakdown | null {
+  if (geography.length === 0) return null;
+
+  const totalImpressions = geography.reduce((sum, row) => sum + row.impressions, 0);
+  const meaningfulThreshold = Math.max(100, Math.round(totalImpressions * 0.08));
+  const candidates = geography.filter((row) => row.impressions >= meaningfulThreshold);
+  const pool = candidates.length > 0 ? candidates : geography;
+
+  const withCtr = pool.filter((row) => row.ctr != null);
+  if (withCtr.length > 0) {
+    return [...withCtr].sort((a, b) => {
+      if ((b.ctr ?? 0) !== (a.ctr ?? 0)) return (b.ctr ?? 0) - (a.ctr ?? 0);
+      if (b.clicks !== a.clicks) return b.clicks - a.clicks;
+      return b.impressions - a.impressions;
+    })[0];
+  }
+
+  return [...pool].sort((a, b) => b.impressions - a.impressions)[0] ?? null;
+}
+
+export function findTopCreative(ads: AdCard[]): AdCard | null {
+  if (ads.length === 0) return null;
+
+  const meaningful = ads.filter((ad) => ad.spend >= 10 || ad.impressions >= 500);
+  const pool = meaningful.length > 0 ? meaningful : ads;
+  const withRoas = pool.filter((ad) => ad.roas != null);
+
+  if (withRoas.length > 0) {
+    return [...withRoas].sort((a, b) => {
+      if ((b.roas ?? 0) !== (a.roas ?? 0)) return (b.roas ?? 0) - (a.roas ?? 0);
+      return (b.revenue ?? 0) - (a.revenue ?? 0);
+    })[0];
+  }
+
+  const withCtr = pool.filter((ad) => ad.ctr != null);
+  if (withCtr.length > 0) {
+    return [...withCtr].sort((a, b) => {
+      if ((b.ctr ?? 0) !== (a.ctr ?? 0)) return (b.ctr ?? 0) - (a.ctr ?? 0);
+      return b.clicks - a.clicks;
+    })[0];
+  }
+
+  return [...pool].sort((a, b) => b.impressions - a.impressions)[0] ?? null;
+}
+
 // --- Campaign detail recommendations ---
 
 export function generateRecommendations(
   campaign: CampaignCard,
   ageGender: AgeGenderBreakdown[],
   placements: PlacementBreakdown[],
+  geography: GeographyBreakdown[],
   ads: AdCard[],
   hourly: HourlyBreakdown[],
   daily: DailyPoint[],
@@ -421,13 +490,29 @@ export function generateRecommendations(
 
   // Best time of day
   if (hourly.length > 0) {
-    const peak = [...hourly].sort((a, b) => b.impressions - a.impressions);
-    const topHours = peak.slice(0, 3).map((h) => formatHour(h.hour));
-    recs.push({
-      title: "Peak activity hours",
-      detail: `Highest engagement at ${topHours.join(", ")}. Your audience is most active during these windows.`,
-      type: "info",
-    });
+    const bestHour = findBestHour(hourly);
+    if (bestHour) {
+      recs.push({
+        title: `${formatHour(bestHour.hour)} is your strongest hour`,
+        detail: bestHour.ctr != null
+          ? `This window is delivering ${bestHour.ctr.toFixed(2)}% CTR on ${bestHour.impressions.toLocaleString()} impressions. Concentrating spend here can improve efficiency.`
+          : `This window is delivering the strongest delivery volume right now. Concentrating spend here can improve efficiency.`,
+        type: "info",
+      });
+    }
+  }
+
+  if (geography.length > 0) {
+    const topMarket = findTopMarket(geography);
+    if (topMarket) {
+      recs.push({
+        title: `${topMarket.market} is your hottest market`,
+        detail: topMarket.ctr != null
+          ? `${topMarket.market} is returning ${topMarket.ctr.toFixed(2)}% CTR with ${topMarket.clicks.toLocaleString()} clicks. Use this market as your benchmark when shifting spend.`
+          : `${topMarket.market} is currently driving the heaviest delivery. Use it as a benchmark when shifting spend.`,
+        type: "info",
+      });
+    }
   }
 
   // Best day of week
@@ -452,13 +537,14 @@ export function generateRecommendations(
   }
 
   // Top performing ad
-  const adsWithRoas = ads.filter((a) => a.roas != null && a.roas > 0);
-  if (adsWithRoas.length >= 2) {
-    const best = [...adsWithRoas].sort((a, b) => (b.roas ?? 0) - (a.roas ?? 0))[0];
+  const bestCreative = findTopCreative(ads);
+  if (bestCreative) {
     recs.push({
-      title: `"${best.name}" is your top creative`,
-      detail: `At ${best.roas?.toFixed(1)}x ROAS, this ad outperforms the rest. Consider using similar messaging and visuals for new creatives.`,
-      type: "success",
+      title: `"${bestCreative.name}" is your top creative`,
+      detail: bestCreative.roas != null
+        ? `At ${bestCreative.roas.toFixed(1)}x ROAS, this ad is outperforming the rest. Use its messaging and visual structure as the next creative benchmark.`
+        : `This ad is leading on engagement. Use its messaging and visual structure as the next creative benchmark.`,
+      type: bestCreative.roas != null && bestCreative.roas >= 2 ? "success" : "info",
     });
   }
 

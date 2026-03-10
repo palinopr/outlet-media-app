@@ -1,6 +1,5 @@
-import { currentUser } from "@clerk/nextjs/server";
 import type { ScopeFilter } from "@/lib/member-access";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import {
@@ -23,22 +22,6 @@ export interface ConversationsCenter {
   threads: ConversationThread[];
 }
 
-async function getConversationReadClient(options: GetConversationsCenterOptions) {
-  if (!supabaseAdmin) return null;
-  if (options.mode !== "client" || !options.clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 function stringValue(value: unknown) {
   return typeof value === "string" && value.length > 0 ? value : null;
@@ -59,7 +42,7 @@ export function matchesConversationKinds(
 export async function listConversationThreads(
   options: GetConversationsCenterOptions,
 ): Promise<ConversationThread[]> {
-  const db = await getConversationReadClient(options);
+  const db = await getFeatureReadClient(options.mode === "client" && !!options.clientSlug);
   if (!db) return [];
 
   const limitPerKind = Math.max((options.limit ?? 12) * 4, 24);

@@ -4,6 +4,7 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
+    <div className="dark min-h-screen bg-background text-foreground">
     <div className="max-w-3xl mx-auto px-6 py-12 prose prose-invert">
       <h1>Terms of Service</h1>
       <p className="text-muted-foreground">Last updated: March 2, 2026</p>
@@ -37,6 +38,7 @@ export default function TermsPage() {
 
       <h2>8. Changes to These Terms</h2>
       <p>We will update this page when our terms change. Continued use of the platform after changes constitutes acceptance.</p>
+    </div>
     </div>
   );
 }

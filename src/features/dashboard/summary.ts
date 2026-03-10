@@ -1,3 +1,4 @@
+import { describeCount } from "@/lib/formatters";
 import type { TaskPriority } from "@/lib/workspace-types";
 
 export type DashboardSummaryMode = "admin" | "client";
@@ -105,10 +106,6 @@ function resolveCampaignId(
 
 function sortDateDesc(a: string | null, b: string | null) {
   return new Date(b ?? 0).getTime() - new Date(a ?? 0).getTime();
-}
-
-function describeCount(value: number, singular: string, plural = `${singular}s`) {
-  return `${value} ${value === 1 ? singular : plural}`;
 }
 
 function buildMetrics(

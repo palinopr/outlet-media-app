@@ -509,7 +509,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
       await msg.reply("Bot client not connected.");
       return;
     }
-    const schedResult = await handleScheduleCommand(content, discordClient, channelName);
+    const schedResult = await handleScheduleCommand(content, channelName);
     if (schedResult) {
       if (schedResult.text) await msg.reply(schedResult.text);
       if (schedResult.embed) {

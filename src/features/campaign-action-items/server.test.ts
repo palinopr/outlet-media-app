@@ -95,6 +95,7 @@ vi.mock("@clerk/nextjs/server", () => ({
 
 vi.mock("@/lib/supabase", () => ({
   createClerkSupabaseClient,
+  getFeatureReadClient: vi.fn().mockResolvedValue(supabaseAdmin),
   supabaseAdmin,
 }));
 

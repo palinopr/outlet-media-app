@@ -28,8 +28,7 @@ function getApiKeyStatus() {
   return keys.map((k) => {
     const value = process.env[k.envVar];
     const configured = !!value && value.length > 0;
-    // Show first 4 chars + **** if configured, never show more
-    const masked = configured ? `${value.slice(0, 4)}...****` : "not set";
+    const masked = configured ? "configured" : "not set";
     return { ...k, masked, configured };
   });
 }

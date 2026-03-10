@@ -3,8 +3,6 @@ import {
   TrendingUp,
   Users,
   Megaphone,
-  ArrowUp,
-  ArrowDown,
   Clock,
   Sparkles,
   Target,
@@ -29,17 +27,6 @@ import { requireClientAccess } from "@/features/client-portal/access";
 interface Props {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ range?: string }>;
-}
-
-function Delta({ value }: { value: number | null }) {
-  if (value == null) return null;
-  const positive = value >= 0;
-  return (
-    <span className={`inline-flex items-center gap-0.5 text-xs font-semibold ${positive ? "text-emerald-400" : "text-red-400"}`}>
-      {positive ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />}
-      {Math.abs(value).toFixed(0)}%
-    </span>
-  );
 }
 
 export default async function ClientDashboard({ params, searchParams }: Props) {
@@ -103,11 +90,6 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
             {fmtUsd(heroStats.totalSpend)}
           </p>
-          {heroStats.spendDelta != null && (
-            <div className="flex items-center gap-2 mt-2">
-              <Delta value={heroStats.spendDelta} />
-            </div>
-          )}
         </div>
 
         <div className="glass-card hero-stat-card stat-glow p-5">

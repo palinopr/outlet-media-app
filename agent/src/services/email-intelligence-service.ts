@@ -118,7 +118,7 @@ async function processInboundMessage(message: EmailMessageDetail): Promise<Email
   };
 
   const needsOwnerAttention = shouldPushOwnerAlert(message, plan, triage);
-  const shouldDeliverOwnerAlert = true;
+  const shouldDeliverOwnerAlert = needsOwnerAttention;
 
   await upsertEmailEvent(
     message,

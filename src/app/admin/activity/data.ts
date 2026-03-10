@@ -39,7 +39,8 @@ export async function getActivity(filters: {
 
   if (!supabaseAdmin) return empty;
 
-  const todayStart = new Date();
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }));
+  const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);
   const todayIso = todayStart.toISOString();
 

@@ -5,10 +5,10 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
 import { CreateTaskSchema, UpdateTaskSchema } from "@/lib/api-schemas";
 import {
-  TASK_STATUS_LABELS,
   type NotificationType,
   type TaskStatus,
 } from "@/lib/workspace-types";
+import { taskStatusLabel } from "@/lib/action-item-labels";
 import { createNotification } from "@/features/notifications/server";
 import { logAudit } from "../../actions/audit";
 import {
@@ -27,10 +27,6 @@ const TASK_FIELD_LABELS: Record<string, string> = {
   status: "status",
   title: "title",
 };
-
-function taskStatusLabel(status: string) {
-  return TASK_STATUS_LABELS[status as TaskStatus] ?? status;
-}
 
 export async function createTask(formData: {
   title: string;
@@ -60,7 +56,7 @@ export async function createTask(formData: {
     .eq("status", parsed.status)
     .order("position", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
   const nextPosition = (maxRow?.position ?? -1) + 1;
 

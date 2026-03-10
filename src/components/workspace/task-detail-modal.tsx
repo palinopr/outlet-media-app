@@ -20,17 +20,11 @@ import { Calendar, Pencil, Trash2 } from "lucide-react";
 import { updateTask, deleteTask } from "@/app/admin/workspace/actions/tasks";
 import type { WorkspaceTask, TaskStatus, TaskPriority } from "@/lib/workspace-types";
 import {
+  TASK_PRIORITY_COLORS,
   TASK_STATUSES,
   TASK_STATUS_LABELS,
   TASK_PRIORITY_LABELS,
 } from "@/lib/workspace-types";
-
-const priorityColors: Record<TaskPriority, string> = {
-  low: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-  medium: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  high: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-  urgent: "bg-red-500/20 text-red-300 border-red-500/30",
-};
 
 interface TaskDetailModalProps {
   task: WorkspaceTask;
@@ -136,7 +130,7 @@ export function TaskDetailModal({
             <span className="text-xs text-white/40 w-16">Priority</span>
             <Badge
               variant="outline"
-              className={`text-[10px] ${priorityColors[priority] ?? priorityColors.medium}`}
+              className={`text-[10px] ${TASK_PRIORITY_COLORS[priority] ?? TASK_PRIORITY_COLORS.medium}`}
             >
               {TASK_PRIORITY_LABELS[priority] ?? priority}
             </Badge>

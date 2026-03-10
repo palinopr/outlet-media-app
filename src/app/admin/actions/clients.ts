@@ -181,6 +181,13 @@ export async function deactivateClient(formData: { slug: string }) {
   const parsed = DeactivateClientSchema.parse(formData);
   if (!supabaseAdmin) throw new Error("DB not configured");
 
+  const { error } = await supabaseAdmin
+    .from("clients")
+    .update({ status: "inactive" })
+    .eq("slug", parsed.slug);
+
+  if (error) throw new Error(error.message);
+
   const pausedCampaigns = await pauseCampaignsForClientSlug(parsed.slug);
 
   await logAudit("client", parsed.slug, "deactivate", null, {

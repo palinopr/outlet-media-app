@@ -1,23 +1,8 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient } from "@/lib/supabase";
 import type { WorkspacePage, WorkspaceTask } from "@/lib/workspace-types";
 
 export async function getWorkspaceReadClient(clientSlug?: string) {
-  if (!clientSlug || clientSlug === "admin") {
-    return supabaseAdmin;
-  }
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+  return getFeatureReadClient(!!clientSlug && clientSlug !== "admin");
 }
 
 export async function getWorkspacePages(clientSlug?: string): Promise<{

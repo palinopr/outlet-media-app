@@ -111,12 +111,12 @@ describe("POST /api/alerts", () => {
     const { POST } = await import("@/app/api/alerts/route");
     const req = new Request("http://localhost/api/alerts", {
       method: "POST",
-      body: JSON.stringify({ secret: "test-secret", message: "critical!", level: "error" }),
+      body: JSON.stringify({ secret: "test-secret", message: "critical!", level: "critical" }),
     });
     await POST(req);
 
     expect(mockInsert).toHaveBeenCalledWith(
-      expect.objectContaining({ level: "error" })
+      expect.objectContaining({ level: "critical" })
     );
   });
 

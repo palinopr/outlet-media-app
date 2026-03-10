@@ -32,13 +32,13 @@ export async function getEvents(clientSlug: string | null): Promise<EventsData> 
 
   const clients = [...new Set((clientsRes.data ?? []).map((r) => r.client_slug as string))].sort();
 
-  const query = supabaseAdmin
+  let query = supabaseAdmin
     .from("tm_events")
     .select("*")
     .order("date", { ascending: true })
     .limit(200);
 
-  if (clientSlug) query.eq("client_slug", clientSlug);
+  if (clientSlug) query = query.eq("client_slug", clientSlug);
 
   const [{ data, error }, demosRes, campaignsRes] = await Promise.all([
     query,

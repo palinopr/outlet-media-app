@@ -79,7 +79,8 @@ export async function fetchAdAccounts(
   token: string
 ): Promise<Array<{ id: string; name: string; account_status: number }>> {
   const res = await fetch(
-    `https://graph.facebook.com/${META_API_VERSION}/me/adaccounts?fields=id,name,account_status&access_token=${token}`
+    `https://graph.facebook.com/${META_API_VERSION}/me/adaccounts?fields=id,name,account_status`,
+    { headers: { Authorization: `Bearer ${token}` } }
   );
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -93,8 +94,8 @@ export async function fetchAdAccounts(
 
 export async function revokeToken(token: string): Promise<void> {
   const res = await fetch(
-    `https://graph.facebook.com/${META_API_VERSION}/me/permissions?access_token=${token}`,
-    { method: "DELETE" }
+    `https://graph.facebook.com/${META_API_VERSION}/me/permissions`,
+    { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
   );
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));

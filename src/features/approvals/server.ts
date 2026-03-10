@@ -2,7 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import {
   createSystemCampaignActionItem,
@@ -180,22 +180,6 @@ function buildApprovalListQuery(
   return query;
 }
 
-async function getApprovalReadClient(options: ListApprovalRequestsOptions) {
-  if (!supabaseAdmin) return null;
-  if (!options.clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 function shouldEnqueueApprovalTriage(approval: ApprovalRequest) {
   return (
@@ -469,7 +453,7 @@ export async function canAccessApprovalRequest(userId: string, approval: Approva
 export async function listApprovalRequests(
   options: ListApprovalRequestsOptions = {},
 ): Promise<ApprovalRequest[]> {
-  const approvalReadDb = await getApprovalReadClient(options);
+  const approvalReadDb = await getFeatureReadClient(!!options.clientSlug);
   if (!approvalReadDb || !supabaseAdmin) return [];
 
   const requestedLimit = options.limit ?? 8;

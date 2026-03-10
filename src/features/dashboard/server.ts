@@ -1,11 +1,10 @@
-import { currentUser } from "@clerk/nextjs/server";
 import type { TaskPriority } from "@/lib/workspace-types";
 import type { ScopeFilter } from "@/lib/member-access";
 import {
   applyEffectiveCampaignClientSlugs,
   listEffectiveCampaignIdsForClientSlug,
 } from "@/lib/campaign-client-assignment";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { listApprovalRequests } from "@/features/approvals/server";
 import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { listConversationThreads } from "@/features/conversations/server";
@@ -77,25 +76,6 @@ export interface DashboardActionCenter {
   discussions: DashboardActionCenterDiscussion[];
 }
 
-async function getDashboardReadClient(options: {
-  clientSlug?: string;
-  mode: DashboardSummaryMode;
-}) {
-  if (!supabaseAdmin) return null;
-  if (options.mode !== "client" || !options.clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 function emptySummary(mode: DashboardSummaryMode, limit?: number): DashboardOpsSummary {
   return buildDashboardOpsSummary({
@@ -172,7 +152,7 @@ function resolveEventName(
 export async function getDashboardOpsSummary(
   options: GetDashboardOpsSummaryOptions,
 ): Promise<DashboardOpsSummary> {
-  const db = await getDashboardReadClient(options);
+  const db = await getFeatureReadClient(options.mode === "client" && !!options.clientSlug);
   if (!db) return emptySummary(options.mode, options.limit);
 
   const effectiveClientCampaignIds = options.clientSlug
@@ -353,7 +333,7 @@ export async function getDashboardAssetSummary(
 export async function getDashboardActionCenter(
   options: GetDashboardActionCenterOptions,
 ): Promise<DashboardActionCenter> {
-  const db = await getDashboardReadClient(options);
+  const db = await getFeatureReadClient(options.mode === "client" && !!options.clientSlug);
   if (!db) {
     return { approvals: [], crmFollowUps: [], discussions: [] };
   }

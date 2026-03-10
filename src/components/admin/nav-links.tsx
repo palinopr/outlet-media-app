@@ -9,41 +9,7 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-import {
-  LayoutDashboard,
-  BarChart3,
-  Megaphone,
-  CalendarDays,
-  Bot,
-  Users,
-  BriefcaseBusiness,
-  BellRing,
-  MessageSquareMore,
-  UserCog,
-  Activity,
-  BadgeCheck,
-  Settings,
-  FileText,
-  Image as ImageIcon,
-} from "lucide-react";
-
-const nav = [
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/reports", label: "Reports", icon: BarChart3 },
-  { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
-  { href: "/admin/events", label: "Events", icon: CalendarDays },
-  { href: "/admin/assets", label: "Assets", icon: ImageIcon },
-  { href: "/admin/crm", label: "CRM", icon: BriefcaseBusiness },
-  { href: "/admin/approvals", label: "Approvals", icon: BadgeCheck },
-  { href: "/admin/notifications", label: "Notifications", icon: BellRing },
-  { href: "/admin/conversations", label: "Conversations", icon: MessageSquareMore },
-  { href: "/admin/agents", label: "Agents", icon: Bot },
-  { href: "/admin/clients", label: "Clients", icon: Users },
-  { href: "/admin/users", label: "Users", icon: UserCog },
-  { href: "/admin/workspace", label: "Workspace", icon: FileText },
-  { href: "/admin/activity", label: "Activity", icon: Activity },
-  { href: "/admin/settings", label: "Settings", icon: Settings },
-];
+import { adminNavItems } from "./nav-config";
 
 interface NavLinksProps {
   collapsed?: boolean;
@@ -56,7 +22,7 @@ export function NavLinks({ collapsed }: NavLinksProps) {
     return (
       <TooltipProvider delayDuration={0}>
         <nav className="px-2 py-4 space-y-0.5">
-          {nav.map(({ href, label, icon: Icon }) => {
+          {adminNavItems.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
             return (
               <Tooltip key={href}>
@@ -91,7 +57,7 @@ export function NavLinks({ collapsed }: NavLinksProps) {
 
   return (
     <nav className="px-2 py-4 space-y-0.5">
-      {nav.map(({ href, label, icon: Icon }) => {
+      {adminNavItems.map(({ href, label, icon: Icon }) => {
         const active = pathname === href || pathname.startsWith(href + "/");
         return (
           <Link

@@ -13,12 +13,12 @@ const schedulerPath = resolve(__dirname, "../agent/src/scheduler.ts");
 const schedulerSrc = readFileSync(schedulerPath, "utf8");
 
 describe("scheduler – startScheduler() cron jobs are enabled", () => {
-  it("has 5 uncommented cron.schedule() calls", () => {
+  it("has 12 cron.schedule() calls (6 core + 6 conditional)", () => {
     const activeScheduleCalls = schedulerSrc
       .split("\n")
       .filter((line) => /^\s+cron\.schedule\(/.test(line));
 
-    expect(activeScheduleCalls).toHaveLength(5);
+    expect(activeScheduleCalls).toHaveLength(12);
   });
 
   it("registers HEARTBEAT_CRON", () => {
@@ -41,6 +41,14 @@ describe("scheduler – startScheduler() cron jobs are enabled", () => {
     expect(schedulerSrc).toContain("cron.schedule(DISCORD_HEALTH_CRON");
   });
 
+  it("registers SCHEDULED_HANDOFF_CRON", () => {
+    expect(schedulerSrc).toContain("cron.schedule(SCHEDULED_HANDOFF_CRON");
+  });
+
+  it("registers MEETING_REMINDER_CRON", () => {
+    expect(schedulerSrc).toContain("cron.schedule(MEETING_REMINDER_CRON");
+  });
+
   it("has no commented-out cron.schedule() calls", () => {
     const commentedScheduleCalls = schedulerSrc
       .split("\n")
@@ -56,7 +64,7 @@ describe("scheduler – startScheduler() cron jobs are enabled", () => {
 
   it("logs the correct startup message", () => {
     expect(schedulerSrc).toContain(
-      '[scheduler] 5 core cron jobs started'
+      '[scheduler] Core jobs started'
     );
   });
 

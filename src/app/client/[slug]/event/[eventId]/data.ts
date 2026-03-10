@@ -38,18 +38,12 @@ async function getEventDetailReadContext() {
       };
     }
   } catch {
-    return {
-      db: supabaseAdmin,
-      trustsCampaignRls: false,
-    };
+    return null;
   }
 
   const userScopedClient = await createClerkSupabaseClient();
   if (!userScopedClient) {
-    return {
-      db: supabaseAdmin,
-      trustsCampaignRls: false,
-    };
+    return null;
   }
 
   return {

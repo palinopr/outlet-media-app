@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  type Row,
   ColumnDef,
   SortingState,
   flexRender,
@@ -298,8 +299,6 @@ export function JobHistory({ jobs }: Props) {
 
 // Separate component to keep the table body clean.
 // Renders the data row and, when expanded, an additional row with full output.
-import type { Row } from "@tanstack/react-table";
-
 interface ExpandableRowProps {
   row: Row<AgentJob>;
   output: string | null;

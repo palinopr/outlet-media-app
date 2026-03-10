@@ -107,19 +107,3 @@ export const getMemberAccessForSlug = cache(async function getMemberAccessForSlu
   return access;
 });
 
-/**
- * Build a ScopeFilter for data queries. Returns undefined for admins and "all" scope members.
- */
-export async function getScopeFilter(
-  userId: string | null,
-  slug: string,
-  isAdmin?: boolean,
-): Promise<ScopeFilter | undefined> {
-  if (!userId || isAdmin) return undefined;
-  const access = await getMemberAccessForSlug(userId, slug);
-  if (access?.scope !== "assigned") return undefined;
-  return {
-    allowedCampaignIds: access.allowedCampaignIds,
-    allowedEventIds: access.allowedEventIds,
-  };
-}

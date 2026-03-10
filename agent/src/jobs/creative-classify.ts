@@ -226,8 +226,6 @@ Here are the assets:`,
     });
 
     // 4. Run the Agent SDK with vision + tools
-    let resultText = "";
-
     async function* prompt(): AsyncGenerator<SDKUserMessage> {
       yield {
         type: "user" as const,
@@ -258,16 +256,7 @@ Here are the assets:`,
           ],
         },
       })) {
-        if (msg.type === "assistant") {
-          const content = (msg as { message?: { content?: Array<{ type: string; text?: string }> } }).message?.content;
-          if (Array.isArray(content)) {
-            for (const block of content) {
-              if (block.type === "text" && block.text) {
-                resultText += block.text;
-              }
-            }
-          }
-        }
+        // consume iterator to drive the agent loop to completion
       }
     } catch (err) {
       const errMsg = toErrorMessage(err);

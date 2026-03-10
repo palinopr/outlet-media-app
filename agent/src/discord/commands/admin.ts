@@ -202,7 +202,7 @@ export async function checkAutoMod(msg: Message): Promise<boolean> {
     if (word && lowerContent.includes(word.toLowerCase())) {
       await msg.delete().catch((e) => console.warn("[admin] delete failed:", toErrorMessage(e)));
       await warnUser(msg, "Message removed -- contains restricted content.");
-      await logAction(`Removed message from ${msg.author.tag} (banned word: ${word})`);
+      await logAction(`Removed message from ${msg.author.username} (banned word: ${word})`);
       return true;
     }
   }
@@ -227,7 +227,7 @@ export async function checkAutoMod(msg: Message): Promise<boolean> {
           `${msg.author}, slow down. You're sending messages too fast.`
         ).catch((e) => console.warn("[admin] send failed:", toErrorMessage(e)));
       }
-      await logAction(`Rate-limited ${msg.author.tag} in #${(msg.channel as TextChannel).name}`);
+      await logAction(`Rate-limited ${msg.author.username} in #${(msg.channel as TextChannel).name}`);
     }
     return true;
   }
@@ -236,7 +236,7 @@ export async function checkAutoMod(msg: Message): Promise<boolean> {
   if (msg.mentions.users.size >= 5 || msg.mentions.roles.size >= 3) {
     await msg.delete().catch((e) => console.warn("[admin] delete failed:", toErrorMessage(e)));
     await warnUser(msg, "Mass mentions are not allowed.");
-    await logAction(`Blocked mass mention from ${msg.author.tag}`);
+    await logAction(`Blocked mass mention from ${msg.author.username}`);
     return true;
   }
 
@@ -261,7 +261,7 @@ async function warnUser(msg: Message, reason: string): Promise<void> {
   if (warnings >= 3 && msg.member) {
     const tenMinutes = 10 * 60 * 1000;
     await msg.member.timeout(tenMinutes, `Auto-mod: ${warnings} warnings`).catch((e) => console.warn("[admin] timeout failed:", toErrorMessage(e)));
-    await logAction(`Timed out ${msg.author.tag} for 10 minutes (${warnings} warnings)`);
+    await logAction(`Timed out ${msg.author.username} for 10 minutes (${warnings} warnings)`);
     userWarnings.delete(userId);
   }
 }
@@ -313,7 +313,7 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
     });
   }
 
-  await logAction(`New member joined: ${member.user.tag}`);
+  await logAction(`New member joined: ${member.user.username}`);
 }
 
 // --- Server Snapshot ---

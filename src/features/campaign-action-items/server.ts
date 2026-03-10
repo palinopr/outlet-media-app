@@ -1,12 +1,11 @@
-import { currentUser } from "@clerk/nextjs/server";
 import {
   TASK_PRIORITY_LABELS,
-  TASK_STATUS_LABELS,
   type TaskPriority,
   type TaskStatus,
 } from "@/lib/workspace-types";
+import { FIELD_LABELS, taskStatusLabel } from "@/lib/action-item-labels";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   logSystemEvent,
@@ -86,21 +85,6 @@ interface UpdateSystemCampaignActionItemInput extends CampaignActionItemActor {
 const CAMPAIGN_ACTION_ITEM_SELECT =
   "id, campaign_id, client_slug, title, description, status, priority, visibility, assignee_id, assignee_name, due_date, created_by, position, source_entity_type, source_entity_id, created_at, updated_at";
 
-const FIELD_LABELS: Record<string, string> = {
-  assigneeId: "assignee",
-  assigneeName: "assignee name",
-  description: "description",
-  dueDate: "due date",
-  priority: "priority",
-  status: "status",
-  title: "title",
-  visibility: "visibility",
-};
-
-function taskStatusLabel(status: TaskStatus) {
-  return TASK_STATUS_LABELS[status] ?? status;
-}
-
 function shouldEnqueueCampaignActionItemTriage(
   item: CampaignActionItem,
   previous?: CampaignActionItemTriagePreviousState,
@@ -158,30 +142,11 @@ function mapCampaignActionItem(row: Record<string, unknown>): CampaignActionItem
   };
 }
 
-async function getCampaignActionItemReadClient(options: {
-  audience?: "all" | CampaignActionItemVisibility;
-  clientSlug: string;
-}) {
-  if (!supabaseAdmin) return null;
-  if (options.audience !== "shared" || !options.clientSlug) return supabaseAdmin;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return supabaseAdmin;
-    }
-  } catch {
-    return supabaseAdmin;
-  }
-
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
-}
 
 export async function listCampaignActionItems(
   options: ListCampaignActionItemsOptions,
 ): Promise<CampaignActionItem[]> {
-  const db = await getCampaignActionItemReadClient(options);
+  const db = await getFeatureReadClient(options.audience === "shared" && !!options.clientSlug);
   if (!db) return [];
 
   let query = db

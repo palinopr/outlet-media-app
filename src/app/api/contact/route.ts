@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   if (resend) {
     try {
       await resend.emails.send({
-        from: "Outlet Media <onboarding@resend.dev>",
+        from: process.env.RESEND_FROM_EMAIL ?? "Outlet Media <noreply@outletmedia.co>",
         to: "support@outletmedia.co",
         subject: `New contact form: ${name}`,
         text: [

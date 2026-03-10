@@ -8,8 +8,7 @@ import type { DailyInsight } from "@/lib/meta-campaigns";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { syncCampaignToMeta } from "@/app/admin/actions/campaigns";
 import { toast } from "sonner";
-import { Loader2, RefreshCw } from "lucide-react";
-import { useState } from "react";
+import { RefreshCw } from "lucide-react";
 
 export function BudgetBar({ spend, dailyBudget, lifetimeBudget }: { spend: number | null; dailyBudget: number | null; lifetimeBudget: number | null }) {
   if (spend == null) {
@@ -89,8 +88,6 @@ export function RoasSparkline({ points }: { points: DailyInsight[] }) {
 }
 
 export function SyncButton({ campaignId, status, dailyBudget }: { campaignId: string; status: string; dailyBudget: number | null }) {
-  const [syncing, setSyncing] = useState(false);
-
   return (
     <ConfirmDialog
       trigger={
@@ -98,11 +95,7 @@ export function SyncButton({ campaignId, status, dailyBudget }: { campaignId: st
           className="text-muted-foreground hover:text-foreground transition-colors"
           title="Sync to Meta"
         >
-          {syncing ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <RefreshCw className="h-3.5 w-3.5" />
-          )}
+          <RefreshCw className="h-3.5 w-3.5" />
         </button>
       }
       title="Sync campaign to Meta?"
@@ -110,7 +103,6 @@ export function SyncButton({ campaignId, status, dailyBudget }: { campaignId: st
       confirmLabel="Sync"
       variant="default"
       onConfirm={async () => {
-        setSyncing(true);
         try {
           const changes: { status?: string; dailyBudgetCents?: number } = { status };
           if (dailyBudget != null) changes.dailyBudgetCents = dailyBudget;
@@ -118,8 +110,6 @@ export function SyncButton({ campaignId, status, dailyBudget }: { campaignId: st
           toast.success("Synced to Meta");
         } catch (err) {
           toast.error(err instanceof Error ? err.message : "Sync failed");
-        } finally {
-          setSyncing(false);
         }
       }}
     />

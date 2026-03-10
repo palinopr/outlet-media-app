@@ -13,6 +13,7 @@ import {
 } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 import { adminGuard } from "@/lib/api-helpers";
+import { centsToUsd } from "@/lib/formatters";
 import { logAudit } from "./audit";
 import { syncCampaignStatus, syncCampaignBudget } from "./meta-sync";
 import { logSystemEvent } from "@/features/system-events/server";
@@ -28,7 +29,7 @@ function eventVisibility(clientSlug: string | null | undefined) {
 
 function centsLabel(value: number | null | undefined) {
   if (typeof value !== "number") return "unknown budget";
-  return `$${(value / 100).toFixed(0)}/day`;
+  return `$${(centsToUsd(value) as number).toFixed(0)}/day`;
 }
 
 function revalidateCampaignPaths(
@@ -503,7 +504,7 @@ export async function syncCampaignToMeta(campaignId: string, changes: { status?:
   }
   if (changes.dailyBudgetCents) {
     await syncCampaignBudget(campaignId, changes.dailyBudgetCents);
-    results.push("Budget -> $" + (changes.dailyBudgetCents / 100).toFixed(0) + "/day");
+    results.push("Budget -> $" + (centsToUsd(changes.dailyBudgetCents) as number).toFixed(0) + "/day");
   }
 
   if (supabaseAdmin) {

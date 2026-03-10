@@ -11,7 +11,7 @@ export async function GET() {
     const jobs = await listAgentJobs(30);
     return NextResponse.json({ jobs: jobs.reverse() });
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return apiError(message);
+    console.error("[agents/jobs]", err instanceof Error ? err.message : String(err));
+    return apiError("Failed to fetch jobs");
   }
 }

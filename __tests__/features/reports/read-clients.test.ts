@@ -4,6 +4,7 @@ const {
   createClerkSupabaseClient,
   currentUser,
   fetchAllCampaigns,
+  getFeatureReadClient,
   serviceState,
   supabaseAdmin,
   userScopedState,
@@ -75,14 +76,33 @@ const {
     };
   }
 
+  const supabaseAdminClient = buildClient(serviceState);
+  const userScopedSupabaseClient = buildClient(userScopedState);
+
+  const createClerkSupabaseClientFn = vi.fn();
+  const currentUserFn = vi.fn();
+
+  const getFeatureReadClientFn = vi.fn(async (useClientScope: boolean) => {
+    if (!useClientScope) return supabaseAdminClient;
+    try {
+      const user = await currentUserFn();
+      const role = (user?.publicMetadata as { role?: string } | null)?.role;
+      if (role === "admin") return supabaseAdminClient;
+    } catch {
+      return supabaseAdminClient;
+    }
+    return (await createClerkSupabaseClientFn()) ?? supabaseAdminClient;
+  });
+
   return {
-    createClerkSupabaseClient: vi.fn(),
-    currentUser: vi.fn(),
+    createClerkSupabaseClient: createClerkSupabaseClientFn,
+    currentUser: currentUserFn,
     fetchAllCampaigns: vi.fn(),
+    getFeatureReadClient: getFeatureReadClientFn,
     serviceState,
-    supabaseAdmin: buildClient(serviceState),
+    supabaseAdmin: supabaseAdminClient,
     userScopedState,
-    userScopedSupabase: buildClient(userScopedState),
+    userScopedSupabase: userScopedSupabaseClient,
   };
 });
 
@@ -92,6 +112,7 @@ vi.mock("@clerk/nextjs/server", () => ({
 
 vi.mock("@/lib/supabase", () => ({
   createClerkSupabaseClient,
+  getFeatureReadClient,
   supabaseAdmin,
 }));
 

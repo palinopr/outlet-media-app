@@ -108,6 +108,8 @@ vi.mock("@/lib/api-helpers", () => ({
   apiError: (message: string, status = 500) =>
     Response.json({ error: message }, { status }),
   authGuard,
+  getAuthorName: (user: { firstName?: string | null; lastName?: string | null } | null) =>
+    [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown",
   validateRequest,
 }));
 

@@ -1,3 +1,4 @@
+import { describeCount } from "@/lib/formatters";
 import type { TaskPriority } from "@/lib/workspace-types";
 
 export type EventOperationsMetricKey =
@@ -68,10 +69,6 @@ interface BuildEventOperationsSummaryInput {
   followUps: EventOperationsFollowUpRecord[];
   limit?: number;
   updates: EventOperationsUpdateRecord[];
-}
-
-function describeCount(value: number, singular: string, plural = `${singular}s`) {
-  return `${value} ${value === 1 ? singular : plural}`;
 }
 
 function sortDateDesc(a: string | null, b: string | null) {
