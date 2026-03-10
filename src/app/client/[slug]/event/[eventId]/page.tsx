@@ -41,6 +41,7 @@ import {
   DailySalesChart,
 } from "@/components/client/charts";
 import type { SalesVelocity, TicketPlatform } from "../../types";
+import { getDaysUntilEvent } from "../../lib";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getDashboardOpsSummary } from "@/features/dashboard/server";
@@ -80,18 +81,28 @@ function trendColor(trend: SalesVelocity["trend"]): string {
   return "text-white/50";
 }
 
-function getDaysUntilEvent(eventDate: string | null): number | null {
-  if (!eventDate) return null;
-  return Math.max(
-    0,
-    Math.round((new Date(eventDate).getTime() - Date.now()) / 86400000),
-  );
-}
-
 export default async function EventDetailPage({ params }: Props) {
   const { slug, eventId } = await params;
   const { scope, userId } = await requireClientAccess(slug, "ticketmaster", "eata");
-  const data = await getEventDetail(slug, eventId, scope);
+  // Fire event detail + non-dependent queries in parallel to avoid waterfall
+  const [data, eventEvents, eventComments, eventFollowUpItems] = await Promise.all([
+    getEventDetail(slug, eventId, scope),
+    listEventSystemEvents({
+      audience: "shared",
+      clientSlug: slug,
+      eventId,
+      limit: 6,
+    }),
+    listEventComments({
+      audience: "shared",
+      eventId,
+    }),
+    listEventFollowUpItems({
+      audience: "shared",
+      eventId,
+      limit: 24,
+    }),
+  ]);
 
   if (!data) {
     return (
@@ -109,44 +120,26 @@ export default async function EventDetailPage({ params }: Props) {
 
   const { event: e, snapshots, dailyDeltas, velocity, audience, linkedCampaigns, channelBreakdown } = data;
   const linkedCampaignIds = linkedCampaigns.map((campaign) => campaign.campaignId);
-  const [opsSummary, eventEvents, eventComments, eventFollowUpItems, agentOutcomes] = await Promise.all([
+  const scopedCampaignIds = linkedCampaignIds.length > 0
+    ? linkedCampaignIds.filter((id) =>
+        scope?.allowedCampaignIds ? scope.allowedCampaignIds.includes(id) : true,
+      )
+    : [];
+
+  // These two depend on linkedCampaignIds from the event detail response
+  const [opsSummary, agentOutcomes] = await Promise.all([
     getDashboardOpsSummary({
       clientSlug: slug,
       limit: 5,
       mode: "client",
-      scopeCampaignIds:
-        linkedCampaignIds.length > 0
-          ? linkedCampaignIds.filter((campaignId) =>
-              scope?.allowedCampaignIds ? scope.allowedCampaignIds.includes(campaignId) : true,
-            )
-          : [],
-    }),
-    listEventSystemEvents({
-      audience: "shared",
-      clientSlug: slug,
-      eventId: e.id,
-      limit: 6,
-    }),
-    listEventComments({
-      audience: "shared",
-      eventId: e.id,
-    }),
-    listEventFollowUpItems({
-      audience: "shared",
-      eventId: e.id,
-      limit: 24,
+      scopeCampaignIds: scopedCampaignIds,
     }),
     listAgentOutcomes({
       audience: "shared",
       clientSlug: slug,
       eventId: e.id,
       limit: 4,
-      scopeCampaignIds:
-        linkedCampaignIds.length > 0
-          ? linkedCampaignIds.filter((campaignId) =>
-              scope?.allowedCampaignIds ? scope.allowedCampaignIds.includes(campaignId) : true,
-            )
-          : [],
+      scopeCampaignIds: scopedCampaignIds,
       scopeEventIds: scope?.allowedEventIds,
     }),
   ]);
@@ -164,7 +157,6 @@ export default async function EventDetailPage({ params }: Props) {
   const hasEdpData = e.edpTotalViews != null || e.conversionRate != null;
   const hasTodayData = e.ticketsSoldToday != null || e.revenueToday != null;
 
-  // Compute days until event even when velocity is null (needs just an event date)
   const daysUntilEvent = getDaysUntilEvent(e.date);
 
   return (

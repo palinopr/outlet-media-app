@@ -143,6 +143,11 @@ function computeTrendRate(snapshots: TicketSnapshot[]): {
   return { recentDailySales, trend, trendPct };
 }
 
+export function getDaysUntilEvent(eventDate: string | null): number | null {
+  if (!eventDate) return null;
+  return Math.max(0, Math.round((new Date(eventDate).getTime() - Date.now()) / 86400000));
+}
+
 export function computeVelocity(
   snapshots: TicketSnapshot[],
   eventDate: string | null,
@@ -153,13 +158,11 @@ export function computeVelocity(
   const avgDailySales = Math.round(sliceRate(snapshots));
   const { recentDailySales, trend, trendPct } = computeTrendRate(snapshots);
 
-  let daysUntilEvent: number | null = null;
+  const daysUntilEvent = getDaysUntilEvent(eventDate);
   let projectedTotalSold: number | null = null;
-  if (eventDate) {
-    const diff = (new Date(eventDate).getTime() - Date.now()) / 86400000;
-    daysUntilEvent = Math.max(0, Math.round(diff));
+  if (daysUntilEvent != null && daysUntilEvent > 0) {
     const dailyRate = recentDailySales ?? avgDailySales;
-    if (dailyRate > 0 && daysUntilEvent > 0) {
+    if (dailyRate > 0) {
       projectedTotalSold = currentSold + dailyRate * daysUntilEvent;
     }
   }

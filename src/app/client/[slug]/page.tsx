@@ -25,7 +25,7 @@ import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
-import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
+import { fmtUsd, fmtNum, roasColor, slugToLabel, fmtTodayLong } from "@/lib/formatters";
 import { roasLabel, DATE_OPTIONS } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
 import { DateRangePicker } from "./components/date-range-picker";
@@ -95,7 +95,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
     const user = await currentUser();
     if (user?.firstName) displayName = user.firstName;
   } catch { /* Clerk unavailable -- fall back to slug label */ }
-  const now = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const now = fmtTodayLong();
 
   return (
     <div className="space-y-6">

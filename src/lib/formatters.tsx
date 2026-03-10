@@ -44,6 +44,15 @@ export function fmtDate(d: string | null): string {
   });
 }
 
+/** Format today's date as "Monday, March 10". */
+export function fmtTodayLong(): string {
+  return new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+}
+
 // ─── Strings ────────────────────────────────────────────────────────────────
 
 /** Convert an underscore-separated slug to a Title Case label. */

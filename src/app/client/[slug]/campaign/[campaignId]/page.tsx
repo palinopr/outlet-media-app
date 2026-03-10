@@ -14,8 +14,8 @@ import { parseRange } from "@/lib/constants";
 import { fmtUsd, fmtNum } from "@/lib/formatters";
 import { roasLabel } from "../../lib";
 import { getCampaignDetail } from "./data";
-import { AdsPreview, type AdPreview } from "@/components/client/ads-preview";
-import { RecommendationsList, type RecommendationItem } from "@/components/client/recommendations";
+import { AdsPreview } from "@/components/client/ads-preview";
+import { RecommendationsList } from "@/components/client/recommendations";
 import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
 import { CampaignActionItemsPanel } from "@/components/campaigns/campaign-action-items-panel";
@@ -97,26 +97,6 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
     dataSource,
     rangeLabel,
   } = data;
-
-  const adsPreviewData: AdPreview[] = ads.map((ad) => ({
-    adId: ad.adId,
-    name: ad.name,
-    status: ad.status,
-    thumbnailUrl: ad.thumbnailUrl,
-    creativeTitle: ad.creativeTitle,
-    creativeBody: ad.creativeBody,
-    impressions: ad.impressions,
-    clicks: ad.clicks,
-    reach: ad.reach,
-    ctr: ad.ctr,
-    roas: ad.roas,
-  }));
-
-  const recsData: RecommendationItem[] = recommendations.map((r) => ({
-    title: r.title,
-    detail: r.detail,
-    type: r.type,
-  }));
 
   return (
     <div className="space-y-6">
@@ -221,13 +201,13 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       </section>
 
       {/* -- Recommendations -- */}
-      {recsData.length > 0 && (
+      {recommendations.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Insights & Recommendations</span>
           </div>
-          <RecommendationsList items={recsData} />
+          <RecommendationsList items={recommendations} />
         </section>
       )}
 
@@ -239,7 +219,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
             <span className="section-label">Ad Creatives</span>
             <span className="text-xs text-white/45 ml-auto">{ads.length} ads</span>
           </div>
-          <AdsPreview ads={adsPreviewData} />
+          <AdsPreview ads={ads} />
         </section>
       )}
 

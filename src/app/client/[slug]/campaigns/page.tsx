@@ -5,7 +5,7 @@ import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-
 import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
 import { getCampaignsWorkflowData } from "@/features/campaigns/server";
-import { fmtUsd, fmtNum, roasColor, slugToLabel } from "@/lib/formatters";
+import { fmtUsd, fmtNum, roasColor, slugToLabel, fmtTodayLong } from "@/lib/formatters";
 import { getCampaignsPageData } from "../data";
 import { buildTrendData } from "../lib";
 import { ClientPortalFooter } from "../components/client-portal-footer";
@@ -46,12 +46,10 @@ export default async function ClientCampaigns({ params }: Props) {
   const totalSpend       = campaigns.reduce((a, c) => a + c.spend, 0);
   const totalRevenue     = campaigns.reduce((a, c) => a + (c.revenue ?? 0), 0);
   const totalImpressions = campaigns.reduce((a, c) => a + c.impressions, 0);
-  const blendedRoas      = totalSpend > 0 ? totalRevenue / totalSpend : 0;
+  const blendedRoas      = totalSpend > 0 ? totalRevenue / totalSpend : null;
   const hasData          = campaigns.length > 0;
 
-  const now = new Date().toLocaleDateString("en-US", {
-    weekday: "long", month: "long", day: "numeric",
-  });
+  const now = fmtTodayLong();
 
   const heroStats = [
     {
@@ -74,8 +72,8 @@ export default async function ClientCampaigns({ params }: Props) {
     },
     {
       label: "Blended ROAS",
-      value: blendedRoas > 0 ? blendedRoas.toFixed(1) + "x" : "--",
-      valueColor: roasColor(blendedRoas > 0 ? blendedRoas : null),
+      value: blendedRoas != null ? blendedRoas.toFixed(1) + "x" : "--",
+      valueColor: roasColor(blendedRoas),
       sub: "return on ad spend",
       icon: Megaphone,
       iconBg: "bg-emerald-500/10",

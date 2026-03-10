@@ -12,7 +12,7 @@ import {
 import { auth } from "@clerk/nextjs/server";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { TicketVelocityChart } from "@/components/charts/ticket-velocity-chart";
-import { centsToUsd, fmtUsd, fmtNum, computeBlendedRoas } from "@/lib/formatters";
+import { centsToUsd, fmtUsd, fmtNum, computeBlendedRoas, fmtTodayLong } from "@/lib/formatters";
 import { StatCard } from "@/components/admin/stat-card";
 import { AGENT_CONFIG, DASHBOARD_AGENTS } from "@/components/admin/agents/constants";
 import { getData } from "./data";
@@ -87,7 +87,7 @@ export default async function AdminDashboard() {
   const totalSpend = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0), 0);
   const avgRoas = computeBlendedRoas(campaigns.map(c => ({ spend: c.spend ?? 0, roas: c.roas }))) ?? 0;
 
-  const now = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const now = fmtTodayLong();
 
   const heroStats = [
     { label: "Ad Spend", value: fmtUsd(totalSpend), icon: DollarSign, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
