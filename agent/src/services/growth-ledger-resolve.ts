@@ -1,4 +1,5 @@
 import { getServiceSupabase } from "./supabase-service.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 import type {
   GrowthAccountPlatform,
   GrowthAccountStatus,
@@ -56,7 +57,7 @@ export async function safeLogGrowthEvent(input: GrowthEventInput): Promise<void>
   try {
     await logGrowthEvent(input);
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+    const message = toErrorMessage(error);
     console.warn(`[growth-ledger] failed to log ${input.eventName}: ${message}`);
   }
 }

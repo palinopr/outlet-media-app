@@ -23,6 +23,7 @@ import { initQueue } from "../../services/queue-service.js";
 import { initApprovals } from "../../services/approval-service.js";
 import { releaseChannelLock, cleanForDiscord, chunkText } from "../../events/message-handler.js";
 import { routeMessage } from "./command-router.js";
+import { toErrorMessage } from "../../utils/error-helpers.js";
 
 const token = process.env.DISCORD_TOKEN;
 const channelId = process.env.DISCORD_CHANNEL_ID;
@@ -121,7 +122,7 @@ export function startDiscordBot(): void {
         console.log("[discord] Webhook service initialized");
       })
       .catch((error) => {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = toErrorMessage(error);
         console.error("[discord] Webhook init failed -- agent identities degraded:", message);
       });
 
@@ -130,7 +131,7 @@ export function startDiscordBot(): void {
         console.log("[discord] Approval service initialized");
       })
       .catch((error) => {
-        const message = error instanceof Error ? error.message : String(error);
+        const message = toErrorMessage(error);
         console.error("[discord] Approval init failed -- approval workflow degraded:", message);
       });
 
@@ -169,7 +170,7 @@ export function startDiscordBot(): void {
   discordClient.on("messageCreate", (msg) => routeMessage(msg, discordClient));
 
   discordClient.login(token).catch((err: unknown) => {
-    const m = err instanceof Error ? err.message : String(err);
+    const m = toErrorMessage(err);
     console.error("[discord] Login failed:", m);
   });
 }
@@ -250,7 +251,7 @@ export async function notifyChannel(target: string, text: string): Promise<void>
       }
     }
   } catch (err) {
-    const m = err instanceof Error ? err.message : String(err);
+    const m = toErrorMessage(err);
     console.warn(`[discord] Failed to send to #${channelName}:`, m);
   }
 }
@@ -267,7 +268,7 @@ export async function notifyDiscord(text: string): Promise<void> {
       }
     }
   } catch (err) {
-    const m = err instanceof Error ? err.message : String(err);
+    const m = toErrorMessage(err);
     console.warn("[discord] Failed to send notification:", m);
   }
 }

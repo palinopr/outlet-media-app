@@ -54,6 +54,7 @@ import {
   listUnreadInboxMessageIds,
 } from "./email-gmail.js";
 import { getServiceSupabase } from "./supabase-service.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 
 // ---------------------------------------------------------------------------
 // Processing
@@ -102,7 +103,7 @@ async function processInboundMessage(message: EmailMessageDetail): Promise<Email
       calendarEventCreated = true;
       console.log(`[email-agent] Created calendar event: ${calEvent.summary} (${calEvent.eventId})`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
+      const msg = toErrorMessage(err);
       console.error("[email-agent] Failed to create calendar event:", msg);
     }
   }

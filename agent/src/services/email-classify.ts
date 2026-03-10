@@ -21,6 +21,7 @@ import {
   TECH_ALERT_DOMAINS,
   VIP_SENDERS,
 } from "./email-types.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 
 // ---------------------------------------------------------------------------
 // String utilities
@@ -544,7 +545,7 @@ export async function postEmailLog(text: string): Promise<void> {
     const { notifyChannel } = await import("../discord/core/entry.js");
     await notifyChannel("email-log", text);
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     console.warn("[email-agent] Failed to write #email-log entry:", message);
   }
 }

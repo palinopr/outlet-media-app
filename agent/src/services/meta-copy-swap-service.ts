@@ -1,4 +1,5 @@
 import { withResourceLocks } from "../state.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 
 const META_API_VERSION = process.env.META_API_VERSION ?? "v21.0";
 const META_WRITE_RESOURCE = "meta-ads-write";
@@ -129,14 +130,14 @@ export async function executeScheduledCopySwap(
         ].join("\n"),
       };
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
 
       if (activateSucceeded) {
         try {
           await setAdStatus(params.activateAdId, "PAUSED", accessToken);
           rollbackPerformed = true;
         } catch (rollbackError) {
-          const rollbackMessage = rollbackError instanceof Error ? rollbackError.message : String(rollbackError);
+          const rollbackMessage = toErrorMessage(rollbackError);
           throw new Error(
             `Scheduled copy swap failed after activating ${params.activateAdId}; rollback also failed: ${rollbackMessage}. Root error: ${message}`,
           );

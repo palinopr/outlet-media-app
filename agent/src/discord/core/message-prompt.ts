@@ -1,4 +1,5 @@
 import { extname } from "node:path";
+import { toErrorMessage } from "../../utils/error-helpers.js";
 
 export interface DiscordAttachmentInput {
   contentType: string | null;
@@ -111,7 +112,7 @@ export async function buildPromptFromDiscordMessage(
         `[end attached file: ${attachment.name}]`,
       ].filter(Boolean).join("\n"));
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
+      const message = toErrorMessage(error);
       notes.push(`${attachment.name}: could not be fetched (${message})`);
     }
   }

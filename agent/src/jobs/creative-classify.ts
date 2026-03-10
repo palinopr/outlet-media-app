@@ -13,6 +13,7 @@ import { query, tool, createSdkMcpServer, type SDKUserMessage } from "@anthropic
 import { z } from "zod";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { toErrorMessage } from "../utils/error-helpers.js";
 
 const AGENT_DIR = join(import.meta.dirname ?? ".", "..");
 const SUPABASE_URL = process.env.SUPABASE_URL ?? "";
@@ -64,7 +65,7 @@ async function fetchImageAsBase64(
     const mediaType = res.headers.get("content-type") ?? "image/png";
     return { data: buf.toString("base64"), mediaType };
   } catch (err) {
-    console.log(`[creative-classify] image fetch failed for ${url}: ${err instanceof Error ? err.message : String(err)}`);
+    console.log(`[creative-classify] image fetch failed for ${url}: ${toErrorMessage(err)}`);
     return null;
   }
 }
@@ -269,7 +270,7 @@ Here are the assets:`,
         }
       }
     } catch (err) {
-      const errMsg = err instanceof Error ? err.message : String(err);
+      const errMsg = toErrorMessage(err);
       results.push(`${clientSlug}: classification failed -- ${errMsg}`);
       continue;
     }

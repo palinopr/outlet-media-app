@@ -10,6 +10,7 @@ import { spawn } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join } from "node:path";
+import { toErrorMessage } from "./utils/error-helpers.js";
 
 const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const AGENT_DIR = join(__dirname, "..");
@@ -88,7 +89,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
       try {
         systemPrompt = loadPrompt(systemPromptName);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
+        const msg = toErrorMessage(err);
         console.error(`[runner] Prompt file not found: prompts/${systemPromptName}.txt`);
         return {
           text: `Error: prompt file '${systemPromptName}.txt' not found.`,

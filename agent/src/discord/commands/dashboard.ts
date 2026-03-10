@@ -11,6 +11,7 @@
 import { EmbedBuilder, type Client, type TextChannel } from "discord.js";
 import { readFile, writeFile } from "node:fs/promises";
 import { dashboardButtons } from "../features/buttons.js";
+import { toErrorMessage } from "../../utils/error-helpers.js";
 
 const CAMPAIGNS_FILE = "session/last-campaigns.json";
 const DASHBOARD_STATE_FILE = "session/dashboard-state.json";
@@ -247,7 +248,7 @@ export async function handleDashboardCommand(
     const result = await updateDashboard(client);
     return { text: result };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
+    const msg = toErrorMessage(err);
     return { text: `Dashboard update failed: ${msg}` };
   }
 }

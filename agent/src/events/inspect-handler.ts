@@ -21,6 +21,7 @@ import {
   type TextChannel,
 } from "discord.js";
 import { AGENT_INTERNALS } from "../discord/core/router.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 
 const AGENT_DIR = process.cwd();
 const INTERNALS_CHANNEL = "agent-internals";
@@ -257,7 +258,7 @@ async function inspectMemory(
 
     await msg.reply({ embeds: [embed] });
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+    const errMsg = toErrorMessage(err);
     await msg.reply(`Error reading memory: ${errMsg}`);
   }
 }
@@ -313,7 +314,7 @@ async function inspectSkills(
 
     await msg.reply({ embeds: [embed] });
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+    const errMsg = toErrorMessage(err);
     await msg.reply(`Error reading skills: ${errMsg}`);
   }
 }
@@ -352,7 +353,7 @@ async function inspectPrompt(
 
     await msg.reply({ embeds: [embed] });
   } catch (err) {
-    const errMsg = err instanceof Error ? err.message : String(err);
+    const errMsg = toErrorMessage(err);
     await msg.reply(`Error reading prompt: ${errMsg}`);
   }
 }

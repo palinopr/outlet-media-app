@@ -14,6 +14,7 @@ import { readFile, appendFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { AGENT_INTERNALS, PROMPT_TO_AGENT } from "../core/router.js";
 import { runClaude } from "../../runner.js";
+import { toErrorMessage } from "../../utils/error-helpers.js";
 
 /** Per-agent cooldown to prevent memory updates on every response */
 const lastMemoryUpdate = new Map<string, number>();
@@ -27,7 +28,7 @@ async function serializedAppend(path: string, data: string): Promise<void> {
   const next = prev.then(
     () => appendFile(path, data),
     (err) => {
-      console.warn("[memory] previous write failed:", err instanceof Error ? err.message : String(err));
+      console.warn("[memory] previous write failed:", toErrorMessage(err));
       return appendFile(path, data);
     },
   );

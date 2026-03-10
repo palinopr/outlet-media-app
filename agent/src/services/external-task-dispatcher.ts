@@ -4,6 +4,7 @@ import { getAgentForChannel } from "../discord/core/router.js";
 import { ResourceBusyError, withResourceLocks } from "../state.js";
 import { processGmailHistoryPush } from "./gmail-watch-service.js";
 import { getServiceSupabase } from "./supabase-service.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 
 const POLL_INTERVAL_MS = 5_000;
 const MAX_CONCURRENT_TASKS = 3;
@@ -272,7 +273,7 @@ async function processTask(task: ExternalTaskRow): Promise<void> {
       return;
     }
 
-    const message = err instanceof Error ? err.message : String(err);
+    const message = toErrorMessage(err);
     console.error(`[external-dispatcher] task ${task.id} failed:`, message);
     await failTask(task.id, message);
   } finally {

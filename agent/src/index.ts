@@ -7,6 +7,7 @@ import { killAllClaude } from "./runner.js";
 import { stopStatus } from "./services/status-service.js";
 import { stopExternalTaskDispatcher } from "./services/external-task-dispatcher.js";
 import { stopApprovals } from "./services/approval-service.js";
+import { toErrorMessage } from "./utils/error-helpers.js";
 
 // Ensure session directory exists for TM One browser state
 const sessionDir = new URL("../session", import.meta.url).pathname;
@@ -110,7 +111,7 @@ process.once("SIGHUP", () => { void gracefulExit("SIGHUP"); });
 
 // Suppress unhandled Discord WS close errors on shutdown
 process.on("unhandledRejection", (reason) => {
-  const msg = reason instanceof Error ? reason.message : String(reason);
+  const msg = toErrorMessage(reason);
   if (msg.includes("1000") || msg.includes("WebSocket")) return;
   console.error("[unhandled]", msg);
 });

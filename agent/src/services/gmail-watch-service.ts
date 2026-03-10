@@ -10,6 +10,7 @@ import {
   type EmailProcessResult,
 } from "./email-intelligence-service.js";
 import { notifyOwner, notifyOwnerEmailAlert } from "./owner-discord-service.js";
+import { toErrorMessage } from "../utils/error-helpers.js";
 import { getRuntimeState, setRuntimeState } from "./runtime-state.js";
 
 const SERVICE_ACCOUNT_PATH = fileURLToPath(new URL("../../service-account.json", import.meta.url));
@@ -172,7 +173,7 @@ export async function processGmailHistoryPush(incomingHistoryId: string): Promis
       try {
         results.push(await processWatchedMessage(messageId));
       } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
+        const message = toErrorMessage(err);
         failureMessages.push(`${messageId}: ${message}`);
       }
     }
@@ -180,7 +181,7 @@ export async function processGmailHistoryPush(incomingHistoryId: string): Promis
     const notifiedCount = await sendOwnerNotifications(results);
     return summarizeResults(candidateMessageIds, results, failureMessages, notifiedCount);
   } catch (err) {
-    const error = err instanceof Error ? err.message : String(err);
+    const error = toErrorMessage(err);
 
     if (error.includes("404")) {
       await setRuntimeState(WATCH_STATE_KEY, {
