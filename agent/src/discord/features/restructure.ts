@@ -264,7 +264,7 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
         log.push(`Created category: ${categoryName}`);
       } else if (category.name !== categoryName) {
         const previousName = category.name;
-        await category.setName(categoryName).catch((e) => console.warn("[restructure] setName failed:", e));
+        await category.setName(categoryName).catch((e) => console.warn("[restructure] setName failed:", e instanceof Error ? e.message : String(e)));
         log.push(`Renamed category ${previousName} -> ${categoryName}`);
       }
 
@@ -277,14 +277,14 @@ export async function runServerRestructure(guild: Guild): Promise<string> {
 
         if (existing) {
           if (existing.parentId !== category.id) {
-            await (existing as TextChannel).setParent(category.id).catch((e) => console.warn("[restructure] setParent failed:", e));
+            await (existing as TextChannel).setParent(category.id).catch((e) => console.warn("[restructure] setParent failed:", e instanceof Error ? e.message : String(e)));
             log.push(`Moved #${channelConfig.name} -> ${categoryName}`);
           }
 
-          await (existing as TextChannel).setTopic(channelConfig.topic).catch((e) => console.warn("[restructure] setTopic failed:", e));
+          await (existing as TextChannel).setTopic(channelConfig.topic).catch((e) => console.warn("[restructure] setTopic failed:", e instanceof Error ? e.message : String(e)));
           await (existing as TextChannel).permissionOverwrites
             .set(permissionOverwrites)
-            .catch((e) => console.warn("[restructure] setPermissions failed:", e));
+            .catch((e) => console.warn("[restructure] setPermissions failed:", e instanceof Error ? e.message : String(e)));
           continue;
         }
 

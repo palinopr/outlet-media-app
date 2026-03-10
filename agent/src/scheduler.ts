@@ -256,7 +256,7 @@ async function renewGmailWatch(): Promise<void> {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[scheduler] Gmail watch renewal failed:", message);
     if (SCHEDULED_OWNER_NOTIFICATIONS) {
-      await notifyOwnerImportant(`[Email Watch -- failed]\n${message}`, { channel: "email" }).catch((e) => console.warn("[scheduler] notify failed:", e));
+      await notifyOwnerImportant(`[Email Watch -- failed]\n${message}`, { channel: "email" });
     }
   }
 }
@@ -271,7 +271,7 @@ async function runExternalSync(cfg: SyncConfig, options?: JobRunOptions): Promis
   const auditTask = await beginAuditTask(job, cfg.auditAgent, cfg.lockKey, { label: cfg.label });
   console.log(`[scheduler] Running ${cfg.label}...`);
   if (job.notify) {
-    await notifyChannel("active-jobs", `>> **${cfg.label}** started`).catch((e) => console.warn("[scheduler] notify failed:", e));
+    await notifyChannel("active-jobs", `>> **${cfg.label}** started`);
   }
 
   try {
@@ -285,7 +285,7 @@ async function runExternalSync(cfg: SyncConfig, options?: JobRunOptions): Promis
         const err = execErr as { status?: number; stdout?: string; stderr?: string };
         if (err.status === 2) {
           if (job.notify) {
-            await notifyChannel("active-jobs", `>> **${cfg.label}** refreshing auth...`).catch((e) => console.warn("[scheduler] notify failed:", e));
+            await notifyChannel("active-jobs", `>> **${cfg.label}** refreshing auth...`);
           }
           await cfg.refreshFn();
           output = execFileSync("node", [cfg.scriptPath], {
@@ -308,7 +308,7 @@ async function runExternalSync(cfg: SyncConfig, options?: JobRunOptions): Promis
       await finishAuditTask(auditTask, "completed", message);
 
       if (job.notify) {
-        await notifyChannel("active-jobs", `ok **${cfg.label}** finished`).catch((e) => console.warn("[scheduler] notify failed:", e));
+        await notifyChannel("active-jobs", `ok **${cfg.label}** finished`);
       await Promise.all([
         notifyOwner(`[${cfg.label}]\n\n${message}`),
         notifyChannel(cfg.notifyChannel, `**${cfg.label} Update**\n\n${message}`),
@@ -329,10 +329,10 @@ async function runExternalSync(cfg: SyncConfig, options?: JobRunOptions): Promis
     await finishAuditTask(auditTask, "failed", message);
 
     if (job.notify) {
-      await notifyChannel("active-jobs", `x **${cfg.label}** failed: ${message.slice(0, 200)}`).catch((e) => console.warn("[scheduler] notify failed:", e));
+      await notifyChannel("active-jobs", `x **${cfg.label}** failed: ${message.slice(0, 200)}`);
       await Promise.all([
-        notifyOwnerImportant(`[${cfg.label} -- failed]\n${message}`).catch((e) => console.warn("[scheduler] notify failed:", e)),
-        notifyChannel("agent-alerts", `**${cfg.label} failed**\n${message}`).catch((e) => console.warn("[scheduler] alert failed:", e)),
+        notifyOwnerImportant(`[${cfg.label} -- failed]\n${message}`),
+        notifyChannel("agent-alerts", `**${cfg.label} failed**\n${message}`),
       ]);
     }
 
@@ -362,7 +362,7 @@ async function runTokenRefresh(
     }
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[scheduler] ${label} auth refresh failed:`, message);
-    await notifyChannel("agent-alerts", `**${label} auth refresh failed**\n${message.slice(0, 200)}`).catch((e) => console.warn("[scheduler] alert failed:", e));
+    await notifyChannel("agent-alerts", `**${label} auth refresh failed**\n${message.slice(0, 200)}`);
   }
 }
 
@@ -462,7 +462,7 @@ export async function runEmailCheck(options?: JobRunOptions): Promise<string> {
     const message = err instanceof Error ? err.message : String(err);
     await finishAuditTask(auditTask, "failed", message);
     if (job.notify) {
-      await notifyChannel("agent-alerts", `**Email check failed**\n${message.slice(0, 200)}`).catch((e) => console.warn("[scheduler] alert failed:", e));
+      await notifyChannel("agent-alerts", `**Email check failed**\n${message.slice(0, 200)}`);
     }
     throw err;
   } finally {
@@ -494,7 +494,7 @@ export async function runEmailHistoryPoll(options?: JobRunOptions): Promise<stri
     const message = err instanceof Error ? err.message : String(err);
     await finishAuditTask(auditTask, "failed", message);
     if (job.notify) {
-      await notifyChannel("agent-alerts", `**Email history poll failed**\n${message.slice(0, 200)}`).catch((e) => console.warn("[scheduler] alert failed:", e));
+      await notifyChannel("agent-alerts", `**Email history poll failed**\n${message.slice(0, 200)}`);
     }
     throw err;
   } finally {
@@ -511,7 +511,7 @@ export async function runMetaSync(options?: JobRunOptions): Promise<string> {
   setAgentBusy("meta-sync");
   const auditTask = await beginAuditTask(job, "meta-ads", "meta-sync");
   if (job.notify) {
-    await notifyChannel("active-jobs", ">> **Meta Ads sync** started").catch((e) => console.warn("[scheduler] notify failed:", e));
+    await notifyChannel("active-jobs", ">> **Meta Ads sync** started");
   }
 
   try {
@@ -524,7 +524,7 @@ export async function runMetaSync(options?: JobRunOptions): Promise<string> {
     await finishAuditTask(auditTask, "completed", message);
 
     if (job.notify) {
-      await notifyChannel("active-jobs", "ok **Meta Ads sync** finished").catch((e) => console.warn("[scheduler] notify failed:", e));
+      await notifyChannel("active-jobs", "ok **Meta Ads sync** finished");
       await Promise.all([
         notifyOwner(`[Meta Ads]\n\n${message}`),
         notifyChannel("performance", `**Meta Ads Sync**\n\n${message}`),
@@ -546,10 +546,10 @@ export async function runMetaSync(options?: JobRunOptions): Promise<string> {
     const message = err instanceof Error ? err.message : String(err);
     await finishAuditTask(auditTask, "failed", message);
     if (job.notify) {
-      await notifyChannel("active-jobs", `x **Meta Ads sync** failed: ${message.slice(0, 200)}`).catch((e) => console.warn("[scheduler] notify failed:", e));
+      await notifyChannel("active-jobs", `x **Meta Ads sync** failed: ${message.slice(0, 200)}`);
       await Promise.all([
-        notifyOwnerImportant(`[Meta Ads -- failed]\n${message}`).catch((e) => console.warn("[scheduler] notify failed:", e)),
-        notifyChannel("agent-alerts", `**Meta sync failed**\n${message}`).catch((e) => console.warn("[scheduler] alert failed:", e)),
+        notifyOwnerImportant(`[Meta Ads -- failed]\n${message}`),
+        notifyChannel("agent-alerts", `**Meta sync failed**\n${message}`),
       ]);
     }
     throw err;
@@ -609,7 +609,7 @@ export async function runThinkCycle(options?: JobRunOptions): Promise<string> {
   setAgentBusy("think");
   const auditTask = await beginAuditTask(job, "think", "think");
   if (job.notify) {
-    await notifyChannel("active-jobs", ">> **Think loop** started").catch((e) => console.warn("[scheduler] notify failed:", e));
+    await notifyChannel("active-jobs", ">> **Think loop** started");
   }
 
   try {
@@ -640,7 +640,7 @@ export async function runThinkCycle(options?: JobRunOptions): Promise<string> {
     const message = result.text?.trim() || "Think loop completed.";
     await finishAuditTask(auditTask, "completed", message);
     if (job.notify) {
-      await notifyChannel("active-jobs", "ok **Think loop** finished").catch((e) => console.warn("[scheduler] notify failed:", e));
+      await notifyChannel("active-jobs", "ok **Think loop** finished");
     }
     return message;
   } catch (err) {
@@ -652,7 +652,7 @@ export async function runThinkCycle(options?: JobRunOptions): Promise<string> {
     const message = err instanceof Error ? err.message : String(err);
     await finishAuditTask(auditTask, "failed", message);
     if (job.notify) {
-      await notifyChannel("active-jobs", `x **Think loop** failed: ${message.slice(0, 200)}`).catch((e) => console.warn("[scheduler] notify failed:", e));
+      await notifyChannel("active-jobs", `x **Think loop** failed: ${message.slice(0, 200)}`);
     }
     throw err;
   } finally {

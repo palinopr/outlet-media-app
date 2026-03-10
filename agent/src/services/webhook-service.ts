@@ -222,7 +222,7 @@ export async function sendAsAgent(
       }
 
       // Last resort: send as bot
-      await channel.send(content).catch((e) => console.warn("[webhooks] fallback send failed:", e));
+      await channel.send(content).catch((e) => console.warn("[webhooks] fallback send failed:", e instanceof Error ? e.message : String(e)));
     }
   }
 }

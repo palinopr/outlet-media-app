@@ -366,7 +366,7 @@ function enableJob(jobKey: string): string {
     job.runner();
   });
   saveSweepState();
-  postToFeed(`Schedule: enabled **${job.name}** (${job.cron})`).catch((e) => console.warn("[schedule] feed post failed:", e));
+  postToFeed(`Schedule: enabled **${job.name}** (${job.cron})`);
   return `Enabled **${job.name}** (${job.cron})`;
 }
 
@@ -382,7 +382,7 @@ function disableJob(jobKey: string): string {
     job.task = null;
   }
   saveSweepState();
-  postToFeed(`Schedule: disabled **${job.name}**`).catch((e) => console.warn("[schedule] feed post failed:", e));
+  postToFeed(`Schedule: disabled **${job.name}**`);
   return `Disabled **${job.name}**`;
 }
 

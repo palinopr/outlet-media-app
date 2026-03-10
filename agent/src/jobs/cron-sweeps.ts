@@ -49,17 +49,17 @@ async function withRoutineLock(
   const task = enqueueTask("scheduler", agentKey, name, {}, "green");
 
   console.log(`[sweeps] Starting ${name} (task ${task.id})`);
-  await postToFeed(`>> **${name}** started`).catch((e) => console.warn("[sweeps] feed post failed:", e));
+  await postToFeed(`>> **${name}** started`);
 
   try {
     const result = await fn();
     completeTask(task.id, { text: result });
-    await postToFeed(`ok **${name}** finished`).catch((e) => console.warn("[sweeps] feed post failed:", e));
+    await postToFeed(`ok **${name}** finished`);
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : String(err);
     failTask(task.id, msg);
     console.error(`[sweeps] ${name} failed:`, msg);
-    await postToFeed(`x **${name}** failed: ${msg.slice(0, 200)}`).catch((e) => console.warn("[sweeps] feed post failed:", e));
+    await postToFeed(`x **${name}** failed: ${msg.slice(0, 200)}`);
   } finally {
     clearAgentBusy(lockId);
   }

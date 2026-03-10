@@ -169,7 +169,7 @@ async function logActivity(
 
   const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" });
   const feedMsg = `\`${timestamp}\` **#${channel}** (${agent}) -- ${user}: "${message.slice(0, 80)}"`;
-  notifyChannel("agent-feed", feedMsg).catch((e) => console.warn("[message-handler] notify failed:", e));
+  notifyChannel("agent-feed", feedMsg);
 }
 
 /**
@@ -213,12 +213,12 @@ async function deliverResponse(
 ): Promise<void> {
   try {
     await sendAsAgent(agentKey, channelName, chunks[0] || "Done.");
-    await working.delete().catch((e) => console.warn("[message-handler] delete failed:", e));
+    await working.delete().catch((e) => console.warn("[message-handler] delete failed:", e instanceof Error ? e.message : String(e)));
     for (const chunk of chunks.slice(1)) {
       await sendAsAgent(agentKey, channelName, chunk);
     }
   } catch {
-    await working.edit(chunks[0] || "Done.").catch((e) => console.warn("[message-handler] edit failed:", e));
+    await working.edit(chunks[0] || "Done.").catch((e) => console.warn("[message-handler] edit failed:", e instanceof Error ? e.message : String(e)));
     for (const chunk of chunks.slice(1)) {
       if ("send" in msg.channel) await (msg.channel as TextChannel).send(chunk);
     }
@@ -235,13 +235,13 @@ function postProcess(
   prompt: string,
   responseText: string,
 ): void {
-  logActivity(channelName, username, prompt, agent.description, responseText).catch((e) => console.warn("[message-handler] log failed:", e));
+  logActivity(channelName, username, prompt, agent.description, responseText).catch((e) => console.warn("[message-handler] log failed:", e instanceof Error ? e.message : String(e)));
   import("../discord/features/memory.js")
     .then(({ maybeUpdateMemory }) => maybeUpdateMemory(agent.promptFile, prompt, responseText))
-    .catch((e) => console.warn("[message-handler] memory update failed:", e));
+    .catch((e) => console.warn("[message-handler] memory update failed:", e instanceof Error ? e.message : String(e)));
   import("../discord/features/skills.js")
     .then(({ maybeCreateSkill }) => maybeCreateSkill(agent.promptFile, prompt, responseText))
-    .catch((e) => console.warn("[message-handler] skill creation failed:", e));
+    .catch((e) => console.warn("[message-handler] skill creation failed:", e instanceof Error ? e.message : String(e)));
 }
 
 /**
@@ -288,7 +288,7 @@ export async function handleMessage(
         buffer += chunk;
         if (Date.now() - lastEdit > 1500 && buffer.trim()) {
           const preview = cleanForDiscord(buffer.slice(-1900));
-          await working?.edit(preview || "...").catch((e) => console.warn("[message-handler] edit failed:", e));
+          await working?.edit(preview || "...").catch((e) => console.warn("[message-handler] edit failed:", e instanceof Error ? e.message : String(e)));
           lastEdit = Date.now();
         }
       },
@@ -346,7 +346,7 @@ export async function handleMessage(
   } catch (err) {
     const errMsg = err instanceof Error ? err.message : String(err);
     if (working) {
-      await working.edit(`Something went wrong: ${errMsg}`).catch((e) => console.warn("[message-handler] edit failed:", e));
+      await working.edit(`Something went wrong: ${errMsg}`).catch((e) => console.warn("[message-handler] edit failed:", e instanceof Error ? e.message : String(e)));
     }
   } finally {
     if (typingInterval) clearInterval(typingInterval);

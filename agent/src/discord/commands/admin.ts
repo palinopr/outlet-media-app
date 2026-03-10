@@ -199,7 +199,7 @@ export async function checkAutoMod(msg: Message): Promise<boolean> {
   const lowerContent = content.toLowerCase();
   for (const word of BANNED_WORDS) {
     if (word && lowerContent.includes(word.toLowerCase())) {
-      await msg.delete().catch((e) => console.warn("[admin] delete failed:", e));
+      await msg.delete().catch((e) => console.warn("[admin] delete failed:", e instanceof Error ? e.message : String(e)));
       await warnUser(msg, "Message removed -- contains restricted content.");
       await logAction(`Removed message from ${msg.author.tag} (banned word: ${word})`);
       return true;
@@ -219,12 +219,12 @@ export async function checkAutoMod(msg: Message): Promise<boolean> {
   messageRates.set(userId, rate);
 
   if (rate.count > RATE_LIMIT_MAX) {
-    await msg.delete().catch((e) => console.warn("[admin] delete failed:", e));
+    await msg.delete().catch((e) => console.warn("[admin] delete failed:", e instanceof Error ? e.message : String(e)));
     if (rate.count === RATE_LIMIT_MAX + 1) {
       if (msg.channel.isTextBased() && "send" in msg.channel) {
         await (msg.channel as TextChannel).send(
           `${msg.author}, slow down. You're sending messages too fast.`
-        ).catch((e) => console.warn("[admin] send failed:", e));
+        ).catch((e) => console.warn("[admin] send failed:", e instanceof Error ? e.message : String(e)));
       }
       await logAction(`Rate-limited ${msg.author.tag} in #${(msg.channel as TextChannel).name}`);
     }
@@ -233,7 +233,7 @@ export async function checkAutoMod(msg: Message): Promise<boolean> {
 
   // Mass mention detection
   if (msg.mentions.users.size >= 5 || msg.mentions.roles.size >= 3) {
-    await msg.delete().catch((e) => console.warn("[admin] delete failed:", e));
+    await msg.delete().catch((e) => console.warn("[admin] delete failed:", e instanceof Error ? e.message : String(e)));
     await warnUser(msg, "Mass mentions are not allowed.");
     await logAction(`Blocked mass mention from ${msg.author.tag}`);
     return true;
@@ -248,18 +248,18 @@ async function warnUser(msg: Message, reason: string): Promise<void> {
   userWarnings.set(userId, warnings);
 
   try {
-    await msg.author.send(`Warning (${warnings}/3): ${reason}`).catch((e) => console.warn("[admin] DM failed:", e));
+    await msg.author.send(`Warning (${warnings}/3): ${reason}`).catch((e) => console.warn("[admin] DM failed:", e instanceof Error ? e.message : String(e)));
   } catch {
     if (msg.channel.isTextBased() && "send" in msg.channel) {
       await (msg.channel as TextChannel).send(
         `${msg.author} Warning (${warnings}/3): ${reason}`
-      ).catch((e) => console.warn("[admin] send failed:", e));
+      ).catch((e) => console.warn("[admin] send failed:", e instanceof Error ? e.message : String(e)));
     }
   }
 
   if (warnings >= 3 && msg.member) {
     const tenMinutes = 10 * 60 * 1000;
-    await msg.member.timeout(tenMinutes, `Auto-mod: ${warnings} warnings`).catch((e) => console.warn("[admin] timeout failed:", e));
+    await msg.member.timeout(tenMinutes, `Auto-mod: ${warnings} warnings`).catch((e) => console.warn("[admin] timeout failed:", e instanceof Error ? e.message : String(e)));
     await logAction(`Timed out ${msg.author.tag} for 10 minutes (${warnings} warnings)`);
     userWarnings.delete(userId);
   }
@@ -293,7 +293,7 @@ async function handleMemberJoin(member: GuildMember): Promise<void> {
     .setTimestamp();
 
   if (welcomeChannel) {
-    await welcomeChannel.send({ embeds: [embed] }).catch((e) => console.warn("[admin] send failed:", e));
+    await welcomeChannel.send({ embeds: [embed] }).catch((e) => console.warn("[admin] send failed:", e instanceof Error ? e.message : String(e)));
   }
 
   // DM the new member with the same guide

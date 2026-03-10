@@ -49,14 +49,14 @@ async function handleTaskCompletion(task: AgentTask): Promise<void> {
 
   switch (task.action) {
     case "morning-briefing": {
-      await notifyChannel("general", `Morning briefing posted to #morning-briefing.`).catch((e) => console.warn("[triggers] notify failed:", e));
+      await notifyChannel("general", `Morning briefing posted to #morning-briefing.`);
       break;
     }
 
     default:
       await notifyChannel("audit-log",
         `Task completed: **${task.action}** (${task.from} -> ${task.to}) [${task.id}]`
-      ).catch((e) => console.warn("[triggers] notify failed:", e));
+      );
       break;
   }
 }
@@ -70,15 +70,15 @@ async function handleTaskFailure(task: AgentTask): Promise<void> {
 
   await notifyChannel("audit-log",
     `Task FAILED: **${task.action}** (${task.from} -> ${task.to}) -- ${task.error?.slice(0, 200) ?? "unknown error"} [${task.id}]`
-  ).catch((e) => console.warn("[triggers] notify failed:", e));
+  );
 
   await sendAsAgent("boss", "boss",
     `**Task Failed**: ${task.action} (assigned to ${task.to})\nError: ${task.error?.slice(0, 300) ?? "unknown"}\nTask ID: ${task.id}`
   ).catch((e) => {
-    console.warn("[triggers] notify failed:", e);
+    console.warn("[triggers] sendAsAgent failed:", e instanceof Error ? e.message : String(e));
     notifyChannel("boss",
       `**Task Failed**: ${task.action} (${task.to}) -- ${task.error?.slice(0, 200) ?? "unknown"}`
-    ).catch((e2) => console.warn("[triggers] notify failed:", e2));
+    );
   });
 
   // Auto-retry once for transient errors
@@ -105,11 +105,11 @@ async function handleEscalation(task: AgentTask): Promise<void> {
 
   await notifyChannel("ops",
     `**Escalation**: Task ${task.action} (${task.from} -> ${task.to}) escalated to RED tier.\nDetails: ${JSON.stringify(task.params).slice(0, 500)}\nTask ID: ${task.id}`
-  ).catch((e) => console.warn("[triggers] notify failed:", e));
+  );
 
   await notifyChannel("audit-log",
     `Task ESCALATED: **${task.action}** (${task.from} -> ${task.to}) [${task.id}]`
-  ).catch((e) => console.warn("[triggers] notify failed:", e));
+  );
 }
 
 /**

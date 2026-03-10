@@ -370,7 +370,7 @@ async function ensureDiscordThread(
   await sendAsAgent(CUSTOMER_AGENT_KEY, channelName, {
     content: intro,
     threadId: thread.id,
-  }).catch((e) => console.warn("[whatsapp] thread intro send failed:", e));
+  }).catch((e) => console.warn("[whatsapp] thread intro send failed:", e instanceof Error ? e.message : String(e)));
 
   return { channelName, threadId: thread.id };
 }
@@ -393,7 +393,7 @@ async function mirrorInboundMessage(
     latestInbound.textBody ?? `[${latestInbound.messageType}]`,
   ].join("\n");
 
-  await sendAsAgent(CUSTOMER_AGENT_KEY, channelName, threadId ? { content, threadId } : content).catch((e) => console.warn("[whatsapp] mirror inbound failed:", e));
+  await sendAsAgent(CUSTOMER_AGENT_KEY, channelName, threadId ? { content, threadId } : content).catch((e) => console.warn("[whatsapp] mirror inbound failed:", e instanceof Error ? e.message : String(e)));
   await markMessageMirrored(latestInbound.id);
 }
 
@@ -425,7 +425,7 @@ async function notifyApprovalBlock(
       .filter(Boolean)
       .join("\n");
 
-    await sendAsAgent("boss", WHATSAPP_BOSS_CHANNEL, bossText).catch((e) => console.warn("[whatsapp] approval boss notify failed:", e));
+    await sendAsAgent("boss", WHATSAPP_BOSS_CHANNEL, bossText).catch((e) => console.warn("[whatsapp] approval boss notify failed:", e instanceof Error ? e.message : String(e)));
   }
 
   const statusText =
@@ -442,7 +442,7 @@ async function notifyApprovalBlock(
           threadId,
         }
       : `**Internal triage**\n${statusText}\n${instructions}`,
-  ).catch((e) => console.warn("[whatsapp] approval block notify failed:", e));
+  ).catch((e) => console.warn("[whatsapp] approval block notify failed:", e instanceof Error ? e.message : String(e)));
 
   return `${statusText} ${instructions}`;
 }
@@ -466,7 +466,7 @@ async function routeOwnerControlMessage(
     "Treat this as Jaime owner instruction, not as customer-facing client chat.",
   ].join("\n");
 
-  await sendAsAgent("boss", WHATSAPP_BOSS_CHANNEL, bossText).catch((e) => console.warn("[whatsapp] owner control notify failed:", e));
+  await sendAsAgent("boss", WHATSAPP_BOSS_CHANNEL, bossText).catch((e) => console.warn("[whatsapp] owner control notify failed:", e instanceof Error ? e.message : String(e)));
 
   await markMessageTriaged(latestInbound.id);
   return `Owner control message routed to Boss from ${context.waId}.`;
@@ -587,7 +587,7 @@ async function maybeHandleSimpleDirectMessage(
           threadId,
         }
       : `**Internal triage**\nSent direct WhatsApp reply.\n\n_${reply}_`,
-  ).catch((e) => console.warn("[whatsapp] direct reply triage notify failed:", e));
+  ).catch((e) => console.warn("[whatsapp] direct reply triage notify failed:", e instanceof Error ? e.message : String(e)));
 
   await markMessageTriaged(latestInbound.id);
   return reply;
@@ -642,7 +642,7 @@ export async function processWhatsAppTask(task: ExternalTaskRow): Promise<string
                 threadId,
               }
             : "**Internal triage**\nIgnoring group chatter until the agent is explicitly mentioned.",
-        ).catch((e) => console.warn("[whatsapp] group chatter notify failed:", e));
+        ).catch((e) => console.warn("[whatsapp] group chatter notify failed:", e instanceof Error ? e.message : String(e)));
         await markMessageTriaged(latestInbound.id);
         return `Ignored non-mention chatter in approved group conversation ${conversationId}.`;
       }
@@ -720,7 +720,7 @@ export async function processWhatsAppTask(task: ExternalTaskRow): Promise<string
       await sendAsAgent(CUSTOMER_AGENT_KEY, channelName, threadId
         ? { content: `**Internal triage**\n${deliveredText}`, threadId }
         : `**Internal triage**\n${deliveredText}`,
-      ).catch((e) => console.warn("[whatsapp] triage result send failed:", e));
+      ).catch((e) => console.warn("[whatsapp] triage result send failed:", e instanceof Error ? e.message : String(e)));
     }
 
     await markMessageTriaged(latestInbound.id);

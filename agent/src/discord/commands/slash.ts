@@ -337,7 +337,7 @@ export function registerSlashHandler(client: Client): void {
               `Original request: "${request}"`,
             ].join("\n"),
           );
-          await notifyChannel("agent-feed", `**#${channelName}** (scheduled-budget-slash) -- ${requester}: "${request.slice(0, 120)}"`).catch((e) => console.warn("[slash] notify failed:", e));
+          await notifyChannel("agent-feed", `**#${channelName}** (scheduled-budget-slash) -- ${requester}: "${request.slice(0, 120)}"`);
 
           await cmd.reply({
             content: `Created scheduler task \`${scheduledTask.id}\` for ${scheduledLabel}.`,
@@ -444,7 +444,7 @@ export function registerSlashHandler(client: Client): void {
           await notifyChannel(
             "agent-feed",
             `**#${channelName}** (scheduled-copy-swap-slash) -- ${requester}: activate ${activateAdId}, pause ${pauseAdId}`,
-          ).catch((e) => console.warn("[slash] notify failed:", e));
+          );
 
           await cmd.reply({
             content: `Created copy-swap task \`${scheduledTask.id}\` for ${scheduledLabel}.`,
@@ -536,9 +536,9 @@ export function registerSlashHandler(client: Client): void {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       if (cmd.deferred || cmd.replied) {
-        await cmd.editReply(`Error: ${msg}`).catch((e) => console.warn("[slash] reply failed:", e));
+        await cmd.editReply(`Error: ${msg}`).catch((e) => console.warn("[slash] reply failed:", e instanceof Error ? e.message : String(e)));
       } else {
-        await cmd.reply({ content: `Error: ${msg}`, ephemeral: true }).catch((e) => console.warn("[slash] reply failed:", e));
+        await cmd.reply({ content: `Error: ${msg}`, ephemeral: true }).catch((e) => console.warn("[slash] reply failed:", e instanceof Error ? e.message : String(e)));
       }
     }
   });

@@ -106,7 +106,7 @@ export function notifyCreativeNewAssets(clientSlug: string, count: number): void
       );
       if (res.status === 401 || res.status === 404) invalidateWebhookCache();
     })
-    .catch((e) => console.warn("[notify-creative] webhook post failed:", e));
+    .catch((e) => console.warn("[notify-creative] webhook post failed:", e instanceof Error ? e.message : String(e)));
 }
 
 export function notifyCreative(payload: NotifyPayload): void {
@@ -172,5 +172,5 @@ export function notifyCreative(payload: NotifyPayload): void {
       );
       if (res.status === 401 || res.status === 404) invalidateWebhookCache();
     })
-    .catch((e) => console.warn("[notify-creative] webhook post failed:", e));
+    .catch((e) => console.warn("[notify-creative] webhook post failed:", e instanceof Error ? e.message : String(e)));
 }

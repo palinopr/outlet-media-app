@@ -202,7 +202,7 @@ export function enqueueTask(
   taskRegistry.set(task.id, task);
 
   // Write to Supabase ledger (fire-and-forget)
-  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e));
+  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e instanceof Error ? e.message : String(e)));
 
   // Check if we can run immediately
   const agentSlot = activeSlots.get(to);
@@ -225,7 +225,7 @@ function startTask(task: AgentTask): void {
   task.status = "running";
   task.startedAt = new Date();
   activeSlots.set(task.to, task);
-  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e));
+  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e instanceof Error ? e.message : String(e)));
   taskEvents.emit("started", task);
 
   const timer = setTimeout(() => {
@@ -254,7 +254,7 @@ export function completeTask(taskId: string, result: unknown): void {
   task.completedAt = new Date();
   task.result = result;
   activeSlots.set(task.to, null);
-  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e));
+  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e instanceof Error ? e.message : String(e)));
   taskEvents.emit("completed", task);
 
   // Process next in queue
@@ -277,7 +277,7 @@ export function failTask(taskId: string, error: string): void {
   task.completedAt = new Date();
   task.error = error;
   activeSlots.set(task.to, null);
-  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e));
+  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e instanceof Error ? e.message : String(e)));
   taskEvents.emit("failed", task);
 
   processNextForAgent(task.to);
@@ -308,7 +308,7 @@ export function escalateTask(taskId: string): void {
     );
   }
 
-  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e));
+  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e instanceof Error ? e.message : String(e)));
   taskEvents.emit("escalated", task);
 }
 
@@ -321,7 +321,7 @@ export function approveTask(taskId: string, approvedBy: string): void {
 
   task.status = "approved";
   task.approvedBy = approvedBy;
-  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e));
+  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e instanceof Error ? e.message : String(e)));
   taskEvents.emit("approved", task);
 
   // Re-enqueue as green tier for execution
@@ -345,7 +345,7 @@ export function rejectTask(taskId: string): void {
     activeSlots.set(task.to, null);
   }
 
-  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e));
+  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", e instanceof Error ? e.message : String(e)));
   taskEvents.emit("rejected", task);
 
   if (!activeSlots.get(task.to)) {
