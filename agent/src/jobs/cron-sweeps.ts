@@ -15,6 +15,8 @@ import { todayCST, yesterdayCST } from "../utils/date-helpers.js";
 import { loadEvents, loadCampaigns, categorizeEvents } from "../utils/session-loader.js";
 import { campaignsSummary, eventsSummary } from "../utils/prompt-formatters.js";
 
+const META_AD_ACCOUNT = process.env.META_AD_ACCOUNT_ID ?? "act_787610255314938";
+
 // Lazy imports to avoid circular deps
 async function postToChannel(target: string, text: string, agentKey?: string): Promise<void> {
   if (agentKey && target !== "agent-feed") {
@@ -132,7 +134,7 @@ Show-day tasks:
 4. Report what changes you are making
 
 Use curl to make actual Meta API calls to adjust budgets and ad status.
-Ad account: act_787610255314938
+Ad account: ${META_AD_ACCOUNT}
 Use the Meta access token from the environment variable META_ACCESS_TOKEN.
 
 Report all changes to this channel. Be specific about what you changed.`;
@@ -174,7 +176,7 @@ Check the spend pace for today's show campaigns:
 3. If underpacing, flag it. If overpacing, flag it.
 4. Report a brief status update
 
-Ad account: act_787610255314938
+Ad account: ${META_AD_ACCOUNT}
 Keep the response concise.`;
 
     const result = await runClaude({
@@ -210,7 +212,7 @@ Generate a post-show recap:
 4. For each completed show campaign, pause it
 5. Post a summary
 
-Ad account: act_787610255314938
+Ad account: ${META_AD_ACCOUNT}
 Format as a Discord message with bold headers.`;
 
     const result = await runClaude({
@@ -237,7 +239,7 @@ async function weeklyReport(): Promise<void> {
     const prompt = `You are the Reporting agent for Outlet Media. Today is ${todayCST()} (Monday).
 
 Generate the weekly performance report. Pull last 7 days of campaign data.
-Ad account: act_787610255314938
+Ad account: ${META_AD_ACCOUNT}
 
 CACHED CAMPAIGNS:
 ${campaignsSummary(campaigns)}
@@ -276,7 +278,7 @@ async function creativeFatigueCheck(): Promise<void> {
 
 CREATIVE FATIGUE CHECK for ${active.length} active campaign(s).
 Pull ad-level insights from Meta API. Flag ads where CTR dropped >20%, frequency >3.0, or CPC increased >30%.
-Ad account: act_787610255314938
+Ad account: ${META_AD_ACCOUNT}
 
 ACTIVE CAMPAIGNS:
 ${campaignsSummary(active)}
@@ -325,7 +327,7 @@ async function budgetPacing(): Promise<void> {
     const prompt = `You are the Media Buyer agent. Today is ${todayCST()}, ~${hour}:00 CST.
 
 BUDGET PACING CHECK. Expected spend fraction: ~${(fraction * 100).toFixed(0)}%.
-Ad account: act_787610255314938
+Ad account: ${META_AD_ACCOUNT}
 
 ACTIVE CAMPAIGNS:
 ${campaignsSummary(active)}
@@ -477,37 +479,37 @@ async function creativeClassify(): Promise<void> {
 export function getSweepRunners(): Record<string, () => void> {
   return {
     "morning-briefing": () => {
-      morningBriefing();
+      void morningBriefing();
     },
     "show-day-check": () => {
-      showDayAutomation();
+      void showDayAutomation();
     },
     "show-day-monitor": () => {
-      showDayMonitor();
+      void showDayMonitor();
     },
     "post-show-recap": () => {
-      postShowRecap();
+      void postShowRecap();
     },
     "weekly-report": () => {
-      weeklyReport();
+      void weeklyReport();
     },
     "creative-fatigue": () => {
-      creativeFatigueCheck();
+      void creativeFatigueCheck();
     },
     "budget-pacing": () => {
-      budgetPacing();
+      void budgetPacing();
     },
     "ticket-velocity": () => {
-      ticketVelocity();
+      void ticketVelocity();
     },
     "client-pulse": () => {
-      clientPulse();
+      void clientPulse();
     },
     "boss-supervision": () => {
-      bossSupervision();
+      void bossSupervision();
     },
     "creative-classify": () => {
-      creativeClassify();
+      void creativeClassify();
     },
   };
 }

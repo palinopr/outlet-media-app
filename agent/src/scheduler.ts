@@ -1,4 +1,4 @@
-import cron from "node-cron";
+import cron, { type ScheduledTask } from "node-cron";
 import { readFileSync, existsSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
@@ -45,6 +45,8 @@ const TM_SCHEDULER_ENABLED = (process.env.TM_SCHEDULER_ENABLED ?? "false").toLow
 const EATA_SCHEDULER_ENABLED = (process.env.EATA_SCHEDULER_ENABLED ?? "false").toLowerCase() === "true";
 const GMAIL_PUSH_ENABLED = Boolean(process.env.GMAIL_PUBSUB_TOPIC);
 const INGEST_URL = process.env.INGEST_URL?.replace("/api/ingest", "");
+
+const cronTasks: ScheduledTask[] = [];
 
 const META_TASK = "Run the Meta Ads sync: pull all active campaigns and last-30-day insights for ad account act_787610255314938, save to session/last-campaigns.json, POST to the ingest endpoint. Report spend and ROAS summary.";
 const THINK_TASK = "Run your proactive self-improvement cycle. Read LEARNINGS.md first to pick which priority to focus on this cycle.";
@@ -106,37 +108,47 @@ async function finishAuditTask(task: LedgerTask | null, status: "completed" | "f
 }
 
 export function startScheduler(): void {
-  cron.schedule(HEARTBEAT_CRON, () => { void pingHeartbeat(); });
-  cron.schedule(META_CRON, () => { void runMetaSync({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); });
-  cron.schedule(THINK_CRON, () => { void runThinkCycle({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); }, { timezone: "America/Los_Angeles" });
-  cron.schedule(DISCORD_HEALTH_CRON, () => { void runDiscordHealthCheck(); });
-  cron.schedule(SCHEDULED_HANDOFF_CRON, () => { void dispatchDueScheduledHandoffs(discordClient); });
-  cron.schedule(MEETING_REMINDER_CRON, () => { void runMeetingReminder(); }, { timezone: "America/Chicago" });
+  cronTasks.push(
+    cron.schedule(HEARTBEAT_CRON, () => { void pingHeartbeat(); }),
+    cron.schedule(META_CRON, () => { void runMetaSync({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); }),
+    cron.schedule(THINK_CRON, () => { void runThinkCycle({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); }, { timezone: "America/Los_Angeles" }),
+    cron.schedule(DISCORD_HEALTH_CRON, () => { void runDiscordHealthCheck(); }),
+    cron.schedule(SCHEDULED_HANDOFF_CRON, () => { void dispatchDueScheduledHandoffs(discordClient); }),
+    cron.schedule(MEETING_REMINDER_CRON, () => { void runMeetingReminder(); }, { timezone: "America/Chicago" }),
+  );
 
   if (TM_SCHEDULER_ENABLED) {
-    cron.schedule(CHECK_CRON, () => { void runTmCheck({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); });
-    cron.schedule(TM_COOKIE_CRON, () => { void refreshTmCookies(); });
+    cronTasks.push(
+      cron.schedule(CHECK_CRON, () => { void runTmCheck({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); }),
+      cron.schedule(TM_COOKIE_CRON, () => { void refreshTmCookies(); }),
+    );
   } else {
     console.log("[scheduler] TM1 core cron disabled (set TM_SCHEDULER_ENABLED=true to re-enable)");
   }
 
   if (EATA_SCHEDULER_ENABLED) {
-    cron.schedule(EATA_CRON, () => { void runEataSync({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); });
-    cron.schedule(EATA_COOKIE_CRON, () => { void refreshEataCookies(); });
+    cronTasks.push(
+      cron.schedule(EATA_CRON, () => { void runEataSync({ notify: SCHEDULED_OWNER_NOTIFICATIONS }); }),
+      cron.schedule(EATA_COOKIE_CRON, () => { void refreshEataCookies(); }),
+    );
   } else {
     console.log("[scheduler] EATA core cron disabled (set EATA_SCHEDULER_ENABLED=true to re-enable)");
   }
 
   if (GMAIL_PUSH_ENABLED) {
-    cron.schedule(EMAIL_WATCH_RENEW_CRON, () => {
-      void renewGmailWatch();
-    }, { timezone: "America/Los_Angeles" });
+    cronTasks.push(
+      cron.schedule(EMAIL_WATCH_RENEW_CRON, () => {
+        void renewGmailWatch();
+      }, { timezone: "America/Los_Angeles" }),
+    );
     void renewGmailWatch();
     console.log("[scheduler] Gmail push enabled; cron email polling disabled");
   } else {
-    cron.schedule(EMAIL_HISTORY_POLL_CRON, () => {
-      void runEmailHistoryPoll({ notify: false });
-    }, { timezone: "America/Los_Angeles" });
+    cronTasks.push(
+      cron.schedule(EMAIL_HISTORY_POLL_CRON, () => {
+        void runEmailHistoryPoll({ notify: false });
+      }, { timezone: "America/Los_Angeles" }),
+    );
     console.log(`[scheduler] Gmail push unavailable; using incremental email history polling (${EMAIL_HISTORY_POLL_CRON})`);
   }
 
@@ -215,9 +227,17 @@ async function pingHeartbeat() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ secret: process.env.INGEST_SECRET }),
     });
-  } catch {
-    // ignore
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.warn("[scheduler] heartbeat failed:", msg);
   }
+}
+
+export function stopScheduler(): void {
+  for (const task of cronTasks) {
+    task.stop();
+  }
+  cronTasks.length = 0;
 }
 
 async function renewGmailWatch(): Promise<void> {

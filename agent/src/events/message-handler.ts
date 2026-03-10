@@ -350,6 +350,5 @@ export async function handleMessage(
     }
   } finally {
     if (typingInterval) clearInterval(typingInterval);
-    channelLocks.delete(msg.channelId);
   }
 }

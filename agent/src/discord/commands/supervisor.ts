@@ -82,15 +82,16 @@ export async function runSupervision(): Promise<string> {
     "--- END LOG ---",
   ].join("\n");
 
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error("Supervisor timed out after 3 minutes")), 180_000)
-  );
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error("Supervisor timed out after 3 minutes")), 180_000);
+  });
   const result = await Promise.race([
     runClaude({
       prompt: supervisePrompt,
       systemPromptName: "boss",
       maxTurns: 5,
-    }),
+    }).then((v) => { clearTimeout(timer!); return v; }),
     timeout,
   ]);
 

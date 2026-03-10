@@ -126,7 +126,7 @@ async function requeueTask(id: string): Promise<void> {
     .from("agent_tasks")
     .update({
       status: "pending",
-      started_at: new Date().toISOString(),
+      started_at: null,
     })
     .eq("id", id);
 }

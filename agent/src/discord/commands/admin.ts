@@ -383,6 +383,14 @@ export async function buildAdminPrompt(promptFile = "boss"): Promise<string> {
 // --- Channel Health Check (called from scheduler) ---
 
 export async function runChannelHealthCheck(): Promise<void> {
+  // Clean up stale rate limit entries
+  const now = Date.now();
+  for (const [userId, rate] of messageRates) {
+    if (now - rate.firstAt > RATE_LIMIT_WINDOW_MS) {
+      messageRates.delete(userId);
+    }
+  }
+
   if (!guild) return;
 
   const staleChannels: string[] = [];

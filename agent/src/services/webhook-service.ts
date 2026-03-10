@@ -62,10 +62,11 @@ async function withWebhookInitTimeout<T>(
   promise: Promise<T>,
   context: string,
 ): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout>;
   return await Promise.race([
-    promise,
+    promise.then((v) => { clearTimeout(timer); return v; }),
     new Promise<null>((resolve) => {
-      setTimeout(() => {
+      timer = setTimeout(() => {
         console.warn(`[webhooks] Timed out during ${context}; continuing startup`);
         resolve(null);
       }, WEBHOOK_INIT_TIMEOUT_MS);
@@ -192,8 +193,9 @@ export async function sendAsAgent(
         avatarURL: wh.avatarURL,
       });
       return;
-    } catch {
-      // Webhook invalid -- try to recreate
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.warn(`[webhooks] Webhook send failed for ${agentKey} in #${channelName}: ${errMsg}`);
       channelWebhooks?.delete(agentKey);
     }
   }

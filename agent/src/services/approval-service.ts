@@ -43,6 +43,7 @@ interface Rules {
 
 let rules: Rules | null = null;
 let client: Client | null = null;
+let sweepInterval: ReturnType<typeof setInterval> | null = null;
 
 /** Pending approval tasks: task ID -> { timeout handle, created timestamp } */
 const pendingApprovals = new Map<string, { timeout: ReturnType<typeof setTimeout>; createdAt: number }>();
@@ -92,7 +93,7 @@ export async function initApprovals(c: Client): Promise<void> {
   });
 
   // Sweep stale approvals every hour (catches orphans from bot restarts)
-  setInterval(sweepExpiredApprovals, 60 * 60 * 1000);
+  sweepInterval = setInterval(sweepExpiredApprovals, 60 * 60 * 1000);
 
   console.log("[approvals] Approval service initialized");
 }
@@ -239,6 +240,13 @@ async function postApprovalRequest(task: AgentTask): Promise<void> {
  * Catches approvals that survived a bot restart (their setTimeout was lost).
  * Called periodically from a setInterval in initApprovals.
  */
+export function stopApprovals(): void {
+  if (sweepInterval) {
+    clearInterval(sweepInterval);
+    sweepInterval = null;
+  }
+}
+
 function sweepExpiredApprovals(): void {
   const now = Date.now();
   for (const [taskId, entry] of pendingApprovals) {

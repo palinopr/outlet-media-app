@@ -26,7 +26,10 @@ async function serializedAppend(path: string, data: string): Promise<void> {
   const prev = writeLocks.get(path) ?? Promise.resolve();
   const next = prev.then(
     () => appendFile(path, data),
-    () => appendFile(path, data), // proceed even if previous write failed
+    (err) => {
+      console.warn("[memory] previous write failed:", err instanceof Error ? err.message : String(err));
+      return appendFile(path, data);
+    },
   );
   writeLocks.set(path, next);
   await next;

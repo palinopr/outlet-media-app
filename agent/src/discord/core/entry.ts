@@ -444,7 +444,7 @@ export function startDiscordBot(): void {
       })
       .catch((error) => {
         const message = error instanceof Error ? error.message : String(error);
-        console.error("[discord] Webhook init failed:", message);
+        console.error("[discord] Webhook init failed -- agent identities degraded:", message);
       });
 
     void initApprovals(discordClient!)
@@ -453,7 +453,7 @@ export function startDiscordBot(): void {
       })
       .catch((error) => {
         const message = error instanceof Error ? error.message : String(error);
-        console.error("[discord] Approval init failed:", message);
+        console.error("[discord] Approval init failed -- approval workflow degraded:", message);
       });
 
     // Initialize event-driven triggers and agent spawner
