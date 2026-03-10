@@ -1,17 +1,16 @@
 import {
-  DollarSign,
   Users,
   Megaphone,
   Clock,
   Sparkles,
-  Target,
   Ticket,
   ListChecks,
+  Calendar,
 } from "lucide-react";
 import { currentUser } from "@clerk/nextjs/server";
 import { getData } from "./data";
 import { parseRange } from "@/lib/constants";
-import { fmtUsd, fmtNum, slugToLabel, fmtTodayLong } from "@/lib/formatters";
+import { fmtNum, slugToLabel, fmtTodayLong } from "@/lib/formatters";
 import { DATE_OPTIONS, generateInsights } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
 import { DateRangePicker } from "./components/date-range-picker";
@@ -27,6 +26,10 @@ import { OverviewCampaignJumpSection } from "./components/overview-campaign-jump
 interface Props {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ range?: string }>;
+}
+
+function normalizeEventStatus(status: string | null) {
+  return (status ?? "").toLowerCase().replace(/_/g, "");
 }
 
 export default async function ClientDashboard({ params, searchParams }: Props) {
@@ -53,10 +56,92 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   let displayName = clientName;
   if (user?.firstName) displayName = user.firstName;
   const now = fmtTodayLong();
-  const metricsByKey = new Map(opsSummary.metrics.map((metric) => [metric.key, metric]));
-  const pendingApprovals = metricsByKey.get("pending_approvals")?.value ?? 0;
-  const openNextSteps = metricsByKey.get("action_items")?.value ?? 0;
-  const openThreads = metricsByKey.get("open_discussions")?.value ?? 0;
+  const onSaleEvents = events.filter((event) => normalizeEventStatus(event.status) === "onsale").length;
+  const heroCards = events.length > 0
+    ? [
+        {
+          icon: Megaphone,
+          iconBg: "bg-cyan-500/10",
+          iconRing: "ring-cyan-500/20",
+          iconColor: "text-cyan-400",
+          label: "Live Campaigns",
+          sub: `${heroStats.totalCampaigns} total campaigns`,
+          value: heroStats.activeCampaigns.toString(),
+          valueColor: "text-white",
+        },
+        {
+          icon: ListChecks,
+          iconBg: "bg-violet-500/10",
+          iconRing: "ring-violet-500/20",
+          iconColor: "text-violet-400",
+          label: "All Campaigns",
+          sub: `${heroStats.totalCampaigns - heroStats.activeCampaigns} not live right now`,
+          value: heroStats.totalCampaigns.toString(),
+          valueColor: "text-white",
+        },
+        {
+          icon: Ticket,
+          iconBg: "bg-emerald-500/10",
+          iconRing: "ring-emerald-500/20",
+          iconColor: "text-emerald-400",
+          label: "Total Events",
+          sub: `${onSaleEvents} on sale right now`,
+          value: events.length.toString(),
+          valueColor: "text-white",
+        },
+        {
+          icon: Calendar,
+          iconBg: "bg-blue-500/10",
+          iconRing: "ring-blue-500/20",
+          iconColor: "text-blue-400",
+          label: "On Sale Now",
+          sub: `${events.length - onSaleEvents} not on sale`,
+          value: onSaleEvents.toString(),
+          valueColor: "text-white",
+        },
+      ]
+    : [
+        {
+          icon: Megaphone,
+          iconBg: "bg-cyan-500/10",
+          iconRing: "ring-cyan-500/20",
+          iconColor: "text-cyan-400",
+          label: "Live Campaigns",
+          sub: `${heroStats.totalCampaigns} total campaigns`,
+          value: heroStats.activeCampaigns.toString(),
+          valueColor: "text-white",
+        },
+        {
+          icon: ListChecks,
+          iconBg: "bg-violet-500/10",
+          iconRing: "ring-violet-500/20",
+          iconColor: "text-violet-400",
+          label: "All Campaigns",
+          sub: `${heroStats.totalCampaigns - heroStats.activeCampaigns} not live right now`,
+          value: heroStats.totalCampaigns.toString(),
+          valueColor: "text-white",
+        },
+        {
+          icon: Users,
+          iconBg: "bg-emerald-500/10",
+          iconRing: "ring-emerald-500/20",
+          iconColor: "text-emerald-400",
+          label: "Audience Reach",
+          sub: `${fmtNum(heroStats.totalClicks)} clicks`,
+          value: fmtNum(heroStats.totalImpressions),
+          valueColor: "text-white",
+        },
+        {
+          icon: Calendar,
+          iconBg: "bg-blue-500/10",
+          iconRing: "ring-blue-500/20",
+          iconColor: "text-blue-400",
+          label: "Reporting Window",
+          sub: "Currently selected range",
+          value: rangeLabel,
+          valueColor: "text-white",
+        },
+      ];
 
   return (
     <div className="space-y-6">
@@ -90,71 +175,20 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
 
       {/* -- Hero Stats -- */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="glass-card hero-stat-card stat-glow p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-cyan-500/10 ring-1 ring-cyan-500/20">
-              <DollarSign className="h-3.5 w-3.5 text-cyan-400" />
+        {heroCards.map(({ icon: Icon, iconBg, iconRing, iconColor, label, sub, value, valueColor }) => (
+          <div key={label} className="glass-card hero-stat-card stat-glow p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className={`flex items-center justify-center h-7 w-7 rounded-lg ${iconBg} ring-1 ${iconRing}`}>
+                <Icon className={`h-3.5 w-3.5 ${iconColor}`} />
+              </div>
+              <span className="text-xs font-semibold tracking-wider uppercase text-white/60">{label}</span>
             </div>
-            <span className="text-xs font-semibold tracking-wider uppercase text-white/60">Ad Spend</span>
+            <p className={`text-2xl sm:text-3xl font-extrabold tracking-tighter leading-none ${valueColor}`}>
+              {value}
+            </p>
+            <p className="text-xs text-white/45 mt-2">{sub}</p>
           </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
-            {fmtUsd(heroStats.totalSpend)}
-          </p>
-          <p className="text-xs text-white/45 mt-2">
-            {rangeLabel.toLowerCase()}
-          </p>
-        </div>
-
-        <div className="glass-card hero-stat-card stat-glow p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/20">
-              <Target className="h-3.5 w-3.5 text-emerald-400" />
-            </div>
-            <span className="text-xs font-semibold tracking-wider uppercase text-white/60">Revenue</span>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-emerald-400 tracking-tighter leading-none">
-            {fmtUsd(heroStats.totalRevenue)}
-          </p>
-          <p className="text-xs text-white/45 mt-2">
-            {fmtNum(heroStats.totalImpressions)} impressions | {fmtNum(heroStats.totalClicks)} clicks
-          </p>
-        </div>
-
-        <div className="glass-card hero-stat-card stat-glow p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-violet-500/10 ring-1 ring-violet-500/20">
-              <ListChecks className="h-3.5 w-3.5 text-violet-400" />
-            </div>
-            <span className="text-xs font-semibold tracking-wider uppercase text-white/60">Needs Attention</span>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
-            {opsSummary.campaignsNeedingAttention}
-          </p>
-          <p className="text-xs text-white/45 mt-2">
-            {pendingApprovals > 0
-              ? `${pendingApprovals} approvals awaiting review`
-              : openNextSteps > 0
-                ? `${openNextSteps} campaign next steps open`
-                : openThreads > 0
-                  ? `${openThreads} discussion threads active`
-                  : "Nothing urgent right now"}
-          </p>
-        </div>
-
-        <div className="glass-card hero-stat-card stat-glow p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-blue-500/10 ring-1 ring-blue-500/20">
-              <Megaphone className="h-3.5 w-3.5 text-blue-400" />
-            </div>
-            <span className="text-xs font-semibold tracking-wider uppercase text-white/60">Campaigns</span>
-          </div>
-          <p className="text-2xl sm:text-3xl font-extrabold text-white tracking-tighter leading-none">
-            {heroStats.activeCampaigns}
-          </p>
-          <p className="text-xs text-white/45 mt-2">
-            {heroStats.activeCampaigns} active of {heroStats.totalCampaigns} total
-          </p>
-        </div>
+        ))}
       </div>
 
       {campaigns.length > 0 && (
