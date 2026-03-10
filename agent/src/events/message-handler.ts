@@ -15,7 +15,6 @@ import {
 } from "discord.js";
 import { runClaude } from "../runner.js";
 import { getAgentForChannel, type AgentConfig } from "../discord/core/router.js";
-import { isAgentFree } from "../services/queue-service.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { loadAgentMemory } from "../discord/features/memory.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
@@ -259,10 +258,6 @@ export async function handleMessage(
   if (agent.readOnly) return;
 
   const agentKey = agent.promptFile;
-  if (!isAgentFree(agentKey)) {
-    await msg.reply("This agent is currently busy — please try again in a moment.");
-    return;
-  }
 
   let typingInterval: ReturnType<typeof setInterval> | undefined;
   let working: Message | undefined;

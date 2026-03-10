@@ -326,9 +326,8 @@ export function approveTask(taskId: string, approvedBy: string): void {
   taskEvents.emit("approved", task);
 
   // Re-enqueue as green tier for execution
-  const execTask = enqueueTask(task.from, task.to, task.action, task.params, "green");
-  execTask.params._approvedBy = approvedBy;
-  execTask.params._originalTaskId = taskId;
+  const execParams = { ...task.params, _approvedBy: approvedBy, _originalTaskId: taskId };
+  enqueueTask(task.from, task.to, task.action, execParams, "green");
 }
 
 /**

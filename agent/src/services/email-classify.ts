@@ -359,7 +359,7 @@ export function formatRecipients(addresses: EmailAddress[]): string[] {
 
 export function detectLanguage(text: string): string {
   const lower = text.toLowerCase();
-  const spanishHints = [" hola ", " gracias ", " por favor", " envio", " adjunto", "venue", "meta pixel id"];
+  const spanishHints = [" hola ", " gracias ", " por favor", " envio", " adjunto"];
   return spanishHints.some((hint) => lower.includes(hint.trim())) ? "es" : "en";
 }
 

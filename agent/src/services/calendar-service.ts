@@ -88,13 +88,12 @@ function normalizeDateTime(iso: string): { dateTime: string; timeZone?: string }
 
 function computeEnd(startIso: string, durationMinutes: number): { dateTime: string; timeZone?: string } {
   const start = normalizeDateTime(startIso);
-  const match = start.dateTime.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/);
-  if (!match) throw new Error(`Invalid start datetime: ${startIso}`);
+  const startMs = new Date(start.dateTime).getTime();
+  const endMs = startMs + durationMinutes * 60_000;
+  const endDate = new Date(endMs);
 
-  const [y, mo, d, h, mi, s] = match.slice(1).map(Number);
-  const dt = new Date(y, mo - 1, d, h, mi + durationMinutes, s);
   const pad = (n: number) => String(n).padStart(2, "0");
-  const endStr = `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(dt.getHours())}:${pad(dt.getMinutes())}:${pad(dt.getSeconds())}`;
+  const endStr = `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:${pad(endDate.getSeconds())}`;
 
   return start.timeZone
     ? { dateTime: endStr, timeZone: start.timeZone }

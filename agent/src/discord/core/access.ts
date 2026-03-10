@@ -99,13 +99,9 @@ export function getMemberAccess(
   userId?: string,
 ): MemberAccess {
   const isOwner =
-    !!userId &&
-    !!member?.guild &&
-    member.guild.ownerId === userId
-      ? true
-      : !!userId && OWNER_USER_IDS.size > 0 && OWNER_USER_IDS.has(userId)
-      ? true
-      : hasRole(member, OWNER_ROLE_NAME);
+    (!!userId && !!member?.guild && member.guild.ownerId === userId) ||
+    (!!userId && OWNER_USER_IDS.size > 0 && OWNER_USER_IDS.has(userId)) ||
+    hasRole(member, OWNER_ROLE_NAME);
 
   const isAdmin =
     !!member &&

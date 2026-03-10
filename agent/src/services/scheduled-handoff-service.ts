@@ -217,7 +217,8 @@ export function parseScheduledDispatchTime(content: string, now: Date = new Date
   let dateStr = dateFmt.format(now);
 
   const wantsTomorrow = /\btomorrow\b|\bmanana\b/.test(lower);
-  const wantsToday = /\btoday\b|\btonight\b|\bhoy\b|\besta noche\b/.test(lower);
+  const wantsToday = /\btoday\b|\bhoy\b/.test(lower);
+  const wantsTonight = /\btonight\b|\besta noche\b/.test(lower);
 
   if (wantsTomorrow) {
     dateStr = dateFmt.format(new Date(now.getTime() + 86_400_000));
@@ -237,7 +238,13 @@ export function parseScheduledDispatchTime(content: string, now: Date = new Date
 
   const target = new Date(`${isoLike}${tzSuffix}`);
 
-  if (!wantsTomorrow && !wantsToday && target.getTime() <= now.getTime()) {
+  // "tonight" at a small hour means the upcoming occurrence
+  if (wantsTonight && hours < 12 && target.getTime() <= now.getTime()) {
+    target.setTime(target.getTime() + 86_400_000);
+  }
+
+  // Generic rollover: if no explicit day word and time is past, assume next day
+  if (!wantsTomorrow && !wantsToday && !wantsTonight && target.getTime() <= now.getTime()) {
     target.setTime(target.getTime() + 86_400_000);
   }
 
