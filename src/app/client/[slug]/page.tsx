@@ -9,7 +9,6 @@ import {
   Sparkles,
   Target,
   Ticket,
-  Lightbulb,
 } from "lucide-react";
 import { currentUser } from "@clerk/nextjs/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +19,7 @@ import { fmtUsd, fmtNum, roasColor, slugToLabel, fmtTodayLong } from "@/lib/form
 import { roasLabel, DATE_OPTIONS, generateInsights } from "./lib";
 import { ExportButton } from "@/components/client/export-button";
 import { DateRangePicker } from "./components/date-range-picker";
+import { InsightsPanel } from "./components/insights-panel";
 import { ClientPortalFooter } from "./components/client-portal-footer";
 import { CampaignSection } from "./components/campaign-section";
 import { EventCard } from "./components/event-card";
@@ -157,23 +157,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
       </div>
 
       {/* -- Smart Insights -- */}
-      {insights.length > 0 && (
-        <div className="glass-card p-5 space-y-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Lightbulb className="h-3.5 w-3.5 text-amber-400/70" />
-            <span className="section-label">Insights</span>
-          </div>
-          {insights.map((insight, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <span className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${
-                insight.type === "positive" ? "bg-emerald-400" :
-                insight.type === "warning" ? "bg-amber-400" : "bg-white/40"
-              }`} />
-              <p className="text-sm text-white/70 leading-relaxed">{insight.text}</p>
-            </div>
-          ))}
-        </div>
-      )}
+      <InsightsPanel insights={insights} />
 
       {trendData.length > 0 && (
         <section>

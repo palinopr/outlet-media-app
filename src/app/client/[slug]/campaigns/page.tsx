@@ -6,13 +6,13 @@ import {
   MousePointerClick,
   Sparkles,
   Clock,
-  Lightbulb,
   BarChart3,
 } from "lucide-react";
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 import { fmtUsd, fmtNum, roasColor, slugToLabel, fmtTodayLong } from "@/lib/formatters";
 import { getCampaignsPageData } from "../data";
 import { buildTrendData, roasLabel, generateCampaignInsights } from "../lib";
+import { InsightsPanel } from "../components/insights-panel";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { CampaignsTable } from "./campaigns-table";
 import { requireClientAccess } from "@/features/client-portal/access";
@@ -158,51 +158,25 @@ export default async function ClientCampaigns({ params }: Props) {
       {/* -- Reach & Efficiency -- */}
       {hasData && (
         <div className="grid grid-cols-3 gap-3">
-          <div className="glass-card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <BarChart3 className="h-3 w-3 text-white/40" />
-              <span className="text-xs font-semibold tracking-wider uppercase text-white/50">CPM</span>
-            </div>
-            <p className="text-lg font-bold text-white">{avgCpm != null ? fmtUsd(avgCpm) : "--"}</p>
-            <p className="text-xs text-white/35 mt-1">cost per 1,000 views</p>
-          </div>
-          <div className="glass-card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <MousePointerClick className="h-3 w-3 text-white/40" />
-              <span className="text-xs font-semibold tracking-wider uppercase text-white/50">CPC</span>
-            </div>
-            <p className="text-lg font-bold text-white">{avgCpc != null ? fmtUsd(avgCpc) : "--"}</p>
-            <p className="text-xs text-white/35 mt-1">cost per click</p>
-          </div>
-          <div className="glass-card p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-3 w-3 text-white/40" />
-              <span className="text-xs font-semibold tracking-wider uppercase text-white/50">Click Rate</span>
-            </div>
-            <p className="text-lg font-bold text-white">{avgCtr != null ? avgCtr.toFixed(2) + "%" : "--"}</p>
-            <p className="text-xs text-white/35 mt-1">of viewers who clicked</p>
-          </div>
-        </div>
-      )}
-
-      {/* -- Performance Insights -- */}
-      {insights.length > 0 && (
-        <div className="glass-card p-5 space-y-3">
-          <div className="flex items-center gap-2 mb-1">
-            <Lightbulb className="h-3.5 w-3.5 text-amber-400/70" />
-            <span className="text-xs font-semibold tracking-wider uppercase text-white/60">Performance Insights</span>
-          </div>
-          {insights.map((insight, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <span className={`mt-1.5 h-1.5 w-1.5 rounded-full shrink-0 ${
-                insight.type === "positive" ? "bg-emerald-400" :
-                insight.type === "warning" ? "bg-amber-400" : "bg-white/40"
-              }`} />
-              <p className="text-sm text-white/70 leading-relaxed">{insight.text}</p>
+          {([
+            { icon: BarChart3, label: "CPM", value: avgCpm != null ? fmtUsd(avgCpm) : "--", desc: "cost per 1,000 views" },
+            { icon: MousePointerClick, label: "CPC", value: avgCpc != null ? fmtUsd(avgCpc) : "--", desc: "cost per click" },
+            { icon: TrendingUp, label: "Click Rate", value: avgCtr != null ? avgCtr.toFixed(2) + "%" : "--", desc: "of viewers who clicked" },
+          ] as const).map(({ icon: Icon, label, value, desc }) => (
+            <div key={label} className="glass-card p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Icon className="h-3 w-3 text-white/40" />
+                <span className="text-xs font-semibold tracking-wider uppercase text-white/50">{label}</span>
+              </div>
+              <p className="text-lg font-bold text-white">{value}</p>
+              <p className="text-xs text-white/35 mt-1">{desc}</p>
             </div>
           ))}
         </div>
       )}
+
+      {/* -- Performance Insights -- */}
+      <InsightsPanel insights={insights} title="Performance Insights" />
 
       {/* -- Trend Charts -- */}
       {hasData && trendData.length > 1 && (

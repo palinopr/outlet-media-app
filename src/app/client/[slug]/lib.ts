@@ -309,8 +309,6 @@ export function generateInsights(
 
 export function generateCampaignInsights(campaigns: CampaignCard[]): Insight[] {
   const out: Insight[] = [];
-  const totalSpend = campaigns.reduce((a, c) => a + c.spend, 0);
-  const totalRevenue = campaigns.reduce((a, c) => a + (c.revenue ?? 0), 0);
   const totalClicks = campaigns.reduce((a, c) => a + c.clicks, 0);
   const totalImpressions = campaigns.reduce((a, c) => a + c.impressions, 0);
 
