@@ -37,7 +37,7 @@ export function AdsPreview({ ads }: { ads: AdPreview[] }) {
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[700px]">
+        <table className="w-full min-w-[600px]">
           <thead>
             <tr className="border-b border-white/[0.06]">
               <th className={`${TH} w-10 text-center`}>#</th>

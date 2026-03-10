@@ -255,7 +255,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 
       {/* -- Audience Snapshot (horizontal row) -- */}
       {snapshotCards.length > 0 && (
-        <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
           {snapshotCards.map((card) => (
             <SnapshotCard key={card.label} {...card} />
           ))}
@@ -264,7 +264,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 
       {/* -- Row 2: Performance Timeline | Daypart Heatmap | Audience Demographics -- */}
       <div className="grid gap-3 xl:grid-cols-3">
-        <section>
+        <section className="min-w-0">
           <div className="mb-2 flex items-center gap-2">
             <Calendar className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Strong performance timeline</span>
@@ -273,7 +273,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           <PerformanceTrendTabs data={trendData} />
         </section>
 
-        <section>
+        <section className="min-w-0">
           <div className="mb-2 flex items-center gap-2">
             <BarChart3 className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">True daypart heatmap</span>
@@ -288,7 +288,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           )}
         </section>
 
-        <section>
+        <section className="min-w-0">
           <div className="mb-2 flex items-center gap-2">
             <Users className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Audience demographics</span>
@@ -307,20 +307,20 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       {/* -- Row 3: Markets & Placements | Ad Performance + Recommendations -- */}
       <div className="grid gap-3 xl:grid-cols-2">
         {(marketData.length > 0 || placementData.length > 0) && (
-          <section>
+          <section className="min-w-0">
             <div className="mb-2 flex items-center gap-2">
               <Globe2 className="h-3.5 w-3.5 text-white/50" />
               <span className="section-label">Markets & placements</span>
               <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
             </div>
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="space-y-3">
               {marketData.length > 0 ? <MarketPerformanceTable data={marketData} /> : null}
               {placementData.length > 0 ? <PlacementBarChart data={placementData} /> : null}
             </div>
           </section>
         )}
 
-        <div className="space-y-3">
+        <div className="space-y-3 min-w-0">
           <section>
             <div className="mb-2 flex items-center gap-2">
               <ImageIcon className="h-3.5 w-3.5 text-white/50" />
@@ -367,7 +367,7 @@ function SnapshotCard({
   detail: string;
 }) {
   return (
-    <div className="shrink-0 min-w-[130px] flex-1 rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
+    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
       <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
       <p className="mt-1.5 text-lg font-bold tracking-tight text-white leading-tight truncate">{value}</p>
     </div>

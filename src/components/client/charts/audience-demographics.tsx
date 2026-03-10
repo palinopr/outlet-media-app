@@ -158,12 +158,12 @@ function AgeTab({ data }: { data: AgeRow[] }) {
   const maxImp = Math.max(...data.map((d) => d.impressions));
 
   return (
-    <div className="h-[210px]">
+    <div className="h-[260px]">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
           data={data}
           layout="vertical"
-          margin={{ top: 0, right: 12, bottom: 0, left: 0 }}
+          margin={{ top: 0, right: 16, bottom: 0, left: 0 }}
         >
           <XAxis type="number" hide domain={[0, maxImp * 1.15]} />
           <YAxis
@@ -185,7 +185,7 @@ function AgeTab({ data }: { data: AgeRow[] }) {
             dataKey="impressions"
             fill="#22d3ee"
             radius={[0, 6, 6, 0]}
-            barSize={18}
+            barSize={24}
             label={{
               position: "right" as const,
               fill: "rgba(255,255,255,0.5)",
@@ -201,16 +201,16 @@ function AgeTab({ data }: { data: AgeRow[] }) {
 
 function GenderTab({ data }: { data: GenderRow[] }) {
   return (
-    <div className="flex items-center gap-4 h-[210px]">
-      <div className="h-40 w-40 shrink-0">
+    <div className="flex flex-col items-center gap-4 h-[260px]">
+      <div className="h-44 w-44 shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={data}
               dataKey="impressions"
               nameKey="gender"
-              innerRadius="58%"
-              outerRadius="88%"
+              innerRadius="55%"
+              outerRadius="90%"
               paddingAngle={3}
               strokeWidth={0}
             >
@@ -233,9 +233,9 @@ function GenderTab({ data }: { data: GenderRow[] }) {
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="space-y-3 flex-1">
+      <div className="flex items-center gap-5 w-full justify-center">
         {data.map((row) => (
-          <div key={row.gender} className="flex items-center gap-3">
+          <div key={row.gender} className="flex items-center gap-2">
             <span
               className="h-2.5 w-2.5 rounded-full shrink-0"
               style={{
@@ -243,7 +243,7 @@ function GenderTab({ data }: { data: GenderRow[] }) {
                   GENDER_COLORS[row.gender] ?? "rgba(255,255,255,0.1)",
               }}
             />
-            <span className="text-xs text-white/50 flex-1">{row.gender}</span>
+            <span className="text-xs text-white/50">{row.gender}</span>
             <span className="text-sm font-bold text-white/80">
               {row.pct.toFixed(0)}%
             </span>

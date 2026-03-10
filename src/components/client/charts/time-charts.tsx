@@ -39,8 +39,8 @@ export function HourlyHeatmap({ data }: { data: HourlyRow[] }) {
       <p className="text-[10px] text-white/20 mb-4">
         Brighter cells indicate higher impression volume
       </p>
-      <div className="overflow-x-auto">
-        <div className="flex flex-wrap gap-1">
+      <div>
+        <div className="grid grid-cols-6 gap-1">
           {hours.map((h) => {
             const row = byHour.get(h);
             const imp = row?.impressions ?? 0;
@@ -48,7 +48,7 @@ export function HourlyHeatmap({ data }: { data: HourlyRow[] }) {
             return (
               <div
                 key={h}
-                className="group relative h-9 w-9 sm:h-8 sm:w-8 rounded-md flex items-center justify-center cursor-default transition-all hover:scale-110 hover:z-10"
+                className="group relative aspect-square rounded-md flex items-center justify-center cursor-default transition-all hover:scale-105 hover:z-10"
                 style={{ background: `rgba(34, 211, 238, ${opacity})` }}
               >
                 <span className="text-[8px] sm:text-[9px] font-medium text-white/50">

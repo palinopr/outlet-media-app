@@ -43,7 +43,7 @@ export function PerformanceTrendTabs({ data }: Props) {
 
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
-      <div className="h-64">
+      <div className="h-72">
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart
             data={data}

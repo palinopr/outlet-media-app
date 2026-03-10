@@ -75,7 +75,7 @@ export function PlacementBarChart({ data }: { data: PlacementBarData[] }) {
       <p className="text-xs font-semibold text-white/60 mb-4">
         Impressions by Placement
       </p>
-      <div className="h-[200px]">
+      <div className="h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
