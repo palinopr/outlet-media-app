@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { adminGuard, apiError } from "@/lib/api-helpers";
+import { adminGuard, apiError, validateRequest } from "@/lib/api-helpers";
+import { ImportAssetsSchema } from "@/lib/api-schemas";
 import { importAssetsFromFolder } from "@/features/assets/server";
 import { logSystemEvent } from "@/features/system-events/server";
 
@@ -10,16 +11,9 @@ export async function POST(req: NextRequest) {
   const guard = await adminGuard();
   if (guard) return guard;
 
-  const body = await req.json();
-  const { folder_url, client_slug, uploaded_by } = body as {
-    folder_url: string;
-    client_slug: string;
-    uploaded_by: string;
-  };
-
-  if (!folder_url || !client_slug || !uploaded_by) {
-    return apiError("folder_url, client_slug, and uploaded_by are required", 400);
-  }
+  const { data: body, error: valErr } = await validateRequest(req, ImportAssetsSchema);
+  if (valErr) return valErr;
+  const { folder_url, client_slug, uploaded_by } = body;
 
   const user = await currentUser();
 

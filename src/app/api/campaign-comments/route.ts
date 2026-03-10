@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { apiError, authGuard, validateRequest } from "@/lib/api-helpers";
+import { apiError, authGuard, dbError, validateRequest } from "@/lib/api-helpers";
 import {
   CreateCampaignCommentSchema,
   ResolveCommentSchema,
@@ -122,7 +122,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { data, error: dbErr } = await query;
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   return NextResponse.json({ comments: data ?? [] });
 }
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
     .select("*")
     .single();
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   const campaignName = await getCampaignName(body.campaign_id);
   await logSystemEvent({
@@ -301,7 +301,7 @@ export async function PATCH(request: NextRequest) {
     .update({ resolved: body.resolved, updated_at: new Date().toISOString() })
     .eq("id", id);
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   if (body.resolved !== existing.resolved) {
     const campaignName = await getCampaignName(existing.campaign_id as string);
@@ -369,7 +369,7 @@ export async function DELETE(request: NextRequest) {
     .delete()
     .eq("id", id);
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   const campaignName = await getCampaignName(existing.campaign_id as string);
   await logSystemEvent({

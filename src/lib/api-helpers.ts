@@ -7,6 +7,12 @@ export function apiError(message: string, status = 500): NextResponse {
   return NextResponse.json({ error: message }, { status });
 }
 
+/** Log real DB/Supabase error and return a generic message to the client. */
+export function dbError(err: { message: string }, status = 500): NextResponse {
+  console.error("[db]", err.message);
+  return apiError("Database error", status);
+}
+
 /** Check Clerk auth. Returns userId on success, or a 401 error response. */
 export async function authGuard(): Promise<
   { userId: string; error: null } | { userId: null; error: NextResponse }

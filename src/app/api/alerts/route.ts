@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AlertPostSchema, AlertPatchSchema } from "@/lib/api-schemas";
-import { apiError, secretGuard, validateRequest } from "@/lib/api-helpers";
+import { apiError, dbError, secretGuard, validateRequest } from "@/lib/api-helpers";
 
 // POST -- agent writes an alert (requires INGEST_SECRET)
 export async function POST(request: Request) {
@@ -20,8 +20,7 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    console.error("alerts insert error:", error);
-    return apiError(error.message, 500);
+    return dbError(error);
   }
 
   return NextResponse.json({ ok: true });
@@ -41,8 +40,7 @@ export async function PATCH(request: Request) {
     .is("read_at", null);
 
   if (error) {
-    console.error("alerts update error:", error);
-    return apiError(error.message, 500);
+    return dbError(error);
   }
 
   return NextResponse.json({ ok: true });

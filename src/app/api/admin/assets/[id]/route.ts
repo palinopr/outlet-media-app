@@ -4,7 +4,8 @@ import {
   getAssetWorkflowPaths,
   revalidateWorkflowPaths,
 } from "@/features/workflow/revalidation";
-import { adminGuard, apiError } from "@/lib/api-helpers";
+import { adminGuard, apiError, validateRequest } from "@/lib/api-helpers";
+import { UpdateAssetSchema } from "@/lib/api-schemas";
 import { deleteAssetById, getAssetRecordById, updateAsset } from "@/features/assets/server";
 import { logSystemEvent, summarizeChangedFields } from "@/features/system-events/server";
 
@@ -16,7 +17,8 @@ export async function PATCH(
   if (guard) return guard;
 
   const { id } = await params;
-  const body = (await req.json()) as Record<string, unknown>;
+  const { data: body, error: valErr } = await validateRequest(req, UpdateAssetSchema);
+  if (valErr) return valErr;
   const user = await currentUser();
 
   try {

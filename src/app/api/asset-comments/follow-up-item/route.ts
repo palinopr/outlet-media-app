@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
+import { adminGuard, apiError, dbError, parseJsonBody } from "@/lib/api-helpers";
 import {
   createSystemAssetFollowUpItem,
   findAssetFollowUpItemBySource,
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     .eq("id", commentId)
     .maybeSingle();
 
-  if (error) return apiError(error.message);
+  if (error) return dbError(error);
   if (!commentRow) return apiError("Comment not found", 404);
 
   const comment = commentRow as Record<string, unknown>;

@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
+import { authGuard, apiError, dbError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { UpdateTaskSchema } from "@/lib/api-schemas";
 import { requireWorkspaceClientAccess } from "@/features/workspace/access";
@@ -26,12 +26,12 @@ export async function PATCH(
   const access = await requireWorkspaceClientAccess(userId, existing.client_slug as string | null);
   if (access instanceof Response) return access;
 
-  const { error: dbError } = await supabaseAdmin
+  const { error: dbErr } = await supabaseAdmin
     .from("workspace_tasks")
     .update({ ...body, updated_at: new Date().toISOString() })
     .eq("id", taskId);
 
-  if (dbError) return apiError(dbError.message, 500);
+  if (dbErr) return dbError(dbErr);
 
   // Fetch updated task
   const { data: task } = await supabaseAdmin
@@ -62,12 +62,12 @@ export async function DELETE(
   const access = await requireWorkspaceClientAccess(userId, existing.client_slug as string | null);
   if (access instanceof Response) return access;
 
-  const { error: dbError } = await supabaseAdmin
+  const { error: dbErr } = await supabaseAdmin
     .from("workspace_tasks")
     .delete()
     .eq("id", taskId);
 
-  if (dbError) return apiError(dbError.message, 500);
+  if (dbErr) return dbError(dbErr);
 
   return NextResponse.json({ ok: true });
 }

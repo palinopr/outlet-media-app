@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { apiError, authGuard, validateRequest } from "@/lib/api-helpers";
+import { apiError, authGuard, dbError, validateRequest } from "@/lib/api-helpers";
 import { CreateCrmCommentSchema, ResolveCommentSchema } from "@/lib/api-schemas";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
   }
 
   const { data, error: dbErr } = await query;
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   return NextResponse.json({ comments: data ?? [] });
 }
@@ -149,7 +149,7 @@ export async function POST(request: NextRequest) {
     .select("*")
     .single();
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   const contactName = await getContactName(body.contact_id);
   await logSystemEvent({
@@ -263,7 +263,7 @@ export async function PATCH(request: NextRequest) {
     .update({ resolved: body.resolved, updated_at: new Date().toISOString() })
     .eq("id", id);
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   if (body.resolved !== existing.resolved) {
     const contactName = await getContactName(existing.contact_id as string);
@@ -320,7 +320,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   const { error: dbErr } = await supabaseAdmin.from("crm_comments").delete().eq("id", id);
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   const contactName = await getContactName(existing.contact_id as string);
   await logSystemEvent({

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { apiError, authGuard, validateRequest } from "@/lib/api-helpers";
+import { apiError, authGuard, dbError, validateRequest } from "@/lib/api-helpers";
 import { CreateAssetCommentSchema, ResolveCommentSchema } from "@/lib/api-schemas";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -188,7 +188,8 @@ export async function POST(request: NextRequest) {
     .single();
   const data = createdRow as AssetCommentRow | null;
 
-  if (dbErr || !data) return apiError(dbErr?.message ?? "Failed to create comment");
+  if (dbErr) return dbError(dbErr);
+  if (!data) return apiError("Failed to create comment");
 
   await logSystemEvent({
     eventName: "asset_comment_added",
@@ -316,7 +317,7 @@ export async function PATCH(request: NextRequest) {
     .update({ resolved: body.resolved, updated_at: new Date().toISOString() })
     .eq("id", id);
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   if (body.resolved !== existing.resolved) {
     await logSystemEvent({
@@ -385,7 +386,7 @@ export async function DELETE(request: NextRequest) {
     .delete()
     .eq("id", id);
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   await logSystemEvent({
     eventName: "asset_comment_deleted",

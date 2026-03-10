@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
+import { authGuard, apiError, dbError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { CreateCommentSchema, ResolveCommentSchema } from "@/lib/api-schemas";
 import { currentUser } from "@clerk/nextjs/server";
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     .eq("page_id", pageId)
     .order("created_at", { ascending: true });
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
   return NextResponse.json({ comments: data });
 }
 
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
     .select("*")
     .single();
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   const commentType: NotificationType = "comment";
   const notificationJobs: Promise<unknown>[] = [];
@@ -195,7 +195,7 @@ export async function PATCH(request: NextRequest) {
     .update({ resolved: body.resolved, updated_at: new Date().toISOString() })
     .eq("id", id);
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   if (body.resolved !== existing.resolved) {
     if (page) {
@@ -255,7 +255,7 @@ export async function DELETE(request: NextRequest) {
     .eq("id", id)
     .eq("author_id", userId);
 
-  if (dbErr) return apiError(dbErr.message);
+  if (dbErr) return dbError(dbErr);
 
   if (page) {
     await logSystemEvent({

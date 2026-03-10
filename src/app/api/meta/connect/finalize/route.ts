@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { encrypt, decrypt } from "@/lib/crypto";
 import { fetchAdAccounts } from "@/lib/meta-oauth";
 import { z } from "zod/v4";
-import { apiError, validateRequest } from "@/lib/api-helpers";
+import { apiError, dbError, validateRequest } from "@/lib/api-helpers";
 import { requireClientOwner } from "@/features/client-portal/ownership";
 
 const FinalizeSchema = z.object({
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
     { onConflict: "ad_account_id" }
   );
 
-  if (error) return apiError(`Failed to store account: ${error.message}`, 500);
+  if (error) return dbError(error);
 
   const response = NextResponse.json({ ok: true });
   response.cookies.delete("meta_pending_token");

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AgentPostSchema, VALID_AGENTS } from "@/lib/api-schemas";
-import { adminGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
+import { adminGuard, apiError, dbError, parseJsonBody } from "@/lib/api-helpers";
 import { getLatestAgentStatuses, mapTaskToJob } from "@/lib/agent-jobs";
 
 // ─── POST /api/agents ─ queue a job ──────────────────────────────────────────
@@ -45,8 +45,7 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    console.error("[api/agents] insert failed:", error.message);
-    return apiError(error.message);
+    return dbError(error);
   }
 
   return NextResponse.json({ job: mapTaskToJob(data) });

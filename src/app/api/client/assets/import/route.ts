@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authGuard, apiError } from "@/lib/api-helpers";
+import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
+import { ClientImportAssetsSchema } from "@/lib/api-schemas";
 import { notifyCreative, notifyCreativeNewAssets } from "@/lib/notify-creative";
 import { createApprovalRequest } from "@/features/approvals/server";
 import {
@@ -15,15 +16,9 @@ export async function POST(req: NextRequest) {
   const { userId, error } = await authGuard();
   if (error) return error;
 
-  const body = await req.json();
-  const { folder_url, client_slug } = body as {
-    folder_url: string;
-    client_slug: string;
-  };
-
-  if (!folder_url || !client_slug) {
-    return apiError("folder_url and client_slug are required", 400);
-  }
+  const { data: body, error: valErr } = await validateRequest(req, ClientImportAssetsSchema);
+  if (valErr) return valErr;
+  const { folder_url, client_slug } = body;
 
   const allowed = await canAccessClientAssets(userId, client_slug);
   if (!allowed) return apiError("Forbidden", 403);

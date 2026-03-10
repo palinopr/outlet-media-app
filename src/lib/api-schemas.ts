@@ -344,3 +344,24 @@ export const ResolveApprovalRequestSchema = z.object({
   note: z.string().max(2000).optional().nullable(),
   status: z.enum(["approved", "rejected", "cancelled"]),
 });
+
+// ─── Asset schemas ─────────────────────────────────────────────────────────
+
+export const UpdateAssetSchema = z.object({
+  format: z.string().max(50).optional(),
+  labels: z.array(z.string().max(100)).optional(),
+  placement: z.string().max(100).optional(),
+  status: z.string().max(50).optional(),
+  used_in_campaigns: z.array(z.string()).optional(),
+});
+
+export const ImportAssetsSchema = z.object({
+  folder_url: z.string().url().max(2000),
+  client_slug: z.string().min(1).max(100),
+  uploaded_by: z.string().min(1).max(200),
+});
+
+export const ClientImportAssetsSchema = z.object({
+  folder_url: z.string().url().max(2000),
+  client_slug: z.string().min(1).max(100),
+});

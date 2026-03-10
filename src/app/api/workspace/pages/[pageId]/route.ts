@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
+import { authGuard, apiError, dbError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { UpdatePageSchema } from "@/lib/api-schemas";
 import {
@@ -66,7 +66,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
     .update({ ...body, updated_at: new Date().toISOString() })
     .eq("id", pageId);
 
-  if (error) return apiError(error.message, 500);
+  if (error) return dbError(error);
 
   const changedFields = Object.keys(body)
     .filter((key) => key !== "content" && key !== "position")
@@ -136,7 +136,7 @@ export async function DELETE(_request: Request, { params }: Ctx) {
     .delete()
     .eq("id", pageId);
 
-  if (error) return apiError(error.message, 500);
+  if (error) return dbError(error);
 
   await logSystemEvent({
     eventName: "workspace_page_deleted",

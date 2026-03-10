@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { NextResponse, type NextRequest } from "next/server";
-import { authGuard, apiError } from "@/lib/api-helpers";
+import { authGuard, apiError, dbError } from "@/lib/api-helpers";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
 import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import { listNotificationsForUser } from "@/features/notifications/server";
@@ -110,7 +110,7 @@ export async function PATCH(request: NextRequest) {
         .eq("user_id", userId)
         .in("id", visibleIds);
 
-      if (dbErr) return apiError(dbErr.message);
+      if (dbErr) return dbError(dbErr);
       return NextResponse.json({ success: true });
     }
 
@@ -125,7 +125,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const { error: dbErr } = await query;
-    if (dbErr) return apiError(dbErr.message);
+    if (dbErr) return dbError(dbErr);
     return NextResponse.json({ success: true });
   }
 
@@ -155,7 +155,7 @@ export async function PATCH(request: NextRequest) {
       .eq("id", body.id)
       .eq("user_id", userId);
 
-    if (dbErr) return apiError(dbErr.message);
+    if (dbErr) return dbError(dbErr);
     return NextResponse.json({ success: true });
   }
 

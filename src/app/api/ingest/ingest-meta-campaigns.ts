@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { apiError } from "@/lib/api-helpers";
+import { dbError } from "@/lib/api-helpers";
 import type { IngestPayload } from "@/lib/api-schemas";
 
 export async function ingestMetaCampaigns(body: IngestPayload) {
@@ -36,7 +36,7 @@ export async function ingestMetaCampaigns(body: IngestPayload) {
 
   if (error) {
     console.error("Supabase upsert error (meta_campaigns):", error);
-    return apiError(error.message, 500);
+    return dbError(error);
   }
 
   const snapshots = campaigns
@@ -66,13 +66,15 @@ export async function ingestMetaCampaigns(body: IngestPayload) {
   // The agent sends all ACTIVE campaigns each sync -- if one is missing, it was paused.
   const incomingIds = campaigns.map((c) => c.campaign_id);
   if (incomingIds.length > 0) {
-    const { data: stale } = await supabaseAdmin!
+    const { data: active } = await supabaseAdmin!
       .from("meta_campaigns")
       .select("campaign_id")
-      .eq("status", "ACTIVE")
-      .not("campaign_id", "in", `(${incomingIds.join(",")})`);
+      .eq("status", "ACTIVE");
 
-    if (stale && stale.length > 0) {
+    const incomingSet = new Set(incomingIds);
+    const stale = (active ?? []).filter((r) => !incomingSet.has(r.campaign_id));
+
+    if (stale.length > 0) {
       const staleIds = stale.map((r) => r.campaign_id);
       await supabaseAdmin!
         .from("meta_campaigns")

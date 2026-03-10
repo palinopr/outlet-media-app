@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { apiError } from "@/lib/api-helpers";
+import { dbError } from "@/lib/api-helpers";
 import type { IngestPayload } from "@/lib/api-schemas";
 
 export async function ingestTmDemographics(body: IngestPayload) {
@@ -15,8 +15,7 @@ export async function ingestTmDemographics(body: IngestPayload) {
     .upsert(rows, { onConflict: "tm_id" });
 
   if (error) {
-    console.error("Supabase upsert error (tm_event_demographics):", error);
-    return apiError(error.message, 500);
+    return dbError(error);
   }
 
   console.log(`Ingest: upserted ${rows.length} TM demographics rows`);

@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { authGuard, apiError } from "@/lib/api-helpers";
+import { authGuard, apiError, dbError } from "@/lib/api-helpers";
 import { requireWorkspaceClientAccess } from "@/features/workspace/access";
 import { getWorkspaceReadClient } from "@/features/workspace/server";
 
@@ -30,8 +30,8 @@ export async function GET(request: NextRequest) {
   if (assigneeId) query = query.eq("assignee_id", assigneeId);
   if (priority) query = query.eq("priority", priority);
 
-  const { data, error: dbError } = await query;
-  if (dbError) return apiError(dbError.message, 500);
+  const { data, error: dbErr } = await query;
+  if (dbErr) return dbError(dbErr);
 
   return NextResponse.json(data ?? []);
 }

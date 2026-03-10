@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
-import { apiError } from "@/lib/api-helpers";
+import { dbError } from "@/lib/api-helpers";
 import type { IngestPayload } from "@/lib/api-schemas";
 
 export async function ingestTmEvents(body: IngestPayload) {
@@ -48,8 +48,7 @@ export async function ingestTmEvents(body: IngestPayload) {
     .upsert(rows, { onConflict: "tm_id" });
 
   if (error) {
-    console.error("Supabase upsert error (tm_events):", error);
-    return apiError(error.message, 500);
+    return dbError(error);
   }
 
   const freshSnapshots = events

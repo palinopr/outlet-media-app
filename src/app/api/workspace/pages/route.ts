@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { authGuard, apiError, validateRequest } from "@/lib/api-helpers";
+import { authGuard, apiError, dbError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 import { CreatePageSchema } from "@/lib/api-schemas";
 import { logSystemEvent } from "@/features/system-events/server";
@@ -27,7 +27,7 @@ export async function GET(request: Request) {
   query = query.eq("client_slug", access.clientSlug);
 
   const { data, error } = await query;
-  if (error) return apiError(error.message, 500);
+  if (error) return dbError(error);
 
   return NextResponse.json({ pages: data });
 }
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
     .select("id, title")
     .single();
 
-  if (error) return apiError(error.message, 500);
+  if (error) return dbError(error);
 
   await logSystemEvent({
     eventName: "workspace_page_created",
