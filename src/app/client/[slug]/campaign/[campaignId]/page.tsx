@@ -238,7 +238,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         }));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <CampaignDetailHeader
         slug={slug}
         range={range}
@@ -256,7 +256,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
             <span className="section-label">Audience Snapshot</span>
             <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
             {snapshotCards.map((card) => (
               <SnapshotCard key={card.label} {...card} theme={theme} />
             ))}
@@ -264,9 +264,9 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         </section>
       )}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_320px]">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_320px]">
         <section>
-          <div className="mb-3 flex items-center gap-2">
+          <div className="mb-2 flex items-center gap-2">
             <Calendar className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Performance Timeline</span>
             <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
@@ -275,7 +275,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         </section>
 
         <section>
-          <div className="mb-3 flex items-center gap-2">
+          <div className="mb-2 flex items-center gap-2">
             <BarChart3 className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Top Performing Times</span>
           </div>
@@ -290,9 +290,9 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         </section>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_320px]">
+      <div className="grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_320px]">
         <section>
-          <div className="mb-3 flex items-center gap-2">
+          <div className="mb-2 flex items-center gap-2">
             <ImageIcon className="h-3.5 w-3.5 text-white/50" />
             <span className="section-label">Ad Performance</span>
             <span className="ml-auto text-xs text-white/45">
@@ -353,17 +353,17 @@ function SnapshotCard({
   theme: ReturnType<typeof getClientPortalTheme>;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-[24px] border border-white/[0.06] bg-white/[0.03] p-4">
+    <div className="relative shrink-0 min-w-[140px] flex-1 overflow-hidden rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `linear-gradient(135deg, rgba(${theme.accentRgb}, 0.1), rgba(${theme.secondaryRgb}, 0.04) 58%, transparent 100%)`,
+          backgroundImage: `linear-gradient(135deg, rgba(${theme.accentRgb}, 0.08), transparent 70%)`,
         }}
       />
       <div className="relative">
-        <p className="text-[10px] uppercase tracking-[0.22em] text-white/30">{label}</p>
-        <p className="mt-2 text-2xl font-bold tracking-tight text-white">{value}</p>
-        <p className="mt-2 text-xs text-white/45">{detail}</p>
+        <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
+        <p className="mt-1.5 text-lg font-bold tracking-tight text-white leading-tight truncate">{value}</p>
+        <p className="mt-1 text-[11px] text-white/40 truncate">{detail}</p>
       </div>
     </div>
   );
@@ -496,7 +496,7 @@ function CampaignIntelligenceBrief({
 }) {
   return (
     <section
-      className="relative overflow-hidden rounded-[32px] border border-white/[0.08] bg-white/[0.03] p-6 sm:p-8"
+      className="relative overflow-hidden rounded-[28px] border border-white/[0.08] bg-white/[0.03] p-5 sm:p-6"
       style={{
         backgroundImage: `linear-gradient(135deg, rgba(${theme.accentRgb}, 0.14), rgba(${theme.secondaryRgb}, 0.08) 52%, rgba(${theme.highlightRgb}, 0.06) 100%)`,
       }}
