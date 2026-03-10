@@ -30,11 +30,6 @@ import { ProgressBar } from "../../components/progress-bar";
 import { EventStatusBadge } from "../../components/event-status-badge";
 import { AudienceSection } from "../../components/audience-section";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
-import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
-import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
-import { EventCommentsPanel } from "@/components/events/event-comments-panel";
-import { EventFollowUpItemsPanel } from "@/components/events/event-follow-up-items-panel";
-import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
 import {
   TicketSalesChart,
   type TicketChartRow,
@@ -43,11 +38,6 @@ import {
 import type { SalesVelocity, TicketPlatform } from "../../types";
 import { getDaysUntilEvent } from "../../lib";
 import { requireClientAccess } from "@/features/client-portal/access";
-import { listAgentOutcomes } from "@/features/agent-outcomes/server";
-import { getDashboardOpsSummary } from "@/features/dashboard/server";
-import { listEventComments } from "@/features/event-comments/server";
-import { listEventFollowUpItems } from "@/features/event-follow-up-items/server";
-import { listEventSystemEvents } from "@/features/system-events/server";
 
 interface Props {
   params: Promise<{ slug: string; eventId: string }>;
@@ -83,26 +73,8 @@ function trendColor(trend: SalesVelocity["trend"]): string {
 
 export default async function EventDetailPage({ params }: Props) {
   const { slug, eventId } = await params;
-  const { scope, userId } = await requireClientAccess(slug, "ticketmaster", "eata");
-  // Fire event detail + non-dependent queries in parallel to avoid waterfall
-  const [data, eventEvents, eventComments, eventFollowUpItems] = await Promise.all([
-    getEventDetail(slug, eventId, scope),
-    listEventSystemEvents({
-      audience: "shared",
-      clientSlug: slug,
-      eventId,
-      limit: 6,
-    }),
-    listEventComments({
-      audience: "shared",
-      eventId,
-    }),
-    listEventFollowUpItems({
-      audience: "shared",
-      eventId,
-      limit: 24,
-    }),
-  ]);
+  const { scope } = await requireClientAccess(slug, "ticketmaster", "eata");
+  const data = await getEventDetail(slug, eventId, scope);
 
   if (!data) {
     return (
@@ -119,30 +91,6 @@ export default async function EventDetailPage({ params }: Props) {
   }
 
   const { event: e, snapshots, dailyDeltas, velocity, audience, linkedCampaigns, channelBreakdown } = data;
-  const linkedCampaignIds = linkedCampaigns.map((campaign) => campaign.campaignId);
-  const scopedCampaignIds = linkedCampaignIds.length > 0
-    ? linkedCampaignIds.filter((id) =>
-        scope?.allowedCampaignIds ? scope.allowedCampaignIds.includes(id) : true,
-      )
-    : [];
-
-  // These two depend on linkedCampaignIds from the event detail response
-  const [opsSummary, agentOutcomes] = await Promise.all([
-    getDashboardOpsSummary({
-      clientSlug: slug,
-      limit: 5,
-      mode: "client",
-      scopeCampaignIds: scopedCampaignIds,
-    }),
-    listAgentOutcomes({
-      audience: "shared",
-      clientSlug: slug,
-      eventId: e.id,
-      limit: 4,
-      scopeCampaignIds: scopedCampaignIds,
-      scopeEventIds: scope?.allowedEventIds,
-    }),
-  ]);
 
   const chartData: TicketChartRow[] = snapshots.map((s) => {
     const dt = new Date(s.date + "T12:00:00");
@@ -255,58 +203,6 @@ export default async function EventDetailPage({ params }: Props) {
           }
         />
       </div>
-
-      <section className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-3.5 w-3.5 text-white/50" />
-          <span className="section-label">Event workflow</span>
-        </div>
-        <DashboardOpsSummarySection
-          campaignHrefPrefix={`/client/${slug}/campaign`}
-          description="See the campaign work tied to promoting this event without leaving the event view."
-          emptyState="No linked campaign workflows need attention for this event right now."
-          summary={opsSummary}
-          title="Promotion workflow"
-          variant="client"
-        />
-        <WorkspaceActivityFeed
-          events={eventEvents}
-          campaignHrefPrefix={`/client/${slug}/campaign`}
-          eventHrefPrefix={`/client/${slug}/event`}
-          title="Event activity"
-          description="Shared changes to ticketing and event state for this show."
-          emptyState="Event activity will appear here when the team updates ticketing or event status."
-        />
-        <EventCommentsPanel
-          allowAdminOnly={false}
-          canDeleteAny={false}
-          comments={eventComments}
-          currentUserId={userId}
-          eventId={e.id}
-          description="Ask questions, flag ticketing concerns, and stay aligned with the Outlet team on this show."
-          emptyState="No shared event discussion yet."
-          title="Event discussion"
-          variant="client"
-        />
-        <EventFollowUpItemsPanel
-          canManage={false}
-          eventId={e.id}
-          items={eventFollowUpItems}
-          title="Event next steps"
-          description="Shared next steps attached directly to this event."
-          emptyState="No shared event follow-up items are active yet."
-          variant="client"
-        />
-        <AgentOutcomesPanel
-          outcomes={agentOutcomes}
-          title="Agent follow-through"
-          description="Agent notes and recommendations attached to this event or its linked promotion workflow."
-          emptyState="No event-specific agent follow-through is attached to this show yet."
-          variant="client"
-          campaignHrefPrefix={`/client/${slug}/campaign`}
-          eventHrefPrefix={`/client/${slug}/event`}
-        />
-      </section>
 
       {/* -- Event Overview (always visible) -- */}
       {(daysUntilEvent != null || (e.gross != null && e.gross > 0)) && (
