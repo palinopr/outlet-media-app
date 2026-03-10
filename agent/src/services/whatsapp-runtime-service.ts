@@ -36,12 +36,10 @@ export async function sendWhatsAppMessage(
   }
 
   const response = await fetch(`${getOutletBaseUrl()}/api/whatsapp/send`, {
-    body: JSON.stringify({
-      ...input,
-      secret,
-    }),
+    body: JSON.stringify(input),
     headers: {
       "Content-Type": "application/json",
+      "X-Ingest-Secret": secret,
     },
     method: "POST",
   });

@@ -278,6 +278,10 @@ export function registerSlashHandler(client: Client): void {
         }
 
         case "schedule-budget": {
+          if (!canRunCommand("schedule", guildMember, cmd.user.id)) {
+            await cmd.reply({ content: "Access denied. Scheduled handoffs are owner-only.", ephemeral: true });
+            break;
+          }
           if (!channelName || isReadOnlyChannel(channelName)) {
             await cmd.reply({ content: "Use `/schedule-budget` in a team work channel like #general or #media-buyer.", ephemeral: true });
             break;
@@ -348,6 +352,10 @@ export function registerSlashHandler(client: Client): void {
         }
 
         case "schedule-copy-swap": {
+          if (!canRunCommand("schedule", guildMember, cmd.user.id)) {
+            await cmd.reply({ content: "Access denied. Scheduled copy swaps are owner-only.", ephemeral: true });
+            break;
+          }
           if (!channelName || isReadOnlyChannel(channelName)) {
             await cmd.reply({ content: "Use `/schedule-copy-swap` in a team work channel like #boss or #media-buyer.", ephemeral: true });
             break;

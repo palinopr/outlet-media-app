@@ -9,6 +9,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { toErrorMessage } from "../utils/error-helpers.js";
+import { OWNER_USER_IDS } from "./owner-discord-service.js";
 import {
   EmbedBuilder,
   ActionRowBuilder,
@@ -21,7 +22,6 @@ import {
 import {
   type AgentTask,
   approveTask,
-  escalateTask,
   rejectTask,
   taskEvents,
 } from "./queue-service.js";
@@ -55,10 +55,7 @@ export async function initApprovals(c: Client): Promise<void> {
 
   // Listen for task events that need approval
   taskEvents.on("escalated", (task: AgentTask) => {
-    if (task.status !== "escalated") {
-      escalateTask(task.id);
-    }
-
+    if (pendingApprovals.has(task.id)) return;
     postApprovalRequest(task).catch(err => {
       console.error("[approvals] Failed to post approval:", err);
     });
@@ -68,6 +65,13 @@ export async function initApprovals(c: Client): Promise<void> {
   c.on("interactionCreate", async (interaction) => {
     if (!interaction.isStringSelectMenu()) return;
     if (!interaction.customId.startsWith("approval_")) return;
+
+    // Owner-only gate
+    const ownerIds = new Set(OWNER_USER_IDS);
+    if (!ownerIds.has(interaction.user.id)) {
+      await interaction.reply({ content: "You do not have permission to approve tasks.", ephemeral: true });
+      return;
+    }
 
     const taskId = interaction.customId.replace("approval_", "");
     const value = interaction.values[0];

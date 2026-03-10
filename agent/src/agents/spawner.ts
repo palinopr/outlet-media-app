@@ -17,8 +17,7 @@ import {
   EmbedBuilder,
 } from "discord.js";
 import { taskEvents, type AgentTask } from "../services/queue-service.js";
-import { registerAgentWebhook } from "../services/webhook-service.js";
-import { sendAsAgent } from "../services/webhook-service.js";
+import { registerAgentWebhook, sendAsAgent } from "../services/webhook-service.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
 import { registerRoute, type AgentConfig } from "../discord/core/router.js";
 
@@ -68,6 +67,10 @@ export function initSpawner(client: Client): void {
  * Spawn a new agent. Creates all required files and Discord resources.
  */
 export async function spawnAgent(spec: SpawnSpec): Promise<void> {
+  if (!/^[a-z][a-z0-9-]{1,48}$/.test(spec.key)) {
+    throw new Error(`Invalid agent key: "${spec.key}" -- must be lowercase kebab-case, 2-49 chars`);
+  }
+
   const { notifyChannel } = await import("../discord/core/entry.js");
   const log: string[] = [];
 
@@ -151,9 +154,9 @@ export async function spawnAgent(spec: SpawnSpec): Promise<void> {
       .setTimestamp()
       .setFooter({ text: "Agent spawned by Boss" });
 
-    await sendAsAgent("boss", "agent-feed", { embeds: [intro] }).catch((e) => {
+    await sendAsAgent("boss", "agent-feed", { embeds: [intro] }).catch(async (e) => {
       console.warn("[spawner] sendAsAgent failed:", toErrorMessage(e));
-      notifyChannel("agent-feed", `**New Agent**: ${spec.name} -- ${spec.description}`);
+      return notifyChannel("agent-feed", `**New Agent**: ${spec.name} -- ${spec.description}`);
     });
 
     // Log to audit

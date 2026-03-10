@@ -174,7 +174,7 @@ export const WhatsAppSendSchema = z
     phoneNumberId: z.string().trim().min(1).optional(),
     previewUrl: z.boolean().optional(),
     replyToMessageId: z.string().trim().min(1).optional(),
-    secret: z.string().min(1),
+    secret: z.string().min(1).optional(),
     toWaId: z.string().trim().min(1).optional(),
     approved: z.boolean().optional(),
   })

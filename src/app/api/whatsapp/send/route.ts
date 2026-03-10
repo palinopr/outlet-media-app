@@ -16,7 +16,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const secretError = secretGuard(parsed.data.secret);
+  const secret = request.headers.get("x-ingest-secret") ?? parsed.data.secret;
+  const secretError = secretGuard(secret);
   if (secretError) return secretError;
 
   if (!supabaseAdmin) {
