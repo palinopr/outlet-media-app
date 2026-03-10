@@ -27,6 +27,9 @@ export interface AgentTask {
 }
 
 const MAX_CONCURRENT = 3;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const TERMINAL_STATUSES: ReadonlySet<AgentTask["status"]> = new Set(["completed", "failed", "rejected", "expired"]);
+const LIVE_STATUSES: ReadonlySet<AgentTask["status"]> = new Set(["pending", "running", "escalated", "approved"]);
 let taskCounter = 0;
 const EXTERNAL_TASK_SOURCES = new Set(["web-admin", "gmail-push", "whatsapp-cloud"]);
 
@@ -464,13 +467,11 @@ async function persistTask(task: AgentTask): Promise<void> {
  */
 export function pruneTaskRegistry(): void {
   const now = Date.now();
-  const DAY_MS = 24 * 60 * 60 * 1000;
-  const terminalStatuses = new Set(["completed", "failed", "rejected", "expired"]);
   let pruned = 0;
 
   // Pass 1: remove terminal tasks older than 24 hours
   for (const [id, task] of taskRegistry) {
-    if (terminalStatuses.has(task.status) && now - task.createdAt.getTime() > DAY_MS) {
+    if (TERMINAL_STATUSES.has(task.status) && now - task.createdAt.getTime() > DAY_MS) {
       taskRegistry.delete(id);
       pruned++;
     }
@@ -480,10 +481,9 @@ export function pruneTaskRegistry(): void {
   if (taskRegistry.size > 200) {
     const entries = [...taskRegistry.entries()]
       .sort((a, b) => b[1].createdAt.getTime() - a[1].createdAt.getTime());
-    const liveStatuses = new Set(["pending", "running", "escalated", "approved"]);
     const toDelete = entries.slice(200);
     for (const [id, t] of toDelete) {
-      if (liveStatuses.has(t.status)) continue;
+      if (LIVE_STATUSES.has(t.status)) continue;
       taskRegistry.delete(id);
       pruned++;
     }

@@ -29,7 +29,7 @@ import {
 import { handleScheduleCommand, initScheduleJobs } from "../commands/schedule.js";
 import { handleSuperviseCommand } from "../commands/supervisor.js";
 import { handleDashboardCommand } from "../commands/dashboard.js";
-import { handleMessage, isChannelLocked, forceReleaseChannelLock, acquireChannelLock, releaseChannelLock, cleanForDiscord, chunkText } from "../../events/message-handler.js";
+import { handleMessage, isChannelLocked, acquireChannelLock, releaseChannelLock, cleanForDiscord, chunkText } from "../../events/message-handler.js";
 import { initWebhooks, sendAsAgent } from "../../services/webhook-service.js";
 import { initQueue } from "../../services/queue-service.js";
 import { initApprovals } from "../../services/approval-service.js";
@@ -98,7 +98,7 @@ function checkAndReleaseStaleLock(channelId: string): boolean {
     `[discord] Stale channel lock on ${channelId} -- held for ${heldSec}s (max ${CHANNEL_LOCK_MAX_AGE_MS / 1000}s). Force-releasing.`,
   );
   channelLockTimestamps.delete(channelId);
-  forceReleaseChannelLock(channelId);
+  releaseChannelLock(channelId);
   return true;
 }
 

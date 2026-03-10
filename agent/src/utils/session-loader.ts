@@ -1,7 +1,6 @@
 /** Load cached session data (events, campaigns) from JSON files. */
 
 import { readFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { todayCST, yesterdayCST, tomorrowCST } from "./date-helpers.js";
@@ -41,7 +40,6 @@ export interface CampaignData {
 
 export async function loadEvents(): Promise<EventData[]> {
   const filePath = join(SESSION_DIR, "last-events.json");
-  if (!existsSync(filePath)) return [];
   try {
     const raw = await readFile(filePath, "utf-8");
     const parsed: unknown = JSON.parse(raw);
@@ -62,7 +60,6 @@ export async function loadEvents(): Promise<EventData[]> {
 
 export async function loadCampaigns(): Promise<CampaignData[]> {
   const filePath = join(SESSION_DIR, "last-campaigns.json");
-  if (!existsSync(filePath)) return [];
   try {
     const raw = await readFile(filePath, "utf-8");
     const parsed: unknown = JSON.parse(raw);

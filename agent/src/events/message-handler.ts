@@ -72,10 +72,6 @@ export function isChannelLocked(channelId: string): boolean {
   return channelLocks.has(channelId);
 }
 
-export function forceReleaseChannelLock(channelId: string): void {
-  channelLocks.delete(channelId);
-}
-
 export function acquireChannelLock(channelId: string): boolean {
   if (channelLocks.has(channelId)) return false;
   channelLocks.add(channelId);
@@ -267,7 +263,6 @@ export async function handleMessage(
     return;
   }
 
-  channelLocks.add(msg.channelId);
   let typingInterval: ReturnType<typeof setInterval> | undefined;
   let working: Message | undefined;
 

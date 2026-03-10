@@ -289,8 +289,6 @@ function buildRuntimeManagedNote(jobKey: string): string {
       return EATA_SCHEDULER_ENABLED
         ? "Runtime-managed core cron is active."
         : "Runtime-managed core cron is paused by env; this job is manual-only.";
-    case "email-check":
-      return "Runtime-managed core cron is active.";
     case "meta-sync":
     case "think":
       return SCHEDULED_OWNER_NOTIFICATIONS

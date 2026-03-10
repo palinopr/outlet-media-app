@@ -12,6 +12,18 @@ const SCHEDULED_BUDGET_ACTION = "scheduled-budget-handoff";
 const SCHEDULED_COPY_SWAP_ACTION = "scheduled-copy-swap";
 const MAX_DUE_HANDOFFS = 20;
 
+const dateFmt = new Intl.DateTimeFormat("en-CA", {
+  timeZone: DEFAULT_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
+});
+const offsetFmt = new Intl.DateTimeFormat("en-US", {
+  timeZone: DEFAULT_TIME_ZONE, timeZoneName: "shortOffset",
+});
+const labelFmt = new Intl.DateTimeFormat("en-US", {
+  timeZone: DEFAULT_TIME_ZONE,
+  weekday: "short", month: "short", day: "numeric",
+  hour: "numeric", minute: "2-digit", hour12: true, timeZoneName: "short",
+});
+
 let sweepInFlight = false;
 
 interface ScheduledTaskRow {
@@ -201,10 +213,6 @@ export function parseScheduledDispatchTime(content: string, now: Date = new Date
     }
   }
 
-  // Get today's date in target timezone
-  const dateFmt = new Intl.DateTimeFormat("en-CA", {
-    timeZone: DEFAULT_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
-  });
   let dateStr = dateFmt.format(now);
 
   const wantsTomorrow = /\btomorrow\b|\bmanana\b/.test(lower);
@@ -217,10 +225,7 @@ export function parseScheduledDispatchTime(content: string, now: Date = new Date
   const pad = (n: number) => String(n).padStart(2, "0");
   const isoLike = `${dateStr}T${pad(hours)}:${pad(minutes)}:00`;
 
-  // Get current UTC offset for the target timezone
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: DEFAULT_TIME_ZONE, timeZoneName: "shortOffset",
-  }).formatToParts(now);
+  const parts = offsetFmt.formatToParts(now);
   const offsetVal = parts.find(p => p.type === "timeZoneName")?.value ?? "GMT";
   const offMatch = offsetVal.match(/GMT([+-]?)(\d{1,2})(?::?(\d{2}))?/);
   let tzSuffix = "Z";
@@ -239,16 +244,7 @@ export function parseScheduledDispatchTime(content: string, now: Date = new Date
 }
 
 export function formatScheduledTimeLabel(date: Date): string {
-  return new Intl.DateTimeFormat("en-US", {
-    timeZone: DEFAULT_TIME_ZONE,
-    weekday: "short",
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-    timeZoneName: "short",
-  }).format(date);
+  return labelFmt.format(date);
 }
 
 async function scheduleMediaBuyerHandoff(
