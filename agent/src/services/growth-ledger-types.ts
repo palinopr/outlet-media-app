@@ -13,6 +13,7 @@ import type {
   GrowthPublishAttemptStatus,
   GrowthTargetStatus,
   GrowthAgentKey,
+  GrowthOwnerKind,
   GrowthTaskAction,
 } from "../growth/contracts.js";
 
@@ -108,7 +109,7 @@ export interface UpsertGrowthAccountInput {
   label: string;
   metadata?: JsonObject;
   operatingMode?: GrowthOperatingMode;
-  ownerKind?: "outlet" | "client";
+  ownerKind?: GrowthOwnerKind;
   platform: GrowthAccountPlatform;
   primaryChannelName?: string | null;
   profileUrl?: string | null;

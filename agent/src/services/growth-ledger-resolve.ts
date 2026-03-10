@@ -52,7 +52,7 @@ export function compactRecord<T extends JsonObject>(value: T): T {
   ) as T;
 }
 
-async function safeLogGrowthEvent(input: GrowthEventInput): Promise<void> {
+export async function safeLogGrowthEvent(input: GrowthEventInput): Promise<void> {
   try {
     await logGrowthEvent(input);
   } catch (error) {
@@ -290,8 +290,6 @@ export async function logGrowthEvent(input: GrowthEventInput): Promise<void> {
     throw new Error(error.message);
   }
 }
-
-export { safeLogGrowthEvent };
 
 export async function listGrowthAccounts(input?: {
   limit?: number;
