@@ -29,47 +29,23 @@ interface AgentWebhook {
 
 /** Agent display config: name, avatar, primary channel */
 const AGENT_PROFILES: Record<string, { name: string; avatar: string; channels: string[] }> = {
-  boss:            { name: "Boss",           avatar: "https://i.imgur.com/7ZGDfqr.png", channels: ["boss", "whatsapp-boss"] },
-  scheduler:       { name: "Scheduler",      avatar: "https://i.imgur.com/NqRPmBL.png", channels: ["schedule", "media-buyer"] },
-  "media-buyer":   { name: "Media Buyer",    avatar: "https://i.imgur.com/Qj8YXBK.png", channels: ["media-buyer"] },
-  "tm-agent":      { name: "TM Data",        avatar: "https://i.imgur.com/3JzGKvN.png", channels: ["tm-data"] },
-  creative:        { name: "Creative",       avatar: "https://i.imgur.com/WfVlJEK.png", channels: ["creative"] },
-  "creative-agent":{ name: "Creative",       avatar: "https://i.imgur.com/WfVlJEK.png", channels: ["creative"] },
-  reporting:       { name: "Reporting",      avatar: "https://i.imgur.com/NqRPmBL.png", channels: ["dashboard"] },
-  "reporting-agent": { name: "Reporting",    avatar: "https://i.imgur.com/NqRPmBL.png", channels: ["dashboard"] },
-  "email-agent":   { name: "Email Agent",    avatar: "https://i.imgur.com/LqJHpGH.png", channels: ["email"] },
-  "meeting-agent": { name: "Meeting Agent",  avatar: "https://i.imgur.com/NqRPmBL.png", channels: ["meetings"] },
-  "growth-supervisor": {
-    name: "Growth Supervisor",
-    avatar: "https://i.imgur.com/7ZGDfqr.png",
-    channels: ["growth"],
-  },
-  "tiktok-supervisor": {
-    name: "TikTok Supervisor",
-    avatar: "https://i.imgur.com/Qj8YXBK.png",
-    channels: ["tiktok-ops"],
-  },
-  "content-finder": {
-    name: "Content Finder",
-    avatar: "https://i.imgur.com/WfVlJEK.png",
-    channels: ["content-lab"],
-  },
-  "lead-qualifier": {
-    name: "Lead Qualifier",
-    avatar: "https://i.imgur.com/8FxTGnA.png",
-    channels: ["lead-inbox"],
-  },
-  "publisher-tiktok": {
-    name: "TikTok Publisher",
-    avatar: "https://i.imgur.com/7ZGDfqr.png",
-    channels: ["tiktok-publish"],
-  },
+  boss:            { name: "Boss",           avatar: "https://cdn.discordapp.com/avatars/1476648616188968991/caf49673430a14325a2e65ebbe81c702.png?size=512", channels: ["boss", "whatsapp-boss"] },
+  scheduler:       { name: "Boss",           avatar: "https://cdn.discordapp.com/avatars/1476648616188968991/caf49673430a14325a2e65ebbe81c702.png?size=512", channels: ["schedule", "media-buyer"] },
+  "media-buyer":   { name: "Media Buyer",    avatar: "https://cdn.discordapp.com/avatars/1476648618441179177/befbaa786048534226b126f23e08b44a.png?size=512", channels: ["media-buyer"] },
+  "tm-agent":      { name: "TM Data",        avatar: "https://cdn.discordapp.com/avatars/1476648620404248648/9605f0b209911b9683696681cf50da54.png?size=512", channels: ["tm-data"] },
+  creative:        { name: "Creative",       avatar: "https://cdn.discordapp.com/avatars/1476648622236897361/a4bf1ab4d7c06b255a5338913d6e9e69.png?size=512", channels: ["creative"] },
+  "creative-agent":{ name: "Creative",       avatar: "https://cdn.discordapp.com/avatars/1476648622236897361/a4bf1ab4d7c06b255a5338913d6e9e69.png?size=512", channels: ["creative"] },
+  reporting:       { name: "Reporting",      avatar: "https://cdn.discordapp.com/avatars/1476648624342700084/bc1b26fa229e92f4d5f0c2b6a2957d84.png?size=512", channels: ["dashboard"] },
+  "reporting-agent": { name: "Reporting",    avatar: "https://cdn.discordapp.com/avatars/1476648624342700084/bc1b26fa229e92f4d5f0c2b6a2957d84.png?size=512", channels: ["dashboard"] },
+  "email-agent":   { name: "Email Agent",    avatar: "https://cdn.discordapp.com/avatars/1479514591859052574/b988bc7a284b9bee783ccd6f91122674.png?size=512", channels: ["email"] },
+  "meeting-agent": { name: "Meeting Agent",  avatar: "https://cdn.discordapp.com/avatars/1479528327629770774/f8a2f2fd9ec1c59c841b2be82e3922bf.png?size=512", channels: ["meetings"] },
+  "don-omar-agent":{ name: "Don Omar",       avatar: "https://cdn.discordapp.com/avatars/1479566420307087400/2f275dfb289ac4a08547b343e12bba3e.png?size=512", channels: ["don-omar-tickets"] },
   "customer-whatsapp-agent": {
-    name: "Client Liaison",
-    avatar: "https://i.imgur.com/8FxTGnA.png",
+    name: "Client Manager",
+    avatar: "https://cdn.discordapp.com/avatars/1476648626007838894/a885030673dee1ac45739239f3cb1da7.png?size=512",
     channels: ["dashboard", "zamora", "kybba", "don-omar-tickets"],
   },
-  "client-manager":{ name: "Client Manager", avatar: "https://i.imgur.com/8FxTGnA.png", channels: ["zamora", "kybba"] },
+  "client-manager":{ name: "Client Manager", avatar: "https://cdn.discordapp.com/avatars/1476648626007838894/a885030673dee1ac45739239f3cb1da7.png?size=512", channels: ["zamora", "kybba"] },
 };
 
 /** channelName -> agentKey -> AgentWebhook */
