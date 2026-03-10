@@ -8,6 +8,12 @@
 
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { EventEmitter } from "node:events";
+import {
+  safeLogAgentTaskDeferred,
+  safeLogAgentTaskRequested,
+  safeLogAgentTaskStarted,
+  safeLogAgentTaskStatus,
+} from "./system-events-service.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
 
 export interface AgentTask {
@@ -45,8 +51,12 @@ const taskRegistry = new Map<string, AgentTask>();
 
 /** Per-task timeout timers (task id -> timer handle) */
 const taskTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const taskRetryTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const taskRetryCounts = new Map<string, number>();
 
 const TASK_TIMEOUT_MS = 600_000; // 10 minutes
+const TASK_RETRY_BASE_MS = 2_000;
+const TASK_RETRY_MAX_MS = 30_000;
 
 /** Event bus for task lifecycle events */
 export const taskEvents = new EventEmitter();
@@ -90,6 +100,23 @@ function reviveTask(row: PersistedTaskRow): AgentTask {
   };
 }
 
+function toTimelineTask(task: AgentTask) {
+  return {
+    action: task.action,
+    approvedBy: task.approvedBy,
+    completedAt: task.completedAt,
+    error: task.error,
+    from: task.from,
+    id: task.id,
+    params: task.params,
+    result: task.result,
+    startedAt: task.startedAt,
+    status: task.status,
+    tier: task.tier,
+    to: task.to,
+  };
+}
+
 function runTask(task: AgentTask): void {
   if (!taskExecutor) return;
 
@@ -102,6 +129,27 @@ function runTask(task: AgentTask): void {
     }
     console.error(`[queue] task ${task.id} runner failed after state transition:`, message);
   });
+}
+
+function clearTaskTimeout(taskId: string): void {
+  const timer = taskTimers.get(taskId);
+  if (timer) {
+    clearTimeout(timer);
+    taskTimers.delete(taskId);
+  }
+}
+
+function clearTaskRetry(taskId: string): void {
+  const retryTimer = taskRetryTimers.get(taskId);
+  if (retryTimer) {
+    clearTimeout(retryTimer);
+    taskRetryTimers.delete(taskId);
+  }
+}
+
+function clearTaskRetryState(taskId: string): void {
+  clearTaskRetry(taskId);
+  taskRetryCounts.delete(taskId);
 }
 
 export function setTaskExecutor(executor: ((task: AgentTask) => Promise<void>) | null): void {
@@ -146,6 +194,7 @@ export async function initQueue(): Promise<void> {
     for (const row of recoverableRows) {
       const task = reviveTask(row);
       taskRegistry.set(task.id, task);
+      void safeLogAgentTaskRequested(toTimelineTask(task));
 
       const agentSlot = activeSlots.get(task.to);
       if (!agentSlot && countActive() < MAX_CONCURRENT) {
@@ -201,6 +250,7 @@ export function enqueueTask(
   };
 
   taskRegistry.set(task.id, task);
+  void safeLogAgentTaskRequested(toTimelineTask(task));
 
   // Write to Supabase ledger (fire-and-forget)
   persistTask(task).catch((e) => console.error("[queue] persistTask failed:", toErrorMessage(e)));
@@ -227,6 +277,7 @@ function startTask(task: AgentTask): void {
   task.startedAt = new Date();
   activeSlots.set(task.to, task);
   persistTask(task).catch((e) => console.error("[queue] persistTask failed:", toErrorMessage(e)));
+  void safeLogAgentTaskStarted(toTimelineTask(task));
   taskEvents.emit("started", task);
 
   const timer = setTimeout(() => {
@@ -248,14 +299,15 @@ export function completeTask(taskId: string, result: unknown): void {
   const task = taskRegistry.get(taskId);
   if (!task) return;
 
-  const timer = taskTimers.get(taskId);
-  if (timer) { clearTimeout(timer); taskTimers.delete(taskId); }
+  clearTaskTimeout(taskId);
+  clearTaskRetryState(taskId);
 
   task.status = "completed";
   task.completedAt = new Date();
   task.result = result;
   activeSlots.set(task.to, null);
   persistTask(task).catch((e) => console.error("[queue] persistTask failed:", toErrorMessage(e)));
+  void safeLogAgentTaskStatus(toTimelineTask(task));
   taskEvents.emit("completed", task);
 
   // Process next in queue
@@ -271,14 +323,15 @@ export function failTask(taskId: string, error: string): void {
   const task = taskRegistry.get(taskId);
   if (!task) return;
 
-  const timer = taskTimers.get(taskId);
-  if (timer) { clearTimeout(timer); taskTimers.delete(taskId); }
+  clearTaskTimeout(taskId);
+  clearTaskRetryState(taskId);
 
   task.status = "failed";
   task.completedAt = new Date();
   task.error = error;
   activeSlots.set(task.to, null);
   persistTask(task).catch((e) => console.error("[queue] persistTask failed:", toErrorMessage(e)));
+  void safeLogAgentTaskStatus(toTimelineTask(task));
   taskEvents.emit("failed", task);
 
   processNextForAgent(task.to);
@@ -293,6 +346,8 @@ export function escalateTask(taskId: string): void {
   const task = taskRegistry.get(taskId);
   if (!task) return;
 
+  clearTaskTimeout(taskId);
+  clearTaskRetryState(taskId);
   task.status = "escalated";
 
   const activeTask = activeSlots.get(task.to);
@@ -310,6 +365,7 @@ export function escalateTask(taskId: string): void {
   }
 
   persistTask(task).catch((e) => console.error("[queue] persistTask failed:", toErrorMessage(e)));
+  void safeLogAgentTaskStatus(toTimelineTask(task));
   taskEvents.emit("escalated", task);
 }
 
@@ -320,9 +376,11 @@ export function approveTask(taskId: string, approvedBy: string): void {
   const task = taskRegistry.get(taskId);
   if (!task) return;
 
+  clearTaskRetryState(taskId);
   task.status = "approved";
   task.approvedBy = approvedBy;
   persistTask(task).catch((e) => console.error("[queue] persistTask failed:", toErrorMessage(e)));
+  void safeLogAgentTaskStatus(toTimelineTask(task));
   taskEvents.emit("approved", task);
 
   // Re-enqueue as green tier for execution
@@ -337,6 +395,8 @@ export function rejectTask(taskId: string): void {
   const task = taskRegistry.get(taskId);
   if (!task) return;
 
+  clearTaskTimeout(taskId);
+  clearTaskRetryState(taskId);
   task.status = "rejected";
   task.completedAt = new Date();
 
@@ -346,11 +406,61 @@ export function rejectTask(taskId: string): void {
   }
 
   persistTask(task).catch((e) => console.error("[queue] persistTask failed:", toErrorMessage(e)));
+  void safeLogAgentTaskStatus(toTimelineTask(task));
   taskEvents.emit("rejected", task);
 
   if (!activeSlots.get(task.to)) {
     processNextForAgent(task.to);
   }
+}
+
+export function deferTask(taskId: string, reason: string, delayMs?: number): void {
+  const task = taskRegistry.get(taskId);
+  if (!task) return;
+
+  clearTaskTimeout(taskId);
+
+  const activeTask = activeSlots.get(task.to);
+  if (activeTask?.id === task.id) {
+    activeSlots.set(task.to, null);
+  }
+
+  const queue = pendingQueues.get(task.to);
+  if (queue?.length) {
+    pendingQueues.set(
+      task.to,
+      queue.filter((queuedTask) => queuedTask.id !== taskId),
+    );
+  }
+
+  const retryCount = (taskRetryCounts.get(taskId) ?? 0) + 1;
+  taskRetryCounts.set(taskId, retryCount);
+
+  task.status = "pending";
+  task.startedAt = undefined;
+  task.completedAt = undefined;
+
+  persistTask(task).catch((e) => console.error("[queue] persistTask failed:", toErrorMessage(e)));
+  void safeLogAgentTaskDeferred(toTimelineTask(task), reason, retryCount);
+  taskEvents.emit("deferred", task);
+
+  processNextForAgent(task.to);
+
+  clearTaskRetry(taskId);
+  const retryDelay = delayMs ?? Math.min(TASK_RETRY_BASE_MS * 2 ** (retryCount - 1), TASK_RETRY_MAX_MS);
+  const retryTimer = setTimeout(() => {
+    taskRetryTimers.delete(taskId);
+    const current = taskRegistry.get(taskId);
+    if (!current || current.status !== "pending") return;
+
+    if (!pendingQueues.has(current.to)) pendingQueues.set(current.to, []);
+    pendingQueues.get(current.to)!.push(current);
+    taskEvents.emit("queued", current);
+    processNextForAgent(current.to);
+  }, retryDelay);
+  taskRetryTimers.set(taskId, retryTimer);
+
+  console.log(`[queue] deferred ${task.id} for ${retryDelay}ms: ${reason}`);
 }
 
 export async function waitForTaskTerminal(taskId: string, timeoutMs = 300_000): Promise<AgentTask> {

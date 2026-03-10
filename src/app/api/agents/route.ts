@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
+import { logSystemEvent } from "@/features/system-events/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { AgentPostSchema, VALID_AGENTS } from "@/lib/api-schemas";
 import { adminGuard, apiError, dbError, parseJsonBody } from "@/lib/api-helpers";
@@ -47,6 +48,25 @@ export async function POST(request: Request) {
   if (error) {
     return dbError(error);
   }
+
+  await logSystemEvent({
+    eventName: "agent_action_requested",
+    actorType: "user",
+    entityType: "agent_task",
+    entityId: taskId,
+    visibility: "admin_only",
+    source: "app",
+    summary: `Queued agent task: ${action} -> ${agent}`,
+    detail: prompt ? "Admin requested an external agent task from the web surface." : null,
+    metadata: {
+      action,
+      fromAgent: "web-admin",
+      params: prompt ? { prompt } : {},
+      taskId,
+      tier: "green",
+      toAgent: agent,
+    },
+  });
 
   return NextResponse.json({ job: mapTaskToJob(data) });
 }

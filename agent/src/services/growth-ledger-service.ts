@@ -313,25 +313,14 @@ export async function createGrowthAgentTask(
     action: input.action,
     params: input.params ?? {},
     tier: input.tier ?? "green",
-  });
-
-  await safeLogGrowthEvent({
-    actorName: input.actorName ?? input.from,
-    correlationId: input.correlationId ?? task.id,
-    causationId: input.causationId ?? null,
-    entityId: task.id,
-    entityType: "agent_task",
-    eventName: "agent_action_requested",
-    metadata: {
-      action: input.action,
-      fromAgent: input.from,
-      params: input.params ?? {},
-      taskId: task.id,
-      tier: input.tier ?? "green",
-      toAgent: input.to,
+    timeline: {
+      actorName: input.actorName ?? input.from,
+      causationId: input.causationId ?? null,
+      correlationId: input.correlationId ?? null,
+      detail: null,
+      source: "worker",
+      summary: `Growth task requested: ${input.action} -> ${input.to}`,
     },
-    source: "worker",
-    summary: `Growth task requested: ${input.action} -> ${input.to}`,
   });
 
   return task;

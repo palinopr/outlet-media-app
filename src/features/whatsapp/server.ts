@@ -873,11 +873,6 @@ export function extractWhatsAppWebhookBatches(payload: WhatsAppWebhookPayload): 
   return batches;
 }
 
-function channelForClientSlug(clientSlug: string | null | undefined): string | null {
-  if (!clientSlug) return null;
-  return ROUTES_BY_CLIENT_SLUG.get(clientSlug)?.discordChannel ?? null;
-}
-
 async function guessClientSlugFromCrm(waId: string): Promise<string | null> {
   if (!supabaseAdmin) return null;
 
@@ -1385,6 +1380,33 @@ async function enqueueConversationTask(
 ): Promise<string | null> {
   if (!supabaseAdmin) return null;
 
+  const logConversationTaskRequested = async (taskId: string, params: Record<string, unknown>) => {
+    await logSystemEvent({
+      eventName: "agent_action_requested",
+      actorId: "whatsapp-cloud",
+      actorName: "WhatsApp Cloud API",
+      actorType: "system",
+      clientSlug: conversation.client_slug,
+      entityType: "agent_task",
+      entityId: taskId,
+      visibility: "admin_only",
+      source: "webhook",
+      summary: `Queued WhatsApp triage task for conversation ${conversation.id}`,
+      detail: "Customer WhatsApp traffic queued a triage task for the Discord-first control plane.",
+      metadata: {
+        action: "triage-conversation",
+        conversationId: conversation.id,
+        discordChannelName: conversation.discord_channel_name,
+        fromAgent: "whatsapp-cloud",
+        messageId: message.message_id,
+        params,
+        taskId,
+        tier: "green",
+        toAgent: conversation.agent_key || WHATSAPP_AGENT_KEY,
+      },
+    });
+  };
+
   const { data: existingRows, error: fetchError } = await supabaseAdmin
     .from("agent_tasks")
     .select("id, status, params, created_at")
@@ -1448,6 +1470,7 @@ async function enqueueConversationTask(
     }
 
     if (updatedTask) {
+      await logConversationTaskRequested(plan.taskId, plan.params);
       return plan.taskId;
     }
   }
@@ -1469,6 +1492,8 @@ async function enqueueConversationTask(
     console.error("[whatsapp] task enqueue failed:", error.message);
     return null;
   }
+
+  await logConversationTaskRequested(plan.taskId, plan.params);
 
   return plan.taskId;
 }

@@ -21,6 +21,7 @@ vi.mock("../discord/core/router.js", () => ({
     readOnly: false,
     injectSnapshot: false,
   }),
+  PROMPT_TO_AGENT: {},
 }));
 
 vi.mock("../services/queue-service.js", () => ({
@@ -33,6 +34,11 @@ vi.mock("../services/webhook-service.js", () => ({
 
 vi.mock("../discord/features/memory.js", () => ({
   loadAgentMemory: vi.fn().mockResolvedValue(null),
+  maybeUpdateMemory: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("../services/system-events-service.js", () => ({
+  logDiscordAgentTurn: vi.fn().mockResolvedValue(undefined),
 }));
 
 // Prevent fire-and-forget imports from loading real modules

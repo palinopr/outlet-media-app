@@ -7,7 +7,7 @@
 
 import type { Client, Message, TextChannel } from "discord.js";
 import { isAnyAgentBusy } from "../../state.js";
-import { matchManualTrigger, isConfigChannel, isInternalChannel } from "./router.js";
+import { hasAgentRoute, matchManualTrigger, isConfigChannel, isInternalChannel } from "./router.js";
 import {
   canRunCommand,
   canUseChannel,
@@ -16,6 +16,7 @@ import {
 } from "./access.js";
 import { handleScheduleCommand } from "../commands/schedule.js";
 import { handleSuperviseCommand } from "../commands/supervisor.js";
+import { handleOpsCommand } from "../commands/ops.js";
 import { handleDashboardCommand } from "../commands/dashboard.js";
 import {
   handleMessage,
@@ -114,6 +115,38 @@ function getOwnerMentions(msg: Message): string {
   if (msg.guild?.ownerId) ids.add(msg.guild.ownerId);
   for (const id of OWNER_USER_IDS) ids.add(id);
   return [...ids].map((id) => `<@${id}>`).join(" ").trim();
+}
+
+function stripAssistantInvocation(
+  content: string,
+  discordClient: Client | null,
+): { prompt: string; routeToBoss: boolean } {
+  let prompt = content.trim();
+  let routeToBoss = false;
+
+  const botUserId = discordClient?.user?.id;
+  if (botUserId) {
+    const mentionPrefix = new RegExp(`^<@!?${botUserId}>[,:\\s-]*`, "i");
+    if (mentionPrefix.test(prompt)) {
+      prompt = prompt.replace(mentionPrefix, "").trim();
+      routeToBoss = true;
+    }
+  }
+
+  if (/^(?:!assistant\b[\s:-]*|assistant\b[:\s,-]+|boss\b[:,-]+)/i.test(prompt)) {
+    prompt = prompt.replace(/^(?:!assistant\b[\s:-]*|assistant\b[:\s,-]+|boss\b[:,-]+)/i, "").trim();
+    routeToBoss = true;
+  }
+
+  return { prompt, routeToBoss };
+}
+
+function buildUnknownRouteMessage(channelName: string): string {
+  if (!channelName) {
+    return "This conversation does not map to an assistant route yet. DM me or use `assistant:` in a mapped work channel.";
+  }
+
+  return `No agent route is configured for #${channelName}. Use #boss or start your message with \`assistant:\` in a mapped work channel.`;
 }
 
 async function handoffMeetingRequestToBoss(
@@ -351,15 +384,15 @@ async function handleWhatsAppCommand(msg: Message, content: string): Promise<boo
 export async function routeMessage(msg: Message, discordClient: Client | null): Promise<void> {
   if (msg.author.bot) return;
 
-  const content = msg.content.trim();
-  if (!content && msg.attachments.size === 0) return;
+  const rawContent = msg.content.trim();
+  if (!rawContent && msg.attachments.size === 0) return;
 
   // Dedup
   if (!markProcessed(msg.id)) {
     console.log(`[discord] DEDUP blocked msg ${msg.id} from ${msg.author.username}`);
     return;
   }
-  const logPreview = content || `[${msg.attachments.size} attachment(s)]`;
+  const logPreview = rawContent || `[${msg.attachments.size} attachment(s)]`;
   console.log(`[discord] Processing msg ${msg.id} from ${msg.author.username}: ${logPreview.slice(0, 60)}`);
 
   // Run auto-moderation first (fast path, no Claude)
@@ -373,6 +406,9 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
         ? (msg.channel.parent?.name ?? msg.channel.name)
         : (msg.channel as TextChannel).name)
     : "";
+  const assistantRoute = stripAssistantInvocation(rawContent, discordClient);
+  const content = assistantRoute.routeToBoss ? assistantRoute.prompt : rawContent;
+  const routedChannelName = assistantRoute.routeToBoss || !channelName ? "boss" : channelName;
 
   if (!canUseChannel(channelName, msg.member, msg.author.id)) {
     await msg.reply(getAccessDeniedMessage(channelName)).catch((e) => console.warn("[router] reply failed:", toErrorMessage(e)));
@@ -393,6 +429,8 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
       "`!help` -- this message",
       "`!status` -- check if the agent is idle or busy",
       "`!reset` -- clear conversation context in this channel",
+      "`assistant: <ask>` -- route a question to Boss from any mapped work channel",
+      "`DM the bot` -- talk to Boss directly",
       "",
       "**Agent channels** -- just type naturally:",
       "  #general -- team chat",
@@ -403,7 +441,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
       "  #whatsapp-control -- customer WhatsApp liaison tasks",
       "  #zamora / #kybba -- client forums",
       "  #whatsapp-boss -- owner-only WhatsApp approvals and supervision",
-      "  #boss / #email / #meetings / #email-log / #schedule -- owner-only",
+      "  #boss / #ops / #email / #meetings / #email-log / #schedule -- owner-only",
       "",
       "**Manual triggers:**",
       "  `run meta sync` (in #media-buyer)",
@@ -416,6 +454,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
       "",
       "**Admin:**",
       "  `!supervise` -- Boss reviews all agent activity",
+      "  `!ops` -- durable operator snapshot of live tasks, retries, failures, and completions",
       "  `!dashboard` -- update campaign status panel",
       "  `!whatsapp allow|deny|status <conversationId>` -- owner WhatsApp access control",
       "  `/schedule-copy-swap` -- explicitly schedule an activate/pause ad swap with exact IDs",
@@ -481,6 +520,18 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
     if (!discordClient) { await msg.reply("Bot not connected."); return; }
     await msg.reply("Running Boss supervision cycle...");
     const result = await handleSuperviseCommand(discordClient);
+    if (result.text) await (msg.channel as TextChannel).send(result.text);
+    await (msg.channel as TextChannel).send({ embeds: [result.embed] });
+    return;
+  }
+
+  if (content === "!ops" || content === "/ops") {
+    if (!canRunCommand("ops", msg.member, msg.author.id)) {
+      await msg.reply("Access denied. Ops snapshot is owner-only.");
+      return;
+    }
+    await msg.reply("Building Boss ops snapshot...");
+    const result = await handleOpsCommand(discordClient ?? undefined);
     if (result.text) await (msg.channel as TextChannel).send(result.text);
     await (msg.channel as TextChannel).send({ embeds: [result.embed] });
     return;
@@ -589,6 +640,18 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
     return;
   }
 
+  if (!hasAgentRoute(routedChannelName)) {
+    await msg.reply(buildUnknownRouteMessage(channelName)).catch((e) => console.warn("[router] reply failed:", toErrorMessage(e)));
+    return;
+  }
+
+  if (!content && msg.attachments.size === 0) {
+    if (assistantRoute.routeToBoss) {
+      await msg.reply("Send the actual request after `assistant:` or in the DM.").catch((e) => console.warn("[router] reply failed:", toErrorMessage(e)));
+    }
+    return;
+  }
+
   // Per-channel lock with stale lock detection
   if (isChannelLocked(msg.channelId)) {
     const wasStale = checkAndReleaseStaleLock(msg.channelId);
@@ -614,7 +677,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
       return;
     }
 
-    await handleMessage(msg, promptResult.prompt, channelName, discordClient);
+    await handleMessage(msg, promptResult.prompt, routedChannelName, discordClient);
   } finally {
     releaseChannelLock(msg.channelId);
     markChannelLockReleased(msg.channelId);

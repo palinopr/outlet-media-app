@@ -13,13 +13,15 @@
  */
 
 import { type Client, EmbedBuilder, type TextChannel, ChannelType } from "discord.js";
-import { enqueueTask, escalateTask, completeTask, failTask, setTaskExecutor, type AgentTask } from "../services/queue-service.js";
+import { enqueueTask, escalateTask, completeTask, deferTask, failTask, setTaskExecutor, type AgentTask } from "../services/queue-service.js";
 import { evaluateTier } from "../services/approval-service.js";
+import { getDelegatedTaskResources } from "../services/agent-resource-locks.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { sendWhatsAppMessage } from "../services/whatsapp-runtime-service.js";
 import { runClaude } from "../runner.js";
 import { getAgentForChannel } from "../discord/core/router.js";
 import { notifyChannel } from "../discord/core/entry.js";
+import { ResourceBusyError, withResourceLocks } from "../state.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
 import { WHITELISTED_CHANNELS } from "../discord/features/restructure.js";
 
@@ -217,6 +219,10 @@ function getReplyChannel(params: Record<string, unknown>): string | null {
   if (!raw) return null;
   const normalized = normalizeChannelName(raw);
   return WHITELISTED_CHANNELS.has(normalized) ? normalized : null;
+}
+
+function shouldNotifyDeferredTask(task: AgentTask): boolean {
+  return task.params._queueDeferredNotified !== true;
 }
 
 function extractCustomerFacingContext(
@@ -784,14 +790,88 @@ export async function executeAgentTask(
   }
 
   const agent = getAgentForChannel(targetChannel);
+  const taskResources = getDelegatedTaskResources(task, targetChannel);
 
   try {
-    if (task.action === "scheduled-copy-swap") {
-      const { executeScheduledCopySwap } = await import("../services/meta-copy-swap-service.js");
-      const result = await executeScheduledCopySwap(task.id, task.params);
-      const deliveredText = result.text;
+    const runTask = async (): Promise<string> => {
+      if (task.action === "scheduled-copy-swap") {
+        const { executeScheduledCopySwap } = await import("../services/meta-copy-swap-service.js");
+        const result = await executeScheduledCopySwap(task.id, task.params);
+        const deliveredText = result.text;
 
-      completeTask(task.id, result);
+        completeTask(task.id, result);
+
+        const summary = deliveredText.slice(0, 1900);
+        await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch((e) => console.warn("[delegate] sendAsAgent failed:", toErrorMessage(e)));
+
+        if (options?.notifySource !== false) {
+          const shortSummary = deliveredText.slice(0, 500);
+          await notifyChannel(sourceChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`);
+        }
+
+        const replyChannel = getReplyChannel(task.params);
+        if (
+          replyChannel &&
+          replyChannel !== targetChannel &&
+          (options?.notifySource === false || replyChannel !== sourceChannel)
+        ) {
+          const shortSummary = deliveredText.slice(0, 500);
+          await notifyChannel(replyChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`);
+        }
+
+        return deliveredText;
+      }
+
+      const result = await runClaude({
+        prompt: buildDelegatedTaskPrompt(task),
+        systemPromptName: agent.promptFile,
+        maxTurns: agent.maxTurns,
+      });
+
+      let responseText = result.text ?? "No response.";
+      const actionNotes: string[] = [];
+
+      const whatsappSends = await processWhatsAppSends(responseText, targetChannel, {
+        inheritedParams: task.params,
+      });
+      responseText = whatsappSends.cleanText;
+      if (whatsappSends.sent > 0) {
+        actionNotes.push(
+          `Sent ${whatsappSends.sent} WhatsApp message${whatsappSends.sent === 1 ? "" : "s"}.`,
+        );
+      }
+      if (whatsappSends.errors.length > 0) {
+        actionNotes.push(`WhatsApp send failed: ${whatsappSends.errors.join(" | ")}`.slice(0, 500));
+      }
+
+      const channelMessages = await processChannelMessages(client, responseText, targetChannel, depth + 1, {
+        inheritedParams: task.params,
+      });
+      responseText = channelMessages.cleanText;
+      if (channelMessages.posted > 0) {
+        const targets = channelMessages.targets.map((target) => `#${target}`).join(", ");
+        actionNotes.push(`Posted to ${targets}.`);
+      }
+      if (channelMessages.handedOff > 0) {
+        const targets = channelMessages.handoffTargets.map((target) => `#${target}`).join(", ");
+        actionNotes.push(`Handoff queued for ${targets}.`);
+      }
+
+      const delegations = await processDelegations(client, responseText, targetChannel, depth + 1, {
+        inheritedParams: task.params,
+      });
+      responseText = delegations.cleanText;
+      if (delegations.delegated > 0) {
+        const targets = delegations.targets.map((target) => `#${target}`).join(", ");
+        actionNotes.push(`Queued for ${targets}.`);
+      }
+
+      const deliveredText = [responseText.trim(), ...actionNotes.map((note) => `_${note}_`)]
+        .filter(Boolean)
+        .join("\n\n")
+        .trim() || "No response.";
+
+      completeTask(task.id, { text: deliveredText });
 
       const summary = deliveredText.slice(0, 1900);
       await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch((e) => console.warn("[delegate] sendAsAgent failed:", toErrorMessage(e)));
@@ -812,82 +892,30 @@ export async function executeAgentTask(
       }
 
       return deliveredText;
-    }
+    };
 
-    const result = await runClaude({
-      prompt: buildDelegatedTaskPrompt(task),
-      systemPromptName: agent.promptFile,
-      maxTurns: agent.maxTurns,
-    });
-
-    let responseText = result.text ?? "No response.";
-    const actionNotes: string[] = [];
-
-    const whatsappSends = await processWhatsAppSends(responseText, targetChannel, {
-      inheritedParams: task.params,
-    });
-    responseText = whatsappSends.cleanText;
-    if (whatsappSends.sent > 0) {
-      actionNotes.push(
-        `Sent ${whatsappSends.sent} WhatsApp message${whatsappSends.sent === 1 ? "" : "s"}.`,
-      );
-    }
-    if (whatsappSends.errors.length > 0) {
-      actionNotes.push(`WhatsApp send failed: ${whatsappSends.errors.join(" | ")}`.slice(0, 500));
-    }
-
-    const channelMessages = await processChannelMessages(client, responseText, targetChannel, depth + 1, {
-      inheritedParams: task.params,
-    });
-    responseText = channelMessages.cleanText;
-    if (channelMessages.posted > 0) {
-      const targets = channelMessages.targets.map((target) => `#${target}`).join(", ");
-      actionNotes.push(`Posted to ${targets}.`);
-    }
-    if (channelMessages.handedOff > 0) {
-      const targets = channelMessages.handoffTargets.map((target) => `#${target}`).join(", ");
-      actionNotes.push(`Handoff queued for ${targets}.`);
-    }
-
-    // Check if the delegated agent also wants to delegate (recursive, depth-limited)
-    const delegations = await processDelegations(client, responseText, targetChannel, depth + 1, {
-      inheritedParams: task.params,
-    });
-    responseText = delegations.cleanText;
-    if (delegations.delegated > 0) {
-      const targets = delegations.targets.map((target) => `#${target}`).join(", ");
-      actionNotes.push(`Queued for ${targets}.`);
-    }
-
-    const deliveredText = [responseText.trim(), ...actionNotes.map((note) => `_${note}_`)]
-      .filter(Boolean)
-      .join("\n\n")
-      .trim() || "No response.";
-
-    completeTask(task.id, { text: deliveredText });
-
-    // Post result to target channel via webhook
-    const summary = deliveredText.slice(0, 1900);
-    await sendAsAgent(task.to, targetChannel, `**Task ${task.action} completed:**\n${summary}`).catch((e) => console.warn("[delegate] sendAsAgent failed:", toErrorMessage(e)));
-
-    // Notify source
-    if (options?.notifySource !== false) {
-      const shortSummary = deliveredText.slice(0, 500);
-      await notifyChannel(sourceChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`);
-    }
-
-    const replyChannel = getReplyChannel(task.params);
-    if (
-      replyChannel &&
-      replyChannel !== targetChannel &&
-      (options?.notifySource === false || replyChannel !== sourceChannel)
-    ) {
-      const shortSummary = deliveredText.slice(0, 500);
-      await notifyChannel(replyChannel, `**${task.to} completed ${task.action}:**\n${shortSummary}`);
-    }
-
-    return deliveredText;
+    return taskResources.length > 0
+      ? await withResourceLocks(task.id, taskResources, runTask)
+      : await runTask();
   } catch (err) {
+    if (err instanceof ResourceBusyError) {
+      const blockers = err.blockers.join(", ");
+      const shouldNotify = shouldNotifyDeferredTask(task);
+      task.params._queueDeferredNotified = true;
+      deferTask(task.id, `waiting for ${blockers}`);
+
+      if (shouldNotify) {
+        const deferMessage = `Delegation to ${task.to} is waiting on ${blockers}. I kept the task queued and will retry automatically.`;
+        if (options?.notifySource !== false) {
+          await notifyChannel(sourceChannel, deferMessage);
+        } else {
+          await notifyChannel("agent-feed", `**${task.to}** deferred ${task.action}; waiting on ${blockers}.`);
+        }
+      }
+
+      return `Deferred: waiting for ${blockers}`;
+    }
+
     const errMsg = toErrorMessage(err);
     failTask(task.id, errMsg);
     const failureChannel = options?.notifySource === false ? targetChannel : sourceChannel;

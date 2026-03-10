@@ -17,6 +17,9 @@ import { runClaude } from "../runner.js";
 import { getAgentForChannel, type AgentConfig } from "../discord/core/router.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { loadAgentMemory } from "../discord/features/memory.js";
+import { getInteractiveRouteResources } from "../services/agent-resource-locks.js";
+import { logDiscordAgentTurn } from "../services/system-events-service.js";
+import { ResourceBusyError, withResourceLocks } from "../state.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
 
 /** Per-channel processing lock to prevent concurrent agent calls */
@@ -118,54 +121,25 @@ async function buildConversationContext(
   }
 }
 
-// --- Activity Logging for Boss Supervisor ---
-
-interface ActivityEntry {
-  ts: string;
-  channel: string;
-  user: string;
-  message: string;
-  agent: string;
-  responseSummary: string;
-}
-
-const ACTIVITY_LOG = "session/activity-log.json";
-const MAX_LOG_ENTRIES = 200;
-
 async function logActivity(
+  agentKey: string,
   channel: string,
   user: string,
   message: string,
   agent: string,
   response: string,
+  messageId: string,
 ): Promise<void> {
-  const fs = await import("node:fs/promises");
   const { notifyChannel } = await import("../discord/core/entry.js");
-
-  const entry: ActivityEntry = {
-    ts: new Date().toISOString(),
+  await logDiscordAgentTurn({
+    agentDescription: agent,
+    agentKey,
     channel,
+    message,
+    messageId,
+    response,
     user,
-    message: message.slice(0, 200),
-    agent,
-    responseSummary: response.slice(0, 300),
-  };
-
-  let log: ActivityEntry[] = [];
-  try {
-    const raw = await fs.readFile(ACTIVITY_LOG, "utf-8");
-    const parsed: unknown = JSON.parse(raw);
-    if (Array.isArray(parsed)) log = parsed as ActivityEntry[];
-  } catch {
-    // File doesn't exist yet
-  }
-
-  log.push(entry);
-  if (log.length > MAX_LOG_ENTRIES) {
-    log = log.slice(-MAX_LOG_ENTRIES);
-  }
-
-  await fs.writeFile(ACTIVITY_LOG, JSON.stringify(log, null, 2));
+  });
 
   const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" });
   const feedMsg = `\`${timestamp}\` **#${channel}** (${agent}) -- ${user}: "${message.slice(0, 80)}"`;
@@ -226,16 +200,18 @@ async function deliverResponse(
 }
 
 /**
- * Fire-and-forget post-processing: activity log, memory, skills, delegation.
+ * Fire-and-forget post-processing: durable activity event, memory, skills.
  */
 function postProcess(
+  agentKey: string,
   agent: AgentConfig,
   channelName: string,
   username: string,
   prompt: string,
   responseText: string,
+  messageId: string,
 ): void {
-  logActivity(channelName, username, prompt, agent.description, responseText).catch((e) => console.warn("[message-handler] log failed:", toErrorMessage(e)));
+  logActivity(agentKey, channelName, username, prompt, agent.description, responseText, messageId).catch((e) => console.warn("[message-handler] log failed:", toErrorMessage(e)));
   import("../discord/features/memory.js")
     .then(({ maybeUpdateMemory }) => maybeUpdateMemory(agent.promptFile, prompt, responseText))
     .catch((e) => console.warn("[message-handler] memory update failed:", toErrorMessage(e)));
@@ -272,23 +248,41 @@ export async function handleMessage(
     working = await msg.reply("Working on it...");
     const contextualPrompt = await buildConversationContext(msg, prompt);
     const systemPrompt = await buildSystemPrompt(agent);
+    const interactiveResources = getInteractiveRouteResources(channelName, agent.promptFile);
 
     let buffer = "";
     let lastEdit = Date.now();
-    const result = await runClaude({
-      prompt: contextualPrompt,
-      systemPromptName: agent.promptFile,
-      systemPrompt,
-      maxTurns: agent.maxTurns,
-      onChunk: async (chunk: string) => {
-        buffer += chunk;
-        if (Date.now() - lastEdit > 1500 && buffer.trim()) {
-          const preview = cleanForDiscord(buffer.slice(-1900));
-          await working?.edit(preview || "...").catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
-          lastEdit = Date.now();
-        }
-      },
-    });
+    const result = interactiveResources.length > 0
+      ? await withResourceLocks(`discord-message:${msg.id}`, interactiveResources, async () => {
+          return await runClaude({
+            prompt: contextualPrompt,
+            systemPromptName: agent.promptFile,
+            systemPrompt,
+            maxTurns: agent.maxTurns,
+            onChunk: async (chunk: string) => {
+              buffer += chunk;
+              if (Date.now() - lastEdit > 1500 && buffer.trim()) {
+                const preview = cleanForDiscord(buffer.slice(-1900));
+                await working?.edit(preview || "...").catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
+                lastEdit = Date.now();
+              }
+            },
+          });
+        })
+      : await runClaude({
+          prompt: contextualPrompt,
+          systemPromptName: agent.promptFile,
+          systemPrompt,
+          maxTurns: agent.maxTurns,
+          onChunk: async (chunk: string) => {
+            buffer += chunk;
+            if (Date.now() - lastEdit > 1500 && buffer.trim()) {
+              const preview = cleanForDiscord(buffer.slice(-1900));
+              await working?.edit(preview || "...").catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
+              lastEdit = Date.now();
+            }
+          },
+        });
 
     let responseText = result.text || "Done.";
     const actionNotes: string[] = [];
@@ -338,8 +332,17 @@ export async function handleMessage(
 
     const chunks = chunkText(cleanForDiscord(deliveredText), 1900);
     await deliverResponse(agentKey, channelName, chunks, working, msg);
-    postProcess(agent, channelName, msg.author.username, prompt, deliveredText);
+    postProcess(agentKey, agent, channelName, msg.author.username, prompt, deliveredText, msg.id);
   } catch (err) {
+    if (err instanceof ResourceBusyError) {
+      const blockers = err.blockers.join(", ");
+      const message = `That workflow is waiting on ${blockers}. Try again in a bit.`;
+      if (working) {
+        await working.edit(message).catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
+      }
+      return;
+    }
+
     const errMsg = toErrorMessage(err);
     if (working) {
       await working.edit(`Something went wrong: ${errMsg}`).catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));

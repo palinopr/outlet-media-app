@@ -4,6 +4,14 @@ import { getAgentForChannel } from "../discord/core/router.js";
 import { ResourceBusyError, withResourceLocks } from "../state.js";
 import { processGmailHistoryPush } from "./gmail-watch-service.js";
 import { getServiceSupabase } from "./supabase-service.js";
+import {
+  buildAgentActivityDigest,
+  listRecentAgentActivity,
+  safeLogAgentTaskDeferred,
+  safeLogAgentTaskRequested,
+  safeLogAgentTaskStarted,
+  safeLogAgentTaskStatus,
+} from "./system-events-service.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
 
 const POLL_INTERVAL_MS = 5_000;
@@ -20,8 +28,12 @@ interface ExternalTaskRow {
   to_agent: string;
   action: string;
   params: Record<string, unknown> | null;
+  tier: "green" | "yellow" | "red" | null;
   status: string;
+  started_at?: string | null;
 }
+
+const externalTaskRetryCounts = new Map<string, number>();
 
 const WEB_ADMIN_AGENT_CHANNELS: Record<string, string> = {
   assistant: "boss",
@@ -47,7 +59,7 @@ async function claimPendingTask(): Promise<ExternalTaskRow | null> {
 
   const { data, error } = await supabase
     .from("agent_tasks")
-    .select("id, from_agent, to_agent, action, params, status")
+    .select("id, from_agent, to_agent, action, params, tier, status")
     .eq("status", "pending")
     .in("from_agent", ["web-admin", "gmail-push", "whatsapp-cloud"])
     .order("started_at", { ascending: true, nullsFirst: true })
@@ -70,7 +82,7 @@ async function claimPendingTask(): Promise<ExternalTaskRow | null> {
       })
       .eq("id", task.id)
       .eq("status", "pending")
-      .select("id, from_agent, to_agent, action, params, status")
+      .select("id, from_agent, to_agent, action, params, tier, status, started_at")
       .maybeSingle();
 
     if (claimError) {
@@ -79,42 +91,85 @@ async function claimPendingTask(): Promise<ExternalTaskRow | null> {
     }
 
     if (claimed) {
-      return claimed as ExternalTaskRow;
+      const claimedTask = claimed as ExternalTaskRow;
+      await safeLogAgentTaskRequested(toTimelineTask(claimedTask));
+      await safeLogAgentTaskStarted(toTimelineTask(claimedTask));
+      return claimedTask;
     }
   }
 
   return null;
 }
 
-async function completeTask(id: string, result: string): Promise<void> {
+function toTimelineTask(task: ExternalTaskRow, overrides: Partial<{
+  approvedBy: string | undefined;
+  completedAt: Date | undefined;
+  error: string | undefined;
+  result: unknown;
+  startedAt: Date | undefined;
+  status: string;
+}> = {}) {
+  return {
+    action: task.action,
+    approvedBy: overrides.approvedBy,
+    completedAt: overrides.completedAt,
+    error: overrides.error,
+    from: task.from_agent,
+    id: task.id,
+    params: task.params ?? {},
+    result: overrides.result,
+    startedAt: overrides.startedAt ?? (task.started_at ? new Date(task.started_at) : undefined),
+    status: overrides.status ?? task.status,
+    tier: task.tier ?? "green",
+    to: task.to_agent,
+  };
+}
+
+async function completeTask(task: ExternalTaskRow, result: string): Promise<void> {
   const supabase = getServiceSupabase();
   if (!supabase) return;
 
+  const completedAt = new Date();
   await supabase
     .from("agent_tasks")
     .update({
       status: "completed",
-      completed_at: new Date().toISOString(),
+      completed_at: completedAt.toISOString(),
       result: { text: result },
     })
-    .eq("id", id);
+    .eq("id", task.id);
+
+  externalTaskRetryCounts.delete(task.id);
+  await safeLogAgentTaskStatus(toTimelineTask(task, {
+    completedAt,
+    result: { text: result },
+    status: "completed",
+  }));
 }
 
-async function failTask(id: string, error: string): Promise<void> {
+async function failTask(task: ExternalTaskRow, error: string): Promise<void> {
   const supabase = getServiceSupabase();
   if (!supabase) return;
 
+  const completedAt = new Date();
   await supabase
     .from("agent_tasks")
     .update({
       status: "failed",
-      completed_at: new Date().toISOString(),
+      completed_at: completedAt.toISOString(),
       error,
     })
-    .eq("id", id);
+    .eq("id", task.id);
+
+  externalTaskRetryCounts.delete(task.id);
+  await safeLogAgentTaskStatus(toTimelineTask(task, {
+    completedAt,
+    error,
+    status: "failed",
+  }));
 }
 
-async function requeueTask(id: string): Promise<void> {
+async function requeueTask(task: ExternalTaskRow, reason: string): Promise<void> {
   const supabase = getServiceSupabase();
   if (!supabase) return;
 
@@ -124,7 +179,13 @@ async function requeueTask(id: string): Promise<void> {
       status: "pending",
       started_at: null,
     })
-    .eq("id", id);
+    .eq("id", task.id);
+
+  const retryCount = (externalTaskRetryCounts.get(task.id) ?? 0) + 1;
+  externalTaskRetryCounts.set(task.id, retryCount);
+  await safeLogAgentTaskDeferred(toTimelineTask(task, {
+    startedAt: task.started_at ? new Date(task.started_at) : undefined,
+  }), reason, retryCount);
 }
 
 function getResourceBusyError(err: unknown): ResourceBusyError | null {
@@ -154,7 +215,7 @@ async function executeWebAdminTask(task: ExternalTaskRow): Promise<string> {
     case "assistant": {
       return await runWebAdminPromptTask(
         task,
-        "Give me a concise executive briefing across Outlet Media. Read MEMORY.md and session/activity-log.json first.",
+        "Give me a concise executive briefing across Outlet Media. Read MEMORY.md and use the durable activity context below first.",
       );
     }
     case "meta-ads": {
@@ -183,7 +244,16 @@ async function runWebAdminPromptTask(
     throw new Error(`Unsupported web-admin prompt target: ${task.to_agent}`);
   }
 
-  const prompt = getPromptParam(task) ?? fallbackPrompt;
+  const recentActivity = await listRecentAgentActivity({ limit: 18, visibility: "admin_only" });
+  const activityContext = buildAgentActivityDigest(
+    recentActivity,
+    "Durable activity context from system_events",
+  );
+  const prompt = [
+    getPromptParam(task) ?? fallbackPrompt,
+    "",
+    activityContext,
+  ].join("\n");
   const agent = getAgentForChannel(channelName);
   const result = await runClaude({
     prompt,
@@ -227,20 +297,20 @@ async function executeTask(task: ExternalTaskRow): Promise<string> {
 async function processTask(task: ExternalTaskRow): Promise<void> {
   try {
     const result = await executeTask(task);
-    await completeTask(task.id, result);
+    await completeTask(task, result);
   } catch (err) {
     const busyError = getResourceBusyError(err);
     if (busyError) {
       console.log(
         `[external-dispatcher] deferring ${task.id}; blockers: ${busyError.blockers.join(", ") || "unknown"}`,
       );
-      await requeueTask(task.id);
+      await requeueTask(task, `waiting for ${busyError.blockers.join(", ") || "resource lock"}`);
       return;
     }
 
     const message = toErrorMessage(err);
     console.error(`[external-dispatcher] task ${task.id} failed:`, message);
-    await failTask(task.id, message);
+    await failTask(task, message);
   } finally {
     activeWorkers = Math.max(0, activeWorkers - 1);
     void pumpQueue();

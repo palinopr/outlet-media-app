@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
 import { google, gmail_v1 } from "googleapis";
 import { getServiceSupabase } from "./supabase-service.js";
+import { listRecentAgentActivity } from "./system-events-service.js";
 import type {
   EmailClassification,
   EmailDirection,
@@ -10,7 +10,6 @@ import type {
   EmailMessageDetail,
   EmailTriageDecision,
   EmailThreadActionResult,
-  ActivityEntry,
   BusinessContext,
   CampaignSnapshot,
   EventSnapshot,
@@ -501,31 +500,31 @@ export async function getSuggestedDraftForMessage(messageId: string): Promise<{
 // ---------------------------------------------------------------------------
 
 export async function readActivityContext(clientSlug: string | null, senderEmail: string | null): Promise<string[]> {
-  const path = fileURLToPath(new URL("../../session/activity-log.json", import.meta.url));
-  try {
-    const raw = await readFile(path, "utf-8");
-    const parsed = JSON.parse(raw) as ActivityEntry[];
-    const keywords = uniqueStrings([
-      clientSlug,
-      senderEmail?.split("@")[0],
-      senderEmail?.split("@")[1],
-    ]).map((value) => value.toLowerCase());
+  const keywords = uniqueStrings([
+    clientSlug,
+    senderEmail?.split("@")[0],
+    senderEmail?.split("@")[1],
+  ]);
 
-    return parsed
-      .filter((entry) => {
-        const haystack = JSON.stringify(entry).toLowerCase();
-        return keywords.some((keyword) => keyword && haystack.includes(keyword));
-      })
-      .slice(-MAX_ACTIVITY_ENTRIES)
-      .map((entry) => {
-        const ts = entry.ts?.slice(0, 16) ?? "";
-        const channel = entry.channel ?? "unknown";
-        const summary = entry.responseSummary ?? entry.message ?? "";
-        return `${ts} #${channel}: ${clip(summary, 180)}`;
-      });
-  } catch {
-    return [];
-  }
+  const events = await listRecentAgentActivity({
+    clientSlug,
+    keywords,
+    limit: MAX_ACTIVITY_ENTRIES,
+    visibility: "admin_only",
+  });
+
+  return events.map((event) => {
+    const ts = event.occurredAt.slice(0, 16);
+    const channel =
+      typeof event.metadata.channel === "string"
+        ? event.metadata.channel
+        : event.entityId ?? "unknown";
+    const summary =
+      typeof event.metadata.responseSummary === "string"
+        ? event.metadata.responseSummary
+        : event.summary;
+    return `${ts} #${channel}: ${clip(summary, 180)}`;
+  });
 }
 
 export async function readBusinessContext(clientSlug: string | null): Promise<BusinessContext> {

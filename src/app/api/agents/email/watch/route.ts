@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { logSystemEvent } from "@/features/system-events/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 function unauthorized() {
@@ -69,6 +70,29 @@ export async function POST(request: Request) {
     console.error("[gmail-watch] enqueue failed:", error.message);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
+
+  await logSystemEvent({
+    eventName: "agent_action_requested",
+    actorId: "gmail-push",
+    actorName: "Gmail Push Watch",
+    actorType: "system",
+    entityType: "agent_task",
+    entityId: taskId,
+    visibility: "admin_only",
+    source: "webhook",
+    summary: "Queued Gmail history reconciliation task",
+    detail: "Gmail push webhook queued new inbox history for the email agent.",
+    metadata: {
+      action: "gmail-history",
+      emailAddress: payload.emailAddress ?? null,
+      fromAgent: "gmail-push",
+      historyId,
+      publishTime: body?.message?.publishTime ?? null,
+      taskId,
+      tier: "green",
+      toAgent: "email-agent",
+    },
+  });
 
   return NextResponse.json({ ok: true });
 }

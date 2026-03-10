@@ -23,9 +23,12 @@ Preferred split:
 - Owner work should stay in private Discord surfaces such as `#boss`, `#whatsapp-boss`, `#email`, `#meetings`, `#email-log`, `#approvals`, and `#schedule`.
 - Team collaboration should stay in scoped Discord channels such as `#general`, `#media-buyer`, `#tm-data`, `#creative`, and client channels.
 - `#dashboard` is a team work surface, not a bot-only read-only sink. Team members should be able to ask for reporting help there, and those requests can hand off to Boss or other owner workflows when needed.
+- Boss should be the primary assistant surface. Direct messages to the bot and explicit assistant-style asks in mapped work channels should route to Boss and reply in place instead of forcing the operator to remember which specialist lane to use first.
 - Meeting and scheduling requests from team channels should use deterministic runtime handoff to Boss. Do not rely only on a specialist prompt to remember to emit delegation JSON for owner-scheduling workflows.
 - Timed operational asks from team channels should also use deterministic runtime handoff plus durable scheduler state. If someone asks for a campaign or budget action "at 12am," Boss should write a real scheduled task and the scheduler should dispatch the specialist handoff when due instead of relying on prompt memory.
 - Timed Meta mutations that need exact live IDs, such as ad copy swaps, should use a structured command or task payload with the concrete IDs to activate/pause plus a bounded executor path. Do not let Boss or Media Buyer improvise those IDs from chat at execution time.
+- Unknown Discord channels should fail loud instead of silently falling back to a generic chat agent. If a channel is intended to be a work surface, add an explicit route; otherwise tell the operator there is no route configured.
+- Boss supervision and recent agent context should come from durable `system_events`, not local session files. Direct Discord turns and agent-task lifecycle changes should be replay-safe timeline events.
 - The backend event/queue layer is the automation plane that executes work and records outcomes.
 - Personal/owner email is part of that private owner plane. Do not turn it into a default admin/client web inbox; use structured DB state to support Discord triage, not to justify duplicating the inbox into the shared product.
 
@@ -52,6 +55,7 @@ Examples:
 - `gmail-inbox` for Gmail push, history polling, and manual inbox sweeps
 - `memory-write` for think-loop prompt and memory mutations
 - `discord-owner-actions` only when a privileged owner flow must serialize work in private channels
+- When a delegated task cannot run because a required resource is locked, defer and retry it with backoff. Do not convert temporary lock contention into a hard task failure.
 
 Owner Discord should use channel-native operating surfaces, not a second private bot plane.
 

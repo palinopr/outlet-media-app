@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { logSystemEvent } from "@/features/system-events/server";
 import { supabaseAdmin } from "@/lib/supabase";
 
 interface EnqueueExternalAgentTaskInput {
@@ -36,6 +37,25 @@ export async function enqueueExternalAgentTask(
     console.error("[agent-dispatch] Failed to enqueue external task:", error.message);
     return null;
   }
+
+  await logSystemEvent({
+    eventName: "agent_action_requested",
+    actorType: "user",
+    entityType: "agent_task",
+    entityId: taskId,
+    visibility: "admin_only",
+    source: "app",
+    summary: `Queued agent task: ${input.action} -> ${input.toAgent}`,
+    detail: "Admin product flow requested an external agent task.",
+    metadata: {
+      action: input.action,
+      fromAgent: "web-admin",
+      params: { prompt: input.prompt },
+      taskId,
+      tier: "green",
+      toAgent: input.toAgent,
+    },
+  });
 
   return taskId;
 }

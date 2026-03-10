@@ -1,64 +1,66 @@
 /**
  * discord-supervisor.ts -- Boss supervision loop.
  *
- * Reads session/activity-log.json, sends it to Claude CLI with the boss.txt
- * prompt to generate a summary + directives across all agent channels.
+ * Reads recent durable agent activity from system_events, sends it to Claude
+ * CLI with the boss.txt prompt to generate a summary + directives across all
+ * agent channels.
  * Posts the result as a rich embed to #boss.
  *
  * Triggered by `!supervise` command in #boss.
  */
 
 import { EmbedBuilder, type Client } from "discord.js";
-import { readFile } from "node:fs/promises";
 import { runClaude } from "../../runner.js";
+import { listRecentAgentActivity } from "../../services/system-events-service.js";
 import { isAgentBusy, setAgentBusy, clearAgentBusy } from "../../state.js";
 
-const ACTIVITY_LOG = "session/activity-log.json";
-
-interface ActivityEntry {
-  ts: string;
-  channel: string;
-  user: string;
-  message: string;
-  agent: string;
-  responseSummary: string;
-}
-
 /**
- * Read the activity log and build a context string for Boss.
+ * Read recent durable activity and build a context string for Boss.
  */
 async function loadActivitySummary(): Promise<string> {
-  try {
-    const raw = await readFile(ACTIVITY_LOG, "utf-8");
-    const parsed: unknown = JSON.parse(raw);
-    const entries = Array.isArray(parsed) ? (parsed as ActivityEntry[]) : [];
-
-    if (entries.length === 0) return "No activity recorded yet.";
-
-    // Group by channel for a clean summary
-    const byChannel = new Map<string, ActivityEntry[]>();
-    for (const e of entries) {
-      const list = byChannel.get(e.channel) ?? [];
-      list.push(e);
-      byChannel.set(e.channel, list);
-    }
-
-    const lines: string[] = [`Activity log (${entries.length} entries):\n`];
-    for (const [channel, items] of byChannel) {
-      lines.push(`## #${channel} (${items.length} messages)`);
-      // Show last 5 per channel to keep context reasonable
-      for (const item of items.slice(-5)) {
-        lines.push(
-          `  [${item.ts}] ${item.user}: "${item.message}" -> ${item.agent}: "${item.responseSummary}"`
-        );
-      }
-      lines.push("");
-    }
-
-    return lines.join("\n");
-  } catch {
-    return "No activity log found. Agents have not processed any messages yet.";
+  const events = await listRecentAgentActivity({ limit: 40, visibility: "admin_only" });
+  if (events.length === 0) {
+    return "No recent activity recorded in system_events.";
   }
+
+  const byChannel = new Map<string, string[]>();
+  const taskLines: string[] = [];
+
+  for (const event of events) {
+    const ts = event.occurredAt.slice(0, 16);
+    if (event.eventName === "discord_agent_turn_logged") {
+      const channel = typeof event.metadata.channel === "string" ? event.metadata.channel : (event.entityId ?? "unknown");
+      const user = typeof event.metadata.user === "string" ? event.metadata.user : "unknown";
+      const responseSummary =
+        typeof event.metadata.responseSummary === "string"
+          ? event.metadata.responseSummary
+          : event.summary;
+      const lines = byChannel.get(channel) ?? [];
+      lines.push(`[${ts}] ${user}: "${responseSummary.slice(0, 180)}"`);
+      byChannel.set(channel, lines);
+      continue;
+    }
+
+    taskLines.push(`[${ts}] ${event.summary}`);
+  }
+
+  const lines: string[] = [`Recent durable activity (${events.length} events):\n`];
+  for (const [channel, items] of byChannel) {
+    lines.push(`## #${channel} (${items.length} turns)`);
+    for (const item of items.slice(0, 5)) {
+      lines.push(`  ${item}`);
+    }
+    lines.push("");
+  }
+
+  if (taskLines.length > 0) {
+    lines.push("## Task lifecycle");
+    for (const item of taskLines.slice(0, 12)) {
+      lines.push(`  ${item}`);
+    }
+  }
+
+  return lines.join("\n");
 }
 
 /**
@@ -77,9 +79,9 @@ export async function runSupervision(): Promise<string> {
     "",
     "Keep it concise -- this goes into a Discord embed.",
     "",
-    "--- ACTIVITY LOG ---",
+    "--- DURABLE ACTIVITY TIMELINE ---",
     activityContext,
-    "--- END LOG ---",
+    "--- END TIMELINE ---",
   ].join("\n");
 
   let timer: ReturnType<typeof setTimeout>;

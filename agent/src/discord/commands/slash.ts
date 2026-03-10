@@ -38,6 +38,9 @@ const commands = [
     .setName("supervise")
     .setDescription("Run Boss supervision cycle over all agent activity"),
   new SlashCommandBuilder()
+    .setName("ops")
+    .setDescription("Show Boss operator snapshot for live tasks and recent task outcomes"),
+  new SlashCommandBuilder()
     .setName("dashboard")
     .setDescription("Update the campaign status dashboard panel"),
   new SlashCommandBuilder()
@@ -239,6 +242,20 @@ export function registerSlashHandler(client: Client): void {
           await cmd.deferReply();
           const { handleSuperviseCommand } = await import("./supervisor.js");
           const result = await handleSuperviseCommand(client);
+          const opts: Record<string, unknown> = { embeds: [result.embed] };
+          if (result.text) opts.content = result.text;
+          await cmd.editReply(opts);
+          break;
+        }
+
+        case "ops": {
+          if (!canRunCommand("ops", guildMember, cmd.user.id)) {
+            await cmd.reply({ content: "Access denied. Ops snapshot is owner-only.", ephemeral: true });
+            break;
+          }
+          await cmd.deferReply();
+          const { handleOpsCommand } = await import("./ops.js");
+          const result = await handleOpsCommand(client);
           const opts: Record<string, unknown> = { embeds: [result.embed] };
           if (result.text) opts.content = result.text;
           await cmd.editReply(opts);
@@ -561,6 +578,7 @@ function buildHelpText(): string {
     "`/help` -- this message",
     "`/reset` -- clear conversation context in this channel",
     "`/supervise` -- Boss reviews all agent activity",
+    "`/ops` -- Boss operator snapshot for live tasks and durable outcomes",
     "`/dashboard` -- update campaign status panel",
     "`/schedule` -- show scheduled jobs panel",
     "`/schedule-budget` -- explicitly schedule a budget handoff",
@@ -577,7 +595,7 @@ function buildHelpText(): string {
     "  #creative -- ad creative, copy, images",
     "  #dashboard -- reporting, analytics, trends",
     "  #zamora / #kybba -- client conversations",
-    "  #boss / #email / #meetings / #schedule -- owner-only",
+    "  #boss / #ops / #email / #meetings / #schedule -- owner-only",
     "",
     "**Manual triggers:**",
     "  `run meta sync` (in #media-buyer)",

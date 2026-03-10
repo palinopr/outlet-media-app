@@ -11,6 +11,10 @@
 import { isAgentBusy, setAgentBusy, clearAgentBusy } from "../state.js";
 import { runClaude } from "../runner.js";
 import { enqueueTask, completeTask, failTask } from "../services/queue-service.js";
+import {
+  buildAgentActivityDigest,
+  listRecentAgentActivity,
+} from "../services/system-events-service.js";
 import { todayCST, yesterdayCST } from "../utils/date-helpers.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
 import { loadEvents, loadCampaigns, categorizeEvents } from "../utils/session-loader.js";
@@ -437,12 +441,18 @@ Keep response concise and actionable.`;
 
 async function bossSupervision(): Promise<void> {
   await withRoutineLock("Boss Supervision", "boss", async () => {
+    const activityContext = buildAgentActivityDigest(
+      await listRecentAgentActivity({ limit: 24, visibility: "admin_only" }),
+      "Durable activity context from system_events",
+    );
     const prompt = `You are the Boss agent for Outlet Media. Today is ${todayCST()}.
 
 SUPERVISION CYCLE -- review all agent activity.
 
-Read session/activity-log.json to see what agents have been doing.
 Read memory files for each agent to understand their current state.
+Use the durable activity context below to see what agents have been doing.
+
+${activityContext}
 
 Tasks:
 1. Identify any agents that haven't been active recently

@@ -41,6 +41,7 @@ const OWNER_ONLY_COMMANDS = new Set([
   "restructure",
   "roles",
   "supervise",
+  "ops",
   "dashboard",
   "schedule",
   "inspect",

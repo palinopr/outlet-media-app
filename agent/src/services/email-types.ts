@@ -61,15 +61,6 @@ export interface EmailMessageDetail {
   direction: EmailDirection;
 }
 
-export interface ActivityEntry {
-  ts?: string;
-  channel?: string;
-  user?: string;
-  message?: string;
-  agent?: string;
-  responseSummary?: string;
-}
-
 export interface CampaignSnapshot {
   name: string;
   status: string;

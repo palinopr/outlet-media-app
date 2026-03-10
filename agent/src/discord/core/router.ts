@@ -23,6 +23,13 @@ export interface AgentConfig {
  * Keys are Discord channel names (kebab-case).
  */
 const AGENT_ROUTES: Record<string, AgentConfig> = {
+  // --- General team chat ---
+  "general": {
+    promptFile: "general",
+    maxTurns: 10,
+    description: "general-chat",
+  },
+
   // --- Boss / Orchestrator (supervisor of all agents) ---
   "boss": {
     promptFile: "boss",
@@ -34,6 +41,18 @@ const AGENT_ROUTES: Record<string, AgentConfig> = {
     promptFile: "boss",
     maxTurns: 25,
     description: "boss-whatsapp-orchestrator",
+    injectSnapshot: true,
+  },
+  "ops": {
+    promptFile: "boss",
+    maxTurns: 25,
+    description: "boss-ops-orchestrator",
+    injectSnapshot: true,
+  },
+  "war-room": {
+    promptFile: "boss",
+    maxTurns: 25,
+    description: "boss-war-room-orchestrator",
     injectSnapshot: true,
   },
 
@@ -117,6 +136,30 @@ const AGENT_ROUTES: Record<string, AgentConfig> = {
     description: "read-only",
     readOnly: true,
   },
+  "morning-briefing": {
+    promptFile: "general",
+    maxTurns: 5,
+    description: "read-only",
+    readOnly: true,
+  },
+  "email-log": {
+    promptFile: "general",
+    maxTurns: 5,
+    description: "read-only",
+    readOnly: true,
+  },
+  "approvals": {
+    promptFile: "general",
+    maxTurns: 5,
+    description: "read-only",
+    readOnly: true,
+  },
+  "audit-log": {
+    promptFile: "general",
+    maxTurns: 5,
+    description: "read-only",
+    readOnly: true,
+  },
   "schedule": {
     promptFile: "general",
     maxTurns: 5,
@@ -131,6 +174,10 @@ const DEFAULT_AGENT: AgentConfig = {
   maxTurns: 10,
   description: "general-chat",
 };
+
+export function hasAgentRoute(channelName: string): boolean {
+  return channelName in AGENT_ROUTES;
+}
 
 /**
  * Look up the agent config for a given channel name.
@@ -217,7 +264,7 @@ export const AGENT_INTERNALS: Record<string, AgentInternals> = {
     promptFile: "boss",
     memoryChannel: "boss-memory",
     skillsChannel: "boss-skills",
-    tools: ["curl (Discord REST, Meta Graph, Supabase)", "activity-log.json reader", "all agent delegation"],
+    tools: ["curl (Discord REST, Meta Graph, Supabase)", "system_events timeline reader", "all agent delegation"],
   },
   "media-buyer": {
     name: "Media Buyer",
