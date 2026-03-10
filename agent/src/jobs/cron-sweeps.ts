@@ -101,12 +101,10 @@ Keep it under 1500 characters. Be direct, no fluff.`;
     const result = await runClaude({ prompt, systemPromptName: "boss", maxTurns: 5 });
     const text = result.text?.trim() || "";
     if (text) {
-      await postToChannel(
-        "morning-briefing",
-        `**Morning Briefing -- ${todayCST()}**\n\n${text}`,
-        "boss",
-      );
-      await postToChannel("boss", `Morning briefing posted to #morning-briefing.`, "boss");
+      await Promise.all([
+        postToChannel("morning-briefing", `**Morning Briefing -- ${todayCST()}**\n\n${text}`, "boss"),
+        postToChannel("boss", `Morning briefing posted to #morning-briefing.`, "boss"),
+      ]);
     }
     return text;
   });
@@ -146,16 +144,10 @@ Report all changes to this channel. Be specific about what you changed.`;
     });
     const text = result.text?.trim() || "";
     if (text) {
-      await postToChannel(
-        "media-buyer",
-        `**Show-Day Automation -- ${todayCST()}**\n\n${text}`,
-        "media-buyer",
-      );
-      await postToChannel(
-        "boss",
-        `Show-day automation ran for ${today.length} show(s). Check #media-buyer.`,
-        "scheduler",
-      );
+      await Promise.all([
+        postToChannel("media-buyer", `**Show-Day Automation -- ${todayCST()}**\n\n${text}`, "media-buyer"),
+        postToChannel("boss", `Show-day automation ran for ${today.length} show(s). Check #media-buyer.`, "scheduler"),
+      ]);
     }
     return text;
   });
@@ -228,16 +220,11 @@ Format as a Discord message with bold headers.`;
     });
     const text = result.text?.trim() || "";
     if (text) {
-      await postToChannel(
-        "boss",
-        `**Post-Show Recap -- ${yesterdayCST()}**\n\n${text}`,
-        "reporting",
-      );
-      await postToChannel(
-        "dashboard",
-        `**Post-Show Recap -- ${yesterdayCST()}**\n\n${text}`,
-        "reporting",
-      );
+      const recap = `**Post-Show Recap -- ${yesterdayCST()}**\n\n${text}`;
+      await Promise.all([
+        postToChannel("boss", recap, "reporting"),
+        postToChannel("dashboard", recap, "reporting"),
+      ]);
     }
     return text;
   });
@@ -307,8 +294,10 @@ Only report if you find actual fatigue signals.`;
         !text.toLowerCase().includes("everything looks healthy") &&
         !text.toLowerCase().includes("no fatigue");
       if (hasFindings) {
-        await postToChannel("creative", `**Creative Fatigue Alert**\n\n${text}`, "creative");
-        await postToChannel("boss", `Creative fatigue detected -- check #creative.`, "creative");
+        await Promise.all([
+          postToChannel("creative", `**Creative Fatigue Alert**\n\n${text}`, "creative"),
+          postToChannel("boss", `Creative fatigue detected -- check #creative.`, "creative"),
+        ]);
       } else {
         await postToFeed(`Creative fatigue check: all healthy`);
       }
@@ -354,8 +343,10 @@ Keep response concise. Only flag actual pacing issues.`;
         text.toLowerCase().includes("underpacing") ||
         text.toLowerCase().includes("overpacing");
       if (hasIssue) {
-        await postToChannel("media-buyer", `**Budget Pacing Alert**\n\n${text}`, "media-buyer");
-        await postToChannel("boss", `Budget pacing issue -- check #media-buyer.`, "media-buyer");
+        await Promise.all([
+          postToChannel("media-buyer", `**Budget Pacing Alert**\n\n${text}`, "media-buyer"),
+          postToChannel("boss", `Budget pacing issue -- check #media-buyer.`, "media-buyer"),
+        ]);
       } else {
         await postToFeed(`Budget pacing: all on track`);
       }
@@ -393,10 +384,13 @@ Keep response concise.`;
     });
     const text = result.text?.trim() || "";
     if (text) {
-      await postToChannel("tm-data", `**Ticket Velocity Check**\n\n${text}`, "tm-agent");
+      const posts: Promise<void>[] = [
+        postToChannel("tm-data", `**Ticket Velocity Check**\n\n${text}`, "tm-agent"),
+      ];
       if (text.toLowerCase().includes("80%") || text.toLowerCase().includes("alert")) {
-        await postToChannel("boss", `Ticket velocity alert -- check #tm-data.`, "tm-agent");
+        posts.push(postToChannel("boss", `Ticket velocity alert -- check #tm-data.`, "tm-agent"));
       }
+      await Promise.all(posts);
     }
     return text;
   });
