@@ -81,6 +81,10 @@ export default async function EventDetailPage({ params }: Props) {
   const hasTodayData = e.ticketsSoldToday != null || e.revenueToday != null;
   const hasEdpData = e.edpTotalViews != null || e.conversionRate != null;
   const currency = e.ticketPlatform === "vivaticket" ? "EUR" : "USD";
+  const revenuePerTicket = e.gross != null && e.gross > 0 && e.ticketsSold > 0
+    ? e.gross / e.ticketsSold
+    : null;
+  const briefText = buildEventBrief(e, daysUntilEvent, velocity, dailyDeltas.length);
 
   return (
     <div className="space-y-4">
@@ -138,13 +142,17 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       </div>
 
+      {/* -- Intelligence Brief -- */}
+      <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] px-6 py-5"
+        style={{ backgroundImage: "linear-gradient(135deg, rgba(34,211,238,0.08), rgba(139,92,246,0.04) 60%, transparent 100%)" }}
+      >
+        <p className="text-sm font-semibold text-white/80">Event Intelligence Brief</p>
+        <p className="mt-2 text-sm leading-6 text-white/50">{briefText}</p>
+      </section>
+
       {/* -- Key Metrics Row -- */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <MetricCard
-          label="Tickets Sold"
-          value={fmtNum(e.ticketsSold)}
-          sub={e.ticketsAvailable != null ? `${fmtNum(e.ticketsAvailable)} remaining` : undefined}
-        />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <MetricCard label="Tickets Sold" value={fmtNum(e.ticketsSold)} />
         <MetricCard
           label="Revenue"
           value={e.gross != null && e.gross > 0 ? fmtUsd(e.gross) : "--"}
@@ -158,6 +166,12 @@ export default async function EventDetailPage({ params }: Props) {
           label="Avg Ticket"
           value={e.avgTicketPrice != null ? `$${e.avgTicketPrice.toFixed(0)}` : "--"}
         />
+        {daysUntilEvent != null && daysUntilEvent > 0 && (
+          <MetricCard label="Days Until Event" value={String(daysUntilEvent)} />
+        )}
+        {revenuePerTicket != null && (
+          <MetricCard label="Rev / Ticket" value={`$${revenuePerTicket.toFixed(0)}`} />
+        )}
       </div>
 
       {/* -- Sell-Through Progress -- */}
@@ -171,17 +185,105 @@ export default async function EventDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* -- Today's Activity -- */}
-      {hasTodayData && (
-        <div className="grid grid-cols-2 gap-3">
-          {e.ticketsSoldToday != null && (
-            <SnapshotCard label="Sold Today" value={fmtNum(e.ticketsSoldToday)} icon={<Zap className="h-3.5 w-3.5 text-cyan-400" />} />
-          )}
-          {e.revenueToday != null && (
-            <SnapshotCard label="Revenue Today" value={fmtUsd(e.revenueToday)} icon={<DollarSign className="h-3.5 w-3.5 text-emerald-400" />} />
-          )}
-        </div>
-      )}
+      {/* -- Today's Activity + Event Overview (always show something) -- */}
+      <div className="grid gap-3 xl:grid-cols-3">
+        {hasTodayData && (
+          <section className="min-w-0">
+            <div className="mb-2 flex items-center gap-2">
+              <Zap className="h-3.5 w-3.5 text-white/50" />
+              <span className="section-label">Today&apos;s activity</span>
+            </div>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 space-y-4">
+              {e.ticketsSoldToday != null && (
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Sold Today</p>
+                  <p className="text-lg font-bold text-cyan-400">{fmtNum(e.ticketsSoldToday)}</p>
+                </div>
+              )}
+              {e.revenueToday != null && (
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Revenue Today</p>
+                  <p className="text-lg font-bold text-emerald-400">{fmtUsd(e.revenueToday)}</p>
+                </div>
+              )}
+              {e.ticketsSoldToday != null && e.ticketsSoldToday > 0 && revenuePerTicket != null && (
+                <div className="flex items-center justify-between border-t border-white/[0.06] pt-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Today vs Avg</p>
+                  <p className="text-sm font-medium text-white/60">
+                    {e.revenueToday != null && e.ticketsSoldToday > 0
+                      ? `$${(e.revenueToday / e.ticketsSoldToday).toFixed(0)}/ticket today`
+                      : "--"}
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Event overview -- always shows when we have revenue */}
+        {e.gross != null && e.gross > 0 && (
+          <section className="min-w-0">
+            <div className="mb-2 flex items-center gap-2">
+              <DollarSign className="h-3.5 w-3.5 text-white/50" />
+              <span className="section-label">Revenue overview</span>
+            </div>
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Total Revenue</p>
+                <p className="text-lg font-bold text-white">{fmtUsd(e.gross)}</p>
+              </div>
+              {revenuePerTicket != null && (
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Revenue Per Ticket</p>
+                  <p className="text-lg font-bold text-emerald-400">${revenuePerTicket.toFixed(2)}</p>
+                </div>
+              )}
+              {e.potentialRevenue != null && e.potentialRevenue > 0 && (
+                <div className="flex items-center justify-between">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Potential Revenue</p>
+                  <p className="text-lg font-bold text-white/60">{fmtUsd(e.potentialRevenue)}</p>
+                </div>
+              )}
+              {snapshots.length > 0 && (
+                <div className="flex items-center justify-between border-t border-white/[0.06] pt-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Data Points</p>
+                  <p className="text-sm font-medium text-white/60">{snapshots.length} snapshots</p>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Ticket breakdown -- always shows */}
+        <section className="min-w-0">
+          <div className="mb-2 flex items-center gap-2">
+            <Ticket className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Ticket breakdown</span>
+          </div>
+          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Total Sold</p>
+              <p className="text-lg font-bold text-white">{fmtNum(e.ticketsSold)}</p>
+            </div>
+            {e.ticketsAvailable != null && (
+              <div className="flex items-center justify-between">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Remaining</p>
+                <p className="text-lg font-bold text-white/60">{fmtNum(e.ticketsAvailable)}</p>
+              </div>
+            )}
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Platform</p>
+              <PlatformBadge platform={e.ticketPlatform} />
+            </div>
+            {e.status && (
+              <div className="flex items-center justify-between border-t border-white/[0.06] pt-4">
+                <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">Status</p>
+                <EventStatusBadge status={e.status} />
+              </div>
+            )}
+          </div>
+        </section>
+      </div>
 
       {/* -- Row: Sales Charts + Momentum (3 columns) -- */}
       {(chartData.length >= 2 || dailyDeltas.length >= 2 || velocity) && (
@@ -400,18 +502,6 @@ function MetricCard({ label, value, sub }: { label: string; value: string; sub?:
   );
 }
 
-function SnapshotCard({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
-  return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 flex items-center gap-3">
-      {icon}
-      <div>
-        <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
-        <p className="text-lg font-bold tracking-tight text-white">{value}</p>
-      </div>
-    </div>
-  );
-}
-
 function MomentumRow({
   label,
   value,
@@ -470,4 +560,52 @@ function ChannelCell({
       <p className="text-sm font-bold text-white">{value.toFixed(0)}%</p>
     </div>
   );
+}
+
+function buildEventBrief(
+  e: import("../../types").EventCard,
+  daysUntilEvent: number | null,
+  velocity: SalesVelocity | null,
+  snapshotDays: number,
+): string {
+  const parts: string[] = [];
+
+  if (e.gross != null && e.gross > 0) {
+    parts.push(
+      `${e.name} has sold ${fmtNum(e.ticketsSold)} tickets generating ${fmtUsd(e.gross)} in gross revenue.`,
+    );
+  } else {
+    parts.push(`${e.name} has ${fmtNum(e.ticketsSold)} tickets sold so far.`);
+  }
+
+  if (e.avgTicketPrice != null) {
+    parts.push(`Average ticket price is $${e.avgTicketPrice.toFixed(0)}.`);
+  }
+
+  if (daysUntilEvent != null && daysUntilEvent > 0) {
+    parts.push(`The event is ${daysUntilEvent} days away.`);
+  }
+
+  if (velocity) {
+    if (velocity.trend === "accelerating") {
+      parts.push(`Sales are accelerating with a recent pace of ${fmtNum(velocity.recentDailySales ?? 0)} tickets/day.`);
+    } else if (velocity.trend === "decelerating") {
+      parts.push(`Sales have slowed to ${fmtNum(velocity.recentDailySales ?? 0)} tickets/day recently.`);
+    } else if (velocity.avgDailySales > 0) {
+      parts.push(`Averaging ${fmtNum(velocity.avgDailySales)} tickets/day.`);
+    }
+    if (velocity.projectedTotalSold != null) {
+      parts.push(`At current pace, projected to reach ${fmtNum(velocity.projectedTotalSold)} total sales.`);
+    }
+  }
+
+  if (e.ticketsSoldToday != null && e.ticketsSoldToday > 0) {
+    parts.push(`Today: ${fmtNum(e.ticketsSoldToday)} tickets sold${e.revenueToday != null ? ` for ${fmtUsd(e.revenueToday)}` : ""}.`);
+  }
+
+  if (snapshotDays === 0 && !velocity) {
+    parts.push("Historical trend data will appear here once daily snapshots begin tracking.");
+  }
+
+  return parts.join(" ");
 }
