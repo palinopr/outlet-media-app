@@ -26,25 +26,6 @@ export async function requireClientOwner(
   return null;
 }
 
-export async function requireClientOwnerPage(
-  slug: string,
-): Promise<{ isAdmin: boolean; userId: string }> {
-  const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
-
-  const user = await currentUser();
-  const role = (user?.publicMetadata as { role?: string } | null)?.role;
-  if (role === "admin") {
-    return { isAdmin: true, userId };
-  }
-
-  const access = await getMemberAccessForSlug(userId, slug);
-  if (!access) redirect("/client");
-  if (access.role !== "owner") redirect(`/client/${slug}`);
-
-  return { isAdmin: false, userId };
-}
-
 export async function requireInternalMetaManagementPage(
   slug: string,
   fallbackPath = `/client/${slug}/campaigns`,

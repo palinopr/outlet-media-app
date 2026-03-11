@@ -247,7 +247,6 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         range={range}
         rangeLabel={rangeLabel}
         campaign={c}
-        editHref={null}
         theme={theme}
       />
 

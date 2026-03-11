@@ -8,7 +8,6 @@ import { CampaignStatusBadge } from "./campaign-status-badge";
 import type { ClientPortalTheme } from "@/features/client-portal/theme";
 
 interface Props {
-  editHref?: string | null;
   slug: string;
   range: DateRange;
   rangeLabel: string;
@@ -16,7 +15,7 @@ interface Props {
   theme: ClientPortalTheme;
 }
 
-export function CampaignDetailHeader({ slug, range, campaign: c, editHref }: Props) {
+export function CampaignDetailHeader({ slug, range, campaign: c }: Props) {
   return (
     <div className="space-y-4">
       <Link
@@ -66,14 +65,6 @@ export function CampaignDetailHeader({ slug, range, campaign: c, editHref }: Pro
         </div>
 
         <div className="shrink-0 text-right">
-          {editHref ? (
-            <Link
-              href={editHref}
-              className="inline-flex items-center justify-center rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-medium text-cyan-100 transition hover:border-cyan-300/35 hover:bg-cyan-300/15"
-            >
-              Edit campaign
-            </Link>
-          ) : null}
           <p className="text-[10px] uppercase tracking-[0.22em] text-white/30">Daily budget</p>
           <p className="mt-1 text-xl font-bold tracking-tight text-white">
             {c.dailyBudget != null ? `${fmtUsd(c.dailyBudget)} USD` : "--"}
