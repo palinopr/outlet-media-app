@@ -27,6 +27,11 @@ const ERROR_COPY: Record<string, { detail: string; title: string }> = {
       "Meta returned to the app, but the account could not be linked successfully. Try the connect flow again.",
     title: "Account linking failed",
   },
+  retired_client_flow: {
+    detail:
+      "Meta account linking is no longer available from the client portal. Campaign reporting remains read-only here.",
+    title: "Client Meta connect was retired",
+  },
 };
 
 interface Props {
@@ -38,7 +43,7 @@ export default async function ConnectErrorPage({ searchParams }: Props) {
   const key = (code ?? error ?? "").toLowerCase();
   const copy = ERROR_COPY[key] ?? {
     detail:
-      "The app could not complete the Meta connect flow. Return to the client portal and try again.",
+      "The app could not complete the Meta connect flow. Return to the admin team if account changes are still needed.",
     title: "Meta connect error",
   };
   const detail =

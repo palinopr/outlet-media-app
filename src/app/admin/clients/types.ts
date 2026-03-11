@@ -20,37 +20,12 @@ export interface ClientSummary {
   createdAt: string;
 }
 
-export interface ClientAsset {
-  id: string;
-  fileName: string;
-  publicUrl: string | null;
-  mediaType: string;
-  placement: string | null;
-  format: string | null;
-  labels: string[];
-  status: string;
-  createdAt: string;
-}
-
-export interface ClientAssetSource {
-  id: string;
-  provider: string;
-  folderUrl: string;
-  folderName: string | null;
-  lastSyncedAt: string | null;
-  fileCount: number;
-}
-
 export interface ClientDetail extends ClientSummary {
   members: ClientMember[];
   pendingInvites: ClientPendingInvite[];
-  connectedAccounts: import("@/features/settings/connected-accounts").ConnectedAccount[];
   campaigns: ClientCampaign[];
   eventsEnabled: boolean;
   events: ClientEvent[];
-  assets: ClientAsset[];
-  assetSources: ClientAssetSource[];
-  services: import("@/lib/client-services").ClientService[];
 }
 
 export interface ClientPendingInvite {

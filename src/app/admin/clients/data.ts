@@ -5,7 +5,6 @@ import {
 } from "@/lib/campaign-client-assignment";
 import { clerkClient } from "@clerk/nextjs/server";
 import { centsToUsd, computeBlendedRoas } from "@/lib/formatters";
-import { getClientServices } from "@/lib/client-services";
 import { buildClientWorkflowHealth } from "@/features/clients/summary";
 import { listActionableInvitations } from "@/features/invitations/server";
 import {
@@ -19,8 +18,6 @@ export type {
   ClientMember,
   ClientCampaign,
   ClientEvent,
-  ClientAsset,
-  ClientAssetSource,
 } from "./types";
 
 import type {
@@ -29,8 +26,6 @@ import type {
   ClientMember,
   ClientCampaign,
   ClientEvent,
-  ClientAsset,
-  ClientAssetSource,
 } from "./types";
 
 // ─── Summaries ──────────────────────────────────────────────────────────────
@@ -357,9 +352,7 @@ export async function getClientDetail(
     campaignsRes,
     eventsRes,
     assetsRes,
-    assetSourcesRes,
     connectedAccountsRes,
-    serviceRows,
     approvalsRes,
     actionItemsRes,
     campaignDiscussionsRes,
@@ -388,14 +381,9 @@ export async function getClientDetail(
       .order("date", { ascending: true }),
     supabaseAdmin
       .from("ad_assets")
-      .select("id, file_name, public_url, media_type, placement, format, labels, status, created_at")
+      .select("status")
       .eq("client_slug", client.slug)
-      .order("created_at", { ascending: false }),
-    supabaseAdmin
-      .from("asset_sources")
-      .select("id, provider, folder_url, folder_name, last_synced_at, file_count")
-      .eq("client_slug", client.slug)
-      .order("created_at", { ascending: false }),
+      .in("status", ["new", "labeled"]),
     supabaseAdmin
       .from("client_accounts")
       .select(
@@ -403,7 +391,6 @@ export async function getClientDetail(
       )
       .eq("client_slug", client.slug)
       .order("connected_at", { ascending: false }),
-    getClientServices(clientId),
     supabaseAdmin
       .from("approval_requests")
       .select("id, client_slug, entity_type, entity_id, metadata")
@@ -458,28 +445,6 @@ export async function getClientDetail(
     date: e.date,
     status: e.status,
   }));
-
-  const assets: ClientAsset[] = (assetsRes.data ?? []).map((a) => ({
-    id: a.id,
-    fileName: a.file_name,
-    publicUrl: a.public_url,
-    mediaType: a.media_type,
-    placement: a.placement,
-    format: a.format,
-    labels: a.labels ?? [],
-    status: a.status,
-    createdAt: a.created_at,
-  }));
-
-  const assetSources: ClientAssetSource[] = (assetSourcesRes.data ?? []).map((s) => ({
-    id: s.id,
-    provider: s.provider,
-    folderUrl: s.folder_url,
-    folderName: s.folder_name,
-    lastSyncedAt: s.last_synced_at,
-    fileCount: s.file_count,
-  }));
-
   const connectedAccounts: ConnectedAccount[] = ((connectedAccountsRes.data ?? []) as ConnectedAccount[]);
   const connectionSummary = buildConnectedAccountsSummary(connectedAccounts);
 
@@ -490,7 +455,7 @@ export async function getClientDetail(
   ).length;
   const roas = computeBlendedRoas(campaigns) ?? 0;
   const attention = buildClientWorkflowHealth({
-    assetsNeedingReview: assets.filter((asset) => asset.status === "new" || asset.status === "labeled").length,
+    assetsNeedingReview: (assetsRes.data ?? []).length,
     openActionItems: ((actionItemsRes.data ?? []) as Array<{ campaign_id: string | null }>)
       .filter((row) => row.campaign_id && clientCampaignIds.has(row.campaign_id))
       .length,
@@ -548,12 +513,8 @@ export async function getClientDetail(
     roas,
     createdAt: client.created_at,
     members,
-    connectedAccounts,
     campaigns,
     eventsEnabled: client.events_enabled ?? false,
     events,
-    assets,
-    assetSources,
-    services: serviceRows,
   };
 }

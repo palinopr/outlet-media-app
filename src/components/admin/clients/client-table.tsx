@@ -4,16 +4,10 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Loader2, Check, CheckCircle2 } from "lucide-react";
+import { Plus, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { createClient, bulkDeactivateClients } from "@/app/admin/actions/clients";
 import { toSlug } from "@/lib/to-slug";
-import {
-  SERVICE_PRESETS,
-  SERVICE_REGISTRY,
-  SERVICE_KEYS,
-  type ServiceKey,
-} from "@/lib/service-registry";
 import Link from "next/link";
 import { DataTable } from "@/components/admin/data-table/data-table";
 import { clientColumns } from "./columns";
@@ -32,28 +26,10 @@ function CreateClientForm({ onDone }: { onDone: () => void }) {
   const [slug, setSlug] = useState("");
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
-  const [presetId, setPresetId] = useState("music_promoter");
-  const [selectedServices, setSelectedServices] = useState<ServiceKey[]>(
-    SERVICE_PRESETS[0].services,
-  );
 
   function handleNameChange(val: string) {
     setName(val);
     setSlug(toSlug(val));
-  }
-
-  function handlePresetSelect(id: string) {
-    setPresetId(id);
-    const preset = SERVICE_PRESETS.find((p) => p.id === id);
-    if (preset && id !== "custom") {
-      setSelectedServices(preset.services);
-    }
-  }
-
-  function toggleCustomService(key: ServiceKey) {
-    setSelectedServices((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    );
   }
 
   async function submit(e: React.FormEvent) {
@@ -63,7 +39,6 @@ function CreateClientForm({ onDone }: { onDone: () => void }) {
       await createClient({
         name: name.trim(),
         slug,
-        services: selectedServices,
       });
       setCreated(true);
       toast.success(`Client "${name.trim()}" created`);
@@ -110,51 +85,6 @@ function CreateClientForm({ onDone }: { onDone: () => void }) {
             className="h-8 w-40 text-sm"
           />
         </div>
-      </div>
-
-      <div>
-        <label className="text-xs text-muted-foreground mb-1.5 block">
-          Service Preset
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {SERVICE_PRESETS.map((preset) => (
-            <button
-              key={preset.id}
-              type="button"
-              onClick={() => handlePresetSelect(preset.id)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-colors ${
-                presetId === preset.id
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border/60 text-muted-foreground hover:border-border hover:text-foreground"
-              }`}
-            >
-              {preset.name}
-            </button>
-          ))}
-        </div>
-        {presetId === "custom" && (
-          <div className="flex flex-wrap gap-2 mt-2">
-            {SERVICE_KEYS.map((key) => {
-              const def = SERVICE_REGISTRY[key];
-              const active = selectedServices.includes(key);
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => toggleCustomService(key)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs border transition-colors ${
-                    active
-                      ? "border-primary/40 bg-primary/10 text-primary"
-                      : "border-border/60 text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {active && <CheckCircle2 className="h-3 w-3" />}
-                  {def.name}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       <div className="flex gap-2">

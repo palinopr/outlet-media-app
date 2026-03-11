@@ -13,8 +13,6 @@ import {
   RemoveClientMemberSchema,
   ChangeClientMemberRoleSchema,
 } from "@/lib/api-schemas";
-import { toggleClientService, seedClientServices } from "@/lib/client-services";
-import { SERVICE_KEYS, type ServiceKey } from "@/lib/service-registry";
 import { logAudit } from "./audit";
 import { revalidateAccessManagementPaths } from "@/features/access/revalidation";
 
@@ -240,7 +238,7 @@ export async function bulkDeactivateClients(formData: { clientIds: string[] }) {
 
 // ─── Create client ──────────────────────────────────────────────────────────
 
-export async function createClient(formData: { name: string; slug: string; services?: string[] }) {
+export async function createClient(formData: { name: string; slug: string }) {
   const err = await adminGuard();
   if (err) throw new Error("Forbidden");
   if (!supabaseAdmin) throw new Error("DB not configured");
@@ -258,59 +256,15 @@ export async function createClient(formData: { name: string; slug: string; servi
     throw new Error(error.message);
   }
 
-  // Seed services if provided
-  const serviceKeys = (formData.services ?? []).filter((k): k is ServiceKey =>
-    SERVICE_KEYS.includes(k as ServiceKey),
-  );
-  if (serviceKeys.length > 0) {
-    await seedClientServices(data.id, serviceKeys);
-  }
-
   await logAudit("client", data.id, "create", null, {
     name: parsed.name,
     slug: parsed.slug,
-    services: serviceKeys,
   });
   revalidateAccessManagementPaths({
     clientId: data.id,
     clientSlug: data.slug,
   });
   return data;
-}
-
-// --- Toggle service ---
-
-const ToggleServiceSchema = z.object({
-  clientId: z.string().min(1),
-  serviceKey: z.enum(SERVICE_KEYS),
-  enabled: z.boolean(),
-  config: z.record(z.string(), z.unknown()).optional(),
-});
-
-export async function toggleService(formData: {
-  clientId: string;
-  serviceKey: string;
-  enabled: boolean;
-  config?: Record<string, unknown>;
-}) {
-  const err = await adminGuard();
-  if (err) throw new Error("Forbidden");
-
-  const parsed = ToggleServiceSchema.parse(formData);
-
-  await toggleClientService(
-    parsed.clientId,
-    parsed.serviceKey,
-    parsed.enabled,
-    parsed.config,
-  );
-
-  await logAudit("client_service", parsed.clientId, "toggle", null, {
-    serviceKey: parsed.serviceKey,
-    enabled: parsed.enabled,
-  });
-  const accessContext = await getClientAccessContextById(parsed.clientId);
-  revalidateAccessManagementPaths(accessContext ?? {});
 }
 
 // ─── Update client ──────────────────────────────────────────────────────────

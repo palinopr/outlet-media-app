@@ -23,4 +23,17 @@ describe("GET /api/meta/callback", () => {
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toContain("missing_params");
   });
+
+  it("redirects completed callbacks to the retired-flow message", async () => {
+    const { GET } = await import("./route");
+    const request = new Request(
+      "https://example.com/api/meta/callback?code=test-code&state=test-state",
+    );
+    const response = await GET(request);
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "https://example.com/connect-error?code=retired_client_flow",
+    );
+  });
 });
