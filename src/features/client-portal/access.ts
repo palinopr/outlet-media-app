@@ -1,8 +1,7 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
-import { requireService } from "@/lib/service-guard";
-import type { ServiceKey } from "@/lib/service-registry";
+import { getClientPortalConfig } from "./config";
 
 async function isAdminPortalViewer() {
   const user = await currentUser();
@@ -12,15 +11,10 @@ async function isAdminPortalViewer() {
 
 export async function requireClientAccess(
   slug: string,
-  ...serviceKeys: ServiceKey[]
 ): Promise<{
   userId: string;
   scope: ScopeFilter | undefined;
 }> {
-  if (serviceKeys.length > 0) {
-    await requireService(slug, ...serviceKeys);
-  }
-
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
@@ -40,4 +34,20 @@ export async function requireClientAccess(
       : undefined;
 
   return { userId, scope };
+}
+
+export async function requireClientEventsAccess(
+  slug: string,
+): Promise<{
+  userId: string;
+  scope: ScopeFilter | undefined;
+}> {
+  const access = await requireClientAccess(slug);
+  const portalConfig = await getClientPortalConfig(slug);
+
+  if (!portalConfig?.eventsEnabled) {
+    redirect(`/client/${slug}`);
+  }
+
+  return access;
 }

@@ -7,71 +7,34 @@ import {
   Users,
   Megaphone,
   CalendarDays,
-  TrendingUp,
-  ImageIcon,
+  Eye,
 } from "lucide-react";
 import { statusBadge } from "@/lib/formatters";
 import { StatCard } from "@/components/admin/stat-card";
 import { MembersSection } from "./members-section";
 import { CampaignsSection } from "./campaigns-section";
-import { AssetsSection } from "./assets-section";
-import { ServicesSection } from "./services-section";
-import { ClientCrmTab } from "./client-crm-tab";
 import { ClientOverviewTab } from "./client-overview-tab";
 import { EventsSection } from "./events-section";
-import type { CrmDiscussionThread } from "@/features/crm-comments/server";
-import type { CrmFollowUpItem } from "@/features/crm-follow-up-items/server";
-import type { CrmOverview } from "@/features/crm/server";
 import type { ClientDetail } from "@/app/admin/clients/data";
-import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
-import type { DashboardOpsSummary } from "@/features/dashboard/summary";
-import type { EventOperationsSummary } from "@/features/events/summary";
-import type { SystemEvent } from "@/features/system-events/server";
-import type { WorkQueueSummary } from "@/features/work-queue/summary";
 
 type Tab =
   | "overview"
   | "members"
   | "campaigns"
-  | "events"
-  | "crm"
-  | "assets"
-  | "services";
+  | "events";
 
 interface Props {
-  agentOutcomes: AgentOutcomeView[];
   client: ClientDetail;
-  crmDiscussions: CrmDiscussionThread[];
-  crmFollowUpItems: CrmFollowUpItem[];
-  crmOverview: CrmOverview;
-  eventOperations: EventOperationsSummary;
-  opsSummary: DashboardOpsSummary;
-  recentActivity: SystemEvent[];
-  workQueue: WorkQueueSummary;
 }
 
-export function ClientDetailView({
-  agentOutcomes,
-  client,
-  crmDiscussions,
-  crmFollowUpItems,
-  crmOverview,
-  eventOperations,
-  opsSummary,
-  recentActivity,
-  workQueue,
-}: Props) {
+export function ClientDetailView({ client }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
-  const roasDisplay = client.roas > 0 ? client.roas.toFixed(1) + "x" : "\u2014";
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
-    { id: "overview", label: "Overview", count: client.needsAttention },
+    { id: "overview", label: "Portal" },
     { id: "members", label: "Members", count: client.memberCount },
     { id: "campaigns", label: "Campaigns", count: client.totalCampaigns },
     { id: "events", label: "Events", count: client.events.length },
-    { id: "crm", label: "CRM", count: crmOverview.summary.totalContacts },
-    { id: "assets", label: "Assets", count: client.assets.length },
-    { id: "services", label: "Services", count: client.services.length },
   ];
 
   return (
@@ -96,7 +59,7 @@ export function ClientDetailView({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           icon={Users}
           label="Members"
@@ -112,24 +75,17 @@ export function ClientDetailView({
           variant="compact"
         />
         <StatCard
-          icon={CalendarDays}
-          label="Shows"
-          value={String(client.activeShows)}
-          accent="bg-amber-500/10 text-amber-400"
-          variant="compact"
-        />
-        <StatCard
-          icon={TrendingUp}
-          label="ROAS"
-          value={roasDisplay}
+          icon={Eye}
+          label="Portal Events"
+          value={client.eventsEnabled ? "Enabled" : "Hidden"}
           accent="bg-emerald-500/10 text-emerald-400"
           variant="compact"
         />
         <StatCard
-          icon={ImageIcon}
-          label="Ad Assets"
-          value={String(client.assets.length)}
-          accent="bg-pink-500/10 text-pink-400"
+          icon={CalendarDays}
+          label="Assigned Events"
+          value={String(client.events.length)}
+          accent="bg-amber-500/10 text-amber-400"
           variant="compact"
         />
       </div>
@@ -162,41 +118,11 @@ export function ClientDetailView({
 
       {/* Tab content */}
       {activeTab === "overview" && (
-        <ClientOverviewTab
-          agentOutcomes={agentOutcomes}
-          clientSlug={client.slug}
-          connectedAccounts={client.connectedAccounts}
-          opsSummary={opsSummary}
-          recentActivity={recentActivity}
-          workQueue={workQueue}
-        />
+        <ClientOverviewTab clientId={client.id} eventsEnabled={client.eventsEnabled} />
       )}
       {activeTab === "members" && <MembersSection client={client} />}
       {activeTab === "campaigns" && <CampaignsSection campaigns={client.campaigns} />}
-      {activeTab === "events" && (
-        <EventsSection events={client.events} summary={eventOperations} />
-      )}
-      {activeTab === "crm" && (
-        <ClientCrmTab
-          clientSlug={client.slug}
-          discussions={crmDiscussions}
-          followUpItems={crmFollowUpItems}
-          overview={crmOverview}
-        />
-      )}
-      {activeTab === "assets" && (
-        <AssetsSection
-          clientSlug={client.slug}
-          initialAssets={client.assets}
-          initialSources={client.assetSources}
-        />
-      )}
-      {activeTab === "services" && (
-        <ServicesSection
-          clientId={client.id}
-          initialServices={client.services}
-        />
-      )}
+      {activeTab === "events" && <EventsSection events={client.events} />}
     </div>
   );
 }

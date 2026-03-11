@@ -40,7 +40,7 @@ interface Props {
 
 export default async function CampaignDetailPage({ params, searchParams }: Props) {
   const { slug, campaignId } = await params;
-  const { scope } = await requireClientAccess(slug, "meta_ads");
+  const { scope } = await requireClientAccess(slug);
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam, "7");
 

@@ -6,11 +6,11 @@ import { redirect } from "next/navigation";
 import { slugToLabel } from "@/lib/formatters";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getMemberAccessForSlug, getMemberships } from "@/lib/member-access";
-import { getEnabledServices } from "@/lib/client-services";
 import { ClientNav } from "./components/client-nav";
 import { MobileNav } from "./components/mobile-nav";
 import { CompleteProfileModal } from "./components/complete-profile-modal";
 import { getClientPortalTheme } from "@/features/client-portal/theme";
+import { getClientPortalConfig } from "@/features/client-portal/config";
 
 interface Props {
   children: ReactNode;
@@ -36,6 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientLayout({ children, params }: Props) {
   const { slug } = await params;
+  const portalConfig = await getClientPortalConfig(slug);
   const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   let needsName = false;
 
@@ -90,27 +91,19 @@ export default async function ClientLayout({ children, params }: Props) {
     needsName = !isAdmin && (!user?.firstName || !user?.lastName);
 
     // Auto-enroll: ensure client_members row exists for invited users
-    if (!isAdmin && supabaseAdmin) {
-      const { data: clientRow } = await supabaseAdmin
-        .from("clients")
-        .select("id")
-        .eq("slug", slug)
-        .single();
-
-      if (clientRow) {
-        const enrollRole = meta.client_role === "owner" ? "owner" : "member";
-        await supabaseAdmin
-          .from("client_members")
-          .upsert(
-            { client_id: clientRow.id, clerk_user_id: userId, role: enrollRole },
-            { onConflict: "client_id,clerk_user_id" }
-          );
-      }
+    if (!isAdmin && supabaseAdmin && portalConfig?.clientId) {
+      const enrollRole = meta.client_role === "owner" ? "owner" : "member";
+      await supabaseAdmin
+        .from("client_members")
+        .upsert(
+          { client_id: portalConfig.clientId, clerk_user_id: userId, role: enrollRole },
+          { onConflict: "client_id,clerk_user_id" }
+        );
     }
   }
 
   const clientName = slugToLabel(slug);
-  const enabledServices = await getEnabledServices(slug);
+  const eventsEnabled = portalConfig?.eventsEnabled ?? false;
   const theme = getClientPortalTheme(slug);
 
   return (
@@ -137,7 +130,7 @@ export default async function ClientLayout({ children, params }: Props) {
             <Image src="/images/brand/symbol-white.png" alt="Outlet Media" width={36} height={36} className="h-9 w-9 shrink-0" />
             <div className="min-w-0">
               <p className="text-sm font-bold text-white/90 truncate">{clientName}</p>
-              <p className="text-[10px] text-white/30 font-medium tracking-wide">Client Portal</p>
+              <p className="text-[10px] text-white/30 font-medium tracking-wide">Read-Only Portal</p>
             </div>
           </div>
           {theme.brandLogoSrc ? (
@@ -154,7 +147,7 @@ export default async function ClientLayout({ children, params }: Props) {
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <ClientNav slug={slug} enabledServices={enabledServices} />
+          <ClientNav slug={slug} eventsEnabled={eventsEnabled} />
         </div>
         <div className="px-5 py-4 shrink-0">
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent mb-4" />
@@ -165,7 +158,7 @@ export default async function ClientLayout({ children, params }: Props) {
         </div>
       </aside>
       {/* Mobile header */}
-      <MobileNav slug={slug} clientName={clientName} enabledServices={enabledServices} />
+      <MobileNav slug={slug} clientName={clientName} eventsEnabled={eventsEnabled} />
       <div className="flex flex-col flex-1 min-w-0">
         <main className="flex-1 overflow-auto lg:pt-0 pt-14">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">{children}</div>

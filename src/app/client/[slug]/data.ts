@@ -20,6 +20,10 @@ export interface ClientData {
   trendData: Array<{ date: string; roas: number; spend: number }>;
 }
 
+interface GetClientDataOptions {
+  includeEvents?: boolean;
+}
+
 const EMPTY: ClientData = {
   heroStats: {
     totalSpend: 0,
@@ -196,16 +200,20 @@ export async function getData(
   slug: string,
   range: DateRange,
   scope?: ScopeFilter,
+  options: GetClientDataOptions = {},
 ): Promise<ClientData> {
   const db = await getClientPortalReadClient();
+  const includeEvents = options.includeEvents ?? true;
 
   // Build events query (independent of Meta API)
-  let eventsQuery = db
-    ?.from("tm_events")
-    .select("*")
-    .eq("client_slug", slug)
-    .order("date", { ascending: true })
-    .limit(50);
+  let eventsQuery = includeEvents
+    ? db
+        ?.from("tm_events")
+        .select("*")
+        .eq("client_slug", slug)
+        .order("date", { ascending: true })
+        .limit(50)
+    : null;
 
   if (scope?.allowedEventIds && eventsQuery) {
     eventsQuery = eventsQuery.in("id", scope.allowedEventIds);
@@ -238,12 +246,12 @@ export async function getData(
   );
 
   const dataSource = result.error ? "supabase" : "meta_api";
-  const tmEvents = (eventsRes.data ?? []) as TmEvent[];
+  const tmEvents = includeEvents ? ((eventsRes.data ?? []) as TmEvent[]) : [];
   const events = buildEventCards(tmEvents);
 
   // Demographics depend on event tm_ids
   let audience: AudienceProfile | null = null;
-  if (tmEvents.length > 0 && db) {
+  if (includeEvents && tmEvents.length > 0 && db) {
     const tmIds = tmEvents.map((e) => e.tm_id);
     const { data: demoRows } = await db
       .from("tm_event_demographics")

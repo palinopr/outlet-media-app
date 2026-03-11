@@ -239,7 +239,7 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     const connectionSummary = buildConnectedAccountsSummary(
       connectedAccountsBySlug.get(client.slug) ?? [],
     );
-    const workflow = buildClientWorkflowHealth({
+    const attention = buildClientWorkflowHealth({
       assetsNeedingReview: assetsNeedingReviewBySlug[client.slug] ?? 0,
       openActionItems: openActionItemsBySlug[client.slug] ?? 0,
       openDiscussions: openDiscussionsBySlug[client.slug] ?? 0,
@@ -247,7 +247,7 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     });
 
     return {
-      assetsNeedingReview: workflow.assetsNeedingReview,
+      assetsNeedingReview: attention.assetsNeedingReview,
       connectedAccountCount: connectionSummary.totalCount,
       connectionRiskAccounts: connectionSummary.attentionCount,
       id: client.id,
@@ -255,11 +255,11 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
       slug: client.slug,
       status: client.status,
       memberCount: membersByClientId[client.id] ?? 0,
-      needsAttention: workflow.needsAttention,
+      needsAttention: attention.needsAttention,
       activeCampaigns,
-      openActionItems: workflow.openActionItems,
-      openDiscussions: workflow.openDiscussions,
-      pendingApprovals: workflow.pendingApprovals,
+      openActionItems: attention.openActionItems,
+      openDiscussions: attention.openDiscussions,
+      pendingApprovals: attention.pendingApprovals,
       totalCampaigns: campaigns.length,
       activeShows: showsBySlug[client.slug] ?? 0,
       totalSpend,
@@ -346,7 +346,7 @@ export async function getClientDetail(
 
   const { data: client } = await supabaseAdmin
     .from("clients")
-    .select("id, name, slug, status, created_at")
+    .select("id, name, slug, status, created_at, events_enabled")
     .eq("id", clientId)
     .single();
 
@@ -489,7 +489,7 @@ export async function getClientDetail(
     (c) => c.status === "ACTIVE",
   ).length;
   const roas = computeBlendedRoas(campaigns) ?? 0;
-  const workflow = buildClientWorkflowHealth({
+  const attention = buildClientWorkflowHealth({
     assetsNeedingReview: assets.filter((asset) => asset.status === "new" || asset.status === "labeled").length,
     openActionItems: ((actionItemsRes.data ?? []) as Array<{ campaign_id: string | null }>)
       .filter((row) => row.campaign_id && clientCampaignIds.has(row.campaign_id))
@@ -527,7 +527,7 @@ export async function getClientDetail(
   });
 
   return {
-    assetsNeedingReview: workflow.assetsNeedingReview,
+    assetsNeedingReview: attention.assetsNeedingReview,
     connectedAccountCount: connectionSummary.totalCount,
     connectionRiskAccounts: connectionSummary.attentionCount,
     id: client.id,
@@ -536,11 +536,11 @@ export async function getClientDetail(
     status: client.status,
     memberCount: members.length,
     pendingInvites,
-    needsAttention: workflow.needsAttention,
+    needsAttention: attention.needsAttention,
     activeCampaigns,
-    openActionItems: workflow.openActionItems,
-    openDiscussions: workflow.openDiscussions,
-    pendingApprovals: workflow.pendingApprovals,
+    openActionItems: attention.openActionItems,
+    openDiscussions: attention.openDiscussions,
+    pendingApprovals: attention.pendingApprovals,
     totalCampaigns: campaigns.length,
     activeShows: events.length,
     totalSpend,
@@ -550,6 +550,7 @@ export async function getClientDetail(
     members,
     connectedAccounts,
     campaigns,
+    eventsEnabled: client.events_enabled ?? false,
     events,
     assets,
     assetSources,

@@ -6,18 +6,17 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { Menu, X, Mail } from "lucide-react";
 import { getClientNavLinks, isNavActive } from "./nav-config";
-import type { ServiceKey } from "@/lib/service-registry";
 
 interface Props {
   slug: string;
   clientName: string;
-  enabledServices?: ServiceKey[] | null;
+  eventsEnabled: boolean;
 }
 
-export function MobileNav({ slug, clientName, enabledServices }: Props) {
+export function MobileNav({ slug, clientName, eventsEnabled }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const links = getClientNavLinks(slug, enabledServices);
+  const links = getClientNavLinks(slug, { eventsEnabled });
 
   const close = useCallback(() => setOpen(false), []);
 

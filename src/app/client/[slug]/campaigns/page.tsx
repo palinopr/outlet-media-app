@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientCampaigns({ params }: Props) {
   const { slug } = await params;
-  const { scope } = await requireClientAccess(slug, "meta_ads");
+  const { scope } = await requireClientAccess(slug);
   const clientName = slugToLabel(slug);
 
   const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug, scope);

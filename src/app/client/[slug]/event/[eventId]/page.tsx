@@ -11,10 +11,7 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  Clock,
   Eye,
-  MousePointerClick,
-  Target,
   Zap,
   Monitor,
   Smartphone,
@@ -34,7 +31,7 @@ import {
 } from "@/components/client/charts";
 import type { SalesVelocity, TicketPlatform } from "../../types";
 import { getDaysUntilEvent } from "../../lib";
-import { requireClientAccess } from "@/features/client-portal/access";
+import { requireClientEventsAccess } from "@/features/client-portal/access";
 
 interface Props {
   params: Promise<{ slug: string; eventId: string }>;
@@ -48,7 +45,7 @@ const PLATFORM_LABELS: Record<TicketPlatform, { name: string; color: string }> =
 
 export default async function EventDetailPage({ params }: Props) {
   const { slug, eventId } = await params;
-  const { scope } = await requireClientAccess(slug, "ticketmaster", "eata");
+  const { scope } = await requireClientEventsAccess(slug);
   const data = await getEventDetail(slug, eventId, scope);
 
   if (!data) {

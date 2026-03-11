@@ -46,6 +46,7 @@ export interface ClientDetail extends ClientSummary {
   pendingInvites: ClientPendingInvite[];
   connectedAccounts: import("@/features/settings/connected-accounts").ConnectedAccount[];
   campaigns: ClientCampaign[];
+  eventsEnabled: boolean;
   events: ClientEvent[];
   assets: ClientAsset[];
   assetSources: ClientAssetSource[];

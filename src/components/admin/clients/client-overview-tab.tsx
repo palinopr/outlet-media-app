@@ -1,76 +1,104 @@
 "use client";
 
-import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
-import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
-import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
-import { WorkQueueSection } from "@/components/workflow/work-queue-section";
-import { ClientConnectionsSection } from "./client-connections-section";
-import type { ConnectedAccount } from "@/features/settings/connected-accounts";
-import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
-import type { DashboardOpsSummary } from "@/features/dashboard/summary";
-import type { SystemEvent } from "@/features/system-events/server";
-import type { WorkQueueSummary } from "@/features/work-queue/summary";
+import { useState, useTransition } from "react";
+import { CalendarDays, Eye, Megaphone } from "lucide-react";
+import { toast } from "sonner";
+import { updateClient } from "@/app/admin/actions/clients";
+import { Switch } from "@/components/ui/switch";
 
 interface ClientOverviewTabProps {
-  agentOutcomes: AgentOutcomeView[];
-  clientSlug: string;
-  connectedAccounts: ConnectedAccount[];
-  opsSummary: DashboardOpsSummary;
-  recentActivity: SystemEvent[];
-  workQueue: WorkQueueSummary;
+  clientId: string;
+  eventsEnabled: boolean;
 }
 
 export function ClientOverviewTab({
-  agentOutcomes,
-  clientSlug,
-  connectedAccounts,
-  opsSummary,
-  recentActivity,
-  workQueue,
+  clientId,
+  eventsEnabled: initialEventsEnabled,
 }: ClientOverviewTabProps) {
-  return (
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)]">
-      <div className="space-y-6">
-        <DashboardOpsSummarySection
-          campaignHrefPrefix="/admin/campaigns"
-          description="Workflow pressure, open decisions, and shared campaign momentum for this client account."
-          emptyState="This client account does not have any flagged campaign workflows right now."
-          summary={opsSummary}
-          title="Client workflow overview"
-          variant="admin"
-        />
-        <WorkQueueSection
-          description="Cross-app next steps tied to this client across campaigns, CRM, events, and creative review."
-          summary={workQueue}
-          title="Client work queue"
-          variant="admin"
-        />
-        <ClientConnectionsSection accounts={connectedAccounts} />
-      </div>
+  const [eventsEnabled, setEventsEnabled] = useState(initialEventsEnabled);
+  const [isPending, startTransition] = useTransition();
 
-      <div className="space-y-6">
-        <AgentOutcomesPanel
-          assetHrefPrefix="/admin/assets"
-          canCreateActionItems
-          campaignHrefPrefix="/admin/campaigns"
-          crmHrefPrefix="/admin/crm"
-          description="Bounded agent work requested for this client account and the follow-through that came back."
-          eventHrefPrefix="/admin/events"
-          outcomes={agentOutcomes}
-          title="Agent follow-through"
-          variant="admin"
-        />
-        <WorkspaceActivityFeed
-          assetHrefPrefix="/admin/assets"
-          basePath="/admin/workspace"
-          campaignHrefPrefix="/admin/campaigns"
-          crmHrefPrefix="/admin/crm"
-          description="Recent shared workflow movement across this client account."
-          eventHrefPrefix="/admin/events"
-          events={recentActivity}
-          title={`${clientSlug} activity`}
-        />
-      </div>
+  function handleEventsToggle(checked: boolean) {
+    setEventsEnabled(checked);
+
+    startTransition(async () => {
+      try {
+        await updateClient({
+          clientId,
+          eventsEnabled: checked,
+        });
+        toast.success(`Client Events ${checked ? "enabled" : "disabled"}`);
+      } catch (error) {
+        setEventsEnabled(!checked);
+        toast.error(
+          error instanceof Error ? error.message : "Failed to update client portal settings",
+        );
+      }
+    });
+  }
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+      <section className="rounded-2xl border border-border/60 bg-card p-5">
+        <div className="flex items-center gap-2">
+          <Eye className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold">Client Portal Shape</h2>
+        </div>
+        <p className="mt-2 text-sm text-muted-foreground">
+          The client portal is intentionally narrow: dashboard, campaigns, campaign detail, and
+          optional events. Clients do not create, edit, approve, or manage work from the portal.
+        </p>
+
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Megaphone className="h-4 w-4 text-primary" />
+              Campaign visibility
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Assign campaigns to the client from admin campaign ownership and member scope.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <CalendarDays className="h-4 w-4 text-primary" />
+              Events visibility
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              One toggle controls whether the client sees the Events nav item and event routes.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-border/60 bg-card p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-sm font-semibold">Portal Events Access</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Turn this on only for clients that should see the Events page.
+            </p>
+          </div>
+
+          <Switch
+            aria-label="Toggle client events access"
+            checked={eventsEnabled}
+            disabled={isPending}
+            onCheckedChange={handleEventsToggle}
+          />
+        </div>
+
+        <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-4">
+          <p className="text-sm font-medium">
+            {eventsEnabled ? "Events are visible in the client portal." : "Events are hidden from the client portal."}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            When disabled, the Events nav item is removed and direct event URLs redirect back to
+            the dashboard.
+          </p>
+        </div>
+      </section>
     </div>
   );
 }

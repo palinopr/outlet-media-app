@@ -13,7 +13,8 @@ export function getAccessManagementPaths(input: AccessManagementPathsInput = {})
   }
 
   if (input.clientSlug) {
-    paths.push(`/client/${input.clientSlug}/settings`);
+    paths.push(`/client/${input.clientSlug}`);
+    paths.push(`/client/${input.clientSlug}/events`);
   }
 
   return [...new Set(paths)];

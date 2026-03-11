@@ -315,22 +315,32 @@ export async function toggleService(formData: {
 
 // ─── Update client ──────────────────────────────────────────────────────────
 
-export async function updateClient(formData: { clientId: string; name?: string; slug?: string; status?: string }) {
+export async function updateClient(formData: {
+  clientId: string;
+  eventsEnabled?: boolean;
+  name?: string;
+  slug?: string;
+  status?: string;
+}) {
   const err = await adminGuard();
   if (err) throw new Error("Forbidden");
   if (!supabaseAdmin) throw new Error("DB not configured");
 
   const parsed = UpdateClientSchema.parse(formData);
-  const { clientId, ...updates } = parsed;
+  const { clientId, eventsEnabled, ...updates } = parsed;
+  const dbUpdates = {
+    ...updates,
+    ...(eventsEnabled === undefined ? {} : { events_enabled: eventsEnabled }),
+  };
 
   const { error } = await supabaseAdmin
     .from("clients")
-    .update(updates)
+    .update(dbUpdates)
     .eq("id", clientId);
 
   if (error) throw new Error(error.message);
 
-  await logAudit("client", clientId, "update", null, updates);
+  await logAudit("client", clientId, "update", null, parsed);
   const accessContext = await getClientAccessContextById(clientId);
   revalidateAccessManagementPaths(accessContext ?? {});
 }

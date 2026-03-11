@@ -20,8 +20,7 @@ import { CampaignSection } from "./components/campaign-section";
 import { EventCard } from "./components/event-card";
 import { AudienceSection } from "./components/audience-section";
 import { requireClientAccess } from "@/features/client-portal/access";
-import { getDashboardOpsSummary } from "@/features/dashboard/server";
-import { OverviewCampaignJumpSection } from "./components/overview-campaign-jump-section";
+import { getClientPortalConfig } from "@/features/client-portal/config";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -37,17 +36,15 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam);
 
-  const { scope } = await requireClientAccess(slug);
-  const [dashboardData, opsSummary, user] = await Promise.all([
-    getData(slug, range, scope),
-    getDashboardOpsSummary({
-      clientSlug: slug,
-      limit: 6,
-      mode: "client",
-      scopeCampaignIds: scope?.allowedCampaignIds,
-    }),
+  const [{ scope }, portalConfig, user] = await Promise.all([
+    requireClientAccess(slug),
+    getClientPortalConfig(slug),
     currentUser().catch(() => null),
   ]);
+  const eventsEnabled = portalConfig?.eventsEnabled ?? false;
+  const dashboardData = await getData(slug, range, scope, {
+    includeEvents: eventsEnabled,
+  });
   const { heroStats, campaigns, events, audience, dataSource, rangeLabel } = dashboardData;
   const insights = generateInsights(heroStats, campaigns, events, audience);
 
@@ -155,7 +152,7 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="h-4 w-4 text-cyan-400/70" />
-              <span className="text-xs font-semibold tracking-widest uppercase text-cyan-400">Client Portal</span>
+              <span className="text-xs font-semibold tracking-widest uppercase text-cyan-400">Read-Only Reporting</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">Welcome back, {displayName}</h1>
             <p className="text-sm text-white/60 mt-1.5 flex items-center gap-1.5">
@@ -190,16 +187,6 @@ export default async function ClientDashboard({ params, searchParams }: Props) {
           </div>
         ))}
       </div>
-
-      {campaigns.length > 0 && (
-        <OverviewCampaignJumpSection
-          attentionCampaigns={opsSummary.attentionCampaigns}
-          campaigns={campaigns}
-          metrics={opsSummary.metrics}
-          range={range}
-          slug={slug}
-        />
-      )}
 
       {/* -- Smart Insights -- */}
       <InsightsPanel insights={insights} />

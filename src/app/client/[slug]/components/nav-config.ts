@@ -1,24 +1,22 @@
-import {
-  LayoutDashboard,
-  Megaphone,
-  Ticket,
-} from "lucide-react";
+import { LayoutDashboard, Megaphone, Ticket } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { ServiceKey } from "@/lib/service-registry";
 
 export interface NavLink {
   href: string;
   label: string;
   icon: LucideIcon;
   matchExact?: boolean;
-  requiredService?: ServiceKey | ServiceKey[];
 }
 
-const NAV_LINKS: Omit<NavLink, "href">[] = [
+const BASE_NAV_LINKS: Omit<NavLink, "href">[] = [
   { label: "Overview", icon: LayoutDashboard, matchExact: true },
-  { label: "Campaigns", icon: Megaphone, requiredService: "meta_ads" },
-  { label: "Events", icon: Ticket, requiredService: ["ticketmaster", "eata"] },
+  { label: "Campaigns", icon: Megaphone },
 ];
+
+const EVENTS_NAV_LINK: Omit<NavLink, "href"> = {
+  label: "Events",
+  icon: Ticket,
+};
 
 function routeSegment(label: string): string {
   if (label === "Overview") return "";
@@ -27,17 +25,13 @@ function routeSegment(label: string): string {
 
 export function getClientNavLinks(
   slug: string,
-  enabledServices?: ServiceKey[] | null,
+  options: { eventsEnabled?: boolean } = {},
 ): NavLink[] {
-  return NAV_LINKS.filter((link) => {
-    if (!link.requiredService) return true;
-    if (!enabledServices) return true;
+  const links = options.eventsEnabled
+    ? [...BASE_NAV_LINKS, EVENTS_NAV_LINK]
+    : BASE_NAV_LINKS;
 
-    const required = Array.isArray(link.requiredService)
-      ? link.requiredService
-      : [link.requiredService];
-    return required.some((key) => enabledServices.includes(key));
-  }).map((link) => {
+  return links.map((link) => {
     const segment = routeSegment(link.label);
     return {
       ...link,

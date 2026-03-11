@@ -728,6 +728,7 @@ export type Database = {
       }
       clients: {
         Row: {
+          events_enabled: boolean
           id: string
           name: string
           slug: string
@@ -735,6 +736,7 @@ export type Database = {
           created_at: string
         }
         Insert: {
+          events_enabled?: boolean
           id?: string
           name: string
           slug: string
@@ -742,6 +744,7 @@ export type Database = {
           created_at?: string
         }
         Update: {
+          events_enabled?: boolean
           id?: string
           name?: string
           slug?: string

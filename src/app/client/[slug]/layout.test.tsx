@@ -15,9 +15,23 @@ vi.mock("next/navigation", () => ({
   usePathname: vi.fn().mockReturnValue("/client/acme"),
 }));
 
+vi.mock("@/features/client-portal/config", () => ({
+  getClientPortalConfig: vi.fn().mockResolvedValue({
+    clientId: "client_1",
+    eventsEnabled: false,
+  }),
+}));
+
 import ClientLayout from "./layout";
+import { getClientPortalConfig } from "@/features/client-portal/config";
+
+const mockedGetClientPortalConfig = vi.mocked(getClientPortalConfig);
 
 afterEach(() => {
+  mockedGetClientPortalConfig.mockResolvedValue({
+    clientId: "client_1",
+    eventsEnabled: false,
+  });
   cleanup();
 });
 
@@ -94,6 +108,32 @@ describe("ClientLayout navigation links", () => {
     expect(links).toHaveLength(2);
     expect(links[0]).toHaveAttribute("href", "/client/test_client/campaigns");
     expect(links[1]).toHaveAttribute("href", "/client/test_client/campaigns");
+  });
+
+  it("hides Events links when events are disabled for the client", async () => {
+    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    mockedGetClientPortalConfig.mockResolvedValue({
+      clientId: "client_1",
+      eventsEnabled: false,
+    });
+
+    await renderLayout("acme");
+
+    expect(screen.queryByRole("link", { name: "Events" })).not.toBeInTheDocument();
+  });
+
+  it("shows Events links when events are enabled for the client", async () => {
+    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    mockedGetClientPortalConfig.mockResolvedValue({
+      clientId: "client_1",
+      eventsEnabled: true,
+    });
+
+    await renderLayout("acme");
+
+    const links = screen.getAllByRole("link", { name: "Events" });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/client/acme/events");
   });
 
   it("renders children inside main content area", async () => {

@@ -133,6 +133,7 @@ export const CreateClientSchema = z.object({
 
 export const UpdateClientSchema = z.object({
   clientId: z.string().uuid(),
+  eventsEnabled: z.boolean().optional(),
   name: z.string().min(1).max(200).optional(),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9_]+$/).optional(),
   status: z.enum(["active", "inactive"]).optional(),
