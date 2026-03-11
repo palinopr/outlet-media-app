@@ -30,6 +30,7 @@ import {
 import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { CampaignDetailHeader } from "../../components/campaign-detail-header";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { canManageClientAccount } from "@/features/client-portal/ownership";
 import { getClientPortalTheme } from "@/features/client-portal/theme";
 import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket, roasLabel } from "../../lib";
 
@@ -41,6 +42,7 @@ interface Props {
 export default async function CampaignDetailPage({ params, searchParams }: Props) {
   const { slug, campaignId } = await params;
   const { scope } = await requireClientAccess(slug, "meta_ads");
+  const canManage = await canManageClientAccount(slug);
   const { range: rangeParam } = await searchParams;
   const range = parseRange(rangeParam, "7");
 
@@ -247,6 +249,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         range={range}
         rangeLabel={rangeLabel}
         campaign={c}
+        editHref={canManage ? `/client/${slug}/campaign/${campaignId}/edit` : null}
         theme={theme}
       />
 

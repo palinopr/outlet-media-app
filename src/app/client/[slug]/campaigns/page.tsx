@@ -16,6 +16,7 @@ import { InsightsPanel } from "../components/insights-panel";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { CampaignsTable } from "./campaigns-table";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { canManageClientAccount } from "@/features/client-portal/ownership";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -34,6 +35,7 @@ export default async function ClientCampaigns({ params }: Props) {
   const { slug } = await params;
   const { scope } = await requireClientAccess(slug, "meta_ads");
   const clientName = slugToLabel(slug);
+  const canManage = await canManageClientAccount(slug);
 
   const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug, scope);
   const trendData = buildTrendData(snapshots);
@@ -118,6 +120,22 @@ export default async function ClientCampaigns({ params }: Props) {
             <a href={`/client/${slug}`} className="text-xs text-white/50 hover:text-white/80 transition-colors">
               Back to overview
             </a>
+            {canManage ? (
+              <>
+                <a
+                  href={`/client/${slug}/settings`}
+                  className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs font-medium text-white/68 transition hover:border-white/[0.16] hover:text-white"
+                >
+                  Meta settings
+                </a>
+                <a
+                  href={`/client/${slug}/campaigns/new`}
+                  className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-xs font-medium text-cyan-100 transition hover:border-cyan-300/35 hover:bg-cyan-300/15"
+                >
+                  New campaign
+                </a>
+              </>
+            ) : null}
             <div className="flex items-center gap-2">
               {hasData ? (
                 <>

@@ -5,7 +5,13 @@ vi.stubEnv("META_APP_SECRET", "test-secret");
 vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://example.com");
 
 describe("meta-oauth", () => {
-  beforeEach(() => vi.resetAllMocks());
+  beforeEach(() => {
+    vi.resetAllMocks();
+    vi.unstubAllEnvs();
+    vi.stubEnv("META_APP_ID", "123456");
+    vi.stubEnv("META_APP_SECRET", "test-secret");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://example.com");
+  });
 
   it("buildAuthUrl returns a valid Facebook OAuth URL", async () => {
     const { buildAuthUrl } = await import("./meta-oauth");
@@ -15,6 +21,16 @@ describe("meta-oauth", () => {
     expect(url).toContain("redirect_uri=");
     expect(url).toContain("scope=ads_management");
     expect(url).toContain("state=state-token-123");
+  });
+
+  it("buildAuthUrl uses business login config when provided", async () => {
+    vi.stubEnv("META_FACEBOOK_LOGIN_CONFIG_ID", "business-config-1");
+
+    const { buildAuthUrl } = await import("./meta-oauth");
+    const url = buildAuthUrl("state-token-123");
+
+    expect(url).toContain("config_id=business-config-1");
+    expect(url).not.toContain("scope=");
   });
 
   it("verifySignedRequest validates HMAC signature", async () => {

@@ -6,6 +6,8 @@ import {
   exchangeCodeForToken,
   exchangeForLongLived,
   fetchAdAccounts,
+  fetchMetaUserProfile,
+  REQUESTED_META_SCOPES,
 } from "@/lib/meta-oauth";
 
 export async function GET(request: Request) {
@@ -19,20 +21,20 @@ export async function GET(request: Request) {
     const errorDesc =
       url.searchParams.get("error_description") ?? "Permission denied";
     return NextResponse.redirect(
-      `${appUrl}/client/connect-error?error=${encodeURIComponent(errorDesc)}`,
+      `${appUrl}/connect-error?code=${encodeURIComponent(error)}&error=${encodeURIComponent(errorDesc)}`,
     );
   }
 
   if (!code || !stateB64) {
     return NextResponse.redirect(
-      `${appUrl}/client/connect-error?error=missing_params`,
+      `${appUrl}/connect-error?code=missing_params`,
     );
   }
 
   const secret = process.env.META_APP_SECRET;
   if (!secret) {
     return NextResponse.redirect(
-      `${appUrl}/client/connect-error?error=not_configured`,
+      `${appUrl}/connect-error?code=not_configured`,
     );
   }
 
@@ -59,14 +61,17 @@ export async function GET(request: Request) {
     slug = parsed.slug;
   } catch {
     return NextResponse.redirect(
-      `${appUrl}/client/connect-error?error=invalid_state`,
+      `${appUrl}/connect-error?code=invalid_state`,
     );
   }
 
   try {
     const shortLived = await exchangeCodeForToken(code);
     const longLived = await exchangeForLongLived(shortLived.access_token);
-    const adAccounts = await fetchAdAccounts(longLived.access_token);
+    const [metaUser, adAccounts] = await Promise.all([
+      fetchMetaUserProfile(longLived.access_token),
+      fetchAdAccounts(longLived.access_token),
+    ]);
 
     if (adAccounts.length === 0) {
       return NextResponse.redirect(
@@ -76,7 +81,7 @@ export async function GET(request: Request) {
 
     if (adAccounts.length === 1) {
       const account = adAccounts[0];
-      await storeAccount(userId, slug, longLived, account);
+      await storeAccount(userId, slug, longLived, account, metaUser.id);
       return NextResponse.redirect(
         `${appUrl}/client/${slug}/settings?connected=${account.id}`,
       );
@@ -117,6 +122,7 @@ export async function storeAccount(
   clientSlug: string,
   tokenData: { access_token: string; expires_in: number },
   account: { id: string; name: string },
+  metaUserId: string,
 ) {
   if (!supabaseAdmin) throw new Error("Database not configured");
 
@@ -128,12 +134,12 @@ export async function storeAccount(
     {
       clerk_user_id: clerkUserId,
       client_slug: clientSlug,
-      meta_user_id: "",
+      meta_user_id: metaUserId,
       ad_account_id: account.id,
       ad_account_name: account.name,
       access_token_encrypted: encrypt(tokenData.access_token),
       token_expires_at: expiresAt,
-      scopes: ["ads_management", "ads_read", "business_management"],
+      scopes: REQUESTED_META_SCOPES,
       status: "active",
       connected_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),

@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { META_API_VERSION } from "./constants";
 
 const SCOPES = "ads_management,ads_read,business_management";
+export const REQUESTED_META_SCOPES = SCOPES.split(",");
 
 function getAppId(): string {
   const id = process.env.META_APP_ID;
@@ -21,13 +22,21 @@ function getRedirectUri(): string {
 }
 
 export function buildAuthUrl(state: string): string {
+  const configId = process.env.META_FACEBOOK_LOGIN_CONFIG_ID?.trim();
   const params = new URLSearchParams({
     client_id: getAppId(),
     redirect_uri: getRedirectUri(),
-    scope: SCOPES,
     state,
     response_type: "code",
   });
+
+  if (configId) {
+    // Meta recommends Facebook Login for Business for agency-style business integrations.
+    params.set("config_id", configId);
+  } else {
+    params.set("scope", SCOPES);
+  }
+
   return `https://www.facebook.com/${META_API_VERSION}/dialog/oauth?${params}`;
 }
 
@@ -90,6 +99,23 @@ export async function fetchAdAccounts(
   }
   const data = await res.json();
   return data.data ?? [];
+}
+
+export async function fetchMetaUserProfile(token: string): Promise<{
+  id: string;
+  name?: string;
+}> {
+  const res = await fetch(
+    `https://graph.facebook.com/${META_API_VERSION}/me?fields=id,name`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(
+      `Failed to fetch Meta user: ${err.error?.message ?? res.statusText}`
+    );
+  }
+  return res.json();
 }
 
 export async function revokeToken(token: string): Promise<void> {

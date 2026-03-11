@@ -6,6 +6,7 @@ const isPublicRoute = createRouteMatcher([
   "/landing",
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/connect-error(.*)",
   "/privacy",
   "/terms",
   "/deletion-status(.*)",

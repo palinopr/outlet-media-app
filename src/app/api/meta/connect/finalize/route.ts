@@ -3,7 +3,11 @@ import { cookies } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { encrypt, decrypt } from "@/lib/crypto";
-import { fetchAdAccounts } from "@/lib/meta-oauth";
+import {
+  fetchAdAccounts,
+  fetchMetaUserProfile,
+  REQUESTED_META_SCOPES,
+} from "@/lib/meta-oauth";
 import { z } from "zod/v4";
 import { apiError, dbError, validateRequest } from "@/lib/api-helpers";
 import { requireClientOwner } from "@/features/client-portal/ownership";
@@ -36,7 +40,10 @@ export async function POST(request: Request) {
   const expiresIn = parseInt(pendingExpires, 10);
   const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
 
-  const adAccounts = await fetchAdAccounts(token);
+  const [metaUser, adAccounts] = await Promise.all([
+    fetchMetaUserProfile(token),
+    fetchAdAccounts(token),
+  ]);
   const account = adAccounts.find((a) => a.id === data.ad_account_id);
   if (!account) {
     return apiError("Ad account not found on your profile", 403);
@@ -46,12 +53,12 @@ export async function POST(request: Request) {
     {
       clerk_user_id: userId,
       client_slug: data.slug,
-      meta_user_id: "",
+      meta_user_id: metaUser.id,
       ad_account_id: account.id,
       ad_account_name: account.name,
       access_token_encrypted: encrypt(token),
       token_expires_at: expiresAt,
-      scopes: ["ads_management", "ads_read", "business_management"],
+      scopes: REQUESTED_META_SCOPES,
       status: "active",
       connected_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
