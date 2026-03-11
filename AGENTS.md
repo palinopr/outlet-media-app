@@ -41,6 +41,7 @@
   - `Campaigns`
   - `Events`
 - Client-facing analytics, activity, approvals, comments, assets, and agent follow-through should live inside campaign and event views before earning their own top-level client routes.
+- Client-facing web is primarily a reporting and visibility surface. Meta account connection, campaign creation, and live campaign mutation should stay internal/admin-only by default unless a later product decision explicitly reopens client self-serve execution.
 - Do not ship client top-level apps for CRM, assets, approvals, conversations, reports, updates, or workspace unless current customers clearly need them and the surface can be maintained without duplicating workflow logic.
 - Admin web remains the broader operating surface for account management, campaign/event operations, CRM, approvals, assets, and internal coordination.
 - CRM is admin-first for now. Evolution/WhatsApp should enrich CRM and account context through durable ledgers and routing state, but customer messaging operations remain Discord-first unless a later product decision explicitly asks for a dedicated admin inbox.

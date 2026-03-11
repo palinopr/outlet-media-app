@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CircleAlert, Settings2 } from "lucide-react";
-import { requireClientOwnerPage } from "@/features/client-portal/ownership";
+import { requireInternalMetaManagementPage } from "@/features/client-portal/ownership";
 import { getActiveAccountsForSlug } from "@/lib/client-token";
 import { fmtUsd } from "@/lib/formatters";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -23,7 +23,7 @@ export default async function ClientCampaignEditPage({
 }: Props) {
   const { slug, campaignId } = await params;
   const { ad_account_id: accountIdFromUrl, created } = await searchParams;
-  await requireClientOwnerPage(slug);
+  await requireInternalMetaManagementPage(slug, `/client/${slug}/campaign/${campaignId}`);
 
   if (!supabaseAdmin) {
     return (
@@ -93,7 +93,8 @@ export default async function ClientCampaignEditPage({
               Edit {campaign.name}
             </h1>
             <p className="mt-3 text-sm leading-6 text-white/62">
-              Update campaign name or budget, and pause or reactivate the campaign directly from Outlet&apos;s UI.
+              Internal Outlet controls for campaign name, budget, and status changes when live Meta
+              execution work needs a direct edit surface.
             </p>
           </div>
 
@@ -113,7 +114,7 @@ export default async function ClientCampaignEditPage({
         <div className="mt-8">
           {created === "1" ? (
             <div className="mb-4 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
-              Campaign created successfully. This page is the reviewer-visible edit and status control surface.
+              Campaign created successfully. This page is the internal edit and status control surface.
             </div>
           ) : null}
 

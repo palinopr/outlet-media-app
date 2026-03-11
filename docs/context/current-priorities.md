@@ -8,9 +8,9 @@ Outlet is being built as a client-facing autonomous agency operating system.
 
 The short-term focus is:
 
-1. Make the client portal feel extremely clear and trustworthy for current customers.
-2. Keep the customer-facing web surface focused on campaigns and events.
-3. Make campaign and event analytics strong enough that clients do not need extra tabs to understand performance.
+1. Make the client portal feel extremely clear and trustworthy for current customers, centered on Meta ads reporting, campaign status, and outcomes.
+2. Keep the customer-facing web surface focused on campaigns first, with events present only when they materially improve client understanding.
+3. Keep live Meta account linking, campaign creation, and campaign mutation as internal/admin workflows by default rather than general client self-serve surfaces.
 4. Keep admin as the broader operating surface for CRM, approvals, assets, account management, and internal workflow.
 5. Build the event backbone that lets agents react to real system activity.
 6. Preserve the shared operating-system backbone so more surfaces can be exposed later without rebuilding the model.
@@ -39,6 +39,7 @@ Implications:
 
 - Do not keep broad client navigation just because the backend supports it.
 - Client analytics, approvals, conversations, activity, assets, and agent follow-through should usually be embedded inside campaign and event views first.
+- Do not expose Meta account connection, campaign creation, or live campaign mutation as default client self-serve flows unless a later product decision explicitly reopens that surface.
 - CRM is admin-first right now.
 - Evolution/WhatsApp should enrich CRM and client/account context through durable records, routing, and summaries, but should not become a separate public client inbox.
 - If admin needs WhatsApp visibility in the web app, prefer CRM-linked conversation context and account health views over a second standalone chat surface that duplicates Discord operations.

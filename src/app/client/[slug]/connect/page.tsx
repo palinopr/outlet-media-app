@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, CheckSquare, Link2 } from "lucide-react";
-import { requireClientOwnerPage } from "@/features/client-portal/ownership";
+import { requireInternalMetaManagementPage } from "@/features/client-portal/ownership";
 import { slugToLabel } from "@/lib/formatters";
 import { AccountPicker } from "./account-picker";
 
@@ -44,7 +44,7 @@ export default async function ClientMetaConnectPage({
 }: Props) {
   const { slug } = await params;
   const { accounts: encodedAccounts } = await searchParams;
-  await requireClientOwnerPage(slug);
+  await requireInternalMetaManagementPage(slug);
 
   const accounts = parseAccounts(encodedAccounts);
   const clientName = slugToLabel(slug);
@@ -71,8 +71,8 @@ export default async function ClientMetaConnectPage({
               Choose the ad account for {clientName}
             </h1>
             <p className="mt-3 text-sm leading-6 text-white/62">
-              Meta returned more than one ad account for this business user. Select the account that
-              should be linked to Outlet so the reviewer can continue into campaign creation and edit flows.
+              Meta returned more than one ad account for this business user. Choose the account Outlet
+              should use for internal setup and campaign management.
             </p>
           </div>
 

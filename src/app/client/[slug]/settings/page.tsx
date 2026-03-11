@@ -4,7 +4,7 @@ import {
   getConnectedAccountHealth,
   type ConnectedAccount,
 } from "@/features/settings/connected-accounts";
-import { requireClientOwnerPage } from "@/features/client-portal/ownership";
+import { requireInternalMetaManagementPage } from "@/features/client-portal/ownership";
 import { fmtDate, slugToLabel } from "@/lib/formatters";
 import { supabaseAdmin } from "@/lib/supabase";
 import { DisconnectAccountButton } from "./disconnect-account-button";
@@ -44,7 +44,7 @@ export default async function ClientMetaSettingsPage({
 }: Props) {
   const { slug } = await params;
   const { connected, error } = await searchParams;
-  await requireClientOwnerPage(slug);
+  await requireInternalMetaManagementPage(slug);
 
   const databaseReady = !!supabaseAdmin;
   let data: ConnectedAccount[] | null = null;
@@ -87,8 +87,8 @@ export default async function ClientMetaSettingsPage({
               {clientName} account connections
             </h1>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-white/62">
-              Use this page to connect the client&apos;s Meta ad accounts, confirm the link is healthy,
-              and reach the campaign management flow Meta reviewers need to test.
+              Internal Outlet control for connecting the client&apos;s Meta ad accounts, confirming link
+              health, and reaching the campaign management flow when live setup work is needed.
             </p>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, CircleAlert, Rocket } from "lucide-react";
-import { requireClientOwnerPage } from "@/features/client-portal/ownership";
+import { requireInternalMetaManagementPage } from "@/features/client-portal/ownership";
 import { getActiveAccountsForSlug } from "@/lib/client-token";
 import { slugToLabel } from "@/lib/formatters";
 import { CampaignCreateForm } from "./campaign-create-form";
@@ -11,7 +11,7 @@ interface Props {
 
 export default async function ClientCampaignCreatePage({ params }: Props) {
   const { slug } = await params;
-  await requireClientOwnerPage(slug);
+  await requireInternalMetaManagementPage(slug);
 
   const accounts = await getActiveAccountsForSlug(slug);
   const clientName = slugToLabel(slug);
@@ -39,8 +39,8 @@ export default async function ClientCampaignCreatePage({ params }: Props) {
               Create a Meta campaign for {clientName}
             </h1>
             <p className="mt-3 text-sm leading-6 text-white/62">
-              This owner-only flow creates a campaign, ad set, and ad through Outlet&apos;s custom UI so
-              Meta reviewers can verify campaign management directly in the product.
+              Internal Outlet flow for creating a campaign, ad set, and ad through the product when
+              live Meta execution or reviewer verification requires it.
             </p>
           </div>
 

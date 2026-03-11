@@ -45,14 +45,23 @@ export async function requireClientOwnerPage(
   return { isAdmin: false, userId };
 }
 
-export async function canManageClientAccount(slug: string): Promise<boolean> {
+export async function requireInternalMetaManagementPage(
+  slug: string,
+  fallbackPath = `/client/${slug}/campaigns`,
+): Promise<{ userId: string }> {
   const { userId } = await auth();
-  if (!userId) return false;
+  if (!userId) redirect("/sign-in");
 
   const user = await currentUser();
   const role = (user?.publicMetadata as { role?: string } | null)?.role;
-  if (role === "admin") return true;
+  if (role === "admin") {
+    return { userId };
+  }
 
   const access = await getMemberAccessForSlug(userId, slug);
-  return access?.role === "owner";
+  if (!access) {
+    redirect("/client");
+  }
+
+  redirect(fallbackPath);
 }
