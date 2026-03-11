@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { EventOperationsSection } from "@/components/events/event-operations-section";
 import { fmtDate, statusBadge } from "@/lib/formatters";
 import type { ClientDetail } from "@/app/admin/clients/data";
 import type { EventOperationsSummary } from "@/features/events/summary";
@@ -21,16 +20,10 @@ interface EventsSectionProps {
 }
 
 export function EventsSection({ events, summary }: EventsSectionProps) {
+  void summary;
+
   return (
     <div className="space-y-4">
-      <EventOperationsSection
-        description="Show-level workflow pressure, promotion follow-through, and discussion for this client account."
-        hrefPrefix="/admin/events"
-        summary={summary}
-        title="Event operations"
-        variant="admin"
-      />
-
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold">Assigned events</h2>

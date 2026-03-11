@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ClientDetailView } from "./client-detail";
+import type { EventOperationsSummary } from "@/features/events/summary";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
@@ -100,9 +101,40 @@ const client = {
   totalSpend: 1250,
 };
 
+const eventOperations: EventOperationsSummary = {
+  attentionEvents: [],
+  eventsNeedingAttention: 0,
+  metrics: [
+    {
+      detail: "0 event next steps",
+      key: "open_follow_ups",
+      label: "Open follow-ups",
+      value: 0,
+    },
+    {
+      detail: "0 urgent event items",
+      key: "urgent_follow_ups",
+      label: "Urgent follow-ups",
+      value: 0,
+    },
+    {
+      detail: "0 active event threads",
+      key: "open_discussions",
+      label: "Open discussions",
+      value: 0,
+    },
+    {
+      detail: "0 event updates in the last 7 days",
+      key: "recent_updates",
+      label: "Recent updates",
+      value: 0,
+    },
+  ],
+};
+
 describe("ClientDetailView", () => {
   it("defaults to the overview tab", () => {
-    render(<ClientDetailView client={client} />);
+    render(<ClientDetailView client={client} eventOperations={eventOperations} />);
 
     expect(screen.getByText("Client Portal Shape")).toBeInTheDocument();
     expect(screen.getByText("Portal Events Access")).toBeInTheDocument();
@@ -111,7 +143,7 @@ describe("ClientDetailView", () => {
   });
 
   it("renders events when the Events tab is selected", () => {
-    render(<ClientDetailView client={client} />);
+    render(<ClientDetailView client={client} eventOperations={eventOperations} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Events/i }));
 
@@ -123,7 +155,7 @@ describe("ClientDetailView", () => {
   });
 
   it("renders pending invites on the Members tab", () => {
-    render(<ClientDetailView client={client} />);
+    render(<ClientDetailView client={client} eventOperations={eventOperations} />);
 
     fireEvent.click(screen.getByRole("button", { name: /Members/i }));
 
