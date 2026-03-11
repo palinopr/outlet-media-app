@@ -21,7 +21,8 @@ describe("access management revalidation paths", () => {
       "/admin/settings",
       "/admin/users",
       "/admin/clients/client_1",
-      "/client/zamora/settings",
+      "/client/zamora",
+      "/client/zamora/events",
     ]);
   });
 });
