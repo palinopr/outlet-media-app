@@ -67,6 +67,7 @@ API base: https://graph.facebook.com/v21.0
 - **Scale**: ROAS > 5x for 3+ consecutive days → increase budget max 30% at once
 - ROAS < 2.0 = flag for review, not automatic kill
 - Urgency creatives in final week before show date
+- **Post-show auto-pause:** After a show date passes, verify the campaign is PAUSED with $0 spend. If still ACTIVE or spending, pause immediately — no confirmation needed. Jaime confirmed: "if it's paused and hasn't spent, turn it off automatically always."
 
 ---
 
@@ -84,7 +85,7 @@ curl -s "https://graph.facebook.com/v21.0/act_787610255314938/campaigns?fields=i
 Note: The filter is `effective_status` (NOT `status`). Value is a URL-encoded JSON array: `%5B%22ACTIVE%22%5D` = `["ACTIVE"]`.
 
 ### Pagination:
-Meta defaults to 25 results per page. Always include `&limit=100`. There are ~97 campaigns in this account — without `limit`, you'll only get the first 25. If the response has `paging.next`, follow it.
+Meta defaults to 25 results per page. Always include `&limit=100`. There are ~300 campaigns in this account (including all historical) — without `limit`, you'll only get the first 25. **With 300+ campaigns, you MUST follow `paging.next`** — a single `limit=100` page won't return everything. Loop until no `paging.next` remains.
 
 ## Get insights for a campaign (last 30 days)
 
@@ -187,6 +188,13 @@ curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/campaigns"
   -d "{\"access_token\":\"$TOKEN\",\"name\":\"Campaign Name\",\"objective\":\"OUTCOME_SALES\",\"status\":\"PAUSED\",\"special_ad_categories\":[]}"
 ```
 
+**Campaign creation checklist (from Jaime's rules — see MEMORY.md for details):**
+- **CTA:** Always "Shop Now" for event/sales campaigns
+- **Fan page:** Use the artist's FB page (NOT Outlet Media's). Fallback: Zamora's page.
+- **Advantage+ Creative Enhancements:** ALL OFF (set every enhancement to 0/disabled)
+- **EU targeting:** Set beneficiary and payer to "OUTLET MEDIA INC" in Advertising Settings
+- **Split creatives:** Separate Post and Story placements (see MEMORY.md "Meta Ad Creative Rules")
+
 ## Ad set write operations
 
 ### Pause or activate an ad set
@@ -231,7 +239,20 @@ curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/adsets" \
   --data-urlencode "access_token=$TOKEN"
 ```
 **CBO note:** Adsets under CBO campaigns have NO `daily_budget`. Budget is at campaign level.
-**Pixel IDs:** Default pixel: `879345548404130`. Sienna pixel: `918875103967661`. Use the correct pixel for the client when creating adsets.
+**Pixel IDs:** Default pixel: `879345548404130`. Sienna pixel: `918875103967661`. San Diego pixel: `2005949343681464`. El Destilero pixel: `939151375333756`. Use the correct pixel for the client/venue when creating adsets.
+**Non-purchase optimization:** For campaigns optimizing for ViewContent (e.g., Sienna), use `"custom_event_type":"VIEW_CONTENT"` instead of `"PURCHASE"`. Other valid events: `ADD_TO_CART`, `INITIATED_CHECKOUT`. Match the campaign's optimization goal.
+
+## Image Upload Operations
+
+### Upload an image to the ad account
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/adimages" \
+  -F "filename=@\"$FILE_PATH\"" \
+  -F "access_token=$TOKEN"
+```
+Returns `{"images":{"filename":{"hash":"IMAGE_HASH","url":"..."}}}`. Use the `hash` value when creating ad creatives with `asset_feed_spec.images`.
+
+---
 
 ## Ad write operations
 
@@ -403,16 +424,16 @@ INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warn"}'
+  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warning"}'
 ```
-Levels: "info", "warn", "error" (Zod-validated — "warning" and "critical" will be REJECTED). Body: `{ secret, message, level }` only — no other fields.
+Levels: "info", "warning", "critical" (Zod-validated — "warn" and "error" will be REJECTED). Body: `{ secret, message, level }` only — no other fields.
 
 ---
 
 ## EATA / Vivaticket (Don Omar BCN)
 
-Don Omar BCN has a Meta campaign (launched Mar 6, $100/day) AND ticket sales tracked via Vivaticket/EATA.
-If Jaime asks about Don Omar tickets, query Supabase EATA data. For ad performance, pull from Meta API like any other campaign.
+Don Omar BCN has a Meta campaign ($600/day budget, ~6.4x ROAS, 68+ purchases) AND ticket sales tracked via Vivaticket/EATA. Delivery recovered after initial stall — now performing well.
+If Jaime asks about Don Omar tickets, query Supabase EATA data. For ad performance, pull from Meta API like any other campaign. Always check live data — Don Omar delivery and ROAS change frequently.
 
 ```bash
 curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=name,status,tickets_sold,gross,tickets_sold_today,revenue_today,avg_ticket_price,date&tm_id=eq.eata_14948" \
@@ -442,12 +463,12 @@ Avoid:
 ## Response examples
 
 Campaign status:
-**KYBBA Miami** (ACTIVE · $100/day)
-- Spend: $580
-- Purchases: 11
-- Revenue: $1,803 (= spend × ROAS)
-- ROAS: **3.11x**
-- CPA: $52.75 (= spend / purchases)
+**KYBBA Miami** (ACTIVE · $50/day)
+- Spend: $2,624
+- Purchases: 60
+- Revenue: $6,954 (= spend × ROAS)
+- ROAS: **2.65x**
+- CPA: $43.73 (= spend / purchases)
 
 Action done:
 Boss, done. Duplicated **Denver V2** → new ID `120219401679220999`. Starts paused.

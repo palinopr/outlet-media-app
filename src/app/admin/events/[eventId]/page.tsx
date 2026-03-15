@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
 import {
   ArrowLeft,
   DollarSign,
@@ -8,20 +7,10 @@ import {
   Ticket,
   TrendingUp,
 } from "lucide-react";
-import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
-import { EventCommentsPanel } from "@/components/events/event-comments-panel";
-import { EventFollowUpItemsPanel } from "@/components/events/event-follow-up-items-panel";
 import { StatCard } from "@/components/admin/stat-card";
 import { EventOperatingPanel } from "@/components/admin/events/event-operating-panel";
-import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
-import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
-import { listAgentOutcomes } from "@/features/agent-outcomes/server";
-import { getDashboardOpsSummary } from "@/features/dashboard/server";
-import { listEventComments } from "@/features/event-comments/server";
-import { listEventFollowUpItems } from "@/features/event-follow-up-items/server";
 import { getEventOperatingData } from "@/features/events/server";
-import { listEventSystemEvents } from "@/features/system-events/server";
 import { centsToUsd, computeBlendedRoas, fmtDate, fmtNum, fmtUsd, slugToLabel } from "@/lib/formatters";
 
 interface Props {
@@ -37,42 +26,10 @@ function eventSellThrough(sold: number, available: number | null) {
 
 export default async function AdminEventDetailPage({ params }: Props) {
   const { eventId } = await params;
-  const { userId } = await auth();
   const data = await getEventOperatingData(eventId);
   if (!data) notFound();
 
   const { event, linkedCampaigns, clients } = data;
-  const linkedCampaignIds = linkedCampaigns.map((campaign) => campaign.campaignId);
-  const [opsSummary, events, agentOutcomes, comments, followUpItems] = await Promise.all([
-    getDashboardOpsSummary({
-      clientSlug: event.clientSlug ?? undefined,
-      limit: 5,
-      mode: "admin",
-      scopeCampaignIds: linkedCampaignIds,
-    }),
-    listEventSystemEvents({
-      audience: "all",
-      clientSlug: event.clientSlug ?? undefined,
-      eventId: event.id,
-      limit: 8,
-    }),
-    listAgentOutcomes({
-      audience: "all",
-      clientSlug: event.clientSlug ?? undefined,
-      eventId: event.id,
-      limit: 4,
-      scopeCampaignIds: linkedCampaignIds,
-    }),
-    listEventComments({
-      audience: "all",
-      eventId,
-    }),
-    listEventFollowUpItems({
-      audience: "all",
-      eventId,
-      limit: 24,
-    }),
-  ]);
 
   const totalCampaignSpend = linkedCampaigns.reduce(
     (sum, campaign) => sum + (centsToUsd(campaign.spend) ?? 0),
@@ -153,31 +110,6 @@ export default async function AdminEventDetailPage({ params }: Props) {
         <div className="space-y-6">
           <EventOperatingPanel event={event} clients={clients} />
 
-          <EventCommentsPanel
-            allowAdminOnly
-            allowCreateFollowUpItems
-            canDeleteAny
-            comments={comments}
-            currentUserId={userId ?? ""}
-            eventId={eventId}
-            linkedFollowUpSourceIds={followUpItems
-              .filter((item) => item.sourceEntityType === "event_comment" && item.sourceEntityId)
-              .map((item) => item.sourceEntityId as string)}
-            description="Keep ticketing notes, promotion context, and client-facing discussion attached directly to this event."
-            title="Event discussion"
-            variant="admin"
-          />
-
-          <EventFollowUpItemsPanel
-            canManage
-            eventId={eventId}
-            items={followUpItems}
-            title="Event next steps"
-            description="Track ticketing, promotion, and delivery follow-through without leaving the event page."
-            emptyState="No event follow-up items are active yet."
-            variant="admin"
-          />
-
           <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
             <div className="mb-4">
               <p className="text-sm font-medium text-[#787774]">Linked campaigns</p>
@@ -185,7 +117,7 @@ export default async function AdminEventDetailPage({ params }: Props) {
                 Promotion campaigns
               </h2>
               <p className="mt-1 text-sm text-[#9b9a97]">
-                Campaigns linked to this event through the shared promotion workflow.
+                Campaigns linked to this event through shared promotion activity.
               </p>
             </div>
 
@@ -225,62 +157,28 @@ export default async function AdminEventDetailPage({ params }: Props) {
             )}
           </section>
         </div>
-
-        <div className="space-y-6">
-          <DashboardOpsSummarySection
-            campaignHrefPrefix="/admin/campaigns"
-            description="See the promotion workflow attached to this event without jumping between campaign pages."
-            emptyState="No linked campaign workflows need attention for this event right now."
-            summary={opsSummary}
-            title="Promotion workflow"
-            variant="admin"
-          />
-
-          <WorkspaceActivityFeed
-            assetHrefPrefix="/admin/assets"
-            campaignHrefPrefix="/admin/campaigns"
-            crmHrefPrefix="/admin/crm"
-            events={events}
-            basePath="/admin/events"
-            eventHrefPrefix="/admin/events"
-            title="Event activity"
-            description="Recent ticketing and event-state changes attached to this show."
-            emptyState="Event activity will appear here as the team updates ticketing, status, or client assignment."
-          />
-
-          <AgentOutcomesPanel
-            canCreateActionItems
-            outcomes={agentOutcomes}
-            title="Agent follow-through"
-            description="Agent work tied to the linked campaign workflow for this event."
-            emptyState="No agent work is attached to this event yet."
-            variant="admin"
-            campaignHrefPrefix="/admin/campaigns"
-            eventHrefPrefix="/admin/events"
-          />
-
-          <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
-            <p className="text-sm font-medium text-[#787774]">Event snapshot</p>
-            <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#2f2f2f]">
-              Quick context
-            </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Venue</p>
-                <p className="mt-2 text-sm font-medium text-[#2f2f2f]">{event.venue}</p>
-                <p className="mt-1 text-xs text-[#9b9a97]">{event.city ?? "No city set"}</p>
-              </div>
-              <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Date</p>
-                <p className="mt-2 text-sm font-medium text-[#2f2f2f]">{fmtDate(event.date)}</p>
-                <p className="mt-1 text-xs text-[#9b9a97]">
-                  Updated {event.updatedAt ? fmtDate(event.updatedAt) : "recently"}
-                </p>
-              </div>
-            </div>
-          </section>
-        </div>
       </div>
+
+      <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
+        <p className="text-sm font-medium text-[#787774]">Event snapshot</p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#2f2f2f]">
+          Quick context
+        </h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Venue</p>
+            <p className="mt-2 text-sm font-medium text-[#2f2f2f]">{event.venue}</p>
+            <p className="mt-1 text-xs text-[#9b9a97]">{event.city ?? "No city set"}</p>
+          </div>
+          <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Date</p>
+            <p className="mt-2 text-sm font-medium text-[#2f2f2f]">{fmtDate(event.date)}</p>
+            <p className="mt-1 text-xs text-[#9b9a97]">
+              Updated {event.updatedAt ? fmtDate(event.updatedAt) : "recently"}
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

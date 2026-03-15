@@ -76,6 +76,8 @@ curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,im
 ```
 Note: `date_preset=today` may return empty `data: []` early in the day or if the campaign hasn't spent yet. If empty, fall back to `last_30d`.
 
+**Common date_preset values:** `today`, `yesterday`, `last_7d`, `last_14d`, `last_30d`, `lifetime`. Use `last_7d` for recent performance, `lifetime` for all-time totals.
+
 ### Get insights for a custom date range:
 ```bash
 curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&time_range=%7B%22since%22%3A%222026-02-20%22%2C%22until%22%3A%222026-02-24%22%7D&access_token=$TOKEN"
@@ -160,6 +162,14 @@ curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/campaigns"
   -d "{\"access_token\":\"$TOKEN\",\"name\":\"Campaign Name\",\"objective\":\"OUTCOME_SALES\",\"status\":\"PAUSED\",\"special_ad_categories\":[]}"
 ```
 
+### Enable CBO (Campaign Budget Optimization) — default for all Outlet Media campaigns:
+All campaigns use CBO. When creating campaigns via API, CBO is enabled by default if you set `daily_budget` at campaign level. To explicitly enable:
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}" \
+  -d "access_token=$TOKEN&bid_strategy=LOWEST_COST_WITHOUT_CAP"
+```
+With CBO, budget is at campaign level — do NOT set `daily_budget` on adsets.
+
 ### Verify after any write
 ```bash
 curl -s "https://graph.facebook.com/v21.0/{ID}?fields=id,name,status,effective_status,daily_budget,lifetime_budget&access_token=$TOKEN"
@@ -215,11 +225,19 @@ curl -s -X POST "https://graph.facebook.com/v21.0/act_{AD_ACCOUNT_ID}/adsets" \
 ```
 **CBO campaign note:** Adsets under CBO campaigns have NO `daily_budget` — budget is controlled at campaign level. Do NOT include `daily_budget` in the adset payload. For non-CBO campaigns, include `daily_budget` in cents.
 
-`promoted_object` must include a pixel ID and `PURCHASE` event type.
+`promoted_object` must include a pixel ID and event type. Use `PURCHASE` for most campaigns.
+**For non-purchase optimization** (e.g., Sienna = ViewContent): change `custom_event_type` to the appropriate event:
+- `PURCHASE` — default for sales campaigns (Zamora, KYBBA, Vaz Vil, Don Omar)
+- `VIEW_CONTENT` — for awareness/consideration campaigns (Sienna)
+- `ADD_TO_CART`, `INITIATE_CHECKOUT` — for mid-funnel optimization
+Check existing adsets if unsure which event a campaign uses: `GET /{ADSET_ID}?fields=promoted_object`
+
 **Pixel IDs by client:**
 - Default (Zamora/KYBBA/most clients): 879345548404130
 - Sienna: 918875103967661 (pixel "sienna", created Feb 25)
-Use the correct pixel for the campaign's client. Check existing adsets if unsure which pixel a campaign uses.
+- San Diego (Pechanga Arena / AXS): 2005949343681464
+- El Destilero: 939151375333756 (created Mar 12 by Isabel — possible new client onboarding)
+Use the correct pixel for the campaign's client and venue. Check existing adsets if unsure which pixel a campaign uses.
 
 After creation, Meta may normalize some fields (e.g., `targeting_automation.individual_setting` gets stripped). This is expected; `advantage_audience:1` is retained.
 
@@ -302,10 +320,14 @@ Look for `effective_status=WITH_ISSUES` — this blocks delivery even if `status
 # Step 1: Create the creative with asset_feed_spec
 SPEC='{"images":[{"adlabels":[{"name":"city_post"}],"hash":"POST_HASH"},{"adlabels":[{"name":"city_story"}],"hash":"STORY_HASH"}],"bodies":[{"adlabels":[{"name":"body1"}],"text":"Ad body text"}],"call_to_action_types":["SHOP_NOW"],"descriptions":[{"text":""}],"link_urls":[{"adlabels":[{"name":"link1"}],"website_url":"https://..."}],"titles":[{"adlabels":[{"name":"title1"}],"text":"Shop Now"}],"ad_formats":["AUTOMATIC_FORMAT"],"asset_customization_rules":[{"customization_spec":{"publisher_platforms":["facebook","instagram"],"facebook_positions":["story","facebook_reels"],"instagram_positions":["story","reels","ig_search","profile_reels"]},"image_label":{"name":"city_story"},"body_label":{"name":"body1"},"link_url_label":{"name":"link1"},"title_label":{"name":"title1"},"priority":1},{"customization_spec":{},"image_label":{"name":"city_post"},"body_label":{"name":"body1"},"link_url_label":{"name":"link1"},"title_label":{"name":"title1"},"priority":2}],"optimization_type":"PLACEMENT"}'
 
+# Disable Advantage+ enhancements (Jaime wants ALL OFF)
+DOF='{"creative_features_spec":{"standard_enhancements":{"enroll_status":"OPT_OUT"}}}'
+
 curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/adcreatives" \
   --data-urlencode "name=Creative Name" \
   --data-urlencode "object_story_spec={\"page_id\":\"175118299508364\",\"instagram_user_id\":\"17841402356610735\"}" \
   --data-urlencode "asset_feed_spec=$SPEC" \
+  --data-urlencode "degrees_of_freedom_spec=$DOF" \
   --data-urlencode "access_token=$TOKEN"
 
 # Step 2: Create the ad under an adset
@@ -370,6 +392,16 @@ curl -s "https://graph.facebook.com/v21.0/{PIXEL_ID}/assigned_users?fields=id,na
 
 ## Video Upload Operations
 
+### Upload an image to the ad account
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/adimages" \
+  -F "filename=@\"$FILE_PATH\"" \
+  -F "access_token=$TOKEN"
+```
+Returns `{"images":{"<filename>":{"hash":"abc123...","url":"..."}}}`. Use the `hash` value in `asset_feed_spec.images[].hash` when creating ad creatives.
+
+**Same filename safeguards as video uploads** — escape quotes around file path, watch for commas in filenames.
+
 ### Upload a video to the ad account
 ```bash
 curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/advideos" \
@@ -402,6 +434,7 @@ Returns `{"id": "VIDEO_ID"}` on success.
 - **Scale**: ROAS > 5x for 3+ consecutive days → increase budget max 30% at once
 - **ROAS < 2.0** → flag via alerts endpoint, not automatic kill
 - **Never delete** — always pause
+- **Post-show auto-pause**: After a show date passes, verify the campaign is PAUSED with $0 spend. If still ACTIVE or spending, pause it immediately — no confirmation needed. Jaime re-confirmed Mar 9: "if it's paused and hasn't spent, turn it off automatically always."
 
 ---
 
@@ -515,9 +548,9 @@ POST alerts to the dashboard (shown in the admin alert banner):
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warn"}'
+  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warning"}'
 ```
-Levels: "info", "warn", "error" (Zod-validated — "warning" and "critical" will be REJECTED). Accepts: { secret, message, level } only.
+Levels: "info", "warning", "critical" (Zod-validated — "warn" and "error" will be REJECTED). Accepts: { secret, message, level } only.
 
 ---
 
@@ -593,6 +626,41 @@ Meta returns `{"error":{"message":"...","type":"...","code":NNN}}`. Handle by er
 4. **Permission error** (code 10, 200): the token may lack the required permission scope. Log the error and report to Jaime — don't retry.
 5. **General**: read the error message carefully. After fixing, retry the failed step — do not start over from scratch.
 6. **Never expose raw API error JSON to Jaime** — diagnose and summarise in plain language.
+
+---
+
+## Delivery Diagnostics (Campaign/Adset Level)
+
+When a campaign isn't spending or is severely underpacing, diagnose at the adset level:
+
+### Check adset delivery status and learning phase:
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/adsets?fields=id,name,status,effective_status,delivery_info,daily_budget,optimization_goal&limit=50&access_token=$TOKEN"
+```
+`delivery_info` tells you the adset's delivery state. Key values:
+- `active` — delivering normally
+- `learning` — still in Meta's learning phase (needs ~50 conversions/week to exit). Performance is volatile. Do NOT judge ROAS during learning.
+- `learning_limited` — exited learning phase due to insufficient conversions. Budget may be too low, audience too narrow, or optimization event too rare. **Common cause of stalled delivery.**
+- `not_delivering` — not spending. Check `effective_status` for the reason.
+
+### Check audience size estimate:
+```bash
+curl -s -G "https://graph.facebook.com/v21.0/act_787610255314938/delivery_estimate" \
+  --data-urlencode "targeting_spec={\"geo_locations\":{\"custom_locations\":[{\"latitude\":LAT,\"longitude\":LON,\"radius\":RADIUS,\"distance_unit\":\"mile\"}]},\"age_min\":18,\"age_max\":65}" \
+  --data-urlencode "optimization_goal=OFFSITE_CONVERSIONS" \
+  --data-urlencode "access_token=$TOKEN"
+```
+Returns `daily_outcomes_curve` with estimated reach. If audience is under 100K, targeting may be too narrow — consider expanding radius or broadening demographics.
+
+### Delivery stall diagnosis checklist:
+1. **Check adset `delivery_info`** — is it `learning_limited`?
+2. **Check ad `effective_status`** — any `WITH_ISSUES`? (see Ad Delivery Error Fixing below)
+3. **Check `frequency`** — above 4.0 means audience exhaustion, ads being shown to same people repeatedly
+4. **Check audience size** — use delivery_estimate above
+5. **Check pixel fires** — are events actually being tracked? `GET /{PIXEL_ID}/stats?aggregation=event&event=Purchase&access_token=$TOKEN`
+6. **Check recent spend trend** — compare snapshots over 3+ days. $0 delta = fully stalled.
+
+This checklist directly addresses patterns seen with Vaz Vil (0x stalled), KYBBA (delivery broken at $2/day), Houston (0x at $1,500/day), and Sienna (frozen snapshots).
 
 ---
 

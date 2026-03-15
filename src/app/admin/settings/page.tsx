@@ -118,7 +118,7 @@ export default async function SettingsPage() {
                   <div>
                     <p className="text-sm font-medium">{client.name}</p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {client.memberCount} member{client.memberCount === 1 ? "" : "s"} • {client.pendingApprovals} approvals • {client.openActionItems} next steps
+                      {client.memberCount} member{client.memberCount === 1 ? "" : "s"} • {client.activeCampaigns} campaign{client.activeCampaigns === 1 ? "" : "s"} • {client.connectionRiskAccounts} connection{client.connectionRiskAccounts === 1 ? "" : "s"} at risk
                     </p>
                   </div>
                   <ArrowRight className="h-4 w-4 text-muted-foreground" />

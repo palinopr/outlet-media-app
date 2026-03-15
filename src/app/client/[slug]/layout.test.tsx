@@ -28,6 +28,7 @@ import { getClientPortalConfig } from "@/features/client-portal/config";
 const mockedGetClientPortalConfig = vi.mocked(getClientPortalConfig);
 
 afterEach(() => {
+  vi.unstubAllEnvs();
   mockedGetClientPortalConfig.mockResolvedValue({
     clientId: "client_1",
     eventsEnabled: false,
@@ -51,7 +52,7 @@ function openMobileNav() {
 describe("ClientLayout navigation links", () => {
   it("renders Overview link pointing to /client/{slug} in the desktop sidebar", async () => {
     // Clerk disabled so auth gating is skipped
-    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("acme");
     const links = screen.getAllByRole("link", { name: "Overview" });
     expect(links.length).toBeGreaterThanOrEqual(1);
@@ -64,7 +65,7 @@ describe("ClientLayout navigation links", () => {
   });
 
   it("renders Campaigns link pointing to /client/{slug}/campaigns in the desktop sidebar", async () => {
-    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("acme");
     const links = screen.getAllByRole("link", { name: "Campaigns" });
     expect(links.length).toBeGreaterThanOrEqual(1);
@@ -76,7 +77,7 @@ describe("ClientLayout navigation links", () => {
   });
 
   it("renders Overview link in the mobile header", async () => {
-    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("acme");
     openMobileNav();
     const links = screen.getAllByRole("link", { name: "Overview" });
@@ -88,7 +89,7 @@ describe("ClientLayout navigation links", () => {
   });
 
   it("renders Campaigns link in the mobile header", async () => {
-    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("acme");
     openMobileNav();
     const links = screen.getAllByRole("link", { name: "Campaigns" });
@@ -100,7 +101,7 @@ describe("ClientLayout navigation links", () => {
   });
 
   it("renders both desktop and mobile Campaigns links for any slug", async () => {
-    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("test_client");
     openMobileNav();
     const links = screen.getAllByRole("link", { name: "Campaigns" });
@@ -111,7 +112,7 @@ describe("ClientLayout navigation links", () => {
   });
 
   it("hides Events links when events are disabled for the client", async () => {
-    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     mockedGetClientPortalConfig.mockResolvedValue({
       clientId: "client_1",
       eventsEnabled: false,
@@ -123,7 +124,7 @@ describe("ClientLayout navigation links", () => {
   });
 
   it("shows Events links when events are enabled for the client", async () => {
-    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     mockedGetClientPortalConfig.mockResolvedValue({
       clientId: "client_1",
       eventsEnabled: true,
@@ -137,13 +138,13 @@ describe("ClientLayout navigation links", () => {
   });
 
   it("renders children inside main content area", async () => {
-    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("acme");
     expect(screen.getByTestId("child")).toBeInTheDocument();
   });
 
   it("does not render the customer AI helper", async () => {
-    delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("acme");
     expect(screen.queryByRole("link", { name: "Open AI helper" })).not.toBeInTheDocument();
   });

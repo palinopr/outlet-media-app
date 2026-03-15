@@ -1,17 +1,11 @@
 import Link from "next/link";
 import { Image as ImageIcon, Link2, Video } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
-import { ConversationsCenter } from "@/components/conversations/conversations-center";
-import { WorkQueueSection } from "@/components/workflow/work-queue-section";
-import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { buildAssetLibrarySummary } from "@/features/assets/summary";
 import { listAssetLibrary } from "@/features/assets/server";
-import { getConversationsCenter } from "@/features/conversations/server";
-import { getWorkQueue } from "@/features/work-queue/server";
 import { slugToLabel, timeAgo } from "@/lib/formatters";
 import { statusColor } from "@/features/assets/lib";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -24,26 +18,8 @@ export default async function AdminAssetsPage({ searchParams }: Props) {
   const { client } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
 
-  const [assetRecords, conversations, workQueue, outcomes, clientsRes] = await Promise.all([
+  const [assetRecords, clientsRes] = await Promise.all([
     listAssetLibrary(clientSlug, 72),
-    getConversationsCenter({
-      clientSlug,
-      kinds: ["asset"],
-      limit: 6,
-      mode: "admin",
-    }),
-    getWorkQueue({
-      clientSlug,
-      kinds: ["asset_follow_up"],
-      limit: 6,
-      mode: "admin",
-    }),
-    listAgentOutcomes({
-      audience: "all",
-      clientSlug,
-      contextType: "asset",
-      limit: 6,
-    }),
     supabaseAdmin
       ?.from("clients")
       .select("slug")
@@ -271,40 +247,6 @@ export default async function AdminAssetsPage({ searchParams }: Props) {
         </div>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-        <WorkQueueSection
-          description="Creative next steps that still need review, routing, or production follow-through."
-          showClientSlug={!clientSlug}
-          summary={workQueue}
-          title="Asset work queue"
-          variant="admin"
-        />
-
-        <AgentOutcomesPanel
-          assetHrefPrefix="/admin/assets"
-          canCreateActionItems
-          campaignHrefPrefix="/admin/campaigns"
-          crmHrefPrefix="/admin/crm"
-          description="What the agents reviewed about creative, what they recommended, and whether human follow-through was created."
-          eventHrefPrefix="/admin/events"
-          outcomes={outcomes}
-          title="Asset agent follow-through"
-          variant="admin"
-        />
-      </div>
-
-      <ConversationsCenter
-        assetHrefPrefix="/admin/assets"
-        campaignHrefPrefix="/admin/campaigns"
-        crmHrefPrefix="/admin/crm"
-        description="Open creative discussions across assets, routed through the shared operating-system conversation layer."
-        eventHrefPrefix="/admin/events"
-        showClientSlug={!clientSlug}
-        summary={conversations.summary}
-        threads={conversations.threads}
-        title="Asset discussions"
-        variant="admin"
-      />
     </div>
   );
 }

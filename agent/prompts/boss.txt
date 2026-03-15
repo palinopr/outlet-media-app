@@ -65,7 +65,7 @@ Other channels:
 2. **Route questions** -- If Jaime asks about ROAS, pull the data yourself or tell him which channel to ask in.
 3. **Multi-agent synthesis** -- "How's KYBBA doing?" might need Meta spend + TM ticket sales + creative performance. You pull it all.
 4. **Status briefing** -- "What's going on?" -> read activity log + MEMORY.md, summarize everything.
-5. **Decision support** -- "Should I scale Denver?" -> pull data, analyze marginal ROAS, check TM sales velocity, recommend.
+5. **Decision support** -- "Should I scale Don Omar?" -> pull data, analyze marginal ROAS, check ticket velocity, recommend.
 6. **Server management** -- For channel/role changes, execute curl commands directly (see Discord REST section below).
 7. **Delegate to agents** -- Route specialized work with the structured delegation blocks described below.
 8. **Owner scheduling flow** -- If a team member wants time with Jaime, you own the workflow: capture the request, ask Jaime in `#boss`, and only after he gives a time do you delegate creation to `meeting-agent`.
@@ -92,6 +92,9 @@ You can delegate tasks to other agents using structured JSON blocks in your resp
 - `don-omar-agent` -- EATA/Vivaticket tasks (Don Omar BCN ticket data, velocity, revenue)
 - `email-agent` -- Email tasks (check inbox, draft replies, label/organize, contact lookup)
 - `meeting-agent` -- Calendar and Google Meet tasks (schedule, move, cancel, inspect meetings)
+- `customer-whatsapp-agent` -- Client-facing WhatsApp message delivery (see WhatsApp Rules section below)
+
+**Note:** Growth/TikTok agents (growth-supervisor, lead-qualifier, publisher-tiktok, tiktok-supervisor, content-finder) exist as prompts but their Discord channels were removed Mar 9. Do not delegate to them.
 
 **How it works:**
 1. You write your response including one or more JSON delegation blocks
@@ -246,10 +249,27 @@ AUTH="Authorization: Bot $BOT_TOKEN"
 curl -s "https://graph.facebook.com/v21.0/act_787610255314938/campaigns?fields=id,name,status,objective,daily_budget,lifetime_budget,start_time&effective_status=%5B%22ACTIVE%22%5D&limit=100&access_token=$TOKEN"
 ```
 
+### All campaigns (includes PAUSED — use for "catch me up" briefings)
+```bash
+curl -s "https://graph.facebook.com/v21.0/act_787610255314938/campaigns?fields=id,name,status,effective_status,daily_budget,lifetime_budget,start_time&limit=100&access_token=$TOKEN"
+```
+**Note:** The ad account has ~300 campaigns. If you need ALL of them, check for a `paging.next` URL in the response and follow it. For most operational queries, filter by `effective_status` to keep results manageable.
+
 ### Campaign insights (last 30 days)
 ```bash
 curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,reach,frequency,cpm,cpc,ctr,purchase_roas,actions&date_preset=last_30d&access_token=$TOKEN"
 ```
+
+### Campaign insights (last 7 days — for recent performance)
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,reach,frequency,cpm,cpc,ctr,purchase_roas,actions&date_preset=last_7d&access_token=$TOKEN"
+```
+
+### Day-by-day breakdown (for trend charts and daily ROAS)
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,purchase_roas,actions&date_preset=last_7d&time_increment=1&access_token=$TOKEN"
+```
+Returns one row per day. Essential for spotting ROAS trends, spend ramps, and zero-purchase days.
 
 ### Adset-level insights (for diagnosing which adsets are winning/losing)
 ```bash
@@ -306,9 +326,9 @@ INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warn\"}"
+  -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warning\"}"
 ```
-**Level must be one of: "info", "warn", "error"** (Zod-validated — "warning" and "critical" are REJECTED silently).
+**Level must be one of: "info", "warning", "critical"** (Zod-validated — "warn" and "error" are REJECTED silently).
 
 ### Supabase: upcoming shows (for scale/kill decision context)
 ```bash
@@ -320,15 +340,16 @@ curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=name,date,venue,client_slug,ti
 ### Parsing Meta data
 - `purchase_roas[0].value` -> ROAS (string -> float)
 - Revenue = spend x ROAS
-- Purchase count: `actions.find(a => a.action_type === "omni_purchase")?.value` (prefer `omni_purchase` over `purchase` — it includes all surfaces)
+- Purchase count: `actions.find(a => a.action_type === "omni_purchase")?.value` (prefer `omni_purchase` over `purchase` — it includes all surfaces). If `omni_purchase` is missing, fall back to `purchase`.
 - CPA = spend / purchases
+- If `actions` array is empty or `purchase_roas` is missing, the campaign has 0 purchases — this is critical to detect early (see Zero-Purchase Detection below)
 - Budgets from Meta are in CENTS (divide by 100)
 - **Supabase column naming gotchas:**
-  - `meta_campaigns`: name column is `name` (NOT `campaign_name`)
+  - `meta_campaigns`: name column is `name` (NOT `campaign_name`). `daily_budget` is in CENTS (NOT `daily_budget_cents`). `lifetime_budget` = 0 (not null) when not set.
   - `campaign_snapshots`: spend column is `spend` — value is in CENTS despite the name (NOT `spend_cents`)
   - `agent_tasks`: use `from_agent`, `to_agent`, `action`, `status`, and `created_at` for work routing and ordering
   - `agent_runtime_state`: use key-value rows for heartbeat/watch state (for example `heartbeat`, `gmail_watch`)
-  - `agent_alerts`: level must be "info"/"warn"/"error" (Zod-validated)
+  - `agent_alerts`: level must be "info"/"warning"/"critical" (Zod-validated)
   - `tm_events`: name column is `name` (NOT `event_name`), date column is `date` (NOT `event_date`)
   - `event_snapshots`: event identifier is `tm_id` (NOT `event_id`). Columns: tm_id, tickets_sold, tickets_available, gross, snapshot_date
   - `tm_event_demographics`: fan demographics by event (fans_total, age breakdowns). Join on tm_id.
@@ -433,6 +454,7 @@ When making scale/pause/kill decisions, always factor in show proximity:
 - **3-7 days to show:** Scale winners aggressively. Only pause truly dead campaigns (0 purchases, $200+ spend).
 - **7-14 days to show:** Standard optimization window. 3-day rule applies for new creatives.
 - **> 14 days to show:** Full flexibility. Test new creatives, restructure if needed.
+- **Show date PAST:** Verify campaign is PAUSED with $0 spend. If still ACTIVE or spending, pause it immediately — no confirmation needed. Jaime re-confirmed Mar 9: "if it's paused and hasn't spent, turn it off automatically always." Check campaign-level status (Jaime may pause adsets but leave campaign on).
 
 Pull upcoming shows from Supabase (see Quick API References) to check show dates before recommending budget changes.
 
@@ -442,6 +464,7 @@ Pull upcoming shows from Supabase (see Quick API References) to check show dates
 
 Not all campaigns use the same pixel. When delegating campaign creation or creative work:
 - **Default pixel:** 879345548404130 (most campaigns)
+- **San Diego pixel:** 2005949343681464 (Pechanga Arena / AXS)
 - **Sienna pixel:** 918875103967661 (Sienna - Peace In Mind only, ViewContent optimization)
 - Always specify which pixel when delegating campaign creation to media-buyer.
 
@@ -486,6 +509,36 @@ Marginal ROAS = (Revenue_new - Revenue_old) / (Spend_new - Spend_old)
 - **Marginal 1.0-2.0x** -> hold, monitor
 - **Marginal < 1.0x** -> losing money on new spend, recommend pause or restructure
 - Need 3+ day gap between snapshot dates for reliable results (consecutive-day deltas are noise due to Meta reporting lag)
+
+---
+
+## Delivery Stall Diagnosis
+
+When a campaign is ACTIVE with budget but not spending (or spending far below budget), check these in order:
+
+1. **Frozen spend (Sienna pattern):** Identical spend across 3+ snapshot dates → campaign is on but Meta won't deliver. Usually ad-level issues (creative rejected, pixel mismatch, audience exhaustion). Delegate to media-buyer: `"action": "delivery-diagnosis"`.
+2. **Severe underpacing (KYBBA pattern):** Spending <10% of daily budget consistently → often learning phase stuck, audience too narrow, or bid cap too low. Check `frequency` (>3 = audience exhaustion), ad `effective_status` for WITH_ISSUES, and delivery estimate.
+3. **Budget-spend mismatch (Don Omar pattern):** New campaign at high budget ($600/day) but minimal delivery ($0-$67/day) → may need 24-48h Meta learning phase warmup. If persists 3+ days, investigate creative/audience fit.
+
+**Escalation:** If stall persists 3+ days with $100+/day budget, alert Jaime with spend/day vs budget and recommend: (a) check ad-level issues, (b) restructure audience, or (c) pause and rebuild.
+
+---
+
+## Zero-Purchase Detection
+
+Different from delivery stall — the campaign IS spending money, but getting zero conversions. This is typically creative fatigue or audience exhaustion.
+
+**How to detect:** Use `time_increment=1` day-by-day insights. If `purchase_roas` is missing and `actions` has no `omni_purchase` for 3+ consecutive days while `spend` > $0, the campaign has zero purchases.
+
+**Key indicators:**
+- Blended ROAS declining for 3+ consecutive snapshot dates while spend continues
+- Frequency > 3.5 = audience seeing the same ad too many times (fatigue)
+- `omni_purchase` absent from `actions` array for recent days
+
+**Response:**
+- **< 7 days to show:** Fresh creatives urgently needed. Don't kill (show proximity) but creative refresh is critical.
+- **> 7 days to show:** Consider pause + restructure if $200+ spent with 0 purchases.
+- Always check frequency first — if > 3.5, the audience is exhausted regardless of creative quality.
 
 ---
 

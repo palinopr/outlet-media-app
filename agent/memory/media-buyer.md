@@ -225,3 +225,48 @@ Use daily snapshots for trend analysis, not intraday deltas.
 
 <!-- auto-learned 2026-03-08 -->
 - Arjona Palm Desert Mar 8: $320 spent, 4 purchases, 3.35x ROAS, $80 CPA
+
+<!-- auto-learned 2026-03-10 -->
+- KYBBA Miami: $5,110 campaign spend cap, $4,884 spent, ~$226 left
+
+<!-- auto-learned 2026-03-10 -->
+- KYBBA Miami: budget cut $100/day → $50/day (Mar 10), review end of week
+
+<!-- auto-learned 2026-03-10 -->
+- Camila ads switched to official Camila MX FB page (254160188123)
+- Camila MX IG actor: 17841400367905728 (@camilamx)
+
+<!-- auto-learned 2026-03-10 -->
+- Camila Sacramento Mar 10: $1,749 spent, 34 purchases, 4.72x ROAS, freq 4.07
+- Camila Anaheim Mar 10: $1,751 spent, 29 purchases, 3.97x ROAS, freq 2.98
+
+<!-- auto-learned 2026-03-10 -->
+- Don Omar FB page: 21608835481 (23.6M fans), IG: 17841400670290220
+- Meta blocks owner/Business Manager ID lookup without business_management perm
+
+<!-- auto-learned 2026-03-10 -->
+- Arjona Palm Desert Mar 10: $1,055 spent, 11 purchases, 2.14x ROAS, $96 CPA
+- Arjona Palm Desert: only 1 active ad (Asset 1) carrying all spend
+- Influencer video content requested urgently for Arjona Palm Desert
+
+<!-- auto-learned 2026-03-10 -->
+- Sienna fan page: "Sienna Music" / @siennamusicofficial (correct)
+- Sienna has 3 active adsets: EUR/SEA, LATAM, US
+- Meta upload: files >130MB need chunked upload API (413 error)
+- 4 new video creatives added to Sienna campaign (Mar 10)
+
+<!-- auto-learned 2026-03-10 -->
+- Sienna V5 (ad 4174436769535587) + V6 (951929210749482) created Mar 10
+- Sienna: 17 broken 0310 ads paused, replaced by V5/V6 (2 correct ads)
+- Sienna creatives = 2 videos (not 4), each split post+story
+
+<!-- auto-learned 2026-03-12 -->
+- Pixel "El Destilero" created: ID 939151375333756 (ad account AA1)
+- Pixel access: Jaime Ortiz, Isabel Leal, Alexandra Victoria (edit/analyze/advertise)
+
+<!-- auto-learned 2026-03-14 -->
+- Camila all cities lifetime: $13,203 spent, 325 purchases, 5.13x ROAS
+
+<!-- auto-learned 2026-03-14 -->
+- Camila all-cities spend cap target: $15,000
+- Camila Sacramento: $1,800/day budget, auto-ends 6pm PDT Mar 14

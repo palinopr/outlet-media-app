@@ -8,7 +8,6 @@ import { ActivityTracker } from "@/components/admin/activity-tracker";
 import { CommandPalette } from "@/components/admin/command-palette";
 import { AdminBreadcrumbs } from "@/components/admin/breadcrumbs";
 import { CollapsibleSidebar } from "@/components/admin/collapsible-sidebar";
-import { NotificationBell } from "@/components/workspace/notification-bell";
 
 export const dynamic = "force-dynamic";
 
@@ -64,11 +63,8 @@ export default async function AdminLayout({ children }: { children: ReactNode })
 
       {/* Mobile: top bar + main stacked vertically. Desktop: just main (sidebar is beside) */}
       <div className="flex flex-col flex-1 min-w-0">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center">
           <MobileSidebar clerkEnabled={clerkEnabled} displayName={displayName} />
-          <div className="flex items-center px-4 py-2 lg:px-6">
-            {activityUserId && <NotificationBell viewer="admin" />}
-          </div>
         </div>
         <main className="flex-1 overflow-auto">
           <NuqsAdapter>

@@ -14,13 +14,11 @@ export function LandingFooter() {
               height={28}
               className="h-7 w-7"
             />
-            <span className="text-sm font-semibold tracking-wide text-white">
-              Outlet Media
-            </span>
+            <span className="text-sm font-semibold tracking-wide text-white">Outlet Media</span>
           </div>
           <p className="mt-4 max-w-md text-sm leading-6 text-slate-400">
-            Client-facing operating system for campaigns and live events.
-            Shared visibility first, guided execution second.
+            Performance agency for artists, tours, nightlife, venues, and brands. Creative, media,
+            and an operating system that keeps campaigns moving and clients close to the work.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-5 text-sm text-slate-400">
@@ -31,10 +29,7 @@ export function LandingFooter() {
           <Link href="/terms" className="transition-colors hover:text-white">
             Terms of Service
           </Link>
-          <a
-            href="mailto:support@outletmedia.co"
-            className="transition-colors hover:text-white"
-          >
+          <a href="mailto:support@outletmedia.co" className="transition-colors hover:text-white">
             support@outletmedia.co
           </a>
         </div>

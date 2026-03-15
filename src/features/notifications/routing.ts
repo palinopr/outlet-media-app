@@ -10,7 +10,7 @@ export function buildNotificationsCenterHref(
   fallbackClientSlug?: string | null,
 ) {
   if (viewer === "admin") {
-    return "/admin/notifications";
+    return "/admin/dashboard";
   }
 
   return fallbackClientSlug ? `/client/${fallbackClientSlug}/notifications` : "/client";
@@ -45,10 +45,10 @@ function buildAdminNotificationEntityHref(notification: AppNotification) {
     return `/admin/events/${entityId}`;
   }
   if (entityType === "crm_contact" && entityId) {
-    return `/admin/crm/${entityId}`;
+    return "/admin/clients";
   }
   if (notification.entityType === "approval_request") {
-    return "/admin/approvals";
+    return "/admin/dashboard";
   }
   if (
     notification.entityType === "campaign_comment" ||
@@ -56,7 +56,7 @@ function buildAdminNotificationEntityHref(notification: AppNotification) {
     notification.entityType === "asset_comment" ||
     notification.entityType === "event_comment"
   ) {
-    return "/admin/conversations";
+    return "/admin/dashboard";
   }
   if (notification.entityType === "campaign_action_item") {
     return "/admin/campaigns";
@@ -68,7 +68,7 @@ function buildAdminNotificationEntityHref(notification: AppNotification) {
     return "/admin/events";
   }
   if (notification.entityType === "crm_follow_up_item") {
-    return "/admin/crm";
+    return "/admin/clients";
   }
   return null;
 }
@@ -90,7 +90,7 @@ function buildClientNotificationEntityHref(
     return `/client/${clientSlug}/event/${entityId}`;
   }
   if (entityType === "crm_contact" && entityId) {
-    return `/client/${clientSlug}/crm/${entityId}`;
+    return `/client/${clientSlug}`;
   }
   if (notification.entityType === "approval_request") {
     return `/client/${clientSlug}/approvals`;
@@ -113,7 +113,7 @@ function buildClientNotificationEntityHref(
     return `/client/${clientSlug}/events`;
   }
   if (notification.entityType === "crm_follow_up_item") {
-    return `/client/${clientSlug}/crm`;
+    return `/client/${clientSlug}`;
   }
   return null;
 }
@@ -131,7 +131,7 @@ export function buildNotificationHref(
       return `/admin/workspace/${notification.pageId}`;
     }
     if (notification.taskId || notification.entityType === "workspace_task") {
-      return "/admin/workspace/tasks";
+      return "/admin/dashboard";
     }
     return null;
   }

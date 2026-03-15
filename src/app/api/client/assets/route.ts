@@ -79,8 +79,8 @@ export async function POST(req: NextRequest) {
       entityType: campaignId ? "campaign" : "asset",
       requestType: "asset_review",
       summary: campaignName
-        ? `A client uploaded a new asset for ${campaignName} that should be reviewed before it moves further in the campaign workflow.`
-        : "A client uploaded a new asset that should be reviewed before it moves further in the campaign workflow.",
+        ? `A client uploaded a new asset for ${campaignName} that should be reviewed before it moves further in the campaign.`
+        : "A client uploaded a new asset that should be reviewed before it moves further in the campaign.",
       title: campaignName
         ? `Review uploaded asset "${asset.file_name as string}" for ${campaignName}`
         : `Review uploaded asset "${asset.file_name as string}"`,

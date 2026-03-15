@@ -51,19 +51,19 @@ export function ContactForm() {
           <div>
             <p className="section-label text-[#9bd0ff]">Contact</p>
             <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
-              Show us the next 90 days of your event calendar.
+              If the current agency feels slow, generic, or invisible, bring us the next 90 days.
             </h2>
             <p className="mt-4 max-w-xl text-base leading-7 text-slate-300">
-              We&apos;ll walk through where campaign performance, event pressure,
-              approvals, or client visibility are breaking down and show how
-              Outlet can tighten the loop.
+              Tours, nightlife calendars, venue on-sales, artist campaigns, ecommerce pushes, brand
+              launches. If the goal is stronger movement and clearer visibility, we&apos;ll show you
+              exactly where Outlet can create leverage.
             </p>
 
             <div className="mt-8 space-y-4">
               {[
-                "Paid media tied to event demand instead of sitting in a separate reporting stack",
-                "Client-facing visibility without forcing promoters into operator tooling",
-                "Approvals, activity, and follow-through that stay attached to the right context",
+                "Strategy, creative, and paid media tied to actual revenue goals",
+                "Client-facing visibility without the usual agency blackout",
+                "AI-backed speed without losing human accountability",
               ].map((item) => (
                 <div key={item} className="flex gap-3">
                   <CheckCircle2 className="mt-1 size-4 shrink-0 text-[#9bd0ff]" />
@@ -103,7 +103,7 @@ export function ContactForm() {
               />
               <textarea
                 name="message"
-                placeholder="Tell us what events you run, how you manage promotion today, and where visibility or approvals keep slipping."
+                placeholder="Tell us what you are pushing, what the revenue goal is, who the audience is, and where the current agency or team is falling short."
                 required
                 maxLength={5000}
                 rows={6}
@@ -116,11 +116,11 @@ export function ContactForm() {
                 disabled={pending}
               >
                 <Send className="size-4" />
-                {pending ? "Sending..." : "Request a Walkthrough"}
+                {pending ? "Sending..." : "Request a Strategy Call"}
               </Button>
               <p className="text-xs leading-6 text-slate-400">
-                We read every note ourselves. No generic lead routing, no
-                auto-reply maze.
+                Every inquiry gets read by the team. No generic lead routing. No fake automation. No
+                maze.
               </p>
             </div>
           </form>

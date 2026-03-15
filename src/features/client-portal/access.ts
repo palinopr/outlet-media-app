@@ -42,8 +42,10 @@ export async function requireClientEventsAccess(
   userId: string;
   scope: ScopeFilter | undefined;
 }> {
-  const access = await requireClientAccess(slug);
-  const portalConfig = await getClientPortalConfig(slug);
+  const [access, portalConfig] = await Promise.all([
+    requireClientAccess(slug),
+    getClientPortalConfig(slug),
+  ]);
 
   if (!portalConfig?.eventsEnabled) {
     redirect(`/client/${slug}`);

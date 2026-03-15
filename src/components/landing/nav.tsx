@@ -6,10 +6,10 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 
 const NAV_LINKS = [
+  { label: "Why Us", href: "#why-outlet" },
   { label: "Proof", href: "#proof" },
-  { label: "Product", href: "#product" },
-  { label: "Workflow", href: "#workflow" },
-  { label: "Visibility", href: "#visibility" },
+  { label: "Method", href: "#method" },
+  { label: "System", href: "#system" },
   { label: "Contact", href: "#contact" },
 ] as const;
 
@@ -48,7 +48,7 @@ export function LandingNav() {
             href="#contact"
             className="hidden h-9 items-center justify-center rounded-full bg-[#4aa8ff] px-4 text-sm font-semibold text-[#06111d] transition-colors hover:bg-[#70bbff] sm:inline-flex"
           >
-            Book a Walkthrough
+            Book a Strategy Call
           </a>
           <Button variant="outline" size="sm" asChild>
             <Link

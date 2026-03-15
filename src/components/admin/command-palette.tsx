@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import {
   Megaphone,
   CalendarDays,
-  BriefcaseBusiness,
   Users,
   Image as ImageIcon,
 } from "lucide-react";
@@ -29,7 +28,6 @@ const typeIcon: Record<SearchableRecord["type"], typeof Megaphone> = {
   campaign: Megaphone,
   event: CalendarDays,
   client: Users,
-  crm_contact: BriefcaseBusiness,
 };
 
 export function CommandPalette() {
@@ -75,14 +73,13 @@ export function CommandPalette() {
   const events = records.filter((r) => r.type === "event");
   const assets = records.filter((r) => r.type === "asset");
   const clients = records.filter((r) => r.type === "client");
-  const crmContacts = records.filter((r) => r.type === "crm_contact");
 
   return (
     <CommandDialog
       open={open}
       onOpenChange={setOpen}
       title="Command Palette"
-      description="Search pages, campaigns, events, assets, clients, and CRM contacts"
+      description="Search pages, campaigns, events, assets, and clients"
       showCloseButton={false}
     >
       <CommandInput placeholder="Type to search..." />
@@ -179,30 +176,6 @@ export function CommandPalette() {
             <CommandSeparator />
             <CommandGroup heading="Clients">
               {clients.map((r) => {
-                const Icon = typeIcon[r.type];
-                return (
-                  <CommandItem
-                    key={r.id}
-                    value={`${r.name} ${r.subtitle}`}
-                    onSelect={() => navigate(r.href)}
-                  >
-                    <Icon className="size-4" />
-                    <span>{r.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {r.subtitle}
-                    </span>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          </>
-        )}
-
-        {loaded && crmContacts.length > 0 && (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading="CRM">
-              {crmContacts.map((r) => {
                 const Icon = typeIcon[r.type];
                 return (
                   <CommandItem

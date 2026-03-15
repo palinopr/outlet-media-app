@@ -168,3 +168,24 @@
 - Amazon Seller credit card update needed + balance due
 - DistroKid billing info update needed
 - Emily Sharp: Arjona Anaheim press thread (ball on Mirna)
+
+<!-- auto-learned 2026-03-10 -->
+- TX insurance license: General Lines — Life, Accident and Health
+- Nationwide carrier appointment: Fixed Life Products (approved Mar 3)
+- Insurance upline: Anabel Martinez @ The PG (thepg.com)
+- NAPA E&O policy active Feb 2026–Feb 2027 ($1M/$3M limits)
+
+<!-- auto-learned 2026-03-11 -->
+- HCAD homestead exemption signed Mar 11 (acct A-1460670030036)
+- **PRIORITY ONE — HCAD / Homestead Exemption**: Any email from @hcad.org or mentioning "homestead exemption" is top priority. ALWAYS ping Jaime immediately. Never archive silently. Treat same as VIP senders.
+
+<!-- auto-learned 2026-03-11 -->
+- Email agent violated HCAD priority rule; must reinforce triage layer compliance
+
+<!-- auto-learned 2026-03-12 -->
+- **NEVER ARCHIVE emails from @thepg.com** (The Producers Group / Freundt & Associates). These are Jaime's insurance upline — always keep in inbox, label with Life Insurance. Same rule applies to any insurance contracting/appointment threads involving PG contacts (Anabel Martinez, Eric Freundt, James Katomski).
+- Treat @thepg.com same as VIP senders for triage purposes.
+
+<!-- auto-learned 2026-03-12 -->
+- Agent falsely reported "Royal Neighbors" email from Eric Freundt; never delivered
+- Mutual of Omaha Final Expense illustration requested for Jaime's father-in-law

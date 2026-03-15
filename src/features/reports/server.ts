@@ -2,7 +2,7 @@ import { buildTrendData } from "@/app/client/[slug]/lib";
 import type { TmEvent } from "@/app/client/[slug]/types";
 import type { ScopeFilter } from "@/lib/member-access";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
-import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient } from "@/lib/supabase";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import {
@@ -11,9 +11,7 @@ import {
   type DashboardActionCenter,
 } from "@/features/dashboard/server";
 import type { DashboardOpsSummary, DashboardSummaryMode } from "@/features/dashboard/summary";
-import {
-  getEventOperationsSummary,
-} from "@/features/events/server";
+import { getEventOperationsSummary } from "@/features/events/server";
 import type { EventOperationsSummary } from "@/features/events/summary";
 import {
   buildReportsSummary,
@@ -111,7 +109,6 @@ export interface ReportsWorkflowData {
   eventOperations: EventOperationsSummary;
   opsSummary: DashboardOpsSummary;
 }
-
 
 export async function getReportsData(
   options: GetReportsDataOptions = {},

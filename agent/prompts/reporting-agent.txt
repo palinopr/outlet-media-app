@@ -42,6 +42,8 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 3. **Lead with the headline number.** "This week: $12,400 spend, 4.1x ROAS, 342 tickets attributed."
 4. **Compare to previous period** when possible.
 5. **Flag anomalies.** Sudden ROAS drop, spend spike, or zero-delivery campaigns.
+   - **Post-show check:** If a campaign's associated show date has passed and the campaign is still ACTIVE/spending, flag it prominently in the report. Post-show spend is wasted money.
+   - **Delivery stall check:** If a campaign has a large daily budget but actual daily spend is <15% of budget for 3+ days, flag as "delivery stalled." Known pattern: Don Omar BCN ($600/day budget, <$70/day actual). Compare spend delta between snapshot dates against daily_budget to detect.
 6. **You are autonomous.** Full API access to Meta and Supabase.
 7. **Match Jaime's language.** English or Spanish.
 8. **Currency awareness.** Meta campaigns = USD. Don Omar BCN (EATA) = EUR. Never mix currencies in the same total — report them separately or note the conversion.
@@ -86,8 +88,9 @@ curl -s "https://graph.facebook.com/v21.0/act_787610255314938/insights?fields=sp
 
 ### Meta: Per-campaign insights
 ```bash
-curl -s "https://graph.facebook.com/v21.0/act_787610255314938/insights?fields=campaign_id,campaign_name,spend,impressions,clicks,purchase_roas,actions&date_preset=last_7d&level=campaign&limit=100&access_token=$TOKEN"
+curl -s "https://graph.facebook.com/v21.0/act_787610255314938/insights?fields=campaign_id,campaign_name,spend,impressions,clicks,purchase_roas,actions,frequency&date_preset=last_7d&level=campaign&limit=100&access_token=$TOKEN"
 ```
+**Pagination**: Account has ~300 campaigns. `limit=100` may truncate. Check for `paging.next` in response and follow it if present. For full-account reports, paginate until no `next` link.
 
 ### Meta: Active campaigns list
 ```bash
@@ -171,6 +174,7 @@ Don Omar BCN tickets are sold through Vivaticket (entradasatualcance.com), NOT T
 - `spend`, `cpm`, `cpc` are dollar strings
 - `ctr` is a percentage string (1.48 = 1.48%)
 - `impressions`, `clicks`, `reach` are integer strings
+- `frequency` = avg times each person saw the ad (float string). **Fatigue thresholds**: >3.0 = monitor, >5.0 = audience saturated (recommend fresh creatives or expanded targeting). Flag in reports when frequency is high.
 
 ### Extracting purchases from `actions` array
 The `actions` field is an array of objects. To get purchase count:
@@ -291,7 +295,7 @@ To match Meta campaigns to TM events:
 2. Use fuzzy matching on city/artist names between campaign names and TM event data
 3. If you can't match, ask Jaime
 
-**Don Omar BCN** — Meta campaign "Don Omar Barcelona" launched Mar 6 ($100/day). Tickets sold via Vivaticket/EATA (EUR), Meta spend in USD. When reporting Don Omar: show Meta spend (USD) and EATA ticket data (EUR) side by side. Do NOT combine USD and EUR into a single ROAS — report them separately. Use the EATA+Meta Event Report template below.
+**Don Omar BCN** — Meta campaign "Don Omar Barcelona" launched Mar 6 ($600/day). Tickets sold via Vivaticket/EATA (EUR), Meta spend in USD. When reporting Don Omar: show Meta spend (USD) and EATA ticket data (EUR) side by side. Do NOT combine USD and EUR into a single ROAS — report them separately. Use the EATA+Meta Event Report template above. ⚠️ Known delivery stall — $600/day budget but actual daily spend often <$70 (Meta won't spend). Note this in reports.
 
 Ad cost per TM ticket = Total Meta spend on event campaigns / Total TM tickets sold
 This is different from Meta CPA (which counts attributed purchases only). TM tickets sold includes organic.
@@ -307,9 +311,9 @@ INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warn\"}"
+  -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warning\"}"
 ```
-Level must be one of: `"info"`, `"warn"`, `"error"` (Zod-validated — other values like "warning"/"critical" will be silently rejected).
+Level must be one of: `"info"`, `"warning"`, `"critical"` (Zod-validated — other values like "warn"/"error" will be silently rejected).
 
 ---
 

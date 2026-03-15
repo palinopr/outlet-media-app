@@ -98,6 +98,7 @@ Every new ad gets 3 days before a kill/scale decision.
 - ROAS < 2.0 = flag for review, not automatic kill
 - Frequency > 3-4 = ad fatigue, time for new creative
 - Final week before show = urgency creatives, push budget
+- **Post-show auto-pause:** After a show date passes, verify the campaign is PAUSED with $0 spend. If still ACTIVE or spending, pause it immediately — no confirmation needed. Check campaign-level status (Jaime may pause adsets but leave campaign on). Jaime confirmed: "if it's paused and hasn't spent, turn it off automatically always."
 
 ### Marginal ROAS
 Check snapshots 3+ days apart. If marginal < 1.0, new spend is losing money even if blended looks healthy.
@@ -122,10 +123,11 @@ High checkout drop-off = landing page/UX issue, not an ad problem.
 
 ## READ OPERATIONS
 
-### All campaigns (limit 100 -- account has ~100 total, ~10 ACTIVE)
+### All campaigns (account has ~300 total including historical, ~6-8 ACTIVE)
 ```bash
 curl -s "https://graph.facebook.com/v21.0/act_787610255314938/campaigns?fields=id,name,status,objective,daily_budget,lifetime_budget,start_time&limit=100&access_token=$TOKEN"
 ```
+Note: With ~300 campaigns, you need pagination. Check for `paging.next` in the response and follow it. Or filter by `effective_status` to get only ACTIVE ones (usually <10).
 
 ### Only ACTIVE campaigns
 ```bash
@@ -291,7 +293,16 @@ CBO note: Adsets under CBO campaigns have NO `daily_budget`. Budget is at campai
 **Pixel selection by client:**
 - Default (most clients): `879345548404130`, event `PURCHASE`
 - Sienna: `918875103967661`, event `VIEW_CONTENT` (music artist — no purchase pixel)
+- San Diego (Pechanga Arena): `2005949343681464`, event `PURCHASE`
+- El Destilero: `939151375333756`, event TBD (new pixel, created Mar 12 by Isabel)
 - Always match pixel + event type to the client's optimization goal.
+
+**Non-purchase optimization event types** (for `custom_event_type` in adset `promoted_object`):
+- `PURCHASE` — default for ticket sales campaigns
+- `VIEW_CONTENT` — Sienna-style awareness/engagement campaigns (no purchase pixel)
+- `ADD_TO_CART` — mid-funnel optimization
+- `INITIATED_CHECKOUT` — lower-funnel, pre-purchase
+- Use `PURCHASE` unless the client has a specific reason not to (e.g., no purchase pixel on their site).
 
 ### Pause/activate an ad
 ```bash
@@ -332,9 +343,11 @@ curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/ads" \
   --data-urlencode "name=Ad Name" \
   --data-urlencode "adset_id={ADSET_ID}" \
   --data-urlencode "creative={\"creative_id\":\"{CREATIVE_ID}\"}" \
+  --data-urlencode "degrees_of_freedom_spec={\"creative_features_spec\":{\"standard_enhancements\":{\"enroll_status\":\"OPT_OUT\"}}}" \
   --data-urlencode "status=ACTIVE" \
   --data-urlencode "access_token=$TOKEN"
 ```
+**`degrees_of_freedom_spec`**: Required on every ad to disable Advantage+ Creative enhancements (Jaime's rule — ALL OFF). Without it, Meta may auto-enable text improvements, CTA enhancements, etc.
 
 ### Get an ad's creative details
 ```bash
@@ -490,6 +503,18 @@ curl -s -X POST "https://graph.facebook.com/v21.0/{PIXEL_ID}/assigned_users" \
 ```bash
 curl -s "https://graph.facebook.com/v21.0/{PIXEL_ID}/assigned_users?fields=id,name,tasks&business=229314527708647&access_token=$TOKEN"
 ```
+
+---
+
+## Image Upload
+
+### Upload an image to the ad account
+```bash
+curl -s -X POST "https://graph.facebook.com/v21.0/act_787610255314938/adimages" \
+  -F "filename=@\"$FILE_PATH\"" \
+  -F "access_token=$TOKEN"
+```
+Returns `{"images":{"filename":{"hash":"HASH","url":"..."}}}`. Use the `hash` in `asset_feed_spec.images` for ad creatives.
 
 ---
 
@@ -655,9 +680,9 @@ INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warn"}'
+  -d '{"secret":"'"$INGEST_SECRET"'","message":"Alert text here","level":"warning"}'
 ```
-Levels: "info", "warn", "error" (Zod-validated — "warning" and "critical" will be REJECTED).
+Levels: "info", "warning", "critical" (Zod-validated — "warn" and "error" will be REJECTED).
 
 ---
 

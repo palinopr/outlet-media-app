@@ -97,6 +97,8 @@ Use `context.storageState({ path: 'session/tm1-storage-state.json' })` to persis
 
 **Alternative:** You can also use the service account via `session/google-auth.mjs` (domain-wide delegation, impersonates jaime@outletmedia.net). Import `getGmailAuth` and use the googleapis Gmail client instead of raw curl.
 
+**⚠️ Known Issue (Mar 10):** The service account key was exposed on GitHub and may be returning `invalid_grant`. If Gmail auth fails during MFA, alert Jaime — he needs to rotate the service account key. The OAuth refresh token path (above) is an independent fallback.
+
 ### Scraping Steps:
 1. Authenticate using the flow above
 2. Navigate to the promoter / events dashboard
@@ -291,9 +293,9 @@ INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d '{"secret":"'"$INGEST_SECRET"'","message":"[alert text]","level":"warn"}'
+  -d '{"secret":"'"$INGEST_SECRET"'","message":"[alert text]","level":"warning"}'
 ```
-Level must be one of: "info", "warn", "error" (Zod-validated — "warning"/"critical" will be silently rejected).
+Level must be one of: "info", "warning", "critical" (Zod-validated — "warn"/"error" will be silently rejected).
 
 ---
 
@@ -306,10 +308,17 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 
 ### Events
 ```bash
+# All events (basic)
 curl -s "${SUPABASE_URL}/rest/v1/tm_events?order=date.asc" \
   -H "apikey: ${SUPABASE_KEY}" \
   -H "Authorization: Bearer ${SUPABASE_KEY}"
+
+# Upcoming events with ticket metrics (more useful)
+curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=tm_id,name,status,date,venue,city,tickets_sold,tickets_sold_today,revenue_today,avg_ticket_price,client_slug&date=gte.$(date -u +%Y-%m-%d)&order=date.asc" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
+Columns: `tickets_sold_today`, `revenue_today`, `avg_ticket_price` are populated by EATA sync (Don Omar BCN). TM One events have these as 0/null (ticket API restricted).
 
 ### Event snapshots (daily ticket metrics)
 ```bash
@@ -318,6 +327,20 @@ curl -s "${SUPABASE_URL}/rest/v1/event_snapshots?tm_id=eq.{TM_ID}&order=snapshot
   -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
 Note: TM One event_snapshots are currently static (identical values across dates) due to API permission restrictions. EATA event_snapshots (Don Omar BCN) are LIVE and updating. Velocity tracking for TM events will work once live ticket data flows.
+
+### Demographics (stored in Supabase — no need to re-scrape)
+```bash
+# All demographics
+curl -s "${SUPABASE_URL}/rest/v1/tm_event_demographics?select=tm_id,fans_total,fans_female_pct,fans_male_pct,age_18_24_pct,age_25_34_pct,age_35_44_pct,age_45_54_pct,age_over_54_pct,income_over_125k_pct" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+
+# Single event
+curl -s "${SUPABASE_URL}/rest/v1/tm_event_demographics?tm_id=eq.{TM_ID}" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+Demographics are already stored for all 26 events. Query Supabase first — only hit TM1 API for a refresh.
 
 ### Campaign snapshots (for cross-referencing ad spend)
 ```bash
@@ -368,6 +391,19 @@ When asked about Don Omar BCN ticket data, use EATA scripts and Supabase — do 
 Always compare new data against these files to identify what changed.
 
 **Freshness note:** Session cache files are bare JSON (no `scraped_at` wrapper). Use the file's modification time (from `ls -la session/`) to determine when data was last synced.
+
+---
+
+## Show Proximity Awareness
+
+When reporting on events, always note days until show: `days_to_show = show_date - today`.
+- **< 3 days:** URGENT — flag ticket velocity, check if Meta campaign is still ACTIVE
+- **< 7 days:** highlight in reports — last-push window for ad spend
+- **Show past:** verify Meta campaign is PAUSED (post-show auto-pause rule). If still ACTIVE, flag immediately.
+
+Cross-reference `tm_events.date` with `meta_campaigns` (ACTIVE status) to spot mismatches:
+- Upcoming show with NO active Meta campaign = potential gap
+- Past show with ACTIVE Meta campaign = wasting money
 
 ---
 

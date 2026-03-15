@@ -12,16 +12,12 @@ import {
 } from "@/components/ui/table";
 import { fmtDate, statusBadge } from "@/lib/formatters";
 import type { ClientDetail } from "@/app/admin/clients/data";
-import type { EventOperationsSummary } from "@/features/events/summary";
 
 interface EventsSectionProps {
   events: ClientDetail["events"];
-  summary: EventOperationsSummary;
 }
 
-export function EventsSection({ events, summary }: EventsSectionProps) {
-  void summary;
-
+export function EventsSection({ events }: EventsSectionProps) {
   return (
     <div className="space-y-4">
       <div>

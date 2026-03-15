@@ -74,6 +74,7 @@ Do NOT expose:
 - "sienna", "peace in mind" -> Sienna
 - "vaz vil", "kiko blade", "penetrado" -> Vaz Vil
 - "don omar", "don omar bcn", "barcelona" -> Don Omar BCN
+- "el destilero", "destilero" -> El Destilero (new client, pixel only — onboarding)
 
 ---
 
@@ -206,9 +207,10 @@ Some clients have total spend caps (e.g., Alofoke had $2K cap). When tracking:
 
 ### KYBBA
 - Event promotion, Miami show Mar 22
-- Budget: $100/day (doubled from $50 in late Feb)
+- Budget: $50/day
 - Pixel: 1553637492361321
 - Adset swap Feb 25: V9+V1 paused, V5+Asset1 activated — ROAS recovered from 2.46x to 2.65x
+- Current: $2,624 spend, 2.65x ROAS, 60 purchases. Delivery has been erratic (Meta spend revisions). Freq 4.76 ⚠️ audience fatigue.
 
 ### Sienna (New Client, ~Mar 2026)
 - "Peace In Mind" brand — **music artist, optimized for ViewContent, NOT purchases**
@@ -219,18 +221,23 @@ Some clients have total spend caps (e.g., Alofoke had $2K cap). When tracking:
 ### Vaz Vil (New Client, ~Mar 2026)
 - "Kiko Blade" / "Penetrado" tour
 - Budget: $50/day
-- Status: ⚠️ $197 spent, 0x ROAS after 5+ days. 4+ consecutive 0x snapshots — alert posted. Under review.
+- Status: 🔴 $350 spent, 0x ROAS after 9+ days. Multiple 0x snapshots — alerted. Freq 2.51 (reaching people but zero conversions). Needs Jaime's call: pause or keep running.
 
 ### Don Omar BCN (New Client, ~Mar 2026)
 - Don Omar concert in Barcelona, Jul 23 2026
 - Venue: Estadio Olimpico Lluis Companys
 - Tickets sold through **Vivaticket/EATA** (entradasatualcance.com), NOT Ticketmaster
-- **Meta campaign:** "Don Omar Barcelona" — ACTIVE, $600/day, 6.53x ROAS ($224 spend as of Mar 8). Launched Mar 6.
+- **Meta campaign:** "Don Omar Barcelona" — ACTIVE, $600/day, 9.59x ROAS ($885 spend, 29 purchases as of Mar 12). Launched Mar 6. ⚠️ **Delivery severely underpacing** — $885 total on $600/day over 6+ days.
 - Supabase tm_id: `eata_14948`
 - Slug: `don_omar_bcn`
 - Current: ~30K tickets sold, ~3.2M EUR gross, 442 tickets/day avg
 - EATA data syncs every 2h via `session/eata-http-sync.mjs`
 - **Currency note:** EATA revenue is in EUROS, Meta spend is in USD. Never combine. Report side by side.
+
+### El Destilero (New Client — Onboarding, Mar 2026)
+- Pixel: 939151375333756 (created Mar 12 by Isabel)
+- Access: Jaime, Isabel, Alexandra
+- Status: Pixel created, no campaigns yet. Onboarding likely incoming.
 
 ### Beamina
 - Smaller client, fewer campaigns
@@ -239,6 +246,23 @@ Some clients have total spend caps (e.g., Alofoke had $2K cap). When tracking:
 ### Happy Paws
 - Non-music client (pet services)
 - Mostly PAUSED
+
+---
+
+## Show Proximity Awareness
+
+When preparing client updates, always check upcoming show dates. Shows within 3 days need special attention:
+- Verify campaign is ACTIVE and spending normally
+- Check ROAS — below 2.0 within 3 days of show is a flag
+- After show date passes, verify campaign is PAUSED with $0 new spend
+- **Post-show auto-pause rule:** If a campaign is still ACTIVE after its show date, flag it immediately — no confirmation needed.
+
+Query upcoming shows:
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=name,date,status,venue_name,client_slug&date=gte.$(date +%Y-%m-%d)&order=date.asc&limit=10" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
 
 ---
 
@@ -267,10 +291,10 @@ INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warn\"}"
+  -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warning\"}"
 ```
 
-Level must be one of: "info", "warn", "error" (Zod-validated — "warning"/"critical" will be rejected).
+Level must be one of: "info", "warning", "critical" (Zod-validated — "warn"/"error" will be rejected).
 
 ---
 

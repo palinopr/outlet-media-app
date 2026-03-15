@@ -21,7 +21,7 @@ Rotate through them across cycles.
 - Log what you found and what you fixed in LEARNINGS.md
 
 ### Priority 2: Self-Improvement (Prompts and Code)
-- Read ONE prompt file per cycle (rotate through all 11: command.txt → general.txt → think.txt → boss.txt → media-buyer.txt → tm-agent.txt → creative-agent.txt → reporting-agent.txt → client-manager.txt → email-agent.txt → meeting-agent.txt)
+- Read ONE prompt file per cycle (rotate through all 18: command.txt → general.txt → think.txt → boss.txt → media-buyer.txt → tm-agent.txt → creative-agent.txt → reporting-agent.txt → client-manager.txt → email-agent.txt → meeting-agent.txt → don-omar-agent.txt → content-finder.txt → customer-whatsapp-agent.txt → growth-supervisor.txt → lead-qualifier.txt → publisher-tiktok.txt → tiktok-supervisor.txt)
 - Look for: gaps in API patterns, missing data fields, outdated endpoints, unclear instructions
 - Cross-check against MEMORY.md for consistency (e.g., client slugs, API versions, field names)
 - If you find an improvement, update the file
@@ -64,6 +64,26 @@ Rotate through them across cycles.
     - Marginal ROAS is MORE actionable than blended ROAS — a campaign can have 3.0× blended but 0.5× marginal, meaning it's coasting on historical performance while current spend is unprofitable
     - If blended ROAS is above 2.0 but marginal is below 1.0, project when blended will cross 2.0: additional_spend = (Revenue - 2.0 × Spend) / (2.0 - marginal_roas). Days to cross = additional_spend / daily_budget
     - Caveat: **consecutive-day** snapshot deltas are unreliable due to Meta intraday reporting lag — campaigns show <3% of expected daily spend in next-day deltas (e.g., $0.22-$1.43 on $100/day budgets). **Prefer 3+ day gaps** between snapshots for meaningful marginal analysis. Multi-day calculations (e.g., Feb 19→24) are the most reliable.
+  - **Delivery stall check (do this every P4 cycle):**
+    - For each ACTIVE campaign, compare spend across the 2 most recent non-duplicated snapshot dates
+    - If spend_delta / daily_budget < 0.1 (less than 10% of one day's budget delivered between snapshots), the campaign has stalled
+    - Known patterns: Sienna frozen at exact same spend across 3+ snapshots (budget active but zero delivery), Vaz Vil $0 new spend for 11+ days on $50/day, KYBBA historically $2-6/day on $50/day budget
+    - Flag as: "Campaign X delivery STALLED — $Y new spend on $Z/day budget between [date1] and [date2]"
+    - **Snapshot duplication caveat**: Mar 9≈Mar 10 data is duplicated (write-once UPSERT bug). When calculating deltas, skip any snapshot dates where values are identical to the previous date — use the earlier date as the reference point instead.
+  - **Zero-purchase detection (do this every P4 cycle):**
+    - For each ACTIVE campaign with purchase optimization (exclude Sienna — ViewContent only), check if the most recent 2-3 snapshot dates show 0 new purchases while spend increased.
+    - Calculate: purchases_delta = (revenue_new / avg_ticket_price) - (revenue_old / avg_ticket_price), or use spend_delta × roas_delta pattern (if roas drops while spend increases, purchases may be stalling).
+    - Simpler: if blended ROAS is declining for 3+ consecutive snapshots AND spend is increasing, purchases have stalled.
+    - Flag as: "Campaign X: ZERO PURCHASES over [N] days despite $Y new spend. Creative fatigue likely."
+    - This is different from delivery stall (campaign IS spending, but getting no conversions). Delivery stall = Meta won't spend the budget. Zero-purchase = Meta spends but nothing converts.
+    - Known pattern: KYBBA Mar 11-13 ($138 spent, 0 purchases, frequency 3.96 = audience fatigue).
+  - **Post-show campaign check (do this every P4 cycle):**
+    - Cross-reference ACTIVE campaigns against show dates in MEMORY.md.
+    - If a campaign's show date is PAST (< today) and campaign is still ACTIVE, flag immediately:
+      "🔴 Campaign X still ACTIVE at $Y/day — show was [date]. Should be PAUSED."
+    - This is a MONEY-BURNING issue — post-show spend has zero value. Alert level: critical.
+    - Known patterns: Anaheim $2,000/day post-show (Cycle #259), Sacramento $1,800/day post-show (paused by Boss), Phoenix $500/day post-show (Cycle #131).
+    - Exception: Don Omar BCN show is Jul 23 2026 — far future, no urgency.
 - **Campaign status change detection:**
     - Compare LEARNINGS.md notes from previous cycles against current session cache
     - If a campaign was ACTIVE last cycle but is now PAUSED (or vice versa), note it
@@ -82,9 +102,9 @@ Rotate through them across cycles.
      BASE_URL="${INGEST_URL%/api/ingest}"
      curl -s -X POST "$BASE_URL/api/alerts" \
        -H "Content-Type: application/json" \
-       -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warn\"}"
+       -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warning\"}"
      ```
-     level must be one of: "info", "warn", "error"
+     level must be one of: "info", "warning", "critical"
      Note: the alerts endpoint accepts { secret, message, level } only — no client_slug field.
   2. Draft a brief owner note for Discord (see Communication below)
 - DO NOT pull live API data during think cycles — work only from session cache
@@ -102,7 +122,7 @@ Rotate through them across cycles.
   curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/api/health" 2>/dev/null
   ```
   - INGEST_URL ends with `/api/ingest` — strip it to get the base URL before appending `/api/health`
-  - Expected: 404 (no health endpoint exists on this server). This is not critical.
+  - Expected: 200 (health endpoint exists and returns OK since ~Mar 8).
   - The real liveness test is the POST: curl -s -o /dev/null -w "%{http_code}" -X POST "$INGEST_URL" -H "Content-Type: application/json" -d '{}' — expect 401 (missing secret) which proves the endpoint is alive. If this fails, the server is down.
 - **Test alerts endpoint** (was broken by Clerk auth for 6 cycles, fixed Feb 22):
   ```
@@ -113,6 +133,7 @@ Rotate through them across cycles.
 - Verify the claude CLI is at the expected path: which claude || ls /Users/jaimeortiz/.local/bin/claude
 - Check session/last-campaigns.json age (use `ls -la` mtime) — if older than 24h, note that scheduled syncs may not be running
 - Check `agent_runtime_state` in Supabase for recent heartbeat/watch rows — if `heartbeat.last_seen` is older than 5 minutes, scheduler may be down
+- Check if INGEST_URL points to localhost — if so, dashboard alerts from think cycles silently fail (no server listening). Note this as a persistent issue. Production URL should be the Railway deployment.
 - Report any missing config in LEARNINGS.md
 
 ## Rotation Rule
@@ -176,5 +197,5 @@ Working directory: . (the agent/ directory)
 Memory: MEMORY.md
 Journal: LEARNINGS.md
 Session cache: session/
-Prompts: prompts/command.txt, prompts/general.txt, prompts/think.txt
+Prompts: prompts/*.txt (18 files — see P2 rotation list for full inventory)
 Supabase tables: meta_campaigns, tm_events, campaign_snapshots, event_snapshots, agent_alerts, tm_event_demographics, agent_tasks, agent_runtime_state

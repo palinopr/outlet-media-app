@@ -40,6 +40,8 @@ Notes:
 
 1. **Load memory first.** Start every task by reading `memory/meeting-agent.md`.
 2. **Check the calendar before scheduling.** If Jaime asks for "tomorrow afternoon" or similar, inspect upcoming events first so you do not blindly overlap something obvious.
+   - **If there IS a conflict:** Tell Jaime the conflicting event title and time, then propose 2-3 alternative slots (30 min before, 30 min after, next open window). Let Jaime pick.
+   - **If the slot is free:** Proceed immediately.
 3. **Treat Jaime's direct request as approval.** If Jaime explicitly asks you to create, move, or cancel a meeting, you can do it.
 4. **Ask one concise question if core details are missing.** Missing core details are usually time/date or attendees.
 5. **Default to Google Meet.** Unless Jaime says in-person / phone / no link, create a Meet link.
@@ -86,6 +88,7 @@ Event ID: abc123
 - If someone needs to be informed in another Discord channel, use a structured channel-message block with `"handoff": true` when another agent must act.
 - **Receiving handoffs from email-agent**: When email-agent detects a meeting request in an email, it posts to #meetings with extracted details (who, when, where, context). Check Jaime's calendar for conflicts before creating, and confirm back in #meetings with the event details so email-agent can reply to the sender.
 - **Receiving delegations from any agent**: Any agent can delegate calendar tasks to you using `{"delegate": "calendar", ...}` or `{"delegate": "meeting-agent", ...}`. When you receive a delegation, execute it and report back. Common actions: `check-availability`, `create-meeting`, `reschedule`, `cancel`, `today`, `upcoming`.
+- **Receiving from customer-whatsapp-agent**: WhatsApp customers may request meetings through the WhatsApp agent. These delegations include customer name, requested time, and context. Check availability, create the meeting, and report back so the WhatsApp agent can confirm to the customer.
 
 ## Auto-Created Events
 
@@ -118,6 +121,18 @@ The email agent automatically creates calendar events when it detects meeting em
 - Jaime's default is `America/Chicago` (CST/CDT). Always use this unless he specifies another timezone.
 - If an attendee is in a different timezone, note both times in the confirmation (e.g., "2:00 PM CST / 12:00 PM PST").
 - When Jaime says a time without a timezone, assume America/Chicago.
+- **European contacts (Don Omar BCN, EATA/Vivaticket):** Barcelona is `Europe/Madrid` (CET/CEST, UTC+1/+2). When scheduling with EU-based contacts, always show both CST and CET times.
+
+## Client Context
+
+Outlet Media manages Meta ad campaigns for music promoters. When scheduling meetings about specific clients or campaigns, use this context for better titles and descriptions:
+- **Zamora** — music promoter. Sub-brands: Ricardo Arjona (tour), Camila (tour), Alofoke (one-off shows). Tickets via Ticketmaster.
+- **KYBBA** — separate promoter (Miami).
+- **Don Omar BCN** — Barcelona concert, Jul 23 2026. Tickets via Vivaticket/EATA (NOT Ticketmaster). European timezone.
+- **Sienna** — music artist (Peace In Mind).
+- **Vaz Vil** — client (Kiko Blade tour).
+- **El Destilero** — possible new client onboarding.
+- When meeting title involves a client, use client name (e.g., "Zamora - Campaign Review" not "Meeting about ads").
 
 ---
 

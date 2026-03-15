@@ -25,9 +25,9 @@ function outcomeContext(outcome: AgentOutcomeView) {
   }
   if (outcome.crmContactId) {
     return {
-      href: `/admin/crm/${outcome.crmContactId}`,
-      label: outcome.crmContactName ?? "CRM contact",
-      type: "CRM",
+      href: null,
+      label: outcome.crmContactName ?? "Contact",
+      type: "Contact",
     };
   }
   if (outcome.eventId) {
@@ -47,7 +47,7 @@ function outcomeContext(outcome: AgentOutcomeView) {
 
   return {
     href: null,
-    label: "General follow-through",
+    label: "General agent output",
     type: "Other",
   };
 }
@@ -190,7 +190,7 @@ export function AgentCommandSummarySection({
       <Card className="border-border/60">
         <div className="flex items-center justify-between border-b border-border/60 px-5 py-4">
           <div>
-            <p className="text-sm font-medium">Follow-through queue</p>
+            <p className="text-sm font-medium">Action queue</p>
             <p className="text-xs text-muted-foreground">
               Agent work that is still blocked on a human next step or worker completion.
             </p>
@@ -202,7 +202,7 @@ export function AgentCommandSummarySection({
 
         {summary.actionableOutcomes.length === 0 ? (
           <div className="px-5 py-6 text-sm text-muted-foreground">
-            No queued, failed, or untriaged agent outcomes need follow-through right now.
+            No queued, failed, or untriaged agent outcomes need action right now.
           </div>
         ) : (
           <div className="space-y-4 px-5 py-4">

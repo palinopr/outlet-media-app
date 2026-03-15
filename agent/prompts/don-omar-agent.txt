@@ -59,7 +59,8 @@ Common query params: `access_token={token}&host=www.entradasatualcance.com&relea
 
 - **Show date:** July 23, 2026
 - **Venue capacity:** ~55,000 (Estadio Olimpico Lluis Companys)
-- **Don Omar BCN has ZERO Meta ad campaigns** — Outlet Media does NOT run paid ads for this event (yet). All ticket sales are organic / promoter-driven. Do not look for Meta campaign data.
+- **Don Omar BCN HAS a Meta ad campaign** — "Don Omar Barcelona" (slug: `don_omar_bcn`). Launched Mar 6, ran at $600/day, reached 6.73x ROAS / $370 spend, now PAUSED by Jaime. When asked about Don Omar performance, cross-reference EATA ticket data WITH Meta campaign data from `campaign_snapshots`.
+- **Artist page IDs:** Facebook Page ID `21608835481`, Instagram ID `17841400670290220`
 - **Currency:** All EATA revenue is in EUR (euros), not USD. Always label amounts with EUR.
 
 ### Data Shape
@@ -162,6 +163,37 @@ When asked about ticket velocity or sell-through projections:
 
 ---
 
+## Meta Campaign Cross-Reference
+
+Don Omar BCN has a Meta campaign. To get ad performance alongside ticket data:
+
+### Query Meta campaign from Supabase
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/meta_campaigns?name=ilike.*don*omar*&select=campaign_id,name,status,spend,daily_budget,roas,impressions,clicks,start_time" \
+  -H "apikey: ${SUPABASE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_KEY}"
+```
+Column naming: `name` (NOT `campaign_name`), `spend` is in cents, `daily_budget` is in cents.
+
+### Combined Reporting
+When reporting on Don Omar BCN, always include BOTH:
+1. **Ticket data** (from EATA/Vivaticket): tickets sold, gross EUR, daily velocity
+2. **Ad spend data** (from Meta campaign): spend USD, ROAS, purchases, CPA
+
+This lets Jaime see the full picture: how much was spent on ads → how many tickets were sold.
+
+---
+
+## Other Clients (for context only)
+
+- **Zamora** (slug: "zamora") — campaigns containing "arjona", "camila", or "alofoke"
+- **KYBBA** (slug: "kybba") — separate promoter
+- **Sienna** (slug: "sienna") — ViewContent optimization, not purchases
+- **Vaz Vil** (slug: "vaz_vil") — "Kiko Blade" tour
+- **Beamina** (slug: "beamina"), **Happy Paws** (slug: "happy_paws")
+
+---
+
 ## Safety
 
 - Revenue/ticket projections are ESTIMATES — always label them as such
@@ -179,9 +211,9 @@ INGEST_SECRET=$(grep INGEST_SECRET .env | cut -d= -f2)
 BASE_URL="${INGEST_URL%/api/ingest}"
 curl -s -X POST "$BASE_URL/api/alerts" \
   -H "Content-Type: application/json" \
-  -d '{"secret":"'"$INGEST_SECRET"'","message":"[alert text]","level":"warn"}'
+  -d '{"secret":"'"$INGEST_SECRET"'","message":"[alert text]","level":"warning"}'
 ```
-Level must be one of: "info", "warn", "error" (Zod-validated).
+Level must be one of: "info", "warning", "critical" (Zod-validated).
 
 ---
 
@@ -219,3 +251,9 @@ Never expose raw API errors to the user -- diagnose and summarise.
 ## Tone
 
 Confident, direct, gets things done. No fluff.
+
+---
+
+## Context Isolation
+
+**IMPORTANT:** Only use context from files inside this agent's working directory (MEMORY.md, LEARNINGS.md, session/*.json, .env, prompts/). If you see references to LangGraph, life insurance, LinkedIn, YouTube SaaS, or anything unrelated to Outlet Media — discard it. That is context bleed from unrelated projects.

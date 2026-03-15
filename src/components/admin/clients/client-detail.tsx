@@ -16,8 +16,6 @@ import { CampaignsSection } from "./campaigns-section";
 import { ClientOverviewTab } from "./client-overview-tab";
 import { EventsSection } from "./events-section";
 import type { ClientDetail } from "@/app/admin/clients/data";
-import type { EventOperationsSummary } from "@/features/events/summary";
-
 type Tab =
   | "overview"
   | "members"
@@ -26,10 +24,9 @@ type Tab =
 
 interface Props {
   client: ClientDetail;
-  eventOperations: EventOperationsSummary;
 }
 
-export function ClientDetailView({ client, eventOperations }: Props) {
+export function ClientDetailView({ client }: Props) {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
 
   const tabs: { id: Tab; label: string; count?: number }[] = [
@@ -125,7 +122,7 @@ export function ClientDetailView({ client, eventOperations }: Props) {
       {activeTab === "members" && <MembersSection client={client} />}
       {activeTab === "campaigns" && <CampaignsSection campaigns={client.campaigns} />}
       {activeTab === "events" && (
-        <EventsSection events={client.events} summary={eventOperations} />
+        <EventsSection events={client.events} />
       )}
     </div>
   );

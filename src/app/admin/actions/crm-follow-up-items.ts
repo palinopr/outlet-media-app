@@ -321,7 +321,7 @@ export async function deleteCrmFollowUpItem(itemId: string) {
     entityType: "crm_follow_up_item",
     entityId: item.id,
     summary: `Deleted CRM follow-up "${item.title}"`,
-    detail: "Removed it from the CRM workflow.",
+    detail: "Removed it from the CRM follow-up list.",
     metadata: {
       crmContactId: item.contactId,
       crmContactName: item.contactName,

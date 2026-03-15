@@ -9,7 +9,6 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { auth } from "@clerk/nextjs/server";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { TicketVelocityChart } from "@/components/charts/ticket-velocity-chart";
 import { centsToUsd, fmtUsd, fmtNum, computeBlendedRoas, fmtTodayLong } from "@/lib/formatters";
@@ -19,23 +18,8 @@ import { getData } from "./data";
 import { EventsPreviewTable } from "./events-preview-table";
 import { UpcomingShows } from "./upcoming-shows";
 import { CampaignCards } from "./campaign-cards";
-import { DashboardOpsSummarySection } from "@/components/dashboard/dashboard-ops-summary";
-import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { DashboardAssetsSection } from "@/components/dashboard/dashboard-assets-section";
-import { DashboardCrmSection } from "@/components/dashboard/dashboard-crm-section";
-import { EventOperationsSection } from "@/components/events/event-operations-section";
-import {
-  getDashboardActionCenter,
-  getDashboardAssetSummary,
-  getDashboardOpsSummary,
-} from "@/features/dashboard/server";
-import { getEventOperationsSummary } from "@/features/events/server";
-import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
-import { listAgentOutcomes } from "@/features/agent-outcomes/server";
-import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
-import { getCrmOverview } from "@/features/crm/server";
-import { WorkQueueSection } from "@/components/workflow/work-queue-section";
-import { getWorkQueue } from "@/features/work-queue/server";
+import { getDashboardAssetSummary } from "@/features/dashboard/server";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
@@ -56,27 +40,12 @@ function getUpcomingShows(events: Parameters<typeof EventsPreviewTable>[0]["even
 // --- Page ---
 
 export default async function AdminDashboard() {
-  const { userId } = await auth();
   const [
     { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb },
-    opsSummary,
-    actionCenter,
     assetSummary,
-    eventOperations,
-    agentOutcomes,
-    assignedWorkQueue,
-    crm,
-    crmFollowUpItems,
   ] = await Promise.all([
     getData(),
-    getDashboardOpsSummary({ mode: "admin", limit: 6 }),
-    getDashboardActionCenter({ mode: "admin", limit: 4 }),
     getDashboardAssetSummary({ limit: 4 }),
-    getEventOperationsSummary({ limit: 5, mode: "admin" }),
-    listAgentOutcomes({ audience: "all", limit: 4 }),
-    userId ? getWorkQueue({ assigneeId: userId, limit: 4, mode: "admin" }) : Promise.resolve({ items: [], metrics: [] }),
-    getCrmOverview({ audience: "all" }),
-    listCrmFollowUpItems({ audience: "all", limit: 6 }),
   ]);
 
   const upcomingShows = getUpcomingShows(events, 8);
@@ -100,7 +69,6 @@ export default async function AdminDashboard() {
     { label: "Tickets Sold", value: fmtNum(totalSold), sub: `of ${fmtNum(totalCap)}`, icon: Ticket },
     { label: "Total Gross", value: fmtUsd(totalGross), sub: "box office revenue", icon: DollarSign },
   ];
-  const crmContacts = crm.upcomingFollowUps.length > 0 ? crm.upcomingFollowUps.slice(0, 4) : crm.recentContacts.slice(0, 4);
 
   return (
     <div className="space-y-4 sm:space-y-8">
@@ -134,25 +102,6 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
-      <DashboardOpsSummarySection
-        campaignHrefPrefix="/admin/campaigns"
-        description="Traditional dashboard KPIs are now backed by the same approvals, action items, comments, and activity flowing through campaign operations."
-        emptyState="No campaigns need workflow attention right now."
-        summary={opsSummary}
-        title="Operations snapshot"
-        variant="admin"
-      />
-
-      <DashboardActionCenterSection
-        actionCenter={actionCenter}
-        assetHrefPrefix="/admin/assets"
-        assetLibraryHref="/admin/assets"
-        campaignHrefPrefix="/admin/campaigns"
-        crmHrefPrefix="/admin/crm"
-        eventHrefPrefix="/admin/events"
-        variant="admin"
-      />
-
       <DashboardAssetsSection
         assetHrefPrefix="/admin/assets"
         href="/admin/assets"
@@ -164,51 +113,6 @@ export default async function AdminDashboard() {
         emptyState="No creative review pressure right now."
         variant="admin"
       />
-
-      <DashboardCrmSection
-        contacts={crmContacts}
-        detailHrefPrefix="/admin/crm"
-        followUpHrefPrefix="/admin/crm"
-        followUpItems={crmFollowUpItems.filter((item) => item.status !== "done").slice(0, 4)}
-        href="/admin/crm"
-        showClientSlug
-        summary={crm.summary}
-        title="CRM snapshot"
-        description="Hot contacts and due follow-ups on the same dashboard as campaign work."
-        emptyState="No CRM contacts are active yet. Add contacts in the CRM app to start tracking follow-ups."
-        variant="admin"
-      />
-
-      <EventOperationsSection
-        description="A summary-first readout of which shows need promotion follow-through, responses, or ticketing attention."
-        hrefPrefix="/admin/events"
-        showClientSlug
-        summary={eventOperations}
-        title="Event snapshot"
-        variant="admin"
-      />
-
-      <div className="grid gap-6 xl:grid-cols-2">
-        <WorkQueueSection
-          description="The cross-app work already assigned to you across campaigns, CRM, events, and assets."
-          emptyState="Nothing is assigned to you right now."
-          showClientSlug
-          showMetrics={false}
-          summary={assignedWorkQueue}
-          title="Assigned to you"
-          variant="admin"
-        />
-        <AgentOutcomesPanel
-          canCreateActionItems
-          outcomes={agentOutcomes}
-          title="Recent agent outcomes"
-          description="The latest completed, running, or blocked agent work across campaign operations."
-          emptyState="No agent outcomes are available yet."
-          variant="admin"
-          campaignHrefPrefix="/admin/campaigns"
-          eventHrefPrefix="/admin/events"
-        />
-      </div>
 
       {/* Trend charts */}
       {(trendData.length > 0 || velocityData.length > 0) && (

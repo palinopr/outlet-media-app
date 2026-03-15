@@ -6,8 +6,8 @@ import { StatCard } from "@/components/admin/stat-card";
 import { ClientTable } from "@/components/admin/clients/client-table";
 import {
   Users,
-  BadgeCheck,
-  MessageSquareMore,
+  DollarSign,
+  Megaphone,
   Image as ImageIcon,
   Link2Off,
 } from "lucide-react";
@@ -28,8 +28,6 @@ export default async function ClientsPage() {
   const totalSpend = clients.reduce((s, c) => s + c.totalSpend, 0);
   const totalCampaigns = clients.reduce((s, c) => s + c.totalCampaigns, 0);
   const activeCampaigns = clients.reduce((s, c) => s + c.activeCampaigns, 0);
-  const pendingApprovals = clients.reduce((s, c) => s + c.pendingApprovals, 0);
-  const openDiscussions = clients.reduce((s, c) => s + c.openDiscussions, 0);
   const assetsNeedingReview = clients.reduce((s, c) => s + c.assetsNeedingReview, 0);
   const connectionRiskAccounts = clients.reduce(
     (sum, client) => sum + client.connectionRiskAccounts,
@@ -45,15 +43,15 @@ export default async function ClientsPage() {
 
   const stats = [
     { label: "Clients Needing Attention", value: String(clientsNeedingAttention.length), sub: `${clients.length} total accounts`, icon: Users },
-    { label: "Pending Approvals", value: String(pendingApprovals), sub: "decisions waiting", icon: BadgeCheck },
+    { label: "Active Campaigns", value: String(activeCampaigns), sub: `${totalCampaigns} total campaigns`, icon: Megaphone },
     {
       label: "Connection Risk",
       value: String(connectionRiskAccounts),
       sub: `${clients.filter((client) => client.connectionRiskAccounts > 0).length} client accounts affected`,
       icon: Link2Off,
     },
-    { label: "Open Discussions", value: String(openDiscussions), sub: "threads needing a reply", icon: MessageSquareMore },
     { label: "Assets Needing Review", value: String(assetsNeedingReview), sub: `${activeCampaigns} active campaigns`, icon: ImageIcon },
+    { label: "Managed Spend", value: fmtUsd(totalSpend), sub: "across all client accounts", icon: DollarSign },
   ];
 
   return (
@@ -89,7 +87,7 @@ export default async function ClientsPage() {
             <div>
               <p className="text-sm font-semibold">Client health snapshot</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Accounts with the most pending approvals, discussions, next steps, and creative review pressure.
+                Accounts with the most operating pressure, connection issues, and creative review load.
               </p>
             </div>
             <div className="text-right">
@@ -125,12 +123,11 @@ export default async function ClientsPage() {
                     </span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
+                    {client.activeCampaigns > 0 ? <span>{client.activeCampaigns} active campaigns</span> : null}
+                    {client.activeShows > 0 ? <span>{client.activeShows} live shows</span> : null}
                     {client.connectionRiskAccounts > 0 ? (
                       <span>{client.connectionRiskAccounts} connections at risk</span>
                     ) : null}
-                    {client.pendingApprovals > 0 ? <span>{client.pendingApprovals} approvals</span> : null}
-                    {client.openDiscussions > 0 ? <span>{client.openDiscussions} discussions</span> : null}
-                    {client.openActionItems > 0 ? <span>{client.openActionItems} next steps</span> : null}
                     {client.assetsNeedingReview > 0 ? <span>{client.assetsNeedingReview} assets to review</span> : null}
                   </div>
                 </Link>

@@ -1,16 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
-import { DashboardActionCenterSection } from "@/components/dashboard/dashboard-action-center";
 import { CalendarDays, Bot, Ticket, DollarSign, TrendingUp, Users } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { getEvents } from "./data";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { EventTable } from "@/components/admin/events/event-table";
-import { EventOperationsSection } from "@/components/events/event-operations-section";
 import { Suspense } from "react";
 import { fmtUsd, slugToLabel } from "@/lib/formatters";
-import { getEventOperationsSummary, getEventsWorkflowData } from "@/features/events/server";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
@@ -24,11 +20,7 @@ export default async function EventsPage({ searchParams }: Props) {
   const { client } = await searchParams;
   const clientSlug = client && client !== "all" ? client : null;
 
-  const [{ events, clients, demoMap, campaigns, fromDb }, operations, workflow] = await Promise.all([
-    getEvents(clientSlug),
-    getEventOperationsSummary({ clientSlug, limit: 6, mode: "admin" }),
-    getEventsWorkflowData({ clientSlug, limit: 5, mode: "admin" }),
-  ]);
+  const { events, clients, demoMap, campaigns, fromDb } = await getEvents(clientSlug);
 
   const totalSold = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
   const eventsWithCap = events.filter((e) => e.tickets_sold != null && e.tickets_available != null);
@@ -77,37 +69,6 @@ export default async function EventsPage({ searchParams }: Props) {
           <StatCard key={s.label} {...s} />
         ))}
       </div>
-
-      <EventOperationsSection
-        description="The live event workflow across promotion follow-ups, open discussion, and recent show-level updates."
-        hrefPrefix="/admin/events"
-        showClientSlug
-        summary={operations}
-        title="Event operating pressure"
-        variant="admin"
-      />
-
-      <DashboardActionCenterSection
-        actionCenter={workflow.actionCenter}
-        assetHrefPrefix="/admin/assets"
-        assetLibraryHref="/admin/assets"
-        campaignHrefPrefix="/admin/campaigns"
-        description="Pending event approvals and open event threads that still need operator attention."
-        eventHrefPrefix="/admin/events"
-        showCrmFollowUps={false}
-        variant="admin"
-      />
-
-      <AgentOutcomesPanel
-        assetHrefPrefix="/admin/assets"
-        campaignHrefPrefix="/admin/campaigns"
-        crmHrefPrefix="/admin/crm"
-        description="Agent follow-through tied to show operations, so promotion recommendations stay visible alongside ticket movement."
-        eventHrefPrefix="/admin/events"
-        outcomes={workflow.agentOutcomes}
-        title="Event agent follow-through"
-        variant="admin"
-      />
 
       {/* Table */}
       <Card className="border-border/60">

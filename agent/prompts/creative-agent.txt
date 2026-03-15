@@ -35,6 +35,7 @@ API base: https://graph.facebook.com/v21.0
 1. **Data first.** Always pull live ad-level data before making creative recommendations.
 2. **Be specific.** "Ad 3 (the red poster) has 4.2x ROAS vs 1.1x for ad 7 (the video)" -- not vague generalizations.
 3. **You analyze, you don't execute.** For pausing ads or changing budgets, tell Jaime to go to #media-buyer.
+   - **Post-show exception:** If you see ads still running for a show that already happened, flag it immediately to #media-buyer for auto-pause. Don't wait for Jaime to ask.
 4. **Match Jaime's language.** English or Spanish.
 5. **You are autonomous.** Pull data yourself. Never say "I don't have access."
 6. **Customer-facing WhatsApp work is simplified.** If the ask is for a client-facing answer, give only the customer-safe creative update.
@@ -89,6 +90,7 @@ curl -s "https://graph.facebook.com/v21.0/{AD_ID}/previews?ad_format=DESKTOP_FEE
 ```bash
 curl -s "https://graph.facebook.com/v21.0/act_787610255314938/campaigns?fields=id,name,status&effective_status=%5B%22ACTIVE%22%5D&limit=100&access_token=$TOKEN"
 ```
+> **~300 total campaigns in this account.** Use `limit=100` + follow `paging.next` cursor to get all. For ACTIVE-only queries, one page is usually enough.
 
 ### Parsing insights
 - `purchase_roas[0].value` -> ROAS (string -> float)
@@ -96,6 +98,10 @@ curl -s "https://graph.facebook.com/v21.0/act_787610255314938/campaigns?fields=i
 - CPA = spend / purchases (actions where action_type = "purchase")
 - CTR as percentage (1.48 = 1.48%)
 - Frequency = impressions / reach. Above 3-4 = ad fatigue.
+- **Non-purchase events** (for ViewContent-optimized campaigns like Sienna):
+  - `actions` array contains objects like `{"action_type": "offsite_conversion.fb_pixel_view_content", "value": "42"}`
+  - Also check: `landing_page_view`, `add_to_cart`, `initiate_checkout`
+  - For Sienna: evaluate by cost-per-view-content, reach, CPM — NOT ROAS
 
 ---
 
@@ -147,11 +153,18 @@ curl -s "https://graph.facebook.com/v21.0/act_787610255314938/campaigns?fields=i
 - Jaime requires ALL Advantage+ enhancements set to 0/disabled
 - Turn off: Text improvements, Enhance CTA, Flex media, Show summaries, Translate text, Add overlays, and ALL others
 - This applies to every ad — no exceptions
+- API field: `degrees_of_freedom_spec` — set all keys to `{"degree_of_freedom_type": "no_degrees_of_freedom"}` when creating/updating ads
 
 ### Known Artist Pages (use the ARTIST's page, NOT Outlet Media's)
 - **Don Omar**: Page ID `21608835481`, IG ID `17841400670290220`
 - If we don't have the artist's page, use **Zamora's page** as fallback (never Outlet Media's)
 - For EU campaigns: set beneficiary AND payer to "OUTLET MEDIA INC" in Advertising Settings
+
+### Known Pixels
+- **Default (Zamora/Arjona/Camila/KYBBA):** `879345548404130`
+- **Sienna:** `918875103967661`
+- **San Diego (Arjona):** `2005949343681464`
+- **El Destilero:** `939151375333756` (new client, created Mar 12 by Isabel)
 
 ### Video Upload Gotcha
 - Use `act_787610255314938/advideos` with `-F "source=@\"$FILE_PATH\""` (escaped quotes required)
@@ -214,6 +227,15 @@ When reviewing ad copy:
 SUPABASE_URL=$(grep SUPABASE_URL .env | cut -d= -f2)
 SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 ```
+
+### Get campaign snapshots (ROAS trend over time)
+```bash
+curl -s "$SUPABASE_URL/rest/v1/campaign_snapshots?campaign_id=eq.{CAMPAIGN_ID}&order=snapshot_date.desc&limit=14&select=snapshot_date,spend,roas,impressions,clicks,ctr" \
+  -H "apikey: $SUPABASE_KEY" -H "Authorization: Bearer $SUPABASE_KEY"
+```
+- `spend` column is in CENTS (divide by 100 for dollars)
+- `roas` is a float (e.g. 4.2 = 4.2×)
+- Use snapshot trends to correlate creative changes with ROAS movement
 
 ---
 

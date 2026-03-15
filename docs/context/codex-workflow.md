@@ -183,3 +183,8 @@ pkill -f 'chrome-devtools-mcp|@playwright/mcp|playwright-chrome-clone|mcp-discor
 For browser debugging, stabilize one MCP path first:
 - get `chrome-devtools` healthy before changing Playwright config
 - do not mix Playwright profile experiments with a broken DevTools session in the same Codex run unless you are explicitly debugging MCP behavior itself
+
+When running local Next.js dev with Clerk and a real browser session:
+- prefer `npm run dev -- --hostname localhost --port <port>` over `127.0.0.1`
+- Next 16 can proxy Clerk auth rewrites to `http://localhost:<port>` during development
+- if the server was started on `127.0.0.1`, local `/sign-in` can fail with `Failed to proxy ... socket hang up` or an `Internal Server Error`

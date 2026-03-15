@@ -85,19 +85,12 @@ async function revalidateClientSlugSurfaces(
     clientId,
     clientSlug: newSlug,
   });
-  revalidatePath("/admin/activity");
   revalidatePath("/admin/assets");
   revalidatePath("/admin/campaigns");
   revalidatePath("/admin/clients");
   revalidatePath(`/admin/clients/${clientId}`);
-  revalidatePath("/admin/conversations");
-  revalidatePath("/admin/crm");
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin/events");
-  revalidatePath("/admin/notifications");
-  revalidatePath("/admin/reports");
-  revalidatePath("/admin/workspace", "layout");
-  revalidatePath("/admin/workspace/tasks");
   revalidatePath(`/client/${oldSlug}`, "layout");
   revalidatePath(`/client/${newSlug}`, "layout");
 }

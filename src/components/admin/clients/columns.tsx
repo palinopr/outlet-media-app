@@ -110,21 +110,19 @@ export const clientColumns: ColumnDef<ClientSummary>[] = [
   {
     accessorKey: "needsAttention",
     header: ({ column }) => (
-      <ColumnHeader column={column} title="Workflow" className="justify-end" />
+      <ColumnHeader column={column} title="Attention" className="justify-end" />
     ),
     cell: ({ row }) => {
       const client = row.original;
       const needsAttention = client.needsAttention;
       const detail =
-        client.pendingApprovals > 0
-          ? `${client.pendingApprovals} approvals`
-          : client.openDiscussions > 0
-            ? `${client.openDiscussions} discussions`
-            : client.openActionItems > 0
-              ? `${client.openActionItems} next steps`
-              : client.assetsNeedingReview > 0
-                ? `${client.assetsNeedingReview} assets`
-                : "Clear";
+        client.connectionRiskAccounts > 0
+          ? `${client.connectionRiskAccounts} connections at risk`
+          : client.assetsNeedingReview > 0
+            ? `${client.assetsNeedingReview} assets to review`
+            : client.activeCampaigns > 0
+              ? `${client.activeCampaigns} active campaigns`
+              : "Clear";
 
       return (
         <div className="text-right">

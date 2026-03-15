@@ -1,27 +1,15 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { auth } from "@clerk/nextjs/server";
 import {
   ArrowLeft,
-  CheckSquare,
   Image as ImageIcon,
   Link2,
   Video,
 } from "lucide-react";
-import { AgentOutcomesPanel } from "@/components/agents/agent-outcomes-panel";
-import { AssetCommentsPanel } from "@/components/assets/asset-comments-panel";
-import { AssetFollowUpItemsPanel } from "@/components/assets/asset-follow-up-items-panel";
 import { AssetOperatingPanel } from "@/components/admin/assets/asset-operating-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
-import { WorkspaceActivityFeed } from "@/components/workspace/workspace-activity-feed";
-import { WorkspaceApprovalsPanel } from "@/components/workspace/workspace-approvals-panel";
-import { listAgentOutcomes } from "@/features/agent-outcomes/server";
-import { listAssetComments } from "@/features/asset-comments/server";
-import { listAssetFollowUpItems } from "@/features/asset-follow-up-items/server";
-import { listAssetApprovalRequests } from "@/features/approvals/server";
 import { getAssetOperatingData, getAssetRecordById } from "@/features/assets/server";
-import { listAssetSystemEvents } from "@/features/system-events/server";
 import { fmtDate, fmtNum, slugToLabel } from "@/lib/formatters";
 
 interface Props {
@@ -71,76 +59,11 @@ function assetPreview(asset: Awaited<ReturnType<typeof getAssetRecordById>>) {
 
 export default async function AdminAssetDetailPage({ params }: Props) {
   const { assetId } = await params;
-  const { userId } = await auth();
   const assetRecord = await getAssetRecordById(assetId);
   if (!assetRecord) notFound();
 
-  const [approvals, comments, events, followUpItems] = await Promise.all([
-    listAssetApprovalRequests({
-      audience: "all",
-      assetId,
-      clientSlug: assetRecord.client_slug,
-      limit: 8,
-      status: "pending",
-    }),
-    listAssetComments({
-      assetId,
-      audience: "all",
-      clientSlug: assetRecord.client_slug,
-    }),
-    listAssetSystemEvents({
-      audience: "all",
-      assetId,
-      clientSlug: assetRecord.client_slug,
-      limit: 10,
-    }),
-    listAssetFollowUpItems({
-      audience: "all",
-      assetId,
-      clientSlug: assetRecord.client_slug,
-      limit: 24,
-    }),
-  ]);
-
-  const linkedCampaignIds = new Set<string>();
-
-  for (const approval of approvals) {
-    if (approval.entityType === "campaign" && approval.entityId) {
-      linkedCampaignIds.add(approval.entityId);
-      continue;
-    }
-
-    const campaignId = approval.metadata.campaignId;
-    if (typeof campaignId === "string" && campaignId.length > 0) {
-      linkedCampaignIds.add(campaignId);
-    }
-  }
-
-  for (const event of events) {
-    if (event.entityType === "campaign" && event.entityId) {
-      linkedCampaignIds.add(event.entityId);
-      continue;
-    }
-
-    const campaignId = event.metadata.campaignId;
-    if (typeof campaignId === "string" && campaignId.length > 0) {
-      linkedCampaignIds.add(campaignId);
-    }
-  }
-
-  const data = await getAssetOperatingData(assetId, linkedCampaignIds);
+  const data = await getAssetOperatingData(assetId);
   if (!data) notFound();
-
-  const agentOutcomes = await listAgentOutcomes({
-    audience: "all",
-    assetId,
-    clientSlug: data.asset.client_slug,
-    limit: 4,
-    scopeCampaignIds:
-      data.linkedCampaigns.length > 0
-        ? data.linkedCampaigns.map((campaign) => campaign.campaignId)
-        : undefined,
-  });
 
   const dimensions =
     data.asset.width && data.asset.height
@@ -161,7 +84,7 @@ export default async function AdminAssetDetailPage({ params }: Props) {
 
       <AdminPageHeader
         title={data.asset.file_name}
-        description="Asset operating view across review state, campaign linkage, approvals, and recent activity."
+        description="Asset detail view across review state, campaign linkage, and recent activity."
       >
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-border/70 bg-muted/40 px-2.5 py-1 text-xs text-muted-foreground">
@@ -183,13 +106,6 @@ export default async function AdminAssetDetailPage({ params }: Props) {
           icon={Link2}
           accent="from-cyan-500/20 to-blue-500/20"
           iconColor="text-cyan-400"
-        />
-        <StatCard
-          label="Pending approvals"
-          value={String(approvals.length)}
-          icon={CheckSquare}
-          accent="from-amber-500/20 to-orange-500/20"
-          iconColor="text-amber-400"
         />
         <StatCard
           label="Dimensions"
@@ -216,40 +132,13 @@ export default async function AdminAssetDetailPage({ params }: Props) {
                 Hosted creative
               </h2>
               <p className="mt-1 text-sm text-[#9b9a97]">
-                Review the asset itself before moving it further through campaign workflow.
+                Review the asset itself before updating its linked campaign work.
               </p>
             </div>
             {assetPreview(data.asset)}
           </section>
 
           <AssetOperatingPanel asset={data.asset} />
-
-          <AssetCommentsPanel
-            allowAdminOnly
-            allowCreateFollowUpItems
-            assetId={assetId}
-            canDeleteAny
-            clientSlug={data.asset.client_slug}
-            comments={comments}
-            currentUserId={userId ?? ""}
-            description="Keep creative feedback, internal review notes, and client-facing discussion on the asset itself."
-            linkedFollowUpSourceIds={followUpItems
-              .filter((item) => item.sourceEntityType === "asset_comment" && item.sourceEntityId)
-              .map((item) => item.sourceEntityId as string)}
-            title="Asset discussion"
-            variant="admin"
-          />
-
-          <AssetFollowUpItemsPanel
-            assetId={assetId}
-            canManage
-            clientSlug={data.asset.client_slug}
-            items={followUpItems}
-            title="Creative next steps"
-            description="Track asset-specific review, production, and delivery follow-through without leaving the asset page."
-            emptyState="No asset follow-up items are active yet."
-            variant="admin"
-          />
 
           <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
             <div className="mb-4">
@@ -258,7 +147,7 @@ export default async function AdminAssetDetailPage({ params }: Props) {
                 Promotion context
               </h2>
               <p className="mt-1 text-sm text-[#9b9a97]">
-                Campaigns this asset is attached to by direct workflow events or name-based classification.
+                Campaigns this asset is attached to through direct links or name-based classification.
               </p>
             </div>
 
@@ -296,61 +185,28 @@ export default async function AdminAssetDetailPage({ params }: Props) {
             )}
           </section>
         </div>
-
-        <div className="space-y-6">
-          <WorkspaceApprovalsPanel
-            approvals={approvals}
-            canDecide
-            title="Asset approvals"
-            description="Pending reviews triggered by uploads or folder imports tied to this asset."
-            emptyState="No approvals are waiting for this asset right now."
-          />
-
-          <WorkspaceActivityFeed
-            events={events}
-            assetHrefPrefix="/admin/assets"
-            campaignHrefPrefix="/admin/campaigns"
-            crmHrefPrefix="/admin/crm"
-            basePath="/admin/assets"
-            eventHrefPrefix="/admin/events"
-            title="Asset activity"
-            description="Recent upload, review, and workflow events attached to this asset."
-            emptyState="Asset activity will appear here as review state and workflow context change."
-          />
-
-          <AgentOutcomesPanel
-            assetHrefPrefix="/admin/assets"
-            canCreateActionItems
-            outcomes={agentOutcomes}
-            title="Agent follow-through"
-            description="Agent tasks triggered from campaign workflow connected to this asset."
-            emptyState="No agent work is attached to this asset yet."
-            variant="admin"
-            campaignHrefPrefix="/admin/campaigns"
-          />
-
-          <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
-            <p className="text-sm font-medium text-[#787774]">Asset snapshot</p>
-            <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#2f2f2f]">
-              Quick context
-            </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Folder</p>
-                <p className="mt-2 text-sm font-medium text-[#2f2f2f]">
-                  {data.asset.folder ?? "Uncategorized"}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Labels</p>
-                <p className="mt-2 text-sm font-medium text-[#2f2f2f]">
-                  {data.asset.labels?.length ? data.asset.labels.join(", ") : "No labels yet"}
-                </p>
-              </div>
-            </div>
-          </section>
-        </div>
       </div>
+
+      <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
+        <p className="text-sm font-medium text-[#787774]">Asset snapshot</p>
+        <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#2f2f2f]">
+          Quick context
+        </h2>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Folder</p>
+            <p className="mt-2 text-sm font-medium text-[#2f2f2f]">
+              {data.asset.folder ?? "Uncategorized"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Labels</p>
+            <p className="mt-2 text-sm font-medium text-[#2f2f2f]">
+              {data.asset.labels?.length ? data.asset.labels.join(", ") : "No labels yet"}
+            </p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
