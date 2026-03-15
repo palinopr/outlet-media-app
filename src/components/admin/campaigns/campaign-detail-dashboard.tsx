@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { Sparkles, Bot, ChevronDown } from "lucide-react";
 import type { MetaCampaignCard } from "@/lib/meta-campaigns";
@@ -33,14 +32,11 @@ function seededRandom(seed: number) {
     return x - Math.floor(x);
 }
 
-function generateHeatmapData() {
-    return days.map((_, dIdx) =>
-        hours.map((_, hIdx) => Math.floor(seededRandom(dIdx * 24 + hIdx + 42) * 100))
-    );
-}
+const heatmapData = days.map((_, dIdx) =>
+    hours.map((_, hIdx) => Math.floor(seededRandom(dIdx * 24 + hIdx + 42) * 100))
+);
 
 export function CampaignDetailDashboard({ campaign }: Props) {
-    const heatmapData = useMemo(() => generateHeatmapData(), []);
 
     return (
         <div className="space-y-6">

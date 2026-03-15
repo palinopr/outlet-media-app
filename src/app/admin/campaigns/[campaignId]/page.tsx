@@ -37,7 +37,7 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight">Campaign Detail</h1>
             <div className={`flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-medium ${statusCfg.bg} ${statusCfg.text} border-current/30`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} ${campaign.status.toUpperCase() === "ACTIVE" ? "animate-pulse" : ""}`} />
+              <div className={`w-1.5 h-1.5 rounded-full ${statusCfg.dot} ${statusCfg.label === "Active" ? "animate-pulse" : ""}`} />
               {statusCfg.label}
             </div>
           </div>

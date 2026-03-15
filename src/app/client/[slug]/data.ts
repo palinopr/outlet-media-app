@@ -206,23 +206,25 @@ export async function getData(
   const includeEvents = options.includeEvents ?? true;
 
   // Build events query (independent of Meta API)
-  let eventsQuery = includeEvents
-    ? db
-        ?.from("tm_events")
-        .select("*")
-        .eq("client_slug", slug)
-        .order("date", { ascending: true })
-        .limit(50)
-    : null;
-
-  if (scope?.allowedEventIds && eventsQuery) {
-    eventsQuery = eventsQuery.in("id", scope.allowedEventIds);
+  async function fetchEvents(): Promise<{ data: TmEvent[] | null }> {
+    if (!includeEvents || !db) return { data: null };
+    let q = db
+      .from("tm_events")
+      .select("*")
+      .eq("client_slug", slug)
+      .order("date", { ascending: true })
+      .limit(50);
+    if (scope?.allowedEventIds) {
+      q = q.in("id", scope.allowedEventIds);
+    }
+    const res = await q;
+    return { data: (res.data ?? null) as TmEvent[] | null };
   }
 
   // Fetch campaigns (Meta API) and events (Supabase) in parallel
   const [result, eventsRes] = await Promise.all([
     fetchAllCampaigns(range, slug),
-    eventsQuery ? eventsQuery : Promise.resolve({ data: null }),
+    fetchEvents(),
   ]);
 
   let campaigns = result.campaigns.map(toCampaignCard);
@@ -246,7 +248,7 @@ export async function getData(
   );
 
   const dataSource = result.error ? "supabase" : "meta_api";
-  const tmEvents = includeEvents ? ((eventsRes.data ?? []) as TmEvent[]) : [];
+  const tmEvents = (eventsRes.data ?? []) as TmEvent[];
   const events = buildEventCards(tmEvents);
 
   // Demographics depend on event tm_ids
