@@ -4,6 +4,7 @@ const CLIENT_RULES: Array<{ keywords: string[]; slug: string }> = [
   { keywords: ["beamina"], slug: "beamina" },
   { keywords: ["happy paws", "happy_paws"], slug: "happy_paws" },
   { keywords: ["don omar", "don_omar"], slug: "don_omar_bcn" },
+  { keywords: ["distill", "destilado", "destilero"], slug: "distill_pr" },
 ];
 
 export function guessClientSlug(campaignName: string): string {
