@@ -15,6 +15,12 @@ export interface ClientPortalTheme {
   style: CSSProperties;
 }
 
+export interface ClientPortalThemeOverrides {
+  brandName?: string | null;
+  logoUrl?: string | null;
+  logoAlt?: string | null;
+}
+
 const DEFAULT_THEME = createTheme({
   accentRgb: "34 211 238",
   secondaryRgb: "168 85 247",
@@ -55,10 +61,25 @@ const HOMEBUYER_THEME = createTheme({
   brandBadge: "Homebuyer Readiness",
 });
 
-export function getClientPortalTheme(slug: string): ClientPortalTheme {
+export function getClientPortalTheme(
+  slug: string,
+  overrides?: ClientPortalThemeOverrides,
+): ClientPortalTheme {
   const normalized = slug.trim().toLowerCase();
-  if (HOMEBUYER_ALIASES.has(normalized)) return HOMEBUYER_THEME;
-  return DEFAULT_THEME;
+  const baseTheme = HOMEBUYER_ALIASES.has(normalized) ? HOMEBUYER_THEME : DEFAULT_THEME;
+
+  if (!overrides) return baseTheme;
+
+  const brandBadge = overrides.brandName?.trim() || baseTheme.brandBadge;
+  const brandLogoSrc = overrides.logoUrl?.trim() || baseTheme.brandLogoSrc;
+  const brandLogoAlt = overrides.logoAlt?.trim() || (brandLogoSrc ? brandBadge : baseTheme.brandLogoAlt);
+
+  return {
+    ...baseTheme,
+    brandBadge,
+    brandLogoSrc,
+    brandLogoAlt,
+  };
 }
 
 function createTheme(

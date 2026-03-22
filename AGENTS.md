@@ -40,9 +40,13 @@
 - The current customer-facing web product should stay intentionally narrow:
   - `Campaigns`
   - `Events`
+  - `Reports`
+- Client portal packaging is controlled from Outlet admin. Each client account should have one admin-managed source of truth for enabled apps, branding, portal URL metadata, and memberships.
+- Treat the client account record and `client_members` as the authority for portal access. Do not treat Clerk `publicMetadata.client_slug` or URL slug values as the business source of truth for invites, memberships, or landing behavior.
+- Keep `Events` optional per client account. Campaigns are universal; reports are first-class when enabled.
 - Client-facing analytics, activity, approvals, comments, assets, and agent follow-through should live inside campaign and event views before earning their own top-level client routes.
 - Client-facing web is primarily a reporting and visibility surface. Meta account connection, campaign creation, and live campaign mutation should stay internal/admin-only by default unless a later product decision explicitly reopens client self-serve execution.
-- Do not ship client top-level apps for CRM, assets, approvals, conversations, reports, updates, or workspace unless current customers clearly need them and the surface can be maintained without duplicating workflow logic.
+- Do not ship client top-level apps for CRM, assets, approvals, conversations, updates, or workspace unless current customers clearly need them and the surface can be maintained without duplicating workflow logic.
 - Admin web remains the broader operating surface for account management, campaign/event operations, CRM, approvals, assets, and internal coordination.
 - CRM is admin-first for now. Evolution/WhatsApp should enrich CRM and account context through durable ledgers and routing state, but customer messaging operations remain Discord-first unless a later product decision explicitly asks for a dedicated admin inbox.
 
@@ -78,6 +82,7 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
 - Treat agents as bounded workers that inspect events, decide next actions, draft work, request approval, and log outcomes.
 - When agent work produces a recommendation, blocker, or failure, make it convertible into first-class campaign follow-up work instead of leaving it as a passive status row.
 - Treat the workspace/editor layer as the **shell**, not the full product. Core business entities should not be hidden inside generic docs when they need first-class models.
+- Client onboarding should resolve through one canonical portal-entry flow: create client account -> invite member -> member signs in/up -> lands in the correct portal or pending screen without false "no access" states.
 - Campaign-native next steps should live in first-class campaign workflow objects, not only generic workspace tasks.
 - Traditional dashboards and reporting views should remain first-class surfaces for summary-first users.
 - Dashboard summary surfaces should be derived from the same approvals, action items, comments, and `system_events` backbone as deeper workflow views, not from duplicated ad hoc summary state.

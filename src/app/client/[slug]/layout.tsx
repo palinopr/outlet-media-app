@@ -4,13 +4,15 @@ import Image from "next/image";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { slugToLabel } from "@/lib/formatters";
-import { supabaseAdmin } from "@/lib/supabase";
-import { getMemberAccessForSlug, getMemberships } from "@/lib/member-access";
 import { ClientNav } from "./components/client-nav";
 import { MobileNav } from "./components/mobile-nav";
 import { CompleteProfileModal } from "./components/complete-profile-modal";
 import { getClientPortalTheme } from "@/features/client-portal/theme";
 import { getClientPortalConfig } from "@/features/client-portal/config";
+import {
+  getUserEmailAddresses,
+  resolveClientPortalEntry,
+} from "@/features/client-portal/entry";
 
 interface Props {
   children: ReactNode;
@@ -53,58 +55,38 @@ export default async function ClientLayout({ children, params }: Props) {
 
     const meta = (user?.publicMetadata ?? {}) as {
       role?: string;
-      client_slug?: string;
-      client_role?: string;
     };
 
     const isAdmin = meta.role === "admin";
 
     if (!isAdmin) {
-      // Check access via client_members table (supports multi-client)
-      const access = await getMemberAccessForSlug(userId, slug);
+      const entry = await resolveClientPortalEntry({
+        emailAddresses: getUserEmailAddresses(user),
+        preferredSlug: slug,
+        role: meta.role ?? null,
+        userId,
+      });
 
-      if (!access) {
-        // No membership for this slug -- redirect to picker or pending
-        const allMemberships = await getMemberships(userId);
-        if (allMemberships.length === 1) {
-          redirect(`/client/${allMemberships[0].clientSlug}`);
-        } else if (allMemberships.length > 1) {
-          redirect("/client");
-        }
-        // Fallback: check legacy metadata
-        if (meta.client_slug && meta.client_slug !== slug) {
-          redirect(`/client/${meta.client_slug}`);
-        }
-        return (
-          <div className="dark flex min-h-screen items-center justify-center bg-background text-foreground">
-            <div className="text-center space-y-2">
-              <p className="text-lg font-semibold">Access denied</p>
-              <p className="text-sm text-muted-foreground">
-                You don&apos;t have access to this client portal.
-              </p>
-            </div>
-          </div>
-        );
+      if (entry.kind === "pending" || entry.kind === "picker") {
+        redirect(entry.destination);
+      }
+
+      if (entry.kind === "portal" && entry.clientSlug !== slug) {
+        redirect(entry.destination);
       }
     }
 
     needsName = !isAdmin && (!user?.firstName || !user?.lastName);
-
-    // Auto-enroll: ensure client_members row exists for invited users
-    if (!isAdmin && supabaseAdmin && portalConfig?.clientId) {
-      const enrollRole = meta.client_role === "owner" ? "owner" : "member";
-      await supabaseAdmin
-        .from("client_members")
-        .upsert(
-          { client_id: portalConfig.clientId, clerk_user_id: userId, role: enrollRole },
-          { onConflict: "client_id,clerk_user_id" }
-        );
-    }
   }
 
-  const clientName = slugToLabel(slug);
+  const clientName = portalConfig?.brandName ?? slugToLabel(slug);
   const eventsEnabled = portalConfig?.eventsEnabled ?? false;
-  const theme = getClientPortalTheme(slug);
+  const reportsEnabled = portalConfig?.reportsEnabled ?? true;
+  const theme = getClientPortalTheme(slug, {
+    brandName: portalConfig?.brandName,
+    logoAlt: portalConfig?.logoAlt,
+    logoUrl: portalConfig?.logoUrl,
+  });
 
   return (
     <div
@@ -147,7 +129,11 @@ export default async function ClientLayout({ children, params }: Props) {
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <ClientNav slug={slug} eventsEnabled={eventsEnabled} />
+          <ClientNav
+            slug={slug}
+            eventsEnabled={eventsEnabled}
+            reportsEnabled={reportsEnabled}
+          />
         </div>
         <div className="px-5 py-4 shrink-0">
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent mb-4" />
@@ -158,7 +144,12 @@ export default async function ClientLayout({ children, params }: Props) {
         </div>
       </aside>
       {/* Mobile header */}
-      <MobileNav slug={slug} clientName={clientName} eventsEnabled={eventsEnabled} />
+      <MobileNav
+        slug={slug}
+        clientName={clientName}
+        eventsEnabled={eventsEnabled}
+        reportsEnabled={reportsEnabled}
+      />
       <div className="flex flex-col flex-1 min-w-0">
         <main className="flex-1 overflow-auto lg:pt-0 pt-14">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">{children}</div>

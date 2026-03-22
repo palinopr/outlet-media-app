@@ -96,41 +96,52 @@ export async function revokeInvitation(formData: { invitationId: string }) {
   const parsed = RevokeInvitationSchema.parse(formData);
   const client = await clerkClient();
 
-  // Find the target invitation's email, then revoke all revocable
-  // invitations for that address so old pending/expired ones don't linger.
-  // Only "pending" and "expired" can be revoked -- "accepted" cannot.
-  const { data: allInvitations } = await client.invitations.getInvitationList();
-  const target = allInvitations.find((i) => i.id === parsed.invitationId);
-  const email = target?.emailAddress;
-  const targetClientSlug =
-    target &&
-    typeof (target.publicMetadata as Record<string, unknown> | undefined)?.client_slug === "string"
-      ? ((target.publicMetadata as Record<string, unknown>).client_slug as string)
-      : null;
-  const targetClientId =
-    targetClientSlug && supabaseAdmin
-      ? (
-          await supabaseAdmin
-            .from("clients")
-            .select("id")
-            .eq("slug", targetClientSlug)
-            .maybeSingle()
-        ).data?.id ?? null
-      : null;
-
-  if (email) {
-    const revocable = allInvitations.filter(
-      (i) => i.emailAddress.toLowerCase() === email.toLowerCase() && (i.status === "pending" || i.status === "expired")
-    );
-    await Promise.all(revocable.map((i) => client.invitations.revokeInvitation(i.id)));
-    await logAudit("invitation", parsed.invitationId, "revoke_all", { email, count: revocable.length }, null);
-  } else {
+  if (!supabaseAdmin) {
     await client.invitations.revokeInvitation(parsed.invitationId);
     await logAudit("invitation", parsed.invitationId, "revoke", null, null);
+    revalidateAccessManagementPaths();
+    return;
   }
 
+  const { data: invite, error } = await supabaseAdmin
+    .from("client_access_invites")
+    .select("id, email, client_id, clerk_invitation_id, clients(slug)")
+    .eq("id", parsed.invitationId)
+    .maybeSingle();
+
+  if (error) throw new Error(error.message);
+  if (!invite) throw new Error("Invitation not found");
+
+  if (invite.clerk_invitation_id) {
+    await client.invitations.revokeInvitation(invite.clerk_invitation_id);
+  }
+
+  const now = new Date().toISOString();
+  const { error: updateError } = await supabaseAdmin
+    .from("client_access_invites")
+    .update({ revoked_at: now, status: "revoked" })
+    .eq("id", parsed.invitationId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  const inviteClient = invite.clients as
+    | { slug: string }
+    | { slug: string }[]
+    | null;
+  const clientSlug = Array.isArray(inviteClient)
+    ? inviteClient[0]?.slug ?? null
+    : inviteClient?.slug ?? null;
+
+  await logAudit(
+    "invitation",
+    parsed.invitationId,
+    "revoke",
+    { email: invite.email, clerk_invitation_id: invite.clerk_invitation_id },
+    { status: "revoked" },
+  );
+
   revalidateAccessManagementPaths({
-    clientId: typeof targetClientId === "string" ? targetClientId : null,
-    clientSlug: targetClientSlug,
+    clientId: invite.client_id,
+    clientSlug,
   });
 }

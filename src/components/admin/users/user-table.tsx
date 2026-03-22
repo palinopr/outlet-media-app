@@ -21,7 +21,7 @@ interface Props {
 
 function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOption[] }) {
   const [email, setEmail] = useState("");
-  const [clientSlug, setClientSlug] = useState<string>("");
+  const [clientId, setClientId] = useState<string>("");
   const [clientRole, setClientRole] = useState<"owner" | "member">("member");
   const [asAdmin, setAsAdmin] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,7 +38,7 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email,
-          client_slug: asAdmin ? undefined : clientSlug || undefined,
+          clientId: asAdmin ? undefined : clientId || undefined,
           client_role: asAdmin ? undefined : clientRole,
           role: asAdmin ? "admin" : undefined,
         }),
@@ -84,28 +84,28 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
       <div className="flex flex-col gap-1">
         <label className="text-xs text-muted-foreground">Access</label>
         <select
-          value={asAdmin ? "__admin__" : clientSlug}
+          value={asAdmin ? "__admin__" : clientId}
           onChange={(e) => {
             if (e.target.value === "__admin__") {
               setAsAdmin(true);
-              setClientSlug("");
+              setClientId("");
             } else {
               setAsAdmin(false);
-              setClientSlug(e.target.value);
+              setClientId(e.target.value);
             }
           }}
           className="h-8 rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
         >
           <option value="">-- Select client --</option>
           {clients.map((c) => (
-            <option key={c.slug} value={c.slug}>
+            <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
           <option value="__admin__">Admin (Outlet Media team)</option>
         </select>
       </div>
-      {!asAdmin && clientSlug && (
+      {!asAdmin && clientId && (
         <div className="flex flex-col gap-1">
           <label className="text-xs text-muted-foreground">Role</label>
           <select

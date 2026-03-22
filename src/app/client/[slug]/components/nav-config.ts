@@ -1,4 +1,4 @@
-import { LayoutDashboard, Megaphone, Ticket } from "lucide-react";
+import { FileBarChart2, LayoutDashboard, Megaphone, Ticket } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavLink {
@@ -18,6 +18,11 @@ const EVENTS_NAV_LINK: Omit<NavLink, "href"> = {
   icon: Ticket,
 };
 
+const REPORTS_NAV_LINK: Omit<NavLink, "href"> = {
+  label: "Reports",
+  icon: FileBarChart2,
+};
+
 function routeSegment(label: string): string {
   if (label === "Overview") return "";
   return label.toLowerCase();
@@ -25,11 +30,11 @@ function routeSegment(label: string): string {
 
 export function getClientNavLinks(
   slug: string,
-  options: { eventsEnabled?: boolean } = {},
+  options: { eventsEnabled?: boolean; reportsEnabled?: boolean } = {},
 ): NavLink[] {
-  const links = options.eventsEnabled
-    ? [...BASE_NAV_LINKS, EVENTS_NAV_LINK]
-    : BASE_NAV_LINKS;
+  const links = [...BASE_NAV_LINKS];
+  if (options.eventsEnabled) links.push(EVENTS_NAV_LINK);
+  if (options.reportsEnabled) links.push(REPORTS_NAV_LINK);
 
   return links.map((link) => {
     const segment = routeSegment(link.label);

@@ -34,33 +34,35 @@ interface UserColumnsOptions {
 
 function AssignCell({ user, clients }: { user: UserRow; clients: ClientOption[] }) {
   const [selected, setSelected] = useState<Set<string>>(new Set(user.client_slugs));
-  const [busySlug, setBusySlug] = useState<string | null>(null);
+  const [busyClientId, setBusyClientId] = useState<string | null>(null);
 
   if (user.role === "admin") {
     return <span className="text-xs text-muted-foreground italic">admin -- no client</span>;
   }
 
-  async function toggle(slug: string) {
-    const isAdding = !selected.has(slug);
-    setBusySlug(slug);
+  async function toggle(client: ClientOption) {
+    const isAdding = !selected.has(client.slug);
+    setBusyClientId(client.id);
     try {
       const res = await fetch(`/api/admin/users/${user.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: isAdding ? "add" : "remove", client_slug: slug }),
+        body: JSON.stringify({ action: isAdding ? "add" : "remove", clientId: client.id }),
       });
       if (!res.ok) throw new Error("Request failed");
       setSelected((prev) => {
         const next = new Set(prev);
-        if (isAdding) next.add(slug);
-        else next.delete(slug);
+        if (isAdding) next.add(client.slug);
+        else next.delete(client.slug);
         return next;
       });
-      toast.success(isAdding ? `Added ${slugToLabel(slug)}` : `Removed ${slugToLabel(slug)}`);
+      toast.success(
+        isAdding ? `Added ${slugToLabel(client.slug)}` : `Removed ${slugToLabel(client.slug)}`,
+      );
     } catch {
       toast.error("Failed to update client access");
     } finally {
-      setBusySlug(null);
+      setBusyClientId(null);
     }
   }
 
@@ -78,7 +80,7 @@ function AssignCell({ user, clients }: { user: UserRow; clients: ClientOption[] 
             <span>{count} clients</span>
           )}
           <ChevronDown className="h-3 w-3 text-muted-foreground" />
-          {busySlug && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+          {busyClientId && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48">
@@ -88,9 +90,9 @@ function AssignCell({ user, clients }: { user: UserRow; clients: ClientOption[] 
           <DropdownMenuCheckboxItem
             key={c.slug}
             checked={selected.has(c.slug)}
-            disabled={busySlug !== null}
+            disabled={busyClientId !== null}
             onSelect={(e) => e.preventDefault()}
-            onCheckedChange={() => toggle(c.slug)}
+            onCheckedChange={() => toggle(c)}
           >
             {c.name}
           </DropdownMenuCheckboxItem>

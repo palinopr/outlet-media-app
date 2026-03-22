@@ -15,4 +15,16 @@ describe("getClientPortalTheme", () => {
     expect(theme.brandBadge).toBe("Outlet Media");
     expect(theme.brandLogoSrc).toBeNull();
   });
+
+  it("lets the database branding override the slug defaults", () => {
+    const theme = getClientPortalTheme("homebuyer_readiness", {
+      brandName: "Acme Live",
+      logoUrl: "https://cdn.example.com/acme.png",
+      logoAlt: "Acme Live Logo",
+    });
+
+    expect(theme.brandBadge).toBe("Acme Live");
+    expect(theme.brandLogoSrc).toBe("https://cdn.example.com/acme.png");
+    expect(theme.brandLogoAlt).toBe("Acme Live Logo");
+  });
 });

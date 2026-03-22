@@ -1,4 +1,5 @@
 import {
+  FileBarChart2,
   LayoutDashboard,
   Megaphone,
   CalendarDays,
@@ -18,6 +19,7 @@ export const adminNavItems: NavItem[] = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
   { href: "/admin/events", label: "Events", icon: CalendarDays },
+  { href: "/admin/reports", label: "Reports", icon: FileBarChart2 },
   { href: "/admin/clients", label: "Clients", icon: Users },
   { href: "/admin/users", label: "Users", icon: UserCog },
   { href: "/admin/activity", label: "Activity", icon: Activity },

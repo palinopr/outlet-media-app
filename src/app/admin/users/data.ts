@@ -45,7 +45,6 @@ export async function getUsers(): Promise<UserRow[]> {
     userRows = users.map((u) => {
       const meta = (u.publicMetadata ?? {}) as {
         role?: string;
-        client_slug?: string;
       };
       const slugs = membershipMap.get(u.id) ?? [];
       return {
@@ -53,7 +52,7 @@ export async function getUsers(): Promise<UserRow[]> {
         name: [u.firstName, u.lastName].filter(Boolean).join(" "),
         email: u.emailAddresses[0]?.emailAddress ?? "",
         role: meta.role ?? null,
-        client_slug: meta.client_slug ?? null,
+        client_slug: slugs[0] ?? null,
         client_slugs: slugs,
         created_at: new Date(u.createdAt).toISOString(),
         status: "active" as const,

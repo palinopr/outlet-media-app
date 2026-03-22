@@ -2,20 +2,17 @@ import { describe, expect, it } from "vitest";
 import { buildActionableInvitations } from "./server";
 
 describe("buildActionableInvitations", () => {
-  it("deduplicates by email and prefers pending over expired", () => {
+  it("prefers Clerk-enriched status over the stored ledger status", () => {
     const invitations = buildActionableInvitations([
       {
-        createdAt: Date.parse("2026-03-01T00:00:00.000Z"),
-        emailAddress: "invitee@example.com",
-        id: "inv_expired",
-        publicMetadata: { client_slug: "zamora" },
-        status: "expired",
-      },
-      {
-        createdAt: Date.parse("2026-03-02T00:00:00.000Z"),
-        emailAddress: "invitee@example.com",
-        id: "inv_pending",
-        publicMetadata: { client_slug: "zamora" },
+        clerkInvitationId: "clerk_invite_1",
+        clerkStatus: "expired",
+        clientId: "client_1",
+        clientRole: "member",
+        clientSlug: "zamora",
+        createdAt: "2026-03-02T00:00:00.000Z",
+        email: "invitee@example.com",
+        id: "invite_1",
         status: "pending",
       },
     ]);
@@ -24,38 +21,44 @@ describe("buildActionableInvitations", () => {
     expect(invitations[0]).toMatchObject({
       clientSlug: "zamora",
       email: "invitee@example.com",
-      id: "inv_pending",
-      status: "pending",
+      id: "invite_1",
+      status: "expired",
     });
   });
 
-  it("filters invitations by client slug and excluded emails", () => {
+  it("filters invitations by client id and excluded emails", () => {
     const invitations = buildActionableInvitations(
       [
         {
-          createdAt: Date.parse("2026-03-03T00:00:00.000Z"),
-          emailAddress: "keep@example.com",
+          clientId: "client_1",
+          clientRole: "member",
+          clientSlug: "zamora",
+          createdAt: "2026-03-03T00:00:00.000Z",
+          email: "keep@example.com",
           id: "inv_1",
-          publicMetadata: { client_slug: "zamora" },
           status: "pending",
         },
         {
-          createdAt: Date.parse("2026-03-02T00:00:00.000Z"),
-          emailAddress: "skip@example.com",
+          clientId: "client_1",
+          clientRole: "member",
+          clientSlug: "zamora",
+          createdAt: "2026-03-02T00:00:00.000Z",
+          email: "skip@example.com",
           id: "inv_2",
-          publicMetadata: { client_slug: "zamora" },
           status: "pending",
         },
         {
-          createdAt: Date.parse("2026-03-01T00:00:00.000Z"),
-          emailAddress: "other@example.com",
+          clientId: "client_2",
+          clientRole: "member",
+          clientSlug: "beamina",
+          createdAt: "2026-03-01T00:00:00.000Z",
+          email: "other@example.com",
           id: "inv_3",
-          publicMetadata: { client_slug: "beamina" },
           status: "pending",
         },
       ],
       {
-        clientSlug: "zamora",
+        clientId: "client_1",
         excludeEmails: ["skip@example.com"],
       },
     );
@@ -67,24 +70,30 @@ describe("buildActionableInvitations", () => {
   it("prioritizes pending invites ahead of expired cleanup", () => {
     const invitations = buildActionableInvitations([
       {
-        createdAt: Date.parse("2026-03-04T00:00:00.000Z"),
-        emailAddress: "expired@example.com",
+        clientId: "client_1",
+        clientRole: "member",
+        clientSlug: "zamora",
+        createdAt: "2026-03-04T00:00:00.000Z",
+        email: "expired@example.com",
         id: "inv_expired",
-        publicMetadata: { client_slug: "zamora" },
         status: "expired",
       },
       {
-        createdAt: Date.parse("2026-03-02T00:00:00.000Z"),
-        emailAddress: "older-pending@example.com",
+        clientId: "client_1",
+        clientRole: "member",
+        clientSlug: "zamora",
+        createdAt: "2026-03-02T00:00:00.000Z",
+        email: "older-pending@example.com",
         id: "inv_pending_older",
-        publicMetadata: { client_slug: "zamora" },
         status: "pending",
       },
       {
-        createdAt: Date.parse("2026-03-03T00:00:00.000Z"),
-        emailAddress: "newer-pending@example.com",
+        clientId: "client_1",
+        clientRole: "member",
+        clientSlug: "zamora",
+        createdAt: "2026-03-03T00:00:00.000Z",
+        email: "newer-pending@example.com",
         id: "inv_pending_newer",
-        publicMetadata: { client_slug: "zamora" },
         status: "pending",
       },
     ]);

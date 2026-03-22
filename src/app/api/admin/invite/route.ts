@@ -5,9 +5,9 @@ import { adminGuard, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // POST /api/admin/invite
-// Body: { email: string, client_slug?: string, role?: "admin" }
-// Sends a Clerk invitation email. When the user signs up they get
-// the metadata pre-applied (client_slug or role).
+// Body: { email: string, clientId?: string, client_role?: "owner" | "member", role?: "admin" }
+// Creates a DB-backed invite ledger row for client invites and sends the Clerk invitation
+// with only the transition metadata needed for signup completion.
 
 export async function POST(request: Request) {
   const adminErr = await adminGuard();
@@ -15,32 +15,79 @@ export async function POST(request: Request) {
 
   const { data: body, error: valErr } = await validateRequest(request, InviteSchema);
   if (valErr) return valErr;
+  const normalizedEmail = body.email.trim().toLowerCase();
 
-  // Validate client_slug exists in clients table
-  if (body.client_slug && supabaseAdmin) {
-    const { data: clientRow } = await supabaseAdmin
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: "Database not configured" }, { status: 500 });
+  }
+
+  let clientRow: { id: string; slug: string } | null = null;
+  if (body.clientId) {
+    const { data, error } = await supabaseAdmin
       .from("clients")
-      .select("id")
-      .eq("slug", body.client_slug)
-      .single();
+      .select("id, slug")
+      .eq("id", body.clientId)
+      .maybeSingle();
 
-    if (!clientRow) {
+    if (error) {
+      return NextResponse.json({ error: "Failed to load client" }, { status: 500 });
+    }
+
+    if (!data) {
       return NextResponse.json({ error: "Client not found" }, { status: 400 });
     }
+
+    clientRow = data;
+  }
+
+  let inviteId: string | null = null;
+  if (clientRow) {
+    const { data, error } = await supabaseAdmin
+      .from("client_access_invites")
+      .insert({
+        client_id: clientRow.id,
+        client_role: body.client_role ?? "member",
+        email: normalizedEmail,
+      })
+      .select("id")
+      .single();
+
+    if (error || !data?.id) {
+      return NextResponse.json({ error: "Failed to create invite record" }, { status: 500 });
+    }
+
+    inviteId = data.id;
   }
 
   const publicMetadata: Record<string, string> = {};
-  if (body.client_slug) publicMetadata.client_slug = body.client_slug;
-  if (body.client_role) publicMetadata.client_role = body.client_role;
   if (body.role) publicMetadata.role = body.role;
+  if (clientRow && inviteId) {
+    publicMetadata.client_id = clientRow.id;
+    publicMetadata.client_role = body.client_role ?? "member";
+    publicMetadata.invite_id = inviteId;
+  }
+
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL(request.url).origin;
+  const redirectUrl = new URL("/sign-up", baseUrl);
+  if (inviteId) {
+    redirectUrl.searchParams.set("invite_id", inviteId);
+  }
 
   try {
     const client = await clerkClient();
-    await client.invitations.createInvitation({
-      emailAddress: body.email,
+    const invitation = await client.invitations.createInvitation({
+      emailAddress: normalizedEmail,
       publicMetadata,
       ignoreExisting: true,
+      redirectUrl: redirectUrl.toString(),
     });
+
+    if (inviteId) {
+      await supabaseAdmin
+        .from("client_access_invites")
+        .update({ clerk_invitation_id: invitation.id })
+        .eq("id", inviteId);
+    }
   } catch (err: unknown) {
     // Clerk errors carry an `errors` array with detailed messages
     const clerkErr = err as { errors?: { message: string }[]; message?: string; status?: number };

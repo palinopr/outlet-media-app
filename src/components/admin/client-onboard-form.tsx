@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { toSlug } from "@/lib/to-slug";
+import { createClient } from "@/app/admin/actions/clients";
 
 export function ClientOnboardForm() {
   const [name, setName] = useState("");
@@ -24,17 +25,28 @@ export function ClientOnboardForm() {
 
     setStatus("submitting");
     try {
-      const res = await fetch("/api/admin/invite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), client_slug: slug || undefined }),
+      const client = await createClient({
+        name: name.trim(),
+        slug,
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || `HTTP ${res.status}`);
+
+      if (email.trim()) {
+        const res = await fetch("/api/admin/invite", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: email.trim(),
+            clientId: client.id,
+            client_role: "owner",
+          }),
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.error || `HTTP ${res.status}`);
+        }
       }
       setStatus("done");
-      toast.success("Invite sent successfully");
+      toast.success(email.trim() ? "Client created and invite sent" : "Client created");
       setTimeout(() => {
         setStatus("idle");
         setName("");
@@ -92,10 +104,10 @@ export function ClientOnboardForm() {
         >
           {status === "submitting" && <Loader2 className="h-3 w-3 animate-spin" />}
           {status === "done" && <Check className="h-3 w-3 text-emerald-400" />}
-          {status === "done" ? "Invited" : "Send Invite"}
+          {status === "done" ? "Created" : "Create Client"}
         </Button>
         {status === "error" && (
-          <span className="text-xs text-red-400">Failed to send invite. Try again.</span>
+          <span className="text-xs text-red-400">Failed to create the client. Try again.</span>
         )}
       </div>
     </form>

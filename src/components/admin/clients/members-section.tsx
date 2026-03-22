@@ -50,7 +50,7 @@ export function MembersSection({ client }: { client: ClientDetail }) {
       {showInvite && (
         <div className="mb-4">
           <InviteMemberForm
-            clientSlug={client.slug}
+            clientId={client.id}
             onDone={() => setShowInvite(false)}
           />
         </div>

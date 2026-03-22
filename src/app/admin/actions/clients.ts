@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
-import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { listEffectiveCampaignRowsForClientSlug } from "@/lib/campaign-client-assignment";
 import { adminGuard } from "@/lib/api-helpers";
@@ -265,6 +264,10 @@ export async function createClient(formData: { name: string; slug: string }) {
 export async function updateClient(formData: {
   clientId: string;
   eventsEnabled?: boolean;
+  reportsEnabled?: boolean;
+  brandName?: string | null;
+  logoAlt?: string | null;
+  logoUrl?: string | null;
   name?: string;
   slug?: string;
   status?: string;
@@ -274,10 +277,14 @@ export async function updateClient(formData: {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
   const parsed = UpdateClientSchema.parse(formData);
-  const { clientId, eventsEnabled, ...updates } = parsed;
+  const { clientId, eventsEnabled, reportsEnabled, brandName, logoAlt, logoUrl, ...updates } = parsed;
   const dbUpdates = {
     ...updates,
     ...(eventsEnabled === undefined ? {} : { events_enabled: eventsEnabled }),
+    ...(reportsEnabled === undefined ? {} : { reports_enabled: reportsEnabled }),
+    ...(brandName === undefined ? {} : { portal_brand_name: brandName }),
+    ...(logoAlt === undefined ? {} : { portal_logo_alt: logoAlt }),
+    ...(logoUrl === undefined ? {} : { portal_logo_url: logoUrl }),
   };
 
   const { error } = await supabaseAdmin
@@ -301,7 +308,6 @@ export async function addClientMember(formData: { clientId: string; clerkUserId:
 
   const parsed = AddClientMemberSchema.parse(formData);
 
-  // Get the client slug for Clerk metadata
   const { data: client } = await supabaseAdmin
     .from("clients")
     .select("slug")
@@ -324,16 +330,6 @@ export async function addClientMember(formData: { clientId: string; clerkUserId:
     throw new Error(error.message);
   }
 
-  // Set client_slug in Clerk metadata (only if user has no existing slug)
-  const clerk = await clerkClient();
-  const user = await clerk.users.getUser(parsed.clerkUserId);
-  const existingMeta = (user.publicMetadata ?? {}) as Record<string, unknown>;
-  if (!existingMeta.client_slug) {
-    await clerk.users.updateUserMetadata(parsed.clerkUserId, {
-      publicMetadata: { ...existingMeta, client_slug: client.slug },
-    });
-  }
-
   await logAudit("client_member", parsed.clerkUserId, "add", null, {
     clientId: parsed.clientId,
     role: parsed.role,
@@ -353,7 +349,6 @@ export async function removeClientMember(formData: { clientId: string; memberId:
 
   const parsed = RemoveClientMemberSchema.parse(formData);
 
-  // Get member info before deletion (for Clerk cleanup)
   const { data: member } = await supabaseAdmin
     .from("client_members")
     .select("clerk_user_id")
@@ -369,24 +364,6 @@ export async function removeClientMember(formData: { clientId: string; memberId:
     .eq("id", parsed.memberId);
 
   if (error) throw new Error(error.message);
-
-  // Check if user has other client memberships
-  const { data: otherMemberships } = await supabaseAdmin
-    .from("client_members")
-    .select("id")
-    .eq("clerk_user_id", member.clerk_user_id)
-    .limit(1);
-
-  // If no other memberships, clear client_slug from Clerk
-  if (!otherMemberships?.length) {
-    const clerk = await clerkClient();
-    const user = await clerk.users.getUser(member.clerk_user_id);
-    const existingMeta = (user.publicMetadata ?? {}) as Record<string, unknown>;
-    delete existingMeta.client_slug;
-    await clerk.users.updateUserMetadata(member.clerk_user_id, {
-      publicMetadata: existingMeta,
-    });
-  }
 
   await logAudit("client_member", parsed.memberId, "remove", { clerkUserId: member.clerk_user_id }, null);
   const accessContext = await getClientAccessContextById(parsed.clientId);

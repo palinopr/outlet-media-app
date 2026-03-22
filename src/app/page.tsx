@@ -1,8 +1,17 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { getMemberships } from "@/lib/member-access";
+import {
+  getUserEmailAddresses,
+  resolveClientPortalEntry,
+} from "@/features/client-portal/entry";
 
-export default async function RootPage() {
+interface RootPageProps {
+  searchParams?: Promise<{
+    invite_id?: string;
+  }>;
+}
+
+export default async function RootPage({ searchParams }: RootPageProps) {
   const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
   if (!clerkEnabled) {
@@ -23,29 +32,15 @@ export default async function RootPage() {
   }
 
   const meta = (user?.publicMetadata ?? {}) as {
-    role?: string;
-    client_slug?: string;
+    role?: string | null;
   };
+  const params = await searchParams;
+  const entry = await resolveClientPortalEntry({
+    emailAddresses: getUserEmailAddresses(user),
+    inviteId: typeof params?.invite_id === "string" ? params.invite_id : null,
+    role: meta.role ?? null,
+    userId,
+  });
 
-  if (meta.role === "admin") {
-    redirect("/admin/dashboard");
-  }
-
-  // Check client_members table for multi-client support
-  const memberships = await getMemberships(userId);
-
-  if (memberships.length === 1) {
-    redirect(`/client/${memberships[0].clientSlug}`);
-  }
-
-  if (memberships.length > 1) {
-    redirect("/client");
-  }
-
-  // Fallback: check legacy client_slug metadata
-  if (meta.client_slug) {
-    redirect(`/client/${meta.client_slug}`);
-  }
-
-  redirect("/client/pending");
+  redirect(entry.destination);
 }

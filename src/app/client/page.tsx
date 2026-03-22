@@ -4,21 +4,37 @@ import Link from "next/link";
 import Image from "next/image";
 import { SignOutButton } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
-import { getMemberships } from "@/lib/member-access";
 import { ChevronRight, Building2 } from "lucide-react";
+import {
+  getUserEmailAddresses,
+  resolveClientPortalEntry,
+} from "@/features/client-portal/entry";
 
-export default async function ClientPickerPage() {
+interface ClientPickerPageProps {
+  searchParams?: Promise<{
+    invite_id?: string;
+  }>;
+}
+
+export default async function ClientPickerPage({ searchParams }: ClientPickerPageProps) {
   const { userId } = await auth();
   if (!userId) redirect("/sign-in");
 
   const user = await currentUser();
-  const meta = (user?.publicMetadata ?? {}) as { role?: string };
-  if (meta.role === "admin") redirect("/admin/dashboard");
+  const meta = (user?.publicMetadata ?? {}) as { role?: string | null };
+  const params = await searchParams;
+  const entry = await resolveClientPortalEntry({
+    emailAddresses: getUserEmailAddresses(user),
+    inviteId: typeof params?.invite_id === "string" ? params.invite_id : null,
+    role: meta.role ?? null,
+    userId,
+  });
 
-  const memberships = await getMemberships(userId);
+  if (entry.kind === "admin" || entry.kind === "portal" || entry.kind === "pending") {
+    redirect(entry.destination);
+  }
 
-  if (memberships.length === 0) redirect("/client/pending");
-  if (memberships.length === 1) redirect(`/client/${memberships[0].clientSlug}`);
+  const memberships = entry.memberships;
 
   const firstName = user?.firstName ?? "there";
 

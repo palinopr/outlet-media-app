@@ -119,9 +119,18 @@ export const AgentPostSchema = z.object({
 
 export const InviteSchema = z.object({
   email: z.string().email(),
-  client_slug: z.string().optional(),
+  clientId: z.string().min(1).optional(),
   client_role: z.enum(["owner", "member"]).optional(),
   role: z.string().optional(),
+}).superRefine((value, ctx) => {
+  if (value.role === "admin") return;
+  if (!value.clientId) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "clientId is required for client invites",
+      path: ["clientId"],
+    });
+  }
 });
 
 // ─── Client management schemas ──────────────────────────────────────────────
@@ -132,8 +141,12 @@ export const CreateClientSchema = z.object({
 });
 
 export const UpdateClientSchema = z.object({
-  clientId: z.string().uuid(),
+  clientId: z.string().min(1),
   eventsEnabled: z.boolean().optional(),
+  reportsEnabled: z.boolean().optional(),
+  brandName: z.string().min(1).max(200).nullable().optional(),
+  logoAlt: z.string().min(1).max(200).nullable().optional(),
+  logoUrl: z.string().url().nullable().optional(),
   name: z.string().min(1).max(200).optional(),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9_]+$/).optional(),
   status: z.enum(["active", "inactive"]).optional(),

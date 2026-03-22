@@ -19,6 +19,11 @@ vi.mock("@/features/client-portal/config", () => ({
   getClientPortalConfig: vi.fn().mockResolvedValue({
     clientId: "client_1",
     eventsEnabled: false,
+    slug: "acme",
+    reportsEnabled: true,
+    brandName: null,
+    logoUrl: null,
+    logoAlt: null,
   }),
 }));
 
@@ -32,6 +37,11 @@ afterEach(() => {
   mockedGetClientPortalConfig.mockResolvedValue({
     clientId: "client_1",
     eventsEnabled: false,
+    slug: "acme",
+    reportsEnabled: true,
+    brandName: null,
+    logoUrl: null,
+    logoAlt: null,
   });
   cleanup();
 });
@@ -116,6 +126,11 @@ describe("ClientLayout navigation links", () => {
     mockedGetClientPortalConfig.mockResolvedValue({
       clientId: "client_1",
       eventsEnabled: false,
+      slug: "acme",
+      reportsEnabled: true,
+      brandName: null,
+      logoUrl: null,
+      logoAlt: null,
     });
 
     await renderLayout("acme");
@@ -128,6 +143,11 @@ describe("ClientLayout navigation links", () => {
     mockedGetClientPortalConfig.mockResolvedValue({
       clientId: "client_1",
       eventsEnabled: true,
+      slug: "acme",
+      reportsEnabled: true,
+      brandName: null,
+      logoUrl: null,
+      logoAlt: null,
     });
 
     await renderLayout("acme");
@@ -135,6 +155,25 @@ describe("ClientLayout navigation links", () => {
     const links = screen.getAllByRole("link", { name: "Events" });
     expect(links).toHaveLength(1);
     expect(links[0]).toHaveAttribute("href", "/client/acme/events");
+  });
+
+  it("shows Reports links when reports are enabled for the client", async () => {
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
+    mockedGetClientPortalConfig.mockResolvedValue({
+      clientId: "client_1",
+      eventsEnabled: false,
+      slug: "acme",
+      reportsEnabled: true,
+      brandName: null,
+      logoUrl: null,
+      logoAlt: null,
+    });
+
+    await renderLayout("acme");
+
+    const links = screen.getAllByRole("link", { name: "Reports" });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute("href", "/client/acme/reports");
   });
 
   it("renders children inside main content area", async () => {

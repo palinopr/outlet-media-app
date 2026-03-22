@@ -8,10 +8,11 @@ export default function PendingPage() {
         <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-500 flex items-center justify-center mx-auto">
           <span className="text-white text-lg font-bold">O</span>
         </div>
-        <h1 className="text-lg font-semibold">Account Pending Approval</h1>
+        <h1 className="text-lg font-semibold">No Portal Access Yet</h1>
         <p className="text-sm text-muted-foreground">
-          Your account has been created. An admin at Outlet Media will review
-          and assign you to a client portal. You will get access once approved.
+          If you were invited, sign in with the same email that received the
+          invite. If you still land here after accepting the invite, your portal
+          access has not finished syncing yet.
         </p>
         <SignOutButton>
           <Button variant="outline" size="sm">

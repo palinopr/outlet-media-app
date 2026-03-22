@@ -117,7 +117,14 @@ export function ClientDetailView({ client }: Props) {
 
       {/* Tab content */}
       {activeTab === "overview" && (
-        <ClientOverviewTab clientId={client.id} eventsEnabled={client.eventsEnabled} />
+        <ClientOverviewTab
+          brandName={client.brandName}
+          clientId={client.id}
+          eventsEnabled={client.eventsEnabled}
+          logoAlt={client.logoAlt}
+          logoUrl={client.logoUrl}
+          reportsEnabled={client.reportsEnabled}
+        />
       )}
       {activeTab === "members" && <MembersSection client={client} />}
       {activeTab === "campaigns" && <CampaignsSection campaigns={client.campaigns} />}

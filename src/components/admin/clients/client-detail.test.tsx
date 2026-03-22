@@ -39,6 +39,7 @@ const client = {
   createdAt: "2026-01-01T00:00:00.000Z",
   connectedAccountCount: 1,
   connectionRiskAccounts: 1,
+  brandName: "Acme Live",
   eventsEnabled: true,
   events: [
     {
@@ -54,6 +55,8 @@ const client = {
   members: [],
   name: "Acme Live",
   needsAttention: 3,
+  logoAlt: "Acme Live",
+  logoUrl: "https://cdn.example.com/acme.png",
   openActionItems: 2,
   openDiscussions: 1,
   pendingInvites: [
@@ -66,6 +69,7 @@ const client = {
   ],
   pendingApprovals: 1,
   roas: 3.4,
+  reportsEnabled: true,
   slug: "acme",
   status: "active",
   totalCampaigns: 1,
@@ -79,7 +83,9 @@ describe("ClientDetailView", () => {
 
     expect(screen.getByText("Client Portal Shape")).toBeInTheDocument();
     expect(screen.getByText("Portal Events Access")).toBeInTheDocument();
+    expect(screen.getByText("Portal Reports Access")).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Toggle client events access" })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Toggle client reports access" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /CRM/i })).not.toBeInTheDocument();
   });
 

@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 export function InviteMemberForm({
-  clientSlug,
+  clientId,
   onDone,
 }: {
-  clientSlug: string;
+  clientId: string;
   onDone: () => void;
 }) {
   const router = useRouter();
@@ -27,7 +27,7 @@ export function InviteMemberForm({
       const res = await fetch("/api/admin/invite", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, client_slug: clientSlug, client_role: clientRole }),
+        body: JSON.stringify({ email, clientId, client_role: clientRole }),
       });
       if (!res.ok) {
         const d = (await res.json()) as { error?: string };

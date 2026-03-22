@@ -588,6 +588,56 @@ export type Database = {
         }
         Relationships: []
       }
+      client_access_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_clerk_user_id: string | null
+          clerk_invitation_id: string | null
+          client_id: string
+          client_role: string
+          created_at: string
+          email: string
+          id: string
+          revoked_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_clerk_user_id?: string | null
+          clerk_invitation_id?: string | null
+          client_id: string
+          client_role?: string
+          created_at?: string
+          email: string
+          id?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_clerk_user_id?: string | null
+          clerk_invitation_id?: string | null
+          client_id?: string
+          client_role?: string
+          created_at?: string
+          email?: string
+          id?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_access_invites_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_member_campaigns: {
         Row: {
           id: string
@@ -728,28 +778,40 @@ export type Database = {
       }
       clients: {
         Row: {
+          created_at: string
           events_enabled: boolean
           id: string
           name: string
+          portal_brand_name: string | null
+          portal_logo_alt: string | null
+          portal_logo_url: string | null
+          reports_enabled: boolean
           slug: string
           status: string
-          created_at: string
         }
         Insert: {
+          created_at?: string
           events_enabled?: boolean
           id?: string
           name: string
+          portal_brand_name?: string | null
+          portal_logo_alt?: string | null
+          portal_logo_url?: string | null
+          reports_enabled?: boolean
           slug: string
           status?: string
-          created_at?: string
         }
         Update: {
+          created_at?: string
           events_enabled?: boolean
           id?: string
           name?: string
+          portal_brand_name?: string | null
+          portal_logo_alt?: string | null
+          portal_logo_url?: string | null
+          reports_enabled?: boolean
           slug?: string
           status?: string
-          created_at?: string
         }
         Relationships: []
       }

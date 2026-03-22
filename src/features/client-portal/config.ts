@@ -3,7 +3,12 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export interface ClientPortalConfig {
   clientId: string;
+  slug: string;
   eventsEnabled: boolean;
+  reportsEnabled: boolean;
+  brandName: string | null;
+  logoUrl: string | null;
+  logoAlt: string | null;
 }
 
 export const getClientPortalConfig = cache(
@@ -12,7 +17,9 @@ export const getClientPortalConfig = cache(
 
     const { data, error } = await supabaseAdmin
       .from("clients")
-      .select("id, events_enabled")
+      .select(
+        "id, slug, events_enabled, reports_enabled, portal_brand_name, portal_logo_url, portal_logo_alt",
+      )
       .eq("slug", slug)
       .maybeSingle();
 
@@ -25,7 +32,12 @@ export const getClientPortalConfig = cache(
 
     return {
       clientId: data.id,
+      slug: data.slug,
       eventsEnabled: data.events_enabled ?? false,
+      reportsEnabled: data.reports_enabled ?? true,
+      brandName: data.portal_brand_name,
+      logoUrl: data.portal_logo_url,
+      logoAlt: data.portal_logo_alt,
     };
   },
 );

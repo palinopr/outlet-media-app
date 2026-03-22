@@ -21,11 +21,15 @@ export interface ClientSummary {
 }
 
 export interface ClientDetail extends ClientSummary {
+  brandName: string | null;
+  logoAlt: string | null;
+  logoUrl: string | null;
   members: ClientMember[];
   pendingInvites: ClientPendingInvite[];
   campaigns: ClientCampaign[];
   eventsEnabled: boolean;
   events: ClientEvent[];
+  reportsEnabled: boolean;
 }
 
 export interface ClientPendingInvite {

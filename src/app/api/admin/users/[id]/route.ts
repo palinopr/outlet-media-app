@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
-import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { adminGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // PATCH /api/admin/users/[id]
-// Body: { action: "add" | "remove", client_slug: string }
+// Body: { action: "add" | "remove", clientId: string }
 // Adds or removes a client membership for a user.
 
 const UpdateUserSchema = z.object({
   action: z.enum(["add", "remove"]),
-  client_slug: z.string().min(1),
+  clientId: z.string().min(1),
 });
 
 export async function PATCH(
@@ -29,31 +28,17 @@ export async function PATCH(
   const { data, error: valErr } = await validateRequest(request, UpdateUserSchema);
   if (valErr) return valErr;
 
-  const client = await clerkClient();
-
-  let existingMeta: Record<string, unknown>;
-  try {
-    const user = await client.users.getUser(id);
-    existingMeta =
-      typeof user.publicMetadata === "object" && user.publicMetadata !== null
-        ? (user.publicMetadata as Record<string, unknown>)
-        : {};
-  } catch {
-    return apiError("User not found", 404);
-  }
-
-  const { action, client_slug: slug } = data;
+  const { action, clientId } = data;
 
   if (!supabaseAdmin) {
     return apiError("Database not configured", 500);
   }
 
-  // Look up client by slug
   const { data: clientRow } = await supabaseAdmin
     .from("clients")
-    .select("id")
-    .eq("slug", slug)
-    .single();
+    .select("id, slug")
+    .eq("id", clientId)
+    .maybeSingle();
 
   if (!clientRow) {
     return apiError("Client not found", 404);
@@ -74,7 +59,6 @@ export async function PATCH(
       .eq("client_id", clientRow.id);
   }
 
-  // Sync publicMetadata.client_slug to first remaining membership (legacy compat)
   const { data: remaining } = await supabaseAdmin
     .from("client_members")
     .select("clients(slug)")
@@ -83,15 +67,6 @@ export async function PATCH(
   const remainingSlugs = (remaining ?? [])
     .map((r) => (r.clients as unknown as { slug: string })?.slug)
     .filter(Boolean);
-
-  const publicMetadata = { ...existingMeta };
-  if (remainingSlugs.length > 0) {
-    publicMetadata.client_slug = remainingSlugs[0];
-  } else {
-    delete publicMetadata.client_slug;
-  }
-
-  await client.users.updateUserMetadata(id, { publicMetadata });
 
   return NextResponse.json({ ok: true, client_slugs: remainingSlugs });
 }

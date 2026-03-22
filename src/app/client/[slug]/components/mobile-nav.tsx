@@ -11,12 +11,13 @@ interface Props {
   slug: string;
   clientName: string;
   eventsEnabled: boolean;
+  reportsEnabled: boolean;
 }
 
-export function MobileNav({ slug, clientName, eventsEnabled }: Props) {
+export function MobileNav({ slug, clientName, eventsEnabled, reportsEnabled }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const links = getClientNavLinks(slug, { eventsEnabled });
+  const links = getClientNavLinks(slug, { eventsEnabled, reportsEnabled });
 
   const close = useCallback(() => setOpen(false), []);
 

@@ -8,11 +8,12 @@ import { getClientNavLinks, isNavActive } from "./nav-config";
 interface Props {
   slug: string;
   eventsEnabled: boolean;
+  reportsEnabled: boolean;
 }
 
-export function ClientNav({ slug, eventsEnabled }: Props) {
+export function ClientNav({ slug, eventsEnabled, reportsEnabled }: Props) {
   const pathname = usePathname();
-  const links = getClientNavLinks(slug, { eventsEnabled });
+  const links = getClientNavLinks(slug, { eventsEnabled, reportsEnabled });
 
   return (
     <nav className="flex-1 px-3 py-1">
