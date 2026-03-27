@@ -5,14 +5,14 @@ vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
 }));
 
-describe("ClientReportsPage", () => {
-  it("redirects reports to campaigns", async () => {
-    const { default: ClientReportsPage } = await import("./page");
+describe("ClientPortalRootPage", () => {
+  it("redirects the portal root to campaigns", async () => {
+    const { default: ClientPortalRootPage } = await import("./page");
     const redirectMock = vi.mocked(redirect);
 
     redirectMock.mockClear();
 
-    await ClientReportsPage({
+    await ClientPortalRootPage({
       params: Promise.resolve({ slug: "acme" }),
     });
 
