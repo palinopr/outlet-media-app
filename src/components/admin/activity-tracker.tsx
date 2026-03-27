@@ -2,25 +2,18 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { adminNavItems } from "./nav-config";
 
 interface Props {
   userId: string;
   userEmail: string;
 }
 
-const PAGE_LABELS: Record<string, string> = {
-  "/admin/dashboard": "Viewed Dashboard",
-  "/admin/campaigns": "Viewed Campaigns",
-  "/admin/events": "Viewed Events",
-  "/admin/assets": "Viewed Assets",
-  "/admin/agents": "Viewed Agents",
-  "/admin/clients": "Viewed Clients",
-  "/admin/users": "Viewed Users",
-  "/admin/settings": "Viewed Settings",
-  "/admin/activity": "Viewed Activity",
-};
+const PAGE_LABELS = Object.fromEntries(
+  adminNavItems.map(({ href, label }) => [href, `Viewed ${label}`]),
+) as Record<string, string>;
 
-function getPageLabel(pathname: string): string {
+export function getPageLabel(pathname: string): string {
   return PAGE_LABELS[pathname] ?? `Viewed ${pathname}`;
 }
 
