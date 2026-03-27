@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { fireEvent, render, screen, cleanup } from "@testing-library/react";
+import { fireEvent, render, screen, cleanup, within } from "@testing-library/react";
 
 // Mock Clerk so the async server component can be rendered synchronously
 vi.mock("@clerk/nextjs/server", () => ({
@@ -59,66 +59,51 @@ function openMobileNav() {
   fireEvent.click(screen.getByRole("button", { name: "Toggle navigation menu" }));
 }
 
-describe("ClientLayout navigation links", () => {
-  it("renders Overview link pointing to /client/{slug} in the desktop sidebar", async () => {
-    // Clerk disabled so auth gating is skipped
-    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
-    await renderLayout("acme");
-    const links = screen.getAllByRole("link", { name: "Overview" });
-    expect(links.length).toBeGreaterThanOrEqual(1);
-    // Desktop sidebar link uses rounded-lg class
-    const desktopLink = links.find((l) =>
-      l.className.includes("rounded-lg")
-    );
-    expect(desktopLink).toBeDefined();
-    expect(desktopLink).toHaveAttribute("href", "/client/acme");
-  });
+function getDesktopNav() {
+  return screen.getByRole("navigation", { name: "Client navigation" });
+}
 
+function getMobileNav() {
+  return screen.getByRole("navigation", { name: "Mobile navigation" });
+}
+
+describe("ClientLayout navigation links", () => {
   it("renders Campaigns link pointing to /client/{slug}/campaigns in the desktop sidebar", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("acme");
-    const links = screen.getAllByRole("link", { name: "Campaigns" });
-    expect(links.length).toBeGreaterThanOrEqual(1);
-    const desktopLink = links.find((l) =>
-      l.className.includes("rounded-lg")
-    );
-    expect(desktopLink).toBeDefined();
+    const desktopLink = within(getDesktopNav()).getByRole("link", { name: "Campaigns" });
     expect(desktopLink).toHaveAttribute("href", "/client/acme/campaigns");
   });
 
-  it("renders Overview link in the mobile header", async () => {
+  it("does not render Overview links in the desktop sidebar or mobile nav", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("acme");
     openMobileNav();
-    const links = screen.getAllByRole("link", { name: "Overview" });
-    const mobileLink = links.find((l) =>
-      l.getAttribute("href") === "/client/acme"
-    );
-    expect(mobileLink).toBeDefined();
-    expect(mobileLink).toHaveAttribute("href", "/client/acme");
+
+    expect(screen.queryByRole("link", { name: "Overview" })).not.toBeInTheDocument();
   });
 
   it("renders Campaigns link in the mobile header", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("acme");
     openMobileNav();
-    const links = screen.getAllByRole("link", { name: "Campaigns" });
-    const mobileLink = links.find((l) =>
-      l.getAttribute("href") === "/client/acme/campaigns"
-    );
-    expect(mobileLink).toBeDefined();
+    const mobileLink = within(getMobileNav()).getByRole("link", { name: "Campaigns" });
     expect(mobileLink).toHaveAttribute("href", "/client/acme/campaigns");
   });
 
-  it("renders both desktop and mobile Campaigns links for any slug", async () => {
+  it("renders Campaigns links in both desktop and mobile nav for any slug", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     await renderLayout("test_client");
     openMobileNav();
-    const links = screen.getAllByRole("link", { name: "Campaigns" });
-    // Should appear twice: once in desktop sidebar, once in mobile header
-    expect(links).toHaveLength(2);
-    expect(links[0]).toHaveAttribute("href", "/client/test_client/campaigns");
-    expect(links[1]).toHaveAttribute("href", "/client/test_client/campaigns");
+
+    expect(within(getDesktopNav()).getByRole("link", { name: "Campaigns" })).toHaveAttribute(
+      "href",
+      "/client/test_client/campaigns",
+    );
+    expect(within(getMobileNav()).getByRole("link", { name: "Campaigns" })).toHaveAttribute(
+      "href",
+      "/client/test_client/campaigns",
+    );
   });
 
   it("hides Events links when events are disabled for the client", async () => {
@@ -138,7 +123,7 @@ describe("ClientLayout navigation links", () => {
     expect(screen.queryByRole("link", { name: "Events" })).not.toBeInTheDocument();
   });
 
-  it("shows Events links when events are enabled for the client", async () => {
+  it("shows Events links in desktop and mobile nav when events are enabled for the client", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     mockedGetClientPortalConfig.mockResolvedValue({
       clientId: "client_1",
@@ -151,13 +136,19 @@ describe("ClientLayout navigation links", () => {
     });
 
     await renderLayout("acme");
+    openMobileNav();
 
-    const links = screen.getAllByRole("link", { name: "Events" });
-    expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAttribute("href", "/client/acme/events");
+    expect(within(getDesktopNav()).getByRole("link", { name: "Events" })).toHaveAttribute(
+      "href",
+      "/client/acme/events",
+    );
+    expect(within(getMobileNav()).getByRole("link", { name: "Events" })).toHaveAttribute(
+      "href",
+      "/client/acme/events",
+    );
   });
 
-  it("shows Reports links when reports are enabled for the client", async () => {
+  it("does not render Reports links even when reports are enabled for the client", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     mockedGetClientPortalConfig.mockResolvedValue({
       clientId: "client_1",
@@ -170,10 +161,9 @@ describe("ClientLayout navigation links", () => {
     });
 
     await renderLayout("acme");
+    openMobileNav();
 
-    const links = screen.getAllByRole("link", { name: "Reports" });
-    expect(links).toHaveLength(1);
-    expect(links[0]).toHaveAttribute("href", "/client/acme/reports");
+    expect(screen.queryByRole("link", { name: "Reports" })).not.toBeInTheDocument();
   });
 
   it("renders children inside main content area", async () => {
