@@ -18,8 +18,6 @@ import { getData } from "./data";
 import { EventsPreviewTable } from "./events-preview-table";
 import { UpcomingShows } from "./upcoming-shows";
 import { CampaignCards } from "./campaign-cards";
-import { DashboardAssetsSection } from "@/components/dashboard/dashboard-assets-section";
-import { getDashboardAssetSummary } from "@/features/dashboard/server";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
@@ -40,13 +38,7 @@ function getUpcomingShows(events: Parameters<typeof EventsPreviewTable>[0]["even
 // --- Page ---
 
 export default async function AdminDashboard() {
-  const [
-    { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb },
-    assetSummary,
-  ] = await Promise.all([
-    getData(),
-    getDashboardAssetSummary({ limit: 4 }),
-  ]);
+  const { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb } = await getData();
 
   const upcomingShows = getUpcomingShows(events, 8);
 
@@ -101,18 +93,6 @@ export default async function AdminDashboard() {
           <StatCard key={s.label} {...s} />
         ))}
       </div>
-
-      <DashboardAssetsSection
-        assetHrefPrefix="/admin/assets"
-        href="/admin/assets"
-        libraryHrefLabel="Open assets"
-        showClientSlug
-        summary={assetSummary}
-        title="Creative snapshot"
-        description="A simple creative queue for summary-first users: what needs review, what is linked, and what still lacks campaign context."
-        emptyState="No creative review pressure right now."
-        variant="admin"
-      />
 
       {/* Trend charts */}
       {(trendData.length > 0 || velocityData.length > 0) && (
