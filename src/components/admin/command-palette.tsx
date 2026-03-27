@@ -6,7 +6,6 @@ import {
   Megaphone,
   CalendarDays,
   Users,
-  Image as ImageIcon,
 } from "lucide-react";
 import { adminNavItems } from "./nav-config";
 import {
@@ -24,7 +23,6 @@ import {
 } from "@/app/admin/actions/search";
 
 const typeIcon: Record<SearchableRecord["type"], typeof Megaphone> = {
-  asset: ImageIcon,
   campaign: Megaphone,
   event: CalendarDays,
   client: Users,
@@ -71,7 +69,6 @@ export function CommandPalette() {
 
   const campaigns = records.filter((r) => r.type === "campaign");
   const events = records.filter((r) => r.type === "event");
-  const assets = records.filter((r) => r.type === "asset");
   const clients = records.filter((r) => r.type === "client");
 
   return (
@@ -79,7 +76,7 @@ export function CommandPalette() {
       open={open}
       onOpenChange={setOpen}
       title="Command Palette"
-      description="Search pages, campaigns, events, assets, and clients"
+      description="Search pages, campaigns, events, and clients"
       showCloseButton={false}
     >
       <CommandInput placeholder="Type to search..." />
@@ -128,30 +125,6 @@ export function CommandPalette() {
             <CommandSeparator />
             <CommandGroup heading="Events">
               {events.map((r) => {
-                const Icon = typeIcon[r.type];
-                return (
-                  <CommandItem
-                    key={r.id}
-                    value={`${r.name} ${r.subtitle}`}
-                    onSelect={() => navigate(r.href)}
-                  >
-                    <Icon className="size-4" />
-                    <span>{r.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {r.subtitle}
-                    </span>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          </>
-        )}
-
-        {loaded && assets.length > 0 && (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading="Assets">
-              {assets.map((r) => {
                 const Icon = typeIcon[r.type];
                 return (
                   <CommandItem

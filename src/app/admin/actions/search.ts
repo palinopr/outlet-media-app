@@ -5,7 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 export type SearchableRecord = {
   id: string;
-  type: "asset" | "campaign" | "event" | "client";
+  type: "campaign" | "event" | "client";
   name: string;
   subtitle: string;
   href: string;
@@ -14,7 +14,7 @@ export type SearchableRecord = {
 export async function fetchSearchableRecords(): Promise<SearchableRecord[]> {
   if (!supabaseAdmin) return [];
 
-  const [campaignsRes, eventsRes, clientsRes, assetsRes] = await Promise.all([
+  const [campaignsRes, eventsRes, clientsRes] = await Promise.all([
     supabaseAdmin
       .from("meta_campaigns")
       .select("campaign_id, name, status, client_slug")
@@ -26,10 +26,6 @@ export async function fetchSearchableRecords(): Promise<SearchableRecord[]> {
     supabaseAdmin
       .from("clients")
       .select("id, name, slug, status")
-      .limit(100),
-    supabaseAdmin
-      .from("ad_assets")
-      .select("id, file_name, client_slug, folder, status")
       .limit(100),
   ]);
 
@@ -66,13 +62,5 @@ export async function fetchSearchableRecords(): Promise<SearchableRecord[]> {
     href: `/admin/clients/${cl.id}`,
   }));
 
-  const assets: SearchableRecord[] = (assetsRes.data ?? []).map((asset) => ({
-    id: String((asset as Record<string, unknown>).id),
-    type: "asset" as const,
-    name: String((asset as Record<string, unknown>).file_name ?? ""),
-    subtitle: `${String((asset as Record<string, unknown>).client_slug ?? "")} \u00b7 ${String((asset as Record<string, unknown>).status ?? "")} \u00b7 ${String((asset as Record<string, unknown>).folder ?? "library")}`,
-    href: `/admin/assets/${String((asset as Record<string, unknown>).id)}`,
-  }));
-
-  return [...campaigns, ...events, ...clients, ...assets];
+  return [...campaigns, ...events, ...clients];
 }

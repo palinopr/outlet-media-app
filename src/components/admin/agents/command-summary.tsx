@@ -18,7 +18,7 @@ interface AgentCommandSummaryProps {
 function outcomeContext(outcome: AgentOutcomeView) {
   if (outcome.assetId) {
     return {
-      href: `/admin/assets/${outcome.assetId}`,
+      href: null,
       label: outcome.assetName ?? "Asset",
       type: "Asset",
     };
