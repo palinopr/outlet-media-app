@@ -115,7 +115,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
                 <div>
                   <p className="text-sm font-medium">No campaign data</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Run the Meta sync agent to pull live data from the Meta Marketing API
+                    Use the main agent chat to kick off a Meta sync
                   </p>
                 </div>
               </div>
@@ -123,7 +123,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
                 href="/admin/agents"
                 className="text-xs border border-border/60 px-3 py-1.5 rounded hover:bg-muted transition-colors shrink-0"
               >
-                Run Agent
+                Open chat
               </a>
             </div>
           </CardContent>

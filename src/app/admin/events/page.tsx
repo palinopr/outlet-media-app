@@ -52,7 +52,7 @@ export default async function EventsPage({ searchParams }: Props) {
         <Button size="sm" variant="outline" className="gap-2 h-8 text-xs" asChild>
           <a href="/admin/agents">
             <Bot className="h-3.5 w-3.5" />
-            Run Agent
+            Open chat
           </a>
         </Button>
       </AdminPageHeader>

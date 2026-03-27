@@ -138,7 +138,7 @@ export default async function AdminDashboard() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold">Agents</h2>
             <a href="/admin/agents" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-              Manage <ArrowRight className="h-3 w-3" />
+              Open chat <ArrowRight className="h-3 w-3" />
             </a>
           </div>
           <div className="space-y-3">
