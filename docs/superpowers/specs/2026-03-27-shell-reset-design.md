@@ -57,15 +57,30 @@ Admin keeps only these top-level surfaces:
 
 `Agents` survives as an admin-only surface, but only as a thin main-agent chat entry point. It should not be a broad specialized-agent control center in this reset.
 
-### Client
+### Client Target
 
-Client keeps only:
+The approved target client shell is:
 
 - Campaigns
 - Events, when enabled for that client
 - Updates
 
 `Activity` is not a client page. It is admin-only and is used to see what people are doing on the web.
+
+### Client Phase 1 Shipped Shell
+
+The shell-only refactor does not implement the new `Updates` product area yet.
+
+So the phase-1 shipped client shell is:
+
+- Campaigns
+- Events, when enabled for that client
+
+During phase 1:
+
+- `Updates` is a reserved phase-2 surface
+- no `Updates` nav item ships yet
+- any old client route that does not survive the reset redirects to the surviving client shell
 
 ## Removed Product Areas
 
@@ -138,7 +153,7 @@ Approved shape:
 - agents can help draft updates later
 - agent-written updates always require admin approval before clients see them
 
-This updates system is not part of the shell-only refactor. It is the first build slice after cleanup.
+This updates system is not part of the shell-only refactor. It requires a separate follow-on spec and implementation plan after cleanup is complete.
 
 ### 5. Agents remain internal
 
@@ -154,6 +169,8 @@ Not included in day 1:
 - rich job-management UI
 - client-facing chat
 
+During the shell-only reset, `Agents` remains a kept admin route and nav item, but no new Codex integration or redesign work is included. The reset only preserves the surface and prevents it from expanding further.
+
 ## Non-Goals
 
 This reset will not:
@@ -163,6 +180,7 @@ This reset will not:
 - keep dead routes alive indefinitely after stabilization
 - build the full autonomous agency in the same pass
 - solve agent runtime architecture and shell cleanup at the same time
+- implement the new client `Updates` system in the same spec
 
 ## Reset Principles
 
@@ -201,9 +219,11 @@ Anything that exists mainly to support removed surfaces should be deleted or qua
 Required work:
 
 - replace admin nav with only the approved admin shell
-- replace client nav with only the approved client shell
+- replace client nav with only the phase-1 shipped client shell
 - remove links to removed surfaces
 - hard-redirect removed routes temporarily while cleanup is in progress
+
+This phase is the only implementation scope covered by the implementation plan derived from this spec.
 
 ### Phase 2: Dashboard cleanup
 
@@ -244,6 +264,48 @@ Before new feature work begins:
 - focused tests for shared loaders/actions that survive pruning
 - removal or rewrite of tests tied only to deleted product areas
 - green `type-check` and focused test pass
+
+## Redirect Matrix
+
+The reset should use explicit temporary redirects during stabilization instead of leaving dead pages accessible.
+
+### Admin
+
+| Route | Phase 1 behavior | Final disposition |
+|------|-------------------|-------------------|
+| `/admin/dashboard` | keep | keep |
+| `/admin/campaigns` | keep | keep |
+| `/admin/events` | keep | keep |
+| `/admin/clients` | keep | keep |
+| `/admin/users` | keep | keep |
+| `/admin/settings` | keep | keep |
+| `/admin/activity` | keep | keep |
+| `/admin/agents` | keep as-is, no expansion in phase 1 | keep |
+| `/admin/assets` | redirect to `/admin/campaigns` | delete route after stabilization |
+| `/admin/assets/[assetId]` | redirect to `/admin/campaigns` | delete route after stabilization |
+| `/admin/reports` | redirect to `/admin/dashboard` | delete route after stabilization |
+| `/admin/crm` | redirect to `/admin/clients` | delete route after stabilization |
+| `/admin/crm/[contactId]` | redirect to `/admin/clients` | delete route after stabilization |
+| `/admin/workspace` | redirect to `/admin/dashboard` | delete route after stabilization |
+| `/admin/workspace/[pageId]` | redirect to `/admin/dashboard` | delete route after stabilization |
+| `/admin/workspace/tasks` | redirect to `/admin/dashboard` | delete route after stabilization |
+| `/admin/approvals` | redirect to `/admin/dashboard` | delete route after stabilization |
+| `/admin/conversations` | redirect to `/admin/dashboard` | delete route after stabilization |
+| `/admin/notifications` | redirect to `/admin/dashboard` | delete route after stabilization |
+
+### Client
+
+| Route | Phase 1 behavior | Final disposition |
+|------|-------------------|-------------------|
+| `/client/[slug]/campaigns` | keep | keep |
+| `/client/[slug]/events` | keep when enabled | keep when enabled |
+| `/client/[slug]/event/[eventId]` | keep when enabled | keep when enabled |
+| `/client/[slug]/campaign/[campaignId]` | keep | keep |
+| `/client/[slug]` | redirect to `/client/[slug]/campaigns` | keep as redirect or resolver |
+| `/client/[slug]/reports` | redirect to `/client/[slug]/campaigns` | delete route after stabilization |
+| `/client/[slug]/updates` | do not ship in phase 1 | add in phase 2 under a separate spec |
+
+If route inventory changes are discovered during implementation, the implementation plan should extend this matrix before deleting more surfaces.
 
 ## Kept Surfaces By Responsibility
 
@@ -311,6 +373,8 @@ Purpose:
 - managed from admin
 - later drafted by agents with mandatory approval
 
+This surface is phase 2 only and is intentionally out of scope for the shell reset implementation plan.
+
 ## Execution Sequence
 
 The approved execution order is:
@@ -320,6 +384,28 @@ The approved execution order is:
 3. feature pruning
 4. test hardening
 5. new build work on top of the cleaned shell
+
+## Phase Boundary
+
+This spec is intentionally planning only the shell reset.
+
+The first implementation plan derived from it may cover:
+
+- admin shell cleanup
+- client phase-1 shell cleanup
+- route redirects and deletions
+- dashboard cleanup
+- feature pruning
+- test hardening
+
+It may not cover:
+
+- building `Updates`
+- Codex chat implementation changes
+- new autonomous workflows
+- new publishing or approval mechanics
+
+Those follow in separate specs after the shell reset is stable.
 
 ## Risks
 
