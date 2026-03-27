@@ -123,7 +123,6 @@ export function ClientDetailView({ client }: Props) {
           eventsEnabled={client.eventsEnabled}
           logoAlt={client.logoAlt}
           logoUrl={client.logoUrl}
-          reportsEnabled={client.reportsEnabled}
         />
       )}
       {activeTab === "members" && <MembersSection client={client} />}

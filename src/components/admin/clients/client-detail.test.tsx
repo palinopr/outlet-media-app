@@ -83,9 +83,12 @@ describe("ClientDetailView", () => {
 
     expect(screen.getByText("Client Portal Shape")).toBeInTheDocument();
     expect(screen.getByText("Portal Events Access")).toBeInTheDocument();
-    expect(screen.getByText("Portal Reports Access")).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Toggle client events access" })).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Toggle client reports access" })).toBeInTheDocument();
+    expect(screen.queryByText("Portal Reports Access")).not.toBeInTheDocument();
+    expect(screen.queryByRole("switch", { name: "Toggle client reports access" })).not.toBeInTheDocument();
+    expect(
+      screen.getByText(/The client portal is intentionally narrow: campaigns, campaign detail,/),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /CRM/i })).not.toBeInTheDocument();
   });
 
