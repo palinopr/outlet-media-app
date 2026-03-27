@@ -303,7 +303,17 @@ The reset should use explicit temporary redirects during stabilization instead o
 | `/client/[slug]/campaign/[campaignId]` | keep | keep |
 | `/client/[slug]` | redirect to `/client/[slug]/campaigns` | keep as redirect or resolver |
 | `/client/[slug]/reports` | redirect to `/client/[slug]/campaigns` | delete route after stabilization |
-| `/client/[slug]/updates` | do not ship in phase 1 | add in phase 2 under a separate spec |
+| `/client/[slug]/notifications` | redirect to `/client/[slug]/campaigns` | delete route/helper target after stabilization unless the feature is later reintroduced under a separate spec |
+| `/client/[slug]/approvals` | redirect to `/client/[slug]/campaigns` | delete route/helper target after stabilization unless the feature is later reintroduced under a separate spec |
+| `/client/[slug]/conversations` | redirect to `/client/[slug]/campaigns` | delete route/helper target after stabilization unless the feature is later reintroduced under a separate spec |
+| `/client/[slug]/workspace` | redirect to `/client/[slug]/campaigns` | delete route/helper target after stabilization unless the feature is later reintroduced under a separate spec |
+| `/client/[slug]/workspace/[pageId]` | redirect to `/client/[slug]/campaigns` | delete route/helper target after stabilization unless the feature is later reintroduced under a separate spec |
+| `/client/[slug]/workspace/tasks` | redirect to `/client/[slug]/campaigns` | delete route/helper target after stabilization unless the feature is later reintroduced under a separate spec |
+| `/client/[slug]/assets` | redirect to `/client/[slug]/campaigns` | delete route/helper target after stabilization unless the feature is later reintroduced under a separate spec |
+| `/client/[slug]/assets/[assetId]` | redirect to `/client/[slug]/campaigns` | delete route/helper target after stabilization unless the feature is later reintroduced under a separate spec |
+| `/client/[slug]/crm` | redirect to `/client/[slug]/campaigns` | delete route/helper target after stabilization unless the feature is later reintroduced under a separate spec |
+| `/client/[slug]/crm/[contactId]` | redirect to `/client/[slug]/campaigns` | delete route/helper target after stabilization unless the feature is later reintroduced under a separate spec |
+| `/client/[slug]/updates` | phase 1 does not ship Updates; legacy/helper-generated links resolve to `/client/[slug]/campaigns` until phase 2 | add in phase 2 under a separate spec |
 
 If route inventory changes are discovered during implementation, the implementation plan should extend this matrix before deleting more surfaces.
 
