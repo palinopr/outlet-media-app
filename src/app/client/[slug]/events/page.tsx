@@ -43,11 +43,11 @@ export default async function ClientEventsPage({ params, searchParams }: Props) 
 
         <div className="relative">
           <Link
-            href={`/client/${slug}`}
+            href={`/client/${slug}/campaigns`}
             className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white/70 transition mb-4"
           >
             <ArrowLeft className="h-3 w-3" />
-            Back to dashboard
+            Back to campaigns
           </Link>
 
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

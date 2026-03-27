@@ -52,10 +52,10 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
         <p className="text-white/60 text-sm">Campaign not found.</p>
         <Link
-          href={`/client/${slug}`}
+          href={`/client/${slug}/campaigns`}
           className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
         >
-          <ArrowLeft className="h-3 w-3" /> Back to dashboard
+          <ArrowLeft className="h-3 w-3" /> Back to campaigns
         </Link>
       </div>
     );

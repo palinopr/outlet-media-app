@@ -178,7 +178,7 @@ describe("requireClientAccess", () => {
     });
 
     await expect(requireClientEventsAccess("acme")).rejects.toThrow(
-      "redirect:/client/acme",
+      "redirect:/client/acme/campaigns",
     );
   });
 });

@@ -19,11 +19,11 @@ export function CampaignDetailHeader({ slug, range, campaign: c }: Props) {
   return (
     <div className="space-y-4">
       <Link
-        href={`/client/${slug}?range=${range}`}
+        href={`/client/${slug}/campaigns?range=${range}`}
         className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs text-white/60 transition hover:border-white/[0.16] hover:text-white"
       >
         <ArrowLeft className="h-3 w-3" />
-        Back to dashboard
+        Back to campaigns
       </Link>
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">

@@ -115,9 +115,6 @@ export default async function ClientCampaigns({ params }: Props) {
           </div>
 
           <div className="flex items-center gap-3 self-start flex-wrap">
-            <a href={`/client/${slug}`} className="text-xs text-white/50 hover:text-white/80 transition-colors">
-              Back to overview
-            </a>
             <div className="flex items-center gap-2">
               {hasData ? (
                 <>

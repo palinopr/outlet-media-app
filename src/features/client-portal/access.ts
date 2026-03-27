@@ -64,7 +64,7 @@ export async function requireClientEventsAccess(
   ]);
 
   if (!portalConfig?.eventsEnabled) {
-    redirect(`/client/${slug}`);
+    redirect(`/client/${slug}/campaigns`);
   }
 
   return access;

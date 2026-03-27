@@ -53,10 +53,10 @@ export default async function EventDetailPage({ params }: Props) {
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
         <p className="text-white/60 text-sm">Event not found.</p>
         <Link
-          href={`/client/${slug}`}
+          href={`/client/${slug}/events`}
           className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
         >
-          <ArrowLeft className="h-3 w-3" /> Back to dashboard
+          <ArrowLeft className="h-3 w-3" /> Back to events
         </Link>
       </div>
     );
@@ -88,11 +88,11 @@ export default async function EventDetailPage({ params }: Props) {
       {/* -- Header -- */}
       <div className="space-y-4">
         <Link
-          href={`/client/${slug}`}
+          href={`/client/${slug}/events`}
           className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs text-white/60 transition hover:border-white/[0.16] hover:text-white"
         >
           <ArrowLeft className="h-3 w-3" />
-          Back to dashboard
+          Back to events
         </Link>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
