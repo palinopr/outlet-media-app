@@ -131,7 +131,7 @@ export function ClientOverviewTab({
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
               When disabled, the Events nav item is removed and direct event URLs redirect back to
-              the dashboard.
+              campaigns.
             </p>
           </div>
         </div>

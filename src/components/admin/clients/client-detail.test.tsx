@@ -89,6 +89,11 @@ describe("ClientDetailView", () => {
     expect(
       screen.getByText(/The client portal is intentionally narrow: campaigns, campaign detail,/),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /When disabled, the Events nav item is removed and direct event URLs redirect back to campaigns\./,
+      ),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /CRM/i })).not.toBeInTheDocument();
   });
 
