@@ -33,9 +33,9 @@ function metadataString(metadata: Record<string, unknown> | null | undefined, ke
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
-function portalClientSlug(clientSlug: string | null | undefined) {
-  if (!clientSlug || clientSlug === "admin") return null;
-  return clientSlug;
+function clientCampaignsPath(clientSlug: string | null | undefined) {
+  if (!clientSlug) return [];
+  return [`/client/${clientSlug}/campaigns`];
 }
 
 export function getCampaignWorkflowPaths(
@@ -46,89 +46,43 @@ export function getCampaignWorkflowPaths(
     "/admin/activity",
     "/admin/campaigns",
     `/admin/campaigns/${campaignId}`,
-    "/admin/conversations",
     "/admin/dashboard",
-    "/admin/notifications",
-    "/admin/workspace",
-    "/admin/workspace/tasks",
     ...clientPaths(clientSlug, [
-      "/client/:clientSlug",
       `/client/:clientSlug/campaign/${campaignId}`,
       "/client/:clientSlug/campaigns",
-      "/client/:clientSlug/conversations",
-      "/client/:clientSlug/notifications",
-      "/client/:clientSlug/updates",
-      "/client/:clientSlug/workspace",
-      "/client/:clientSlug/workspace/tasks",
     ]),
   ]);
 }
 
 export function getAssetWorkflowPaths(clientSlug: string | null | undefined, assetId: string) {
+  void assetId;
   return uniquePaths([
     "/admin/activity",
-    "/admin/assets",
-    `/admin/assets/${assetId}`,
-    "/admin/conversations",
+    "/admin/campaigns",
     "/admin/dashboard",
-    "/admin/notifications",
-    "/admin/workspace",
-    "/admin/workspace/tasks",
-    ...clientPaths(clientSlug, [
-      "/client/:clientSlug",
-      "/client/:clientSlug/assets",
-      `/client/:clientSlug/assets/${assetId}`,
-      "/client/:clientSlug/conversations",
-      "/client/:clientSlug/notifications",
-      "/client/:clientSlug/updates",
-      "/client/:clientSlug/workspace",
-      "/client/:clientSlug/workspace/tasks",
-    ]),
+    ...clientCampaignsPath(clientSlug),
   ]);
 }
 
 export function getCrmWorkflowPaths(clientSlug: string | null | undefined, contactId: string) {
+  void contactId;
   return uniquePaths([
     "/admin/activity",
-    "/admin/conversations",
-    "/admin/crm",
-    `/admin/crm/${contactId}`,
+    "/admin/clients",
     "/admin/dashboard",
-    "/admin/notifications",
-    "/admin/workspace",
-    "/admin/workspace/tasks",
-    ...clientPaths(clientSlug, [
-      "/client/:clientSlug",
-      "/client/:clientSlug/conversations",
-      "/client/:clientSlug/crm",
-      `/client/:clientSlug/crm/${contactId}`,
-      "/client/:clientSlug/notifications",
-      "/client/:clientSlug/updates",
-      "/client/:clientSlug/workspace",
-      "/client/:clientSlug/workspace/tasks",
-    ]),
+    ...clientCampaignsPath(clientSlug),
   ]);
 }
 
 export function getEventWorkflowPaths(clientSlug: string | null | undefined, eventId: string) {
   return uniquePaths([
     "/admin/activity",
-    "/admin/conversations",
     "/admin/dashboard",
     "/admin/events",
     `/admin/events/${eventId}`,
-    "/admin/notifications",
-    "/admin/workspace",
-    "/admin/workspace/tasks",
     ...clientPaths(clientSlug, [
-      "/client/:clientSlug",
-      "/client/:clientSlug/conversations",
       `/client/:clientSlug/event/${eventId}`,
       "/client/:clientSlug/events",
-      "/client/:clientSlug/notifications",
-      "/client/:clientSlug/updates",
-      "/client/:clientSlug/workspace",
-      "/client/:clientSlug/workspace/tasks",
     ]),
   ]);
 }
@@ -166,27 +120,12 @@ export function getApprovalWorkflowPaths(input: ApprovalWorkflowPathsInput) {
 
   return uniquePaths([
     "/admin/activity",
-    "/admin/approvals",
     "/admin/dashboard",
-    "/admin/notifications",
-    "/admin/reports",
-    "/admin/workspace",
-    "/admin/workspace/tasks",
-    ...clientPaths(clientSlug, [
-      "/client/:clientSlug",
-      "/client/:clientSlug/approvals",
-      "/client/:clientSlug/notifications",
-      "/client/:clientSlug/reports",
-      "/client/:clientSlug/updates",
-      "/client/:clientSlug/workspace",
-      "/client/:clientSlug/workspace/tasks",
-    ]),
-    ...(input.pageId ? [`/admin/workspace/${input.pageId}`] : []),
-    ...(input.pageId && clientSlug ? [`/client/${clientSlug}/workspace/${input.pageId}`] : []),
     ...(campaignId ? getCampaignWorkflowPaths(clientSlug, campaignId) : []),
     ...(assetId ? getAssetWorkflowPaths(clientSlug, assetId) : []),
     ...(eventId ? getEventWorkflowPaths(clientSlug, eventId) : []),
     ...(contactId ? getCrmWorkflowPaths(clientSlug, contactId) : []),
+    ...clientCampaignsPath(clientSlug),
   ]);
 }
 
@@ -199,22 +138,19 @@ interface WorkspaceMutationTargetsInput {
 }
 
 export function getWorkspaceMutationTargets(input: WorkspaceMutationTargetsInput) {
-  const clientSlug = portalClientSlug(input.clientSlug);
-  const pageIds = [...new Set((input.pageIds ?? []).filter((value): value is string => Boolean(value)))];
+  const {
+    includeActivity,
+    clientSlug: _clientSlug,
+    includeNotifications: _includeNotifications,
+    includeTasks: _includeTasks,
+    pageIds: _pageIds,
+  } = input;
 
+  // Workspace-only routes are retired from the shipped shell. Mutations now only need
+  // to refresh the surviving summary surfaces that can still reflect shared activity.
   return uniqueTargets([
-    { path: "/admin/workspace", type: "layout" },
-    ...(input.includeActivity ? [{ path: "/admin/activity" }] : []),
-    ...(input.includeNotifications ? [{ path: "/admin/notifications" }] : []),
-    ...(input.includeTasks ? [{ path: "/admin/workspace/tasks" }] : []),
-    ...pageIds.map((pageId) => ({ path: `/admin/workspace/${pageId}` })),
-    ...(clientSlug ? [{ path: `/client/${clientSlug}/workspace`, type: "layout" as const }] : []),
-    ...(clientSlug && input.includeActivity ? [{ path: `/client/${clientSlug}/updates` }] : []),
-    ...(clientSlug && input.includeNotifications ? [{ path: `/client/${clientSlug}/notifications` }] : []),
-    ...(clientSlug && input.includeTasks ? [{ path: `/client/${clientSlug}/workspace/tasks` }] : []),
-    ...pageIds.map((pageId) => ({
-      path: clientSlug ? `/client/${clientSlug}/workspace/${pageId}` : "",
-    })).filter((target) => target.path.length > 0),
+    { path: "/admin/dashboard" },
+    ...(includeActivity ? [{ path: "/admin/activity" }] : []),
   ]);
 }
 

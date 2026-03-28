@@ -21,7 +21,11 @@ function slugForHref(itemClientSlug: string | null, options: GetWorkQueueOptions
   return options.mode === "client" ? options.clientSlug ?? itemClientSlug : itemClientSlug;
 }
 
-function buildHref(
+function clientCampaignsHref(clientSlug: string) {
+  return `/client/${clientSlug}/campaigns`;
+}
+
+export function buildWorkQueueHref(
   kind: WorkQueueItem["kind"],
   contextId: string,
   clientSlug: string | null,
@@ -32,11 +36,11 @@ function buildHref(
       case "campaign_action":
         return `/admin/campaigns/${contextId}`;
       case "crm_follow_up":
-        return `/admin/crm/${contextId}`;
+        return "/admin/clients";
       case "event_follow_up":
         return `/admin/events/${contextId}`;
       case "asset_follow_up":
-        return `/admin/assets/${contextId}`;
+        return "/admin/campaigns";
     }
   }
 
@@ -47,11 +51,11 @@ function buildHref(
     case "campaign_action":
       return `/client/${slug}/campaign/${contextId}`;
     case "crm_follow_up":
-      return `/client/${slug}/crm/${contextId}`;
+      return clientCampaignsHref(slug);
     case "event_follow_up":
       return `/client/${slug}/event/${contextId}`;
     case "asset_follow_up":
-      return `/client/${slug}/assets/${contextId}`;
+      return clientCampaignsHref(slug);
   }
 }
 
@@ -238,7 +242,7 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
         clientSlug,
         contextId,
         contextLabel: campaignNames.get(contextId) ?? contextId,
-        href: buildHref("campaign_action", contextId, clientSlug, options),
+        href: buildWorkQueueHref("campaign_action", contextId, clientSlug, options),
         status: row.status as WorkQueueItem["status"],
         priority: row.priority as WorkQueueItem["priority"],
         assigneeName: (row.assignee_name as string | null) ?? null,
@@ -258,7 +262,7 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
         clientSlug,
         contextId,
         contextLabel: contactNames.get(contextId) ?? contextId,
-        href: buildHref("crm_follow_up", contextId, clientSlug, options),
+        href: buildWorkQueueHref("crm_follow_up", contextId, clientSlug, options),
         status: row.status as WorkQueueItem["status"],
         priority: row.priority as WorkQueueItem["priority"],
         assigneeName: (row.assignee_name as string | null) ?? null,
@@ -278,7 +282,7 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
         clientSlug,
         contextId,
         contextLabel: eventNames.get(contextId) ?? contextId,
-        href: buildHref("event_follow_up", contextId, clientSlug, options),
+        href: buildWorkQueueHref("event_follow_up", contextId, clientSlug, options),
         status: row.status as WorkQueueItem["status"],
         priority: row.priority as WorkQueueItem["priority"],
         assigneeName: (row.assignee_name as string | null) ?? null,
@@ -298,7 +302,7 @@ export async function getWorkQueue(options: GetWorkQueueOptions) {
         clientSlug,
         contextId,
         contextLabel: assetNames.get(contextId) ?? contextId,
-        href: buildHref("asset_follow_up", contextId, clientSlug, options),
+        href: buildWorkQueueHref("asset_follow_up", contextId, clientSlug, options),
         status: row.status as WorkQueueItem["status"],
         priority: row.priority as WorkQueueItem["priority"],
         assigneeName: (row.assignee_name as string | null) ?? null,

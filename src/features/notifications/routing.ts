@@ -5,6 +5,10 @@ interface BuildNotificationHrefOptions {
   viewer: "admin" | "client";
 }
 
+function clientCampaignsHref(clientSlug: string) {
+  return `/client/${clientSlug}/campaigns`;
+}
+
 export function buildNotificationsCenterHref(
   viewer: "admin" | "client",
   fallbackClientSlug?: string | null,
@@ -13,7 +17,7 @@ export function buildNotificationsCenterHref(
     return "/admin/dashboard";
   }
 
-  return fallbackClientSlug ? `/client/${fallbackClientSlug}/notifications` : "/client";
+  return fallbackClientSlug ? clientCampaignsHref(fallbackClientSlug) : "/client";
 }
 
 function clientSlugForNotification(
@@ -39,7 +43,7 @@ function buildAdminNotificationEntityHref(notification: AppNotification) {
     return `/admin/campaigns/${entityId}`;
   }
   if (entityType === "asset" && entityId) {
-    return `/admin/assets/${entityId}`;
+    return "/admin/campaigns";
   }
   if (entityType === "event" && entityId) {
     return `/admin/events/${entityId}`;
@@ -62,7 +66,7 @@ function buildAdminNotificationEntityHref(notification: AppNotification) {
     return "/admin/campaigns";
   }
   if (notification.entityType === "asset_follow_up_item") {
-    return "/admin/assets";
+    return "/admin/campaigns";
   }
   if (notification.entityType === "event_follow_up_item") {
     return "/admin/events";
@@ -84,16 +88,16 @@ function buildClientNotificationEntityHref(
     return `/client/${clientSlug}/campaign/${entityId}`;
   }
   if (entityType === "asset" && entityId) {
-    return `/client/${clientSlug}/assets/${entityId}`;
+    return clientCampaignsHref(clientSlug);
   }
   if (entityType === "event" && entityId) {
     return `/client/${clientSlug}/event/${entityId}`;
   }
   if (entityType === "crm_contact" && entityId) {
-    return `/client/${clientSlug}`;
+    return clientCampaignsHref(clientSlug);
   }
   if (notification.entityType === "approval_request") {
-    return `/client/${clientSlug}/approvals`;
+    return clientCampaignsHref(clientSlug);
   }
   if (
     notification.entityType === "campaign_comment" ||
@@ -101,19 +105,19 @@ function buildClientNotificationEntityHref(
     notification.entityType === "asset_comment" ||
     notification.entityType === "event_comment"
   ) {
-    return `/client/${clientSlug}/conversations`;
+    return clientCampaignsHref(clientSlug);
   }
   if (notification.entityType === "campaign_action_item") {
-    return `/client/${clientSlug}/campaigns`;
+    return clientCampaignsHref(clientSlug);
   }
   if (notification.entityType === "asset_follow_up_item") {
-    return `/client/${clientSlug}/assets`;
+    return clientCampaignsHref(clientSlug);
   }
   if (notification.entityType === "event_follow_up_item") {
     return `/client/${clientSlug}/events`;
   }
   if (notification.entityType === "crm_follow_up_item") {
-    return `/client/${clientSlug}`;
+    return clientCampaignsHref(clientSlug);
   }
   return null;
 }
@@ -128,7 +132,7 @@ export function buildNotificationHref(
     const entityHref = buildAdminNotificationEntityHref(notification);
     if (entityHref) return entityHref;
     if (notification.pageId) {
-      return `/admin/workspace/${notification.pageId}`;
+      return "/admin/dashboard";
     }
     if (notification.taskId || notification.entityType === "workspace_task") {
       return "/admin/dashboard";
@@ -143,11 +147,11 @@ export function buildNotificationHref(
   const entityHref = buildClientNotificationEntityHref(notification, clientSlug);
   if (entityHref) return entityHref;
   if (notification.pageId) {
-    return `/client/${clientSlug}/workspace/${notification.pageId}`;
+    return clientCampaignsHref(clientSlug);
   }
   if (notification.taskId || notification.entityType === "workspace_task") {
-    return `/client/${clientSlug}/workspace/tasks`;
+    return clientCampaignsHref(clientSlug);
   }
 
-  return `/client/${clientSlug}/updates`;
+  return clientCampaignsHref(clientSlug);
 }
