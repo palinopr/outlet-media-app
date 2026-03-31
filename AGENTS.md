@@ -41,10 +41,12 @@
   - `Campaigns`
   - `Events`
   - `Reports`
+- `Agent` is the approved exception to that older top-level rule. Treat it as an admin-managed, read-only conversational reporting surface over the same client-safe campaign and optional event backbone, not as a broad new workspace domain.
 - Client portal packaging is controlled from Outlet admin. Each client account should have one admin-managed source of truth for enabled apps, branding, portal URL metadata, and memberships.
 - Treat the client account record and `client_members` as the authority for portal access. Do not treat Clerk `publicMetadata.client_slug` or URL slug values as the business source of truth for invites, memberships, or landing behavior.
-- Keep `Events` optional per client account. Campaigns are universal; reports are first-class when enabled.
+- Keep `Events` optional per client account. Campaigns are universal; reports are first-class when enabled; `Agent` is optional per client account and should stay off until explicitly enabled by Outlet admin.
 - Client-facing analytics, activity, approvals, comments, assets, and agent follow-through should live inside campaign and event views before earning their own top-level client routes.
+- `Agent` may aggregate those same campaign and event insights conversationally, but it must stay read-only and must not expose internal structure, source systems, or admin-only workflow state.
 - Client-facing web is primarily a reporting and visibility surface. Meta account connection, campaign creation, and live campaign mutation should stay internal/admin-only by default unless a later product decision explicitly reopens client self-serve execution.
 - Do not ship client top-level apps for CRM, assets, approvals, conversations, updates, or workspace unless current customers clearly need them and the surface can be maintained without duplicating workflow logic.
 - Admin web remains the broader operating surface for account management, campaign/event operations, CRM, approvals, assets, and internal coordination.

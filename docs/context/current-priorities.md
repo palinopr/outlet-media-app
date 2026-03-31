@@ -9,7 +9,7 @@ Outlet is being built as a client-facing autonomous agency operating system.
 The short-term focus is:
 
 1. Make the client portal feel extremely clear and trustworthy for current customers, centered on campaign status, reporting, outcomes, and clean access.
-2. Keep the customer-facing web surface focused on `Campaigns`, optional `Events`, and `Reports`, with other workflow embedded inside those areas before earning separate routes.
+2. Keep the customer-facing web surface focused on `Campaigns`, optional `Events`, `Reports`, and the new optional `Agent` tab, with other workflow embedded inside those areas before earning separate routes.
 3. Keep live Meta account linking, campaign creation, and campaign mutation as internal/admin workflows by default rather than general client self-serve surfaces.
 4. Make Outlet admin the source of truth for client accounts, enabled apps, branding, memberships, and invites instead of relying on Clerk metadata or slug-only routing assumptions.
 5. Keep admin as the broader operating surface for CRM, approvals, assets, account management, and internal workflow.
@@ -22,6 +22,7 @@ Until current customers prove otherwise, treat the product packaging like this:
 
 - Client web:
   - campaigns
+  - agent
   - events
   - reports
 - Admin web:
@@ -41,6 +42,7 @@ Implications:
 
 - Do not keep broad client navigation just because the backend supports it.
 - Client analytics, approvals, conversations, activity, assets, and agent follow-through should usually be embedded inside campaign and event views first, with reports as the one explicit summary surface that stays top-level.
+- `Agent` is the approved exception to the older top-level packaging limit: it is allowed because it is a read-only conversational reporting surface over the same campaign and event backbone, not a new client workspace domain.
 - Do not expose Meta account connection, campaign creation, or live campaign mutation as default client self-serve flows unless a later product decision explicitly reopens that surface.
 - The client account record plus `client_members` is the authority for client portal access. Slug is URL metadata, not the membership source of truth.
 - Client onboarding should flow through a DB-backed invite ledger and one canonical landing resolver so invited members land in the correct portal or a real pending state instead of a false "no access" screen.
@@ -50,9 +52,10 @@ Implications:
 
 ## Near-Term Architecture Focus
 
-- Keep the current customer-facing packaging narrow: client portal top-level navigation should stay focused on campaigns and events until another surface is clearly justified by live customer use.
-- Reports now counts as the one justified client top-level summary surface. Keep it on the same data layer as campaign and event detail instead of creating route-local reporting logic.
+- Keep the current customer-facing packaging narrow: client portal top-level navigation should stay focused on campaigns, optional events, reports, and the new optional `Agent` reporting surface rather than broad workspace apps.
+- Reports and `Agent` now count as the justified client top-level summary surfaces. Keep both on the same data layer as campaign and event detail instead of creating route-local reporting logic.
 - Make client campaign and event pages the primary analytics and collaboration surfaces instead of spreading customer value across many top-level tabs.
+- Keep `Agent` read-only and client-safe: it can aggregate campaign and event insights conversationally, but it must not expose internal structure, source systems, or admin-only workflow state.
 - Make the root landing and `/client` entrypoints resolve from actual Outlet account membership and pending invites before consulting route preferences or old metadata.
 - Keep admin CRM and client/account hubs as the main web operating surfaces for relationship management, including CRM state that may be informed by WhatsApp/Evolution communication history.
 - Keep customer WhatsApp transport and operator handling Discord-first even if the admin web later shows CRM-linked WhatsApp summaries, statuses, or recent-message context. The current default transport is Evolution on a phone-linked WhatsApp account, not Twilio.

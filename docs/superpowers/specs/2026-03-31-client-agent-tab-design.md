@@ -49,11 +49,32 @@ The label is explicitly `Agent`.
 For the client portal after this feature:
 
 - `Campaigns` remains a top-level tab
-- `Agent` becomes a top-level tab
+- `Agent` becomes a top-level tab only when enabled for that client account
 - `Events` remains a top-level tab only when enabled for that client
 - `Reports` remains available when enabled under the existing packaging rules
 
 `Agent` is not a broad new workspace surface. It is a summary-first conversational surface over the same client-safe campaign and event reporting backbone.
+
+### Packaging and rollout contract
+
+`Agent` must be controlled by the same admin-managed client packaging source of truth that governs other client portal apps.
+
+That means:
+
+- `Agent` is an admin-managed client app flag
+- the flag lives on the client account configuration, not on Clerk metadata
+- existing clients default to `Agent = off` until explicitly enabled
+- when `Agent` is off, the tab is hidden and direct routes redirect to the default allowed client surface
+- when `Agent` is on, the tab appears in the client nav and the route is accessible within normal client permissions
+
+This is an explicit approved exception to the older client packaging rule that top-level surfaces stay limited to `Campaigns`, optional `Events`, and `Reports`.
+
+The reason for the exception is narrow and product-specific:
+
+- `Agent` is a summary-first conversational reporting surface over campaign and event data
+- it does not introduce a broad new workspace domain
+- it stays read-only and client-safe
+- it improves guided visibility without reopening admin-only execution surfaces
 
 ### 2. ChatGPT-style UX, not a page-scoped helper
 
@@ -166,6 +187,7 @@ Each thread:
 - has its own conversation memory
 - supports follow-up questions
 - can be reopened from the chat history
+- is stored durably so the member can return to it later
 
 ### New chat
 
@@ -190,6 +212,34 @@ That means:
 - if the request is ambiguous, the assistant asks a short clarifying question
 
 This preserves the ChatGPT-style mental model while staying tenant-safe.
+
+### Thread ownership and persistence
+
+Version 1 should persist threads and messages in a dedicated client-agent ledger, not only in volatile browser state.
+
+Minimum ownership contract:
+
+- each thread belongs to exactly one client account
+- each thread belongs to exactly one client member
+- messages belong to exactly one thread
+- admin preview does not read or write a real client member thread history
+
+Admin preview behavior for version 1 should be ephemeral:
+
+- preview users may render the page shell
+- preview users may use a temporary non-persistent preview conversation if implementation needs interactive QA
+- preview usage must not create durable client-member chat history
+
+### Scope changes over time
+
+Thread access must always be revalidated against the member's current assignment scope.
+
+That means:
+
+- future turns on an existing thread use the member's current allowed scope, not the scope captured when the thread was first created
+- if a thread references campaigns or events that are no longer in scope, the member must not receive fresh answers about those entities
+- durable thread storage should track referenced entity IDs at the thread or message layer so access can be rechecked safely
+- if a previously visible thread is no longer fully allowed, the thread must be hidden from the member's thread list and direct fetches of that thread must return unavailable
 
 ### Memory limits
 
@@ -326,6 +376,15 @@ Recommended tool set:
 - `get_event_insights(event_ids, metrics, range)`
 - `answerability_check(question)`
 
+### Stable entity contract
+
+Version 1 entity typing should be explicit and narrow:
+
+- `campaign`
+- `event`
+
+If a response references lower-level reporting rows such as ad set, ad, or creative, those rows remain subordinate reporting objects under a campaign answer. They do not become first-class top-level conversation entities in version 1.
+
 ### Tool rules
 
 All tools must be:
@@ -354,6 +413,81 @@ The assistant should be able to resolve natural references like:
 - `our top campaign`
 
 If multiple in-scope entities match, the assistant should ask a short clarifying question instead of guessing.
+
+### Time-range semantics
+
+Tool inputs and outputs must use one normalized range contract.
+
+Minimum range shape:
+
+- `preset`: one of the supported named periods such as `today`, `yesterday`, `last_7_days`, `last_30_days`, `this_week`, `this_month`, `this_quarter`, `custom`
+- `start_date`
+- `end_date`
+- `timezone`
+
+Relative date phrases from the user should resolve in this order:
+
+1. the client account or portal timezone when configured
+2. the event-local timezone for a single-event question when that timezone is available
+3. the system default application timezone as the final fallback
+
+All model-facing tools and all UI-facing supporting blocks should operate on the same resolved range so follow-up questions stay consistent.
+
+## API And Answer Contract
+
+Version 1 should define a stable API surface between the chat UI and the server.
+
+Minimum API shape:
+
+- list threads for the active client member
+- create a new thread
+- send a message into a thread
+- fetch a thread with its visible message history
+
+Minimum thread-list item shape:
+
+- `thread_id`
+- `title`
+- `updated_at`
+- optional `preview_text`
+
+Thread titles should be derived from the first user message or a server-side summarization rule, and thread lists should be ordered by most recent activity descending.
+
+Minimum request shape for a message send:
+
+- `thread_id`
+- `message`
+- optional `client_generated_id` for optimistic UI reconciliation
+
+Minimum response shape from the message API:
+
+- `status`: `answer` | `clarify` | `refuse` | `error`
+- `thread_id`
+- `message_id`
+- `text`
+- `blocks`
+- `referenced_entities`
+- `resolved_range`
+
+### Answer block schema
+
+Supporting blocks should be typed and renderable without guessing.
+
+Version 1 should support:
+
+- `metric_cards`
+- `table`
+- `chart`
+
+Minimum block contract:
+
+- every block has a stable `type`
+- every block may have an optional `title`
+- `metric_cards` returns labeled values and optional deltas
+- `table` returns explicit columns and rows
+- `chart` returns explicit series data, chart type, and axis keys
+
+Clarifications and refusals should not be encoded as pseudo-blocks. They should use the top-level `status` contract.
 
 ## Response Rules
 
@@ -422,6 +556,8 @@ Responsibilities:
 - apply the client-safe system policy
 - return a structured answer payload to the UI
 
+This API surface should remain the only server entry point for the client chat feature. The UI should not call reporting loaders directly.
+
 ### Context builder
 
 The backend should have a dedicated client-agent server module that assembles client-safe context and tool results.
@@ -448,6 +584,20 @@ Responsibilities:
 - return structured answer content for the page
 
 This keeps provider-specific logic out of route handlers and makes policy changes easier to review.
+
+### Durable event integration
+
+The conversational surface should still participate in Outlet's event-driven backbone.
+
+Version 1 should emit bounded `system_events` for:
+
+- thread created
+- user message submitted
+- assistant answer generated
+- assistant refusal generated
+- assistant failure returned
+
+These events should be product-safe envelope events for audit and future follow-through, not raw prompt or raw tool payload dumps.
 
 ## Error Handling
 
