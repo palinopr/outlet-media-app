@@ -54,8 +54,27 @@ function isComparisonQuestion(message: string) {
   return /\b(compare|comparison|versus|vs\.?|against)\b/i.test(message);
 }
 
+function isShowInventoryQuestion(message: string) {
+  return /\bhow many shows\b|\bhow many events\b/.test(message.toLowerCase());
+}
+
+function isLastShowQuestion(message: string) {
+  return /\blast show\b|\bmost recent show\b|\blast event\b/.test(message.toLowerCase());
+}
+
 function isBroadEventQuestion(message: string) {
-  return /\bevents?\b/i.test(message);
+  const lowerMessage = message.toLowerCase();
+
+  if (/\bshow me\b/.test(lowerMessage)) {
+    return false;
+  }
+
+  return (
+    /\bevents?\b/.test(lowerMessage) ||
+    /\bshows?\b/.test(lowerMessage) ||
+    isShowInventoryQuestion(lowerMessage) ||
+    isLastShowQuestion(lowerMessage)
+  );
 }
 
 function selectRangeTimezone(input: PlanQuestionInput) {

@@ -428,4 +428,102 @@ describe("planQuestion", () => {
       },
     });
   });
+
+  it("treats 'how many shows we have' as a broad event question", () => {
+    const result = planQuestion({
+      message: "how many shows we have",
+      timezone: "America/Chicago",
+      now: new Date("2026-03-31T15:00:00.000Z"),
+      eventsEnabled: true,
+      history: [],
+      resolvedEntities: [],
+      ambiguousEntities: [],
+    });
+
+    expect(result).toMatchObject({
+      disposition: "answer",
+      resolvedRange: {
+        preset: "last_30_days",
+        startDate: "2026-03-02",
+        endDate: "2026-03-31",
+        timezone: "America/Chicago",
+      },
+    });
+  });
+
+  it("does not treat 'show me spend by date' as an event question", () => {
+    const result = planQuestion({
+      message: "show me spend by date for Camila",
+      timezone: "America/Chicago",
+      now: new Date("2026-03-31T15:00:00.000Z"),
+      eventsEnabled: true,
+      history: [],
+      resolvedEntities: [],
+      ambiguousEntities: [],
+    });
+
+    expect(result).toMatchObject({
+      disposition: "answer",
+      resolvedRange: {
+        preset: "last_30_days",
+        startDate: "2026-03-02",
+        endDate: "2026-03-31",
+        timezone: "America/Chicago",
+      },
+    });
+  });
+
+  it("marks 'last show' questions as event-intent questions", () => {
+    const result = planQuestion({
+      message: "how we did last show",
+      timezone: "America/Chicago",
+      now: new Date("2026-03-31T15:00:00.000Z"),
+      eventsEnabled: true,
+      history: [],
+      resolvedEntities: [],
+      ambiguousEntities: [],
+    });
+
+    expect(result).toMatchObject({
+      disposition: "answer",
+      resolvedRange: {
+        preset: "last_30_days",
+        startDate: "2026-03-02",
+        endDate: "2026-03-31",
+        timezone: "America/Chicago",
+      },
+    });
+  });
+
+  it("refuses broad show questions when events are disabled", () => {
+    const result = planQuestion({
+      message: "how many shows we have",
+      timezone: "America/Chicago",
+      eventsEnabled: false,
+      history: [],
+      resolvedEntities: [],
+      ambiguousEntities: [],
+    });
+
+    expect(result).toMatchObject({
+      disposition: "refuse",
+      reason: "events_disabled",
+    });
+  });
+
+  it("refuses last-show questions when events are disabled", () => {
+    const result = planQuestion({
+      message: "how we did last show",
+      timezone: "America/Chicago",
+      eventsEnabled: false,
+      history: [],
+      resolvedEntities: [],
+      ambiguousEntities: [],
+    });
+
+    expect(result).toMatchObject({
+      disposition: "refuse",
+      reason: "events_disabled",
+    });
+  });
 });

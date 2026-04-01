@@ -25,6 +25,7 @@ import {
   getOverview,
   getTimeseries,
   getTopMovers,
+  resolveEventIntent,
 } from "./data";
 
 const scope = {
@@ -264,6 +265,200 @@ describe("client-agent data tools", () => {
     });
     getCampaignDetail.mockResolvedValue(buildCampaignDetail());
     getEventDetail.mockResolvedValue(buildEventDetail());
+  });
+
+  it("returns the count of allowed events for broad show inventory questions", async () => {
+    getReportsData.mockResolvedValueOnce({
+      campaigns: [],
+      snapshots: [],
+      trendData: [],
+      events: [makeEvent(1), makeEvent(2), makeEvent(3)],
+      summary: {
+        totalSpend: 0,
+        totalRevenue: 0,
+        blendedRoas: 0,
+        totalImpressions: 0,
+        totalClicks: 0,
+        totalTicketsSold: 0,
+        avgCpc: 0,
+        avgCtr: 0,
+      },
+      dataSource: "meta_api",
+      clients: ["acme"],
+    });
+
+    const result = await resolveEventIntent({
+      message: "how many shows we have",
+      scope: {
+        ...broadScope,
+        allowedEventIds: ["evt_1", "evt_2", "evt_3"],
+      },
+    });
+
+    expect(result).toMatchObject({
+      kind: "count",
+      totalEvents: 3,
+    });
+  });
+
+  it("picks the most recent dated event for 'last show'", async () => {
+    getReportsData.mockResolvedValueOnce({
+      campaigns: [],
+      snapshots: [],
+      trendData: [],
+      events: [
+        { ...makeEvent(1), date: "2026-03-20" },
+        { ...makeEvent(2), date: "2026-04-02" },
+        { ...makeEvent(3), date: "2026-03-29" },
+      ],
+      summary: {
+        totalSpend: 0,
+        totalRevenue: 0,
+        blendedRoas: 0,
+        totalImpressions: 0,
+        totalClicks: 0,
+        totalTicketsSold: 0,
+        avgCpc: 0,
+        avgCtr: 0,
+      },
+      dataSource: "meta_api",
+      clients: ["acme"],
+    });
+    getEventDetail.mockImplementation(async ({ eventId }: { eventId: string }) => ({
+      ...buildEventDetail(),
+      event: {
+        ...buildEventDetail().event,
+        id: eventId,
+        name: eventId === "evt_2" ? "Event 2" : `Event ${eventId.slice(-1)}`,
+        date:
+          eventId === "evt_2"
+            ? "2026-04-02"
+            : eventId === "evt_3"
+              ? "2026-03-29"
+              : "2026-03-20",
+      },
+    }));
+
+    const result = await resolveEventIntent({
+      message: "how we did last show",
+      scope: broadScope,
+    });
+
+    expect(result).toMatchObject({
+      kind: "entity",
+      eventId: "evt_2",
+    });
+  });
+
+  it("returns clarify when multiple events share the same latest date", async () => {
+    getReportsData.mockResolvedValueOnce({
+      campaigns: [],
+      snapshots: [],
+      trendData: [],
+      events: [
+        { ...makeEvent(1), date: "2026-04-05" },
+        { ...makeEvent(2), date: "2026-04-05" },
+      ],
+      summary: {
+        totalSpend: 0,
+        totalRevenue: 0,
+        blendedRoas: 0,
+        totalImpressions: 0,
+        totalClicks: 0,
+        totalTicketsSold: 0,
+        avgCpc: 0,
+        avgCtr: 0,
+      },
+      dataSource: "meta_api",
+      clients: ["acme"],
+    });
+
+    const result = await resolveEventIntent({
+      message: "how we did last show",
+      scope: broadScope,
+    });
+
+    expect(result).toMatchObject({
+      kind: "clarify",
+      choices: expect.arrayContaining([
+        expect.objectContaining({ entityId: "evt_1", entityType: "event" }),
+        expect.objectContaining({ entityId: "evt_2", entityType: "event" }),
+      ]),
+    });
+  });
+
+  it("uses event detail dates when summary event dates are stale or missing", async () => {
+    getReportsData.mockResolvedValueOnce({
+      campaigns: [],
+      snapshots: [],
+      trendData: [],
+      events: [
+        { ...makeEvent(1), date: "2026-04-02" },
+        { ...makeEvent(2), date: null as unknown as string },
+      ],
+      summary: {
+        totalSpend: 0,
+        totalRevenue: 0,
+        blendedRoas: 0,
+        totalImpressions: 0,
+        totalClicks: 0,
+        totalTicketsSold: 0,
+        avgCpc: 0,
+        avgCtr: 0,
+      },
+      dataSource: "meta_api",
+      clients: ["acme"],
+    });
+    getEventDetail.mockImplementation(async ({ eventId }: { eventId: string }) => ({
+      ...buildEventDetail(),
+      event: {
+        ...buildEventDetail().event,
+        id: eventId,
+        name: eventId === "evt_2" ? "Event 2" : "Event 1",
+        date: eventId === "evt_2" ? "2026-04-10" : "2026-04-02",
+      },
+    }));
+
+    const result = await resolveEventIntent({
+      message: "how we did last show",
+      scope: broadScope,
+    });
+
+    expect(result).toMatchObject({
+      kind: "entity",
+      eventId: "evt_2",
+    });
+  });
+
+  it("returns none when no allowed events exist", async () => {
+    getReportsData.mockResolvedValueOnce({
+      campaigns: [],
+      snapshots: [],
+      trendData: [],
+      events: [makeEvent(1), makeEvent(2)],
+      summary: {
+        totalSpend: 0,
+        totalRevenue: 0,
+        blendedRoas: 0,
+        totalImpressions: 0,
+        totalClicks: 0,
+        totalTicketsSold: 0,
+        avgCpc: 0,
+        avgCtr: 0,
+      },
+      dataSource: "meta_api",
+      clients: ["acme"],
+    });
+
+    const result = await resolveEventIntent({
+      message: "how we did last show",
+      scope: {
+        ...broadScope,
+        allowedEventIds: [],
+      },
+    });
+
+    expect(result).toEqual({ kind: "none" });
   });
 
   it("caps overview blocks and filters out-of-scope campaigns and events", async () => {

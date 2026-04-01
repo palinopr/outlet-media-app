@@ -40,7 +40,9 @@ describe("AgentShell", () => {
     expect(screen.queryByRole("button", { name: "How is this event trending?" })).not.toBeInTheDocument();
   });
 
-  it("creates a new chat, loads a thread, submits a message optimistically, and renders typed blocks", async () => {
+  it("creates a new chat, loads a thread, submits a message optimistically, and keeps the chat text-only", async () => {
+    let resolvePendingMessage: ((value: Response) => void) | undefined;
+
     fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
@@ -94,40 +96,9 @@ describe("AgentShell", () => {
       }
 
       if (url.endsWith("/api/client/acme/agent/threads/thread_new/messages")) {
-        return Promise.resolve(
-          makeJsonResponse({
-            status: "clarify",
-            thread_id: "thread_new",
-            message_id: "assistant_1",
-            text: "Which campaign do you mean?",
-            blocks: [
-              {
-                type: "metric_cards",
-                cards: [{ label: "Spend", value: "$4,200" }],
-              },
-              {
-                type: "table",
-                columns: ["Entity", "Metric"],
-                rows: [{ Entity: "Campaign 1", Metric: "$4,200" }],
-              },
-              {
-                type: "chart",
-                xKey: "date",
-                series: [
-                  {
-                    name: "Spend",
-                    points: [
-                      { x: "2026-03-30", y: 4200 },
-                      { x: "2026-03-31", y: 3800 },
-                    ],
-                  },
-                ],
-              },
-            ],
-            referenced_entities: [],
-            resolved_range: null,
-          }),
-        );
+        return new Promise<Response>((resolve) => {
+          resolvePendingMessage = resolve;
+        });
       }
 
       throw new Error(`Unexpected fetch call: ${url}`);
@@ -175,9 +146,51 @@ describe("AgentShell", () => {
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
     expect(await screen.findByText("Show spend by date for Camila.")).toBeInTheDocument();
+    expect(await screen.findByText("Thinking…")).toBeInTheDocument();
+
+    expect(resolvePendingMessage).toBeDefined();
+    resolvePendingMessage!(
+      makeJsonResponse({
+        status: "clarify",
+        thread_id: "thread_new",
+        message_id: "assistant_1",
+        text: "Which campaign do you mean?",
+        blocks: [
+          {
+            type: "metric_cards",
+            cards: [{ label: "Spend", value: "$4,200" }],
+          },
+          {
+            type: "table",
+            columns: ["Entity", "Metric"],
+            rows: [{ Entity: "Campaign 1", Metric: "$4,200" }],
+          },
+          {
+            type: "chart",
+            xKey: "date",
+            series: [
+              {
+                name: "Spend",
+                points: [
+                  { x: "2026-03-30", y: 4200 },
+                  { x: "2026-03-31", y: 3800 },
+                ],
+              },
+            ],
+          },
+        ],
+        referenced_entities: [],
+        resolved_range: null,
+      }),
+    );
+
     expect(await screen.findAllByText("Which campaign do you mean?")).toHaveLength(2);
-    expect(await screen.findByRole("table")).toBeInTheDocument();
-    expect(screen.getByTestId("answer-chart")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("Thinking…")).not.toBeInTheDocument();
+    });
+    expect(screen.queryByRole("table")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("answer-chart")).not.toBeInTheDocument();
+    expect(screen.queryByText("Spend")).not.toBeInTheDocument();
     expect(screen.getByText("Clarification")).toBeInTheDocument();
   });
 
@@ -267,5 +280,55 @@ describe("AgentShell", () => {
         body: expect.stringContaining("\"history\":[]"),
       }),
     );
+  });
+
+  it("clears the working state when the first message on a new thread fails", async () => {
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/client/acme/agent/threads") && init?.method === "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "thread_new",
+              title: null,
+              previewText: null,
+              referencedEntities: [],
+              lastResponseStatus: null,
+              lastMessageAt: "2026-03-31T12:00:00.000Z",
+              updatedAt: "2026-03-31T12:00:00.000Z",
+              createdAt: "2026-03-31T12:00:00.000Z",
+              messages: [],
+            },
+          }, 201),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_new/messages")) {
+        return Promise.reject(new Error("send failed"));
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    });
+
+    render(
+      <AgentShell
+        clientName="Acme"
+        eventsEnabled={true}
+        initialThreads={[]}
+        slug="acme"
+        viewer="member"
+      />,
+    );
+
+    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
+    fireEvent.change(composer, { target: { value: "How is Camila doing?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByText("How is Camila doing?")).toBeInTheDocument();
+    expect(await screen.findByText("I’m unable to send that right now.")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByText("Thinking…")).not.toBeInTheDocument();
+    });
   });
 });

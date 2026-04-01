@@ -126,6 +126,7 @@ export function AgentShell({
   const [threads, setThreads] = useState<AgentThreadSummary[]>(initialThreads);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [messagesByThread, setMessagesByThread] = useState<Record<string, AgentThreadMessage[]>>({});
+  const [pendingThreadIds, setPendingThreadIds] = useState<Record<string, boolean>>({});
   const [loadedThreadIds, setLoadedThreadIds] = useState<Set<string>>(new Set());
   const [draft, setDraft] = useState("");
   const [composerDisabled, setComposerDisabled] = useState(false);
@@ -232,12 +233,17 @@ export function AgentShell({
       return;
     }
 
+    let threadId: string | null = activeThreadId;
     setComposerDisabled(true);
     setShellMessage(null);
 
     try {
-      const threadId = activeThreadId ?? (await createThreadAndSelect());
-      const threadHistory = buildHistoryPayload(messagesByThread[threadId] ?? []);
+      threadId = threadId ?? (await createThreadAndSelect());
+      if (!threadId) {
+        throw new Error("Unable to resolve an active thread.");
+      }
+      const resolvedThreadId = threadId;
+      const threadHistory = buildHistoryPayload(messagesByThread[resolvedThreadId] ?? []);
       const clientGeneratedId = crypto.randomUUID();
       const optimisticUserMessage = buildOptimisticUserMessage(nextMessage, clientGeneratedId);
 
@@ -245,11 +251,15 @@ export function AgentShell({
         setDraft("");
         setMessagesByThread((current) => ({
           ...current,
-          [threadId]: [...(current[threadId] ?? []), optimisticUserMessage],
+          [resolvedThreadId]: [...(current[resolvedThreadId] ?? []), optimisticUserMessage],
+        }));
+        setPendingThreadIds((current) => ({
+          ...current,
+          [resolvedThreadId]: true,
         }));
       });
 
-      const response = await fetch(`/api/client/${slug}/agent/threads/${threadId}/messages`, {
+      const response = await fetch(`/api/client/${slug}/agent/threads/${resolvedThreadId}/messages`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -270,12 +280,16 @@ export function AgentShell({
       startTransition(() => {
         setMessagesByThread((current) => ({
           ...current,
-          [threadId]: [...(current[threadId] ?? []), assistantMessage],
+          [resolvedThreadId]: [...(current[resolvedThreadId] ?? []), assistantMessage],
+        }));
+        setPendingThreadIds((current) => ({
+          ...current,
+          [resolvedThreadId]: false,
         }));
         setThreads((current) => {
-          const existing = current.find((thread) => thread.threadId === threadId);
+          const existing = current.find((thread) => thread.threadId === resolvedThreadId);
           const baseThread: AgentThreadSummary = existing ?? {
-            threadId,
+            threadId: resolvedThreadId,
             title: nextMessage.slice(0, 80),
             previewText: null,
             referencedEntities: [],
@@ -296,7 +310,7 @@ export function AgentShell({
 
           return [
             updatedThread,
-            ...current.filter((thread) => thread.threadId !== threadId),
+            ...current.filter((thread) => thread.threadId !== resolvedThreadId),
           ];
         });
       });
@@ -314,11 +328,16 @@ export function AgentShell({
         createdAt: nowIso(),
       };
 
-      if (activeThreadId) {
+      if (threadId) {
+        const resolvedThreadId = threadId;
         startTransition(() => {
           setMessagesByThread((current) => ({
             ...current,
-            [activeThreadId]: [...(current[activeThreadId] ?? []), assistantError],
+            [resolvedThreadId]: [...(current[resolvedThreadId] ?? []), assistantError],
+          }));
+          setPendingThreadIds((current) => ({
+            ...current,
+            [resolvedThreadId]: false,
           }));
         });
       } else {
@@ -361,6 +380,7 @@ export function AgentShell({
         draft={draft}
         isLoadingThread={isLoadingThread}
         isPreview={isPreview}
+        isWorking={Boolean(activeThreadId && pendingThreadIds[activeThreadId])}
         messages={activeMessages}
         onDraftChange={setDraft}
         onPromptClick={handlePromptClick}

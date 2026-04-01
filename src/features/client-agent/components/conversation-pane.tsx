@@ -1,6 +1,5 @@
 "use client";
 
-import { AnswerBlocks } from "./answer-blocks";
 import type { AgentThreadMessage } from "./agent-shell";
 
 type ConversationPaneProps = {
@@ -10,6 +9,7 @@ type ConversationPaneProps = {
   draft: string;
   isLoadingThread: boolean;
   isPreview: boolean;
+  isWorking: boolean;
   messages: AgentThreadMessage[];
   onDraftChange: (value: string) => void;
   onPromptClick: (prompt: string) => void;
@@ -48,6 +48,7 @@ export function ConversationPane({
   draft,
   isLoadingThread,
   isPreview,
+  isWorking,
   messages,
   onDraftChange,
   onPromptClick,
@@ -124,14 +125,20 @@ export function ConversationPane({
                 </p>
               ) : null}
               <p className="text-sm leading-6">{message.text}</p>
-              {message.blocks.length > 0 ? (
-                <div className="mt-4">
-                  <AnswerBlocks blocks={message.blocks} />
-                </div>
-              ) : null}
             </div>
           </div>
         ))}
+
+        {isWorking ? (
+          <div className="flex justify-start">
+            <div className="max-w-3xl rounded-3xl border border-white/[0.08] bg-white/[0.04] px-4 py-3 text-white/90">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
+                Agent
+              </p>
+              <p className="text-sm leading-6">Thinking…</p>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="border-t border-white/[0.06] px-6 py-5">

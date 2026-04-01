@@ -19,6 +19,12 @@ type DataResult = DataSuccess | DataNoData;
 
 type EntityType = "campaign" | "event";
 
+export type EventIntentResolution =
+  | { kind: "count"; totalEvents: number; referencedEntities: ReferencedEntity[] }
+  | { kind: "entity"; eventId: string; referencedEntities: ReferencedEntity[] }
+  | { kind: "clarify"; choices: ReferencedEntity[] }
+  | { kind: "none" };
+
 function toScopeFilter(scope: ClientAgentScope) {
   return {
     allowedCampaignIds: scope.allowedCampaignIds,
@@ -189,6 +195,97 @@ function buildEventReference(entityId: string, name: string): ReferencedEntity {
     entityId,
     entityType: "event",
     name,
+  };
+}
+
+function isShowInventoryQuestion(message: string) {
+  return /\bhow many shows\b|\bhow many events\b/.test(message.toLowerCase());
+}
+
+function isLastShowQuestion(message: string) {
+  return /\blast show\b|\bmost recent show\b|\blast event\b/.test(message.toLowerCase());
+}
+
+export async function resolveEventIntent({
+  message,
+  scope,
+}: {
+  message: string;
+  scope: ClientAgentScope;
+}): Promise<EventIntentResolution> {
+  const reports = await getReportsData({
+    clientSlug: scope.clientSlug,
+    scope: toScopeFilter(scope),
+  });
+  const allowedEvents = reports.events.filter((event) => isEventAllowed(scope, event.id));
+  const lowerMessage = message.toLowerCase();
+
+  if (isShowInventoryQuestion(lowerMessage)) {
+    return {
+      kind: "count",
+      totalEvents: allowedEvents.length,
+      referencedEntities: allowedEvents.map((event) => buildEventReference(event.id, event.name)),
+    };
+  }
+
+  if (!isLastShowQuestion(lowerMessage)) {
+    return { kind: "none" };
+  }
+
+  if (allowedEvents.length === 0) {
+    return { kind: "none" };
+  }
+
+  const eventsWithEffectiveDates = await Promise.all(
+    allowedEvents.map(async (event) => {
+      const detail = await loadClientAgentEventDetail({
+        slug: scope.clientSlug,
+        eventId: event.id,
+        scope: toScopeFilter(scope),
+      });
+
+      return {
+        ...event,
+        effectiveDate: detail?.event.date ?? event.date ?? null,
+      };
+    }),
+  );
+
+  const datedEvents = [...eventsWithEffectiveDates]
+    .filter((event) => Boolean(event.effectiveDate))
+    .sort((left, right) => (right.effectiveDate ?? "").localeCompare(left.effectiveDate ?? ""));
+
+  if (datedEvents.length > 0) {
+    const latestDate = datedEvents[0]!.effectiveDate;
+    const latestEvents = datedEvents.filter((event) => event.effectiveDate === latestDate);
+
+    if (latestEvents.length === 1) {
+      const latestEvent = latestEvents[0]!;
+      return {
+        kind: "entity",
+        eventId: latestEvent.id,
+        referencedEntities: [buildEventReference(latestEvent.id, latestEvent.name)],
+      };
+    }
+
+    return {
+      kind: "clarify",
+      choices: latestEvents.map((event) => buildEventReference(event.id, event.name)),
+    };
+  }
+
+  if (allowedEvents.length === 1) {
+    const onlyEvent = allowedEvents[0]!;
+    return {
+      kind: "entity",
+      eventId: onlyEvent.id,
+      referencedEntities: [buildEventReference(onlyEvent.id, onlyEvent.name)],
+    };
+  }
+
+  return {
+    kind: "clarify",
+    choices: eventsWithEffectiveDates.map((event) => buildEventReference(event.id, event.name)),
   };
 }
 

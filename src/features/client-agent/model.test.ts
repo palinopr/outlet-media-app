@@ -13,6 +13,7 @@ const {
   getOverview,
   getTimeseries,
   getTopMovers,
+  resolveEventIntent,
   searchEntities,
 } = vi.hoisted(() => ({
   compareEntities: vi.fn(),
@@ -22,6 +23,7 @@ const {
   getOverview: vi.fn(),
   getTimeseries: vi.fn(),
   getTopMovers: vi.fn(),
+  resolveEventIntent: vi.fn(),
   searchEntities: vi.fn(),
 }));
 
@@ -45,6 +47,7 @@ vi.mock("./data", () => ({
   getOverview,
   getTimeseries,
   getTopMovers,
+  resolveEventIntent,
   searchEntities,
 }));
 
@@ -55,7 +58,7 @@ describe("client-agent model adapter", () => {
     vi.clearAllMocks();
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     process.env.OPENAI_API_KEY = "test-openai-key";
-    process.env.CLIENT_AGENT_OPENAI_MODEL = "gpt-5";
+    delete process.env.CLIENT_AGENT_OPENAI_MODEL;
     compareEntities.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
     getBreakdowns.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
     getEntityDetails.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
@@ -63,11 +66,50 @@ describe("client-agent model adapter", () => {
     getOverview.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
     getTimeseries.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
     getTopMovers.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
+    resolveEventIntent.mockResolvedValue({ kind: "none" });
     searchEntities.mockResolvedValue([]);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("defaults client agent responses to gpt-5.4 when no override is configured", async () => {
+    responsesParse.mockResolvedValue({
+      id: "resp_model_default",
+      output: [
+        {
+          type: "message",
+          content: [
+            {
+              type: "output_text",
+              parsed: {
+                status: "answer",
+                text: "Direct answer.",
+                blocks: [],
+                referenced_entities: [],
+                resolved_range: null,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    await generateClientAgentModelResponse({
+      history: [],
+      message: "How are my campaigns doing?",
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(responsesParse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: "gpt-5.4",
+      }),
+    );
   });
 
   it("uses Responses API parse with store:false and Zod text format", async () => {
@@ -218,17 +260,82 @@ describe("client-agent model adapter", () => {
       status: "answer",
       blocks: [],
       referencedEntities: [],
-      resolvedRange: {
+      resolvedRange: expect.objectContaining({
         preset: "yesterday",
-        startDate: "2026-03-30",
-        endDate: "2026-03-30",
         timezone: "America/Chicago",
-      },
+      }),
       providerResponseId: "resp_3",
     });
   });
 
-  it("falls back to the authoritative tool blocks when model formatting throws after successful data execution", async () => {
+  it("returns prose-only answers even when analytics tools return blocks", async () => {
+    getOverview.mockResolvedValue({
+      status: "ok",
+      blocks: [
+        {
+          type: "metric_cards",
+          title: "Overview",
+          cards: [
+            { label: "Spend", value: "$12.6K" },
+            { label: "Revenue", value: "$90.6K" },
+          ],
+        },
+      ],
+      referencedEntities: [
+        {
+          entityId: "cmp_1",
+          entityType: "campaign",
+          name: "Zamora - Camila - Phoenix",
+        },
+      ],
+    });
+    responsesParse.mockResolvedValue({
+      id: "resp_prose_only",
+      output: [
+        {
+          type: "message",
+          content: [
+            {
+              type: "output_text",
+              parsed: {
+                status: "answer",
+                text: "Your campaigns are pacing well this month.",
+                blocks: [],
+                referenced_entities: [],
+                resolved_range: null,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await generateClientAgentModelResponse({
+      history: [],
+      message: "How are my campaigns doing this month?",
+      scope: {
+        clientId: "client_1",
+        clientMemberId: "member_1",
+        clientSlug: "zamora",
+        allowedCampaignIds: null,
+        allowedEventIds: null,
+        eventsEnabled: true,
+        viewer: "member",
+      },
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(result).toMatchObject({
+      status: "answer",
+      text: "Your campaigns are pacing well this month.",
+      blocks: [],
+    });
+  });
+
+  it("falls back to conversational prose instead of canned report copy when formatting fails", async () => {
     responsesParse.mockRejectedValue(new Error("formatter failed"));
     getOverview.mockResolvedValue({
       status: "ok",
@@ -271,13 +378,8 @@ describe("client-agent model adapter", () => {
 
     expect(result).toMatchObject({
       status: "answer",
-      text: expect.stringContaining("summary"),
-      blocks: [
-        {
-          type: "metric_cards",
-          title: "Overview",
-        },
-      ],
+      text: expect.not.stringContaining("summary"),
+      blocks: [],
       referencedEntities: [
         {
           entityId: "cmp_1",
@@ -285,13 +387,188 @@ describe("client-agent model adapter", () => {
           name: "Zamora - Camila - Phoenix",
         },
       ],
-      resolvedRange: {
+      resolvedRange: expect.objectContaining({
         preset: "this_month",
-        startDate: "2026-03-01",
-        endDate: "2026-03-31",
         timezone: "America/Chicago",
-      },
+      }),
       providerResponseId: null,
     });
+  });
+
+  it("answers 'how many shows we have' with prose instead of overview blocks", async () => {
+    resolveEventIntent.mockResolvedValue({
+      kind: "count",
+      totalEvents: 5,
+      referencedEntities: [
+        { entityId: "evt_1", entityType: "event", name: "Camila Phoenix" },
+      ],
+    });
+    responsesParse.mockResolvedValue({
+      id: "resp_show_count",
+      output: [
+        {
+          type: "message",
+          content: [
+            {
+              type: "output_text",
+              parsed: {
+                status: "answer",
+                text: "You currently have 5 shows in scope.",
+                blocks: [],
+                referenced_entities: [],
+                resolved_range: null,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await generateClientAgentModelResponse({
+      history: [],
+      message: "how many shows we have",
+      scope: {
+        clientId: "client_1",
+        clientMemberId: "member_1",
+        clientSlug: "zamora",
+        allowedCampaignIds: null,
+        allowedEventIds: null,
+        eventsEnabled: true,
+        viewer: "member",
+      },
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(result.status).toBe("answer");
+    expect(result.text).toContain("5 shows");
+    expect(result.blocks).toEqual([]);
+  });
+
+  it("answers 'how we did last show' using the inferred most recent event", async () => {
+    resolveEventIntent.mockResolvedValue({
+      kind: "entity",
+      eventId: "evt_latest",
+      referencedEntities: [
+        { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
+      ],
+    });
+    getEntityDetails.mockResolvedValue({
+      status: "ok",
+      blocks: [
+        {
+          type: "metric_cards",
+          title: "Event Performance",
+          cards: [{ label: "Tickets Sold", value: "430" }],
+        },
+      ],
+      referencedEntities: [
+        { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
+      ],
+    });
+    responsesParse.mockResolvedValue({
+      id: "resp_last_show",
+      output: [
+        {
+          type: "message",
+          content: [
+            {
+              type: "output_text",
+              parsed: {
+                status: "answer",
+                text: "Your most recent show was Camila Phoenix.",
+                blocks: [],
+                referenced_entities: [],
+                resolved_range: null,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await generateClientAgentModelResponse({
+      history: [],
+      message: "how we did last show",
+      scope: {
+        clientId: "client_1",
+        clientMemberId: "member_1",
+        clientSlug: "zamora",
+        allowedCampaignIds: null,
+        allowedEventIds: null,
+        eventsEnabled: true,
+        viewer: "member",
+      },
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(result.text).toContain("most recent show");
+    expect(result.referencedEntities).toMatchObject([
+      { entityId: "evt_latest", entityType: "event" },
+    ]);
+    expect(result.blocks).toEqual([]);
+  });
+
+  it("asks a short clarification when multiple latest shows are tied", async () => {
+    resolveEventIntent.mockResolvedValue({
+      kind: "clarify",
+      choices: [
+        { entityId: "evt_camila", entityType: "event", name: "Camila Phoenix" },
+        { entityId: "evt_arjona", entityType: "event", name: "Arjona Houston" },
+      ],
+    });
+
+    const result = await generateClientAgentModelResponse({
+      history: [],
+      message: "how we did last show",
+      scope: {
+        clientId: "client_1",
+        clientMemberId: "member_1",
+        clientSlug: "zamora",
+        allowedCampaignIds: null,
+        allowedEventIds: null,
+        eventsEnabled: true,
+        viewer: "member",
+      },
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(result.status).toBe("clarify");
+    expect(result.text).toMatch(/camila|arjona/i);
+    expect(result.blocks).toEqual([]);
+  });
+
+  it("returns a prose answer when no allowed shows are available", async () => {
+    resolveEventIntent.mockResolvedValue({ kind: "none" });
+
+    const result = await generateClientAgentModelResponse({
+      history: [],
+      message: "how we did last show",
+      scope: {
+        clientId: "client_1",
+        clientMemberId: "member_1",
+        clientSlug: "zamora",
+        allowedCampaignIds: null,
+        allowedEventIds: [],
+        eventsEnabled: true,
+        viewer: "member",
+      },
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(result.status).toBe("answer");
+    expect(result.text).toMatch(/no shows|no events/i);
+    expect(result.blocks).toEqual([]);
   });
 });
