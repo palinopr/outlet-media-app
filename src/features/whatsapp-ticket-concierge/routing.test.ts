@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 
 import type { TicketConciergeScenario } from "./config";
 import {
@@ -25,7 +25,17 @@ const scenario: TicketConciergeScenario = {
   key: "zamora_arjona_miami_v1",
 };
 
+const ORIGINAL_ENV = { ...process.env };
+
+function restoreEnv() {
+  process.env = { ...ORIGINAL_ENV };
+}
+
 describe("matchTicketConciergeScenario", () => {
+  afterEach(() => {
+    restoreEnv();
+  });
+
   it("matches a scenario token in the inbound body", () => {
     expect(
       matchTicketConciergeScenario({
@@ -58,9 +68,25 @@ describe("matchTicketConciergeScenario", () => {
       }),
     ).toBeNull();
   });
+
+  it("matches the configured default scenario when the local demo lane is open", () => {
+    process.env.WHATSAPP_TICKET_CONCIERGE_DEFAULT_SCENARIO_KEY = "zamora_arjona_miami_v1";
+
+    expect(
+      matchTicketConciergeScenario({
+        body: "Hola",
+        conversationMetadata: {},
+        scenario,
+      }),
+    ).toMatchObject({ kind: "scenario", scenarioKey: "zamora_arjona_miami_v1" });
+  });
 });
 
 describe("isAllowedTicketConciergeTarget", () => {
+  afterEach(() => {
+    restoreEnv();
+  });
+
   it("allows a conversation explicitly allowlisted by id", () => {
     expect(
       isAllowedTicketConciergeTarget({
@@ -82,6 +108,31 @@ describe("isAllowedTicketConciergeTarget", () => {
         waId: "13055559999",
       }),
     ).toBe(false);
+  });
+
+  it("allows any target when the scenario allowlists are empty", () => {
+    expect(
+      isAllowedTicketConciergeTarget({
+        conversationId: "conv_9",
+        scenario: {
+          ...scenario,
+          allowlist: { conversationIds: [], waIds: [] },
+        },
+        waId: "13055559999",
+      }),
+    ).toBe(true);
+  });
+
+  it("allows any target when the local demo lane is explicitly opened", () => {
+    process.env.WHATSAPP_TICKET_CONCIERGE_ALLOW_ALL = "true";
+
+    expect(
+      isAllowedTicketConciergeTarget({
+        conversationId: "conv_9",
+        scenario,
+        waId: "13055559999",
+      }),
+    ).toBe(true);
   });
 });
 

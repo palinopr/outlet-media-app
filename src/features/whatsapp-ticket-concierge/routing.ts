@@ -19,6 +19,20 @@ function normalizeText(value: string | null | undefined): string {
   return value?.trim().toLowerCase() ?? "";
 }
 
+function isTruthyEnv(value: string | null | undefined): boolean {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
+}
+
+function getDefaultScenarioKey(): string | null {
+  const key = process.env.WHATSAPP_TICKET_CONCIERGE_DEFAULT_SCENARIO_KEY?.trim();
+  return key && key.length > 0 ? key : null;
+}
+
+function shouldAllowAllTargets(): boolean {
+  return isTruthyEnv(process.env.WHATSAPP_TICKET_CONCIERGE_ALLOW_ALL);
+}
+
 export function matchTicketConciergeScenario(input: {
   body: string | null | undefined;
   conversationMetadata: Record<string, unknown> | null | undefined;
@@ -44,7 +58,10 @@ export function matchTicketConciergeScenario(input: {
     normalizedBody.startsWith(normalizeText(token)),
   );
   if (!matchedToken) {
-    return null;
+    const defaultScenarioKey = getDefaultScenarioKey();
+    if (!defaultScenarioKey || defaultScenarioKey !== input.scenario.key) {
+      return null;
+    }
   }
 
   return {
@@ -58,6 +75,17 @@ export function isAllowedTicketConciergeTarget(input: {
   scenario: Pick<TicketConciergeScenario, "allowlist">;
   waId: string | null | undefined;
 }): boolean {
+  if (shouldAllowAllTargets()) {
+    return true;
+  }
+
+  if (
+    input.scenario.allowlist.conversationIds.length === 0 &&
+    input.scenario.allowlist.waIds.length === 0
+  ) {
+    return true;
+  }
+
   if (input.scenario.allowlist.conversationIds.includes(input.conversationId)) {
     return true;
   }
