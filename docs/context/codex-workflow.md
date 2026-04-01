@@ -170,6 +170,8 @@ args = ["-y", "chrome-devtools-mcp@latest", "--autoConnect"]
 When using Codex Desktop against a real Chrome session:
 - enable Chrome remote debugging in `chrome://inspect/#remote-debugging`
 - verify Chrome shows `Server running at: 127.0.0.1:9222` before blaming MCP config
+- if `127.0.0.1:9222` is listening but `http://127.0.0.1:9222/json/version` returns `404`, check `~/Library/Application Support/Google/Chrome/DevToolsActivePort`
+- on this machine, Chrome can still write a valid websocket browser target there even when the HTTP discovery endpoints are unusable; Playwright/CDP clients may need the direct `ws://127.0.0.1:<port>/devtools/browser/<id>` endpoint instead of the bare HTTP URL
 - if Codex reports `ECONNREFUSED 127.0.0.1:9222`, Chrome is not exposing the debug server yet
 - if Codex reports `Transport closed` or long `tools/call` timeouts, check for duplicate `chrome-devtools-mcp` children under one `codex app-server`
 - before retrying, kill stale browser MCP helpers rather than stacking more wrapper scripts or profile hacks
