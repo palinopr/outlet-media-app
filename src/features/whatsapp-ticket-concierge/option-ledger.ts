@@ -88,6 +88,30 @@ function toPreparedOption(row: TicketConciergePreparedOptionInput): TicketConcie
   };
 }
 
+async function deleteOptionSet(optionSetId: string) {
+  const db = requireSupabaseAdmin();
+  const { error } = await db
+    .from("whatsapp_ticket_concierge_option_sets")
+    .delete()
+    .eq("id", optionSetId);
+
+  if (error) {
+    throw new Error(`[concierge] option set cleanup failed: ${error.message}`);
+  }
+}
+
+async function updateRunActiveOptionSet(runId: string, optionSetId: string | null) {
+  const db = requireSupabaseAdmin();
+  const { error } = await db
+    .from("whatsapp_ticket_concierge_runs")
+    .update({ active_option_set_id: optionSetId, updated_at: new Date().toISOString() })
+    .eq("id", runId);
+
+  if (error) {
+    throw new Error(`[concierge] run active option set update failed: ${error.message}`);
+  }
+}
+
 async function persistOptionSet(
   input: CreateOptionSetInput & { refreshOfOptionSetId?: string | null },
 ): Promise<TicketConciergePreparedOptionSet> {
@@ -116,29 +140,32 @@ async function persistOptionSet(
     throw new Error(`[concierge] option set insert failed: ${optionSetError.message}`);
   }
 
-  for (const option of preparedOptions) {
-    const { error } = await db.from("whatsapp_ticket_concierge_options").insert({
-      created_at: now,
-      execution: option.execution,
-      id: option.id,
-      is_under_budget: option.isUnderBudget,
-      label: option.label,
-      map_svg: option.mapSvg,
-      map_token: option.mapToken,
-      note: option.note,
-      option_set_id: optionSetId,
-      ordinal: option.ordinal,
-      quantity: option.quantity,
-      quote_source: option.quoteSource,
-      row: option.row,
-      seat_labels: option.seatLabels,
-      section: option.section,
-      total_cents: option.totalCents,
-    });
+  const optionRows = preparedOptions.map((option) => ({
+    created_at: now,
+    execution: option.execution,
+    id: option.id,
+    is_under_budget: option.isUnderBudget,
+    label: option.label,
+    map_svg: option.mapSvg,
+    map_token: option.mapToken,
+    note: option.note,
+    option_set_id: optionSetId,
+    ordinal: option.ordinal,
+    quantity: option.quantity,
+    quote_source: option.quoteSource,
+    row: option.row,
+    seat_labels: option.seatLabels,
+    section: option.section,
+    total_cents: option.totalCents,
+  }));
 
-    if (error) {
-      throw new Error(`[concierge] option insert failed: ${error.message}`);
-    }
+  const { error: optionInsertError } = await db
+    .from("whatsapp_ticket_concierge_options")
+    .insert(optionRows);
+
+  if (optionInsertError) {
+    await deleteOptionSet(optionSetId);
+    throw new Error(`[concierge] option insert failed: ${optionInsertError.message}`);
   }
 
   return {
@@ -180,31 +207,48 @@ export async function createConciergeRun(input: ConciergeRunInput) {
 }
 
 export async function createOptionSet(input: CreateOptionSetInput) {
-  return persistOptionSet(input);
+  const created = await persistOptionSet(input);
+  try {
+    await updateRunActiveOptionSet(input.runId, created.id);
+  } catch (error) {
+    await deleteOptionSet(created.id);
+    throw error;
+  }
+
+  return created;
 }
 
 export async function replaceActiveOptionSet(input: ReplaceActiveOptionSetInput) {
-  const db = requireSupabaseAdmin();
-  if (input.previousOptionSetId) {
-    await db
-      .from("whatsapp_ticket_concierge_option_sets")
-      .update({ status: "replaced" })
-      .eq("id", input.previousOptionSetId);
-  }
-
   const created = await persistOptionSet({
     conversationId: input.conversationId,
     eventContext: input.eventContext,
+    refreshOfOptionSetId: input.previousOptionSetId ?? null,
     intent: input.intent,
     options: input.options,
     runId: input.runId,
     status: input.status ?? "active",
   });
 
-  await db
-    .from("whatsapp_ticket_concierge_runs")
-    .update({ active_option_set_id: created.id, updated_at: new Date().toISOString() })
-    .eq("id", input.runId);
+  try {
+    await updateRunActiveOptionSet(input.runId, created.id);
+  } catch (error) {
+    await deleteOptionSet(created.id);
+    throw error;
+  }
+
+  if (input.previousOptionSetId) {
+    const db = requireSupabaseAdmin();
+    const { error } = await db
+      .from("whatsapp_ticket_concierge_option_sets")
+      .update({ status: "replaced" })
+      .eq("id", input.previousOptionSetId);
+
+    if (error) {
+      await updateRunActiveOptionSet(input.runId, input.previousOptionSetId);
+      await deleteOptionSet(created.id);
+      throw new Error(`[concierge] option set replace failed: ${error.message}`);
+    }
+  }
 
   return created;
 }

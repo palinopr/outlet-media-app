@@ -54,6 +54,44 @@ const { state, supabaseAdmin } = vi.hoisted(() => {
 
       return chain;
     },
+    async rpc(name: string, args: Record<string, unknown>) {
+      if (name !== "record_whatsapp_ticket_concierge_tamper_strike") {
+        return { data: null, error: { message: `unknown rpc ${name}` } };
+      }
+
+      const waId = String(args.p_wa_id);
+      const threshold = Number(args.p_threshold ?? 3);
+      const existing = state.whatsapp_ticket_concierge_bans.find((row) => row.wa_id === waId);
+      const strikeCount = Number(existing?.strike_count ?? 0) + 1;
+      const row = {
+        banned_at: existing?.banned_at ?? new Date().toISOString(),
+        conversation_id: args.p_conversation_id ?? null,
+        created_at: existing?.created_at ?? new Date().toISOString(),
+        last_inbound_message_id: args.p_last_inbound_message_id ?? existing?.last_inbound_message_id ?? null,
+        reason: String(args.p_reason),
+        strike_count: strikeCount,
+        updated_at: new Date().toISOString(),
+        wa_id: waId,
+      };
+
+      if (existing) {
+        Object.assign(existing, row);
+      } else {
+        state.whatsapp_ticket_concierge_bans.push(row);
+      }
+
+      return {
+        data: [
+          {
+            banned: strikeCount >= threshold,
+            reason: row.reason,
+            strike_count: strikeCount,
+            wa_id: waId,
+          },
+        ],
+        error: null,
+      };
+    },
   };
 
   return { state, supabaseAdmin };
@@ -94,6 +132,22 @@ describe("ticket concierge security", () => {
       banned: false,
       strikeCount: 1,
     });
+  });
+
+  it("keeps the WhatsApp number allowed until the threshold is reached", async () => {
+    await recordConciergeTamperStrike({
+      conversationId: "conv_1",
+      reason: "stale_option_replay",
+      threshold: 3,
+      waId: "13055551212",
+    });
+
+    await expect(
+      getTicketConciergeSecurityDisposition({
+        conversationId: "conv_1",
+        waId: "13055551212",
+      }),
+    ).resolves.toEqual({ allowed: true, banned: false });
   });
 
   it("ignores non-tamper replies while an option set is active", async () => {

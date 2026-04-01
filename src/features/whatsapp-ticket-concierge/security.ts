@@ -33,6 +33,8 @@ export interface TicketConciergeTamperStrikeResult {
   waId: string;
 }
 
+const DEFAULT_TAMPER_THRESHOLD = 3;
+
 const COUNTABLE_TAMPER_REASONS = new Set<TamperStrikeInput["reason"]>([
   "stale_option_replay",
   "forged_option_id",
@@ -78,9 +80,10 @@ export async function getTicketConciergeSecurityDisposition(
   input: SecurityDispositionInput,
 ): Promise<TicketConciergeSecurityDisposition> {
   const row = await loadBanRow(input.waId);
+  const banned = Boolean(row && row.strike_count >= DEFAULT_TAMPER_THRESHOLD);
   return {
-    allowed: !row,
-    banned: Boolean(row),
+    allowed: !banned,
+    banned,
   };
 }
 
@@ -95,7 +98,7 @@ export async function banTicketConciergeWaId(input: BanInput) {
       created_at: now,
       last_inbound_message_id: input.lastInboundMessageId ?? null,
       reason: input.reason,
-      strike_count: 3,
+      strike_count: DEFAULT_TAMPER_THRESHOLD,
       updated_at: now,
       wa_id: input.waId,
     })
@@ -121,60 +124,25 @@ export async function recordConciergeTamperStrike(input: TamperStrikeInput) {
     };
   }
 
-  const existing = await loadBanRow(input.waId);
-  const threshold = input.threshold ?? 3;
-  const nextStrikeCount = (existing?.strike_count ?? 0) + 1;
-  const shouldBan = nextStrikeCount >= threshold;
-  const now = new Date().toISOString();
-
-  if (shouldBan) {
-    const { data, error } = await db
-      .from("whatsapp_ticket_concierge_bans")
-      .upsert({
-        banned_at: existing?.banned_at ?? now,
-        conversation_id: input.conversationId,
-        created_at: existing?.created_at ?? now,
-        last_inbound_message_id: input.lastInboundMessageId ?? existing?.last_inbound_message_id ?? null,
-        reason: input.reason,
-        strike_count: nextStrikeCount,
-        updated_at: now,
-        wa_id: input.waId,
-      })
-      .select("banned_at, conversation_id, created_at, last_inbound_message_id, reason, strike_count, updated_at, wa_id")
-      .maybeSingle();
-
-    if (error) {
-      throw new Error(`[concierge] ban threshold update failed: ${error.message}`);
-    }
-
-    return {
-      banned: true,
-      reason: data?.reason ?? input.reason,
-      strikeCount: data?.strike_count ?? nextStrikeCount,
-      waId: input.waId,
-    };
-  }
-
-  const { error } = await db.from("whatsapp_ticket_concierge_bans").upsert({
-    banned_at: existing?.banned_at ?? now,
-    conversation_id: input.conversationId,
-    created_at: existing?.created_at ?? now,
-    last_inbound_message_id: input.lastInboundMessageId ?? existing?.last_inbound_message_id ?? null,
-    reason: input.reason,
-    strike_count: nextStrikeCount,
-    updated_at: now,
-    wa_id: input.waId,
+  const threshold = input.threshold ?? DEFAULT_TAMPER_THRESHOLD;
+  const { data, error } = await db.rpc("record_whatsapp_ticket_concierge_tamper_strike", {
+    p_conversation_id: input.conversationId,
+    p_last_inbound_message_id: input.lastInboundMessageId ?? null,
+    p_reason: input.reason,
+    p_threshold: threshold,
+    p_wa_id: input.waId,
   });
 
   if (error) {
     throw new Error(`[concierge] strike upsert failed: ${error.message}`);
   }
 
+  const row = Array.isArray(data) ? data[0] ?? null : data;
   return {
-    banned: false,
-    reason: input.reason,
-    strikeCount: nextStrikeCount,
-    waId: input.waId,
+    banned: row?.banned ?? false,
+    reason: row?.reason ?? input.reason,
+    strikeCount: row?.strike_count ?? 0,
+    waId: row?.wa_id ?? input.waId,
   };
 }
 

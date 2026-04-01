@@ -2159,6 +2159,21 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: never; Returns: boolean }
+      record_whatsapp_ticket_concierge_tamper_strike: {
+        Args: {
+          p_conversation_id: string
+          p_last_inbound_message_id?: string | null
+          p_reason: string
+          p_threshold?: number
+          p_wa_id: string
+        }
+        Returns: {
+          banned: boolean
+          reason: string
+          strike_count: number
+          wa_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
