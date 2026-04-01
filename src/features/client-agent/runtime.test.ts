@@ -401,4 +401,65 @@ describe("client-agent runtime", () => {
     expect(result.text).toContain("Lifetime on Meta ads");
     expect(result.text).toContain("I can help with performance");
   });
+
+  it("resets prior creative context when a follow-up broadens back to overall ads", async () => {
+    responsesCreate.mockResolvedValueOnce(
+      finalMessageResponse({
+        id: "resp_1",
+        text: "ANSWER: Lifetime on Meta ads, you've spent $11,559 so far.",
+      }),
+    );
+
+    const result = await runClientAgentRuntime({
+      history: [
+        {
+          role: "assistant",
+          text: "video 4 - Bay Area is the strongest creative in scope right now, with ROAS 0, CTR 3.24, and spend of $101 over last 30 days.",
+          referencedEntities: [
+            {
+              entityId: "ad_1",
+              entityType: "creative",
+              name: "video 4 - Bay Area",
+              campaignId: "cmp_1",
+            },
+          ],
+          contextPayload: {
+            primaryDomain: "ads",
+            referencedEntities: [
+              {
+                entityId: "ad_1",
+                entityType: "creative",
+                name: "video 4 - Bay Area",
+                campaignId: "cmp_1",
+              },
+            ],
+            resolvedRange: lifetimeRange,
+            comparisonSet: [],
+            pronounTargets: ["ad_1"],
+          },
+          resolvedRange: lifetimeRange,
+        },
+      ],
+      message: "how much we have spend on ads?",
+      scope: memberScope(),
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(responsesCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        instructions: expect.stringContaining(
+          "The current user message broadens scope to the full visible ads portfolio.",
+        ),
+      }),
+    );
+    expect(result).toMatchObject({
+      status: "answer",
+      text: "Lifetime on Meta ads, you've spent $11,559 so far.",
+      referencedEntities: [],
+      contextPayload: null,
+    });
+  });
 });

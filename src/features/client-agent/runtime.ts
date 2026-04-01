@@ -206,7 +206,6 @@ function initializeAuthorityState(
 function buildContextPayload(state: AuthorityState): ThreadContextPayload | null {
   if (
     state.referencedEntities.length === 0 &&
-    state.resolvedRange == null &&
     state.comparisonSet.length === 0 &&
     state.pronounTargets.length === 0
   ) {
@@ -267,16 +266,108 @@ function buildHistoryContextMemo(history: ClientAgentRuntimeHistoryMessage[]) {
   return `Most recent resolved thread context: primary domain ${primaryDomain}; referenced entities ${entityLabel}; resolved range ${rangeLabel}. Reuse this context for follow-ups unless the user clearly changes direction.`;
 }
 
+type ScopeReset = {
+  domain: "ads" | "events";
+  note: string;
+};
+
+const EVENT_SCOPE_PATTERN =
+  /\b(show|shows|event|events|ticket|tickets|venue|venues|sell[-\s]?through|gross|attendance|last show|next show)\b/i;
+const ADS_SCOPE_PATTERN =
+  /\b(meta|ad|ads|campaign|campaigns|creative|creatives|spend|spent|revenue|made|roas|ctr|clicks|impressions|cpc|cpm)\b/i;
+const BROAD_SCOPE_PATTERN =
+  /\b(how much|how are we doing|how we doing|overall|total|totals|lifetime|all|portfolio|across|so far|right now|this month|this week)\b/i;
+const FOLLOW_UP_CONTEXT_PATTERN =
+  /\b(before that|after that|same one|that one|this one|that show|this show|that campaign|this campaign|that creative|this creative|compare that|what about that)\b/i;
+
+function looksLikeBroadAdsQuestion(message: string) {
+  return ADS_SCOPE_PATTERN.test(message) && BROAD_SCOPE_PATTERN.test(message) && !EVENT_SCOPE_PATTERN.test(message);
+}
+
+function looksLikeBroadEventsQuestion(message: string) {
+  return EVENT_SCOPE_PATTERN.test(message) && BROAD_SCOPE_PATTERN.test(message);
+}
+
+function looksLikeContextDependentFollowUp(message: string) {
+  const trimmed = message.trim().toLowerCase();
+  if (!trimmed) {
+    return false;
+  }
+
+  if (FOLLOW_UP_CONTEXT_PATTERN.test(trimmed)) {
+    return true;
+  }
+
+  if (
+    /^(and\b|before\b|after\b|what about\b|how about\b|same\b|that\b|this\b|it\b|they\b)/i.test(
+      trimmed,
+    )
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function resetAuthorityStateForBroadMessage({
+  state,
+  message,
+  defaultRange,
+}: {
+  state: AuthorityState;
+  message: string;
+  defaultRange: ResolvedRange;
+}): ScopeReset | null {
+  if (looksLikeBroadAdsQuestion(message)) {
+    state.primaryDomain = "ads";
+    state.referencedEntities = [];
+    state.comparisonSet = [];
+    state.pronounTargets = [];
+    state.resolvedRange = defaultRange;
+
+    return {
+      domain: "ads",
+      note: "The current user message broadens scope to the full visible ads portfolio. Ignore prior entity-specific references unless the user explicitly repeats them.",
+    };
+  }
+
+  if (looksLikeBroadEventsQuestion(message)) {
+    state.primaryDomain = "events";
+    state.referencedEntities = [];
+    state.comparisonSet = [];
+    state.pronounTargets = [];
+    state.resolvedRange = defaultRange;
+
+    return {
+      domain: "events",
+      note: "The current user message broadens scope to the full visible events portfolio. Ignore prior entity-specific references unless the user explicitly repeats them.",
+    };
+  }
+
+  return null;
+}
+
 function buildInstructions({
   scopeSummary,
   defaultRange,
   history,
+  message,
+  scopeReset,
 }: {
   scopeSummary: ScopeSummary;
   defaultRange: ResolvedRange;
   history: ClientAgentRuntimeHistoryMessage[];
+  message: string;
+  scopeReset: ScopeReset | null;
 }) {
   const contextMemo = buildHistoryContextMemo(history);
+  const followUpHint =
+    scopeReset?.note ??
+    (contextMemo == null
+      ? "There is no prior resolved thread context yet."
+      : looksLikeContextDependentFollowUp(message)
+        ? contextMemo
+        : "There is prior thread context available, but only reuse it when the current message clearly refers back to the same campaign, creative, or show.");
   const today = defaultRange.endDate;
 
   return [
@@ -293,7 +384,7 @@ function buildInstructions({
     "For show chronology, identify the relevant event from search_scope first, then use get_event_details for metrics.",
     `Today is ${today}. Default timezone is ${defaultRange.timezone}.`,
     `Default range object: ${JSON.stringify(defaultRange)}.`,
-    contextMemo ?? "There is no prior resolved thread context yet.",
+    followUpHint,
     "Your final response must begin with exactly one of these prefixes: ANSWER:, CLARIFY:, or REFUSE:.",
   ].join("\n");
 }
@@ -760,11 +851,18 @@ export async function runClientAgentRuntime(
   if (authorityState.resolvedRange == null) {
     authorityState.resolvedRange = defaultRange;
   }
+  const scopeReset = resetAuthorityStateForBroadMessage({
+    state: authorityState,
+    message: safePrompt,
+    defaultRange,
+  });
 
   const instructions = buildInstructions({
     scopeSummary: input.scopeSummary,
     defaultRange,
     history: input.history,
+    message: safePrompt,
+    scopeReset,
   });
 
   let responseInput: ResponseInputItem[] = [
