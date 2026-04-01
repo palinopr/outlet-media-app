@@ -189,6 +189,7 @@ describe("client-agent runtime", () => {
       text: "Lifetime Meta ad spend is $100.00.",
       providerResponseId: "session_1",
     });
+    expect(result).not.toHaveProperty("blocks");
   });
 
   it("adds an events domain hint for last-show style questions", async () => {
@@ -224,6 +225,39 @@ describe("client-agent runtime", () => {
     );
   });
 
+  it("keeps generic show-style reporting prompts on the ads hint", async () => {
+    queryMock.mockImplementation(async function* () {
+      yield assistantJson(
+        JSON.stringify({
+          status: "answer",
+          text: "Campaign spend is pacing normally.",
+          referencedEntities: [],
+          contextPayload: {
+            primaryDomain: "ads",
+            referencedEntities: [],
+            resolvedRange: null,
+            comparisonSet: [],
+            pronounTargets: [],
+          },
+          resolvedRange: null,
+        }),
+      );
+      yield resultJson("done");
+    });
+
+    const { runClientAgentRuntime } = await import("./runtime.js");
+    await runClientAgentRuntime({
+      appClient: { runTool: vi.fn() } as any,
+      context: makeTaskContext("show me spend by campaign"),
+    });
+
+    expect(queryMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        prompt: expect.stringContaining("Domain hint: ads"),
+      }),
+    );
+  });
+
   it("passes refusal results through unchanged for setup or strategy asks", async () => {
     queryMock.mockImplementation(async function* () {
       yield assistantJson(
@@ -248,5 +282,6 @@ describe("client-agent runtime", () => {
       status: "refuse",
       text: "I can help with campaign and event performance, but I can’t share setup or strategy details.",
     });
+    expect(result).not.toHaveProperty("blocks");
   });
 });

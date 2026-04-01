@@ -91,10 +91,10 @@ const BASE_SYSTEM_PROMPT = [
 ].join("\n");
 
 type RuntimeOutput = Omit<ClientAgentResolveInput, "blocks" | "providerResponseId">;
-export type ClientAgentRuntimeResult = RuntimeOutput & { blocks: []; providerResponseId: string | null };
+export type ClientAgentRuntimeResult = RuntimeOutput & { providerResponseId: string | null };
 
 function inferDomainHint(text: string) {
-  return /(last show|next show|show|ticket|tickets|sell[- ]?through|venue|gross|attendance|event)/i.test(text)
+  return /(last show|next show|tickets?|sell[- ]?through|venue|gross|attendance|event)/i.test(text)
     ? "events"
     : "ads";
 }
@@ -232,7 +232,6 @@ export async function runClientAgentRuntime(input: {
 
     return {
       ...parsed,
-      blocks: [],
       providerResponseId,
     };
   } catch (error) {
@@ -242,7 +241,6 @@ export async function runClientAgentRuntime(input: {
       referencedEntities: [],
       contextPayload: null,
       resolvedRange: null,
-      blocks: [],
       providerResponseId,
     };
   }
