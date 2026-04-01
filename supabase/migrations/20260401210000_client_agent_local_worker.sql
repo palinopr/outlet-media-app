@@ -2,21 +2,6 @@ alter table public.client_agent_threads
   add column if not exists viewer_context text not null default 'member',
   add column if not exists preview_admin_user_id text null;
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_constraint
-    where conname = 'client_agent_threads_viewer_context_check'
-      and conrelid = 'public.client_agent_threads'::regclass
-  ) then
-    alter table public.client_agent_threads
-      add constraint client_agent_threads_viewer_context_check
-      check (viewer_context in ('member', 'admin_preview'));
-  end if;
-end;
-$$;
-
 create index if not exists client_agent_threads_preview_lookup_idx
   on public.client_agent_threads (client_id, preview_admin_user_id, updated_at desc)
   where viewer_context = 'admin_preview';
