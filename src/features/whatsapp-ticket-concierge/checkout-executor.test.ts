@@ -32,6 +32,10 @@ vi.mock("./ticketmaster-browser", () => ({
   captureTicketmasterCheckout: vi.fn(async () => browserState.result),
 }));
 
+vi.mock("./bitly", () => ({
+  shortenBitlyUrl: vi.fn(async (url: string) => `https://bit.ly/${url.includes("TMUO=abc") ? "abc123" : "other"}`),
+}));
+
 import { executeConciergeCheckout } from "./checkout-executor";
 
 describe("executeConciergeCheckout", () => {
@@ -91,13 +95,13 @@ describe("executeConciergeCheckout", () => {
         option,
       }),
     ).resolves.toEqual({
-      checkoutUrl: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc",
+      checkoutUrl: "https://bit.ly/abc123",
       status: "checkout_ready",
     });
 
     expect(ledgerState.recorded).toEqual([
       {
-        checkoutUrl: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc",
+        checkoutUrl: "https://bit.ly/abc123",
         failureReason: null,
         optionId: "opt_1",
         status: "checkout_ready",

@@ -1,4 +1,5 @@
 import type { TicketConciergePreparedOption } from "./types";
+import { shortenBitlyUrl } from "./bitly";
 import { getReusableCheckoutAttempt, recordCheckoutAttempt } from "./option-ledger";
 import { captureTicketmasterCheckout } from "./ticketmaster-browser";
 
@@ -49,14 +50,18 @@ export async function executeConciergeCheckout(input: {
   });
 
   if (result.status === "checkout_ready") {
+    const checkoutUrl = await shortenBitlyUrl(result.checkoutUrl);
     await recordCheckoutAttempt({
-      checkoutUrl: result.checkoutUrl,
+      checkoutUrl,
       failureReason: null,
       optionId: input.option.id,
       status: "checkout_ready",
     });
 
-    return result;
+    return {
+      checkoutUrl,
+      status: "checkout_ready" as const,
+    };
   }
 
   if (result.status === "inventory_changed") {
