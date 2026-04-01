@@ -378,8 +378,31 @@ function flattenMarkdownLinks(body: string): string {
   });
 }
 
+function appendCheckoutBrowserFallback(body: string): string {
+  if (!body.includes("auth.ticketmaster.com")) {
+    return body;
+  }
+
+  const lower = body.toLowerCase();
+  if (
+    lower.includes("safari") ||
+    lower.includes("chrome") ||
+    lower.includes("open in browser") ||
+    lower.includes("abrir en navegador")
+  ) {
+    return body;
+  }
+
+  const spanish = /[\u00a1\u00bf]|(?:\b(aqui|seccion|fila|boletos|link|abre|opcion|opción|ticketmaster)\b)/i.test(body);
+  const fallback = spanish
+    ? "Si WhatsApp te dice que no puede cargarlo, toca los tres puntitos y abre el link en Safari o Chrome."
+    : "If WhatsApp says it can't load, tap the three dots and open the link in Safari or Chrome.";
+
+  return `${body.trim()}\n\n${fallback}`;
+}
+
 function sanitizeWhatsAppBody(body: string): string {
-  return flattenMarkdownLinks(body).trim();
+  return appendCheckoutBrowserFallback(flattenMarkdownLinks(body)).trim();
 }
 
 function extractAssistantText(message: SDKAssistantMessage): string {

@@ -294,6 +294,7 @@ describe("runTicketConciergeSellerTurn", () => {
     }
     expect(result.body).toContain("Comprar en Ticketmaster\nhttps://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc");
     expect(result.body).not.toContain("[Comprar en Ticketmaster](");
+    expect(result.body).toContain("abre el link en Safari o Chrome");
   });
 
   it("refreshes fresh options when a direct numeric pick hits inventory_changed", async () => {
