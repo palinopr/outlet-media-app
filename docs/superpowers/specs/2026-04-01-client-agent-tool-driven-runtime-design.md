@@ -231,6 +231,35 @@ or:
 
 The runtime should not artificially force one tool call per message.
 
+## Runtime guardrails
+
+The multi-tool runtime must have explicit budgets and loop controls so planning does not invent them later.
+
+Version 1 guardrails:
+
+- maximum `6` tool calls per turn
+- maximum `12` seconds total tool-loop wall time before fallback
+- maximum `1` correction cycle after an invalid tool argument response
+- no identical tool call may be executed more than twice in the same turn
+- tool calls must be executed sequentially in version 1 so state and traces stay easy to reason about
+
+If the model reaches the tool-call limit or timeout:
+
+- use the successful tool results already gathered if they are enough to answer safely
+- otherwise return a brief safe error instead of inventing or looping
+
+If a tool call is invalid:
+
+- runtime returns a typed invalid-arguments error to the model
+- the model may correct itself once within the same turn budget
+- after that, the turn ends with a safe error or with a safe partial answer if enough evidence already exists
+
+If a later tool fails after one or more earlier tools succeeded:
+
+- answer from the successful reads when they are sufficient for the user question
+- otherwise return a brief safe error
+- never drop into a misleading broad fallback that ignores the successful earlier reads
+
 ## Tool Surface
 
 The tool surface should be broad enough that the model does not need a brittle planner, but small enough to stay understandable and safe.
@@ -306,6 +335,361 @@ Do not expose tools for:
 
 If the user asks for those topics, the agent should refuse in prose.
 
+## Tool Contracts
+
+The planning phase must treat the following request and response contracts as canonical for version 1. Tools may add fields later, but the listed fields and semantics are the required baseline.
+
+### Shared request rules
+
+- all ids are Outlet internal ids already safe to use server-side
+- all dates use `YYYY-MM-DD`
+- all ranges use the normalized client-agent range contract
+- all currency values are returned as `usd` decimal numbers plus formatted display strings when useful
+- all percentage-like values are returned as percentage numbers, not ratios
+- null means unavailable, not zero
+
+### Shared enums
+
+- `domain`: `ads` | `events`
+- `entity_type`: `campaign` | `creative` | `event`
+- `interval`: `day` | `week` | `month`
+- `range_preset`: `today` | `yesterday` | `last_7_days` | `last_30_days` | `this_week` | `this_month` | `this_quarter` | `lifetime` | `custom`
+- `tool_status`: `ok` | `no_data` | `invalid_arguments` | `error`
+
+### Shared range object
+
+```json
+{
+  "preset": "lifetime",
+  "startDate": "1900-01-01",
+  "endDate": "2026-04-01",
+  "timezone": "America/Chicago"
+}
+```
+
+### Shared tool response envelope
+
+Every tool must return:
+
+```json
+{
+  "status": "ok",
+  "data": {},
+  "referencedEntities": [],
+  "warnings": []
+}
+```
+
+Rules:
+
+- `status=no_data` means the request was valid but nothing matched
+- `status=invalid_arguments` means the model called the tool incorrectly
+- `status=error` means the backend failed after validation
+- `referencedEntities` must always reflect the exact campaigns, creatives, or events used in the result
+- `warnings` is optional human-readable guidance the model may use, not a dump of raw errors
+
+### `search_scope`
+
+Request:
+
+```json
+{
+  "query": "camila phoenix"
+}
+```
+
+Response data:
+
+```json
+{
+  "matches": [
+    {
+      "entityId": "cmp_123",
+      "entityType": "campaign",
+      "name": "Zamora - Camila - Phoenix",
+      "domain": "ads"
+    }
+  ]
+}
+```
+
+### `get_ads_overview`
+
+Request:
+
+```json
+{
+  "range": { "preset": "lifetime", "startDate": "1900-01-01", "endDate": "2026-04-01", "timezone": "America/Chicago" },
+  "campaignIds": null,
+  "creativeIds": null
+}
+```
+
+Response data:
+
+```json
+{
+  "totals": {
+    "spendUsd": 11559,
+    "revenueUsd": 86470,
+    "roas": 7.48,
+    "impressions": 1352040,
+    "clicks": 33924,
+    "ctr": 2.51,
+    "cpcUsd": 0.34,
+    "cpmUsd": 8.55
+  }
+}
+```
+
+### `get_events_overview`
+
+Request:
+
+```json
+{
+  "range": { "preset": "lifetime", "startDate": "1900-01-01", "endDate": "2026-04-01", "timezone": "America/Chicago" },
+  "eventIds": null
+}
+```
+
+Response data:
+
+```json
+{
+  "totals": {
+    "ticketsSold": 12866,
+    "grossUsd": 259670,
+    "avgSellThroughPct": 46,
+    "views": 2300,
+    "conversionPct": 0.02
+  }
+}
+```
+
+### `get_campaign_details`
+
+Request:
+
+```json
+{
+  "campaignIds": ["cmp_123"],
+  "range": { "preset": "last_30_days", "startDate": "2026-03-02", "endDate": "2026-03-31", "timezone": "America/Chicago" }
+}
+```
+
+Response data:
+
+```json
+{
+  "campaigns": [
+    {
+      "campaignId": "cmp_123",
+      "name": "Zamora - Camila - Phoenix",
+      "metrics": {
+        "spendUsd": 1771,
+        "revenueUsd": 5350,
+        "roas": 3.02,
+        "impressions": 100000,
+        "clicks": 3000,
+        "ctr": 3.0
+      }
+    }
+  ]
+}
+```
+
+Contract rule:
+
+- `get_campaign_details` returns entity overview metrics only
+- it does not inline demographics, geography, placements, or time-series data
+- those come only from their dedicated tools
+
+### `get_event_details`
+
+Request:
+
+```json
+{
+  "eventIds": ["evt_123"],
+  "range": { "preset": "last_30_days", "startDate": "2026-03-02", "endDate": "2026-03-31", "timezone": "America/Chicago" }
+}
+```
+
+Response data:
+
+```json
+{
+  "events": [
+    {
+      "eventId": "evt_123",
+      "name": "Ricardo Arjona - LO QUE EL SECO NO DIJO TOUR",
+      "metrics": {
+        "ticketsSold": 221,
+        "grossUsd": 259670,
+        "avgDailySales": 221,
+        "currentSellThroughPct": 46,
+        "currentConversionPct": 0.02,
+        "currentViews": 2300
+      }
+    }
+  ]
+}
+```
+
+Contract rule:
+
+- `get_event_details` returns entity overview metrics only
+- it does not inline broad comparison tables or extra breakdown families
+
+### `get_creative_details`
+
+Request:
+
+```json
+{
+  "creativeIds": null,
+  "query": "Bay Area",
+  "range": { "preset": "last_30_days", "startDate": "2026-03-02", "endDate": "2026-03-31", "timezone": "America/Chicago" }
+}
+```
+
+Response data:
+
+```json
+{
+  "creatives": [
+    {
+      "creativeId": "ad_123",
+      "name": "video 4 - Bay Area",
+      "campaignId": "cmp_123",
+      "campaignName": "Zamora - Camila - Phoenix",
+      "metrics": {
+        "spendUsd": 101,
+        "revenueUsd": 0,
+        "roas": 0,
+        "impressions": 5000,
+        "clicks": 162,
+        "ctr": 3.24
+      }
+    }
+  ]
+}
+```
+
+### `get_demographic_breakdown`
+
+Request:
+
+```json
+{
+  "campaignIds": null,
+  "range": { "preset": "last_30_days", "startDate": "2026-03-02", "endDate": "2026-03-31", "timezone": "America/Chicago" }
+}
+```
+
+Response data:
+
+```json
+{
+  "rows": [
+    {
+      "age": "25-34",
+      "gender": "Female",
+      "spendUsd": 500,
+      "revenueUsd": 1930,
+      "roas": 3.86,
+      "impressions": 2200,
+      "clicks": 100,
+      "ctr": 4.55
+    }
+  ]
+}
+```
+
+### `get_geography_breakdown`
+
+Response rows must use:
+
+- `market`
+- `marketType`
+- `spendUsd`
+- `revenueUsd`
+- `roas`
+- `impressions`
+- `clicks`
+- `ctr`
+
+### `get_placement_breakdown`
+
+Response rows must use:
+
+- `platform`
+- `position`
+- `spendUsd`
+- `revenueUsd`
+- `roas`
+- `impressions`
+- `clicks`
+- `ctr`
+
+### `compare_entities`
+
+Request:
+
+```json
+{
+  "entityType": "campaign",
+  "entityIds": ["cmp_1", "cmp_2"],
+  "metric": "roas",
+  "range": { "preset": "this_month", "startDate": "2026-04-01", "endDate": "2026-04-01", "timezone": "America/Chicago" }
+}
+```
+
+Response data:
+
+```json
+{
+  "rows": [
+    {
+      "entityId": "cmp_1",
+      "entityType": "campaign",
+      "name": "Campaign 1",
+      "metric": "roas",
+      "value": 5.18
+    }
+  ]
+}
+```
+
+### `get_timeseries`
+
+Request:
+
+```json
+{
+  "domain": "ads",
+  "entityType": "campaign",
+  "entityIds": ["cmp_123"],
+  "metric": "spend",
+  "range": { "preset": "this_month", "startDate": "2026-04-01", "endDate": "2026-04-01", "timezone": "America/Chicago" },
+  "interval": "day"
+}
+```
+
+Response data:
+
+```json
+{
+  "series": [
+    {
+      "x": "2026-04-01",
+      "y": 707.46
+    }
+  ]
+}
+```
+
 ## Conversation Behavior
 
 ## Thread memory
@@ -326,6 +710,27 @@ The thread memory stays:
 - bounded to a recent context window
 
 It must not become cross-thread or cross-client memory.
+
+## Thread state contract
+
+Version 1 must persist enough structured thread context that follow-ups do not depend only on vague prose history.
+
+Each assistant message should persist a machine-readable context payload containing:
+
+- `primaryDomain`: `ads` | `events` | `mixed`
+- `referencedEntities`: exact referenced campaigns, creatives, and events
+- `resolvedRange`: the normalized range used for the answer
+- `comparisonSet`: optional entity ids used for explicit compare answers
+- `pronounTargets`: the current primary entity or entity set for follow-ups like `that one`, `those`, or `before that`
+
+Follow-up reuse rules:
+
+- `that one` resolves from the most recent `pronounTargets`
+- `before that` on an event-focused thread resolves from the most recent referenced event
+- `how about this month` reuses the prior domain and entity targets but swaps `resolvedRange`
+- if there is no valid stored context for the follow-up, the model must search again or ask a short clarification
+
+This payload may live in message metadata or an adjacent thread-memory column, but it must be durable and explicitly typed.
 
 ## Clarification policy
 
@@ -420,6 +825,21 @@ Refusal copy should stay brief and calm, for example:
 
 `I can help with campaign and event performance, but I can’t share internal setup or account structure details.`
 
+## Mixed prompt handling
+
+If a prompt contains both allowed analytics questions and refused internal/setup/strategy questions:
+
+- answer the safe analytics portion when it can be isolated cleanly
+- append one brief refusal note for the unsafe portion
+
+Example:
+
+- `How much have we spent, and what strategy are you using?`
+  - answer the spend question
+  - then add a short note that strategy/setup details are not available
+
+If the prompt is dominated by refused content or the safe portion cannot be isolated clearly, refuse the whole prompt.
+
 ## Data Model And Persistence
 
 This refactor does not replace the thread ledger model introduced for the existing `Agent` tab.
@@ -434,6 +854,42 @@ The thread ledger should continue to support:
 Admin preview remains non-persistent.
 
 No new client-facing app packaging state is introduced in this refactor.
+
+## Admin preview contract
+
+Admin preview should use the same runtime and same tool surface as a real client turn, but under an explicit preview scope.
+
+Preview scope rules:
+
+- preview scope is constructed from the selected client account slug
+- preview gets the client account's current packaging flags
+- preview gets the full currently allowed campaign/event scope for that client account
+- preview uses the same refusal rules and tool definitions as a real client turn
+
+Preview write rules:
+
+- no durable thread writes
+- no durable message writes
+- no preview conversation should appear in a real client member thread list
+- operational logs and safe server telemetry may still be written for debugging and audit
+
+Compatibility rule:
+
+- preview is an execution-mode exception, not a different agent product
+- preview must not fork a separate prompt, tool, or policy stack
+
+## Compatibility Contract
+
+This refactor should preserve the current client-agent API contract where possible so the chat UI does not need an unrelated transport rewrite.
+
+Version 1 compatibility requirements:
+
+- response payloads may continue returning `status`, `text`, `blocks`, `referencedEntities`, and `resolvedRange`
+- `blocks` must remain an empty array for visible chat answers
+- existing persisted message rows may keep storing `resolvedRange` and `referencedEntities`
+- any new thread-context metadata must be additive and backward-compatible
+
+The goal is to replace runtime reasoning internals without forcing a client-shell rewrite.
 
 ## Migration Strategy
 
@@ -475,6 +931,8 @@ Behavior expectations:
 - ambiguity -> one short clarification
 - tool failure -> brief safe error, no invented metrics
 - model formatting failure after successful tool calls -> fallback prose from authoritative tool results
+- partial tool success -> answer from successful reads when that is enough to satisfy the safe portion of the question
+- invalid tool arguments -> one correction chance inside the same turn budget, then safe error or safe partial answer
 
 ## Verification Requirements
 
@@ -490,6 +948,20 @@ Implementation and planning must cover these cases explicitly:
 - multi-tool turns work
 - thread and client scope boundaries remain enforced on every tool call
 - admin preview stays non-persistent
+
+## Observability
+
+Version 1 should log enough runtime facts that operator debugging does not depend on raw model transcripts alone.
+
+Minimum observability:
+
+- tool-call count per turn
+- tool names used per turn
+- turn duration
+- whether the answer used fallback prose
+- whether the turn ended from timeout or tool-call budget
+- refusal reason category
+- preview vs member mode
 
 ## Out Of Scope
 
