@@ -4,6 +4,7 @@ import {
   type TicketConciergeScenario,
 } from "@/features/whatsapp-ticket-concierge/config";
 import { handleTicketConciergeInbound } from "@/features/whatsapp-ticket-concierge/inbound-responder";
+import { startTypingHeartbeat } from "@/features/whatsapp-ticket-concierge/typing-heartbeat";
 import {
   applyTicketConciergeConversationMetadata,
   isAllowedTicketConciergeTarget,
@@ -2089,8 +2090,9 @@ export async function ingestEvolutionWebhook(
   const conversation = await ensureConversation(account, contact);
   const persistedMessage = await upsertInboundMessage(account, contact, conversation, normalized);
   const routingOutcome = await resolveTicketConciergeRouting(conversation, contact, normalized);
-  const conciergeHandled = await handleTicketConciergeInbound(
+  const conciergeHandled = await handleTicketConciergeInboundWithTransportFeedback(
     {
+      account,
       appBaseUrl: getTicketConciergeAppBaseUrl(),
       contact,
       conversation: routingOutcome.conversation,
@@ -2099,9 +2101,6 @@ export async function ingestEvolutionWebhook(
         messageId: normalized.messageId,
         textBody: normalized.textBody,
       },
-    },
-    {
-      sendText: sendWhatsAppTextMessage,
     },
   );
   if (!conciergeHandled.handled) {
@@ -2167,8 +2166,9 @@ export async function ingestTwilioWebhook(
       const conversation = await ensureConversation(account, contact);
       const persistedMessage = await upsertInboundMessage(account, contact, conversation, normalized);
       const routingOutcome = await resolveTicketConciergeRouting(conversation, contact, normalized);
-      const conciergeHandled = await handleTicketConciergeInbound(
+      const conciergeHandled = await handleTicketConciergeInboundWithTransportFeedback(
         {
+          account,
           appBaseUrl: getTicketConciergeAppBaseUrl(),
           contact,
           conversation: routingOutcome.conversation,
@@ -2177,9 +2177,6 @@ export async function ingestTwilioWebhook(
             messageId: normalized.messageId,
             textBody: normalized.textBody,
           },
-        },
-        {
-          sendText: sendWhatsAppTextMessage,
         },
       );
       if (!conciergeHandled.handled) {
@@ -2440,6 +2437,68 @@ async function maybeSendAutomaticInboundFeedback(
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     console.warn("[whatsapp] automatic ack failed:", detail);
+  }
+}
+
+function startSellerTypingIndicatorHeartbeat(
+  account: AccountRow,
+  inboundMessageId: string | null | undefined,
+) {
+  if (!inboundMessageId || getAccountTransport(account) !== "twilio" || !shouldUseTwilioTypingIndicator()) {
+    return null;
+  }
+
+  return startTypingHeartbeat({
+    intervalMs: 20_000,
+    sendTyping: async () => {
+      try {
+        await sendTwilioTypingIndicator(account, inboundMessageId);
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        console.warn("[whatsapp] seller typing indicator failed:", detail);
+      }
+    },
+  });
+}
+
+async function handleTicketConciergeInboundWithTransportFeedback(input: {
+  account: AccountRow;
+  appBaseUrl: string;
+  contact: ContactRow;
+  conversation: ConversationRow;
+  latestInboundMessageId: string;
+  message: {
+    messageId: string;
+    textBody: string | null;
+  };
+}): Promise<{ handled: boolean }> {
+  let heartbeat = startSellerTypingIndicatorHeartbeat(input.account, input.message.messageId);
+
+  const stopHeartbeat = async () => {
+    if (!heartbeat) return;
+    const activeHeartbeat = heartbeat;
+    heartbeat = null;
+    await activeHeartbeat.stop();
+  };
+
+  try {
+    return await handleTicketConciergeInbound(
+      {
+        appBaseUrl: input.appBaseUrl,
+        contact: input.contact,
+        conversation: input.conversation,
+        latestInboundMessageId: input.latestInboundMessageId,
+        message: input.message,
+      },
+      {
+        sendText: async (sendInput) => {
+          await stopHeartbeat();
+          return sendWhatsAppTextMessage(sendInput);
+        },
+      },
+    );
+  } finally {
+    await stopHeartbeat();
   }
 }
 

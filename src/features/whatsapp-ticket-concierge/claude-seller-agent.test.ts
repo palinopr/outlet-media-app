@@ -142,6 +142,7 @@ describe("runTicketConciergeSellerTurn", () => {
       expect.objectContaining({
         ticketConciergeSeller: expect.objectContaining({
           claudeSessionId: "sess_new",
+          language: "es",
         }),
       }),
     );
@@ -356,5 +357,48 @@ describe("runTicketConciergeSellerTurn", () => {
       body: "Claro, voy a buscar opciones nuevas ahora mismo.",
       kind: "text",
     });
+  });
+
+  it("switches the stored seller language to English when the customer clearly switches languages", async () => {
+    const deps = buildDeps({
+      querySellerAgent: vi.fn(async () => ({
+        sessionId: "sess_existing",
+        text: "I can pull three fresh options for you right now.",
+      })),
+    });
+
+    await runTicketConciergeSellerTurn(
+      {
+        contact,
+        conversation: {
+          id: "conv_1",
+          metadata: {
+            automationRoute: "ticket_concierge",
+            conciergeAllowed: true,
+            scenarioKey: "zamora_arjona_miami_v1",
+            ticketConciergeSeller: {
+              claudeSessionId: "sess_existing",
+              language: "es",
+            },
+          },
+        },
+        latestInboundMessageId: "db_msg_4",
+        message: {
+          messageId: "provider_msg_4",
+          textBody: "I need 2 tickets for Arjona under $300 total",
+        },
+      },
+      deps,
+    );
+
+    expect(deps.updateConversationMetadata).toHaveBeenCalledWith(
+      "conv_1",
+      expect.objectContaining({
+        ticketConciergeSeller: expect.objectContaining({
+          claudeSessionId: "sess_existing",
+          language: "en",
+        }),
+      }),
+    );
   });
 });

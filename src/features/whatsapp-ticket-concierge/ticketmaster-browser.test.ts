@@ -86,10 +86,11 @@ vi.mock("playwright-core", () => {
         };
       }
 
+      const buttonName = options?.name as unknown;
       if (
         role === "button" &&
-        options?.name instanceof RegExp &&
-        options.name.test("Accept & Continue")
+        buttonName instanceof RegExp &&
+        buttonName.test("Accept & Continue")
       ) {
         return {
           async click() {

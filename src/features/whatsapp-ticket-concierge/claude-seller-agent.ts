@@ -10,6 +10,12 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 
 import {
+  detectTicketConciergeLanguage,
+  getStoredTicketConciergeLanguage,
+  looksSpanishText,
+  type TicketConciergeLanguage,
+} from "./language";
+import {
   createConciergeRun,
   createOptionSet,
   expireOptionSet,
@@ -197,18 +203,25 @@ function getStoredClaudeSessionId(
   return typeof sessionId === "string" && sessionId.trim().length > 0 ? sessionId.trim() : null;
 }
 
-function applyStoredClaudeSessionId(
+function applyStoredSellerState(input: {
+  language?: TicketConciergeLanguage | null;
   metadata: Record<string, unknown> | null | undefined,
-  sessionId: string,
-): Record<string, unknown> {
-  const parsed = parseMetadataRecord(metadata);
+  sessionId?: string | null;
+}): Record<string, unknown> {
+  const parsed = parseMetadataRecord(input.metadata);
   const seller = parseMetadataRecord(parsed.ticketConciergeSeller);
+  const nextSessionId =
+    input.sessionId === undefined ? seller.claudeSessionId : input.sessionId;
+  const nextLanguage = input.language === undefined ? seller.language : input.language;
 
   return {
     ...parsed,
     ticketConciergeSeller: {
       ...seller,
-      claudeSessionId: sessionId,
+      ...(typeof nextSessionId === "string" && nextSessionId.trim().length > 0
+        ? { claudeSessionId: nextSessionId.trim() }
+        : {}),
+      ...(nextLanguage === "en" || nextLanguage === "es" ? { language: nextLanguage } : {}),
       updatedAt: new Date().toISOString(),
     },
   };
@@ -308,21 +321,9 @@ function parseDirectOptionOrdinal(messageText: string | null | undefined): 1 | 2
   return null;
 }
 
-function looksSpanishText(value: string | null | undefined): boolean {
-  const text = value?.trim().toLowerCase() ?? "";
-  if (!text) return false;
-
-  return (
-    /[áéíóúñ¿¡]/i.test(text) ||
-    /\b(necesito|quiero|boletos|por|para|mañana|opcion|opciones|hola|gracias|asegurar)\b/i.test(
-      text,
-    )
-  );
-}
-
 function buildDirectSelectionReply(input: {
   checkoutUrl?: string | null;
-  customerLanguageHint: string | null;
+  customerLanguageHint: TicketConciergeLanguage | string | null;
   outcome:
     | "checkout_ready"
     | "expired"
@@ -331,7 +332,9 @@ function buildDirectSelectionReply(input: {
     | "lookup_failed"
     | "no_active_options";
 }): string {
-  const spanish = looksSpanishText(input.customerLanguageHint);
+  const spanish =
+    input.customerLanguageHint === "es" ||
+    (typeof input.customerLanguageHint === "string" && looksSpanishText(input.customerLanguageHint));
 
   switch (input.outcome) {
     case "checkout_ready":
@@ -359,8 +362,10 @@ function buildDirectSelectionReply(input: {
   }
 }
 
-function buildDirectRefreshReply(customerLanguageHint: string | null): string {
-  const spanish = looksSpanishText(customerLanguageHint);
+function buildDirectRefreshReply(customerLanguageHint: TicketConciergeLanguage | string | null): string {
+  const spanish =
+    customerLanguageHint === "es" ||
+    (typeof customerLanguageHint === "string" && looksSpanishText(customerLanguageHint));
   return spanish
     ? "Esos asientos ya no estan. Te paso tres opciones nuevas ahora mismo."
     : "Those seats just changed. Here are three fresh options right now.";
@@ -478,6 +483,9 @@ export async function runTicketConciergeSellerTurn(input: {
     conversationMetadata,
   });
   const storedSessionId = getStoredClaudeSessionId(conversationMetadata);
+  const storedLanguage = getStoredTicketConciergeLanguage(conversationMetadata);
+  const detectedLanguage = detectTicketConciergeLanguage(input.message.textBody);
+  const conversationLanguage = detectedLanguage ?? storedLanguage ?? "es";
   let activeSnapshot = await resolvedDeps.getActiveOptionSetSelectionSnapshot(input.conversation.id);
   let lastCheckoutUrl: string | null = null;
   let preparedOptions: TicketConciergePreparedOption[] | null = null;
@@ -667,8 +675,7 @@ export async function runTicketConciergeSellerTurn(input: {
   const directSelectionOrdinal = parseDirectOptionOrdinal(input.message.textBody);
   if (directSelectionOrdinal && activeSnapshot) {
     const directSelectionSnapshot = activeSnapshot;
-    const customerLanguageHint =
-      directSelectionSnapshot.run.customerMessage || input.message.textBody;
+    const customerLanguageHint = conversationLanguage;
     const directResult = await toolHandlers.choosePreparedOption({
       optionOrdinal: directSelectionOrdinal,
     });
@@ -685,11 +692,15 @@ export async function runTicketConciergeSellerTurn(input: {
     }
 
     if (directResult.status === "inventory_changed" || directResult.status === "expired") {
-      runCustomerMessageOverride = customerLanguageHint;
+      runCustomerMessageOverride =
+        directSelectionSnapshot.run.customerMessage || input.message.textBody;
       const refreshed = await toolHandlers.prepareOptions({
         maxTotalCents: directSelectionSnapshot.run.intent.maxTotalCents ?? null,
         preferences: directSelectionSnapshot.run.intent.preferences,
-        quantity: directSelectionSnapshot.run.intent.quantity,
+        quantity:
+          directSelectionSnapshot.run.intent.quantity ??
+          directSelectionSnapshot.options[0]?.quantity ??
+          1,
       });
 
       if (refreshed.status === "options_ready" && preparedOptions) {
@@ -725,10 +736,18 @@ export async function runTicketConciergeSellerTurn(input: {
     toolHandlers,
   });
 
-  if (agentResult.sessionId && agentResult.sessionId !== storedSessionId) {
+  const shouldPersistSellerState =
+    (agentResult.sessionId && agentResult.sessionId !== storedSessionId) ||
+    conversationLanguage !== storedLanguage;
+
+  if (shouldPersistSellerState) {
     await resolvedDeps.updateConversationMetadata(
       input.conversation.id,
-      applyStoredClaudeSessionId(conversationMetadata, agentResult.sessionId),
+      applyStoredSellerState({
+        language: conversationLanguage,
+        metadata: conversationMetadata,
+        sessionId: agentResult.sessionId ?? storedSessionId,
+      }),
     );
   }
 

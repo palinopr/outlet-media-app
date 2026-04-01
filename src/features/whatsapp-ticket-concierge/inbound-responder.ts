@@ -1,4 +1,5 @@
 import { runTicketConciergeSellerTurn } from "./claude-seller-agent";
+import { resolveTicketConciergeLanguage } from "./language";
 import { formatPreparedOptionsMessage } from "./result-formatter";
 import {
   getTicketConciergeSecurityDisposition,
@@ -64,12 +65,14 @@ async function sendPreparedOptions(input: {
   appBaseUrl: string;
   conversationId: string;
   introText: string;
+  locale: "en" | "es";
   options: TicketConciergePreparedOption[];
   replyToMessageId: string;
   sendText: TicketConciergeResponderDeps["sendText"];
 }) {
   const payloads = formatPreparedOptionsMessage({
     baseUrl: normalizeBaseUrl(input.appBaseUrl),
+    locale: input.locale,
     options: input.options,
   });
 
@@ -124,11 +127,18 @@ export async function handleTicketConciergeInbound(input: {
     message: input.message,
   });
 
+  const locale = resolveTicketConciergeLanguage({
+    defaultLanguage: "es",
+    messageText: input.message.textBody,
+    metadata: input.conversation.metadata,
+  });
+
   if (sellerTurn.kind === "prepared_options") {
     await sendPreparedOptions({
       appBaseUrl: input.appBaseUrl,
       conversationId: input.conversation.id,
       introText: sellerTurn.introText,
+      locale,
       options: sellerTurn.options,
       replyToMessageId: input.message.messageId,
       sendText: resolvedDeps.sendText,

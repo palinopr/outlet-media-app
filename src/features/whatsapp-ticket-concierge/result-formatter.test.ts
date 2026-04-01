@@ -7,6 +7,7 @@ describe("formatPreparedOptionsMessage", () => {
     expect(
       formatPreparedOptionsMessage({
         baseUrl: "https://www.outletmedia.net/",
+        locale: "en",
         options: [
           {
             execution: { selectionPayload: { placeSelections: [] } },
@@ -88,6 +89,7 @@ describe("formatPreparedOptionsMessage", () => {
     expect(
       formatPreparedOptionsMessage({
         baseUrl: "https://www.outletmedia.net/",
+        locale: "en",
         options: [
           {
             execution: { selectionPayload: { placeSelections: [] } },
@@ -138,6 +140,66 @@ describe("formatPreparedOptionsMessage", () => {
       },
       {
         body: "Live inventory is limited right now.\nReply 1 or 2 to pick one of these options.",
+        kind: "text",
+      },
+    ]);
+  });
+
+  it("renders the option cards and reply hint in Spanish", () => {
+    expect(
+      formatPreparedOptionsMessage({
+        baseUrl: "https://www.outletmedia.net/",
+        locale: "es",
+        options: [
+          {
+            execution: { selectionPayload: { placeSelections: [] } },
+            id: "opt_1",
+            isUnderBudget: true,
+            label: "Option 1",
+            mapSvg: "<svg />",
+            mapToken: "map_1",
+            note: "Best value",
+            ordinal: 1,
+            quantity: 4,
+            quoteSource: "exact",
+            row: "14",
+            seatLabels: ["1", "2", "3", "4"],
+            section: "416",
+            totalCents: 87400,
+          },
+          {
+            execution: { selectionPayload: { placeSelections: [] } },
+            id: "opt_2",
+            isUnderBudget: false,
+            label: "Option 2",
+            mapSvg: "<svg />",
+            mapToken: "map_2",
+            note: "Closest available",
+            ordinal: 2,
+            quantity: 4,
+            quoteSource: "exact",
+            row: "15",
+            seatLabels: ["5", "6", "7", "8"],
+            section: "325",
+            totalCents: 87860,
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        body: "Opcion 1\n$874 total\nSeccion 416, Fila 14\n4 asientos juntos\nMejor valor",
+        kind: "media",
+        mediaUrl: "https://www.outletmedia.net/api/whatsapp/concierge/maps/map_1",
+        optionOrdinal: 1,
+      },
+      {
+        body: "Opcion 2\n$878.60 total\nSeccion 325, Fila 15\n4 asientos juntos\nLo mas cercano disponible",
+        kind: "media",
+        mediaUrl: "https://www.outletmedia.net/api/whatsapp/concierge/maps/map_2",
+        optionOrdinal: 2,
+      },
+      {
+        body: "El inventario en vivo esta limitado ahora mismo.\nResponde 1 o 2 para elegir una de estas opciones.",
         kind: "text",
       },
     ]);
