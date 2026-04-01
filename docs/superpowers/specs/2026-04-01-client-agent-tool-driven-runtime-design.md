@@ -219,7 +219,7 @@ Typical turns may look like:
 or:
 
 1. `get_ads_overview(range=lifetime)`
-2. `get_timeseries(domain=campaigns, metric=spend, range=lifetime, interval=month)`
+2. `get_timeseries(domain=ads, entityType=campaign, metric=spend, range=lifetime, interval=month)`
 3. final answer
 
 or:
@@ -355,6 +355,9 @@ The planning phase must treat the following request and response contracts as ca
 - `interval`: `day` | `week` | `month`
 - `range_preset`: `today` | `yesterday` | `last_7_days` | `last_30_days` | `this_week` | `this_month` | `this_quarter` | `lifetime` | `custom`
 - `tool_status`: `ok` | `no_data` | `invalid_arguments` | `error`
+- `ads_metric`: `spend` | `revenue` | `roas` | `impressions` | `clicks` | `ctr` | `cpc` | `cpm`
+- `events_metric`: `tickets_sold` | `gross` | `sell_through` | `views` | `conversion`
+- `compare_metric`: any `ads_metric` or `events_metric` value valid for the chosen `entityType`
 
 ### Shared range object
 
@@ -462,7 +465,7 @@ Response data:
     "grossUsd": 259670,
     "avgSellThroughPct": 46,
     "views": 2300,
-    "conversionPct": 0.02
+    "conversionPct": 2
   }
 }
 ```
@@ -529,7 +532,7 @@ Response data:
         "grossUsd": 259670,
         "avgDailySales": 221,
         "currentSellThroughPct": 46,
-        "currentConversionPct": 0.02,
+        "currentConversionPct": 2,
         "currentViews": 2300
       }
     }
@@ -609,6 +612,15 @@ Response data:
 
 ### `get_geography_breakdown`
 
+Request:
+
+```json
+{
+  "campaignIds": null,
+  "range": { "preset": "last_30_days", "startDate": "2026-03-02", "endDate": "2026-03-31", "timezone": "America/Chicago" }
+}
+```
+
 Response rows must use:
 
 - `market`
@@ -621,6 +633,15 @@ Response rows must use:
 - `ctr`
 
 ### `get_placement_breakdown`
+
+Request:
+
+```json
+{
+  "campaignIds": null,
+  "range": { "preset": "last_30_days", "startDate": "2026-03-02", "endDate": "2026-03-31", "timezone": "America/Chicago" }
+}
+```
 
 Response rows must use:
 
@@ -662,6 +683,11 @@ Response data:
 }
 ```
 
+Contract rules:
+
+- `metric` must be a `compare_metric` valid for the requested `entityType`
+- mixed entity types are invalid arguments, not a model-side guess
+
 ### `get_timeseries`
 
 Request:
@@ -689,6 +715,12 @@ Response data:
   ]
 }
 ```
+
+Contract rules:
+
+- when `domain=ads`, `metric` must be an `ads_metric`
+- when `domain=events`, `metric` must be an `events_metric`
+- `entityType` must be compatible with `domain`
 
 ## Conversation Behavior
 
