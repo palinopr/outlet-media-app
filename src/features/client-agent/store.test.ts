@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { Database } from "@/lib/database.types";
 import type { AgentAnswerBlock, ReferencedEntity, ResolvedRange } from "./types";
 
 const { state, supabaseAdmin } = vi.hoisted(() => {
@@ -193,42 +192,6 @@ function makeMessage(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function makeQueuedThreadRow() {
-  return {
-    id: "thread_queued_1",
-    client_id: "client_1",
-    client_member_id: null,
-    viewer_context: "admin_preview",
-    preview_admin_user_id: "admin_1",
-    title: "Budget pacing",
-    preview_text: "Thinking…",
-    referenced_entities: [],
-    last_response_status: "pending",
-    last_message_at: "2026-03-31T09:00:00.000Z",
-    created_at: "2026-03-31T09:00:00.000Z",
-    updated_at: "2026-03-31T09:00:00.000Z",
-  } satisfies Database["public"]["Tables"]["client_agent_threads"]["Row"];
-}
-
-function makeQueuedMessageRow() {
-  return {
-    id: "message_queued_1",
-    thread_id: "thread_queued_1",
-    role: "assistant",
-    response_status: "pending",
-    text: "Thinking…",
-    blocks: [],
-    referenced_entities: [],
-    context_payload: null,
-    resolved_range: null,
-    provider_response_id: null,
-    client_generated_id: null,
-    agent_task_id: "task_queued_1",
-    client_request_id: "request_queued_1",
-    created_at: "2026-03-31T09:00:00.000Z",
-  } satisfies Database["public"]["Tables"]["client_agent_messages"]["Row"];
-}
-
 describe("client-agent store", () => {
   beforeEach(() => {
     state.fromCalls = 0;
@@ -267,18 +230,57 @@ describe("client-agent store", () => {
     });
   });
 
-  it("expects queued client-agent rows to carry preview and request metadata", () => {
-    const threadRow = makeQueuedThreadRow();
-    const messageRow = makeQueuedMessageRow();
+  it("surfaces pending assistant rows through the store surface", async () => {
+    state.client_agent_threads = [
+      makeThread({
+        id: "thread_queued_1",
+        title: "Waiting on a reply",
+        preview_text: "Thinking…",
+        last_response_status: "pending",
+      }),
+    ];
+    state.client_agent_messages = [
+      makeMessage({
+        id: "message_user_queued",
+        thread_id: "thread_queued_1",
+        role: "user",
+        response_status: null,
+        text: "How is the campaign doing?",
+        client_generated_id: "request_queued_1",
+      }),
+      makeMessage({
+        id: "message_assistant_pending",
+        thread_id: "thread_queued_1",
+        role: "assistant",
+        response_status: "pending",
+        text: "Thinking…",
+        agent_task_id: "task_queued_1",
+        client_request_id: "request_queued_1",
+      }),
+    ];
 
-    expect(threadRow).toMatchObject({
-      viewer_context: "admin_preview",
-      preview_admin_user_id: "admin_1",
+    const thread = await getThread({
+      threadId: "thread_queued_1",
+      scope: memberScope,
     });
-    expect(messageRow).toMatchObject({
-      response_status: "pending",
-      agent_task_id: "task_queued_1",
-      client_request_id: "request_queued_1",
+
+    expect(thread).toMatchObject({
+      threadId: "thread_queued_1",
+      previewText: "Thinking…",
+      lastResponseStatus: "pending",
+      messages: [
+        {
+          messageId: "message_user_queued",
+          role: "user",
+          status: null,
+        },
+        {
+          messageId: "message_assistant_pending",
+          role: "assistant",
+          status: "pending",
+          text: "Thinking…",
+        },
+      ],
     });
   });
 

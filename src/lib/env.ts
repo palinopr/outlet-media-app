@@ -21,7 +21,7 @@ const serverSchema = z.object({
   // Required for the local client-agent worker bridge
   CLIENT_AGENT_WORKER_SECRET: z
     .string()
-    .min(1, "CLIENT_AGENT_WORKER_SECRET is required"),
+    .min(64, "CLIENT_AGENT_WORKER_SECRET must be at least 64 characters"),
 
   // Optional integrations
   META_ACCESS_TOKEN: z.string().optional(),

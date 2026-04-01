@@ -1,6 +1,12 @@
 import { z } from "zod";
 
-export const AgentResponseStatusSchema = z.enum(["answer", "clarify", "refuse", "error"]);
+export const AgentResponseStatusSchema = z.enum([
+  "answer",
+  "clarify",
+  "refuse",
+  "error",
+  "pending",
+]);
 export type AgentResponseStatus = z.infer<typeof AgentResponseStatusSchema>;
 
 const CampaignReferencedEntitySchema = z.object({

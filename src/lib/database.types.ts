@@ -791,7 +791,7 @@ export type Database = {
           preview_text: string | null
           preview_admin_user_id: string | null
           referenced_entities: Json
-          viewer_context: "member" | "admin_preview"
+          viewer_context: string
           title: string | null
           updated_at: string
         }
@@ -805,7 +805,7 @@ export type Database = {
           preview_text?: string | null
           preview_admin_user_id?: string | null
           referenced_entities?: Json
-          viewer_context?: "member" | "admin_preview"
+          viewer_context?: string
           title?: string | null
           updated_at?: string
         }
@@ -819,7 +819,7 @@ export type Database = {
           preview_text?: string | null
           preview_admin_user_id?: string | null
           referenced_entities?: Json
-          viewer_context?: "member" | "admin_preview"
+          viewer_context?: string
           title?: string | null
           updated_at?: string
         }
@@ -1904,7 +1904,7 @@ export type Database = {
           p_preview_admin_user_id?: string
           p_text: string
           p_thread_id: string
-          p_viewer_context: "member" | "admin_preview"
+          p_viewer_context: string
         }
         Returns: {
           agent_task_id: string

@@ -214,3 +214,23 @@ begin
   return next;
 end;
 $$;
+
+revoke all on function public.queue_client_agent_turn(
+  uuid,
+  text,
+  text,
+  uuid,
+  text,
+  text,
+  text
+) from public, anon, authenticated;
+
+grant execute on function public.queue_client_agent_turn(
+  uuid,
+  text,
+  text,
+  uuid,
+  text,
+  text,
+  text
+) to service_role;
