@@ -1,6 +1,7 @@
 import { runClaude } from "../runner.js";
 import { runMetaSync, runTmCheck } from "../scheduler.js";
 import { getAgentForChannel } from "../discord/core/router.js";
+import { processClientAgentTask } from "../client-agent/task-processor.js";
 import { ResourceBusyError, withResourceLocks } from "../state.js";
 import { processGmailHistoryPush } from "./gmail-watch-service.js";
 import { getServiceSupabase } from "./supabase-service.js";
@@ -45,8 +46,9 @@ function getPromptParam(task: ExternalTaskRow): string | null {
   return typeof prompt === "string" ? prompt : null;
 }
 
-function isExternalTask(task: ExternalTaskRow): boolean {
+export function isExternalTask(task: ExternalTaskRow): boolean {
   return (
+    task.from_agent === "client-portal" ||
     task.from_agent === "web-admin" ||
     task.from_agent === "gmail-push" ||
     task.from_agent === "whatsapp-cloud"
@@ -61,7 +63,7 @@ async function claimPendingTask(): Promise<ExternalTaskRow | null> {
     .from("agent_tasks")
     .select("id, from_agent, to_agent, action, params, tier, status")
     .eq("status", "pending")
-    .in("from_agent", ["web-admin", "gmail-push", "whatsapp-cloud"])
+    .in("from_agent", ["client-portal", "web-admin", "gmail-push", "whatsapp-cloud"])
     .order("started_at", { ascending: true, nullsFirst: true })
     .order("created_at", { ascending: true })
     .limit(20);
@@ -268,7 +270,11 @@ async function runWebAdminPromptTask(
   return result.text;
 }
 
-async function executeTask(task: ExternalTaskRow): Promise<string> {
+export async function executeTask(task: ExternalTaskRow): Promise<string> {
+  if (task.from_agent === "client-portal") {
+    return await processClientAgentTask(task);
+  }
+
   if (task.from_agent === "gmail-push") {
     const rawHistoryId = task.params?.historyId;
     const historyId =
@@ -344,7 +350,7 @@ export function startExternalTaskDispatcher(): void {
   timer.unref?.();
 
   void pumpQueue();
-  console.log("[external-dispatcher] Polling agent_tasks for web-admin, Gmail push, and WhatsApp Cloud work");
+  console.log("[external-dispatcher] Polling agent_tasks for client portal, web-admin, Gmail push, and WhatsApp Cloud work");
 }
 
 export function stopExternalTaskDispatcher(): void {
