@@ -399,6 +399,60 @@ describe("client-agent model adapter", () => {
     });
   });
 
+  it("formats current event snapshot metrics separately from range metrics in fallback prose", async () => {
+    responsesParse.mockRejectedValue(new Error("formatter failed"));
+    resolveEventIntent.mockResolvedValue({
+      kind: "entity",
+      eventId: "evt_latest",
+      referencedEntities: [
+        { entityId: "evt_latest", entityType: "event", name: "Ricardo Arjona - LO QUE EL SECO NO DIJO TOUR" },
+      ],
+    });
+    getEntityDetails.mockResolvedValue({
+      status: "ok",
+      blocks: [
+        {
+          type: "metric_cards",
+          title: "Event Performance",
+          cards: [
+            { label: "Tickets Sold", value: "221" },
+            { label: "Current Sell Through", value: "46" },
+            { label: "Gross", value: "$259,670" },
+            { label: "Current Conversion", value: "4.2" },
+          ],
+        },
+      ],
+      referencedEntities: [
+        { entityId: "evt_latest", entityType: "event", name: "Ricardo Arjona - LO QUE EL SECO NO DIJO TOUR" },
+      ],
+    });
+
+    const result = await generateClientAgentModelResponse({
+      history: [],
+      message: "what was my last show?",
+      scope: {
+        clientId: "client_1",
+        clientMemberId: "member_1",
+        clientSlug: "zamora",
+        allowedCampaignIds: null,
+        allowedEventIds: null,
+        eventsEnabled: true,
+        viewer: "member",
+      },
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(result.text).toContain("Over last 30 days");
+    expect(result.text).toContain("sold 221 tickets");
+    expect(result.text).toContain("grossed $259,670");
+    expect(result.text).toContain("Current sell-through is 46%");
+    expect(result.text).not.toContain("current sell through of 46");
+    expect(result.text).not.toContain("46 over last 30 days");
+  });
+
   it("answers 'how many shows we have' with prose instead of overview blocks", async () => {
     resolveEventIntent.mockResolvedValue({
       kind: "count",

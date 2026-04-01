@@ -123,6 +123,68 @@ function buildEntityPhrase(referencedEntities: ReferencedEntity[]) {
   return "your campaigns and events";
 }
 
+function joinPhrases(phrases: string[]) {
+  if (phrases.length === 0) return "";
+  if (phrases.length === 1) return phrases[0]!;
+  if (phrases.length === 2) return `${phrases[0]} and ${phrases[1]}`;
+  return `${phrases.slice(0, -1).join(", ")}, and ${phrases.at(-1)}`;
+}
+
+function withPercentSuffix(value: string) {
+  return /%$/.test(value) ? value : `${value}%`;
+}
+
+function buildEventDetailFallbackText(
+  message: string,
+  referencedEntity: ReferencedEntity,
+  blocks: z.infer<typeof AgentAnswerBlockSchema>[],
+  rangeLabel: string,
+) {
+  const metricCardsBlock = blocks.find((block) => block.type === "metric_cards");
+  if (!metricCardsBlock || metricCardsBlock.cards.length === 0) {
+    return null;
+  }
+
+  const metricValue = (label: string) =>
+    metricCardsBlock.cards.find((card) => card.label === label)?.value ?? null;
+
+  const rangeFacts = [
+    metricValue("Tickets Sold") ? `sold ${metricValue("Tickets Sold")} tickets` : null,
+    metricValue("Gross") ? `grossed ${metricValue("Gross")}` : null,
+    metricValue("Avg Daily Sales") ? `averaged ${metricValue("Avg Daily Sales")} tickets per day` : null,
+  ].filter((value): value is string => Boolean(value));
+
+  const currentFacts = [
+    metricValue("Current Sell Through")
+      ? `Current sell-through is ${withPercentSuffix(metricValue("Current Sell Through")!)}`
+      : null,
+    metricValue("Current Conversion")
+      ? `current conversion is ${withPercentSuffix(metricValue("Current Conversion")!)}`
+      : null,
+    metricValue("Current Views")
+      ? `current views are ${metricValue("Current Views")}`
+      : null,
+  ].filter((value): value is string => Boolean(value));
+
+  const opener = isPreviousShowQuestion(message)
+    ? `Before that, ${referencedEntity.name}`
+    : isLastShowQuestion(message)
+      ? `Your most recent show was ${referencedEntity.name}`
+      : `${referencedEntity.name}`;
+
+  const sentences = [opener.endsWith(".") ? opener : `${opener}.`];
+
+  if (rangeFacts.length > 0) {
+    sentences.push(`Over ${rangeLabel}, it ${joinPhrases(rangeFacts)}.`);
+  }
+
+  if (currentFacts.length > 0) {
+    sentences.push(`${joinPhrases(currentFacts)}.`);
+  }
+
+  return sentences.join(" ");
+}
+
 function buildMetricsPhrase(blocks: z.infer<typeof AgentAnswerBlockSchema>[]) {
   const metricCards = blocks.find((block) => block.type === "metric_cards");
   if (!metricCards || metricCards.cards.length === 0) {
@@ -156,6 +218,19 @@ function buildFallbackAnswerText(
   const topTable = blocks.find((block) => block.type === "table");
   const topRow = topTable?.type === "table" ? topTable.rows[0] : null;
 
+  if (referencedEntities.length === 1 && referencedEntities[0]?.entityType === "event") {
+    const eventFallbackText = buildEventDetailFallbackText(
+      message,
+      referencedEntities[0],
+      blocks,
+      rangeLabel,
+    );
+
+    if (eventFallbackText) {
+      return eventFallbackText;
+    }
+  }
+
   if (topRow && typeof topRow === "object") {
     if ("Age" in topRow && "Gender" in topRow) {
       return `Right now, ${String(topRow.Gender).toLowerCase()} ${String(topRow.Age)} is the strongest audience in scope with ROAS ${String(topRow.ROAS ?? "0")}, CTR ${String(topRow.CTR ?? "0")}, and spend of ${String(topRow.Spend ?? "$0")} over ${rangeLabel}.`;
@@ -179,16 +254,6 @@ function buildFallbackAnswerText(
 
     if ("Entity" in topRow && topTable?.title === "Comparison") {
       return `Over ${rangeLabel}, ${String(topRow.Entity)} is at ${String(topRow.Metric ?? "")}.`;
-    }
-  }
-
-  if (referencedEntities.length === 1 && referencedEntities[0]?.entityType === "event" && metricsPhrase) {
-    if (isPreviousShowQuestion(message)) {
-      return `Before that, ${referencedEntities[0].name} had ${metricsPhrase} over ${rangeLabel}.`;
-    }
-
-    if (isLastShowQuestion(message)) {
-      return `Your most recent show was ${referencedEntities[0].name}. It had ${metricsPhrase} over ${rangeLabel}.`;
     }
   }
 

@@ -24,7 +24,7 @@ describe("AgentShell", () => {
     vi.unstubAllGlobals();
   });
 
-  it("renders empty-state prompt chips and omits event prompt chips when events are disabled", () => {
+  it("renders updated customer prompt chips and omits event prompt chips when events are disabled", () => {
     render(
       <AgentShell
         clientName="Acme"
@@ -37,7 +37,24 @@ describe("AgentShell", () => {
 
     expect(screen.getByText("Ask anything about your campaigns and events")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "How are my campaigns doing this month?" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "How is this event trending?" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "What changed this week?" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "What was my last show?" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "How did my last show do?" })).not.toBeInTheDocument();
+  });
+
+  it("shows natural event prompt chips when events are enabled", () => {
+    render(
+      <AgentShell
+        clientName="Acme"
+        eventsEnabled={true}
+        initialThreads={[]}
+        slug="acme"
+        viewer="member"
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "What was my last show?" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "How did my last show do?" })).toBeInTheDocument();
   });
 
   it("creates a new chat, loads a thread, submits a message optimistically, and keeps the chat text-only", async () => {

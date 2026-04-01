@@ -57,14 +57,17 @@ type HistoryPayload = Array<{
   referenced_entities?: ReferencedEntity[];
 }>;
 
-const BASE_PROMPTS = [
+const CAMPAIGN_PROMPTS = [
   "How are my campaigns doing this month?",
-  "Show spend by date for Camila.",
   "Which audience is performing best right now?",
-  "Compare my top campaigns this quarter.",
+  "What changed this week?",
+  "Which campaign is strongest right now?",
 ];
 
-const EVENT_PROMPT = "How is this event trending?";
+const EVENT_PROMPTS = [
+  "What was my last show?",
+  "How did my last show do?",
+];
 
 function nowIso() {
   return new Date().toISOString();
@@ -137,7 +140,7 @@ export function AgentShell({
   const [shellMessage, setShellMessage] = useState<string | null>(null);
 
   const promptChips = useMemo(
-    () => [...BASE_PROMPTS, ...(eventsEnabled ? [EVENT_PROMPT] : [])],
+    () => [...CAMPAIGN_PROMPTS, ...(eventsEnabled ? EVENT_PROMPTS : [])],
     [eventsEnabled],
   );
   const isPreview = viewer === "admin_preview";
