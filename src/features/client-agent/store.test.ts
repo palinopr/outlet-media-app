@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { Database } from "@/lib/database.types";
 import type { AgentAnswerBlock, ReferencedEntity, ResolvedRange } from "./types";
 
 const { state, supabaseAdmin } = vi.hoisted(() => {
@@ -159,6 +160,8 @@ function makeThread(overrides: Record<string, unknown> = {}) {
     id: "thread_1",
     client_id: "client_1",
     client_member_id: "member_1",
+    viewer_context: "member",
+    preview_admin_user_id: null,
     title: "Budget pacing",
     preview_text: "Latest assistant answer",
     referenced_entities: [],
@@ -183,9 +186,47 @@ function makeMessage(overrides: Record<string, unknown> = {}) {
     resolved_range: null,
     provider_response_id: null,
     client_generated_id: null,
+    agent_task_id: null,
+    client_request_id: null,
     created_at: "2026-03-31T09:00:00.000Z",
     ...overrides,
   };
+}
+
+function makeQueuedThreadRow() {
+  return {
+    id: "thread_queued_1",
+    client_id: "client_1",
+    client_member_id: null,
+    viewer_context: "admin_preview",
+    preview_admin_user_id: "admin_1",
+    title: "Budget pacing",
+    preview_text: "Thinking…",
+    referenced_entities: [],
+    last_response_status: "pending",
+    last_message_at: "2026-03-31T09:00:00.000Z",
+    created_at: "2026-03-31T09:00:00.000Z",
+    updated_at: "2026-03-31T09:00:00.000Z",
+  } satisfies Database["public"]["Tables"]["client_agent_threads"]["Row"];
+}
+
+function makeQueuedMessageRow() {
+  return {
+    id: "message_queued_1",
+    thread_id: "thread_queued_1",
+    role: "assistant",
+    response_status: "pending",
+    text: "Thinking…",
+    blocks: [],
+    referenced_entities: [],
+    context_payload: null,
+    resolved_range: null,
+    provider_response_id: null,
+    client_generated_id: null,
+    agent_task_id: "task_queued_1",
+    client_request_id: "request_queued_1",
+    created_at: "2026-03-31T09:00:00.000Z",
+  } satisfies Database["public"]["Tables"]["client_agent_messages"]["Row"];
 }
 
 describe("client-agent store", () => {
@@ -223,6 +264,21 @@ describe("client-agent store", () => {
     expect(threads[0]).toMatchObject({
       threadId: "thread_visible",
       title: "Visible thread",
+    });
+  });
+
+  it("expects queued client-agent rows to carry preview and request metadata", () => {
+    const threadRow = makeQueuedThreadRow();
+    const messageRow = makeQueuedMessageRow();
+
+    expect(threadRow).toMatchObject({
+      viewer_context: "admin_preview",
+      preview_admin_user_id: "admin_1",
+    });
+    expect(messageRow).toMatchObject({
+      response_status: "pending",
+      agent_task_id: "task_queued_1",
+      client_request_id: "request_queued_1",
     });
   });
 

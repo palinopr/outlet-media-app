@@ -706,42 +706,66 @@ export type Database = {
       client_agent_messages: {
         Row: {
           blocks: Json | null
+          agent_task_id: string | null
           client_generated_id: string | null
+          client_request_id: string | null
           context_payload: Json | null
           created_at: string
           id: string
           provider_response_id: string | null
           referenced_entities: Json
           resolved_range: Json | null
-          response_status: string | null
+          response_status:
+            | "answer"
+            | "clarify"
+            | "refuse"
+            | "error"
+            | "pending"
+            | null
           role: string
           text: string
           thread_id: string
         }
         Insert: {
           blocks?: Json | null
+          agent_task_id?: string | null
           client_generated_id?: string | null
+          client_request_id?: string | null
           context_payload?: Json | null
           created_at?: string
           id?: string
           provider_response_id?: string | null
           referenced_entities?: Json
           resolved_range?: Json | null
-          response_status?: string | null
+          response_status?:
+            | "answer"
+            | "clarify"
+            | "refuse"
+            | "error"
+            | "pending"
+            | null
           role: string
           text: string
           thread_id: string
         }
         Update: {
           blocks?: Json | null
+          agent_task_id?: string | null
           client_generated_id?: string | null
+          client_request_id?: string | null
           context_payload?: Json | null
           created_at?: string
           id?: string
           provider_response_id?: string | null
           referenced_entities?: Json
           resolved_range?: Json | null
-          response_status?: string | null
+          response_status?:
+            | "answer"
+            | "clarify"
+            | "refuse"
+            | "error"
+            | "pending"
+            | null
           role?: string
           text?: string
           thread_id?: string
@@ -765,7 +789,9 @@ export type Database = {
           last_message_at: string
           last_response_status: string | null
           preview_text: string | null
+          preview_admin_user_id: string | null
           referenced_entities: Json
+          viewer_context: "member" | "admin_preview"
           title: string | null
           updated_at: string
         }
@@ -777,7 +803,9 @@ export type Database = {
           last_message_at?: string
           last_response_status?: string | null
           preview_text?: string | null
+          preview_admin_user_id?: string | null
           referenced_entities?: Json
+          viewer_context?: "member" | "admin_preview"
           title?: string | null
           updated_at?: string
         }
@@ -789,7 +817,9 @@ export type Database = {
           last_message_at?: string
           last_response_status?: string | null
           preview_text?: string | null
+          preview_admin_user_id?: string | null
           referenced_entities?: Json
+          viewer_context?: "member" | "admin_preview"
           title?: string | null
           updated_at?: string
         }
@@ -1866,6 +1896,25 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      queue_client_agent_turn: {
+        Args: {
+          p_client_member_id?: string
+          p_client_request_id: string
+          p_client_slug: string
+          p_preview_admin_user_id?: string
+          p_text: string
+          p_thread_id: string
+          p_viewer_context: "member" | "admin_preview"
+        }
+        Returns: {
+          agent_task_id: string
+          assistant_message_id: string
+          client_request_id: string
+          thread_id: string
+          user_message_id: string
+          was_existing: boolean
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {

@@ -18,11 +18,15 @@ const serverSchema = z.object({
   // Required for agent ingest auth -- without this, ingest/alerts auth is bypassed
   INGEST_SECRET: z.string().min(8, "INGEST_SECRET must be at least 8 characters"),
 
+  // Required for the local client-agent worker bridge
+  CLIENT_AGENT_WORKER_SECRET: z
+    .string()
+    .min(1, "CLIENT_AGENT_WORKER_SECRET is required"),
+
   // Optional integrations
   META_ACCESS_TOKEN: z.string().optional(),
   META_AD_ACCOUNT_ID: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
-  CLIENT_AGENT_OPENAI_MODEL: z.string().optional(),
   TICKETMASTER_API_KEY: z.string().optional(),
   TM1_API_PREFIX: z.string().optional(),
   TM1_BASE_URL: z.string().url().optional(),
@@ -82,10 +86,10 @@ function validateEnv() {
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     INGEST_SECRET: process.env.INGEST_SECRET,
+    CLIENT_AGENT_WORKER_SECRET: process.env.CLIENT_AGENT_WORKER_SECRET,
     META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN,
     META_AD_ACCOUNT_ID: process.env.META_AD_ACCOUNT_ID,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    CLIENT_AGENT_OPENAI_MODEL: process.env.CLIENT_AGENT_OPENAI_MODEL,
     TICKETMASTER_API_KEY: process.env.TICKETMASTER_API_KEY,
     TM1_API_PREFIX: process.env.TM1_API_PREFIX,
     TM1_BASE_URL: process.env.TM1_BASE_URL,
