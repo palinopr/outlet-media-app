@@ -298,6 +298,74 @@ function buildTurnPrompt(input: {
   return messageText;
 }
 
+function parseDirectOptionOrdinal(messageText: string | null | undefined): 1 | 2 | 3 | null {
+  const normalized = messageText?.trim().toLowerCase();
+  if (!normalized) return null;
+
+  if (normalized === "1" || normalized === "option 1" || normalized === "opcion 1") return 1;
+  if (normalized === "2" || normalized === "option 2" || normalized === "opcion 2") return 2;
+  if (normalized === "3" || normalized === "option 3" || normalized === "opcion 3") return 3;
+  return null;
+}
+
+function looksSpanishText(value: string | null | undefined): boolean {
+  const text = value?.trim().toLowerCase() ?? "";
+  if (!text) return false;
+
+  return (
+    /[áéíóúñ¿¡]/i.test(text) ||
+    /\b(necesito|quiero|boletos|por|para|mañana|opcion|opciones|hola|gracias|asegurar)\b/i.test(
+      text,
+    )
+  );
+}
+
+function buildDirectSelectionReply(input: {
+  checkoutUrl?: string | null;
+  customerLanguageHint: string | null;
+  outcome:
+    | "checkout_ready"
+    | "expired"
+    | "invalid_option"
+    | "inventory_changed"
+    | "lookup_failed"
+    | "no_active_options";
+}): string {
+  const spanish = looksSpanishText(input.customerLanguageHint);
+
+  switch (input.outcome) {
+    case "checkout_ready":
+      return spanish
+        ? `Perfecto. Aqui tienes tu link de Ticketmaster para pagar ahora mismo:\n${input.checkoutUrl}\nEste link es sensible al tiempo, asi que abrelo ya.`
+        : `Perfect. Here is your Ticketmaster checkout link:\n${input.checkoutUrl}\nThis link is time-sensitive, so open it now.`;
+    case "expired":
+    case "no_active_options":
+      return spanish
+        ? "Esas opciones ya expiraron. Te saco opciones frescas ahora mismo si me confirmas que quieres que vuelva a buscar."
+        : "Those options expired. I can pull fresh options right away if you want me to search again.";
+    case "invalid_option":
+      return spanish
+        ? "No pude identificar esa opcion. Responde 1, 2, o 3 para escoger una de las opciones activas."
+        : "I couldn't match that option. Reply 1, 2, or 3 to choose one of the active options.";
+    case "inventory_changed":
+      return spanish
+        ? "Esos asientos ya cambiaron. Si quieres, te saco tres opciones nuevas ahora mismo."
+        : "Those seats just changed. If you want, I can pull three fresh options right now.";
+    case "lookup_failed":
+    default:
+      return spanish
+        ? "No pude generar el link en este intento. Si quieres, vuelvo a intentarlo ahora mismo."
+        : "I couldn't generate the link on this attempt. If you want, I can try again now.";
+  }
+}
+
+function buildDirectRefreshReply(customerLanguageHint: string | null): string {
+  const spanish = looksSpanishText(customerLanguageHint);
+  return spanish
+    ? "Esos asientos ya no estan. Te paso tres opciones nuevas ahora mismo."
+    : "Those seats just changed. Here are three fresh options right now.";
+}
+
 function extractAssistantText(message: SDKAssistantMessage): string {
   return message.message.content
     .filter((block): block is Extract<typeof block, { type: "text" }> => block.type === "text")
@@ -413,6 +481,7 @@ export async function runTicketConciergeSellerTurn(input: {
   let activeSnapshot = await resolvedDeps.getActiveOptionSetSelectionSnapshot(input.conversation.id);
   let lastCheckoutUrl: string | null = null;
   let preparedOptions: TicketConciergePreparedOption[] | null = null;
+  let runCustomerMessageOverride: string | null = null;
 
   const toolHandlers: TicketConciergeSellerToolHandlers = {
     choosePreparedOption: async ({ optionOrdinal }) => {
@@ -508,6 +577,8 @@ export async function runTicketConciergeSellerTurn(input: {
         preferences,
         quantity,
       };
+      const runCustomerMessage = runCustomerMessageOverride ?? input.message.textBody ?? "";
+      runCustomerMessageOverride = null;
       const prepared = await resolvedDeps.prepareStructuredSelection({
         conversationMetadata,
         intent,
@@ -523,7 +594,7 @@ export async function runTicketConciergeSellerTurn(input: {
       const run = await resolvedDeps.createRun({
         contactId: input.contact.id,
         conversationId: input.conversation.id,
-        customerMessage: input.message.textBody ?? "",
+        customerMessage: runCustomerMessage,
         eventContext: prepared.eventContext,
         intent: prepared.intent,
         latestInboundMessageId: input.latestInboundMessageId,
@@ -565,7 +636,7 @@ export async function runTicketConciergeSellerTurn(input: {
         },
         options: optionSet.options,
         run: {
-          customerMessage: input.message.textBody ?? "",
+          customerMessage: runCustomerMessage,
           eventContext: prepared.eventContext,
           id: run.id,
           intent: prepared.intent,
@@ -592,6 +663,52 @@ export async function runTicketConciergeSellerTurn(input: {
       };
     },
   };
+
+  const directSelectionOrdinal = parseDirectOptionOrdinal(input.message.textBody);
+  if (directSelectionOrdinal && activeSnapshot) {
+    const directSelectionSnapshot = activeSnapshot;
+    const customerLanguageHint =
+      directSelectionSnapshot.run.customerMessage || input.message.textBody;
+    const directResult = await toolHandlers.choosePreparedOption({
+      optionOrdinal: directSelectionOrdinal,
+    });
+
+    if (directResult.status === "checkout_ready") {
+      return {
+        body: buildDirectSelectionReply({
+          checkoutUrl: directResult.checkoutUrl,
+          customerLanguageHint,
+          outcome: "checkout_ready",
+        }),
+        kind: "text",
+      };
+    }
+
+    if (directResult.status === "inventory_changed" || directResult.status === "expired") {
+      runCustomerMessageOverride = customerLanguageHint;
+      const refreshed = await toolHandlers.prepareOptions({
+        maxTotalCents: directSelectionSnapshot.run.intent.maxTotalCents ?? null,
+        preferences: directSelectionSnapshot.run.intent.preferences,
+        quantity: directSelectionSnapshot.run.intent.quantity,
+      });
+
+      if (refreshed.status === "options_ready" && preparedOptions) {
+        return {
+          introText: buildDirectRefreshReply(customerLanguageHint),
+          kind: "prepared_options",
+          options: preparedOptions,
+        };
+      }
+    }
+
+    return {
+      body: buildDirectSelectionReply({
+        customerLanguageHint,
+        outcome: directResult.status,
+      }),
+      kind: "text",
+    };
+  }
 
   const agentResult = await resolvedDeps.querySellerAgent({
     prompt: buildTurnPrompt({

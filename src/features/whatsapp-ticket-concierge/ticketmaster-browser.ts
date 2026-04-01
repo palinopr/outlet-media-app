@@ -210,6 +210,45 @@ async function readMenuItemLabels(page: Page): Promise<string[]> {
   return labels;
 }
 
+async function acceptPricingDisclosureIfPresent(page: Page): Promise<void> {
+  const acceptButton = page.getByRole("button", { name: /accept & continue/i });
+  if ((await acceptButton.count()) === 0) {
+    return;
+  }
+
+  await acceptButton.first().click();
+  await page.waitForTimeout(250);
+}
+
+function buildTicketOfferIdentity(label: string): string | null {
+  const seatedMatch = label.match(/^Sec\s+(.+?)\s+•\s+Row\s+(.+?)\s+(.+?)\s+\$[\d,]+(?:\.\d{2})?$/);
+  if (seatedMatch) {
+    const [, section, row, ticketType] = seatedMatch;
+    return `sec:${section}|row:${row}|type:${ticketType}`.toLowerCase();
+  }
+
+  const gaMatch = label.match(/^General Admission\s+(.+?)\s+\$[\d,]+(?:\.\d{2})?$/);
+  if (gaMatch) {
+    const [, ticketType] = gaMatch;
+    return `ga:${ticketType}`.toLowerCase();
+  }
+
+  return null;
+}
+
+function resolveCheckoutLabel(labels: string[], desiredLabel: string): string | null {
+  if (labels.includes(desiredLabel)) {
+    return desiredLabel;
+  }
+
+  const desiredIdentity = buildTicketOfferIdentity(desiredLabel);
+  if (!desiredIdentity) {
+    return null;
+  }
+
+  return labels.find((label) => buildTicketOfferIdentity(label) === desiredIdentity) ?? null;
+}
+
 export function parseTicketListLabel(
   label: string,
   quantity: number,
@@ -307,14 +346,16 @@ export async function captureTicketmasterCheckout(input: {
 
   try {
     const labels = await readMenuItemLabels(page);
-    if (!labels.includes(input.ticketListLabel)) {
+    const resolvedLabel = resolveCheckoutLabel(labels, input.ticketListLabel);
+    if (!resolvedLabel) {
       return {
         reason: "selected_seats_unavailable",
         status: "inventory_changed",
       };
     }
 
-    await page.getByRole("menuitem", { name: input.ticketListLabel }).click();
+    await acceptPricingDisclosureIfPresent(page);
+    await page.getByRole("menuitem", { name: resolvedLabel }).click();
 
     const nextButton = page.getByRole("button", { name: "Next" });
     await nextButton.waitFor();

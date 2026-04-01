@@ -152,7 +152,7 @@ describe("runTicketConciergeSellerTurn", () => {
     expect(result.kind === "prepared_options" ? result.options : []).toHaveLength(3);
   });
 
-  it("resumes the stored Claude session and can turn a numeric reply into checkout", async () => {
+  it("turns a numeric reply into checkout without waiting on the seller model", async () => {
     const deps = buildDeps({
       getActiveOptionSetSelectionSnapshot: vi.fn(async () => ({
         optionSet: {
@@ -183,15 +183,6 @@ describe("runTicketConciergeSellerTurn", () => {
           status: "options_sent" as const,
         },
       })),
-      querySellerAgent: vi.fn(async (input) => {
-        expect(input.resumeSessionId).toBe("sess_existing");
-        await input.toolHandlers.choosePreparedOption({ optionOrdinal: 2 });
-        return {
-          sessionId: "sess_existing",
-          text:
-            "Perfecto. Aqui tienes el link para pagar ahora mismo: https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc",
-        };
-      }),
     });
 
     const result = await runTicketConciergeSellerTurn(
@@ -217,6 +208,7 @@ describe("runTicketConciergeSellerTurn", () => {
       deps,
     );
 
+    expect(deps.querySellerAgent).not.toHaveBeenCalled();
     expect(deps.runCheckout).toHaveBeenCalledWith({
       option: expect.objectContaining({ id: "opt_2", ordinal: 2 }),
     });
@@ -229,6 +221,95 @@ describe("runTicketConciergeSellerTurn", () => {
       body: expect.stringContaining("https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc"),
       kind: "text",
     });
+  });
+
+  it("refreshes fresh options when a direct numeric pick hits inventory_changed", async () => {
+    const options = [
+      buildOption({ id: "opt_1", label: "Option 1", ordinal: 1 }),
+      buildOption({ id: "opt_2", label: "Option 2", mapToken: "map_2", ordinal: 2 }),
+      buildOption({ id: "opt_3", label: "Option 3", mapToken: "map_3", ordinal: 3 }),
+    ];
+    const deps = buildDeps({
+      getActiveOptionSetSelectionSnapshot: vi.fn(async () => ({
+        optionSet: {
+          conversationId: "conv_1",
+          expiresAt: "2099-04-01T00:05:00.000Z",
+          id: "set_1",
+          runId: "run_1",
+          selectedOptionId: null,
+          status: "active" as const,
+        },
+        options,
+        run: {
+          customerMessage: "Necesito 2 tickets por menos de $300 total",
+          eventContext: {
+            city: "Miami",
+          },
+          id: "run_1",
+          intent: {
+            maxTotalCents: 30000,
+            preferences: [],
+            quantity: 2,
+          },
+          scenarioKey: "zamora_arjona_miami_v1",
+          status: "options_sent" as const,
+        },
+      })),
+      replaceActiveOptionSet: vi.fn(async () => ({
+        id: "set_2",
+        options,
+        status: "active",
+      })),
+      runCheckout: vi.fn(async () => ({
+        reason: "selected_seats_unavailable",
+        status: "inventory_changed" as const,
+      })),
+    });
+
+    const result = await runTicketConciergeSellerTurn(
+      {
+        contact,
+        conversation: {
+          id: "conv_1",
+          metadata: {
+            automationRoute: "ticket_concierge",
+            conciergeAllowed: true,
+            scenarioKey: "zamora_arjona_miami_v1",
+            ticketConciergeSeller: {
+              claudeSessionId: "sess_existing",
+            },
+          },
+        },
+        latestInboundMessageId: "db_msg_3",
+        message: {
+          messageId: "provider_msg_3",
+          textBody: "1",
+        },
+      },
+      deps,
+    );
+
+    expect(deps.querySellerAgent).not.toHaveBeenCalled();
+    expect(deps.runCheckout).toHaveBeenCalledWith({
+      option: expect.objectContaining({ id: "opt_1", ordinal: 1 }),
+    });
+    expect(deps.prepareStructuredSelection).toHaveBeenCalledWith({
+      conversationMetadata: expect.objectContaining({
+        automationRoute: "ticket_concierge",
+        conciergeAllowed: true,
+        scenarioKey: "zamora_arjona_miami_v1",
+      }),
+      intent: {
+        maxTotalCents: 30000,
+        preferences: [],
+        quantity: 2,
+      },
+    });
+    expect(result).toMatchObject({
+      introText: expect.stringContaining("opciones nuevas"),
+      kind: "prepared_options",
+    });
+    expect(result.kind === "prepared_options" ? result.options : []).toHaveLength(3);
   });
 
   it("injects a turn-level state refresh when resuming without active options", async () => {

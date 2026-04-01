@@ -11,6 +11,7 @@ const state = vi.hoisted(() => ({
     text: string;
   }>,
   devToolsActivePort: "9222\n/devtools/browser/test-browser-id\n",
+  dialogVisible: false,
   failAllConnections: false,
   failForbiddenConnection: false,
   failHttpDiscovery: false,
@@ -40,6 +41,9 @@ vi.mock("playwright-core", () => {
       state.lastGoto = url;
       state.currentUrl = url;
     },
+    async waitForTimeout() {
+      return;
+    },
     async waitForFunction() {
       state.waitedForTicketList = true;
       if (state.delayedMenuItems.length > 0) {
@@ -58,6 +62,11 @@ vi.mock("playwright-core", () => {
       if (role === "menuitem") {
         return {
           async click() {
+            if (state.dialogVisible) {
+              throw new Error(
+                'locator.click: Timeout 15000ms exceeded.\nCall log:\n  - waiting for getByRole(\'menuitem\', { name: "ticket" })\n    - <div class="Modal__Overlay-sc-18c5d2p-1 cpBgBh">…</div> from <div id="gds-portal-root">…</div> subtree intercepts pointer events',
+              );
+            }
             state.clickedLabel = options?.name ?? null;
           },
         };
@@ -66,10 +75,31 @@ vi.mock("playwright-core", () => {
       if (role === "button" && options?.name === "Next") {
         return {
           async waitFor() {
+            if (state.dialogVisible) {
+              throw new Error("locator.waitFor: Timeout 15000ms exceeded.");
+            }
             return;
           },
           async click() {
             state.currentUrl = state.nextUrl;
+          },
+        };
+      }
+
+      if (
+        role === "button" &&
+        options?.name instanceof RegExp &&
+        options.name.test("Accept & Continue")
+      ) {
+        return {
+          async click() {
+            state.dialogVisible = false;
+          },
+          async count() {
+            return state.dialogVisible ? 1 : 0;
+          },
+          first() {
+            return this;
           },
         };
       }
@@ -215,6 +245,7 @@ describe("ticketmaster browser adapter", () => {
     state.currentUrl = "";
     state.delayedMenuItems = [];
     state.devToolsActivePort = "9222\n/devtools/browser/test-browser-id\n";
+    state.dialogVisible = false;
     state.failAllConnections = false;
     state.failForbiddenConnection = false;
     state.failHttpDiscovery = false;
@@ -356,6 +387,58 @@ describe("ticketmaster browser adapter", () => {
 
     expect(state.clickedLabel).toBe("Sec 323 • Row 11 Verified Resale Ticket $196.35");
     expect(state.closed).toBe(true);
+  });
+
+  it("captures checkout when the same row is still available at a slightly different price", async () => {
+    state.menuItems = [
+      {
+        aria: null,
+        innerText: "Sec 323 • Row 11 Verified Resale Ticket $201.10",
+        text: "Sec 323 • Row 11 Verified Resale Ticket $201.10",
+      },
+    ];
+    state.nextUrl = "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc";
+
+    await expect(
+      captureTicketmasterCheckout({
+        chromeDebugUrl: "http://127.0.0.1:9222",
+        eventUrl: "https://www.ticketmaster.com/example-event",
+        quantity: 2,
+        ticketListLabel: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+      }),
+    ).resolves.toEqual({
+      checkoutUrl: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc",
+      status: "checkout_ready",
+    });
+
+    expect(state.clickedLabel).toBe("Sec 323 • Row 11 Verified Resale Ticket $201.10");
+  });
+
+  it("accepts the pricing disclosure dialog before capturing checkout", async () => {
+    state.dialogVisible = true;
+    state.menuItems = [
+      {
+        aria: null,
+        innerText: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+        text: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+      },
+    ];
+    state.nextUrl = "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc";
+
+    await expect(
+      captureTicketmasterCheckout({
+        chromeDebugUrl: "http://127.0.0.1:9222",
+        eventUrl: "https://www.ticketmaster.com/example-event",
+        quantity: 2,
+        ticketListLabel: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+      }),
+    ).resolves.toEqual({
+      checkoutUrl: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc",
+      status: "checkout_ready",
+    });
+
+    expect(state.dialogVisible).toBe(false);
+    expect(state.clickedLabel).toBe("Sec 323 • Row 11 Verified Resale Ticket $196.35");
   });
 
   it("falls back to the DevToolsActivePort websocket when HTTP discovery is unavailable", async () => {
