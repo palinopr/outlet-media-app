@@ -117,6 +117,18 @@ async function openEventPage(input: {
   await page
     .getByRole("combobox", { name: "Quantity" })
     .selectOption({ label: formatQuantityLabel(input.quantity) });
+  await page.waitForFunction(() => {
+    const menuItems = Array.from(document.querySelectorAll('[role="menuitem"]'));
+    return menuItems.some((menuItem) => {
+      const innerTextCandidate = (menuItem as HTMLElement).innerText;
+      const rawLabel =
+        typeof innerTextCandidate === "string" && innerTextCandidate.trim().length > 0
+          ? innerTextCandidate
+          : menuItem.getAttribute("aria-label") ?? menuItem.textContent ?? "";
+
+      return /\$\d/.test(rawLabel);
+    });
+  });
 
   return { browser, page };
 }
@@ -126,7 +138,15 @@ async function readMenuItemLabels(page: Page): Promise<string[]> {
     .locator('[role="menuitem"]')
     .evaluateAll((elements: Element[]) =>
       elements
-        .map((element: Element) => (element.getAttribute("aria-label") ?? element.textContent ?? "").trim())
+        .map((element: Element) => {
+          const innerTextCandidate = (element as { innerText?: unknown }).innerText;
+          const rawLabel =
+            typeof innerTextCandidate === "string" && innerTextCandidate.trim().length > 0
+              ? innerTextCandidate
+              : element.getAttribute("aria-label") ?? element.textContent ?? "";
+
+          return rawLabel.replace(/\s+/g, " ").trim();
+        })
         .filter(Boolean),
     );
 

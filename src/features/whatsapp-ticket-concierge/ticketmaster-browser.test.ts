@@ -5,12 +5,22 @@ const state = vi.hoisted(() => ({
   closed: false,
   connectEndpoints: [] as string[],
   currentUrl: "",
+  delayedMenuItems: [] as Array<{
+    aria: string | null;
+    innerText: string | null;
+    text: string;
+  }>,
   devToolsActivePort: "9222\n/devtools/browser/test-browser-id\n",
   failHttpDiscovery: false,
-  labels: [] as string[],
+  menuItems: [] as Array<{
+    aria: string | null;
+    innerText: string | null;
+    text: string;
+  }>,
   lastGoto: null as string | null,
   nextUrl: "",
   selectedQuantityLabel: null as string | null,
+  waitedForTicketList: false,
 }));
 
 vi.mock("node:fs/promises", () => ({
@@ -25,6 +35,12 @@ vi.mock("playwright-core", () => {
     async goto(url: string) {
       state.lastGoto = url;
       state.currentUrl = url;
+    },
+    async waitForFunction() {
+      state.waitedForTicketList = true;
+      if (state.delayedMenuItems.length > 0) {
+        state.menuItems = state.delayedMenuItems;
+      }
     },
     getByRole(role: string, options?: { name?: string }) {
       if (role === "combobox" && options?.name === "Quantity") {
@@ -62,8 +78,16 @@ vi.mock("playwright-core", () => {
       }
 
       return {
-        async evaluateAll() {
-          return state.labels;
+        async evaluateAll(callback: (elements: Element[]) => unknown) {
+          const elements = state.menuItems.map((item) => ({
+            getAttribute(name: string) {
+              return name === "aria-label" ? item.aria : null;
+            },
+            innerText: item.innerText,
+            textContent: item.text,
+          }));
+
+          return callback(elements as unknown as Element[]);
         },
       };
     },
@@ -165,19 +189,33 @@ describe("ticketmaster browser adapter", () => {
     state.closed = false;
     state.connectEndpoints = [];
     state.currentUrl = "";
+    state.delayedMenuItems = [];
     state.devToolsActivePort = "9222\n/devtools/browser/test-browser-id\n";
     state.failHttpDiscovery = false;
-    state.labels = [];
+    state.menuItems = [];
     state.lastGoto = null;
     state.nextUrl = "";
     state.selectedQuantityLabel = null;
+    state.waitedForTicketList = false;
   });
 
   it("collects ticket candidates from the consumer ticket list and ignores non-ticket rows", async () => {
-    state.labels = [
-      "We’re All In: Prices include fees (before taxes).",
-      "Sec 323 • Row 11 Verified Resale Ticket $196.35",
-      "Sec 108 • Row 8 Standard Admission $251.65",
+    state.menuItems = [
+      {
+        aria: null,
+        innerText: "We’re All In: Prices include fees (before taxes).",
+        text: "We’re All In: Prices include fees (before taxes).",
+      },
+      {
+        aria: null,
+        innerText: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+        text: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+      },
+      {
+        aria: null,
+        innerText: "Sec 108 • Row 8 Standard Admission $251.65",
+        text: "Sec 108 • Row 8 Standard Admission $251.65",
+      },
     ];
 
     await expect(
@@ -211,8 +249,69 @@ describe("ticketmaster browser adapter", () => {
     expect(state.closed).toBe(true);
   });
 
+  it("prefers innerText when Ticketmaster collapses ticket rows in textContent", async () => {
+    state.menuItems = [
+      {
+        aria: null,
+        innerText: "Sec 310 • Row 11\nVerified Resale Ticket\n$196.56",
+        text: "Sec 310 • Row 11Verified Resale Ticket$196.56",
+      },
+    ];
+
+    await expect(
+      collectTicketmasterBrowserCandidates({
+        chromeDebugUrl: "http://127.0.0.1:9222",
+        eventUrl: "https://www.ticketmaster.com/example-event",
+        quantity: 2,
+      }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        execution: expect.objectContaining({
+          ticketListLabel: "Sec 310 • Row 11 Verified Resale Ticket $196.56",
+        }),
+        perTicketTotalCents: 19656,
+        row: "11",
+        section: "310",
+        ticketType: "Verified Resale Ticket",
+        totalCents: 39312,
+      }),
+    ]);
+  });
+
+  it("waits for the async ticket list after changing quantity", async () => {
+    state.menuItems = [];
+    state.delayedMenuItems = [
+      {
+        aria: null,
+        innerText: "Sec 310 • Row 11\nVerified Resale Ticket\n$196.56",
+        text: "Sec 310 • Row 11Verified Resale Ticket$196.56",
+      },
+    ];
+
+    await expect(
+      collectTicketmasterBrowserCandidates({
+        chromeDebugUrl: "http://127.0.0.1:9222",
+        eventUrl: "https://www.ticketmaster.com/example-event",
+        quantity: 2,
+      }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        section: "310",
+        totalCents: 39312,
+      }),
+    ]);
+
+    expect(state.waitedForTicketList).toBe(true);
+  });
+
   it("captures a checkout URL for a chosen ticket-list option", async () => {
-    state.labels = ["Sec 323 • Row 11 Verified Resale Ticket $196.35"];
+    state.menuItems = [
+      {
+        aria: null,
+        innerText: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+        text: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+      },
+    ];
     state.nextUrl = "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc";
 
     await expect(
@@ -233,7 +332,13 @@ describe("ticketmaster browser adapter", () => {
 
   it("falls back to the DevToolsActivePort websocket when HTTP discovery is unavailable", async () => {
     state.failHttpDiscovery = true;
-    state.labels = ["Sec 323 • Row 11 Verified Resale Ticket $196.35"];
+    state.menuItems = [
+      {
+        aria: null,
+        innerText: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+        text: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+      },
+    ];
 
     await collectTicketmasterBrowserCandidates({
       chromeDebugUrl: "http://127.0.0.1:9222",
@@ -248,7 +353,13 @@ describe("ticketmaster browser adapter", () => {
   });
 
   it("returns inventory_changed when the chosen option is gone before checkout", async () => {
-    state.labels = ["Sec 108 • Row 8 Standard Admission $251.65"];
+    state.menuItems = [
+      {
+        aria: null,
+        innerText: "Sec 108 • Row 8 Standard Admission $251.65",
+        text: "Sec 108 • Row 8 Standard Admission $251.65",
+      },
+    ];
 
     await expect(
       captureTicketmasterCheckout({
