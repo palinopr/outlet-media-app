@@ -393,4 +393,39 @@ describe("planQuestion", () => {
       "message 8",
     ]);
   });
+
+  it("defaults to the last 30 days when no timeframe is provided", () => {
+    const result = planQuestion({
+      message: "Show spend by date for Spring Tour",
+      timezone: "America/Chicago",
+      now: new Date("2026-03-31T15:00:00.000Z"),
+      eventsEnabled: true,
+      history: [],
+      resolvedEntities: [
+        {
+          entityId: "cmp_1",
+          entityType: "campaign",
+          name: "Spring Tour",
+        },
+      ],
+      ambiguousEntities: [],
+    });
+
+    expect(result).toMatchObject({
+      disposition: "answer",
+      referencedEntities: [
+        {
+          entityId: "cmp_1",
+          entityType: "campaign",
+          name: "Spring Tour",
+        },
+      ],
+      resolvedRange: {
+        preset: "last_30_days",
+        startDate: "2026-03-02",
+        endDate: "2026-03-31",
+        timezone: "America/Chicago",
+      },
+    });
+  });
 });

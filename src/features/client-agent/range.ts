@@ -169,9 +169,13 @@ export function resolveRangeFromMessage(
 
   const matchedPhrases = supportedRanges.filter((phrase) => lowerMessage.includes(phrase));
 
-  if (matchedPhrases.length !== 1) {
+  if (matchedPhrases.length > 1) {
     return null;
   }
 
-  return normalizeRange(matchedPhrases[0], options);
+  if (matchedPhrases.length === 0) {
+    return normalizeRange("last 30 days", options);
+  }
+
+  return normalizeRange(matchedPhrases[0]!, options);
 }
