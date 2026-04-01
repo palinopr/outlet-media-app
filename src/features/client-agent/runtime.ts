@@ -1,6 +1,5 @@
 import OpenAI from "openai";
 import type {
-  EasyInputMessage,
   FunctionTool,
   Response,
   ResponseFunctionToolCall,
@@ -387,15 +386,6 @@ function buildInstructions({
     followUpHint,
     "Your final response must begin with exactly one of these prefixes: ANSWER:, CLARIFY:, or REFUSE:.",
   ].join("\n");
-}
-
-function historyToInputItems(history: ClientAgentRuntimeHistoryMessage[]): EasyInputMessage[] {
-  return history.map((entry) => ({
-    type: "message",
-    role: entry.role,
-    phase: entry.role === "assistant" ? "final_answer" : undefined,
-    content: entry.text,
-  }));
 }
 
 function parseTaggedOutput(text: string): {
@@ -865,11 +855,7 @@ export async function runClientAgentRuntime(
     scopeReset,
   });
 
-  const modelHistory =
-    scopeReset == null ? input.history : [];
-
   let responseInput: ResponseInputItem[] = [
-    ...historyToInputItems(modelHistory),
     {
       type: "message",
       role: "user",

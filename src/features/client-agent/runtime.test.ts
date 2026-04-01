@@ -469,4 +469,71 @@ describe("client-agent runtime", () => {
       contextPayload: null,
     });
   });
+
+  it("passes only the current user message plus context memo for real follow-ups", async () => {
+    responsesCreate.mockResolvedValueOnce(
+      finalMessageResponse({
+        id: "resp_1",
+        text: "ANSWER: Before that, the prior show was Camila - Regresa Tour.",
+      }),
+    );
+
+    await runClientAgentRuntime({
+      history: [
+        {
+          role: "user",
+          text: "what was my last show?",
+          referencedEntities: [],
+          contextPayload: null,
+          resolvedRange: lifetimeRange,
+        },
+        {
+          role: "assistant",
+          text: "Your most recent show was Ricardo Arjona - LO QUE EL SECO NO DIJO TOUR.",
+          referencedEntities: [
+            {
+              entityId: "evt_latest",
+              entityType: "event",
+              name: "Ricardo Arjona - LO QUE EL SECO NO DIJO TOUR",
+            },
+          ],
+          contextPayload: {
+            primaryDomain: "events",
+            referencedEntities: [
+              {
+                entityId: "evt_latest",
+                entityType: "event",
+                name: "Ricardo Arjona - LO QUE EL SECO NO DIJO TOUR",
+              },
+            ],
+            resolvedRange: lifetimeRange,
+            comparisonSet: [],
+            pronounTargets: ["evt_latest"],
+          },
+          resolvedRange: lifetimeRange,
+        },
+      ],
+      message: "and before that?",
+      scope: memberScope(),
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(responsesCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        instructions: expect.stringContaining(
+          "Most recent resolved thread context: primary domain events; referenced entities Ricardo Arjona - LO QUE EL SECO NO DIJO TOUR; resolved range lifetime. Reuse this context for follow-ups unless the user clearly changes direction.",
+        ),
+        input: [
+          {
+            type: "message",
+            role: "user",
+            content: "and before that?",
+          },
+        ],
+      }),
+    );
+  });
 });
