@@ -1397,6 +1397,301 @@ export type Database = {
           },
         ]
       }
+      whatsapp_ticket_concierge_bans: {
+        Row: {
+          banned_at: string
+          conversation_id: string | null
+          created_at: string
+          last_inbound_message_id: string | null
+          reason: string
+          strike_count: number
+          updated_at: string
+          wa_id: string
+        }
+        Insert: {
+          banned_at?: string
+          conversation_id?: string | null
+          created_at?: string
+          last_inbound_message_id?: string | null
+          reason: string
+          strike_count?: number
+          updated_at?: string
+          wa_id: string
+        }
+        Update: {
+          banned_at?: string
+          conversation_id?: string | null
+          created_at?: string
+          last_inbound_message_id?: string | null
+          reason?: string
+          strike_count?: number
+          updated_at?: string
+          wa_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_ticket_concierge_bans_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_ticket_concierge_bans_last_inbound_message_id_fkey"
+            columns: ["last_inbound_message_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_ticket_concierge_checkout_attempts: {
+        Row: {
+          checkout_url: string | null
+          created_at: string
+          failure_reason: string | null
+          option_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          checkout_url?: string | null
+          created_at?: string
+          failure_reason?: string | null
+          option_id: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          checkout_url?: string | null
+          created_at?: string
+          failure_reason?: string | null
+          option_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_ticket_concierge_checkout_attempts_option_id_fkey"
+            columns: ["option_id"]
+            isOneToOne: true
+            referencedRelation: "whatsapp_ticket_concierge_options"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_ticket_concierge_option_sets: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_of_option_set_id: string | null
+          run_id: string
+          selected_option_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_of_option_set_id?: string | null
+          run_id: string
+          selected_option_id?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_of_option_set_id?: string | null
+          run_id?: string
+          selected_option_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_ticket_concierge_option_sets_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_ticket_concierge_option_sets_refresh_of_option_set_id_fkey"
+            columns: ["refresh_of_option_set_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_ticket_concierge_option_sets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_ticket_concierge_option_sets_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_ticket_concierge_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName:
+              "whatsapp_ticket_concierge_option_sets_selected_option_matches_set_fkey"
+            columns: ["selected_option_id", "id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_ticket_concierge_options"
+            referencedColumns: ["id", "option_set_id"]
+          },
+        ]
+      }
+      whatsapp_ticket_concierge_options: {
+        Row: {
+          created_at: string
+          execution: Json
+          id: string
+          is_under_budget: boolean
+          label: string
+          map_svg: string
+          map_token: string
+          note: string
+          option_set_id: string
+          ordinal: number
+          quantity: number
+          quote_source: string
+          row: string | null
+          seat_labels: Json
+          section: string
+          total_cents: number
+        }
+        Insert: {
+          created_at?: string
+          execution: Json
+          id?: string
+          is_under_budget: boolean
+          label: string
+          map_svg: string
+          map_token?: string
+          note: string
+          option_set_id: string
+          ordinal: number
+          quantity: number
+          quote_source: string
+          row?: string | null
+          seat_labels?: Json
+          section: string
+          total_cents: number
+        }
+        Update: {
+          created_at?: string
+          execution?: Json
+          id?: string
+          is_under_budget?: boolean
+          label?: string
+          map_svg?: string
+          map_token?: string
+          note?: string
+          option_set_id?: string
+          ordinal?: number
+          quantity?: number
+          quote_source?: string
+          row?: string | null
+          seat_labels?: Json
+          section?: string
+          total_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_ticket_concierge_options_option_set_id_fkey"
+            columns: ["option_set_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_ticket_concierge_option_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_ticket_concierge_runs: {
+        Row: {
+          active_option_set_id: string | null
+          contact_id: string | null
+          conversation_id: string
+          created_at: string
+          customer_message: string
+          event_context: Json
+          id: string
+          intent: Json
+          last_checkout_url: string | null
+          last_error: string | null
+          latest_inbound_message_id: string | null
+          scenario_key: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          active_option_set_id?: string | null
+          contact_id?: string | null
+          conversation_id: string
+          created_at?: string
+          customer_message: string
+          event_context?: Json
+          id?: string
+          intent?: Json
+          last_checkout_url?: string | null
+          last_error?: string | null
+          latest_inbound_message_id?: string | null
+          scenario_key: string
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          active_option_set_id?: string | null
+          contact_id?: string | null
+          conversation_id?: string
+          created_at?: string
+          customer_message?: string
+          event_context?: Json
+          id?: string
+          intent?: Json
+          last_checkout_url?: string | null
+          last_error?: string | null
+          latest_inbound_message_id?: string | null
+          scenario_key?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName:
+              "whatsapp_ticket_concierge_runs_active_option_set_matches_run_fkey"
+            columns: ["active_option_set_id", "id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_ticket_concierge_option_sets"
+            referencedColumns: ["id", "run_id"]
+          },
+          {
+            foreignKeyName: "whatsapp_ticket_concierge_runs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_ticket_concierge_runs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_ticket_concierge_runs_latest_inbound_message_id_fkey"
+            columns: ["latest_inbound_message_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tm_event_daily: {
         Row: {
           created_at: string

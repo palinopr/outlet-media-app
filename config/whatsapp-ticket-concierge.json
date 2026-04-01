@@ -1,0 +1,22 @@
+{
+  "enabled": false,
+  "optionTtlSeconds": 300,
+  "scenarios": [
+    {
+      "key": "zamora_arjona_miami_v1",
+      "clientSlug": "zamora",
+      "entryTokens": ["[zamora-miami]"],
+      "allowlist": {
+        "conversationIds": [],
+        "waIds": []
+      },
+      "eventContext": {
+        "artist": "Ricardo Arjona",
+        "city": "Miami",
+        "date": "2026-04-02",
+        "eventId": "0D0062FF195A626B",
+        "eventUrl": ""
+      }
+    }
+  ]
+}
