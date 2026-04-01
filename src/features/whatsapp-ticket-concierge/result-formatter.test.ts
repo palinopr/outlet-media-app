@@ -10,6 +10,22 @@ describe("formatPreparedOptionsMessage", () => {
         options: [
           {
             execution: { selectionPayload: { placeSelections: [] } },
+            id: "opt_3",
+            isUnderBudget: false,
+            label: "Option 3",
+            mapSvg: "<svg />",
+            mapToken: "map_3",
+            note: "Center view",
+            ordinal: 3,
+            quantity: 2,
+            quoteSource: "exact",
+            row: "F",
+            seatLabels: ["13", "14"],
+            section: "118",
+            totalCents: 32500,
+          },
+          {
+            execution: { selectionPayload: { placeSelections: [] } },
             id: "opt_2",
             isUnderBudget: true,
             label: "Option 2",
@@ -54,6 +70,12 @@ describe("formatPreparedOptionsMessage", () => {
         kind: "media",
         mediaUrl: "https://www.outletmedia.net/api/whatsapp/concierge/maps/map_2",
         optionOrdinal: 2,
+      },
+      {
+        body: "Option 3\n$325 total\nSection 118, Row F\n2 seats together\nCenter view",
+        kind: "media",
+        mediaUrl: "https://www.outletmedia.net/api/whatsapp/concierge/maps/map_3",
+        optionOrdinal: 3,
       },
       {
         body: "Reply 1, 2, or 3 to pick one of these options.",
