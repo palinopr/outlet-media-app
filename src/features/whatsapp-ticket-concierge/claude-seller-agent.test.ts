@@ -224,6 +224,78 @@ describe("runTicketConciergeSellerTurn", () => {
     });
   });
 
+  it("flattens markdown checkout links before returning a WhatsApp reply", async () => {
+    const deps = buildDeps({
+      getActiveOptionSetSelectionSnapshot: vi.fn(async () => ({
+        optionSet: {
+          conversationId: "conv_1",
+          expiresAt: "2099-04-01T00:05:00.000Z",
+          id: "set_1",
+          runId: "run_1",
+          selectedOptionId: null,
+          status: "active" as const,
+        },
+        options: [
+          buildOption({ id: "opt_1", label: "Option 1", ordinal: 1 }),
+          buildOption({ id: "opt_2", label: "Option 2", mapToken: "map_2", ordinal: 2 }),
+          buildOption({ id: "opt_3", label: "Option 3", mapToken: "map_3", ordinal: 3 }),
+        ],
+        run: {
+          customerMessage: "Necesito 2 tickets por menos de $300 total",
+          eventContext: {
+            city: "Miami",
+          },
+          id: "run_1",
+          intent: {
+            maxTotalCents: 30000,
+            preferences: [],
+            quantity: 2,
+          },
+          scenarioKey: "zamora_arjona_miami_v1",
+          status: "options_sent" as const,
+        },
+      })),
+      querySellerAgent: vi.fn(async (input) => {
+        await input.toolHandlers.choosePreparedOption({ optionOrdinal: 2 });
+        return {
+          sessionId: "sess_existing",
+          text: "Aqui tienes tu link:\n[Comprar en Ticketmaster](https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc)",
+        };
+      }),
+    });
+
+    const result = await runTicketConciergeSellerTurn(
+      {
+        contact,
+        conversation: {
+          id: "conv_1",
+          metadata: {
+            automationRoute: "ticket_concierge",
+            conciergeAllowed: true,
+            scenarioKey: "zamora_arjona_miami_v1",
+            ticketConciergeSeller: {
+              claudeSessionId: "sess_existing",
+              language: "es",
+            },
+          },
+        },
+        latestInboundMessageId: "db_msg_3",
+        message: {
+          messageId: "provider_msg_3",
+          textBody: "Mandame el link otra vez",
+        },
+      },
+      deps,
+    );
+
+    expect(result).toMatchObject({ kind: "text" });
+    if (result.kind !== "text") {
+      throw new Error("expected text result");
+    }
+    expect(result.body).toContain("Comprar en Ticketmaster\nhttps://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc");
+    expect(result.body).not.toContain("[Comprar en Ticketmaster](");
+  });
+
   it("refreshes fresh options when a direct numeric pick hits inventory_changed", async () => {
     const options = [
       buildOption({ id: "opt_1", label: "Option 1", ordinal: 1 }),

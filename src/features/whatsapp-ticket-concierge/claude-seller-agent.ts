@@ -371,6 +371,17 @@ function buildDirectRefreshReply(customerLanguageHint: TicketConciergeLanguage |
     : "Those seats just changed. Here are three fresh options right now.";
 }
 
+function flattenMarkdownLinks(body: string): string {
+  return body.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_match, label: string, url: string) => {
+    const trimmedLabel = label.trim();
+    return trimmedLabel ? `${trimmedLabel}\n${url}` : url;
+  });
+}
+
+function sanitizeWhatsAppBody(body: string): string {
+  return flattenMarkdownLinks(body).trim();
+}
+
 function extractAssistantText(message: SDKAssistantMessage): string {
   return message.message.content
     .filter((block): block is Extract<typeof block, { type: "text" }> => block.type === "text")
@@ -751,11 +762,12 @@ export async function runTicketConciergeSellerTurn(input: {
     );
   }
 
-  const body =
+  const body = sanitizeWhatsAppBody(
     agentResult.text.trim() ||
-    (lastCheckoutUrl
-      ? `Here is your Ticketmaster checkout link:\n${lastCheckoutUrl}\nThis link is time-sensitive, so open it now.`
-      : "Tell me what tickets you need and I’ll check live options.");
+      (lastCheckoutUrl
+        ? `Here is your Ticketmaster checkout link:\n${lastCheckoutUrl}\nThis link is time-sensitive, so open it now.`
+        : "Tell me what tickets you need and I’ll check live options."),
+  );
 
   if (preparedOptions) {
     return {
