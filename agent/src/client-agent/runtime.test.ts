@@ -284,4 +284,46 @@ describe("client-agent runtime", () => {
     });
     expect(result).not.toHaveProperty("blocks");
   });
+
+  it("returns an error result when Claude emits a malformed resolved range", async () => {
+    queryMock.mockImplementation(async function* () {
+      yield assistantJson(
+        JSON.stringify({
+          status: "answer",
+          text: "Lifetime Meta ad spend is $100.00.",
+          referencedEntities: [],
+          contextPayload: {
+            primaryDomain: "ads",
+            referencedEntities: [],
+            resolvedRange: {
+              preset: "custom",
+              startDate: "04/01/2026",
+              endDate: "2026-04-01",
+              timezone: "America/Chicago",
+            },
+            comparisonSet: [],
+            pronounTargets: [],
+          },
+          resolvedRange: {
+            preset: "custom",
+            startDate: "04/01/2026",
+            endDate: "2026-04-01",
+            timezone: "America/Chicago",
+          },
+        }),
+      );
+      yield resultJson("done");
+    });
+
+    const { runClientAgentRuntime } = await import("./runtime.js");
+    const result = await runClientAgentRuntime({
+      appClient: { runTool: vi.fn() } as any,
+      context: makeTaskContext("how much have we spent?"),
+    });
+
+    expect(result).toMatchObject({
+      status: "error",
+      text: expect.stringContaining("Client agent runtime returned invalid JSON."),
+    });
+  });
 });

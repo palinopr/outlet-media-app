@@ -2,6 +2,7 @@ import { z } from "zod";
 
 const ViewerSchema = z.enum(["member", "admin_preview"]);
 const AgentResponseStatusSchema = z.enum(["answer", "clarify", "refuse", "error", "pending"]);
+const CanonicalDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 const ReferencedEntitySchema = z.discriminatedUnion("entityType", [
   z.object({
@@ -34,8 +35,8 @@ const ResolvedRangeSchema = z.object({
     "this_quarter",
     "custom",
   ]),
-  startDate: z.string().min(1),
-  endDate: z.string().min(1),
+  startDate: CanonicalDateSchema,
+  endDate: CanonicalDateSchema,
   timezone: z.string().min(1),
 });
 
@@ -114,6 +115,16 @@ const ResolveBodySchema = z.object({
   status: z.enum(["answer", "clarify", "refuse", "error"]),
   thread_id: z.string().min(1),
   assistant_message_id: z.string().min(1),
+});
+
+const ResolveRequestSchema = z.object({
+  status: z.enum(["answer", "clarify", "refuse", "error"]),
+  text: z.string(),
+  blocks: z.array(z.unknown()),
+  referencedEntities: z.array(ReferencedEntitySchema),
+  contextPayload: ThreadContextPayloadSchema.nullable(),
+  resolvedRange: ResolvedRangeSchema.nullable(),
+  providerResponseId: z.string().nullable(),
 });
 
 export const CLIENT_AGENT_TOOL_NAMES = [
@@ -315,17 +326,18 @@ export function createClientAgentAppClient(options?: {
       taskId: string,
       result: ClientAgentResolveInput,
     ): Promise<ClientAgentResolveResult> {
+      const normalizedResult = ResolveRequestSchema.parse(result);
       const body = await request({
         path: `/api/internal/client-agent/tasks/${taskId}/resolve`,
         method: "POST",
         body: {
-          status: result.status,
-          text: result.text,
-          blocks: result.blocks,
-          referenced_entities: result.referencedEntities,
-          context_payload: result.contextPayload,
-          resolved_range: result.resolvedRange,
-          provider_response_id: result.providerResponseId,
+          status: normalizedResult.status,
+          text: normalizedResult.text,
+          blocks: normalizedResult.blocks,
+          referenced_entities: normalizedResult.referencedEntities,
+          context_payload: normalizedResult.contextPayload,
+          resolved_range: normalizedResult.resolvedRange,
+          provider_response_id: normalizedResult.providerResponseId,
         },
         schema: ResolveBodySchema,
       });

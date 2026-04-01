@@ -207,4 +207,28 @@ describe("client-agent app client", () => {
       assistantMessageId: "msg_assistant_1",
     });
   });
+
+  it("rejects malformed resolved ranges before posting the resolve payload", async () => {
+    const { createClientAgentAppClient } = await import("./app-client.js");
+    const client = createClientAgentAppClient();
+
+    await expect(
+      client.resolveTask("task_1", {
+        status: "answer",
+        text: "Lifetime ad spend is $100.00.",
+        blocks: [],
+        referencedEntities: [],
+        contextPayload: null,
+        resolvedRange: {
+          preset: "custom",
+          startDate: "04/01/2026",
+          endDate: "2026-04-01",
+          timezone: "America/Chicago",
+        },
+        providerResponseId: "session_1",
+      }),
+    ).rejects.toThrow(/Invalid string: must match pattern/);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });

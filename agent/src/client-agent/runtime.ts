@@ -12,6 +12,7 @@ import { toErrorMessage } from "../utils/error-helpers.js";
 
 const AGENT_DIR = join(import.meta.dirname ?? ".", "..");
 const DEFAULT_MODEL = "claude-sonnet-4-6";
+const CanonicalDateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
 const ReferencedEntitySchema = z.discriminatedUnion("entityType", [
   z.object({
@@ -44,8 +45,8 @@ const ResolvedRangeSchema = z.object({
     "this_quarter",
     "custom",
   ]),
-  startDate: z.string().min(1),
-  endDate: z.string().min(1),
+  startDate: CanonicalDateSchema,
+  endDate: CanonicalDateSchema,
   timezone: z.string().min(1),
 });
 
