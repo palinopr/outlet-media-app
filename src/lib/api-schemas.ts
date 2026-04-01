@@ -181,6 +181,7 @@ export const WhatsAppSendSchema = z
   .object({
     body: z.string().trim().min(1).max(4096),
     conversationId: z.string().uuid().optional(),
+    mediaUrl: z.string().url().optional(),
     phoneNumberId: z.string().trim().min(1).optional(),
     previewUrl: z.boolean().optional(),
     replyToMessageId: z.string().trim().min(1).optional(),

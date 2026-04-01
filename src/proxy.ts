@@ -21,6 +21,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/meta/data-deletion(.*)",
   "/api/ticketmaster/tm1(.*)",
   "/api/whatsapp/evolution(.*)",
+  "/api/whatsapp/concierge/maps(.*)",
   "/api/whatsapp/send(.*)",
   "/api/whatsapp/twilio(.*)",
   "/api/whatsapp/webhook(.*)",
@@ -36,6 +37,9 @@ export default clerkMiddleware(async (auth, req) => {
     return;
   }
   if (pathname === "/api/whatsapp/evolution" || pathname.startsWith("/api/whatsapp/evolution/")) {
+    return;
+  }
+  if (pathname === "/api/whatsapp/concierge/maps" || pathname.startsWith("/api/whatsapp/concierge/maps/")) {
     return;
   }
   if (pathname === "/api/whatsapp/send" || pathname.startsWith("/api/whatsapp/send/")) {

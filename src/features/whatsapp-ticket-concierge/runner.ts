@@ -80,3 +80,74 @@ export async function runPreparedConciergeCheckout(input: {
     option: input.option,
   });
 }
+
+export async function prepareStructuredConciergeSelection(input: {
+  chromeDebugUrl?: string;
+  conversationMetadata: Record<string, unknown>;
+  intent: {
+    maxTotalCents?: number;
+    preferences: Array<"near_stage" | "center_view" | "lower_level" | "aisle">;
+    quantity?: number;
+  };
+}) {
+  const config = getTicketConciergeConfig();
+  const resolved = resolveTicketConciergeContext({
+    body: "",
+    conversationMetadata: input.conversationMetadata,
+  });
+  const intent = {
+    maxTotalCents: input.intent.maxTotalCents,
+    preferences: input.intent.preferences,
+    quantity: input.intent.quantity,
+  };
+
+  if (!intent.quantity) {
+    return {
+      eventContext: resolved.eventContext,
+      intent,
+      reason: "missing_quantity",
+      scenarioKey: resolved.scenarioKey,
+      status: "needs_clarification" as const,
+    };
+  }
+
+  const candidates = await collectTicketmasterBrowserCandidates({
+    chromeDebugUrl: input.chromeDebugUrl ?? config.chromeDebugUrl,
+    eventUrl: resolved.eventContext.eventUrl,
+    quantity: intent.quantity,
+  });
+
+  if (candidates.length === 0) {
+    return {
+      eventContext: resolved.eventContext,
+      intent,
+      reason: "no_viable_options",
+      scenarioKey: resolved.scenarioKey,
+      status: "no_inventory" as const,
+    };
+  }
+
+  const options = prepareTicketConciergeOptions({
+    candidates,
+    intent,
+    layout: layoutFixture,
+  });
+
+  if (options.length === 0) {
+    return {
+      eventContext: resolved.eventContext,
+      intent,
+      reason: "no_viable_options",
+      scenarioKey: resolved.scenarioKey,
+      status: "no_inventory" as const,
+    };
+  }
+
+  return {
+    eventContext: resolved.eventContext,
+    intent,
+    options,
+    scenarioKey: resolved.scenarioKey,
+    status: "options_ready" as const,
+  };
+}

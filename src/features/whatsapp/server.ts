@@ -3,6 +3,7 @@ import {
   getTicketConciergeConfig,
   type TicketConciergeScenario,
 } from "@/features/whatsapp-ticket-concierge/config";
+import { handleTicketConciergeInbound } from "@/features/whatsapp-ticket-concierge/inbound-responder";
 import {
   applyTicketConciergeConversationMetadata,
   isAllowedTicketConciergeTarget,
@@ -16,6 +17,7 @@ import whatsappClientRouting from "../../../config/whatsapp-client-routing.json"
 
 export const WHATSAPP_GRAPH_API_VERSION = process.env.WHATSAPP_CLOUD_API_VERSION ?? "v23.0";
 const WHATSAPP_AGENT_KEY = "customer-whatsapp-agent";
+const DEFAULT_TICKET_CONCIERGE_APP_URL = "https://www.outletmedia.net";
 const WHATSAPP_SYSTEM_ACTORS = {
   evolution: {
     actorId: "whatsapp-evolution",
@@ -310,6 +312,7 @@ interface SendWhatsAppTextMessageInput {
   approved?: boolean;
   body: string;
   conversationId?: string;
+  mediaUrl?: string;
   phoneNumberId?: string;
   previewUrl?: boolean;
   replyToMessageId?: string;
@@ -550,6 +553,15 @@ function autoAckCooldownMs(): number {
   const raw = Number(process.env.WHATSAPP_AUTO_ACK_COOLDOWN_SECONDS ?? "45");
   const seconds = Number.isFinite(raw) && raw > 0 ? raw : 45;
   return seconds * 1000;
+}
+
+function getTicketConciergeAppBaseUrl(): string {
+  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!configured) {
+    return DEFAULT_TICKET_CONCIERGE_APP_URL;
+  }
+
+  return configured.endsWith("/") ? configured.slice(0, -1) : configured;
 }
 
 function autoAckDelayMs(): number {
@@ -2077,7 +2089,24 @@ export async function ingestEvolutionWebhook(
   const conversation = await ensureConversation(account, contact);
   const persistedMessage = await upsertInboundMessage(account, contact, conversation, normalized);
   const routingOutcome = await resolveTicketConciergeRouting(conversation, contact, normalized);
-  await maybeSendAutomaticInboundFeedback(account, contact, routingOutcome.conversation, normalized);
+  const conciergeHandled = await handleTicketConciergeInbound(
+    {
+      appBaseUrl: getTicketConciergeAppBaseUrl(),
+      contact,
+      conversation: routingOutcome.conversation,
+      latestInboundMessageId: persistedMessage.id,
+      message: {
+        messageId: normalized.messageId,
+        textBody: normalized.textBody,
+      },
+    },
+    {
+      sendText: sendWhatsAppTextMessage,
+    },
+  );
+  if (!conciergeHandled.handled) {
+    await maybeSendAutomaticInboundFeedback(account, contact, routingOutcome.conversation, normalized);
+  }
 
   await logInboundMessageEvent("evolution", routingOutcome.conversation, contact, normalized, {
     instanceName,
@@ -2138,7 +2167,24 @@ export async function ingestTwilioWebhook(
       const conversation = await ensureConversation(account, contact);
       const persistedMessage = await upsertInboundMessage(account, contact, conversation, normalized);
       const routingOutcome = await resolveTicketConciergeRouting(conversation, contact, normalized);
-      await maybeSendAutomaticInboundFeedback(account, contact, routingOutcome.conversation, normalized);
+      const conciergeHandled = await handleTicketConciergeInbound(
+        {
+          appBaseUrl: getTicketConciergeAppBaseUrl(),
+          contact,
+          conversation: routingOutcome.conversation,
+          latestInboundMessageId: persistedMessage.id,
+          message: {
+            messageId: normalized.messageId,
+            textBody: normalized.textBody,
+          },
+        },
+        {
+          sendText: sendWhatsAppTextMessage,
+        },
+      );
+      if (!conciergeHandled.handled) {
+        await maybeSendAutomaticInboundFeedback(account, contact, routingOutcome.conversation, normalized);
+      }
 
       await logInboundMessageEvent("twilio", routingOutcome.conversation, contact, normalized, {
         phoneNumberId: account.phone_number_id,
@@ -2407,16 +2453,27 @@ async function sendMetaCloudTextMessage(
     throw new Error("WHATSAPP_CLOUD_API_TOKEN is not configured.");
   }
 
-  const payload: Record<string, unknown> = {
-    messaging_product: "whatsapp",
-    preview_url: input.previewUrl ?? false,
-    recipient_type: "individual",
-    text: {
-      body,
-    },
-    to: context.toWaId,
-    type: "text",
-  };
+  const payload: Record<string, unknown> = input.mediaUrl
+    ? {
+        image: {
+          caption: body,
+          link: input.mediaUrl,
+        },
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: context.toWaId,
+        type: "image",
+      }
+    : {
+        messaging_product: "whatsapp",
+        preview_url: input.previewUrl ?? false,
+        recipient_type: "individual",
+        text: {
+          body,
+        },
+        to: context.toWaId,
+        type: "text",
+      };
 
   if (input.replyToMessageId) {
     payload.context = {
@@ -2497,6 +2554,9 @@ async function sendTwilioTextMessage(
     From: toWhatsAppAddress(fromAddress),
     To: toWhatsAppAddress(context.toWaId),
   });
+  if (input.mediaUrl) {
+    payload.set("MediaUrl", input.mediaUrl);
+  }
 
   const statusCallbackUrl = getTwilioStatusCallbackUrl();
   if (statusCallbackUrl) {
@@ -2636,9 +2696,10 @@ export async function sendWhatsAppTextMessage(input: SendWhatsAppTextMessageInpu
       direction: "outbound",
       from_wa_id: normalizeWaId(context.account.display_phone_number ?? context.account.phone_number_id),
       message_id: sent.messageId,
-      message_type: "text",
+      message_type: input.mediaUrl ? "image" : "text",
       metadata: {
         approved: input.approved ?? false,
+        mediaUrl: input.mediaUrl ?? null,
         providerStatus: sent.status,
         transport,
       },

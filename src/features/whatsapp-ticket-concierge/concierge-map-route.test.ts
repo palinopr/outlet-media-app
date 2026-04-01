@@ -40,7 +40,7 @@ vi.mock("@/lib/supabase", () => ({
   supabaseAdmin,
 }));
 
-import { GET } from "./route";
+import { GET } from "@/app/api/whatsapp/concierge/maps/[token]/route";
 
 describe("concierge map route", () => {
   beforeEach(() => {
@@ -64,19 +64,22 @@ describe("concierge map route", () => {
     state.whatsapp_ticket_concierge_options = [
       {
         id: "opt_live",
-        map_svg: "<svg>live</svg>",
+        map_svg:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" fill="#ffffff"/><circle cx="60" cy="60" r="30" fill="#111111"/></svg>',
         map_token: "live-token",
         option_set_id: "set_live",
       },
       {
         id: "opt_replaced",
-        map_svg: "<svg>replaced</svg>",
+        map_svg:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" fill="#ffffff"/></svg>',
         map_token: "replaced-token",
         option_set_id: "set_replaced",
       },
       {
         id: "opt_expired",
-        map_svg: "<svg>expired</svg>",
+        map_svg:
+          '<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="120" height="120" fill="#ffffff"/></svg>',
         map_token: "expired-token",
         option_set_id: "set_expired",
       },
@@ -95,15 +98,20 @@ describe("concierge map route", () => {
     });
   });
 
-  it("returns the SVG with cache headers for a live token", async () => {
+  it("returns a PNG image with cache headers for a live token", async () => {
     const response = await GET(new Request("https://example.com/api/whatsapp/concierge/maps/ignored"), {
       params: Promise.resolve({ token: "live-token" }),
     });
 
     expect(response.status).toBe(200);
-    expect(response.headers.get("Content-Type")).toBe("image/svg+xml; charset=utf-8");
+    expect(response.headers.get("Content-Type")).toBe("image/png");
     expect(response.headers.get("Cache-Control")).toBe("public, max-age=60");
-    expect(await response.text()).toBe("<svg>live</svg>");
+    expect(response.headers.get("Content-Disposition")).toBe(
+      'inline; filename="concierge-map.png"',
+    );
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    expect(bytes.byteLength).toBeGreaterThan(0);
+    expect(Array.from(bytes.slice(0, 8))).toEqual([137, 80, 78, 71, 13, 10, 26, 10]);
   });
 
   it("returns 404 when neither params nor the path include a token", async () => {

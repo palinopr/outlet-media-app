@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { chromium, type Browser, type Page } from "playwright-core";
@@ -57,12 +58,52 @@ function defaultDevToolsActivePortPath(): string {
   );
 }
 
+function errorMessage(error: unknown): string {
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
+}
+
 function shouldRetryWithWebSocket(endpoint: string, error: unknown): boolean {
+  const message = errorMessage(error);
   return (
     endpoint.startsWith("http://") &&
-    error instanceof Error &&
-    error.message.includes("Unexpected status 404")
+    message.includes("Unexpected status 404")
   );
+}
+
+function shouldLaunchLocalChrome(error: unknown): boolean {
+  const message = errorMessage(error);
+  return (
+    message.includes("ECONNREFUSED") ||
+    message.includes("connect ECONNREFUSED") ||
+    message.includes("403 Forbidden") ||
+    message.includes("Connection rejected") ||
+    message.includes("Timeout") ||
+    message.includes("retrieving websocket url") ||
+    message.includes("WebSocket error")
+  );
+}
+
+function resolveChromeExecutablePath(): string {
+  const explicitPath = process.env.CHROME_EXECUTABLE_PATH ?? process.env.GOOGLE_CHROME_BIN;
+  if (explicitPath) {
+    return explicitPath;
+  }
+
+  const darwinExecutable =
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+  if (process.platform === "darwin" && existsSync(darwinExecutable)) {
+    return darwinExecutable;
+  }
+
+  return "/usr/local/bin/google-chrome";
 }
 
 async function resolveWebSocketEndpoint(httpEndpoint: string): Promise<string> {
@@ -91,12 +132,32 @@ async function connectToBrowser(chromeDebugUrl: string): Promise<Browser> {
   try {
     return await chromium.connectOverCDP(chromeDebugUrl);
   } catch (error) {
-    if (!shouldRetryWithWebSocket(chromeDebugUrl, error)) {
-      throw error;
+    if (shouldRetryWithWebSocket(chromeDebugUrl, error)) {
+      const webSocketEndpoint = await resolveWebSocketEndpoint(chromeDebugUrl);
+      try {
+        return await chromium.connectOverCDP(webSocketEndpoint);
+      } catch (webSocketError) {
+        if (shouldLaunchLocalChrome(webSocketError)) {
+          return chromium.launch({
+            args: ["--disable-dev-shm-usage", "--disable-setuid-sandbox", "--no-sandbox"],
+            executablePath: resolveChromeExecutablePath(),
+            headless: true,
+          });
+        }
+
+        throw webSocketError;
+      }
     }
 
-    const webSocketEndpoint = await resolveWebSocketEndpoint(chromeDebugUrl);
-    return chromium.connectOverCDP(webSocketEndpoint);
+    if (shouldLaunchLocalChrome(error)) {
+      return chromium.launch({
+        args: ["--disable-dev-shm-usage", "--disable-setuid-sandbox", "--no-sandbox"],
+        executablePath: resolveChromeExecutablePath(),
+        headless: true,
+      });
+    }
+
+    throw error;
   }
 }
 
@@ -106,17 +167,13 @@ async function openEventPage(input: {
   quantity: number;
 }) {
   const browser = await connectToBrowser(input.chromeDebugUrl);
-  const context = browser.contexts()[0];
-  if (!context) {
-    await browser.close();
-    throw new Error("No Chromium browser context was available over CDP.");
-  }
+  const context = browser.contexts()[0] ?? (await browser.newContext());
 
   const page = await context.newPage();
   await page.goto(input.eventUrl);
   await page
     .getByRole("combobox", { name: "Quantity" })
-    .selectOption({ label: formatQuantityLabel(input.quantity) });
+    .selectOption({ label: formatQuantityLabel(input.quantity) }, { force: true });
   await page.waitForFunction(() => {
     const menuItems = Array.from(document.querySelectorAll('[role="menuitem"]'));
     return menuItems.some((menuItem) => {

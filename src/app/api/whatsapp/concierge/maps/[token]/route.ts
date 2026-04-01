@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { renderMapPng } from "@/features/whatsapp-ticket-concierge/map-renderer";
 
 interface RouteContext {
   params?: Promise<{
@@ -52,10 +53,14 @@ export async function GET(request: Request, context?: RouteContext) {
     return new Response("Unavailable", { status: 410 });
   }
 
-  return new Response(option.map_svg, {
+  const png = await renderMapPng(option.map_svg);
+  const body = new Uint8Array(Array.from(png));
+
+  return new Response(body, {
     headers: {
       "Cache-Control": "public, max-age=60",
-      "Content-Type": "image/svg+xml; charset=utf-8",
+      "Content-Disposition": 'inline; filename="concierge-map.png"',
+      "Content-Type": "image/png",
     },
   });
 }

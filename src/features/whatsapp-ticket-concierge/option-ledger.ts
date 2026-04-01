@@ -8,7 +8,7 @@ import type {
   TicketConciergePreparedOptionSet,
 } from "./types";
 
-interface ConciergeRunInput {
+export interface ConciergeRunInput {
   contactId?: string | null;
   conversationId: string;
   customerMessage: string;
@@ -20,7 +20,7 @@ interface ConciergeRunInput {
 
 type TicketConciergeOptionSetStatus = TicketConciergePreparedOptionSet["status"];
 
-interface CreateOptionSetInput {
+export interface CreateOptionSetInput {
   conversationId: string;
   eventContext: Record<string, unknown>;
   intent: TicketConciergeIntent;
@@ -33,7 +33,7 @@ interface TicketConciergePreparedOptionInput extends Omit<TicketConciergePrepare
   id?: string;
 }
 
-interface ReplaceActiveOptionSetInput extends CreateOptionSetInput {
+export interface ReplaceActiveOptionSetInput extends CreateOptionSetInput {
   previousOptionSetId?: string | null;
 }
 
@@ -49,6 +49,32 @@ interface CheckoutAttemptRow extends CheckoutAttemptInput {
   updated_at?: string;
 }
 
+type ConciergeRunStatus =
+  | "pending_options"
+  | "options_sent"
+  | "checkout_ready"
+  | "inventory_changed"
+  | "no_inventory"
+  | "lookup_failed"
+  | "expired";
+
+interface ConciergeRunRow {
+  active_option_set_id?: string | null;
+  contact_id?: string | null;
+  conversation_id: string;
+  created_at?: string;
+  customer_message: string;
+  event_context: Record<string, unknown>;
+  id: string;
+  intent: TicketConciergeIntent;
+  last_checkout_url?: string | null;
+  last_error?: string | null;
+  latest_inbound_message_id?: string | null;
+  scenario_key: string;
+  status: ConciergeRunStatus;
+  updated_at?: string;
+}
+
 type ActiveOptionSetRow = {
   conversation_id: string;
   created_at: string;
@@ -60,6 +86,53 @@ type ActiveOptionSetRow = {
   status: TicketConciergePreparedOptionSet["status"];
   updated_at: string;
 };
+
+interface ConciergeOptionRow {
+  execution: Record<string, unknown>;
+  id: string;
+  is_under_budget: boolean;
+  label: string;
+  map_svg: string;
+  map_token: string;
+  note: string;
+  option_set_id: string;
+  ordinal: 1 | 2 | 3;
+  quantity: number;
+  quote_source: "exact";
+  row: string | null;
+  seat_labels: string[];
+  section: string;
+  total_cents: number;
+}
+
+export interface ActiveOptionSetSelectionSnapshot {
+  optionSet: {
+    conversationId: string;
+    expiresAt: string;
+    id: string;
+    runId: string;
+    selectedOptionId: string | null;
+    status: TicketConciergePreparedOptionSet["status"];
+  };
+  options: TicketConciergePreparedOption[];
+  run: {
+    customerMessage: string;
+    eventContext: Record<string, unknown>;
+    id: string;
+    intent: TicketConciergeIntent;
+    scenarioKey: string;
+    status: ConciergeRunStatus;
+  };
+}
+
+export interface UpdateRunStateInput {
+  activeOptionSetId?: string | null;
+  lastCheckoutUrl?: string | null;
+  lastError?: string | null;
+  latestInboundMessageId?: string | null;
+  runId: string;
+  status?: ConciergeRunStatus;
+}
 
 function requireSupabaseAdmin() {
   if (!supabaseAdmin) {
@@ -85,6 +158,25 @@ function toPreparedOption(row: TicketConciergePreparedOptionInput): TicketConcie
     seatLabels: row.seatLabels,
     section: row.section,
     totalCents: row.totalCents,
+  };
+}
+
+function toPreparedOptionFromRow(row: ConciergeOptionRow): TicketConciergePreparedOption {
+  return {
+    execution: row.execution,
+    id: row.id,
+    isUnderBudget: row.is_under_budget,
+    label: row.label,
+    mapSvg: row.map_svg,
+    mapToken: row.map_token,
+    note: row.note,
+    ordinal: row.ordinal,
+    quantity: row.quantity,
+    quoteSource: row.quote_source,
+    row: row.row,
+    seatLabels: row.seat_labels,
+    section: row.section,
+    totalCents: row.total_cents,
   };
 }
 
@@ -268,7 +360,74 @@ export async function getActiveOptionSet(conversationId: string) {
     throw new Error(`[concierge] option set lookup failed: ${error.message}`);
   }
 
+  if (data && Date.parse(data.expires_at) <= Date.now()) {
+    await expireOptionSet(data.id);
+    return null;
+  }
+
   return data as ActiveOptionSetRow | null;
+}
+
+export async function getActiveOptionSetSelectionSnapshot(
+  conversationId: string,
+): Promise<ActiveOptionSetSelectionSnapshot | null> {
+  const optionSet = await getActiveOptionSet(conversationId);
+  if (!optionSet) {
+    return null;
+  }
+
+  const db = requireSupabaseAdmin();
+  const [{ data: optionRows, error: optionError }, { data: runRow, error: runError }] =
+    await Promise.all([
+      db
+        .from("whatsapp_ticket_concierge_options")
+        .select(
+          "execution, id, is_under_budget, label, map_svg, map_token, note, option_set_id, ordinal, quantity, quote_source, row, seat_labels, section, total_cents",
+        )
+        .eq("option_set_id", optionSet.id)
+        .order("ordinal"),
+      db
+        .from("whatsapp_ticket_concierge_runs")
+        .select(
+          "conversation_id, customer_message, event_context, id, intent, scenario_key, status, updated_at",
+        )
+        .eq("id", optionSet.run_id)
+        .maybeSingle(),
+    ]);
+
+  if (optionError) {
+    throw new Error(`[concierge] option lookup failed: ${optionError.message}`);
+  }
+
+  if (runError) {
+    throw new Error(`[concierge] run lookup failed: ${runError.message}`);
+  }
+
+  if (!runRow) {
+    return null;
+  }
+
+  return {
+    optionSet: {
+      conversationId: optionSet.conversation_id,
+      expiresAt: optionSet.expires_at,
+      id: optionSet.id,
+      runId: optionSet.run_id,
+      selectedOptionId: optionSet.selected_option_id,
+      status: optionSet.status,
+    },
+    options: ((optionRows ?? []) as ConciergeOptionRow[])
+      .map(toPreparedOptionFromRow)
+      .sort((left, right) => left.ordinal - right.ordinal),
+    run: {
+      customerMessage: (runRow as ConciergeRunRow).customer_message,
+      eventContext: (runRow as ConciergeRunRow).event_context,
+      id: (runRow as ConciergeRunRow).id,
+      intent: (runRow as ConciergeRunRow).intent,
+      scenarioKey: (runRow as ConciergeRunRow).scenario_key,
+      status: (runRow as ConciergeRunRow).status,
+    },
+  };
 }
 
 export async function expireOptionSet(optionSetId: string) {
@@ -331,9 +490,87 @@ export async function getReusableCheckoutAttempt(optionId: string) {
   return data;
 }
 
+export async function selectConciergeOption(input: { optionId: string; optionSetId: string }) {
+  const db = requireSupabaseAdmin();
+  const { error } = await db
+    .from("whatsapp_ticket_concierge_option_sets")
+    .update({
+      selected_option_id: input.optionId,
+      status: "selected",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.optionSetId);
+
+  if (error) {
+    throw new Error(`[concierge] option selection update failed: ${error.message}`);
+  }
+}
+
+export async function updateRunState(input: UpdateRunStateInput) {
+  const db = requireSupabaseAdmin();
+  const payload: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if ("activeOptionSetId" in input) {
+    payload.active_option_set_id = input.activeOptionSetId ?? null;
+  }
+  if ("lastCheckoutUrl" in input) {
+    payload.last_checkout_url = input.lastCheckoutUrl ?? null;
+  }
+  if ("lastError" in input) {
+    payload.last_error = input.lastError ?? null;
+  }
+  if ("latestInboundMessageId" in input) {
+    payload.latest_inbound_message_id = input.latestInboundMessageId ?? null;
+  }
+  if (input.status) {
+    payload.status = input.status;
+  }
+
+  const { error } = await db
+    .from("whatsapp_ticket_concierge_runs")
+    .update(payload)
+    .eq("id", input.runId);
+
+  if (error) {
+    throw new Error(`[concierge] run update failed: ${error.message}`);
+  }
+}
+
+export async function getLatestRunForConversation(conversationId: string) {
+  const db = requireSupabaseAdmin();
+  const { data, error } = await db
+    .from("whatsapp_ticket_concierge_runs")
+    .select(
+      "conversation_id, customer_message, event_context, id, intent, scenario_key, status, updated_at",
+    )
+    .eq("conversation_id", conversationId);
+
+  if (error) {
+    throw new Error(`[concierge] latest run lookup failed: ${error.message}`);
+  }
+
+  const rows = (Array.isArray(data) ? data : []) as ConciergeRunRow[];
+  const latest = [...rows].sort((left, right) =>
+    (right.updated_at ?? "").localeCompare(left.updated_at ?? ""),
+  )[0];
+
+  if (!latest) {
+    return null;
+  }
+
+  return {
+    customerMessage: latest.customer_message,
+    eventContext: latest.event_context,
+    id: latest.id,
+    intent: latest.intent,
+    scenarioKey: latest.scenario_key,
+    status: latest.status,
+  };
+}
+
 export type {
-  ConciergeRunInput,
-  CreateOptionSetInput,
+  ConciergeRunStatus,
   CheckoutAttemptInput,
-  ReplaceActiveOptionSetInput,
 };

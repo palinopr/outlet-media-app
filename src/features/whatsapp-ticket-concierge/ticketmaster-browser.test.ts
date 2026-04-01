@@ -11,7 +11,11 @@ const state = vi.hoisted(() => ({
     text: string;
   }>,
   devToolsActivePort: "9222\n/devtools/browser/test-browser-id\n",
+  failAllConnections: false,
+  failForbiddenConnection: false,
   failHttpDiscovery: false,
+  failWebSocketRetryForbidden: false,
+  launchedExecutablePath: null as string | null,
   menuItems: [] as Array<{
     aria: string | null;
     innerText: string | null;
@@ -117,18 +121,38 @@ vi.mock("playwright-core", () => {
     contexts() {
       return [context];
     },
+    async newContext() {
+      return context;
+    },
   };
 
   return {
     chromium: {
       connectOverCDP: vi.fn(async (endpoint: string) => {
         state.connectEndpoints.push(endpoint);
+        if (state.failAllConnections) {
+          throw new Error("browserType.connectOverCDP: connect ECONNREFUSED 127.0.0.1:9222");
+        }
+        if (state.failForbiddenConnection) {
+          throw new Error(
+            "browserType.connectOverCDP: WebSocket error: ws://127.0.0.1:9222/devtools/browser/test-browser-id 403 Forbidden\nConnection rejected",
+          );
+        }
         if (state.failHttpDiscovery && endpoint.startsWith("http://")) {
           throw new Error(
             "browserType.connectOverCDP: Unexpected status 404 when connecting to http://127.0.0.1:9222/json/version/.",
           );
         }
+        if (state.failWebSocketRetryForbidden && endpoint.startsWith("ws://")) {
+          throw new Error(
+            "browserType.connectOverCDP: WebSocket error: ws://127.0.0.1:9222/devtools/browser/test-browser-id 403 Forbidden\nConnection rejected",
+          );
+        }
 
+        return browser;
+      }),
+      launch: vi.fn(async (input?: { executablePath?: string }) => {
+        state.launchedExecutablePath = input?.executablePath ?? null;
         return browser;
       }),
     },
@@ -191,7 +215,11 @@ describe("ticketmaster browser adapter", () => {
     state.currentUrl = "";
     state.delayedMenuItems = [];
     state.devToolsActivePort = "9222\n/devtools/browser/test-browser-id\n";
+    state.failAllConnections = false;
+    state.failForbiddenConnection = false;
     state.failHttpDiscovery = false;
+    state.failWebSocketRetryForbidden = false;
+    state.launchedExecutablePath = null;
     state.menuItems = [];
     state.lastGoto = null;
     state.nextUrl = "";
@@ -350,6 +378,98 @@ describe("ticketmaster browser adapter", () => {
       "http://127.0.0.1:9222",
       "ws://127.0.0.1:9222/devtools/browser/test-browser-id",
     ]);
+  });
+
+  it("launches local Chrome when no remote debugging endpoint is available", async () => {
+    state.failAllConnections = true;
+    state.menuItems = [
+      {
+        aria: null,
+        innerText: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+        text: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+      },
+    ];
+
+    await expect(
+      collectTicketmasterBrowserCandidates({
+        chromeDebugUrl: "http://127.0.0.1:9222",
+        eventUrl: "https://www.ticketmaster.com/example-event",
+        quantity: 2,
+      }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        section: "323",
+        totalCents: 39270,
+      }),
+    ]);
+
+    expect([
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/usr/local/bin/google-chrome",
+    ]).toContain(state.launchedExecutablePath);
+  });
+
+  it("launches local Chrome when a remote debugging endpoint rejects the websocket", async () => {
+    state.failForbiddenConnection = true;
+    state.menuItems = [
+      {
+        aria: null,
+        innerText: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+        text: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+      },
+    ];
+
+    await expect(
+      collectTicketmasterBrowserCandidates({
+        chromeDebugUrl: "http://127.0.0.1:9222",
+        eventUrl: "https://www.ticketmaster.com/example-event",
+        quantity: 2,
+      }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        section: "323",
+        totalCents: 39270,
+      }),
+    ]);
+
+    expect([
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/usr/local/bin/google-chrome",
+    ]).toContain(state.launchedExecutablePath);
+  });
+
+  it("launches local Chrome when DevToolsActivePort retry also rejects the websocket", async () => {
+    state.failHttpDiscovery = true;
+    state.failWebSocketRetryForbidden = true;
+    state.menuItems = [
+      {
+        aria: null,
+        innerText: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+        text: "Sec 323 • Row 11 Verified Resale Ticket $196.35",
+      },
+    ];
+
+    await expect(
+      collectTicketmasterBrowserCandidates({
+        chromeDebugUrl: "http://127.0.0.1:9222",
+        eventUrl: "https://www.ticketmaster.com/example-event",
+        quantity: 2,
+      }),
+    ).resolves.toEqual([
+      expect.objectContaining({
+        section: "323",
+        totalCents: 39270,
+      }),
+    ]);
+
+    expect(state.connectEndpoints).toEqual([
+      "http://127.0.0.1:9222",
+      "ws://127.0.0.1:9222/devtools/browser/test-browser-id",
+    ]);
+    expect([
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      "/usr/local/bin/google-chrome",
+    ]).toContain(state.launchedExecutablePath);
   });
 
   it("returns inventory_changed when the chosen option is gone before checkout", async () => {
