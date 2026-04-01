@@ -678,11 +678,27 @@ function getSystemActor(transport: WhatsAppTransport) {
   return WHATSAPP_SYSTEM_ACTORS[transport];
 }
 
-function buildTwilioValidationUrl(requestUrl: string): string {
+function parseForwardedHeaderValue(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const first = value.split(",")[0]?.trim();
+  return first && first.length > 0 ? first : null;
+}
+
+function buildTwilioValidationUrl(requestUrl: string, headers?: Headers): string {
+  const url = new URL(requestUrl);
+  const forwardedHost =
+    parseForwardedHeaderValue(headers?.get("x-forwarded-host")) ??
+    parseForwardedHeaderValue(headers?.get("host"));
+  const forwardedProto = parseForwardedHeaderValue(headers?.get("x-forwarded-proto"));
+
+  if (forwardedHost) {
+    const proto = forwardedProto ?? url.protocol.replace(/:$/, "") ?? "https";
+    return new URL(`${url.pathname}${url.search}`, `${proto}://${forwardedHost}`).toString();
+  }
+
   const publicBase = process.env.NEXT_PUBLIC_APP_URL;
   if (!publicBase) return requestUrl;
 
-  const url = new URL(requestUrl);
   return new URL(`${url.pathname}${url.search}`, publicBase).toString();
 }
 
@@ -716,6 +732,7 @@ export function verifyTwilioWebhookSignature(
   requestUrl: string,
   params: URLSearchParams,
   signatureHeader: string | null,
+  headers?: Headers,
 ): boolean {
   if (process.env.TWILIO_VALIDATE_SIGNATURE === "false") {
     return true;
@@ -724,7 +741,7 @@ export function verifyTwilioWebhookSignature(
   if (!authToken) return true;
   if (!signatureHeader) return false;
 
-  const payload = buildTwilioSignaturePayload(buildTwilioValidationUrl(requestUrl), params);
+  const payload = buildTwilioSignaturePayload(buildTwilioValidationUrl(requestUrl, headers), params);
   const expected = createHmac("sha1", authToken).update(payload).digest("base64");
   return safeEqual(expected, signatureHeader);
 }

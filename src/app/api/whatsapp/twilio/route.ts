@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
   const rawBody = await request.text();
   const params = new URLSearchParams(rawBody);
-  if (!verifyTwilioWebhookSignature(request.url, params, request.headers.get("x-twilio-signature"))) {
+  if (!verifyTwilioWebhookSignature(request.url, params, request.headers.get("x-twilio-signature"), request.headers)) {
     return forbidden();
   }
 
