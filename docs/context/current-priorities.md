@@ -56,6 +56,7 @@ Implications:
 - Reports and `Agent` now count as the justified client top-level summary surfaces. Keep both on the same data layer as campaign and event detail instead of creating route-local reporting logic.
 - Make client campaign and event pages the primary analytics and collaboration surfaces instead of spreading customer value across many top-level tabs.
 - Keep `Agent` read-only and client-safe: it can aggregate campaign and event insights conversationally, but it must not expose internal structure, source systems, or admin-only workflow state.
+- Keep client `Agent` on the tool-driven runtime: the model should choose among normalized read-only analytics tools at answer time, default vague business questions to lifetime Meta ads first, and use stored thread context for follow-ups instead of a regex planner deciding the route in advance.
 - Make the root landing and `/client` entrypoints resolve from actual Outlet account membership and pending invites before consulting route preferences or old metadata.
 - Keep admin CRM and client/account hubs as the main web operating surfaces for relationship management, including CRM state that may be informed by WhatsApp/Evolution communication history.
 - Keep customer WhatsApp transport and operator handling Discord-first even if the admin web later shows CRM-linked WhatsApp summaries, statuses, or recent-message context. The current default transport is Evolution on a phone-linked WhatsApp account, not Twilio.

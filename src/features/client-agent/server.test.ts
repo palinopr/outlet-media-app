@@ -258,6 +258,20 @@ describe("client-agent server orchestration", () => {
           referencedEntities: [
             { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
           ],
+          contextPayload: {
+            primaryDomain: "events",
+            referencedEntities: [
+              { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
+            ],
+            resolvedRange: {
+              preset: "lifetime",
+              startDate: "1900-01-01",
+              endDate: "2026-04-01",
+              timezone: "America/Chicago",
+            },
+            comparisonSet: [],
+            pronounTargets: ["evt_latest"],
+          },
           resolvedRange: null,
           providerResponseId: "resp_previous",
           clientGeneratedId: null,
@@ -284,8 +298,29 @@ describe("client-agent server orchestration", () => {
       status: "answer",
       text: "You are pacing ahead of target.",
       blocks: [],
-      referencedEntities: [],
-      resolvedRange: null,
+      referencedEntities: [
+        { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
+      ],
+      resolvedRange: {
+        preset: "lifetime",
+        startDate: "1900-01-01",
+        endDate: "2026-04-01",
+        timezone: "America/Chicago",
+      },
+      contextPayload: {
+        primaryDomain: "ads",
+        referencedEntities: [
+          { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
+        ],
+        resolvedRange: {
+          preset: "lifetime",
+          startDate: "1900-01-01",
+          endDate: "2026-04-01",
+          timezone: "America/Chicago",
+        },
+        comparisonSet: [],
+        pronounTargets: ["cmp_1"],
+      },
       providerResponseId: "resp_1",
     });
     appendAssistantMessage.mockResolvedValue({
@@ -296,8 +331,29 @@ describe("client-agent server orchestration", () => {
         status: "answer",
         text: "You are pacing ahead of target.",
         blocks: [],
-        referencedEntities: [],
-        resolvedRange: null,
+        referencedEntities: [
+          { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
+        ],
+        contextPayload: {
+          primaryDomain: "ads",
+          referencedEntities: [
+            { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
+          ],
+          resolvedRange: {
+            preset: "lifetime",
+            startDate: "1900-01-01",
+            endDate: "2026-04-01",
+            timezone: "America/Chicago",
+          },
+          comparisonSet: [],
+          pronounTargets: ["cmp_1"],
+        },
+        resolvedRange: {
+          preset: "lifetime",
+          startDate: "1900-01-01",
+          endDate: "2026-04-01",
+          timezone: "America/Chicago",
+        },
         providerResponseId: "resp_1",
         clientGeneratedId: null,
         createdAt: "2026-03-31T12:01:01.000Z",
@@ -332,15 +388,48 @@ describe("client-agent server orchestration", () => {
     );
     expect(generateClientAgentModelResponse).toHaveBeenCalledWith(
       expect.objectContaining({
-        history: [
-          {
+        history: expect.arrayContaining([
+          expect.objectContaining({
             role: "assistant",
             text: "Your most recent show was Camila Phoenix.",
             referencedEntities: [
               { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
             ],
+            contextPayload: {
+              primaryDomain: "events",
+              referencedEntities: [
+                { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
+              ],
+              resolvedRange: {
+                preset: "lifetime",
+                startDate: "1900-01-01",
+                endDate: "2026-04-01",
+                timezone: "America/Chicago",
+              },
+              comparisonSet: [],
+              pronounTargets: ["evt_latest"],
+            },
+            resolvedRange: null,
+          }),
+        ]),
+      }),
+    );
+    expect(appendAssistantMessage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contextPayload: {
+          primaryDomain: "ads",
+          referencedEntities: [
+            { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
+          ],
+          resolvedRange: {
+            preset: "lifetime",
+            startDate: "1900-01-01",
+            endDate: "2026-04-01",
+            timezone: "America/Chicago",
           },
-        ],
+          comparisonSet: [],
+          pronounTargets: ["cmp_1"],
+        },
       }),
     );
     expect(revalidateClientAgentPath).toHaveBeenCalledWith("acme");

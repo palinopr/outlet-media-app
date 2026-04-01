@@ -179,6 +179,7 @@ function makeMessage(overrides: Record<string, unknown> = {}) {
     text: "Latest assistant answer",
     blocks: [],
     referenced_entities: [],
+    context_payload: null,
     resolved_range: null,
     provider_response_id: null,
     client_generated_id: null,
@@ -246,6 +247,31 @@ describe("client-agent store", () => {
     });
 
     expect(thread).toBeNull();
+  });
+
+  it("hides creative-only thread rows when the parent campaign is out of scope", async () => {
+    const scopeWithoutCmp1 = {
+      ...memberScope,
+      allowedCampaignIds: ["cmp_2"],
+    };
+
+    state.client_agent_threads = [
+      makeThread({
+        id: "thread_creative_hidden",
+        referenced_entities: [
+          {
+            entityId: "ad_1",
+            entityType: "creative",
+            name: "video 4 - Bay Area",
+            campaignId: "cmp_1",
+          },
+        ],
+      }),
+    ];
+
+    const threads = await listThreads({ scope: scopeWithoutCmp1 });
+
+    expect(threads).toEqual([]);
   });
 
   it("returns null when persisted assistant messages drift out of scope even if thread summary still looks visible", async () => {
@@ -397,6 +423,20 @@ describe("client-agent store", () => {
       text: firstAssistantText,
       blocks,
       referencedEntities: firstReferences,
+      contextPayload: {
+        primaryDomain: "ads",
+        referencedEntities: [
+          {
+            entityId: "ad_1",
+            entityType: "creative",
+            name: "video 4 - Bay Area",
+            campaignId: "cmp_1",
+          },
+        ],
+        resolvedRange,
+        comparisonSet: [],
+        pronounTargets: ["ad_1"],
+      },
       resolvedRange,
       providerResponseId: "resp_1",
     });
@@ -449,6 +489,20 @@ describe("client-agent store", () => {
       text: firstAssistantText,
       blocks,
       referencedEntities: firstReferences,
+      contextPayload: {
+        primaryDomain: "ads",
+        referencedEntities: [
+          {
+            entityId: "ad_1",
+            entityType: "creative",
+            name: "video 4 - Bay Area",
+            campaignId: "cmp_1",
+          },
+        ],
+        resolvedRange,
+        comparisonSet: [],
+        pronounTargets: ["ad_1"],
+      },
       resolvedRange,
     });
   });

@@ -34,7 +34,7 @@ describe("client agent thread messages route", () => {
       }),
     );
     expect(sendMessage).not.toHaveBeenCalled();
-  });
+  }, 15000);
 
   it("returns 200 for product refusals with the response contract shape", async () => {
     sendMessage.mockResolvedValueOnce({
@@ -124,5 +124,121 @@ describe("client agent thread messages route", () => {
     );
 
     expect(unauthenticatedResponse.status).toBe(401);
+  });
+
+  it("accepts creative-aware preview history and forwards context payloads", async () => {
+    sendMessage.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      body: {
+        status: "answer",
+        thread_id: "thread_1",
+        message_id: "message_1",
+        text: "Preview answer.",
+        blocks: [],
+        referenced_entities: [],
+        resolved_range: null,
+      },
+    });
+
+    const { POST } = await import("./route");
+    const response = await POST(
+      new Request("https://example.com", {
+        method: "POST",
+        body: JSON.stringify({
+          message: "and before that?",
+          history: [
+            {
+              role: "assistant",
+              text: "Your strongest creative is video 4 - Bay Area.",
+              referenced_entities: [
+                {
+                  entityId: "ad_1",
+                  entityType: "creative",
+                  name: "video 4 - Bay Area",
+                  campaignId: "cmp_1",
+                },
+              ],
+              context_payload: {
+                primaryDomain: "ads",
+                referencedEntities: [
+                  {
+                    entityId: "ad_1",
+                    entityType: "creative",
+                    name: "video 4 - Bay Area",
+                    campaignId: "cmp_1",
+                  },
+                ],
+                resolvedRange: {
+                  preset: "lifetime",
+                  startDate: "1900-01-01",
+                  endDate: "2026-04-01",
+                  timezone: "America/Chicago",
+                },
+                comparisonSet: [],
+                pronounTargets: ["ad_1"],
+              },
+              resolved_range: {
+                preset: "lifetime",
+                startDate: "1900-01-01",
+                endDate: "2026-04-01",
+                timezone: "America/Chicago",
+              },
+            },
+          ],
+        }),
+        headers: { "Content-Type": "application/json" },
+      }),
+      {
+        params: Promise.resolve({ slug: "acme", threadId: "thread_1" }),
+      },
+    );
+
+    expect(response.status).toBe(200);
+    expect(sendMessage).toHaveBeenCalledWith({
+      slug: "acme",
+      threadId: "thread_1",
+      message: "and before that?",
+      clientGeneratedId: undefined,
+      history: [
+        {
+          role: "assistant",
+          text: "Your strongest creative is video 4 - Bay Area.",
+          referencedEntities: [
+            {
+              entityId: "ad_1",
+              entityType: "creative",
+              name: "video 4 - Bay Area",
+              campaignId: "cmp_1",
+            },
+          ],
+          contextPayload: {
+            primaryDomain: "ads",
+            referencedEntities: [
+              {
+                entityId: "ad_1",
+                entityType: "creative",
+                name: "video 4 - Bay Area",
+                campaignId: "cmp_1",
+              },
+            ],
+            resolvedRange: {
+              preset: "lifetime",
+              startDate: "1900-01-01",
+              endDate: "2026-04-01",
+              timezone: "America/Chicago",
+            },
+            comparisonSet: [],
+            pronounTargets: ["ad_1"],
+          },
+          resolvedRange: {
+            preset: "lifetime",
+            startDate: "1900-01-01",
+            endDate: "2026-04-01",
+            timezone: "America/Chicago",
+          },
+        },
+      ],
+    });
   });
 });

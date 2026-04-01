@@ -299,6 +299,161 @@ describe("AgentShell", () => {
     );
   });
 
+  it("reuses assistant context payload for preview follow-up turns", async () => {
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/client/acme/agent/threads") && init?.method === "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "preview_thread",
+              title: null,
+              previewText: null,
+              referencedEntities: [],
+              lastResponseStatus: null,
+              lastMessageAt: "2026-03-31T12:00:00.000Z",
+              updatedAt: "2026-03-31T12:00:00.000Z",
+              createdAt: "2026-03-31T12:00:00.000Z",
+              messages: [],
+            },
+          }, 201),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/preview_thread/messages")) {
+        const body = JSON.parse(String(init?.body ?? "{}"));
+
+        if (body.message === "What was my last show?") {
+          return Promise.resolve(
+            makeJsonResponse({
+              status: "answer",
+              thread_id: "preview_thread",
+              message_id: "preview_answer_1",
+              text: "Your most recent show was Camila Phoenix.",
+              blocks: [],
+              referenced_entities: [
+                {
+                  entityId: "evt_1",
+                  entityType: "event",
+                  name: "Camila Phoenix",
+                },
+              ],
+              context_payload: {
+                primaryDomain: "events",
+                referencedEntities: [
+                  {
+                    entityId: "evt_1",
+                    entityType: "event",
+                    name: "Camila Phoenix",
+                  },
+                ],
+                resolvedRange: {
+                  preset: "lifetime",
+                  startDate: "1900-01-01",
+                  endDate: "2026-04-01",
+                  timezone: "America/Chicago",
+                },
+                comparisonSet: [],
+                pronounTargets: ["evt_1"],
+              },
+              resolved_range: {
+                preset: "lifetime",
+                startDate: "1900-01-01",
+                endDate: "2026-04-01",
+                timezone: "America/Chicago",
+              },
+            }),
+          );
+        }
+
+        return Promise.resolve(
+          makeJsonResponse({
+            status: "answer",
+            thread_id: "preview_thread",
+            message_id: "preview_answer_2",
+            text: "The show before that was Ricardo Arjona in San Diego.",
+            blocks: [],
+            referenced_entities: [
+              {
+                entityId: "evt_2",
+                entityType: "event",
+                name: "Ricardo Arjona San Diego",
+              },
+            ],
+            context_payload: {
+              primaryDomain: "events",
+              referencedEntities: [
+                {
+                  entityId: "evt_2",
+                  entityType: "event",
+                  name: "Ricardo Arjona San Diego",
+                },
+              ],
+              resolvedRange: {
+                preset: "lifetime",
+                startDate: "1900-01-01",
+                endDate: "2026-04-01",
+                timezone: "America/Chicago",
+              },
+              comparisonSet: [],
+              pronounTargets: ["evt_2"],
+            },
+            resolved_range: {
+              preset: "lifetime",
+              startDate: "1900-01-01",
+              endDate: "2026-04-01",
+              timezone: "America/Chicago",
+            },
+          }),
+        );
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    });
+
+    render(
+      <AgentShell
+        clientName="Acme"
+        eventsEnabled={true}
+        initialThreads={[]}
+        slug="acme"
+        viewer="admin_preview"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "New chat" }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/client/acme/agent/threads",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+
+    const textarea = screen.getByPlaceholderText("Ask a preview question. These chats are not saved.");
+    fireEvent.change(textarea, { target: { value: "What was my last show?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+    expect(await screen.findAllByText("Your most recent show was Camila Phoenix.")).toHaveLength(2);
+
+    fireEvent.change(textarea, { target: { value: "and before that?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+    expect(await screen.findAllByText("The show before that was Ricardo Arjona in San Diego.")).toHaveLength(2);
+
+    const secondMessageCall = fetchMock.mock.calls.find(
+      (call) =>
+        String(call[0]).endsWith("/api/client/acme/agent/threads/preview_thread/messages") &&
+        String((call[1] as RequestInit | undefined)?.body ?? "").includes("and before that?"),
+    );
+
+    expect(secondMessageCall).toBeDefined();
+    expect(String((secondMessageCall?.[1] as RequestInit | undefined)?.body ?? "")).toContain(
+      "\"context_payload\"",
+    );
+    expect(String((secondMessageCall?.[1] as RequestInit | undefined)?.body ?? "")).toContain(
+      "\"pronounTargets\":[\"evt_1\"]",
+    );
+  }, 15000);
+
   it("clears the working state when the first message on a new thread fails", async () => {
     fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);

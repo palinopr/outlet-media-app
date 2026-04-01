@@ -3,11 +3,30 @@ import { z } from "zod";
 export const AgentResponseStatusSchema = z.enum(["answer", "clarify", "refuse", "error"]);
 export type AgentResponseStatus = z.infer<typeof AgentResponseStatusSchema>;
 
-export const ReferencedEntitySchema = z.object({
+const CampaignReferencedEntitySchema = z.object({
   entityId: z.string().min(1),
-  entityType: z.enum(["campaign", "event"]),
+  entityType: z.literal("campaign"),
   name: z.string().min(1),
 });
+
+const EventReferencedEntitySchema = z.object({
+  entityId: z.string().min(1),
+  entityType: z.literal("event"),
+  name: z.string().min(1),
+});
+
+const CreativeReferencedEntitySchema = z.object({
+  entityId: z.string().min(1),
+  entityType: z.literal("creative"),
+  name: z.string().min(1),
+  campaignId: z.string().min(1),
+});
+
+export const ReferencedEntitySchema = z.discriminatedUnion("entityType", [
+  CampaignReferencedEntitySchema,
+  EventReferencedEntitySchema,
+  CreativeReferencedEntitySchema,
+]);
 export type ReferencedEntity = z.infer<typeof ReferencedEntitySchema>;
 
 export const ResolvedRangePresetSchema = z.enum([
@@ -15,6 +34,7 @@ export const ResolvedRangePresetSchema = z.enum([
   "yesterday",
   "last_7_days",
   "last_30_days",
+  "lifetime",
   "this_week",
   "this_month",
   "this_quarter",
@@ -40,16 +60,34 @@ export const ClientAgentScopeSchema = z.object({
 });
 export type ClientAgentScope = z.infer<typeof ClientAgentScopeSchema>;
 
+const AgentHistoryContextPayloadSchema = z.object({
+  primaryDomain: z.enum(["ads", "events", "mixed"]),
+  referencedEntities: z.array(ReferencedEntitySchema),
+  resolvedRange: ResolvedRangeSchema.nullable(),
+  comparisonSet: z.array(z.string().min(1)),
+  pronounTargets: z.array(z.string().min(1)),
+});
+
 export const AgentHistoryMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   text: z.string(),
   referencedEntities: z.array(ReferencedEntitySchema).optional(),
+  contextPayload: AgentHistoryContextPayloadSchema.nullable().optional(),
+  resolvedRange: ResolvedRangeSchema.nullable().optional(),
 });
 export type AgentHistoryMessage = z.infer<typeof AgentHistoryMessageSchema>;
 
-export const PlannerEntityMatchSchema = ReferencedEntitySchema.extend({
-  timezone: z.string().min(1).optional(),
-});
+export const PlannerEntityMatchSchema = z.discriminatedUnion("entityType", [
+  CampaignReferencedEntitySchema.extend({
+    timezone: z.string().min(1).optional(),
+  }),
+  EventReferencedEntitySchema.extend({
+    timezone: z.string().min(1).optional(),
+  }),
+  CreativeReferencedEntitySchema.extend({
+    timezone: z.string().min(1).optional(),
+  }),
+]);
 export type PlannerEntityMatch = z.infer<typeof PlannerEntityMatchSchema>;
 
 const MetricCardSchema = z.object({
@@ -116,31 +154,3 @@ export const AgentAnswerBlockSchema = z.discriminatedUnion("type", [
   ChartBlockSchema,
 ]);
 export type AgentAnswerBlock = z.infer<typeof AgentAnswerBlockSchema>;
-
-const PlannerCommonSchema = z.object({
-  message: z.string().trim().min(1),
-  followUpMessages: z.array(AgentHistoryMessageSchema).max(6),
-  referencedEntities: z.array(ReferencedEntitySchema),
-  resolvedRange: ResolvedRangeSchema.nullable(),
-});
-
-export const AnswerPlanSchema = PlannerCommonSchema.extend({
-  disposition: z.literal("answer"),
-});
-
-export const ClarifyPlanSchema = PlannerCommonSchema.extend({
-  disposition: z.literal("clarify"),
-  reason: z.enum(["ambiguous_entity", "mixed_entity_types"]),
-});
-
-export const RefusePlanSchema = PlannerCommonSchema.extend({
-  disposition: z.literal("refuse"),
-  reason: z.enum(["internal_question", "events_disabled"]),
-});
-
-export const PlannerResultSchema = z.discriminatedUnion("disposition", [
-  AnswerPlanSchema,
-  ClarifyPlanSchema,
-  RefusePlanSchema,
-]);
-export type PlannerResult = z.infer<typeof PlannerResultSchema>;

@@ -3,6 +3,7 @@
 import { startTransition, useEffect, useMemo, useState } from "react";
 import { ConversationPane } from "./conversation-pane";
 import { ThreadList } from "./thread-list";
+import type { ThreadContextPayload } from "../thread-context";
 import type { AgentAnswerBlock, AgentResponseStatus, ReferencedEntity, ResolvedRange } from "../types";
 
 export type AgentThreadSummary = {
@@ -23,6 +24,7 @@ export type AgentThreadMessage = {
   text: string;
   blocks: AgentAnswerBlock[];
   referencedEntities: ReferencedEntity[];
+  contextPayload: ThreadContextPayload | null;
   resolvedRange: ResolvedRange | null;
   providerResponseId: string | null;
   clientGeneratedId: string | null;
@@ -48,6 +50,7 @@ type SendMessagePayload = {
   text: string;
   blocks: AgentAnswerBlock[];
   referenced_entities: ReferencedEntity[];
+  context_payload: ThreadContextPayload | null;
   resolved_range: ResolvedRange | null;
 };
 
@@ -55,6 +58,8 @@ type HistoryPayload = Array<{
   role: "user" | "assistant";
   text: string;
   referenced_entities?: ReferencedEntity[];
+  context_payload?: ThreadContextPayload | null;
+  resolved_range?: ResolvedRange | null;
 }>;
 
 const CAMPAIGN_PROMPTS = [
@@ -87,6 +92,7 @@ function buildOptimisticUserMessage(text: string, clientGeneratedId: string): Ag
     text,
     blocks: [],
     referencedEntities: [],
+    contextPayload: null,
     resolvedRange: null,
     providerResponseId: null,
     clientGeneratedId,
@@ -102,6 +108,7 @@ function buildAssistantMessage(payload: SendMessagePayload): AgentThreadMessage 
     text: payload.text,
     blocks: payload.blocks,
     referencedEntities: payload.referenced_entities,
+    contextPayload: payload.context_payload,
     resolvedRange: payload.resolved_range,
     providerResponseId: null,
     clientGeneratedId: null,
@@ -119,6 +126,8 @@ function buildHistoryPayload(messages: AgentThreadMessage[]): HistoryPayload {
     text: message.text,
     referenced_entities:
       message.referencedEntities.length > 0 ? message.referencedEntities : undefined,
+    context_payload: message.contextPayload,
+    resolved_range: message.resolvedRange,
   }));
 }
 
@@ -328,6 +337,7 @@ export function AgentShell({
         text: "I’m unable to send that right now.",
         blocks: [],
         referencedEntities: [],
+        contextPayload: null,
         resolvedRange: null,
         providerResponseId: null,
         clientGeneratedId: null,

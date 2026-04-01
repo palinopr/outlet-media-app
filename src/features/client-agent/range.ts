@@ -16,6 +16,10 @@ const RANGE_ALIASES = new Map<string, string>([
   ["last_7_days", "last_7_days"],
   ["last 30 days", "last_30_days"],
   ["last_30_days", "last_30_days"],
+  ["lifetime", "lifetime"],
+  ["life time", "lifetime"],
+  ["all time", "lifetime"],
+  ["all-time", "lifetime"],
   ["this week", "this_week"],
   ["this_week", "this_week"],
   ["this month", "this_month"],
@@ -131,6 +135,9 @@ export function normalizeRange(input: string, options: NormalizeRangeOptions): R
     case "last_30_days":
       startDate = addDays(today, -29);
       break;
+    case "lifetime":
+      startDate = "1900-01-01";
+      break;
     case "this_week":
       startDate = startOfWeek(today);
       break;
@@ -158,6 +165,10 @@ export function resolveRangeFromMessage(
 ): ResolvedRange | null {
   const lowerMessage = message.toLowerCase();
   const supportedRanges = [
+    "all-time",
+    "all time",
+    "life time",
+    "lifetime",
     "last 30 days",
     "last 7 days",
     "this quarter",
@@ -174,7 +185,7 @@ export function resolveRangeFromMessage(
   }
 
   if (matchedPhrases.length === 0) {
-    return normalizeRange("last 30 days", options);
+    return normalizeRange("lifetime", options);
   }
 
   return normalizeRange(matchedPhrases[0]!, options);

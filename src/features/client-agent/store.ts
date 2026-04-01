@@ -6,6 +6,11 @@ import type {
   ReferencedEntity,
   ResolvedRange,
 } from "./types";
+import { ReferencedEntitySchema } from "./types";
+import {
+  type ThreadContextPayload,
+  ThreadContextPayloadSchema,
+} from "./thread-context";
 
 type StoreCode = "not_found" | "preview_unavailable" | "write_failed";
 
@@ -32,6 +37,7 @@ type ThreadMessage = {
   text: string;
   blocks: AgentAnswerBlock[];
   referencedEntities: ReferencedEntity[];
+  contextPayload: ThreadContextPayload | null;
   resolvedRange: ResolvedRange | null;
   providerResponseId: string | null;
   clientGeneratedId: string | null;
@@ -73,6 +79,7 @@ type MessageRow = {
   text: string;
   blocks: AgentAnswerBlock[] | null;
   referenced_entities: unknown;
+  context_payload: unknown;
   resolved_range: ResolvedRange | null;
   provider_response_id: string | null;
   client_generated_id: string | null;
@@ -96,6 +103,10 @@ function isEntityAllowed(scope: ClientAgentScope, entity: ReferencedEntity) {
     return scope.allowedCampaignIds == null || scope.allowedCampaignIds.includes(entity.entityId);
   }
 
+  if (entity.entityType === "creative") {
+    return scope.allowedCampaignIds == null || scope.allowedCampaignIds.includes(entity.campaignId);
+  }
+
   if (!scope.eventsEnabled) {
     return false;
   }
@@ -109,24 +120,14 @@ function normalizeReferencedEntities(value: unknown): ReferencedEntity[] {
   }
 
   return value.flatMap((entry) => {
-    if (
-      typeof entry === "object" &&
-      entry !== null &&
-      typeof entry.entityId === "string" &&
-      (entry.entityType === "campaign" || entry.entityType === "event") &&
-      typeof entry.name === "string"
-    ) {
-      return [
-        {
-          entityId: entry.entityId,
-          entityType: entry.entityType,
-          name: entry.name,
-        },
-      ];
-    }
-
-    return [];
+    const parsed = ReferencedEntitySchema.safeParse(entry);
+    return parsed.success ? [parsed.data] : [];
   });
+}
+
+function normalizeThreadContextPayload(value: unknown): ThreadContextPayload | null {
+  const parsed = ThreadContextPayloadSchema.safeParse(value);
+  return parsed.success ? parsed.data : null;
 }
 
 function isThreadVisible(scope: ClientAgentScope, thread: ThreadRow) {
@@ -148,7 +149,10 @@ function uniqueReferencedEntities(entities: ReferencedEntity[]) {
   const result: ReferencedEntity[] = [];
 
   for (const entity of entities) {
-    const key = `${entity.entityType}:${entity.entityId}`;
+    const key =
+      entity.entityType === "creative"
+        ? `${entity.entityType}:${entity.entityId}:${entity.campaignId}`
+        : `${entity.entityType}:${entity.entityId}`;
     if (seen.has(key)) continue;
     seen.add(key);
     result.push(entity);
@@ -182,6 +186,7 @@ function mapMessageRow(row: MessageRow): ThreadMessage {
     text: row.text,
     blocks: Array.isArray(row.blocks) ? row.blocks : [],
     referencedEntities: normalizeReferencedEntities(row.referenced_entities),
+    contextPayload: normalizeThreadContextPayload(row.context_payload),
     resolvedRange: row.resolved_range,
     providerResponseId: row.provider_response_id,
     clientGeneratedId: row.client_generated_id,
@@ -194,8 +199,12 @@ function isMessageVisible(scope: ClientAgentScope, message: MessageRow) {
     return true;
   }
 
-  return normalizeReferencedEntities(message.referenced_entities).every((entity) =>
-    isEntityAllowed(scope, entity),
+  const referencedEntities = normalizeReferencedEntities(message.referenced_entities);
+  const contextPayload = normalizeThreadContextPayload(message.context_payload);
+
+  return (
+    referencedEntities.every((entity) => isEntityAllowed(scope, entity)) &&
+    (contextPayload?.referencedEntities.every((entity) => isEntityAllowed(scope, entity)) ?? true)
   );
 }
 
@@ -411,6 +420,7 @@ export async function appendUserMessage({
     text,
     blocks: [],
     referenced_entities: [],
+    context_payload: null,
     resolved_range: null,
     provider_response_id: null,
     client_generated_id: clientGeneratedId,
@@ -436,6 +446,7 @@ export async function appendAssistantMessage({
   text,
   blocks,
   referencedEntities,
+  contextPayload = null,
   resolvedRange,
   providerResponseId,
 }: {
@@ -445,6 +456,7 @@ export async function appendAssistantMessage({
   text: string;
   blocks: AgentAnswerBlock[];
   referencedEntities: ReferencedEntity[];
+  contextPayload?: ThreadContextPayload | null;
   resolvedRange: ResolvedRange | null;
   providerResponseId: string | null;
 }): Promise<MessageSuccess | StoreFailure> {
@@ -477,6 +489,7 @@ export async function appendAssistantMessage({
     text,
     blocks,
     referenced_entities: referencedEntities,
+    context_payload: contextPayload,
     resolved_range: resolvedRange,
     provider_response_id: providerResponseId,
     client_generated_id: null,

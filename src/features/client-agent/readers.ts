@@ -16,6 +16,8 @@ function toCampaignDetailRange(range: ResolvedRange): CampaignDetailRangeInput {
       return "7";
     case "last_30_days":
       return "30";
+    case "lifetime":
+      return "lifetime";
     case "this_week":
       return { since: range.startDate, until: range.endDate, label: "This Week" };
     case "this_month":

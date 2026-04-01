@@ -707,6 +707,7 @@ export type Database = {
         Row: {
           blocks: Json | null
           client_generated_id: string | null
+          context_payload: Json | null
           created_at: string
           id: string
           provider_response_id: string | null
@@ -720,6 +721,7 @@ export type Database = {
         Insert: {
           blocks?: Json | null
           client_generated_id?: string | null
+          context_payload?: Json | null
           created_at?: string
           id?: string
           provider_response_id?: string | null
@@ -733,6 +735,7 @@ export type Database = {
         Update: {
           blocks?: Json | null
           client_generated_id?: string | null
+          context_payload?: Json | null
           created_at?: string
           id?: string
           provider_response_id?: string | null

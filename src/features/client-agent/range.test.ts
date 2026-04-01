@@ -50,6 +50,15 @@ describe("normalizeRange", () => {
     });
   });
 
+  it("normalizes lifetime to a full-history range", () => {
+    expect(normalizeRange("lifetime", { now, timezone: "America/Chicago" })).toEqual({
+      preset: "lifetime",
+      startDate: "1900-01-01",
+      endDate: "2026-03-31",
+      timezone: "America/Chicago",
+    });
+  });
+
   it("returns null when multiple supported ranges appear in the same message", () => {
     expect(
       resolveRangeFromMessage("How did Tokyo Dome do today versus yesterday?", {
@@ -57,5 +66,45 @@ describe("normalizeRange", () => {
         timezone: "America/Chicago",
       }),
     ).toBeNull();
+  });
+
+  it("resolves lifetime aliases from the message", () => {
+    expect(
+      resolveRangeFromMessage("How much have we spent life time on ads?", {
+        now,
+        timezone: "America/Chicago",
+      }),
+    ).toEqual({
+      preset: "lifetime",
+      startDate: "1900-01-01",
+      endDate: "2026-03-31",
+      timezone: "America/Chicago",
+    });
+
+    expect(
+      resolveRangeFromMessage("How much have we made all time?", {
+        now,
+        timezone: "America/Chicago",
+      }),
+    ).toEqual({
+      preset: "lifetime",
+      startDate: "1900-01-01",
+      endDate: "2026-03-31",
+      timezone: "America/Chicago",
+    });
+  });
+
+  it("defaults broad prompts without a timeframe to lifetime", () => {
+    expect(
+      resolveRangeFromMessage("How much have we spent on ads?", {
+        now,
+        timezone: "America/Chicago",
+      }),
+    ).toEqual({
+      preset: "lifetime",
+      startDate: "1900-01-01",
+      endDate: "2026-03-31",
+      timezone: "America/Chicago",
+    });
   });
 });

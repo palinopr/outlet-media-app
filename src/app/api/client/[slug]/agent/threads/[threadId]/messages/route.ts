@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { validateRequest } from "@/lib/api-helpers";
 import { sendMessage } from "@/features/client-agent/server";
+import { ReferencedEntitySchema, ResolvedRangeSchema } from "@/features/client-agent/types";
+import { ThreadContextPayloadSchema } from "@/features/client-agent/thread-context";
 
 const SendMessageSchema = z.object({
   message: z.string().trim().min(1),
@@ -10,13 +12,9 @@ const SendMessageSchema = z.object({
     z.object({
       role: z.enum(["user", "assistant"]),
       text: z.string(),
-      referenced_entities: z.array(
-        z.object({
-          entityId: z.string().min(1),
-          entityType: z.enum(["campaign", "event"]),
-          name: z.string().min(1),
-        }),
-      ).optional(),
+      referenced_entities: z.array(ReferencedEntitySchema).optional(),
+      context_payload: ThreadContextPayloadSchema.nullable().optional(),
+      resolved_range: ResolvedRangeSchema.nullable().optional(),
     }),
   ).max(6).optional(),
 });
@@ -44,6 +42,8 @@ export async function POST(request: Request, context: RouteContext) {
       role: entry.role,
       text: entry.text,
       referencedEntities: entry.referenced_entities,
+      contextPayload: entry.context_payload,
+      resolvedRange: entry.resolved_range,
     })),
   });
 

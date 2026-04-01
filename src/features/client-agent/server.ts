@@ -11,6 +11,7 @@ import {
   getThread as getStoreThread,
   listThreads as listStoreThreads,
 } from "./store";
+import type { ThreadContextPayload } from "./thread-context";
 import type {
   AgentAnswerBlock,
   AgentHistoryMessage,
@@ -62,6 +63,7 @@ type SendMessageBody = {
   text: string;
   blocks: AgentAnswerBlock[];
   referenced_entities: ReferencedEntity[];
+  context_payload: ThreadContextPayload | null;
   resolved_range: ResolvedRange | null;
 };
 
@@ -340,6 +342,7 @@ export async function sendMessage({
         text: modelResponse.text,
         blocks: modelResponse.blocks,
         referenced_entities: modelResponse.referencedEntities,
+        context_payload: modelResponse.contextPayload,
         resolved_range: modelResponse.resolvedRange,
       },
     };
@@ -384,6 +387,8 @@ export async function sendMessage({
       role: entry.role,
       text: entry.text,
       referencedEntities: entry.referencedEntities,
+      contextPayload: entry.contextPayload,
+      resolvedRange: entry.resolvedRange,
     })),
     message,
     scope: access.scope,
@@ -404,6 +409,7 @@ export async function sendMessage({
     text: modelResponse.text,
     blocks: modelResponse.blocks,
     referencedEntities: modelResponse.referencedEntities,
+    contextPayload: modelResponse.contextPayload,
     resolvedRange: modelResponse.resolvedRange,
     providerResponseId: assistantIdempotencyKey,
   });
@@ -439,14 +445,15 @@ export async function sendMessage({
   return {
     ok: true,
     status: 200,
-    body: {
-      status: assistantStatus,
-      thread_id: threadId,
-      message_id: assistantResult.message.messageId,
-      text: assistantResult.message.text,
-      blocks: assistantResult.message.blocks,
-      referenced_entities: assistantResult.message.referencedEntities,
-      resolved_range: assistantResult.message.resolvedRange,
-    },
-  };
+      body: {
+        status: assistantStatus,
+        thread_id: threadId,
+        message_id: assistantResult.message.messageId,
+        text: assistantResult.message.text,
+        blocks: assistantResult.message.blocks,
+        referenced_entities: assistantResult.message.referencedEntities,
+        context_payload: assistantResult.message.contextPayload,
+        resolved_range: assistantResult.message.resolvedRange,
+      },
+    };
 }
