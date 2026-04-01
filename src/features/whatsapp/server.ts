@@ -1,4 +1,15 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import {
+  getTicketConciergeConfig,
+  type TicketConciergeScenario,
+} from "@/features/whatsapp-ticket-concierge/config";
+import {
+  applyTicketConciergeConversationMetadata,
+  isAllowedTicketConciergeTarget,
+  matchTicketConciergeScenario,
+  shouldQueueDiscordTriage,
+  type TicketConciergeMatch,
+} from "@/features/whatsapp-ticket-concierge/routing";
 import { logSystemEvent } from "@/features/system-events/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import whatsappClientRouting from "../../../config/whatsapp-client-routing.json";
@@ -186,6 +197,11 @@ interface OpenConversationTaskRow {
   id: string;
   params: Record<string, unknown> | null;
   status: string;
+}
+
+interface TicketConciergeRoutingOutcome {
+  conversation: ConversationRow;
+  queueDiscordTriage: boolean;
 }
 
 type ConversationTaskPlan =
@@ -377,6 +393,134 @@ function parseConversationAccessStatus(metadata: unknown): string | null {
 function parseConversationChatKind(metadata: unknown): string | null {
   const chat = parseMetadataRecord(parseMetadataRecord(metadata).chat);
   return typeof chat.kind === "string" ? chat.kind : null;
+}
+
+function clearTicketConciergeConversationMetadata(
+  existingMetadata: Record<string, unknown> | null | undefined,
+  match: TicketConciergeMatch,
+): Record<string, unknown> {
+  const metadata = {
+    ...parseMetadataRecord(existingMetadata),
+  };
+
+  if (metadata.automationRoute === "ticket_concierge") {
+    delete metadata.automationRoute;
+  }
+  if (metadata.scenarioKey === match.scenarioKey) {
+    delete metadata.scenarioKey;
+  }
+  delete metadata.conciergeAllowed;
+
+  return metadata;
+}
+
+function findTicketConciergeScenarioMatch(input: {
+  body: string | null | undefined;
+  conversationMetadata: Record<string, unknown> | null | undefined;
+  scenarios: TicketConciergeScenario[];
+}): { match: TicketConciergeMatch; scenario: TicketConciergeScenario } | null {
+  for (const scenario of input.scenarios) {
+    const match = matchTicketConciergeScenario({
+      body: input.body,
+      conversationMetadata: input.conversationMetadata,
+      scenario,
+    });
+    if (match) {
+      return { match, scenario };
+    }
+  }
+
+  return null;
+}
+
+async function updateConversationMetadata(
+  conversation: ConversationRow,
+  metadata: Record<string, unknown>,
+): Promise<ConversationRow> {
+  if (JSON.stringify(conversation.metadata ?? {}) === JSON.stringify(metadata)) {
+    return conversation;
+  }
+
+  if (!supabaseAdmin) {
+    return { ...conversation, metadata };
+  }
+
+  const { error } = await supabaseAdmin
+    .from("whatsapp_conversations")
+    .update({ metadata })
+    .eq("id", conversation.id);
+
+  if (error) {
+    throw new Error(`[whatsapp] concierge metadata update failed: ${error.message}`);
+  }
+
+  return {
+    ...conversation,
+    metadata,
+  };
+}
+
+async function resolveTicketConciergeRouting(
+  conversation: ConversationRow,
+  contact: ContactRow,
+  message: NormalizedInboundMessage,
+): Promise<TicketConciergeRoutingOutcome> {
+  const config = getTicketConciergeConfig();
+  if (!config.enabled) {
+    return {
+      conversation,
+      queueDiscordTriage: true,
+    };
+  }
+
+  const matchedScenario = findTicketConciergeScenarioMatch({
+    body: message.textBody,
+    conversationMetadata: conversation.metadata,
+    scenarios: config.scenarios,
+  });
+
+  if (!matchedScenario) {
+    return {
+      conversation,
+      queueDiscordTriage: shouldQueueDiscordTriage(conversation.metadata),
+    };
+  }
+
+  const allowed = isAllowedTicketConciergeTarget({
+    conversationId: conversation.id,
+    scenario: matchedScenario.scenario,
+    waId: message.fromWaId ?? contact.wa_id,
+  });
+
+  if (!allowed) {
+    if (matchedScenario.match.kind !== "conversation") {
+      return {
+        conversation,
+        queueDiscordTriage: true,
+      };
+    }
+
+    const nextMetadata = clearTicketConciergeConversationMetadata(
+      conversation.metadata,
+      matchedScenario.match,
+    );
+    const nextConversation = await updateConversationMetadata(conversation, nextMetadata);
+    return {
+      conversation: nextConversation,
+      queueDiscordTriage: true,
+    };
+  }
+
+  const nextMetadata = applyTicketConciergeConversationMetadata(
+    conversation.metadata,
+    matchedScenario.match,
+  );
+  const nextConversation = await updateConversationMetadata(conversation, nextMetadata);
+
+  return {
+    conversation: nextConversation,
+    queueDiscordTriage: shouldQueueDiscordTriage(nextMetadata),
+  };
 }
 
 function isOwnerNumber(waId: string | null | undefined): boolean {
@@ -1682,14 +1826,17 @@ export async function ingestWhatsAppWebhook(
       const contact = await ensureContact(waId, batch.contacts.get(waId)?.profile?.name ?? null);
       const conversation = await ensureConversation(account, contact);
       const persistedMessage = await upsertInboundMessage(account, contact, conversation, normalized);
+      const routingOutcome = await resolveTicketConciergeRouting(conversation, contact, normalized);
 
-      await logInboundMessageEvent("meta-cloud", conversation, contact, normalized, {
+      await logInboundMessageEvent("meta-cloud", routingOutcome.conversation, contact, normalized, {
         phoneNumberId: batch.phoneNumberId,
         provider: "meta-cloud",
       });
 
-      const taskId = await enqueueConversationTask(conversation, persistedMessage);
-      if (taskId) taskIds.push(taskId);
+      if (routingOutcome.queueDiscordTriage) {
+        const taskId = await enqueueConversationTask(routingOutcome.conversation, persistedMessage);
+        if (taskId) taskIds.push(taskId);
+      }
       processedMessages += 1;
     }
 
@@ -1929,17 +2076,20 @@ export async function ingestEvolutionWebhook(
   const contact = await ensureContact(contactWaId, contactLabel);
   const conversation = await ensureConversation(account, contact);
   const persistedMessage = await upsertInboundMessage(account, contact, conversation, normalized);
-  await maybeSendAutomaticInboundFeedback(account, contact, conversation, normalized);
+  const routingOutcome = await resolveTicketConciergeRouting(conversation, contact, normalized);
+  await maybeSendAutomaticInboundFeedback(account, contact, routingOutcome.conversation, normalized);
 
-  await logInboundMessageEvent("evolution", conversation, contact, normalized, {
+  await logInboundMessageEvent("evolution", routingOutcome.conversation, contact, normalized, {
     instanceName,
     phoneNumberId: account.phone_number_id,
     provider: "evolution",
     remoteJid,
   });
 
-  const taskId = await enqueueConversationTask(conversation, persistedMessage);
-  if (taskId) taskIds.push(taskId);
+  if (routingOutcome.queueDiscordTriage) {
+    const taskId = await enqueueConversationTask(routingOutcome.conversation, persistedMessage);
+    if (taskId) taskIds.push(taskId);
+  }
   processedMessages += 1;
 
   return {
@@ -1987,16 +2137,19 @@ export async function ingestTwilioWebhook(
       const contact = await ensureContact(waId, payload.profileName ?? null);
       const conversation = await ensureConversation(account, contact);
       const persistedMessage = await upsertInboundMessage(account, contact, conversation, normalized);
-      await maybeSendAutomaticInboundFeedback(account, contact, conversation, normalized);
+      const routingOutcome = await resolveTicketConciergeRouting(conversation, contact, normalized);
+      await maybeSendAutomaticInboundFeedback(account, contact, routingOutcome.conversation, normalized);
 
-      await logInboundMessageEvent("twilio", conversation, contact, normalized, {
+      await logInboundMessageEvent("twilio", routingOutcome.conversation, contact, normalized, {
         phoneNumberId: account.phone_number_id,
         provider: "twilio",
         twilioAccountSid: payload.accountSid,
       });
 
-      const taskId = await enqueueConversationTask(conversation, persistedMessage);
-      if (taskId) taskIds.push(taskId);
+      if (routingOutcome.queueDiscordTriage) {
+        const taskId = await enqueueConversationTask(routingOutcome.conversation, persistedMessage);
+        if (taskId) taskIds.push(taskId);
+      }
       processedMessages += 1;
     }
   } else {
