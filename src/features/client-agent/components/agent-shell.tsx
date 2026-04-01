@@ -54,6 +54,7 @@ type SendMessagePayload = {
 type HistoryPayload = Array<{
   role: "user" | "assistant";
   text: string;
+  referenced_entities?: ReferencedEntity[];
 }>;
 
 const BASE_PROMPTS = [
@@ -113,6 +114,8 @@ function buildHistoryPayload(messages: AgentThreadMessage[]): HistoryPayload {
   return messages.slice(-6).map((message) => ({
     role: message.role,
     text: message.text,
+    referenced_entities:
+      message.referencedEntities.length > 0 ? message.referencedEntities : undefined,
   }));
 }
 

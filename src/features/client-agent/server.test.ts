@@ -248,7 +248,22 @@ describe("client-agent server orchestration", () => {
       lastMessageAt: "2026-03-31T12:00:00.000Z",
       updatedAt: "2026-03-31T12:00:00.000Z",
       createdAt: "2026-03-31T12:00:00.000Z",
-      messages: [],
+      messages: [
+        {
+          messageId: "message_assistant_prev",
+          role: "assistant",
+          status: "answer",
+          text: "Your most recent show was Camila Phoenix.",
+          blocks: [],
+          referencedEntities: [
+            { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
+          ],
+          resolvedRange: null,
+          providerResponseId: "resp_previous",
+          clientGeneratedId: null,
+          createdAt: "2026-03-31T11:59:00.000Z",
+        },
+      ],
     });
     appendUserMessage.mockResolvedValue({
       ok: true,
@@ -313,6 +328,19 @@ describe("client-agent server orchestration", () => {
     expect(logSystemEvent).toHaveBeenCalledWith(
       expect.objectContaining({
         eventName: "client_agent_answer_generated",
+      }),
+    );
+    expect(generateClientAgentModelResponse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        history: [
+          {
+            role: "assistant",
+            text: "Your most recent show was Camila Phoenix.",
+            referencedEntities: [
+              { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
+            ],
+          },
+        ],
       }),
     );
     expect(revalidateClientAgentPath).toHaveBeenCalledWith("acme");

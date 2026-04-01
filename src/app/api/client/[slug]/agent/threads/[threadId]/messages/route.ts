@@ -10,6 +10,13 @@ const SendMessageSchema = z.object({
     z.object({
       role: z.enum(["user", "assistant"]),
       text: z.string(),
+      referenced_entities: z.array(
+        z.object({
+          entityId: z.string().min(1),
+          entityType: z.enum(["campaign", "event"]),
+          name: z.string().min(1),
+        }),
+      ).optional(),
     }),
   ).max(6).optional(),
 });
@@ -33,7 +40,11 @@ export async function POST(request: Request, context: RouteContext) {
     threadId,
     message: parsed.data.message,
     clientGeneratedId: parsed.data.client_generated_id,
-    history: parsed.data.history,
+    history: parsed.data.history?.map((entry) => ({
+      role: entry.role,
+      text: entry.text,
+      referencedEntities: entry.referenced_entities,
+    })),
   });
 
   return NextResponse.json(result.body, { status: result.status });

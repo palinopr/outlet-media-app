@@ -7,6 +7,7 @@ import {
   getEntityDetails,
   getEventInsights,
   getOverview,
+  resolvePreviousEventIntent,
   getTimeseries,
   getTopMovers,
   resolveEventIntent,
@@ -144,6 +145,7 @@ function buildMetricsPhrase(blocks: z.infer<typeof AgentAnswerBlockSchema>[]) {
 }
 
 function buildFallbackAnswerText(
+  message: string,
   blocks: z.infer<typeof AgentAnswerBlockSchema>[],
   referencedEntities: ReferencedEntity[],
   resolvedRange: z.infer<typeof ResolvedRangeSchema>,
@@ -151,6 +153,44 @@ function buildFallbackAnswerText(
   const rangeLabel = labelRange(resolvedRange.preset);
   const subject = buildEntityPhrase(referencedEntities);
   const metricsPhrase = buildMetricsPhrase(blocks);
+  const topTable = blocks.find((block) => block.type === "table");
+  const topRow = topTable?.type === "table" ? topTable.rows[0] : null;
+
+  if (topRow && typeof topRow === "object") {
+    if ("Age" in topRow && "Gender" in topRow) {
+      return `Right now, ${String(topRow.Gender).toLowerCase()} ${String(topRow.Age)} is the strongest audience in scope with ROAS ${String(topRow.ROAS ?? "0")}, CTR ${String(topRow.CTR ?? "0")}, and spend of ${String(topRow.Spend ?? "$0")} over ${rangeLabel}.`;
+    }
+
+    if ("Market" in topRow) {
+      return `${String(topRow.Market)} is the strongest market in scope right now, with CTR ${String(topRow.CTR ?? "0")} on ${String(topRow.Spend ?? "$0")} of spend over ${rangeLabel}.`;
+    }
+
+    if ("Platform" in topRow && "Position" in topRow) {
+      return `${String(topRow.Platform)} ${String(topRow.Position)} is the strongest placement in scope right now, with CTR ${String(topRow.CTR ?? "0")} on ${String(topRow.Spend ?? "$0")} of spend over ${rangeLabel}.`;
+    }
+
+    if ("Creative" in topRow) {
+      return `${String(topRow.Creative)} is the strongest creative in scope right now, with ROAS ${String(topRow.ROAS ?? "0")}, CTR ${String(topRow.CTR ?? "0")}, and spend of ${String(topRow.Spend ?? "$0")} over ${rangeLabel}.`;
+    }
+
+    if ("Entity" in topRow && topTable?.title === "Top movers") {
+      return `${String(topRow.Entity)} is leading right now at ${String(topRow.Metric ?? "")} over ${rangeLabel}.`;
+    }
+
+    if ("Entity" in topRow && topTable?.title === "Comparison") {
+      return `Over ${rangeLabel}, ${String(topRow.Entity)} is at ${String(topRow.Metric ?? "")}.`;
+    }
+  }
+
+  if (referencedEntities.length === 1 && referencedEntities[0]?.entityType === "event" && metricsPhrase) {
+    if (isPreviousShowQuestion(message)) {
+      return `Before that, ${referencedEntities[0].name} had ${metricsPhrase} over ${rangeLabel}.`;
+    }
+
+    if (isLastShowQuestion(message)) {
+      return `Your most recent show was ${referencedEntities[0].name}. It had ${metricsPhrase} over ${rangeLabel}.`;
+    }
+  }
 
   if (metricsPhrase) {
     return `For ${subject}, I found ${metricsPhrase} over ${rangeLabel}.`;
@@ -181,8 +221,12 @@ function isLastShowQuestion(message: string) {
   return /\blast show\b|\bmost recent show\b|\blast event\b/i.test(message);
 }
 
+function isPreviousShowQuestion(message: string) {
+  return /\band before that\b|\bbefore that\b|\bprevious show\b|\bshow before that\b|\bone before that\b/i.test(message);
+}
+
 function isBroadEventQuestion(message: string) {
-  return /\bevents?\b/i.test(message);
+  return /\bevents?\b|\bshows?\b/i.test(message);
 }
 
 function wantsTimeseries(message: string) {
@@ -208,6 +252,20 @@ function inferBreakdown(message: string) {
 
   if (/\b(creative|creatives|ad|ads)\b/i.test(message)) {
     return "creative" as const;
+  }
+
+  return null;
+}
+
+function findRecentReferencedEvent(history: AgentHistoryMessage[]) {
+  for (let index = history.length - 1; index >= 0; index -= 1) {
+    const eventReference = history[index]?.referencedEntities?.find(
+      (entity) => entity.entityType === "event",
+    );
+
+    if (eventReference) {
+      return eventReference;
+    }
   }
 
   return null;
@@ -378,6 +436,22 @@ async function executePlan(
   }
 
   if (wantsTopMovers(message)) {
+    const breakdown = inferBreakdown(message);
+    if (entityType === "campaign" && breakdown) {
+      const result = await getBreakdowns({
+        scope,
+        entityType: "campaign",
+        entityId: referencedEntities[0]?.entityId ?? null,
+        range: resolvedRange,
+        breakdown,
+        sortDirection: /\b(worst|weakest|lowest|least)\b/i.test(message) ? "asc" : "desc",
+      });
+
+      return result.status === "ok"
+        ? result
+        : { status: "no_data", blocks: [], referencedEntities: [] };
+    }
+
     const result = await getTopMovers({
       scope,
       entityType,
@@ -393,11 +467,11 @@ async function executePlan(
 
   if (entityType === "campaign") {
     const breakdown = inferBreakdown(message);
-    if (breakdown && referencedEntities[0]) {
+    if (breakdown) {
       const result = await getBreakdowns({
         scope,
         entityType: "campaign",
-        entityId: referencedEntities[0].entityId,
+        entityId: referencedEntities[0]?.entityId ?? null,
         range: resolvedRange,
         breakdown,
       });
@@ -568,6 +642,7 @@ export async function generateClientAgentModelResponse(
   }
 
   let referencedEntitiesForExecution = plan.referencedEntities;
+  const recentReferencedEvent = findRecentReferencedEvent(input.history);
   if (input.scope && input.scopeSummary.eventsEnabled) {
     if (isShowInventoryQuestion(input.message)) {
       const eventIntent = await resolveEventIntent({
@@ -599,6 +674,39 @@ export async function generateClientAgentModelResponse(
         resolvedRange,
         providerResponseId: null,
       };
+    }
+
+    if (isPreviousShowQuestion(input.message) && recentReferencedEvent) {
+      const eventIntent = await resolvePreviousEventIntent({
+        currentEventId: recentReferencedEvent.entityId,
+        scope: input.scope,
+      });
+
+      if (eventIntent.kind === "clarify") {
+        return {
+          status: "clarify",
+          text: buildEventClarificationText(eventIntent.choices),
+          blocks: [],
+          referencedEntities: eventIntent.choices,
+          resolvedRange,
+          providerResponseId: null,
+        };
+      }
+
+      if (eventIntent.kind === "none") {
+        return {
+          status: "answer",
+          text: `I couldn't find an earlier show before ${recentReferencedEvent.name} in scope.`,
+          blocks: [],
+          referencedEntities: [recentReferencedEvent],
+          resolvedRange,
+          providerResponseId: null,
+        };
+      }
+
+      if (eventIntent.kind === "entity") {
+        referencedEntitiesForExecution = eventIntent.referencedEntities;
+      }
     }
 
     if (isLastShowQuestion(input.message)) {
@@ -645,7 +753,12 @@ export async function generateClientAgentModelResponse(
   const authoritativeReferencedEntities = toolResult.referencedEntities;
   const fallbackAnswer = (providerResponseId: string | null): ClientAgentModelResponse => ({
     status: "answer",
-    text: buildFallbackAnswerText(authoritativeBlocks, authoritativeReferencedEntities, resolvedRange),
+    text: buildFallbackAnswerText(
+      input.message,
+      authoritativeBlocks,
+      authoritativeReferencedEntities,
+      resolvedRange,
+    ),
     blocks: [],
     referencedEntities: authoritativeReferencedEntities,
     resolvedRange,

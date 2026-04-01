@@ -383,6 +383,7 @@ export async function sendMessage({
     history: thread.messages.map((entry) => ({
       role: entry.role,
       text: entry.text,
+      referencedEntities: entry.referencedEntities,
     })),
     message,
     scope: access.scope,

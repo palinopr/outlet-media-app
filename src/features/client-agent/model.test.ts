@@ -11,6 +11,7 @@ const {
   getEntityDetails,
   getEventInsights,
   getOverview,
+  resolvePreviousEventIntent,
   getTimeseries,
   getTopMovers,
   resolveEventIntent,
@@ -21,6 +22,7 @@ const {
   getEntityDetails: vi.fn(),
   getEventInsights: vi.fn(),
   getOverview: vi.fn(),
+  resolvePreviousEventIntent: vi.fn(),
   getTimeseries: vi.fn(),
   getTopMovers: vi.fn(),
   resolveEventIntent: vi.fn(),
@@ -45,6 +47,7 @@ vi.mock("./data", () => ({
   getEntityDetails,
   getEventInsights,
   getOverview,
+  resolvePreviousEventIntent,
   getTimeseries,
   getTopMovers,
   resolveEventIntent,
@@ -64,6 +67,7 @@ describe("client-agent model adapter", () => {
     getEntityDetails.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
     getEventInsights.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
     getOverview.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
+    resolvePreviousEventIntent.mockResolvedValue({ kind: "none" });
     getTimeseries.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
     getTopMovers.mockResolvedValue({ status: "no_data", blocks: [], referencedEntities: [] });
     resolveEventIntent.mockResolvedValue({ kind: "none" });
@@ -512,6 +516,162 @@ describe("client-agent model adapter", () => {
       { entityId: "evt_latest", entityType: "event" },
     ]);
     expect(result.blocks).toEqual([]);
+  });
+
+  it("answers 'and before that?' using the previously referenced show from history", async () => {
+    resolvePreviousEventIntent.mockResolvedValue({
+      kind: "entity",
+      eventId: "evt_previous",
+      referencedEntities: [
+        { entityId: "evt_previous", entityType: "event", name: "Camila San Diego" },
+      ],
+    });
+    getEntityDetails.mockResolvedValue({
+      status: "ok",
+      blocks: [
+        {
+          type: "metric_cards",
+          title: "Event Performance",
+          cards: [
+            { label: "Tickets Sold", value: "381" },
+            { label: "Gross", value: "$48,100" },
+          ],
+        },
+      ],
+      referencedEntities: [
+        { entityId: "evt_previous", entityType: "event", name: "Camila San Diego" },
+      ],
+    });
+    responsesParse.mockResolvedValue({
+      id: "resp_previous_show",
+      output: [
+        {
+          type: "message",
+          content: [
+            {
+              type: "output_text",
+              parsed: {
+                status: "answer",
+                text: "Before that, your previous show was Camila San Diego.",
+                blocks: [],
+                referenced_entities: [],
+                resolved_range: null,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await generateClientAgentModelResponse({
+      history: [
+        { role: "user", text: "what was my last show?" },
+        {
+          role: "assistant",
+          text: "Your most recent show was Camila Phoenix.",
+          referencedEntities: [
+            { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
+          ],
+        },
+      ],
+      message: "and before that?",
+      scope: {
+        clientId: "client_1",
+        clientMemberId: "member_1",
+        clientSlug: "zamora",
+        allowedCampaignIds: null,
+        allowedEventIds: null,
+        eventsEnabled: true,
+        viewer: "member",
+      },
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(resolvePreviousEventIntent).toHaveBeenCalledWith({
+      currentEventId: "evt_latest",
+      scope: expect.objectContaining({
+        clientSlug: "zamora",
+      }),
+    });
+    expect(result.text).toContain("previous show");
+    expect(result.referencedEntities).toMatchObject([
+      { entityId: "evt_previous", entityType: "event" },
+    ]);
+  });
+
+  it("uses aggregate campaign breakdowns for broad audience questions", async () => {
+    getBreakdowns.mockResolvedValue({
+      status: "ok",
+      blocks: [
+        {
+          type: "table",
+          title: "Breakdown",
+          columns: ["Age", "Gender", "Spend", "CTR", "ROAS"],
+          rows: [
+            {
+              Age: "25-34",
+              Gender: "Female",
+              Spend: "$4,200",
+              CTR: "2.40",
+              ROAS: "3.80",
+            },
+          ],
+        },
+      ],
+      referencedEntities: [
+        { entityId: "cmp_1", entityType: "campaign", name: "Camila Phoenix" },
+        { entityId: "cmp_2", entityType: "campaign", name: "Camila Anaheim" },
+      ],
+    });
+    responsesParse.mockResolvedValue({
+      id: "resp_audience",
+      output: [
+        {
+          type: "message",
+          content: [
+            {
+              type: "output_text",
+              parsed: {
+                status: "answer",
+                text: "Right now, women 25-34 are the strongest audience in your campaigns.",
+                blocks: [],
+                referenced_entities: [],
+                resolved_range: null,
+              },
+            },
+          ],
+        },
+      ],
+    });
+
+    const result = await generateClientAgentModelResponse({
+      history: [],
+      message: "Which audience is performing best right now?",
+      scope: {
+        clientId: "client_1",
+        clientMemberId: "member_1",
+        clientSlug: "zamora",
+        allowedCampaignIds: null,
+        allowedEventIds: null,
+        eventsEnabled: true,
+        viewer: "member",
+      },
+      scopeSummary: {
+        clientSlug: "zamora",
+        eventsEnabled: true,
+      },
+    });
+
+    expect(getBreakdowns).toHaveBeenCalledWith(
+      expect.objectContaining({
+        breakdown: "age_gender",
+        entityId: null,
+      }),
+    );
+    expect(result.text).toContain("strongest audience");
   });
 
   it("asks a short clarification when multiple latest shows are tied", async () => {

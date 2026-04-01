@@ -58,6 +58,19 @@ export function ConversationPane({
 }: ConversationPaneProps) {
   const showEmptyState = !activeThreadId && messages.length === 0;
 
+  function handleComposerKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key !== "Enter" || event.shiftKey) {
+      return;
+    }
+
+    event.preventDefault();
+    if (composerDisabled || draft.trim().length === 0) {
+      return;
+    }
+
+    onSubmit();
+  }
+
   return (
     <div className="rounded-3xl border border-white/[0.06] bg-black/20 shadow-[0_24px_80px_rgba(0,0,0,0.22)] backdrop-blur-sm">
       <div className="border-b border-white/[0.06] px-6 py-5">
@@ -146,6 +159,7 @@ export function ConversationPane({
           <textarea
             value={draft}
             onChange={(event) => onDraftChange(event.target.value)}
+            onKeyDown={handleComposerKeyDown}
             disabled={composerDisabled}
             rows={4}
             placeholder={

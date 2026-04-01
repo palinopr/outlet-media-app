@@ -43,6 +43,7 @@ export type ClientAgentScope = z.infer<typeof ClientAgentScopeSchema>;
 export const AgentHistoryMessageSchema = z.object({
   role: z.enum(["user", "assistant"]),
   text: z.string(),
+  referencedEntities: z.array(ReferencedEntitySchema).optional(),
 });
 export type AgentHistoryMessage = z.infer<typeof AgentHistoryMessageSchema>;
 

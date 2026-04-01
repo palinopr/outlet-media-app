@@ -23,6 +23,7 @@ import {
   getEntityDetails,
   getEventInsights,
   getOverview,
+  resolvePreviousEventIntent,
   getTimeseries,
   getTopMovers,
   resolveEventIntent,
@@ -459,6 +460,156 @@ describe("client-agent data tools", () => {
     });
 
     expect(result).toEqual({ kind: "none" });
+  });
+
+  it("resolves the show immediately before the current event", async () => {
+    getReportsData.mockResolvedValueOnce({
+      campaigns: [],
+      snapshots: [],
+      trendData: [],
+      events: [
+        { ...makeEvent(1), date: "2026-04-10" },
+        { ...makeEvent(2), date: "2026-04-05" },
+        { ...makeEvent(3), date: "2026-03-28" },
+      ],
+      summary: {
+        totalSpend: 0,
+        totalRevenue: 0,
+        blendedRoas: 0,
+        totalImpressions: 0,
+        totalClicks: 0,
+        totalTicketsSold: 0,
+        avgCpc: 0,
+        avgCtr: 0,
+      },
+      dataSource: "meta_api",
+      clients: ["acme"],
+    });
+    getEventDetail.mockImplementation(async ({ eventId }: { eventId: string }) => ({
+      ...buildEventDetail(),
+      event: {
+        ...buildEventDetail().event,
+        id: eventId,
+        name: eventId === "evt_2" ? "Event 2" : eventId === "evt_1" ? "Event 1" : "Event 3",
+        date:
+          eventId === "evt_1"
+            ? "2026-04-10"
+            : eventId === "evt_2"
+              ? "2026-04-05"
+              : "2026-03-28",
+      },
+    }));
+
+    const result = await resolvePreviousEventIntent({
+      currentEventId: "evt_1",
+      scope: broadScope,
+    });
+
+    expect(result).toMatchObject({
+      kind: "entity",
+      eventId: "evt_2",
+    });
+  });
+
+  it("aggregates audience breakdowns across allowed campaigns when no single campaign is specified", async () => {
+    getReportsData.mockResolvedValueOnce({
+      campaigns: [makeCampaign(1), makeCampaign(2)],
+      snapshots: [],
+      trendData: [],
+      events: [],
+      summary: {
+        totalSpend: 0,
+        totalRevenue: 0,
+        blendedRoas: 0,
+        totalImpressions: 0,
+        totalClicks: 0,
+        totalTicketsSold: 0,
+        avgCpc: 0,
+        avgCtr: 0,
+      },
+      dataSource: "meta_api",
+      clients: ["acme"],
+    });
+    getCampaignDetail
+      .mockResolvedValueOnce({
+        ...buildCampaignDetail(),
+        campaign: { ...buildCampaignDetail().campaign, campaignId: "cmp_1", name: "Campaign 1" },
+        ageGender: [
+          {
+            age: "25-34",
+            gender: "Female",
+            spend: 200,
+            impressions: 1000,
+            clicks: 40,
+            ctr: 4,
+            roas: 3.5,
+          },
+          {
+            age: "35-44",
+            gender: "Male",
+            spend: 100,
+            impressions: 800,
+            clicks: 16,
+            ctr: 2,
+            roas: 2.1,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        ...buildCampaignDetail(),
+        campaign: { ...buildCampaignDetail().campaign, campaignId: "cmp_2", name: "Campaign 2" },
+        ageGender: [
+          {
+            age: "25-34",
+            gender: "Female",
+            spend: 300,
+            impressions: 1200,
+            clicks: 60,
+            ctr: 5,
+            roas: 4.1,
+          },
+          {
+            age: "45-54",
+            gender: "Female",
+            spend: 90,
+            impressions: 700,
+            clicks: 14,
+            ctr: 2,
+            roas: 1.9,
+          },
+        ],
+      });
+
+    const result = await getBreakdowns({
+      scope: broadScope,
+      entityType: "campaign",
+      entityId: null,
+      range: {
+        preset: "last_30_days",
+        startDate: "2026-03-01",
+        endDate: "2026-03-31",
+        timezone: "America/Chicago",
+      },
+      breakdown: "age_gender",
+    });
+
+    expect(result.status).toBe("ok");
+    if (result.status !== "ok") {
+      throw new Error("expected aggregate breakdown");
+    }
+
+    expect(result.blocks[0]).toMatchObject({ type: "table" });
+    expect(result.blocks[0]?.type === "table" && result.blocks[0].rows[0]).toMatchObject({
+      Age: "25-34",
+      Gender: "Female",
+      Spend: "$500",
+      CTR: "4.55",
+      ROAS: "3.86",
+    });
+    expect(result.referencedEntities).toEqual([
+      { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
+      { entityId: "cmp_2", entityType: "campaign", name: "Campaign 2" },
+    ]);
   });
 
   it("caps overview blocks and filters out-of-scope campaigns and events", async () => {

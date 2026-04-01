@@ -331,4 +331,66 @@ describe("AgentShell", () => {
       expect(screen.queryByText("Thinking…")).not.toBeInTheDocument();
     });
   });
+
+  it("submits on Enter and keeps Shift+Enter as a newline", async () => {
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/client/acme/agent/threads") && init?.method === "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "thread_new",
+              title: null,
+              previewText: null,
+              referencedEntities: [],
+              lastResponseStatus: null,
+              lastMessageAt: "2026-03-31T12:00:00.000Z",
+              updatedAt: "2026-03-31T12:00:00.000Z",
+              createdAt: "2026-03-31T12:00:00.000Z",
+              messages: [],
+            },
+          }, 201),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_new/messages")) {
+        return Promise.resolve(
+          makeJsonResponse({
+            status: "answer",
+            thread_id: "thread_new",
+            message_id: "assistant_1",
+            text: "Audience answer",
+            blocks: [],
+            referenced_entities: [],
+            resolved_range: null,
+          }),
+        );
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    });
+
+    render(
+      <AgentShell
+        clientName="Acme"
+        eventsEnabled={true}
+        initialThreads={[]}
+        slug="acme"
+        viewer="member"
+      />,
+    );
+
+    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
+    fireEvent.change(composer, { target: { value: "Which audience is performing best right now?" } });
+    fireEvent.keyDown(composer, { key: "Enter", code: "Enter" });
+
+    expect(await screen.findAllByText("Audience answer")).toHaveLength(2);
+
+    fireEvent.change(composer, { target: { value: "Line one" } });
+    fireEvent.keyDown(composer, { key: "Enter", code: "Enter", shiftKey: true });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(composer).toHaveValue("Line one");
+  });
 });

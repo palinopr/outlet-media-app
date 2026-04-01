@@ -25,6 +25,12 @@ export type EventIntentResolution =
   | { kind: "clarify"; choices: ReferencedEntity[] }
   | { kind: "none" };
 
+type EventWithEffectiveDate = {
+  id: string;
+  name: string;
+  effectiveDate: string | null;
+};
+
 function toScopeFilter(scope: ClientAgentScope) {
   return {
     allowedCampaignIds: scope.allowedCampaignIds,
@@ -125,6 +131,10 @@ function uniqueEntities(entities: ReferencedEntity[]) {
   return result;
 }
 
+function isPresent<T>(value: T | null | undefined): value is T {
+  return value != null;
+}
+
 function toReportsRange(range: ResolvedRange): DateRange | MetaInsightsTimeRange {
   switch (range.preset) {
     case "today":
@@ -206,6 +216,40 @@ function isLastShowQuestion(message: string) {
   return /\blast show\b|\bmost recent show\b|\blast event\b/.test(message.toLowerCase());
 }
 
+async function loadAllowedEventsWithEffectiveDates(scope: ClientAgentScope) {
+  const reports = await getReportsData({
+    clientSlug: scope.clientSlug,
+    scope: toScopeFilter(scope),
+  });
+  const allowedEvents = reports.events.filter((event) => isEventAllowed(scope, event.id));
+  const eventsWithEffectiveDates = await Promise.all(
+    allowedEvents.map(async (event) => {
+      const detail = await loadClientAgentEventDetail({
+        slug: scope.clientSlug,
+        eventId: event.id,
+        scope: toScopeFilter(scope),
+      });
+
+      return {
+        id: event.id,
+        name: event.name,
+        effectiveDate: detail?.event.date ?? event.date ?? null,
+      } satisfies EventWithEffectiveDate;
+    }),
+  );
+
+  return {
+    allowedEvents,
+    eventsWithEffectiveDates,
+  };
+}
+
+function sortDatedEvents(events: EventWithEffectiveDate[]) {
+  return [...events]
+    .filter((event) => Boolean(event.effectiveDate))
+    .sort((left, right) => (right.effectiveDate ?? "").localeCompare(left.effectiveDate ?? ""));
+}
+
 export async function resolveEventIntent({
   message,
   scope,
@@ -213,11 +257,7 @@ export async function resolveEventIntent({
   message: string;
   scope: ClientAgentScope;
 }): Promise<EventIntentResolution> {
-  const reports = await getReportsData({
-    clientSlug: scope.clientSlug,
-    scope: toScopeFilter(scope),
-  });
-  const allowedEvents = reports.events.filter((event) => isEventAllowed(scope, event.id));
+  const { allowedEvents, eventsWithEffectiveDates } = await loadAllowedEventsWithEffectiveDates(scope);
   const lowerMessage = message.toLowerCase();
 
   if (isShowInventoryQuestion(lowerMessage)) {
@@ -236,24 +276,7 @@ export async function resolveEventIntent({
     return { kind: "none" };
   }
 
-  const eventsWithEffectiveDates = await Promise.all(
-    allowedEvents.map(async (event) => {
-      const detail = await loadClientAgentEventDetail({
-        slug: scope.clientSlug,
-        eventId: event.id,
-        scope: toScopeFilter(scope),
-      });
-
-      return {
-        ...event,
-        effectiveDate: detail?.event.date ?? event.date ?? null,
-      };
-    }),
-  );
-
-  const datedEvents = [...eventsWithEffectiveDates]
-    .filter((event) => Boolean(event.effectiveDate))
-    .sort((left, right) => (right.effectiveDate ?? "").localeCompare(left.effectiveDate ?? ""));
+  const datedEvents = sortDatedEvents(eventsWithEffectiveDates);
 
   if (datedEvents.length > 0) {
     const latestDate = datedEvents[0]!.effectiveDate;
@@ -286,6 +309,46 @@ export async function resolveEventIntent({
   return {
     kind: "clarify",
     choices: eventsWithEffectiveDates.map((event) => buildEventReference(event.id, event.name)),
+  };
+}
+
+export async function resolvePreviousEventIntent({
+  currentEventId,
+  scope,
+}: {
+  currentEventId: string;
+  scope: ClientAgentScope;
+}): Promise<EventIntentResolution> {
+  const { eventsWithEffectiveDates } = await loadAllowedEventsWithEffectiveDates(scope);
+  const currentEvent = eventsWithEffectiveDates.find((event) => event.id === currentEventId);
+
+  if (!currentEvent?.effectiveDate) {
+    return { kind: "none" };
+  }
+
+  const earlierEvents = sortDatedEvents(eventsWithEffectiveDates).filter(
+    (event) => (event.effectiveDate ?? "") < currentEvent.effectiveDate!,
+  );
+
+  if (earlierEvents.length === 0) {
+    return { kind: "none" };
+  }
+
+  const previousDate = earlierEvents[0]!.effectiveDate;
+  const previousEvents = earlierEvents.filter((event) => event.effectiveDate === previousDate);
+
+  if (previousEvents.length === 1) {
+    const previousEvent = previousEvents[0]!;
+    return {
+      kind: "entity",
+      eventId: previousEvent.id,
+      referencedEntities: [buildEventReference(previousEvent.id, previousEvent.name)],
+    };
+  }
+
+  return {
+    kind: "clarify",
+    choices: previousEvents.map((event) => buildEventReference(event.id, event.name)),
   };
 }
 
@@ -652,58 +715,236 @@ export async function getBreakdowns({
   entityId,
   range,
   breakdown,
+  sortDirection = "desc",
 }: {
   scope: ClientAgentScope;
   entityType: EntityType;
-  entityId: string;
+  entityId: string | null;
   range: ResolvedRange;
   breakdown: "creative" | "placement" | "geography" | "age_gender";
+  sortDirection?: "asc" | "desc";
 }): Promise<DataResult> {
-  if (entityType !== "campaign" || !isCampaignAllowed(scope, entityId)) {
+  if (entityType !== "campaign") {
     return noData();
   }
 
-  const detail = await loadClientAgentCampaignDetail({
-    slug: scope.clientSlug,
-    campaignId: entityId,
-    range,
-    scope: toScopeFilter(scope),
-  });
+  const details = entityId
+    ? await (async () => {
+        if (!isCampaignAllowed(scope, entityId)) {
+          return [];
+        }
 
-  if (!detail) {
+        const detail = await loadClientAgentCampaignDetail({
+          slug: scope.clientSlug,
+          campaignId: entityId,
+          range,
+          scope: toScopeFilter(scope),
+        });
+
+        return detail ? [detail] : [];
+      })()
+    : await (async () => {
+        const reports = await getReportsData({
+          clientSlug: scope.clientSlug,
+          range: toReportsRange(range),
+          scope: toScopeFilter(scope),
+        });
+        const allowedCampaigns = reports.campaigns.filter((campaign) =>
+          isCampaignAllowed(scope, campaign.campaignId)
+        );
+        const loaded = await Promise.all(
+          allowedCampaigns.map((campaign) =>
+            loadClientAgentCampaignDetail({
+              slug: scope.clientSlug,
+              campaignId: campaign.campaignId,
+              range,
+              scope: toScopeFilter(scope),
+            })
+          ),
+        );
+
+        return loaded.filter(isPresent);
+      })();
+
+  if (details.length === 0) {
     return noData();
   }
 
   const rows =
     breakdown === "creative"
-      ? detail.ads.map((ad) => ({
-          Creative: ad.name,
-          Spend: formatCurrency(ad.spend),
-          ROAS: formatDecimal(ad.roas),
-        }))
-      : breakdown === "placement"
-        ? detail.placements.map((placement) => ({
-            Platform: placement.platform,
-            Position: placement.position,
-            Spend: formatCurrency(placement.spend),
-          }))
-        : breakdown === "geography"
-          ? detail.geography.map((geography) => ({
-              Market: geography.market,
-              Spend: formatCurrency(geography.spend),
-              CTR: formatDecimal(geography.ctr),
-            }))
-          : detail.ageGender.map((row) => ({
-              Age: row.age,
-              Gender: row.gender,
-              Spend: formatCurrency(row.spend),
-            }));
+      ? Array.from(
+          details
+            .reduce<
+              Map<string, {
+                Creative: string;
+                spend: number;
+                impressions: number;
+                clicks: number;
+                roasWeight: number;
+                roasWeightedTotal: number;
+              }>
+            >((result, detail) => {
+              for (const ad of detail.ads) {
+                const current = result.get(ad.name) ?? {
+                  Creative: ad.name,
+                  spend: 0,
+                  impressions: 0,
+                  clicks: 0,
+                  roasWeight: 0,
+                  roasWeightedTotal: 0,
+                };
 
-  const columns = Object.keys(rows[0] ?? { Label: null });
+                current.spend += ad.spend ?? 0;
+                current.impressions += ad.impressions ?? 0;
+                current.clicks += ad.clicks ?? 0;
+                if (ad.roas != null) {
+                  const weight = ad.spend && ad.spend > 0 ? ad.spend : 1;
+                  current.roasWeight += weight;
+                  current.roasWeightedTotal += ad.roas * weight;
+                }
+
+                result.set(ad.name, current);
+              }
+
+              return result;
+            }, new Map())
+            .values(),
+        )
+          .map((row) => ({
+            Creative: row.Creative,
+            Spend: formatCurrency(row.spend),
+            CTR: formatDecimal(row.impressions > 0 ? (row.clicks / row.impressions) * 100 : null),
+            ROAS: formatDecimal(row.roasWeight > 0 ? row.roasWeightedTotal / row.roasWeight : null),
+            _sortValue: row.roasWeight > 0 ? row.roasWeightedTotal / row.roasWeight : row.spend,
+          }))
+      : breakdown === "placement"
+        ? Array.from(
+            details
+              .reduce<
+                Map<string, { Platform: string; Position: string; spend: number; impressions: number; clicks: number }>
+              >((result, detail) => {
+                for (const placement of detail.placements) {
+                  const key = `${placement.platform}::${placement.position}`;
+                  const current = result.get(key) ?? {
+                    Platform: placement.platform,
+                    Position: placement.position,
+                    spend: 0,
+                    impressions: 0,
+                    clicks: 0,
+                  };
+
+                  current.spend += placement.spend ?? 0;
+                  current.impressions += placement.impressions ?? 0;
+                  current.clicks += placement.clicks ?? 0;
+                  result.set(key, current);
+                }
+
+                return result;
+              }, new Map())
+              .values(),
+          )
+            .map((row) => ({
+              Platform: row.Platform,
+              Position: row.Position,
+              Spend: formatCurrency(row.spend),
+              CTR: formatDecimal(row.impressions > 0 ? (row.clicks / row.impressions) * 100 : null),
+              _sortValue: row.impressions > 0 ? (row.clicks / row.impressions) * 100 : row.spend,
+            }))
+        : breakdown === "geography"
+          ? Array.from(
+              details
+                .reduce<Map<string, { Market: string; spend: number; impressions: number; clicks: number }>>(
+                  (result, detail) => {
+                    for (const geography of detail.geography) {
+                      const current = result.get(geography.market) ?? {
+                        Market: geography.market,
+                        spend: 0,
+                        impressions: 0,
+                        clicks: 0,
+                      };
+
+                      current.spend += geography.spend ?? 0;
+                      current.impressions += geography.impressions ?? 0;
+                      current.clicks += geography.clicks ?? 0;
+                      result.set(geography.market, current);
+                    }
+
+                    return result;
+                  },
+                  new Map(),
+                )
+                .values(),
+            )
+              .map((row) => ({
+                Market: row.Market,
+                Spend: formatCurrency(row.spend),
+                CTR: formatDecimal(row.impressions > 0 ? (row.clicks / row.impressions) * 100 : null),
+                _sortValue: row.impressions > 0 ? (row.clicks / row.impressions) * 100 : row.spend,
+              }))
+          : Array.from(
+              details
+                .reduce<
+                  Map<string, {
+                    Age: string;
+                    Gender: string;
+                    spend: number;
+                    impressions: number;
+                    clicks: number;
+                    roasWeight: number;
+                    roasWeightedTotal: number;
+                  }>
+                >((result, detail) => {
+                  for (const row of detail.ageGender) {
+                    const key = `${row.age}::${row.gender}`;
+                    const current = result.get(key) ?? {
+                      Age: row.age,
+                      Gender: row.gender,
+                      spend: 0,
+                      impressions: 0,
+                      clicks: 0,
+                      roasWeight: 0,
+                      roasWeightedTotal: 0,
+                    };
+
+                    current.spend += row.spend ?? 0;
+                    current.impressions += row.impressions ?? 0;
+                    current.clicks += row.clicks ?? 0;
+                    if (row.roas != null) {
+                      const weight = row.spend && row.spend > 0 ? row.spend : 1;
+                      current.roasWeight += weight;
+                      current.roasWeightedTotal += row.roas * weight;
+                    }
+
+                    result.set(key, current);
+                  }
+
+                  return result;
+                }, new Map())
+                .values(),
+            )
+              .map((row) => ({
+                Age: row.Age,
+                Gender: row.Gender,
+                Spend: formatCurrency(row.spend),
+                CTR: formatDecimal(row.impressions > 0 ? (row.clicks / row.impressions) * 100 : null),
+                ROAS: formatDecimal(row.roasWeight > 0 ? row.roasWeightedTotal / row.roasWeight : null),
+                _sortValue: row.roasWeight > 0 ? row.roasWeightedTotal / row.roasWeight : row.spend,
+              }));
+
+  const sortedRows = [...rows].sort((left, right) =>
+    sortDirection === "asc"
+      ? (left._sortValue ?? 0) - (right._sortValue ?? 0)
+      : (right._sortValue ?? 0) - (left._sortValue ?? 0),
+  );
+  const outputRows = sortedRows.map(({ _sortValue: _ignore, ...row }) => row);
+
+  const columns = Object.keys(outputRows[0] ?? { Label: null });
 
   return ok(
-    [table(columns, rows, "Breakdown")],
-    [buildCampaignReference(detail.campaign.campaignId, detail.campaign.name)],
+    [table(columns, outputRows, "Breakdown")],
+    uniqueEntities(
+      details.map((detail) => buildCampaignReference(detail.campaign.campaignId, detail.campaign.name)),
+    ),
   );
 }
 
