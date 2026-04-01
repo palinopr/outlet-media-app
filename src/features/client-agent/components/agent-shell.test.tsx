@@ -181,7 +181,45 @@ describe("AgentShell", () => {
     expect(screen.getByText("Clarification")).toBeInTheDocument();
   });
 
-  it("renders compact refusal and error treatments and disables the composer in preview mode", async () => {
+  it("allows unsaved preview chats for admins", async () => {
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/client/acme/agent/threads") && init?.method === "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "preview_thread",
+              title: null,
+              previewText: null,
+              referencedEntities: [],
+              lastResponseStatus: null,
+              lastMessageAt: "2026-03-31T12:00:00.000Z",
+              updatedAt: "2026-03-31T12:00:00.000Z",
+              createdAt: "2026-03-31T12:00:00.000Z",
+              messages: [],
+            },
+          }, 201),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/preview_thread/messages")) {
+        return Promise.resolve(
+          makeJsonResponse({
+            status: "answer",
+            thread_id: "preview_thread",
+            message_id: "preview_answer_1",
+            text: "Preview answer",
+            blocks: [],
+            referenced_entities: [],
+            resolved_range: null,
+          }),
+        );
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    });
+
     render(
       <AgentShell
         clientName="Acme"
@@ -203,8 +241,31 @@ describe("AgentShell", () => {
       />,
     );
 
-    const textarea = screen.getByPlaceholderText("Preview mode disables message sending.");
-    expect(textarea).toBeDisabled();
-    expect(screen.getByText("Preview mode is read-only for Acme.")).toBeInTheDocument();
+    const textarea = screen.getByPlaceholderText("Ask a preview question. These chats are not saved.");
+    expect(textarea).not.toBeDisabled();
+    expect(
+      screen.getByText("Preview mode can test the agent for Acme, but preview chats are not saved."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "New chat" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "New chat" }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/client/acme/agent/threads",
+        expect.objectContaining({ method: "POST" }),
+      );
+    });
+
+    fireEvent.change(textarea, { target: { value: "How are campaigns doing?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(await screen.findAllByText("Preview answer")).toHaveLength(2);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/client/acme/agent/threads/preview_thread/messages",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("\"history\":[]"),
+      }),
+    );
   });
 });

@@ -23,7 +23,6 @@ export function ThreadList({
       <button
         type="button"
         onClick={onNewChat}
-        disabled={isPreview}
         className="flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-400/25 bg-cyan-400/10 px-4 py-3 text-sm font-medium text-cyan-100 transition hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:border-white/[0.08] disabled:bg-white/[0.04] disabled:text-white/35"
       >
         <MessageSquarePlus className="h-4 w-4" />
@@ -34,7 +33,7 @@ export function ThreadList({
         {threads.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-white/[0.08] px-4 py-5 text-sm text-white/45">
             {isPreview
-              ? "Preview mode hides saved conversations."
+              ? "Preview chats are not saved."
               : "No saved conversations yet."}
           </p>
         ) : (

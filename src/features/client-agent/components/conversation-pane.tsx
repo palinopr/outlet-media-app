@@ -68,7 +68,7 @@ export function ConversationPane({
         </h2>
         <p className="mt-2 text-sm text-white/55">
           {isPreview
-            ? `Preview mode is read-only for ${clientName}.`
+            ? `Preview mode can test the agent for ${clientName}, but preview chats are not saved.`
             : `Use plain language and the agent will answer from your client-safe analytics.`}
         </p>
       </div>
@@ -143,7 +143,7 @@ export function ConversationPane({
             rows={4}
             placeholder={
               isPreview
-                ? "Preview mode disables message sending."
+                ? "Ask a preview question. These chats are not saved."
                 : "Ask about campaign or event performance…"
             }
             className="w-full resize-none rounded-2xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-300/35 disabled:cursor-not-allowed disabled:opacity-60"

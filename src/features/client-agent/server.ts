@@ -13,6 +13,7 @@ import {
 } from "./store";
 import type {
   AgentAnswerBlock,
+  AgentHistoryMessage,
   ClientAgentScope,
   ReferencedEntity,
   ResolvedRange,
@@ -305,11 +306,13 @@ export async function sendMessage({
   threadId,
   message,
   clientGeneratedId,
+  history = [],
 }: {
   slug: string;
   threadId: string;
   message: string;
   clientGeneratedId?: string;
+  history?: AgentHistoryMessage[];
 }): Promise<ServiceResult<SendMessageBody>> {
   const access = await resolveScope(slug);
   if (!access.ok) {
@@ -317,7 +320,29 @@ export async function sendMessage({
   }
 
   if (access.scope.viewer === "admin_preview") {
-    return errorResult(403, "Preview mode does not support agent persistence");
+    const modelResponse = await generateClientAgentModelResponse({
+      history,
+      message,
+      scope: access.scope,
+      scopeSummary: {
+        clientSlug: access.scope.clientSlug,
+        eventsEnabled: access.portalConfig.eventsEnabled,
+      },
+    });
+
+    return {
+      ok: true,
+      status: 200,
+      body: {
+        status: modelResponse.status,
+        thread_id: threadId,
+        message_id: crypto.randomUUID(),
+        text: modelResponse.text,
+        blocks: modelResponse.blocks,
+        referenced_entities: modelResponse.referencedEntities,
+        resolved_range: modelResponse.resolvedRange,
+      },
+    };
   }
 
   const thread = await getStoreThread({

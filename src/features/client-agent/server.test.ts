@@ -174,6 +174,56 @@ describe("client-agent server orchestration", () => {
     expect(revalidateClientAgentPath).not.toHaveBeenCalled();
   });
 
+  it("allows admin preview sendMessage without persistence", async () => {
+    resolveClientAgentAccessForApi.mockResolvedValue({
+      kind: "allowed",
+      clientId: "client_1",
+      clientSlug: "acme",
+      scope: undefined,
+      userId: "user_admin",
+      viewer: "admin_preview",
+    });
+    generateClientAgentModelResponse.mockResolvedValue({
+      status: "answer",
+      text: "Preview answer.",
+      blocks: [],
+      referencedEntities: [],
+      resolvedRange: null,
+      providerResponseId: null,
+    });
+
+    const result = await sendMessage({
+      slug: "acme",
+      threadId: "preview_thread_1",
+      message: "How are campaigns doing?",
+      history: [{ role: "user", text: "Previous preview turn" }],
+    });
+
+    expect(result).toMatchObject({
+      ok: true,
+      status: 200,
+      body: {
+        status: "answer",
+        thread_id: "preview_thread_1",
+        text: "Preview answer.",
+      },
+    });
+    expect(generateClientAgentModelResponse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        history: [{ role: "user", text: "Previous preview turn" }],
+        message: "How are campaigns doing?",
+        scope: expect.objectContaining({
+          viewer: "admin_preview",
+        }),
+      }),
+    );
+    expect(getStoreThread).not.toHaveBeenCalled();
+    expect(appendUserMessage).not.toHaveBeenCalled();
+    expect(appendAssistantMessage).not.toHaveBeenCalled();
+    expect(logSystemEvent).not.toHaveBeenCalled();
+    expect(revalidateClientAgentPath).not.toHaveBeenCalled();
+  });
+
   it("returns 404 for thread get when out of scope", async () => {
     getStoreThread.mockResolvedValue(null);
 

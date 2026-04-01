@@ -51,6 +51,11 @@ type SendMessagePayload = {
   resolved_range: ResolvedRange | null;
 };
 
+type HistoryPayload = Array<{
+  role: "user" | "assistant";
+  text: string;
+}>;
+
 const BASE_PROMPTS = [
   "How are my campaigns doing this month?",
   "Show spend by date for Camila.",
@@ -102,6 +107,13 @@ function buildAssistantMessage(payload: SendMessagePayload): AgentThreadMessage 
 
 async function parseJson<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
+}
+
+function buildHistoryPayload(messages: AgentThreadMessage[]): HistoryPayload {
+  return messages.slice(-6).map((message) => ({
+    role: message.role,
+    text: message.text,
+  }));
 }
 
 export function AgentShell({
@@ -206,10 +218,6 @@ export function AgentShell({
   }
 
   async function handleNewChat() {
-    if (isPreview) {
-      return;
-    }
-
     try {
       setShellMessage(null);
       await createThreadAndSelect();
@@ -220,7 +228,7 @@ export function AgentShell({
 
   async function handleSendMessage(explicitMessage?: string) {
     const nextMessage = (explicitMessage ?? draft).trim();
-    if (!nextMessage || composerDisabled || isPreview) {
+    if (!nextMessage || composerDisabled) {
       return;
     }
 
@@ -229,6 +237,7 @@ export function AgentShell({
 
     try {
       const threadId = activeThreadId ?? (await createThreadAndSelect());
+      const threadHistory = buildHistoryPayload(messagesByThread[threadId] ?? []);
       const clientGeneratedId = crypto.randomUUID();
       const optimisticUserMessage = buildOptimisticUserMessage(nextMessage, clientGeneratedId);
 
@@ -248,6 +257,7 @@ export function AgentShell({
         body: JSON.stringify({
           message: nextMessage,
           client_generated_id: clientGeneratedId,
+          history: threadHistory,
         }),
       });
       const body = await parseJson<SendMessagePayload & { error?: string }>(response);
@@ -347,7 +357,7 @@ export function AgentShell({
       <ConversationPane
         activeThreadId={activeThreadId}
         clientName={clientName}
-        composerDisabled={composerDisabled || isPreview}
+        composerDisabled={composerDisabled}
         draft={draft}
         isLoadingThread={isLoadingThread}
         isPreview={isPreview}

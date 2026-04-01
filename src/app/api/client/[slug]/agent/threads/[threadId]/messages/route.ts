@@ -6,6 +6,12 @@ import { sendMessage } from "@/features/client-agent/server";
 const SendMessageSchema = z.object({
   message: z.string().trim().min(1),
   client_generated_id: z.string().min(1).optional(),
+  history: z.array(
+    z.object({
+      role: z.enum(["user", "assistant"]),
+      text: z.string(),
+    }),
+  ).max(6).optional(),
 });
 
 type RouteContext = {
@@ -27,6 +33,7 @@ export async function POST(request: Request, context: RouteContext) {
     threadId,
     message: parsed.data.message,
     clientGeneratedId: parsed.data.client_generated_id,
+    history: parsed.data.history,
   });
 
   return NextResponse.json(result.body, { status: result.status });
