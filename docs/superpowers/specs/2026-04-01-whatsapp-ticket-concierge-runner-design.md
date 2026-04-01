@@ -82,11 +82,18 @@ The runner should receive ad-level event context out of band.
 
 If the customer comes from a specific ad or WhatsApp entry path tied to one show, the runner should use that event/show/date automatically. It should not ask "which show?" unless the event context is actually missing or ambiguous.
 
-### 3. The customer gets 3 options
+### 3. The customer gets up to 3 options
 
-The runner should prepare 3 options, not 1 and not an unbounded list.
+The runner should target 3 options, not 1 and not an unbounded list.
 
 Three is enough to create meaningful choice without making the chat noisy. It also supports the desired fallback behavior when the customer has a strict budget but needs alternatives.
+
+Scarce-inventory fallback must be explicit:
+
+- if 3 valid options exist, return 3
+- if only 2 valid options exist, return 2 and explicitly say live inventory is limited
+- if only 1 valid option exists, return 1 and explicitly say live inventory is limited
+- if no valid options exist, return a structured `no_inventory` result instead of broadening constraints silently
 
 ### 4. Budget means all-in after fees
 
@@ -95,6 +102,25 @@ If the customer says `under $300`, the runner should evaluate options using fina
 This is a trust requirement. The customer should not feel tricked by low face values that turn into over-budget checkouts.
 
 If nothing is available under budget, the runner should return the 3 closest over-budget options rather than stopping and asking for a new budget first.
+
+For v1, `all-in` means:
+
+- base ticket price
+- mandatory service fees
+- mandatory facility / venue fees
+- mandatory order-processing fees prorated across the requested quantity when the quote source returns them only at order level
+
+`All-in` does not include optional add-ons such as:
+
+- ticket insurance
+- parking
+- merchandise
+- donations
+
+Fee source-of-truth rule for v1:
+
+- use the exact consumer-side or inventory-side quote that already includes mandatory fees when available
+- if the quote source cannot produce a trustworthy mandatory-fee total, exclude that option from v1 instead of showing an estimated all-in number
 
 ### 5. Seat visuals should use a simplified real section map
 
@@ -125,6 +151,14 @@ When the customer chooses an option:
 
 After the customer selects one option, the runner should immediately attempt to generate the regular Ticketmaster checkout link for that exact selection. It should not add an intermediate confirmation step such as "locking now" before attempting the checkout flow.
 
+The checkout executor boundary for v1 is:
+
+- assume an already-authenticated browser/session context exists for the internal test runner
+- generate the checkout URL only
+- do not attempt payment
+- do not attempt fulfillment
+- do not mutate the selected option into a different seat choice without surfacing that change to the customer
+
 ### 7. Inventory conflicts must be visible
 
 If the selected seats are gone by the time the runner tries to generate the checkout link:
@@ -150,11 +184,11 @@ This preserves trust and avoids hidden substitution.
 4. The runner parses the message into a strict intent:
    - quantity
    - maximum all-in budget
-   - any optional preference cues
+   - any supported optional preference cues
 5. The runner loads live candidate inventory for the inferred event.
 6. The runner normalizes all candidate prices to final totals after fees.
 7. The runner filters and ranks candidates.
-8. The runner returns 3 options.
+8. The runner returns up to 3 options, depending on valid live inventory.
 
 ### Customer-facing option payload
 
@@ -178,7 +212,49 @@ The choice UI should be:
 9. The customer picks one option.
 10. The runner immediately runs the checkout-link generation path.
 11. If successful, it sends the regular Ticketmaster checkout link with time-sensitive wording.
-12. If unsuccessful because inventory changed, it sends a clear refresh message and 3 new options.
+12. If unsuccessful because inventory changed, it sends a clear refresh message and the current valid result set: up to 3 fresh options, or `no_inventory` if no viable seats remain.
+
+## Selection State Rules
+
+The selection flow must be explicit so the fallback path is deterministic.
+
+### Valid selection
+
+- a button tap for one presented option
+- a reply of `1`, `2`, or `3` that matches one currently active option
+
+### Invalid selection
+
+If the customer replies with anything else while option selection is active:
+
+- do not discard the active options immediately
+- send a short correction such as `Reply 1, 2, or 3 to pick one of these options.`
+- preserve the current option set until timeout or refresh
+
+### Duplicate selection
+
+If the customer selects the same option twice:
+
+- treat the second selection as idempotent
+- do not generate a second independent checkout flow if a live checkout result already exists for that option
+
+### Timeout
+
+Prepared option sets should expire after a short window because inventory is live.
+
+For v1:
+
+- an option set should carry an explicit expiry timestamp
+- if the customer replies after expiry, the old set is stale
+- the runner should tell the customer those options expired and regenerate fresh options instead of attempting the old selection
+
+### Refresh invalidates old choices
+
+Once a refreshed option set is sent:
+
+- the prior option ids are no longer valid
+- a reply referring to the previous set should be treated as stale
+- the runner should tell the customer inventory changed and direct them to choose from the current set
 
 ## Internal Architecture
 
@@ -198,11 +274,20 @@ Output:
 {
   "quantity": 2,
   "maxTotalCents": 30000,
-  "preferences": []
+  "preferences": ["near_stage"]
 }
 ```
 
 This parser should stay narrow and predictable. It does not need to become a general natural-language platform.
+
+For v1, supported preference tokens should be fixed and small:
+
+- `near_stage`
+- `center_view`
+- `lower_level`
+- `aisle`
+
+Unknown preference language should be ignored in v1 rather than guessed.
 
 ### `event-context-resolver`
 
@@ -254,20 +339,22 @@ Input:
 
 Output:
 
-- exactly 3 options
+- up to 3 options
 
 Ranking priority:
 
 1. under budget
 2. closest to budget without going over
-3. better section quality / viewing angle
-4. cleaner row and seat pairing
+3. supported preference match when one of the fixed v1 preference tokens is present
+4. better section quality / viewing angle
+5. cleaner row and seat pairing
 
 If nothing is under budget:
 
 1. closest over-budget totals
-2. better section quality
-3. cleaner row and seat pairing
+2. supported preference match when one of the fixed v1 preference tokens is present
+3. better section quality
+4. cleaner row and seat pairing
 
 The ranker should not attempt hidden preference learning in v1.
 
@@ -350,13 +437,33 @@ Example shape:
       "totalCents": 28600,
       "section": "114",
       "row": "K",
+      "seatLabels": ["7", "8"],
       "quantity": 2,
       "note": "Best value",
-      "mapImagePath": "/tmp/seat-map-opt-1.svg"
+      "mapImagePath": "/tmp/seat-map-opt-1.svg",
+      "quoteSource": "exact",
+      "expiresAt": "2026-04-01T20:10:00.000Z",
+      "execution": {
+        "source": "tm1",
+        "sectionId": "114",
+        "rowId": "K",
+        "seatIds": ["7", "8"],
+        "inventoryVersion": 123,
+        "layoutVersion": "45",
+        "externalEventVersion": 67,
+        "selectionPayload": {
+          "placeSelections": [
+            { "sectionId": "114", "rowId": "K", "placeId": "7" },
+            { "sectionId": "114", "rowId": "K", "placeId": "8" }
+          ]
+        }
+      }
     }
   ]
 }
 ```
+
+The `execution` object is required. The checkout executor must not depend on hidden in-memory seat state that is absent from the prepared option contract.
 
 ### Selection output
 
@@ -379,6 +486,24 @@ Conflict:
 }
 ```
 
+No inventory:
+
+```json
+{
+  "status": "no_inventory",
+  "reason": "no_viable_options"
+}
+```
+
+Lookup failure:
+
+```json
+{
+  "status": "lookup_failed",
+  "reason": "upstream_inventory_error"
+}
+```
+
 ## Failure Handling
 
 ### Missing event context
@@ -393,9 +518,31 @@ If quantity or budget cannot be parsed, the runner may ask a minimal clarificati
 
 Return the 3 closest over-budget options.
 
+### Fewer than 3 viable options
+
+If filtering leaves fewer than 3 valid options:
+
+- return the valid 1-2 options that remain
+- make the limited live inventory explicit in the customer-facing wording
+- do not widen constraints silently just to manufacture 3 choices
+
+### No viable inventory at all
+
+If no valid options remain after filtering:
+
+- return a structured `no_inventory` result
+- for internal testing, the formatter should produce a short out-of-stock message instead of inventing substitutes
+
+### Partial pricing data
+
+If an option does not have a trustworthy mandatory-fee-inclusive total:
+
+- exclude it from v1
+- do not estimate final totals from face value alone
+
 ### Inventory changed after selection
 
-Tell the customer the selected seats are no longer available and send 3 fresh options. Do not auto-substitute.
+Tell the customer the selected seats are no longer available and send the current valid result set: up to 3 fresh options, or `no_inventory` if no viable seats remain. Do not auto-substitute.
 
 ### Map rendering failure
 
@@ -404,6 +551,14 @@ If the simplified real section map cannot be built, use the abstract bowl fallba
 ### Checkout-link generation failure
 
 Return a structured failure and retry path. Do not pretend the link exists. If the failure is due to seat loss, treat it as an inventory refresh case.
+
+### Upstream lookup failures
+
+If Ticketmaster, TM1, or the browser collection step fails upstream:
+
+- return a structured `lookup_failed` result
+- do not fall back to stale inventory
+- do not present incomplete options as if they were live
 
 ## Testing Strategy
 
@@ -427,6 +582,8 @@ Use controlled candidate-option fixtures and verify:
 - closest under-budget option ranks highest
 - over-budget fallback works when necessary
 - split seats are excluded
+- fixed preference tokens affect ranking deterministically
+- fewer-than-3 valid options return 1-2 options without widening constraints
 
 ### 3. Mini-map rendering checks
 
@@ -434,6 +591,7 @@ Verify:
 
 - section highlighting works for the target Zamora event
 - abstract fallback works when geometry is unavailable
+- prepared option expiry is attached to rendered outputs
 
 ### 4. Checkout executor proof
 
@@ -447,9 +605,16 @@ Run the real browser checkout path on the chosen Zamora event and confirm:
 Run:
 
 - message + event context in
-- 3 options out
+- up to 3 options out
 - choice in
 - checkout link or refreshed options out
+
+Also verify:
+
+- invalid numeric reply handling
+- stale reply after option expiry
+- stale reply after a refresh
+- zero-inventory and upstream-failure result shapes
 
 This is the actual stop gate for the first slice.
 
