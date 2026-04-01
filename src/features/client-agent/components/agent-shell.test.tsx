@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AgentShell } from "./agent-shell";
 
@@ -13,6 +13,37 @@ function makeJsonResponse(body: unknown, status = 200) {
   });
 }
 
+function makeThreadSummary({
+  createdAt,
+  lastMessageAt,
+  previewText,
+  referencedEntities = [],
+  threadId,
+  title,
+  updatedAt,
+  lastResponseStatus = null,
+}: {
+  createdAt: string;
+  lastMessageAt: string;
+  previewText: string | null;
+  referencedEntities?: never[];
+  threadId: string;
+  title: string;
+  updatedAt: string;
+  lastResponseStatus?: "answer" | "clarify" | "refuse" | "error" | "pending" | null;
+}) {
+  return {
+    threadId,
+    title,
+    previewText,
+    referencedEntities,
+    lastResponseStatus,
+    lastMessageAt,
+    updatedAt,
+    createdAt,
+  };
+}
+
 describe("AgentShell", () => {
   beforeEach(() => {
     fetchMock.mockReset();
@@ -21,6 +52,8 @@ describe("AgentShell", () => {
 
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
   });
 
@@ -57,54 +90,137 @@ describe("AgentShell", () => {
     expect(screen.getByRole("button", { name: "How did my last show do?" })).toBeInTheDocument();
   });
 
-  it("creates a new chat, loads a thread, submits a message optimistically, and keeps the chat text-only", async () => {
-    let resolvePendingMessage: ((value: Response) => void) | undefined;
+  it("queues a turn, keeps the optimistic user message, polls the thread, and merges the durable result", async () => {
+    vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue("client_request_1");
+
+    let threadFetchCount = 0;
 
     fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
-      if (url.endsWith("/api/client/acme/agent/threads") && init?.method === "POST") {
-        return Promise.resolve(
-          makeJsonResponse({
-            thread: {
-              threadId: "thread_new",
-              title: null,
-              previewText: null,
-              referencedEntities: [],
-              lastResponseStatus: null,
-              lastMessageAt: "2026-03-31T12:00:00.000Z",
-              updatedAt: "2026-03-31T12:00:00.000Z",
-              createdAt: "2026-03-31T12:00:00.000Z",
-              messages: [],
-            },
-          }, 201),
-        );
-      }
+      if (url.endsWith("/api/client/acme/agent/threads/thread_older") && init?.method !== "POST") {
+        threadFetchCount += 1;
 
-      if (url.endsWith("/api/client/acme/agent/threads/thread_1")) {
+        if (threadFetchCount === 1) {
+          return Promise.resolve(
+            makeJsonResponse({
+              thread: {
+                threadId: "thread_older",
+                title: "Older thread",
+                previewText: "Older preview",
+                referencedEntities: [],
+                lastResponseStatus: "answer",
+                lastMessageAt: "2020-04-01T12:00:00.000Z",
+                updatedAt: "2020-04-01T12:00:00.000Z",
+                createdAt: "2020-04-01T12:00:00.000Z",
+                messages: [],
+              },
+            }),
+          );
+        }
+
+        if (threadFetchCount === 2) {
+          return Promise.resolve(
+            makeJsonResponse({
+              thread: {
+                threadId: "thread_older",
+                title: "Older thread",
+                previewText: "Thinking…",
+                referencedEntities: [],
+                lastResponseStatus: "pending",
+                lastMessageAt: "2020-04-01T12:01:00.000Z",
+                updatedAt: "2020-04-01T12:01:00.000Z",
+                createdAt: "2020-04-01T12:00:00.000Z",
+                messages: [
+                  {
+                    messageId: "message_user_1",
+                    role: "user",
+                    status: null,
+                    text: "How are my campaigns doing this month?",
+                    blocks: [],
+                    referencedEntities: [],
+                    contextPayload: null,
+                    resolvedRange: null,
+                    providerResponseId: null,
+                    clientGeneratedId: "client_request_1",
+                    agentTaskId: "task_1",
+                    clientRequestId: "client_request_1",
+                    createdAt: "2020-04-01T12:00:01.000Z",
+                  },
+                  {
+                    messageId: "assistant_pending_1",
+                    role: "assistant",
+                    status: "pending",
+                    text: "Thinking…",
+                    blocks: [],
+                    referencedEntities: [],
+                    contextPayload: null,
+                    resolvedRange: null,
+                    providerResponseId: null,
+                    clientGeneratedId: null,
+                    agentTaskId: "task_1",
+                    clientRequestId: "client_request_1",
+                    createdAt: "2020-04-01T12:00:02.000Z",
+                  },
+                ],
+              },
+            }),
+          );
+        }
+
         return Promise.resolve(
           makeJsonResponse({
             thread: {
-              threadId: "thread_1",
-              title: "Saved thread",
-              previewText: "Latest preview",
-              referencedEntities: [],
+              threadId: "thread_older",
+              title: "Older thread",
+              previewText: "Campaigns are pacing above goal.",
+              referencedEntities: [
+                {
+                  entityId: "cmp_1",
+                  entityType: "campaign",
+                  name: "Campaign 1",
+                },
+              ],
               lastResponseStatus: "answer",
-              lastMessageAt: "2026-03-31T12:00:00.000Z",
-              updatedAt: "2026-03-31T12:00:00.000Z",
-              createdAt: "2026-03-31T12:00:00.000Z",
+              lastMessageAt: "2030-04-01T12:01:02.000Z",
+              updatedAt: "2030-04-01T12:01:02.000Z",
+              createdAt: "2020-04-01T12:00:00.000Z",
               messages: [
                 {
-                  messageId: "assistant_saved",
-                  role: "assistant",
-                  status: "answer",
-                  text: "Saved answer",
+                  messageId: "message_user_1",
+                  role: "user",
+                  status: null,
+                  text: "How are my campaigns doing this month?",
                   blocks: [],
                   referencedEntities: [],
+                  contextPayload: null,
                   resolvedRange: null,
-                  providerResponseId: "resp_saved",
+                  providerResponseId: null,
+                  clientGeneratedId: "client_request_1",
+                  agentTaskId: "task_1",
+                  clientRequestId: "client_request_1",
+                  createdAt: "2020-04-01T12:00:01.000Z",
+                },
+                {
+                  messageId: "assistant_pending_1",
+                  role: "assistant",
+                  status: "answer",
+                  text: "Campaigns are pacing above goal.",
+                  blocks: [],
+                  referencedEntities: [
+                    {
+                      entityId: "cmp_1",
+                      entityType: "campaign",
+                      name: "Campaign 1",
+                    },
+                  ],
+                  contextPayload: null,
+                  resolvedRange: null,
+                  providerResponseId: "resp_1",
                   clientGeneratedId: null,
-                  createdAt: "2026-03-31T12:00:01.000Z",
+                  agentTaskId: "task_1",
+                  clientRequestId: "client_request_1",
+                  createdAt: "2020-04-01T12:00:02.000Z",
                 },
               ],
             },
@@ -112,9 +228,157 @@ describe("AgentShell", () => {
         );
       }
 
-      if (url.endsWith("/api/client/acme/agent/threads/thread_new/messages")) {
+      if (url.endsWith("/api/client/acme/agent/threads/thread_older/messages") && init?.method === "POST") {
+        const body = JSON.parse(String(init.body ?? "{}"));
+        expect(body).toEqual(
+          expect.objectContaining({
+            message: "How are my campaigns doing this month?",
+            client_request_id: "client_request_1",
+          }),
+        );
+        expect(body.history).toBeUndefined();
+
+        return Promise.resolve(
+          makeJsonResponse({
+            status: "queued",
+            thread_id: "thread_older",
+            client_request_id: "client_request_1",
+            task_id: "task_1",
+            assistant_message_id: "assistant_pending_1",
+          }, 202),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_new") && init?.method !== "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "thread_new",
+              title: "New thread",
+              previewText: "New preview",
+              referencedEntities: [],
+              lastResponseStatus: "answer",
+              lastMessageAt: "2020-04-01T12:10:00.000Z",
+              updatedAt: "2020-04-01T12:10:00.000Z",
+              createdAt: "2020-04-01T12:10:00.000Z",
+              messages: [],
+            },
+          }),
+        );
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    });
+
+    render(
+      <AgentShell
+        clientName="Acme"
+        eventsEnabled={true}
+        initialThreads={[
+          makeThreadSummary({
+            threadId: "thread_new",
+            title: "Newer thread",
+            previewText: "Newer preview",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2020-04-01T12:10:00.000Z",
+            updatedAt: "2020-04-01T12:10:00.000Z",
+            createdAt: "2020-04-01T12:10:00.000Z",
+          }),
+          makeThreadSummary({
+            threadId: "thread_older",
+            title: "Older thread",
+            previewText: "Older preview",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2020-04-01T12:00:00.000Z",
+            updatedAt: "2020-04-01T12:00:00.000Z",
+            createdAt: "2020-04-01T12:00:00.000Z",
+          }),
+        ]}
+        slug="acme"
+        viewer="member"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Older thread/ }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/client/acme/agent/threads/thread_older",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
+    fireEvent.change(composer, { target: { value: "How are my campaigns doing this month?" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByText("How are my campaigns doing this month?")).toBeInTheDocument();
+    expect(await screen.findAllByText("Thinking…")).toHaveLength(2);
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/client/acme/agent/threads/thread_older/messages",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("\"client_request_id\":\"client_request_1\""),
+      }),
+    );
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+    });
+
+    expect(screen.getAllByText("Campaigns are pacing above goal.")).toHaveLength(2);
+    expect(screen.queryByText("Thinking…")).not.toBeInTheDocument();
+    const reorderedThreadButtons = screen.getAllByRole("button", { name: /thread/i });
+    expect(reorderedThreadButtons[0]).toHaveTextContent("Older thread");
+    expect(reorderedThreadButtons[1]).toHaveTextContent("Newer thread");
+  });
+
+  it("deduplicates optimistic rows when the same client request id is retried", async () => {
+    vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue("client_request_1");
+
+    let firstPoll = true;
+
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_older") && init?.method !== "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "thread_older",
+              title: "Older thread",
+              previewText: "Older preview",
+              referencedEntities: [],
+              lastResponseStatus: "answer",
+              lastMessageAt: "2026-04-01T12:00:00.000Z",
+              updatedAt: "2026-04-01T12:00:00.000Z",
+              createdAt: "2026-04-01T12:00:00.000Z",
+              messages: [],
+            },
+          }),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_older/messages") && init?.method === "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            status: "queued",
+            thread_id: "thread_older",
+            client_request_id: "client_request_1",
+            task_id: "task_1",
+            assistant_message_id: "assistant_pending_1",
+          }, 202),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_older")) {
         return new Promise<Response>((resolve) => {
-          resolvePendingMessage = resolve;
+          if (firstPoll) {
+            firstPoll = false;
+          }
+          void resolve;
         });
       }
 
@@ -126,123 +390,716 @@ describe("AgentShell", () => {
         clientName="Acme"
         eventsEnabled={true}
         initialThreads={[
-          {
-            threadId: "thread_1",
-            title: "Saved thread",
-            previewText: "Latest preview",
-            referencedEntities: [],
+          makeThreadSummary({
+            threadId: "thread_older",
+            title: "Older thread",
+            previewText: "Older preview",
             lastResponseStatus: "answer",
-            lastMessageAt: "2026-03-31T12:00:00.000Z",
-            updatedAt: "2026-03-31T12:00:00.000Z",
-            createdAt: "2026-03-31T12:00:00.000Z",
-          },
+            lastMessageAt: "2026-04-01T12:00:00.000Z",
+            updatedAt: "2026-04-01T12:00:00.000Z",
+            createdAt: "2026-04-01T12:00:00.000Z",
+          }),
         ]}
         slug="acme"
         viewer="member"
       />,
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /Saved thread/ }));
-    expect(await screen.findByText("Saved answer")).toBeInTheDocument();
-
-    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
-    fireEvent.change(composer, { target: { value: "How are my campaigns doing this month?" } });
-
-    fireEvent.click(screen.getByRole("button", { name: "New chat" }));
+    fireEvent.click(screen.getByRole("button", { name: /Older thread/ }));
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith(
-        "/api/client/acme/agent/threads",
-        expect.objectContaining({ method: "POST" }),
+        "/api/client/acme/agent/threads/thread_older",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal),
+        }),
       );
     });
-    await waitFor(() => {
-      expect(composer).toHaveValue("");
-    });
 
-    fireEvent.change(composer, { target: { value: "Show spend by date for Camila." } });
+    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
+    fireEvent.change(composer, { target: { value: "Retry me" } });
     fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
-    expect(await screen.findByText("Show spend by date for Camila.")).toBeInTheDocument();
+    expect(await screen.findByText("Retry me")).toBeInTheDocument();
     expect(await screen.findByText("Thinking…")).toBeInTheDocument();
 
-    expect(resolvePendingMessage).toBeDefined();
-    resolvePendingMessage!(
-      makeJsonResponse({
-        status: "clarify",
-        thread_id: "thread_new",
-        message_id: "assistant_1",
-        text: "Which campaign do you mean?",
-        blocks: [
-          {
-            type: "metric_cards",
-            cards: [{ label: "Spend", value: "$4,200" }],
-          },
-          {
-            type: "table",
-            columns: ["Entity", "Metric"],
-            rows: [{ Entity: "Campaign 1", Metric: "$4,200" }],
-          },
-          {
-            type: "chart",
-            xKey: "date",
-            series: [
-              {
-                name: "Spend",
-                points: [
-                  { x: "2026-03-30", y: 4200 },
-                  { x: "2026-03-31", y: 3800 },
-                ],
-              },
-            ],
-          },
-        ],
-        referenced_entities: [],
-        resolved_range: null,
-      }),
-    );
+    fireEvent.change(composer, { target: { value: "Retry me" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
-    expect(await screen.findAllByText("Which campaign do you mean?")).toHaveLength(2);
-    await waitFor(() => {
-      expect(screen.queryByText("Thinking…")).not.toBeInTheDocument();
-    });
-    expect(screen.queryByRole("table")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("answer-chart")).not.toBeInTheDocument();
-    expect(screen.queryByText("Spend")).not.toBeInTheDocument();
-    expect(screen.getByText("Clarification")).toBeInTheDocument();
+    expect(screen.getAllByText("Retry me")).toHaveLength(1);
+    expect(screen.getAllByText("Thinking…")).toHaveLength(1);
   });
 
-  it("allows unsaved preview chats for admins", async () => {
+  it("aborts polling when the user switches threads", async () => {
+    let capturedSignal: AbortSignal | null = null;
+    let resolvePoll: ((value: Response) => void) | null = null;
+    let threadAFetchCount = 0;
+
     fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
 
-      if (url.endsWith("/api/client/acme/agent/threads") && init?.method === "POST") {
+      if (url.endsWith("/api/client/acme/agent/threads/thread_a") && init?.method !== "POST") {
+        threadAFetchCount += 1;
+        if (threadAFetchCount === 1) {
+          return Promise.resolve(
+            makeJsonResponse({
+              thread: {
+                threadId: "thread_a",
+                title: "Thread A",
+                previewText: "Preview A",
+                referencedEntities: [],
+                lastResponseStatus: "answer",
+                lastMessageAt: "2026-04-01T12:00:00.000Z",
+                updatedAt: "2026-04-01T12:00:00.000Z",
+                createdAt: "2026-04-01T12:00:00.000Z",
+                messages: [],
+              },
+            }),
+          );
+        }
+
+        return new Promise<Response>((resolve) => {
+          capturedSignal = init?.signal as AbortSignal | null;
+          resolvePoll = resolve;
+        });
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_b") && init?.method !== "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "thread_b",
+              title: "Thread B",
+              previewText: "Preview B",
+              referencedEntities: [],
+              lastResponseStatus: "answer",
+              lastMessageAt: "2026-04-01T12:10:00.000Z",
+              updatedAt: "2026-04-01T12:10:00.000Z",
+              createdAt: "2026-04-01T12:10:00.000Z",
+              messages: [],
+            },
+          }),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_a/messages") && init?.method === "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            status: "queued",
+            thread_id: "thread_a",
+            client_request_id: "client_request_1",
+            task_id: "task_1",
+            assistant_message_id: "assistant_pending_1",
+          }, 202),
+        );
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    });
+
+    render(
+      <AgentShell
+        clientName="Acme"
+        eventsEnabled={true}
+        initialThreads={[
+          makeThreadSummary({
+            threadId: "thread_a",
+            title: "Thread A",
+            previewText: "Preview A",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2026-04-01T12:00:00.000Z",
+            updatedAt: "2026-04-01T12:00:00.000Z",
+            createdAt: "2026-04-01T12:00:00.000Z",
+          }),
+          makeThreadSummary({
+            threadId: "thread_b",
+            title: "Thread B",
+            previewText: "Preview B",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2026-04-01T12:10:00.000Z",
+            updatedAt: "2026-04-01T12:10:00.000Z",
+            createdAt: "2026-04-01T12:10:00.000Z",
+          }),
+        ]}
+        slug="acme"
+        viewer="member"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Thread A/ }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/client/acme/agent/threads/thread_a",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
+    fireEvent.change(composer, { target: { value: "Switch me" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() => {
+      expect(capturedSignal).not.toBeNull();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Thread B/ }));
+    await waitFor(() => {
+      expect(capturedSignal).not.toBeNull();
+      if (!capturedSignal) {
+        throw new Error("Expected polling signal to be captured");
+      }
+      expect(capturedSignal.aborted).toBe(true);
+    });
+
+    expect(resolvePoll).not.toBeNull();
+    if (!resolvePoll) {
+      throw new Error("Expected polling response resolver to be captured");
+    }
+    const pollResolver = resolvePoll as (value: Response) => void;
+
+    pollResolver(
+      makeJsonResponse({
+        thread: {
+          threadId: "thread_a",
+          title: "Thread A",
+          previewText: "Final answer",
+          referencedEntities: [],
+          lastResponseStatus: "answer",
+          lastMessageAt: "2026-04-01T12:01:00.000Z",
+          updatedAt: "2026-04-01T12:01:00.000Z",
+          createdAt: "2026-04-01T12:00:00.000Z",
+          messages: [],
+        },
+      }),
+    );
+
+    expect(screen.queryByText("Final answer")).not.toBeInTheDocument();
+  });
+
+  it("keeps another thread composer active while a different thread send is still posting", async () => {
+    let resolveSend: ((value: Response) => void) | null = null;
+
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_a") && init?.method !== "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "thread_a",
+              title: "Thread A",
+              previewText: "Preview A",
+              referencedEntities: [],
+              lastResponseStatus: "answer",
+              lastMessageAt: "2026-04-01T12:00:00.000Z",
+              updatedAt: "2026-04-01T12:00:00.000Z",
+              createdAt: "2026-04-01T12:00:00.000Z",
+              messages: [],
+            },
+          }),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_b") && init?.method !== "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "thread_b",
+              title: "Thread B",
+              previewText: "Preview B",
+              referencedEntities: [],
+              lastResponseStatus: "answer",
+              lastMessageAt: "2026-04-01T12:10:00.000Z",
+              updatedAt: "2026-04-01T12:10:00.000Z",
+              createdAt: "2026-04-01T12:10:00.000Z",
+              messages: [],
+            },
+          }),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_a/messages") && init?.method === "POST") {
+        return new Promise<Response>((resolve) => {
+          resolveSend = resolve;
+        });
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    });
+
+    render(
+      <AgentShell
+        clientName="Acme"
+        eventsEnabled={true}
+        initialThreads={[
+          makeThreadSummary({
+            threadId: "thread_a",
+            title: "Thread A",
+            previewText: "Preview A",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2026-04-01T12:00:00.000Z",
+            updatedAt: "2026-04-01T12:00:00.000Z",
+            createdAt: "2026-04-01T12:00:00.000Z",
+          }),
+          makeThreadSummary({
+            threadId: "thread_b",
+            title: "Thread B",
+            previewText: "Preview B",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2026-04-01T12:10:00.000Z",
+            updatedAt: "2026-04-01T12:10:00.000Z",
+            createdAt: "2026-04-01T12:10:00.000Z",
+          }),
+        ]}
+        slug="acme"
+        viewer="member"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Thread A/ }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/client/acme/agent/threads/thread_a",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
+    fireEvent.change(composer, { target: { value: "Send on A" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() => {
+      expect(resolveSend).not.toBeNull();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /Thread B/ }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/client/acme/agent/threads/thread_b",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    const switchedComposer = screen.getByPlaceholderText("Ask about campaign or event performance…");
+    expect(switchedComposer).not.toBeDisabled();
+    expect(screen.queryByText("Thinking…")).not.toBeInTheDocument();
+
+    fireEvent.change(switchedComposer, { target: { value: "Thread B stays editable" } });
+    expect(switchedComposer).toHaveValue("Thread B stays editable");
+
+    expect(resolveSend).not.toBeNull();
+    if (!resolveSend) {
+      throw new Error("Expected send resolver to be captured");
+    }
+    const sendResolver = resolveSend as (value: Response) => void;
+    sendResolver(
+      makeJsonResponse({
+        status: "queued",
+        thread_id: "thread_a",
+        client_request_id: "client_request_1",
+        task_id: "task_1",
+        assistant_message_id: "assistant_pending_1",
+      }, 202),
+    );
+  });
+
+  it("retries polling after a transient refresh failure while the assistant is still pending", async () => {
+    vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue("client_request_1");
+
+    let pollAttempt = 0;
+
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_older") && init?.method !== "POST") {
+        pollAttempt += 1;
+
+        if (pollAttempt === 1) {
+          return Promise.resolve(
+            makeJsonResponse({
+              thread: {
+                threadId: "thread_older",
+                title: "Older thread",
+                previewText: "Older preview",
+                referencedEntities: [],
+                lastResponseStatus: "answer",
+                lastMessageAt: "2026-04-01T12:00:00.000Z",
+                updatedAt: "2026-04-01T12:00:00.000Z",
+                createdAt: "2026-04-01T12:00:00.000Z",
+                messages: [],
+              },
+            }),
+          );
+        }
+
+        if (pollAttempt === 2) {
+          return Promise.resolve(
+            makeJsonResponse({ error: "temporary outage" }, 500),
+          );
+        }
+
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "thread_older",
+              title: "Older thread",
+              previewText: "Recovered answer",
+              referencedEntities: [],
+              lastResponseStatus: "answer",
+              lastMessageAt: "2026-04-01T12:02:00.000Z",
+              updatedAt: "2026-04-01T12:02:00.000Z",
+              createdAt: "2026-04-01T12:00:00.000Z",
+              messages: [
+                {
+                  messageId: "message_user_1",
+                  role: "user",
+                  status: null,
+                  text: "Recover please",
+                  blocks: [],
+                  referencedEntities: [],
+                  contextPayload: null,
+                  resolvedRange: null,
+                  providerResponseId: null,
+                  clientGeneratedId: "client_request_1",
+                  agentTaskId: "task_1",
+                  clientRequestId: "client_request_1",
+                  createdAt: "2026-04-01T12:00:01.000Z",
+                },
+                {
+                  messageId: "assistant_pending_1",
+                  role: "assistant",
+                  status: "answer",
+                  text: "Recovered answer",
+                  blocks: [],
+                  referencedEntities: [],
+                  contextPayload: null,
+                  resolvedRange: null,
+                  providerResponseId: "resp_1",
+                  clientGeneratedId: null,
+                  agentTaskId: "task_1",
+                  clientRequestId: "client_request_1",
+                  createdAt: "2026-04-01T12:02:00.000Z",
+                },
+              ],
+            },
+          }),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_older/messages") && init?.method === "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            status: "queued",
+            thread_id: "thread_older",
+            client_request_id: "client_request_1",
+            task_id: "task_1",
+            assistant_message_id: "assistant_pending_1",
+          }, 202),
+        );
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    });
+
+    render(
+      <AgentShell
+        clientName="Acme"
+        eventsEnabled={true}
+        initialThreads={[
+          makeThreadSummary({
+            threadId: "thread_older",
+            title: "Older thread",
+            previewText: "Older preview",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2026-04-01T12:00:00.000Z",
+            updatedAt: "2026-04-01T12:00:00.000Z",
+            createdAt: "2026-04-01T12:00:00.000Z",
+          }),
+        ]}
+        slug="acme"
+        viewer="member"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Older thread/ }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/client/acme/agent/threads/thread_older",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
+    fireEvent.change(composer, { target: { value: "Recover please" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Thinking…")).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1100));
+    });
+
+    expect(await screen.findAllByText("Recovered answer")).toHaveLength(2);
+    expect(screen.queryByText("Thinking…")).not.toBeInTheDocument();
+  }, 15000);
+
+  it("does not let a stale initial thread load overwrite a newer pending thread summary", async () => {
+    vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue("client_request_1");
+
+    let resolveInitialLoad: ((value: Response) => void) | null = null;
+
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_a") && init?.method !== "POST") {
+        return new Promise<Response>((resolve) => {
+          resolveInitialLoad = resolve;
+        });
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_b") && init?.method !== "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            thread: {
+              threadId: "thread_b",
+              title: "Thread B",
+              previewText: "Preview B",
+              referencedEntities: [],
+              lastResponseStatus: "answer",
+              lastMessageAt: "2026-04-01T12:10:00.000Z",
+              updatedAt: "2026-04-01T12:10:00.000Z",
+              createdAt: "2026-04-01T12:10:00.000Z",
+              messages: [],
+            },
+          }),
+        );
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_a/messages") && init?.method === "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            status: "queued",
+            thread_id: "thread_a",
+            client_request_id: "client_request_1",
+            task_id: "task_1",
+            assistant_message_id: "assistant_pending_1",
+          }, 202),
+        );
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    });
+
+    render(
+      <AgentShell
+        clientName="Acme"
+        eventsEnabled={true}
+        initialThreads={[
+          makeThreadSummary({
+            threadId: "thread_a",
+            title: "Thread A",
+            previewText: "Preview A",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2026-04-01T12:00:00.000Z",
+            updatedAt: "2026-04-01T12:00:00.000Z",
+            createdAt: "2026-04-01T12:00:00.000Z",
+          }),
+          makeThreadSummary({
+            threadId: "thread_b",
+            title: "Thread B",
+            previewText: "Preview B",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2026-04-01T12:10:00.000Z",
+            updatedAt: "2026-04-01T12:10:00.000Z",
+            createdAt: "2026-04-01T12:10:00.000Z",
+          }),
+        ]}
+        slug="acme"
+        viewer="member"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Thread A/ }));
+    await waitFor(() => {
+      expect(resolveInitialLoad).not.toBeNull();
+    });
+
+    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
+    fireEvent.change(composer, { target: { value: "Keep A pending" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() => {
+      expect(screen.getAllByText("Thinking…")).toHaveLength(2);
+    });
+
+    expect(resolveInitialLoad).not.toBeNull();
+    if (!resolveInitialLoad) {
+      throw new Error("Expected initial thread load resolver to be captured");
+    }
+    const initialThreadLoadResolver = resolveInitialLoad as (value: Response) => void;
+    initialThreadLoadResolver(
+      makeJsonResponse({
+        thread: {
+          threadId: "thread_a",
+          title: "Thread A",
+          previewText: "Preview A",
+          referencedEntities: [],
+          lastResponseStatus: "answer",
+          lastMessageAt: "2026-04-01T12:00:00.000Z",
+          updatedAt: "2026-04-01T12:00:00.000Z",
+          createdAt: "2026-04-01T12:00:00.000Z",
+          messages: [],
+        },
+      }),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Thread B/ }));
+    await waitFor(() => {
+      const threadAButton = screen.getByRole("button", { name: /Thread A/ });
+      expect(threadAButton).toHaveTextContent("Thinking…");
+      expect(threadAButton).not.toHaveTextContent("Preview A");
+    });
+  });
+
+  it("aborts polling when the shell unmounts", async () => {
+    let capturedSignal: AbortSignal | null = null;
+    let threadAFetchCount = 0;
+
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_a") && init?.method !== "POST") {
+        threadAFetchCount += 1;
+        if (threadAFetchCount === 1) {
+          return Promise.resolve(
+            makeJsonResponse({
+              thread: {
+                threadId: "thread_a",
+                title: "Thread A",
+                previewText: "Preview A",
+                referencedEntities: [],
+                lastResponseStatus: "answer",
+                lastMessageAt: "2026-04-01T12:00:00.000Z",
+                updatedAt: "2026-04-01T12:00:00.000Z",
+                createdAt: "2026-04-01T12:00:00.000Z",
+                messages: [],
+              },
+            }),
+          );
+        }
+
+        return new Promise<Response>((resolve) => {
+          capturedSignal = init?.signal as AbortSignal | null;
+          void resolve;
+        });
+      }
+
+      if (url.endsWith("/api/client/acme/agent/threads/thread_a/messages") && init?.method === "POST") {
+        return Promise.resolve(
+          makeJsonResponse({
+            status: "queued",
+            thread_id: "thread_a",
+            client_request_id: "client_request_1",
+            task_id: "task_1",
+            assistant_message_id: "assistant_pending_1",
+          }, 202),
+        );
+      }
+
+      throw new Error(`Unexpected fetch call: ${url}`);
+    });
+
+    const { unmount } = render(
+      <AgentShell
+        clientName="Acme"
+        eventsEnabled={true}
+        initialThreads={[
+          makeThreadSummary({
+            threadId: "thread_a",
+            title: "Thread A",
+            previewText: "Preview A",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2026-04-01T12:00:00.000Z",
+            updatedAt: "2026-04-01T12:00:00.000Z",
+            createdAt: "2026-04-01T12:00:00.000Z",
+          }),
+        ]}
+        slug="acme"
+        viewer="member"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /Thread A/ }));
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/client/acme/agent/threads/thread_a",
+        expect.objectContaining({
+          signal: expect.any(AbortSignal),
+        }),
+      );
+    });
+
+    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
+    fireEvent.change(composer, { target: { value: "Unmount me" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() => {
+      expect(capturedSignal).not.toBeNull();
+    });
+
+    unmount();
+
+    expect(capturedSignal).not.toBeNull();
+    if (!capturedSignal) {
+      throw new Error("Expected polling signal to be captured");
+    }
+    const abortedSignal = capturedSignal as AbortSignal;
+    expect(abortedSignal.aborted).toBe(true);
+  });
+
+  it("loads persisted preview threads for the owning admin preview user", async () => {
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+
+      if (url.endsWith("/api/client/acme/agent/threads/preview_thread") && init?.method !== "POST") {
         return Promise.resolve(
           makeJsonResponse({
             thread: {
               threadId: "preview_thread",
-              title: null,
-              previewText: null,
+              title: "Preview thread",
+              previewText: "Preview answer",
               referencedEntities: [],
-              lastResponseStatus: null,
-              lastMessageAt: "2026-03-31T12:00:00.000Z",
-              updatedAt: "2026-03-31T12:00:00.000Z",
-              createdAt: "2026-03-31T12:00:00.000Z",
-              messages: [],
+              lastResponseStatus: "answer",
+              lastMessageAt: "2026-04-01T12:00:00.000Z",
+              updatedAt: "2026-04-01T12:00:00.000Z",
+              createdAt: "2026-04-01T12:00:00.000Z",
+              messages: [
+                {
+                  messageId: "assistant_preview_1",
+                  role: "assistant",
+                  status: "answer",
+                  text: "Preview answer",
+                  blocks: [],
+                  referencedEntities: [],
+                  contextPayload: null,
+                  resolvedRange: null,
+                  providerResponseId: "resp_preview_1",
+                  clientGeneratedId: null,
+                  agentTaskId: "task_preview_1",
+                  clientRequestId: "client_request_preview_1",
+                  createdAt: "2026-04-01T12:00:00.000Z",
+                },
+              ],
             },
-          }, 201),
-        );
-      }
-
-      if (url.endsWith("/api/client/acme/agent/threads/preview_thread/messages")) {
-        return Promise.resolve(
-          makeJsonResponse({
-            status: "answer",
-            thread_id: "preview_thread",
-            message_id: "preview_answer_1",
-            text: "Preview answer",
-            blocks: [],
-            referenced_entities: [],
-            resolved_range: null,
           }),
         );
       }
@@ -255,314 +1112,29 @@ describe("AgentShell", () => {
         clientName="Acme"
         eventsEnabled={true}
         initialThreads={[
-          {
-            threadId: "thread_preview",
+          makeThreadSummary({
+            threadId: "preview_thread",
             title: "Preview thread",
-            previewText: null,
-            referencedEntities: [],
-            lastResponseStatus: null,
-            lastMessageAt: "2026-03-31T12:00:00.000Z",
-            updatedAt: "2026-03-31T12:00:00.000Z",
-            createdAt: "2026-03-31T12:00:00.000Z",
-          },
+            previewText: "Preview answer",
+            lastResponseStatus: "answer",
+            lastMessageAt: "2026-04-01T12:00:00.000Z",
+            updatedAt: "2026-04-01T12:00:00.000Z",
+            createdAt: "2026-04-01T12:00:00.000Z",
+          }),
         ]}
         slug="acme"
         viewer="admin_preview"
       />,
     );
 
-    const textarea = screen.getByPlaceholderText("Ask a preview question. These chats are not saved.");
-    expect(textarea).not.toBeDisabled();
-    expect(
-      screen.getByText("Preview mode can test the agent for Acme, but preview chats are not saved."),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "New chat" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: /Preview thread/ }));
 
-    fireEvent.click(screen.getByRole("button", { name: "New chat" }));
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/client/acme/agent/threads",
-        expect.objectContaining({ method: "POST" }),
-      );
-    });
-
-    fireEvent.change(textarea, { target: { value: "How are campaigns doing?" } });
-    fireEvent.click(screen.getByRole("button", { name: "Send" }));
-
-    expect(await screen.findAllByText("Preview answer")).toHaveLength(2);
+    expect(await screen.findByText("Preview answer")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith(
-      "/api/client/acme/agent/threads/preview_thread/messages",
+      "/api/client/acme/agent/threads/preview_thread",
       expect.objectContaining({
-        method: "POST",
-        body: expect.stringContaining("\"history\":[]"),
+        signal: expect.any(AbortSignal),
       }),
     );
-  });
-
-  it("reuses assistant context payload for preview follow-up turns", async () => {
-    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-
-      if (url.endsWith("/api/client/acme/agent/threads") && init?.method === "POST") {
-        return Promise.resolve(
-          makeJsonResponse({
-            thread: {
-              threadId: "preview_thread",
-              title: null,
-              previewText: null,
-              referencedEntities: [],
-              lastResponseStatus: null,
-              lastMessageAt: "2026-03-31T12:00:00.000Z",
-              updatedAt: "2026-03-31T12:00:00.000Z",
-              createdAt: "2026-03-31T12:00:00.000Z",
-              messages: [],
-            },
-          }, 201),
-        );
-      }
-
-      if (url.endsWith("/api/client/acme/agent/threads/preview_thread/messages")) {
-        const body = JSON.parse(String(init?.body ?? "{}"));
-
-        if (body.message === "What was my last show?") {
-          return Promise.resolve(
-            makeJsonResponse({
-              status: "answer",
-              thread_id: "preview_thread",
-              message_id: "preview_answer_1",
-              text: "Your most recent show was Camila Phoenix.",
-              blocks: [],
-              referenced_entities: [
-                {
-                  entityId: "evt_1",
-                  entityType: "event",
-                  name: "Camila Phoenix",
-                },
-              ],
-              context_payload: {
-                primaryDomain: "events",
-                referencedEntities: [
-                  {
-                    entityId: "evt_1",
-                    entityType: "event",
-                    name: "Camila Phoenix",
-                  },
-                ],
-                resolvedRange: {
-                  preset: "lifetime",
-                  startDate: "1900-01-01",
-                  endDate: "2026-04-01",
-                  timezone: "America/Chicago",
-                },
-                comparisonSet: [],
-                pronounTargets: ["evt_1"],
-              },
-              resolved_range: {
-                preset: "lifetime",
-                startDate: "1900-01-01",
-                endDate: "2026-04-01",
-                timezone: "America/Chicago",
-              },
-            }),
-          );
-        }
-
-        return Promise.resolve(
-          makeJsonResponse({
-            status: "answer",
-            thread_id: "preview_thread",
-            message_id: "preview_answer_2",
-            text: "The show before that was Ricardo Arjona in San Diego.",
-            blocks: [],
-            referenced_entities: [
-              {
-                entityId: "evt_2",
-                entityType: "event",
-                name: "Ricardo Arjona San Diego",
-              },
-            ],
-            context_payload: {
-              primaryDomain: "events",
-              referencedEntities: [
-                {
-                  entityId: "evt_2",
-                  entityType: "event",
-                  name: "Ricardo Arjona San Diego",
-                },
-              ],
-              resolvedRange: {
-                preset: "lifetime",
-                startDate: "1900-01-01",
-                endDate: "2026-04-01",
-                timezone: "America/Chicago",
-              },
-              comparisonSet: [],
-              pronounTargets: ["evt_2"],
-            },
-            resolved_range: {
-              preset: "lifetime",
-              startDate: "1900-01-01",
-              endDate: "2026-04-01",
-              timezone: "America/Chicago",
-            },
-          }),
-        );
-      }
-
-      throw new Error(`Unexpected fetch call: ${url}`);
-    });
-
-    render(
-      <AgentShell
-        clientName="Acme"
-        eventsEnabled={true}
-        initialThreads={[]}
-        slug="acme"
-        viewer="admin_preview"
-      />,
-    );
-
-    fireEvent.click(screen.getByRole("button", { name: "New chat" }));
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        "/api/client/acme/agent/threads",
-        expect.objectContaining({ method: "POST" }),
-      );
-    });
-
-    const textarea = screen.getByPlaceholderText("Ask a preview question. These chats are not saved.");
-    fireEvent.change(textarea, { target: { value: "What was my last show?" } });
-    fireEvent.click(screen.getByRole("button", { name: "Send" }));
-    expect(await screen.findAllByText("Your most recent show was Camila Phoenix.")).toHaveLength(2);
-
-    fireEvent.change(textarea, { target: { value: "and before that?" } });
-    fireEvent.click(screen.getByRole("button", { name: "Send" }));
-    expect(await screen.findAllByText("The show before that was Ricardo Arjona in San Diego.")).toHaveLength(2);
-
-    const secondMessageCall = fetchMock.mock.calls.find(
-      (call) =>
-        String(call[0]).endsWith("/api/client/acme/agent/threads/preview_thread/messages") &&
-        String((call[1] as RequestInit | undefined)?.body ?? "").includes("and before that?"),
-    );
-
-    expect(secondMessageCall).toBeDefined();
-    expect(String((secondMessageCall?.[1] as RequestInit | undefined)?.body ?? "")).toContain(
-      "\"context_payload\"",
-    );
-    expect(String((secondMessageCall?.[1] as RequestInit | undefined)?.body ?? "")).toContain(
-      "\"pronounTargets\":[\"evt_1\"]",
-    );
-  }, 15000);
-
-  it("clears the working state when the first message on a new thread fails", async () => {
-    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-
-      if (url.endsWith("/api/client/acme/agent/threads") && init?.method === "POST") {
-        return Promise.resolve(
-          makeJsonResponse({
-            thread: {
-              threadId: "thread_new",
-              title: null,
-              previewText: null,
-              referencedEntities: [],
-              lastResponseStatus: null,
-              lastMessageAt: "2026-03-31T12:00:00.000Z",
-              updatedAt: "2026-03-31T12:00:00.000Z",
-              createdAt: "2026-03-31T12:00:00.000Z",
-              messages: [],
-            },
-          }, 201),
-        );
-      }
-
-      if (url.endsWith("/api/client/acme/agent/threads/thread_new/messages")) {
-        return Promise.reject(new Error("send failed"));
-      }
-
-      throw new Error(`Unexpected fetch call: ${url}`);
-    });
-
-    render(
-      <AgentShell
-        clientName="Acme"
-        eventsEnabled={true}
-        initialThreads={[]}
-        slug="acme"
-        viewer="member"
-      />,
-    );
-
-    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
-    fireEvent.change(composer, { target: { value: "How is Camila doing?" } });
-    fireEvent.click(screen.getByRole("button", { name: "Send" }));
-
-    expect(await screen.findByText("How is Camila doing?")).toBeInTheDocument();
-    expect(await screen.findByText("I’m unable to send that right now.")).toBeInTheDocument();
-    await waitFor(() => {
-      expect(screen.queryByText("Thinking…")).not.toBeInTheDocument();
-    });
-  });
-
-  it("submits on Enter and keeps Shift+Enter as a newline", async () => {
-    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-
-      if (url.endsWith("/api/client/acme/agent/threads") && init?.method === "POST") {
-        return Promise.resolve(
-          makeJsonResponse({
-            thread: {
-              threadId: "thread_new",
-              title: null,
-              previewText: null,
-              referencedEntities: [],
-              lastResponseStatus: null,
-              lastMessageAt: "2026-03-31T12:00:00.000Z",
-              updatedAt: "2026-03-31T12:00:00.000Z",
-              createdAt: "2026-03-31T12:00:00.000Z",
-              messages: [],
-            },
-          }, 201),
-        );
-      }
-
-      if (url.endsWith("/api/client/acme/agent/threads/thread_new/messages")) {
-        return Promise.resolve(
-          makeJsonResponse({
-            status: "answer",
-            thread_id: "thread_new",
-            message_id: "assistant_1",
-            text: "Audience answer",
-            blocks: [],
-            referenced_entities: [],
-            resolved_range: null,
-          }),
-        );
-      }
-
-      throw new Error(`Unexpected fetch call: ${url}`);
-    });
-
-    render(
-      <AgentShell
-        clientName="Acme"
-        eventsEnabled={true}
-        initialThreads={[]}
-        slug="acme"
-        viewer="member"
-      />,
-    );
-
-    const composer = screen.getByPlaceholderText("Ask about campaign or event performance…");
-    fireEvent.change(composer, { target: { value: "Which audience is performing best right now?" } });
-    fireEvent.keyDown(composer, { key: "Enter", code: "Enter" });
-
-    expect(await screen.findAllByText("Audience answer")).toHaveLength(2);
-
-    fireEvent.change(composer, { target: { value: "Line one" } });
-    fireEvent.keyDown(composer, { key: "Enter", code: "Enter", shiftKey: true });
-
-    expect(fetchMock).toHaveBeenCalledTimes(2);
-    expect(composer).toHaveValue("Line one");
   });
 });

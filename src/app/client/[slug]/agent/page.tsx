@@ -25,12 +25,8 @@ export default async function ClientAgentPage({ params }: ClientAgentPageProps) 
   const portalConfig = await getClientPortalConfig(slug);
   const clientName = portalConfig?.brandName ?? slugToLabel(slug);
 
-  const initialThreads = access.viewer === "admin_preview"
-    ? []
-    : await (async () => {
-        const result = await listThreads({ slug });
-        return result.ok ? result.body.threads : [];
-      })();
+  const threadResult = await listThreads({ slug });
+  const initialThreads = threadResult.ok ? threadResult.body.threads : [];
 
   return (
     <div className="space-y-6">

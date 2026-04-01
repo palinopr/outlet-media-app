@@ -2,21 +2,11 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { validateRequest } from "@/lib/api-helpers";
 import { sendMessage } from "@/features/client-agent/server";
-import { ReferencedEntitySchema, ResolvedRangeSchema } from "@/features/client-agent/types";
-import { ThreadContextPayloadSchema } from "@/features/client-agent/thread-context";
 
 const SendMessageSchema = z.object({
   message: z.string().trim().min(1),
+  client_request_id: z.string().min(1).optional(),
   client_generated_id: z.string().min(1).optional(),
-  history: z.array(
-    z.object({
-      role: z.enum(["user", "assistant"]),
-      text: z.string(),
-      referenced_entities: z.array(ReferencedEntitySchema).optional(),
-      context_payload: ThreadContextPayloadSchema.nullable().optional(),
-      resolved_range: ResolvedRangeSchema.nullable().optional(),
-    }),
-  ).max(6).optional(),
 });
 
 type RouteContext = {
@@ -33,19 +23,24 @@ export async function POST(request: Request, context: RouteContext) {
   }
 
   const { slug, threadId } = await context.params;
+  const clientRequestId =
+    parsed.data.client_request_id ?? parsed.data.client_generated_id ?? crypto.randomUUID();
   const result = await sendMessage({
     slug,
     threadId,
     message: parsed.data.message,
-    clientGeneratedId: parsed.data.client_generated_id,
-    history: parsed.data.history?.map((entry) => ({
-      role: entry.role,
-      text: entry.text,
-      referencedEntities: entry.referenced_entities,
-      contextPayload: entry.context_payload,
-      resolvedRange: entry.resolved_range,
-    })),
+    clientGeneratedId: clientRequestId,
   });
+
+  if (result.ok && result.body.status === "queued") {
+    return NextResponse.json(
+      {
+        ...result.body,
+        client_request_id: clientRequestId,
+      },
+      { status: result.status },
+    );
+  }
 
   return NextResponse.json(result.body, { status: result.status });
 }

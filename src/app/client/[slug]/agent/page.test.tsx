@@ -78,7 +78,7 @@ describe("ClientAgentPage", () => {
     expect(shell).toHaveAttribute("data-thread-count", "1");
   });
 
-  it("passes preview mode into the shell and skips durable thread loading for admin preview", async () => {
+  it("passes preview mode into the shell and loads durable preview threads for the same admin user", async () => {
     mockedRequireClientAgentAccess.mockResolvedValueOnce({
       clientId: "client_1",
       clientSlug: "acme",
@@ -96,6 +96,24 @@ describe("ClientAgentPage", () => {
       reportsEnabled: true,
       slug: "acme",
     });
+    listThreads.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      body: {
+        threads: [
+          {
+            threadId: "preview_thread_1",
+            title: "Preview thread",
+            previewText: "Preview answer",
+            referencedEntities: [],
+            lastResponseStatus: "pending",
+            lastMessageAt: "2026-03-31T12:00:00.000Z",
+            updatedAt: "2026-03-31T12:00:00.000Z",
+            createdAt: "2026-03-31T12:00:00.000Z",
+          },
+        ],
+      },
+    });
 
     const { default: ClientAgentPage } = await import("./page");
     const element = await ClientAgentPage({
@@ -106,7 +124,7 @@ describe("ClientAgentPage", () => {
 
     const shell = screen.getByTestId("agent-shell");
     expect(shell).toHaveAttribute("data-viewer", "admin_preview");
-    expect(shell).toHaveAttribute("data-thread-count", "0");
-    expect(listThreads).not.toHaveBeenCalled();
+    expect(shell).toHaveAttribute("data-thread-count", "1");
+    expect(listThreads).toHaveBeenCalledWith({ slug: "acme" });
   });
 });
