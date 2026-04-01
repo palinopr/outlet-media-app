@@ -1,4 +1,5 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { updateClient } from "@/app/admin/actions/clients";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ClientDetailView } from "./client-detail";
 
@@ -21,7 +22,10 @@ vi.mock("sonner", () => ({
 
 afterEach(() => {
   cleanup();
+  vi.clearAllMocks();
 });
+
+const mockedUpdateClient = vi.mocked(updateClient);
 
 const client = {
   activeCampaigns: 1,
@@ -40,6 +44,7 @@ const client = {
   connectedAccountCount: 1,
   connectionRiskAccounts: 1,
   brandName: "Acme Live",
+  agentEnabled: true,
   eventsEnabled: true,
   events: [
     {
@@ -82,12 +87,21 @@ describe("ClientDetailView", () => {
     render(<ClientDetailView client={client} />);
 
     expect(screen.getByText("Client Portal Shape")).toBeInTheDocument();
+    expect(screen.getByText("Portal Agent Access")).toBeInTheDocument();
     expect(screen.getByText("Portal Events Access")).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Toggle client agent access" })).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Toggle client events access" })).toBeInTheDocument();
     expect(screen.queryByText("Portal Reports Access")).not.toBeInTheDocument();
     expect(screen.queryByRole("switch", { name: "Toggle client reports access" })).not.toBeInTheDocument();
     expect(
-      screen.getByText(/The client portal is intentionally narrow: campaigns, campaign detail,/),
+      screen.getByText(
+        /The client portal is intentionally narrow: Campaigns, optional Agent, optional Events, and legacy Reports\./,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /When disabled, the Agent nav item is removed and direct agent URLs redirect back to campaigns\./,
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -95,6 +109,21 @@ describe("ClientDetailView", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /CRM/i })).not.toBeInTheDocument();
+  });
+
+  it("persists the agent toggle from the overview tab", async () => {
+    mockedUpdateClient.mockResolvedValue(undefined);
+
+    render(<ClientDetailView client={client} />);
+
+    fireEvent.click(screen.getByRole("switch", { name: "Toggle client agent access" }));
+
+    await waitFor(() => {
+      expect(mockedUpdateClient).toHaveBeenCalledWith({
+        agentEnabled: false,
+        clientId: "client-1",
+      });
+    });
   });
 
   it("renders events when the Events tab is selected", () => {

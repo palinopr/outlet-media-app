@@ -263,6 +263,7 @@ export async function createClient(formData: { name: string; slug: string }) {
 
 export async function updateClient(formData: {
   clientId: string;
+  agentEnabled?: boolean;
   eventsEnabled?: boolean;
   reportsEnabled?: boolean;
   brandName?: string | null;
@@ -277,9 +278,19 @@ export async function updateClient(formData: {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
   const parsed = UpdateClientSchema.parse(formData);
-  const { clientId, eventsEnabled, reportsEnabled, brandName, logoAlt, logoUrl, ...updates } = parsed;
+  const {
+    clientId,
+    agentEnabled,
+    eventsEnabled,
+    reportsEnabled,
+    brandName,
+    logoAlt,
+    logoUrl,
+    ...updates
+  } = parsed;
   const dbUpdates = {
     ...updates,
+    ...(agentEnabled === undefined ? {} : { agent_enabled: agentEnabled }),
     ...(eventsEnabled === undefined ? {} : { events_enabled: eventsEnabled }),
     ...(reportsEnabled === undefined ? {} : { reports_enabled: reportsEnabled }),
     ...(brandName === undefined ? {} : { portal_brand_name: brandName }),

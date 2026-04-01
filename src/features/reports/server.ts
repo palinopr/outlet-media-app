@@ -1,7 +1,9 @@
 import { buildTrendData } from "@/app/client/[slug]/lib";
 import type { TmEvent } from "@/app/client/[slug]/types";
+import type { DateRange } from "@/lib/constants";
 import type { ScopeFilter } from "@/lib/member-access";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
+import type { MetaInsightsTimeRange } from "@/lib/meta-api";
 import { getFeatureReadClient } from "@/lib/supabase";
 import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
@@ -93,6 +95,7 @@ function toReportsEvent(event: TmEvent): ReportsEventCard {
 
 interface GetReportsDataOptions {
   clientSlug?: string | null;
+  range?: DateRange | MetaInsightsTimeRange;
   scope?: ScopeFilter;
 }
 
@@ -114,7 +117,7 @@ export async function getReportsData(
   options: GetReportsDataOptions = {},
 ): Promise<ReportsData> {
   const reportsDb = await getFeatureReadClient(!!options.clientSlug);
-  const result = await fetchAllCampaigns("30", options.clientSlug ?? null);
+  const result = await fetchAllCampaigns(options.range ?? "30", options.clientSlug ?? null);
 
   let campaigns = result.campaigns.map(toReportsCampaign);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CalendarDays, Eye, Megaphone, Palette } from "lucide-react";
+import { Bot, CalendarDays, Eye, Megaphone, Palette } from "lucide-react";
 import { toast } from "sonner";
 import { updateClient } from "@/app/admin/actions/clients";
 import { Switch } from "@/components/ui/switch";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 interface ClientOverviewTabProps {
+  agentEnabled: boolean;
   brandName: string | null;
   clientId: string;
   eventsEnabled: boolean;
@@ -19,12 +20,14 @@ interface ClientOverviewTabProps {
 type ClientUpdatePatch = Omit<Parameters<typeof updateClient>[0], "clientId">;
 
 export function ClientOverviewTab({
+  agentEnabled: initialAgentEnabled,
   brandName: initialBrandName,
   clientId,
   eventsEnabled: initialEventsEnabled,
   logoAlt: initialLogoAlt,
   logoUrl: initialLogoUrl,
 }: ClientOverviewTabProps) {
+  const [agentEnabled, setAgentEnabled] = useState(initialAgentEnabled);
   const [eventsEnabled, setEventsEnabled] = useState(initialEventsEnabled);
   const [brandName, setBrandName] = useState(initialBrandName ?? "");
   const [logoUrl, setLogoUrl] = useState(initialLogoUrl ?? "");
@@ -58,6 +61,15 @@ export function ClientOverviewTab({
     );
   }
 
+  function handleAgentToggle(checked: boolean) {
+    setAgentEnabled(checked);
+    savePortalSettings(
+      { agentEnabled: checked },
+      () => setAgentEnabled(!checked),
+      `Client Agent ${checked ? "enabled" : "disabled"}`,
+    );
+  }
+
   function handleBrandingSave() {
     savePortalSettings(
       {
@@ -78,34 +90,87 @@ export function ClientOverviewTab({
           <h2 className="text-sm font-semibold">Client Portal Shape</h2>
         </div>
         <p className="mt-2 text-sm text-muted-foreground">
-          The client portal is intentionally narrow: campaigns, campaign detail, and optional
-          events. Clients do not create, edit, approve, or manage work from the portal.
+          The client portal is intentionally narrow: Campaigns, optional Agent, optional Events,
+          and legacy Reports. Clients do not create, edit, approve, or manage work from the portal.
         </p>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Megaphone className="h-4 w-4 text-primary" />
-              Campaign visibility
+              Campaigns
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              Assign campaigns to the client from admin campaign ownership and member scope.
+              Campaigns stay visible for every client. Scope and assignments still come from admin
+              ownership and member access rules.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Bot className="h-4 w-4 text-primary" />
+              Optional Agent
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Enable the read-only Agent tab only for clients that should have conversational
+              reporting in the portal.
             </p>
           </div>
 
           <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
               <CalendarDays className="h-4 w-4 text-primary" />
-              Events visibility
+              Optional Events
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
               One toggle controls whether the client sees the Events nav item and event routes.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Eye className="h-4 w-4 text-primary" />
+              Legacy Reports
+            </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Reports remain a legacy portal package. Keep it available only where that older
+              contract is still in use.
             </p>
           </div>
         </div>
       </section>
 
       <section className="space-y-4">
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-semibold">Portal Agent Access</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Turn this on only for clients that should see the Agent page.
+              </p>
+            </div>
+
+            <Switch
+              aria-label="Toggle client agent access"
+              checked={agentEnabled}
+              disabled={isPending}
+              onCheckedChange={handleAgentToggle}
+            />
+          </div>
+
+          <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-4">
+            <p className="text-sm font-medium">
+              {agentEnabled
+                ? "Agent is visible in the client portal."
+                : "Agent is hidden from the client portal."}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              When disabled, the Agent nav item is removed and direct agent URLs redirect back to
+              campaigns.
+            </p>
+          </div>
+        </div>
+
         <div className="rounded-2xl border border-border/60 bg-card p-5">
           <div className="flex items-start justify-between gap-4">
             <div>

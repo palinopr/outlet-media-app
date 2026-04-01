@@ -1,4 +1,4 @@
-import { Megaphone, Ticket } from "lucide-react";
+import { Bot, Megaphone, Ticket } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavLink {
@@ -17,11 +17,22 @@ const EVENTS_NAV_LINK: Omit<NavLink, "href"> = {
   icon: Ticket,
 };
 
+const AGENT_NAV_LINK: Omit<NavLink, "href"> = {
+  label: "Agent",
+  icon: Bot,
+};
+
+export type ClientNavOptions = {
+  agentEnabled?: boolean;
+  eventsEnabled?: boolean;
+};
+
 export function getClientNavLinks(
   slug: string,
-  options: { eventsEnabled?: boolean } = {},
+  options: ClientNavOptions = {},
 ): NavLink[] {
   const links = [...BASE_NAV_LINKS];
+  if (options.agentEnabled) links.push(AGENT_NAV_LINK);
   if (options.eventsEnabled) links.push(EVENTS_NAV_LINK);
 
   return links.map((link) => {

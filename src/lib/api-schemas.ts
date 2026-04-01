@@ -142,6 +142,7 @@ export const CreateClientSchema = z.object({
 
 export const UpdateClientSchema = z.object({
   clientId: z.string().min(1),
+  agentEnabled: z.boolean().optional(),
   eventsEnabled: z.boolean().optional(),
   reportsEnabled: z.boolean().optional(),
   brandName: z.string().min(1).max(200).nullable().optional(),

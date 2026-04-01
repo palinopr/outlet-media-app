@@ -19,6 +19,24 @@ describe("metaInsightsUrl", () => {
     expect(url.searchParams.get("breakdowns")).toBe("age,gender");
     expect(url.searchParams.get("limit")).toBe("50");
   });
+
+  it("prefers explicit time_range over date_preset when provided", () => {
+    const url = metaInsightsUrl("123", "tok", "spend", {
+      datePreset: "last_7d",
+      timeRange: {
+        since: "2026-03-01",
+        until: "2026-03-31",
+      },
+    });
+
+    expect(url.searchParams.get("time_range")).toBe(
+      JSON.stringify({
+        since: "2026-03-01",
+        until: "2026-03-31",
+      }),
+    );
+    expect(url.searchParams.get("date_preset")).toBeNull();
+  });
 });
 
 describe("metaUrl", () => {

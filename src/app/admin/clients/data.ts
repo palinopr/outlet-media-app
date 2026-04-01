@@ -342,7 +342,7 @@ export async function getClientDetail(
   const { data: client } = await supabaseAdmin
     .from("clients")
     .select(
-      "id, name, slug, status, created_at, events_enabled, reports_enabled, portal_brand_name, portal_logo_url, portal_logo_alt",
+      "id, name, slug, status, created_at, agent_enabled, events_enabled, reports_enabled, portal_brand_name, portal_logo_url, portal_logo_alt",
     )
     .eq("id", clientId)
     .single();
@@ -514,6 +514,7 @@ export async function getClientDetail(
     totalRevenue,
     roas,
     createdAt: client.created_at,
+    agentEnabled: client.agent_enabled ?? false,
     brandName: client.portal_brand_name ?? null,
     logoAlt: client.portal_logo_alt ?? null,
     logoUrl: client.portal_logo_url ?? null,

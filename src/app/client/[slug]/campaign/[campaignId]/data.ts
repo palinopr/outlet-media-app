@@ -4,7 +4,7 @@ import { getEffectiveCampaignRowById } from "@/lib/campaign-client-assignment";
 import type { ScopeFilter } from "@/lib/member-access";
 import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
 import { centsToUsd } from "@/lib/formatters";
-import { metaGet, metaInsightsUrl, metaUrl } from "@/lib/meta-api";
+import { metaGet, metaInsightsUrl, metaUrl, type MetaInsightsTimeRange } from "@/lib/meta-api";
 import { allowsCampaignInScope } from "@/features/client-portal/scope";
 import type {
   CampaignCard,
@@ -26,6 +26,48 @@ function getMetaCreds(): { token: string; accountId: string } | null {
   const rawId = process.env.META_AD_ACCOUNT_ID;
   if (!token || !rawId) return null;
   return { token, accountId: rawId.replace(/^act_/, "") };
+}
+
+export type CampaignDetailRangeInput =
+  | DateRange
+  | {
+      since: string;
+      until: string;
+      label: string;
+    };
+
+function isExplicitRange(range: CampaignDetailRangeInput): range is Exclude<CampaignDetailRangeInput, DateRange> {
+  return typeof range !== "string";
+}
+
+function toInsightsWindow(range: CampaignDetailRangeInput): {
+  datePreset?: string;
+  timeRange?: MetaInsightsTimeRange;
+} {
+  if (isExplicitRange(range)) {
+    return {
+      timeRange: {
+        since: range.since,
+        until: range.until,
+      },
+    };
+  }
+
+  return {
+    datePreset: META_PRESETS[range],
+  };
+}
+
+function toRangeLabel(range: CampaignDetailRangeInput) {
+  return isExplicitRange(range) ? range.label : RANGE_LABELS[range];
+}
+
+function buildAdsInsightsField(range: CampaignDetailRangeInput) {
+  const modifier = isExplicitRange(range)
+    ? `time_range(${JSON.stringify({ since: range.since, until: range.until })})`
+    : `date_preset(${META_PRESETS[range]})`;
+
+  return `insights.${modifier}{spend,impressions,clicks,reach,ctr,cpc,purchase_roas,action_values}`;
 }
 
 // --- Fetch campaign overview from Meta (single campaign) ---
@@ -111,7 +153,7 @@ function deriveRevenue(
 
 async function fetchCampaignOverview(
   campaignId: string,
-  range: DateRange,
+  range: CampaignDetailRangeInput,
   creds: { token: string; accountId: string },
 ): Promise<{ info: MetaCampaignInfo | null; insights: MetaInsightRow | null }> {
   // Campaign info
@@ -121,7 +163,7 @@ async function fetchCampaignOverview(
   const insightsUrl = metaInsightsUrl(
     campaignId, creds.token,
     "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,reach,frequency,purchase_roas,action_values",
-    { datePreset: META_PRESETS[range] },
+    toInsightsWindow(range),
   );
 
   const [infoRes, insightsRes] = await Promise.all([
@@ -151,11 +193,11 @@ interface MetaAgeGenderRow {
 
 async function fetchAgeGender(
   campaignId: string,
-  range: DateRange,
+  range: CampaignDetailRangeInput,
   creds: { token: string; accountId: string },
 ): Promise<AgeGenderBreakdown[]> {
   const url = metaInsightsUrl(campaignId, creds.token, "impressions,clicks,ctr,spend", {
-    datePreset: META_PRESETS[range],
+    ...toInsightsWindow(range),
     breakdowns: "age,gender",
     limit: 100,
   });
@@ -188,11 +230,11 @@ interface MetaPlacementRow {
 
 async function fetchPlacements(
   campaignId: string,
-  range: DateRange,
+  range: CampaignDetailRangeInput,
   creds: { token: string; accountId: string },
 ): Promise<PlacementBreakdown[]> {
   const url = metaInsightsUrl(campaignId, creds.token, "impressions,clicks,ctr,spend", {
-    datePreset: META_PRESETS[range],
+    ...toInsightsWindow(range),
     breakdowns: "publisher_platform,platform_position",
     limit: 100,
   });
@@ -238,11 +280,11 @@ interface MetaHourlyRow {
 
 async function fetchHourly(
   campaignId: string,
-  range: DateRange,
+  range: CampaignDetailRangeInput,
   creds: { token: string; accountId: string },
 ): Promise<HourlyBreakdown[]> {
   const url = metaInsightsUrl(campaignId, creds.token, "impressions,clicks,ctr,spend", {
-    datePreset: META_PRESETS[range],
+    ...toInsightsWindow(range),
     breakdowns: "hourly_stats_aggregated_by_advertiser_time_zone",
     limit: 50,
   });
@@ -274,7 +316,7 @@ interface MetaDailyRow {
 
 async function fetchDaily(
   campaignId: string,
-  range: DateRange,
+  range: CampaignDetailRangeInput,
   creds: { token: string; accountId: string },
 ): Promise<DailyPoint[]> {
   // time_increment=1 gives day-by-day breakdown
@@ -283,7 +325,7 @@ async function fetchDaily(
     creds.token,
     "spend,impressions,clicks,ctr,purchase_roas,action_values",
     {
-      datePreset: META_PRESETS[range],
+      ...toInsightsWindow(range),
       timeIncrement: "1",
       limit: 90,
     },
@@ -322,7 +364,7 @@ interface MetaGeographyRow {
 
 async function fetchGeography(
   campaignId: string,
-  range: DateRange,
+  range: CampaignDetailRangeInput,
   creds: { token: string; accountId: string },
 ): Promise<GeographyBreakdown[]> {
   const attempts: Array<{
@@ -335,7 +377,7 @@ async function fetchGeography(
 
   for (const attempt of attempts) {
     const url = metaInsightsUrl(campaignId, creds.token, "spend,impressions,clicks,ctr,cpc", {
-      datePreset: META_PRESETS[range],
+      ...toInsightsWindow(range),
       breakdowns: attempt.breakdowns,
       limit: 100,
     });
@@ -392,11 +434,11 @@ interface MetaAdRow {
 
 async function fetchAds(
   campaignId: string,
-  range: DateRange,
+  range: CampaignDetailRangeInput,
   creds: { token: string; accountId: string },
 ): Promise<AdCard[]> {
   const url = new URL(metaUrl(`${campaignId}/ads`, creds.token, {
-    fields: `id,name,status,creative{thumbnail_url,title,body},insights.date_preset(${META_PRESETS[range]}){spend,impressions,clicks,reach,ctr,cpc,purchase_roas,action_values}`,
+    fields: `id,name,status,creative{thumbnail_url,title,body},${buildAdsInsightsField(range)}`,
     limit: "50",
   }));
 
@@ -459,7 +501,7 @@ async function getCampaignDetailReadContext() {
 export async function getCampaignDetail(
   slug: string,
   campaignId: string,
-  range: DateRange,
+  range: CampaignDetailRangeInput,
   scope?: ScopeFilter,
 ): Promise<CampaignDetailData | null> {
   if (!allowsCampaignInScope(scope, campaignId)) {
@@ -553,7 +595,7 @@ export async function getCampaignDetail(
         daily,
         recommendations,
         dataSource: "meta_api",
-        rangeLabel: RANGE_LABELS[range],
+        rangeLabel: toRangeLabel(range),
       };
     }
   }
@@ -586,6 +628,6 @@ export async function getCampaignDetail(
     daily: [],
     recommendations: [],
     dataSource: "supabase",
-    rangeLabel: RANGE_LABELS[range],
+    rangeLabel: toRangeLabel(range),
   };
 }

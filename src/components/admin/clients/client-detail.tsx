@@ -118,6 +118,7 @@ export function ClientDetailView({ client }: Props) {
       {/* Tab content */}
       {activeTab === "overview" && (
         <ClientOverviewTab
+          agentEnabled={client.agentEnabled}
           brandName={client.brandName}
           clientId={client.id}
           eventsEnabled={client.eventsEnabled}

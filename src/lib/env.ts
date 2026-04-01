@@ -21,6 +21,8 @@ const serverSchema = z.object({
   // Optional integrations
   META_ACCESS_TOKEN: z.string().optional(),
   META_AD_ACCOUNT_ID: z.string().optional(),
+  OPENAI_API_KEY: z.string().optional(),
+  CLIENT_AGENT_OPENAI_MODEL: z.string().optional(),
   TICKETMASTER_API_KEY: z.string().optional(),
   TM1_API_PREFIX: z.string().optional(),
   TM1_BASE_URL: z.string().url().optional(),
@@ -82,6 +84,8 @@ function validateEnv() {
     INGEST_SECRET: process.env.INGEST_SECRET,
     META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN,
     META_AD_ACCOUNT_ID: process.env.META_AD_ACCOUNT_ID,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    CLIENT_AGENT_OPENAI_MODEL: process.env.CLIENT_AGENT_OPENAI_MODEL,
     TICKETMASTER_API_KEY: process.env.TICKETMASTER_API_KEY,
     TM1_API_PREFIX: process.env.TM1_API_PREFIX,
     TM1_BASE_URL: process.env.TM1_BASE_URL,

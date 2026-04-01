@@ -8,15 +8,16 @@ import { Menu, X, Mail } from "lucide-react";
 import { getClientNavLinks, isNavActive } from "./nav-config";
 
 interface Props {
+  agentEnabled: boolean;
   slug: string;
   clientName: string;
   eventsEnabled: boolean;
 }
 
-export function MobileNav({ slug, clientName, eventsEnabled }: Props) {
+export function MobileNav({ agentEnabled, slug, clientName, eventsEnabled }: Props) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const links = getClientNavLinks(slug, { eventsEnabled });
+  const links = getClientNavLinks(slug, { agentEnabled, eventsEnabled });
 
   const close = useCallback(() => setOpen(false), []);
 

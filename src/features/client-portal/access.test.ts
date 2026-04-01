@@ -29,7 +29,12 @@ import { auth, currentUser } from "@clerk/nextjs/server";
 import { getMemberAccessForSlug } from "@/lib/member-access";
 import { getClientPortalConfig } from "./config";
 import { resolveClientPortalEntry } from "./entry";
-import { requireClientAccess, requireClientEventsAccess } from "./access";
+import {
+  requireClientAccess,
+  requireClientAgentAccess,
+  requireClientEventsAccess,
+  resolveClientAgentAccessForApi,
+} from "./access";
 
 const mockedAuth = vi.mocked(auth);
 const mockedCurrentUser = vi.mocked(currentUser);
@@ -123,6 +128,7 @@ describe("requireClientAccess", () => {
       scope: "assigned",
     });
     mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: false,
       clientId: "client_1",
       eventsEnabled: true,
       slug: "acme",
@@ -146,6 +152,46 @@ describe("requireClientAccess", () => {
     });
   });
 
+  it("allows agent routes when the client has agent access enabled", async () => {
+    mockedAuth.mockResolvedValue({ userId: "user_member" } as Awaited<ReturnType<typeof auth>>);
+    mockedCurrentUser.mockResolvedValue({
+      publicMetadata: { role: "client" },
+    } as unknown as Awaited<ReturnType<typeof currentUser>>);
+    mockedGetMemberAccessForSlug.mockResolvedValue({
+      allowedCampaignIds: ["cmp_1"],
+      allowedEventIds: ["evt_1"],
+      clientId: "client_1",
+      clientName: "Acme",
+      clientSlug: "acme",
+      memberId: "member_1",
+      role: "member",
+      scope: "assigned",
+    });
+    mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: true,
+      clientId: "client_1",
+      eventsEnabled: false,
+      slug: "acme",
+      reportsEnabled: true,
+      brandName: null,
+      logoUrl: null,
+      logoAlt: null,
+    });
+    mockedResolveClientPortalEntry.mockResolvedValue({
+      clientSlug: "acme",
+      destination: "/client/acme",
+      kind: "portal",
+      memberships: [],
+    });
+
+    const result = await requireClientAgentAccess("acme");
+
+    expect(result.scope).toEqual({
+      allowedCampaignIds: ["cmp_1"],
+      allowedEventIds: ["evt_1"],
+    });
+  });
+
   it("redirects event routes when events are disabled for the client", async () => {
     mockedAuth.mockResolvedValue({ userId: "user_member" } as Awaited<ReturnType<typeof auth>>);
     mockedCurrentUser.mockResolvedValue({
@@ -162,6 +208,7 @@ describe("requireClientAccess", () => {
       scope: "all",
     });
     mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: false,
       clientId: "client_1",
       eventsEnabled: false,
       slug: "acme",
@@ -180,5 +227,70 @@ describe("requireClientAccess", () => {
     await expect(requireClientEventsAccess("acme")).rejects.toThrow(
       "redirect:/client/acme/campaigns",
     );
+  });
+
+  it("redirects agent routes when agent access is disabled for the client", async () => {
+    mockedAuth.mockResolvedValue({ userId: "user_member" } as Awaited<ReturnType<typeof auth>>);
+    mockedCurrentUser.mockResolvedValue({
+      publicMetadata: { role: "client" },
+    } as unknown as Awaited<ReturnType<typeof currentUser>>);
+    mockedGetMemberAccessForSlug.mockResolvedValue({
+      allowedCampaignIds: null,
+      allowedEventIds: null,
+      clientId: "client_1",
+      clientName: "Acme",
+      clientSlug: "acme",
+      memberId: "member_1",
+      role: "member",
+      scope: "all",
+    });
+    mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: false,
+      clientId: "client_1",
+      eventsEnabled: true,
+      slug: "acme",
+      reportsEnabled: true,
+      brandName: null,
+      logoUrl: null,
+      logoAlt: null,
+    });
+    mockedResolveClientPortalEntry.mockResolvedValue({
+      clientSlug: "acme",
+      destination: "/client/acme",
+      kind: "portal",
+      memberships: [],
+    });
+
+    await expect(requireClientAgentAccess("acme")).rejects.toThrow(
+      "redirect:/client/acme/campaigns",
+    );
+  });
+
+  it("marks admin previews explicitly in API-safe agent access resolution", async () => {
+    mockedAuth.mockResolvedValue({ userId: "user_admin" } as Awaited<ReturnType<typeof auth>>);
+    mockedCurrentUser.mockResolvedValue({
+      publicMetadata: { role: "admin" },
+    } as unknown as Awaited<ReturnType<typeof currentUser>>);
+    mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: true,
+      clientId: "client_1",
+      eventsEnabled: true,
+      slug: "acme",
+      reportsEnabled: true,
+      brandName: null,
+      logoUrl: null,
+      logoAlt: null,
+    });
+
+    const result = await resolveClientAgentAccessForApi("acme");
+
+    expect(result).toMatchObject({
+      clientId: "client_1",
+      clientSlug: "acme",
+      scope: undefined,
+      userId: "user_admin",
+      viewer: "admin_preview",
+    });
+    expect(mockedGetMemberAccessForSlug).not.toHaveBeenCalled();
   });
 });

@@ -80,6 +80,7 @@ export default async function ClientLayout({ children, params }: Props) {
   }
 
   const clientName = portalConfig?.brandName ?? slugToLabel(slug);
+  const agentEnabled = portalConfig?.agentEnabled ?? false;
   const eventsEnabled = portalConfig?.eventsEnabled ?? false;
   const theme = getClientPortalTheme(slug, {
     brandName: portalConfig?.brandName,
@@ -128,7 +129,7 @@ export default async function ClientLayout({ children, params }: Props) {
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent" />
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
-          <ClientNav slug={slug} eventsEnabled={eventsEnabled} />
+          <ClientNav slug={slug} agentEnabled={agentEnabled} eventsEnabled={eventsEnabled} />
         </div>
         <div className="px-5 py-4 shrink-0">
           <div className="h-px bg-gradient-to-r from-white/[0.06] to-transparent mb-4" />
@@ -139,7 +140,7 @@ export default async function ClientLayout({ children, params }: Props) {
         </div>
       </aside>
       {/* Mobile header */}
-      <MobileNav slug={slug} clientName={clientName} eventsEnabled={eventsEnabled} />
+      <MobileNav slug={slug} clientName={clientName} agentEnabled={agentEnabled} eventsEnabled={eventsEnabled} />
       <div className="flex flex-col flex-1 min-w-0">
         <main className="flex-1 overflow-auto lg:pt-0 pt-14">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">{children}</div>

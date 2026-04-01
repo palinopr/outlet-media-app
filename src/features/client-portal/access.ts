@@ -4,23 +4,45 @@ import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
 import { getClientPortalConfig } from "./config";
 import { getUserEmailAddresses, resolveClientPortalEntry } from "./entry";
 
+type Viewer = "member" | "admin_preview";
+
+type PortalAccessAllowed = {
+  kind: "allowed";
+  clientId?: string;
+  clientSlug: string;
+  scope: ScopeFilter | undefined;
+  userId: string;
+  viewer: Viewer;
+};
+
+type PortalAccessRedirect = {
+  destination: string;
+  kind: "redirect";
+  viewer: Viewer;
+};
+
+type PortalAccessResolution = PortalAccessAllowed | PortalAccessRedirect;
+
 async function isAdminPortalViewer() {
   const user = await currentUser();
   const meta = (user?.publicMetadata ?? {}) as { role?: string };
   return meta.role === "admin";
 }
 
-export async function requireClientAccess(
-  slug: string,
-): Promise<{
-  userId: string;
-  scope: ScopeFilter | undefined;
-}> {
+export async function resolveClientPortalAccess(slug: string): Promise<PortalAccessResolution> {
   const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  if (!userId) {
+    return { destination: "/sign-in", kind: "redirect", viewer: "member" };
+  }
 
   if (await isAdminPortalViewer()) {
-    return { userId, scope: undefined };
+    return {
+      clientSlug: slug,
+      kind: "allowed",
+      scope: undefined,
+      userId,
+      viewer: "admin_preview",
+    };
   }
 
   const user = await currentUser();
@@ -32,14 +54,20 @@ export async function requireClientAccess(
     userId,
   });
 
-  if (entry.kind === "pending") redirect(entry.destination);
-  if (entry.kind === "picker") redirect(entry.destination);
+  if (entry.kind === "pending") {
+    return { destination: entry.destination, kind: "redirect", viewer: "member" };
+  }
+  if (entry.kind === "picker") {
+    return { destination: entry.destination, kind: "redirect", viewer: "member" };
+  }
   if (entry.kind === "portal" && entry.clientSlug !== slug) {
-    redirect(entry.destination);
+    return { destination: entry.destination, kind: "redirect", viewer: "member" };
   }
 
   const access = await getMemberAccessForSlug(userId, slug);
-  if (!access) redirect("/client/pending");
+  if (!access) {
+    return { destination: "/client/pending", kind: "redirect", viewer: "member" };
+  }
 
   const scope =
     access.scope === "assigned"
@@ -49,7 +77,85 @@ export async function requireClientAccess(
         }
       : undefined;
 
-  return { userId, scope };
+  return {
+    clientId: access.clientId,
+    clientSlug: access.clientSlug,
+    kind: "allowed",
+    scope,
+    userId,
+    viewer: "member",
+  };
+}
+
+function requireResolvedClientAccess(
+  resolution: PortalAccessResolution,
+): PortalAccessAllowed {
+  if (resolution.kind === "redirect") {
+    redirect(resolution.destination);
+  }
+
+  return resolution;
+}
+
+async function resolveClientPortalFeatureAccess(
+  slug: string,
+  feature: "agent" | "events" | "reports",
+): Promise<PortalAccessResolution> {
+  const [access, portalConfig] = await Promise.all([
+    resolveClientPortalAccess(slug),
+    getClientPortalConfig(slug),
+  ]);
+
+  if (access.kind === "redirect") {
+    return access;
+  }
+
+  const destination = feature === "reports" ? `/client/${slug}` : `/client/${slug}/campaigns`;
+  const featureEnabled =
+    feature === "agent"
+      ? portalConfig?.agentEnabled
+      : feature === "events"
+        ? portalConfig?.eventsEnabled
+        : portalConfig?.reportsEnabled;
+
+  if (!featureEnabled || !portalConfig) {
+    return { destination, kind: "redirect", viewer: access.viewer };
+  }
+
+  return {
+    ...access,
+    clientId: access.clientId ?? portalConfig.clientId,
+    clientSlug: portalConfig.slug,
+  };
+}
+
+export async function requireClientAccess(
+  slug: string,
+): Promise<{
+  userId: string;
+  scope: ScopeFilter | undefined;
+}> {
+  const access = requireResolvedClientAccess(await resolveClientPortalAccess(slug));
+  return { userId: access.userId, scope: access.scope };
+}
+
+export async function requireClientAgentAccess(
+  slug: string,
+): Promise<{
+  clientId: string;
+  clientSlug: string;
+  scope: ScopeFilter | undefined;
+  userId: string;
+  viewer: Viewer;
+}> {
+  const access = requireResolvedClientAccess(await resolveClientPortalFeatureAccess(slug, "agent"));
+  return {
+    clientId: access.clientId ?? slug,
+    clientSlug: access.clientSlug,
+    scope: access.scope,
+    userId: access.userId,
+    viewer: access.viewer,
+  };
 }
 
 export async function requireClientEventsAccess(
@@ -58,16 +164,8 @@ export async function requireClientEventsAccess(
   userId: string;
   scope: ScopeFilter | undefined;
 }> {
-  const [access, portalConfig] = await Promise.all([
-    requireClientAccess(slug),
-    getClientPortalConfig(slug),
-  ]);
-
-  if (!portalConfig?.eventsEnabled) {
-    redirect(`/client/${slug}/campaigns`);
-  }
-
-  return access;
+  const access = requireResolvedClientAccess(await resolveClientPortalFeatureAccess(slug, "events"));
+  return { userId: access.userId, scope: access.scope };
 }
 
 export async function requireClientReportsAccess(
@@ -76,14 +174,19 @@ export async function requireClientReportsAccess(
   userId: string;
   scope: ScopeFilter | undefined;
 }> {
-  const [access, portalConfig] = await Promise.all([
-    requireClientAccess(slug),
-    getClientPortalConfig(slug),
-  ]);
+  const access = requireResolvedClientAccess(await resolveClientPortalFeatureAccess(slug, "reports"));
+  return { userId: access.userId, scope: access.scope };
+}
 
-  if (!portalConfig?.reportsEnabled) {
-    redirect(`/client/${slug}`);
-  }
-
-  return access;
+export async function resolveClientAgentAccessForApi(
+  slug: string,
+): Promise<
+  | ({
+      viewer: Viewer;
+    } & PortalAccessAllowed)
+  | ({
+      viewer: Viewer;
+    } & PortalAccessRedirect)
+> {
+  return resolveClientPortalFeatureAccess(slug, "agent");
 }

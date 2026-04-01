@@ -4,6 +4,7 @@ import {
   resolveEffectiveCampaignClientSlug,
 } from "./campaign-client-assignment";
 import { centsToUsd } from "./formatters";
+import type { MetaInsightsTimeRange } from "./meta-api";
 import { supabaseAdmin } from "./supabase";
 
 export interface MetaCampaignCard {
@@ -135,7 +136,7 @@ function buildCampaignFilter(ids: string[]): string {
 function buildInsightsUrl(
   base: string,
   token: string,
-  preset: string,
+  range: DateRange | MetaInsightsTimeRange,
   filter: string,
   fields: string,
   limit: string,
@@ -145,7 +146,11 @@ function buildInsightsUrl(
   url.searchParams.set("access_token", token);
   url.searchParams.set("level", "campaign");
   url.searchParams.set("fields", fields);
-  url.searchParams.set("date_preset", preset);
+  if (typeof range === "string") {
+    url.searchParams.set("date_preset", META_PRESETS[range]);
+  } else {
+    url.searchParams.set("time_range", JSON.stringify(range));
+  }
   url.searchParams.set("filtering", filter);
   url.searchParams.set("limit", limit);
   if (timeIncrement) url.searchParams.set("time_increment", timeIncrement);
@@ -153,7 +158,7 @@ function buildInsightsUrl(
 }
 
 export async function fetchAllCampaigns(
-  range: DateRange,
+  range: DateRange | MetaInsightsTimeRange,
   clientSlug?: string | null,
 ): Promise<MetaCampaignsResult> {
   const creds = getCredentials();
@@ -167,7 +172,6 @@ export async function fetchAllCampaigns(
   }
 
   const { token, accountId } = creds;
-  const preset = META_PRESETS[range];
   const base = `https://graph.facebook.com/${META_API_VERSION}/act_${accountId}`;
 
   // Phase 1: fetch campaign list (lightweight -- no insights data)
@@ -225,11 +229,11 @@ export async function fetchAllCampaigns(
 
       const [insights, daily] = await Promise.all([
         fetchAllPages<RawInsight>(
-          buildInsightsUrl(base, token, preset, filter, insightsFields, "500"),
+          buildInsightsUrl(base, token, range, filter, insightsFields, "500"),
           `insights-${i}`,
         ),
         fetchAllPages<RawDailyInsight>(
-          buildInsightsUrl(base, token, preset, filter, "campaign_id,spend,purchase_roas", "5000", "1"),
+          buildInsightsUrl(base, token, range, filter, "campaign_id,spend,purchase_roas", "5000", "1"),
           `daily-${i}`,
         ),
       ]);

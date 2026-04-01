@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { fireEvent, render, screen, cleanup, within } from "@testing-library/react";
 
+const { mockedUsePathname } = vi.hoisted(() => ({
+  mockedUsePathname: vi.fn().mockReturnValue("/client/acme"),
+}));
+
 // Mock Clerk so the async server component can be rendered synchronously
 vi.mock("@clerk/nextjs/server", () => ({
   auth: vi.fn().mockResolvedValue({ userId: "user_123" }),
@@ -12,11 +16,12 @@ vi.mock("@clerk/nextjs/server", () => ({
 // Mock Next.js navigation (redirect for server component, usePathname for ClientNav)
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
-  usePathname: vi.fn().mockReturnValue("/client/acme"),
+  usePathname: mockedUsePathname,
 }));
 
 vi.mock("@/features/client-portal/config", () => ({
   getClientPortalConfig: vi.fn().mockResolvedValue({
+    agentEnabled: false,
     clientId: "client_1",
     eventsEnabled: false,
     slug: "acme",
@@ -34,7 +39,9 @@ const mockedGetClientPortalConfig = vi.mocked(getClientPortalConfig);
 
 afterEach(() => {
   vi.unstubAllEnvs();
+  mockedUsePathname.mockReturnValue("/client/acme");
   mockedGetClientPortalConfig.mockResolvedValue({
+    agentEnabled: false,
     clientId: "client_1",
     eventsEnabled: false,
     slug: "acme",
@@ -109,6 +116,7 @@ describe("ClientLayout navigation links", () => {
   it("hides Events links when events are disabled for the client", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: false,
       clientId: "client_1",
       eventsEnabled: false,
       slug: "acme",
@@ -123,9 +131,74 @@ describe("ClientLayout navigation links", () => {
     expect(screen.queryByRole("link", { name: "Events" })).not.toBeInTheDocument();
   });
 
+  it("hides Agent links when agent access is disabled for the client", async () => {
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
+    mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: false,
+      clientId: "client_1",
+      eventsEnabled: true,
+      slug: "acme",
+      reportsEnabled: true,
+      brandName: null,
+      logoUrl: null,
+      logoAlt: null,
+    });
+
+    await renderLayout("acme");
+    openMobileNav();
+
+    expect(screen.queryByRole("link", { name: "Agent" })).not.toBeInTheDocument();
+  });
+
+  it("shows Agent links in desktop and mobile nav when agent access is enabled", async () => {
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
+    mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: true,
+      clientId: "client_1",
+      eventsEnabled: true,
+      slug: "acme",
+      reportsEnabled: true,
+      brandName: null,
+      logoUrl: null,
+      logoAlt: null,
+    });
+
+    await renderLayout("acme");
+    openMobileNav();
+
+    expect(within(getDesktopNav()).getByRole("link", { name: "Agent" })).toHaveAttribute(
+      "href",
+      "/client/acme/agent",
+    );
+    expect(within(getMobileNav()).getByRole("link", { name: "Agent" })).toHaveAttribute(
+      "href",
+      "/client/acme/agent",
+    );
+  });
+
+  it("marks Agent active when the current path is the agent route", async () => {
+    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
+    mockedUsePathname.mockReturnValue("/client/acme/agent");
+    mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: true,
+      clientId: "client_1",
+      eventsEnabled: false,
+      slug: "acme",
+      reportsEnabled: true,
+      brandName: null,
+      logoUrl: null,
+      logoAlt: null,
+    });
+
+    await renderLayout("acme");
+
+    expect(within(getDesktopNav()).getByRole("link", { name: "Agent" })).toHaveClass("text-white/90");
+  });
+
   it("shows Events links in desktop and mobile nav when events are enabled for the client", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: false,
       clientId: "client_1",
       eventsEnabled: true,
       slug: "acme",
@@ -151,6 +224,7 @@ describe("ClientLayout navigation links", () => {
   it("does not render Reports links even when reports are enabled for the client", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: false,
       clientId: "client_1",
       eventsEnabled: false,
       slug: "acme",

@@ -1,5 +1,10 @@
 import { META_API_VERSION } from "@/lib/constants";
 
+export type MetaInsightsTimeRange = {
+  since: string;
+  until: string;
+};
+
 /**
  * Fetch from Meta Graph API for mutations (POST/DELETE) in API routes.
  * Sends URL-encoded form data. Throws a structured error on failure.
@@ -69,6 +74,7 @@ export function metaInsightsUrl(
   fields: string,
   opts?: {
     datePreset?: string;
+    timeRange?: MetaInsightsTimeRange;
     breakdowns?: string;
     timeIncrement?: string;
     limit?: number;
@@ -77,7 +83,11 @@ export function metaInsightsUrl(
   const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${campaignId}/insights`);
   url.searchParams.set("access_token", token);
   url.searchParams.set("fields", fields);
-  if (opts?.datePreset) url.searchParams.set("date_preset", opts.datePreset);
+  if (opts?.timeRange) {
+    url.searchParams.set("time_range", JSON.stringify(opts.timeRange));
+  } else if (opts?.datePreset) {
+    url.searchParams.set("date_preset", opts.datePreset);
+  }
   if (opts?.breakdowns) url.searchParams.set("breakdowns", opts.breakdowns);
   if (opts?.timeIncrement) url.searchParams.set("time_increment", opts.timeIncrement);
   if (opts?.limit) url.searchParams.set("limit", String(opts.limit));
