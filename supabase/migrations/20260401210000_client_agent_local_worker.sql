@@ -60,26 +60,6 @@ begin
     raise exception 'admin preview queued turns require preview_admin_user_id';
   end if;
 
-  update public.client_agent_threads
-    set viewer_context = p_viewer_context,
-        preview_admin_user_id = case
-          when p_viewer_context = 'admin_preview' then p_preview_admin_user_id
-          else null
-        end,
-        client_member_id = case
-          when p_viewer_context = 'member' then p_client_member_id
-          else null
-        end,
-        last_response_status = 'pending',
-        preview_text = 'Thinking…',
-        last_message_at = v_now,
-        updated_at = v_now
-    where id = p_thread_id;
-
-  if not found then
-    raise exception 'client_agent_thread not found: %', p_thread_id;
-  end if;
-
   select
     user_row.id,
     assistant_row.id,
@@ -166,6 +146,26 @@ begin
     end if;
 
     raise exception 'client_agent_turn queue retry observed without durable rows';
+  end if;
+
+  update public.client_agent_threads
+    set viewer_context = p_viewer_context,
+        preview_admin_user_id = case
+          when p_viewer_context = 'admin_preview' then p_preview_admin_user_id
+          else null
+        end,
+        client_member_id = case
+          when p_viewer_context = 'member' then p_client_member_id
+          else null
+        end,
+        last_response_status = 'pending',
+        preview_text = 'Thinking…',
+        last_message_at = v_now,
+        updated_at = v_now
+    where id = p_thread_id;
+
+  if not found then
+    raise exception 'client_agent_thread not found: %', p_thread_id;
   end if;
 
   insert into public.agent_tasks (
