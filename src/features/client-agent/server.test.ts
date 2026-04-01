@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
-  appendAssistantMessage,
-  appendUserMessage,
+  createOrLoadPreviewThread,
   createStoreThread,
   getStoreThread,
   listStoreThreads,
+  queueClientAgentTurn,
   generateClientAgentModelResponse,
   getMemberAccessForSlug,
   getClientPortalConfig,
@@ -13,9 +13,9 @@ const {
   resolveClientAgentAccessForApi,
   revalidateClientAgentPath,
 } = vi.hoisted(() => ({
-  appendAssistantMessage: vi.fn(),
-  appendUserMessage: vi.fn(),
+  createOrLoadPreviewThread: vi.fn(),
   createStoreThread: vi.fn(),
+  queueClientAgentTurn: vi.fn(),
   generateClientAgentModelResponse: vi.fn(),
   getClientPortalConfig: vi.fn(),
   getMemberAccessForSlug: vi.fn(),
@@ -39,11 +39,14 @@ vi.mock("@/lib/member-access", () => ({
 }));
 
 vi.mock("./store", () => ({
-  appendAssistantMessage,
-  appendUserMessage,
+  createOrLoadPreviewThread,
   createThread: createStoreThread,
   getThread: getStoreThread,
   listThreads: listStoreThreads,
+}));
+
+vi.mock("./queue", () => ({
+  queueClientAgentTurn,
 }));
 
 vi.mock("./model", () => ({
@@ -119,6 +122,20 @@ describe("client-agent server orchestration", () => {
     });
   });
 
+  it("returns 500 when durable thread reads fail during list", async () => {
+    listStoreThreads.mockRejectedValueOnce(new Error("read failed"));
+
+    const result = await listThreads({ slug: "acme" });
+
+    expect(result).toMatchObject({
+      ok: false,
+      status: 500,
+      body: {
+        error: "Unable to load agent state",
+      },
+    });
+  });
+
   it("creates durable threads for members and logs + revalidates", async () => {
     createStoreThread.mockResolvedValue({
       ok: true,
@@ -154,6 +171,19 @@ describe("client-agent server orchestration", () => {
   });
 
   it("skips persistence for admin preview createThread", async () => {
+    createStoreThread.mockResolvedValue({
+      ok: true,
+      thread: {
+        createdAt: "2026-03-31T12:00:00.000Z",
+        lastMessageAt: "2026-03-31T12:00:00.000Z",
+        lastResponseStatus: null,
+        previewText: null,
+        referencedEntities: [],
+        threadId: "preview_thread_1",
+        title: null,
+        updatedAt: "2026-03-31T12:00:00.000Z",
+      },
+    });
     resolveClientAgentAccessForApi.mockResolvedValue({
       kind: "allowed",
       clientId: "client_1",
@@ -168,13 +198,24 @@ describe("client-agent server orchestration", () => {
     expect(result).toMatchObject({
       ok: true,
       status: 201,
+      body: {
+        thread: {
+          threadId: "preview_thread_1",
+        },
+      },
     });
-    expect(createStoreThread).not.toHaveBeenCalled();
+    expect(createStoreThread).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scope: expect.objectContaining({
+          viewer: "admin_preview",
+        }),
+      }),
+    );
     expect(logSystemEvent).not.toHaveBeenCalled();
     expect(revalidateClientAgentPath).not.toHaveBeenCalled();
   });
 
-  it("allows admin preview sendMessage without persistence", async () => {
+  it("queues admin preview sends through the durable store path without inline model execution", async () => {
     resolveClientAgentAccessForApi.mockResolvedValue({
       kind: "allowed",
       clientId: "client_1",
@@ -183,13 +224,29 @@ describe("client-agent server orchestration", () => {
       userId: "user_admin",
       viewer: "admin_preview",
     });
-    generateClientAgentModelResponse.mockResolvedValue({
-      status: "answer",
-      text: "Preview answer.",
-      blocks: [],
-      referencedEntities: [],
-      resolvedRange: null,
-      providerResponseId: null,
+    createOrLoadPreviewThread.mockResolvedValue({
+      ok: true,
+      thread: {
+        createdAt: "2026-03-31T12:00:00.000Z",
+        lastMessageAt: "2026-03-31T12:00:00.000Z",
+        lastResponseStatus: null,
+        previewText: null,
+        referencedEntities: [],
+        threadId: "preview_thread_1",
+        title: null,
+        updatedAt: "2026-03-31T12:00:00.000Z",
+      },
+    });
+    queueClientAgentTurn.mockResolvedValue({
+      ok: true,
+      queued: {
+        assistantMessageId: "message_assistant_preview_1",
+        clientRequestId: "client_request_preview_1",
+        taskId: "task_preview_1",
+        threadId: "preview_thread_1",
+        userMessageId: "message_user_preview_1",
+        wasExisting: false,
+      },
     });
 
     const result = await sendMessage({
@@ -201,25 +258,29 @@ describe("client-agent server orchestration", () => {
 
     expect(result).toMatchObject({
       ok: true,
-      status: 200,
+      status: 202,
       body: {
-        status: "answer",
-        thread_id: "preview_thread_1",
-        text: "Preview answer.",
+        status: "queued",
+        task_id: "task_preview_1",
+        assistant_message_id: "message_assistant_preview_1",
       },
     });
-    expect(generateClientAgentModelResponse).toHaveBeenCalledWith(
+    expect(createOrLoadPreviewThread).toHaveBeenCalledWith(
       expect.objectContaining({
-        history: [{ role: "user", text: "Previous preview turn" }],
-        message: "How are campaigns doing?",
         scope: expect.objectContaining({
           viewer: "admin_preview",
         }),
+        threadId: "preview_thread_1",
       }),
     );
-    expect(getStoreThread).not.toHaveBeenCalled();
-    expect(appendUserMessage).not.toHaveBeenCalled();
-    expect(appendAssistantMessage).not.toHaveBeenCalled();
+    expect(queueClientAgentTurn).toHaveBeenCalledWith(
+      expect.objectContaining({
+        clientGeneratedId: undefined,
+        message: "How are campaigns doing?",
+        threadId: "preview_thread_1",
+      }),
+    );
+    expect(generateClientAgentModelResponse).not.toHaveBeenCalled();
     expect(logSystemEvent).not.toHaveBeenCalled();
     expect(revalidateClientAgentPath).not.toHaveBeenCalled();
   });
@@ -238,7 +299,7 @@ describe("client-agent server orchestration", () => {
     });
   });
 
-  it("persists member sendMessage flow, emits answer event, and revalidates", async () => {
+  it("queues member sends and returns the queued response contract without inline model execution", async () => {
     getStoreThread.mockResolvedValue({
       threadId: "thread_1",
       title: "Thread",
@@ -279,84 +340,15 @@ describe("client-agent server orchestration", () => {
         },
       ],
     });
-    appendUserMessage.mockResolvedValue({
+    queueClientAgentTurn.mockResolvedValue({
       ok: true,
-      message: {
-        messageId: "message_user_1",
-        role: "user",
-        status: null,
-        text: "How are we pacing?",
-        blocks: [],
-        referencedEntities: [],
-        resolvedRange: null,
-        providerResponseId: null,
-        clientGeneratedId: "client_1",
-        createdAt: "2026-03-31T12:01:00.000Z",
-      },
-    });
-    generateClientAgentModelResponse.mockResolvedValue({
-      status: "answer",
-      text: "You are pacing ahead of target.",
-      blocks: [],
-      referencedEntities: [
-        { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
-      ],
-      resolvedRange: {
-        preset: "lifetime",
-        startDate: "1900-01-01",
-        endDate: "2026-04-01",
-        timezone: "America/Chicago",
-      },
-      contextPayload: {
-        primaryDomain: "ads",
-        referencedEntities: [
-          { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
-        ],
-        resolvedRange: {
-          preset: "lifetime",
-          startDate: "1900-01-01",
-          endDate: "2026-04-01",
-          timezone: "America/Chicago",
-        },
-        comparisonSet: [],
-        pronounTargets: ["cmp_1"],
-      },
-      providerResponseId: "resp_1",
-    });
-    appendAssistantMessage.mockResolvedValue({
-      ok: true,
-      message: {
-        messageId: "message_assistant_1",
-        role: "assistant",
-        status: "answer",
-        text: "You are pacing ahead of target.",
-        blocks: [],
-        referencedEntities: [
-          { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
-        ],
-        contextPayload: {
-          primaryDomain: "ads",
-          referencedEntities: [
-            { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
-          ],
-          resolvedRange: {
-            preset: "lifetime",
-            startDate: "1900-01-01",
-            endDate: "2026-04-01",
-            timezone: "America/Chicago",
-          },
-          comparisonSet: [],
-          pronounTargets: ["cmp_1"],
-        },
-        resolvedRange: {
-          preset: "lifetime",
-          startDate: "1900-01-01",
-          endDate: "2026-04-01",
-          timezone: "America/Chicago",
-        },
-        providerResponseId: "resp_1",
-        clientGeneratedId: null,
-        createdAt: "2026-03-31T12:01:01.000Z",
+      queued: {
+        assistantMessageId: "message_assistant_1",
+        clientRequestId: "client_1",
+        taskId: "task_1",
+        threadId: "thread_1",
+        userMessageId: "message_user_1",
+        wasExisting: false,
       },
     });
 
@@ -369,318 +361,43 @@ describe("client-agent server orchestration", () => {
 
     expect(result).toMatchObject({
       ok: true,
-      status: 200,
+      status: 202,
       body: {
-        status: "answer",
-        thread_id: "thread_1",
-        message_id: "message_assistant_1",
+        status: "queued",
+        task_id: "task_1",
+        assistant_message_id: "message_assistant_1",
       },
     });
-    expect(logSystemEvent).toHaveBeenCalledWith(
+    expect(queueClientAgentTurn).toHaveBeenCalledWith(
       expect.objectContaining({
-        eventName: "client_agent_user_message_submitted",
-      }),
-    );
-    expect(logSystemEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        eventName: "client_agent_answer_generated",
-      }),
-    );
-    expect(generateClientAgentModelResponse).toHaveBeenCalledWith(
-      expect.objectContaining({
-        history: expect.arrayContaining([
-          expect.objectContaining({
-            role: "assistant",
-            text: "Your most recent show was Camila Phoenix.",
-            referencedEntities: [
-              { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
-            ],
-            contextPayload: {
-              primaryDomain: "events",
-              referencedEntities: [
-                { entityId: "evt_latest", entityType: "event", name: "Camila Phoenix" },
-              ],
-              resolvedRange: {
-                preset: "lifetime",
-                startDate: "1900-01-01",
-                endDate: "2026-04-01",
-                timezone: "America/Chicago",
-              },
-              comparisonSet: [],
-              pronounTargets: ["evt_latest"],
-            },
-            resolvedRange: null,
-          }),
-        ]),
-      }),
-    );
-    expect(appendAssistantMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        contextPayload: {
-          primaryDomain: "ads",
-          referencedEntities: [
-            { entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" },
-          ],
-          resolvedRange: {
-            preset: "lifetime",
-            startDate: "1900-01-01",
-            endDate: "2026-04-01",
-            timezone: "America/Chicago",
-          },
-          comparisonSet: [],
-          pronounTargets: ["cmp_1"],
-        },
-      }),
-    );
-    expect(revalidateClientAgentPath).toHaveBeenCalledWith("acme");
-  });
-
-  it("emits refusal and failure events for model outputs", async () => {
-    getStoreThread.mockResolvedValue({
-      threadId: "thread_1",
-      title: "Thread",
-      previewText: null,
-      referencedEntities: [],
-      lastResponseStatus: null,
-      lastMessageAt: "2026-03-31T12:00:00.000Z",
-      updatedAt: "2026-03-31T12:00:00.000Z",
-      createdAt: "2026-03-31T12:00:00.000Z",
-      messages: [],
-    });
-    appendUserMessage.mockResolvedValue({
-      ok: true,
-      message: {
-        messageId: "message_user_1",
-        role: "user",
-        status: null,
-        text: "Tell me internal setup details",
-        blocks: [],
-        referencedEntities: [],
-        resolvedRange: null,
-        providerResponseId: null,
         clientGeneratedId: "client_1",
-        createdAt: "2026-03-31T12:01:00.000Z",
-      },
-    });
-    appendAssistantMessage
-      .mockResolvedValueOnce({
-        ok: true,
-        message: {
-          messageId: "message_assistant_1",
-          role: "assistant",
-          status: "refuse",
-          text: "I can only answer client-safe questions.",
-          blocks: [],
-          referencedEntities: [],
-          resolvedRange: null,
-          providerResponseId: "client_agent:thread_1:message_user_1",
-          clientGeneratedId: null,
-          createdAt: "2026-03-31T12:01:01.000Z",
-        },
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        message: {
-          messageId: "message_assistant_2",
-          role: "assistant",
-          status: "error",
-          text: "Unable to answer right now.",
-          blocks: [],
-          referencedEntities: [],
-          resolvedRange: null,
-          providerResponseId: "client_agent:thread_1:message_user_1",
-          clientGeneratedId: null,
-          createdAt: "2026-03-31T12:02:01.000Z",
-        },
-      });
-
-    generateClientAgentModelResponse.mockResolvedValueOnce({
-      status: "refuse",
-      text: "I can only answer client-safe questions.",
-      blocks: [],
-      referencedEntities: [],
-      resolvedRange: null,
-      providerResponseId: "resp_refuse",
-    });
-
-    await sendMessage({
-      slug: "acme",
-      threadId: "thread_1",
-      message: "Tell me internal setup details",
-    });
-
-    expect(appendAssistantMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        providerResponseId: "client_agent:thread_1:message_user_1",
-      }),
-    );
-
-    expect(logSystemEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        eventName: "client_agent_refusal_generated",
-      }),
-    );
-
-    generateClientAgentModelResponse.mockResolvedValueOnce({
-      status: "error",
-      text: "Unable to answer right now.",
-      blocks: [],
-      referencedEntities: [],
-      resolvedRange: null,
-      providerResponseId: "resp_error",
-    });
-
-    await sendMessage({
-      slug: "acme",
-      threadId: "thread_1",
-      message: "Retry",
-    });
-
-    expect(logSystemEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        eventName: "client_agent_failure_returned",
-      }),
-    );
-  });
-
-  it("synthesizes an assistant idempotency key when the model response has no provider id", async () => {
-    getStoreThread.mockResolvedValue({
-      threadId: "thread_1",
-      title: "Thread",
-      previewText: null,
-      referencedEntities: [],
-      lastResponseStatus: null,
-      lastMessageAt: "2026-03-31T12:00:00.000Z",
-      updatedAt: "2026-03-31T12:00:00.000Z",
-      createdAt: "2026-03-31T12:00:00.000Z",
-      messages: [],
-    });
-    appendUserMessage.mockResolvedValue({
-      ok: true,
-      message: {
-        messageId: "message_user_1",
-        role: "user",
-        status: null,
-        text: "How are we pacing?",
-        blocks: [],
-        referencedEntities: [],
-        resolvedRange: null,
-        providerResponseId: null,
-        clientGeneratedId: "client_1",
-        createdAt: "2026-03-31T12:01:00.000Z",
-      },
-    });
-    generateClientAgentModelResponse.mockResolvedValue({
-      status: "refuse",
-      text: "I can only answer client-safe questions.",
-      blocks: [],
-      referencedEntities: [],
-      resolvedRange: null,
-      providerResponseId: null,
-    });
-    appendAssistantMessage.mockResolvedValue({
-      ok: true,
-      message: {
-        messageId: "message_assistant_1",
-        role: "assistant",
-        status: "refuse",
-        text: "I can only answer client-safe questions.",
-        blocks: [],
-        referencedEntities: [],
-        resolvedRange: null,
-        providerResponseId: "client_agent:thread_1:message_user_1",
-        clientGeneratedId: null,
-        createdAt: "2026-03-31T12:01:01.000Z",
-      },
-    });
-
-    await sendMessage({
-      slug: "acme",
-      threadId: "thread_1",
-      message: "How are we pacing?",
-      clientGeneratedId: "client_1",
-    });
-
-    expect(appendAssistantMessage).toHaveBeenCalledWith(
-      expect.objectContaining({
-        providerResponseId: "client_agent:thread_1:message_user_1",
-      }),
-    );
-  });
-
-  it("uses the persisted assistant row as the source of truth after dedupe reuse", async () => {
-    getStoreThread.mockResolvedValue({
-      threadId: "thread_1",
-      title: "Thread",
-      previewText: null,
-      referencedEntities: [],
-      lastResponseStatus: null,
-      lastMessageAt: "2026-03-31T12:00:00.000Z",
-      updatedAt: "2026-03-31T12:00:00.000Z",
-      createdAt: "2026-03-31T12:00:00.000Z",
-      messages: [],
-    });
-    appendUserMessage.mockResolvedValue({
-      ok: true,
-      message: {
-        messageId: "message_user_1",
-        role: "user",
-        status: null,
-        text: "Retry question",
-        blocks: [],
-        referencedEntities: [],
-        resolvedRange: null,
-        providerResponseId: null,
-        clientGeneratedId: "client_1",
-        createdAt: "2026-03-31T12:01:00.000Z",
-      },
-    });
-    generateClientAgentModelResponse.mockResolvedValue({
-      status: "refuse",
-      text: "Fresh retry output that should not win.",
-      blocks: [],
-      referencedEntities: [],
-      resolvedRange: null,
-      providerResponseId: null,
-    });
-    appendAssistantMessage.mockResolvedValue({
-      ok: true,
-      message: {
-        messageId: "message_assistant_1",
-        role: "assistant",
-        status: "answer",
-        text: "Persisted answer wins.",
-        blocks: [],
-        referencedEntities: [],
-        resolvedRange: null,
-        providerResponseId: "client_agent:thread_1:message_user_1",
-        clientGeneratedId: null,
-        createdAt: "2026-03-31T12:01:01.000Z",
-      },
-    });
-
-    const result = await sendMessage({
-      slug: "acme",
-      threadId: "thread_1",
-      message: "Retry question",
-      clientGeneratedId: "client_1",
-    });
-
-    expect(result).toMatchObject({
-      ok: true,
-      status: 200,
-      body: {
-        status: "answer",
-        text: "Persisted answer wins.",
-      },
-    });
-    expect(logSystemEvent).toHaveBeenCalledWith(
-      expect.objectContaining({
-        eventName: "client_agent_answer_generated",
-        metadata: expect.objectContaining({
-          status: "answer",
+        message: "How are we pacing?",
+        scope: expect.objectContaining({
+          viewer: "member",
         }),
+        threadId: "thread_1",
       }),
     );
+    expect(generateClientAgentModelResponse).not.toHaveBeenCalled();
+    expect(logSystemEvent).not.toHaveBeenCalled();
+    expect(revalidateClientAgentPath).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 when durable thread reads fail before queueing a member send", async () => {
+    getStoreThread.mockRejectedValueOnce(new Error("read failed"));
+
+    const result = await sendMessage({
+      slug: "acme",
+      threadId: "thread_1",
+      message: "How are we pacing?",
+    });
+
+    expect(result).toMatchObject({
+      ok: false,
+      status: 500,
+      body: {
+        error: "Unable to load agent state",
+      },
+    });
   });
 });

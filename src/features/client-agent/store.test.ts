@@ -5,8 +5,10 @@ import type { AgentAnswerBlock, ReferencedEntity, ResolvedRange } from "./types"
 const { state, supabaseAdmin } = vi.hoisted(() => {
   const state = {
     fromCalls: 0,
+    rpcCalls: [] as Array<{ fn: string; args: Record<string, unknown> }>,
     client_agent_threads: [] as Record<string, unknown>[],
     client_agent_messages: [] as Record<string, unknown>[],
+    agent_tasks: [] as Record<string, unknown>[],
     failingTables: {} as Partial<Record<string, { insert?: boolean; update?: boolean }>>,
   };
 
@@ -127,6 +129,140 @@ const { state, supabaseAdmin } = vi.hoisted(() => {
 
       return query;
     },
+    async rpc(fn: string, args: Record<string, unknown>) {
+      state.rpcCalls.push({ fn, args });
+
+      if (fn !== "queue_client_agent_turn") {
+        return {
+          data: null,
+          error: { message: `unknown rpc ${fn}` },
+        };
+      }
+
+      const threadId = String(args.p_thread_id ?? "");
+      const clientRequestId = String(args.p_client_request_id ?? "");
+      const text = String(args.p_text ?? "");
+      const viewerContext = String(args.p_viewer_context ?? "");
+      const previewAdminUserId =
+        typeof args.p_preview_admin_user_id === "string" ? args.p_preview_admin_user_id : null;
+      const clientMemberId =
+        typeof args.p_client_member_id === "string" ? args.p_client_member_id : null;
+      const now = new Date().toISOString();
+
+      const thread = state.client_agent_threads.find((row) => row.id === threadId);
+      if (!thread) {
+        return {
+          data: null,
+          error: { message: `thread not found: ${threadId}` },
+        };
+      }
+
+      const existingUserRow = state.client_agent_messages.find(
+        (row) =>
+          row.thread_id === threadId &&
+          row.role === "user" &&
+          row.client_request_id === clientRequestId,
+      );
+      const existingAssistantRow = state.client_agent_messages.find(
+        (row) =>
+          row.thread_id === threadId &&
+          row.role === "assistant" &&
+          row.client_request_id === clientRequestId,
+      );
+
+      if (existingUserRow && existingAssistantRow) {
+        return {
+          data: [
+            {
+              thread_id: threadId,
+              client_request_id: clientRequestId,
+              user_message_id: existingUserRow.id,
+              assistant_message_id: existingAssistantRow.id,
+              agent_task_id: existingAssistantRow.agent_task_id,
+              was_existing: true,
+            },
+          ],
+          error: null,
+        };
+      }
+
+      const userMessageId = `message_user_${state.client_agent_messages.length + 1}`;
+      const assistantMessageId = `message_assistant_${state.client_agent_messages.length + 2}`;
+      const agentTaskId = `task_${state.agent_tasks.length + 1}`;
+
+      state.client_agent_messages.push({
+        id: userMessageId,
+        thread_id: threadId,
+        role: "user",
+        response_status: null,
+        text,
+        blocks: [],
+        referenced_entities: [],
+        context_payload: null,
+        resolved_range: null,
+        provider_response_id: null,
+        client_generated_id: null,
+        agent_task_id: null,
+        client_request_id: clientRequestId,
+        created_at: now,
+      });
+      state.client_agent_messages.push({
+        id: assistantMessageId,
+        thread_id: threadId,
+        role: "assistant",
+        response_status: "pending",
+        text: "Thinking…",
+        blocks: [],
+        referenced_entities: [],
+        context_payload: null,
+        resolved_range: null,
+        provider_response_id: null,
+        client_generated_id: null,
+        agent_task_id: agentTaskId,
+        client_request_id: clientRequestId,
+        created_at: now,
+      });
+      state.agent_tasks.push({
+        id: agentTaskId,
+        from_agent: "client-portal",
+        to_agent: "client-agent",
+        action: "reply",
+        status: "pending",
+        params: {
+          clientSlug: args.p_client_slug,
+          threadId,
+          userMessageId,
+          assistantMessageId,
+          viewerContext,
+          clientMemberId,
+          previewAdminUserId,
+        },
+      });
+
+      Object.assign(thread, {
+        viewer_context: viewerContext,
+        preview_admin_user_id: viewerContext === "admin_preview" ? previewAdminUserId : null,
+        client_member_id: viewerContext === "member" ? clientMemberId : null,
+        last_response_status: "pending",
+        preview_text: "Thinking…",
+        last_message_at: now,
+        updated_at: now,
+      });
+
+      return {
+        data: [
+          {
+            thread_id: threadId,
+            client_request_id: clientRequestId,
+            user_message_id: userMessageId,
+            assistant_message_id: assistantMessageId,
+            agent_task_id: agentTaskId,
+            was_existing: false,
+          },
+        ],
+        error: null,
+      };
+    },
   };
 
   return { state, supabaseAdmin };
@@ -140,8 +276,11 @@ import {
   appendAssistantMessage,
   appendUserMessage,
   createThread,
+  failPendingAssistantMessage,
   getThread,
   listThreads,
+  queueTurn,
+  resolvePendingAssistantMessage,
 } from "./store";
 
 const memberScope = {
@@ -152,6 +291,12 @@ const memberScope = {
   allowedEventIds: ["evt_1"],
   eventsEnabled: true,
   viewer: "member" as const,
+};
+
+const previewScope = {
+  ...memberScope,
+  clientMemberId: "admin_preview:user_admin_1",
+  viewer: "admin_preview" as const,
 };
 
 function makeThread(overrides: Record<string, unknown> = {}) {
@@ -195,8 +340,10 @@ function makeMessage(overrides: Record<string, unknown> = {}) {
 describe("client-agent store", () => {
   beforeEach(() => {
     state.fromCalls = 0;
+    state.rpcCalls = [];
     state.client_agent_threads = [];
     state.client_agent_messages = [];
+    state.agent_tasks = [];
     state.failingTables = {};
     vi.useRealTimers();
   });
@@ -382,48 +529,33 @@ describe("client-agent store", () => {
     expect(threads).toEqual([]);
   });
 
-  it("short-circuits preview mode before any durable reads or writes", async () => {
-    const previewScope = {
-      ...memberScope,
-      viewer: "admin_preview" as const,
-    };
+  it("creates, lists, and gets durable preview threads for the current admin", async () => {
+    const created = await createThread({ scope: previewScope });
+    expect(created).toMatchObject({ ok: true });
 
-    expect(await listThreads({ scope: previewScope })).toEqual([]);
-    expect(await getThread({ threadId: "thread_1", scope: previewScope })).toBeNull();
-    await expect(createThread({ scope: previewScope })).resolves.toMatchObject({
-      ok: false,
-      code: "preview_unavailable",
-    });
-    await expect(
-      appendUserMessage({
-        threadId: "thread_1",
-        scope: previewScope,
-        text: "Can you summarize this?",
-        clientGeneratedId: "client_msg_1",
-      }),
-    ).resolves.toMatchObject({
-      ok: false,
-      code: "preview_unavailable",
-    });
-    await expect(
-      appendAssistantMessage({
-        threadId: "thread_1",
-        scope: previewScope,
-        status: "answer",
-        text: "Preview answers should not persist.",
-        blocks: [],
-        referencedEntities: [],
-        resolvedRange: null,
-        providerResponseId: "resp_1",
-      }),
-    ).resolves.toMatchObject({
-      ok: false,
-      code: "preview_unavailable",
-    });
+    const threadId = created.ok ? created.thread.threadId : "missing";
 
-    expect(state.fromCalls).toBe(0);
-    expect(state.client_agent_threads).toEqual([]);
-    expect(state.client_agent_messages).toEqual([]);
+    const threads = await listThreads({ scope: previewScope });
+    const thread = await getThread({ threadId, scope: previewScope });
+
+    expect(state.client_agent_threads).toEqual([
+      expect.objectContaining({
+        id: threadId,
+        client_id: "client_1",
+        client_member_id: null,
+        viewer_context: "admin_preview",
+        preview_admin_user_id: "user_admin_1",
+      }),
+    ]);
+    expect(threads).toMatchObject([
+      {
+        threadId,
+      },
+    ]);
+    expect(thread).toMatchObject({
+      threadId,
+      messages: [],
+    });
   });
 
   it("derives title and preview text, aggregates assistant references, and refreshes durable timestamps", async () => {
@@ -681,5 +813,254 @@ describe("client-agent store", () => {
         (message) => message.provider_response_id === "resp_retry_1",
       ),
     ).toHaveLength(1);
+  });
+
+  it("queues a durable user turn, creates a pending assistant placeholder, and dedupes client request ids", async () => {
+    const created = await createThread({ scope: memberScope });
+    expect(created).toMatchObject({ ok: true });
+
+    const threadId = created.ok ? created.thread.threadId : "missing";
+
+    const firstAttempt = await queueTurn({
+      threadId,
+      scope: memberScope,
+      clientSlug: "acme",
+      clientRequestId: "request_queued_1",
+      text: "How are we pacing?",
+    });
+
+    expect(firstAttempt).toMatchObject({
+      ok: true,
+      queued: {
+        threadId,
+        clientRequestId: "request_queued_1",
+        wasExisting: false,
+      },
+    });
+
+    const secondAttempt = await queueTurn({
+      threadId,
+      scope: memberScope,
+      clientSlug: "acme",
+      clientRequestId: "request_queued_1",
+      text: "How are we pacing?",
+    });
+
+    expect(secondAttempt).toMatchObject({
+      ok: true,
+      queued: {
+        threadId: firstAttempt.ok ? firstAttempt.queued.threadId : threadId,
+        clientRequestId: firstAttempt.ok ? firstAttempt.queued.clientRequestId : "request_queued_1",
+        userMessageId: firstAttempt.ok ? firstAttempt.queued.userMessageId : "missing",
+        assistantMessageId: firstAttempt.ok
+          ? firstAttempt.queued.assistantMessageId
+          : "missing",
+        taskId: firstAttempt.ok ? firstAttempt.queued.taskId : "missing",
+        wasExisting: true,
+      },
+    });
+    expect(state.client_agent_messages).toHaveLength(2);
+    expect(state.agent_tasks).toHaveLength(1);
+    expect(state.client_agent_threads[0]).toMatchObject({
+      last_response_status: "pending",
+      preview_text: "Thinking…",
+    });
+  });
+
+  it("resolves a pending assistant placeholder in place and refreshes the thread summary", async () => {
+    state.client_agent_threads = [
+      makeThread({
+        id: "thread_pending_resolution",
+        preview_text: "Thinking…",
+        last_response_status: "pending",
+      }),
+    ];
+    state.client_agent_messages = [
+      makeMessage({
+        id: "message_user_pending_resolution",
+        thread_id: "thread_pending_resolution",
+        role: "user",
+        response_status: null,
+        text: "How are we pacing?",
+        client_request_id: "request_pending_resolution",
+      }),
+      makeMessage({
+        id: "message_assistant_pending_resolution",
+        thread_id: "thread_pending_resolution",
+        role: "assistant",
+        response_status: "pending",
+        text: "Thinking…",
+        agent_task_id: "task_pending_resolution",
+        client_request_id: "request_pending_resolution",
+      }),
+    ];
+
+    const resolved = await resolvePendingAssistantMessage({
+      assistantMessageId: "message_assistant_pending_resolution",
+      threadId: "thread_pending_resolution",
+      scope: memberScope,
+      status: "answer",
+      text: "You are pacing ahead of target.",
+      blocks: [],
+      referencedEntities: [{ entityId: "cmp_1", entityType: "campaign", name: "Campaign 1" }],
+      contextPayload: null,
+      resolvedRange: null,
+      providerResponseId: "resp_pending_resolution",
+    });
+
+    expect(resolved).toMatchObject({
+      ok: true,
+      message: {
+        messageId: "message_assistant_pending_resolution",
+        status: "answer",
+        text: "You are pacing ahead of target.",
+      },
+    });
+    expect(state.client_agent_messages).toHaveLength(2);
+    expect(
+      state.client_agent_messages.find(
+        (message) => message.id === "message_assistant_pending_resolution",
+      ),
+    ).toMatchObject({
+      response_status: "answer",
+      text: "You are pacing ahead of target.",
+      provider_response_id: "resp_pending_resolution",
+    });
+    expect(state.client_agent_threads[0]).toMatchObject({
+      last_response_status: "answer",
+      preview_text: "You are pacing ahead of target.",
+    });
+  });
+
+  it("fails a pending assistant placeholder in place", async () => {
+    state.client_agent_threads = [
+      makeThread({
+        id: "thread_pending_failure",
+        preview_text: "Thinking…",
+        last_response_status: "pending",
+      }),
+    ];
+    state.client_agent_messages = [
+      makeMessage({
+        id: "message_assistant_pending_failure",
+        thread_id: "thread_pending_failure",
+        role: "assistant",
+        response_status: "pending",
+        text: "Thinking…",
+        agent_task_id: "task_pending_failure",
+        client_request_id: "request_pending_failure",
+      }),
+    ];
+
+    const failed = await failPendingAssistantMessage({
+      assistantMessageId: "message_assistant_pending_failure",
+      threadId: "thread_pending_failure",
+      scope: memberScope,
+      text: "Unable to answer right now.",
+    });
+
+    expect(failed).toMatchObject({
+      ok: true,
+      message: {
+        messageId: "message_assistant_pending_failure",
+        status: "error",
+        text: "Unable to answer right now.",
+      },
+    });
+  });
+
+  it("does not overwrite a completed assistant message when a worker retry resolves again", async () => {
+    state.client_agent_threads = [
+      makeThread({
+        id: "thread_completed_resolution",
+        preview_text: "Persisted answer wins.",
+        last_response_status: "answer",
+      }),
+    ];
+    state.client_agent_messages = [
+      makeMessage({
+        id: "message_assistant_completed_resolution",
+        thread_id: "thread_completed_resolution",
+        role: "assistant",
+        response_status: "answer",
+        text: "Persisted answer wins.",
+        provider_response_id: "resp_completed_resolution",
+      }),
+    ];
+
+    const resolved = await resolvePendingAssistantMessage({
+      assistantMessageId: "message_assistant_completed_resolution",
+      threadId: "thread_completed_resolution",
+      scope: memberScope,
+      status: "refuse",
+      text: "Late retry should not overwrite.",
+      blocks: [],
+      referencedEntities: [],
+      contextPayload: null,
+      resolvedRange: null,
+      providerResponseId: "resp_retry_resolution",
+    });
+
+    expect(resolved).toMatchObject({
+      ok: true,
+      message: {
+        messageId: "message_assistant_completed_resolution",
+        status: "answer",
+        text: "Persisted answer wins.",
+        providerResponseId: "resp_completed_resolution",
+      },
+    });
+    expect(
+      state.client_agent_messages.find(
+        (message) => message.id === "message_assistant_completed_resolution",
+      ),
+    ).toMatchObject({
+      response_status: "answer",
+      text: "Persisted answer wins.",
+      provider_response_id: "resp_completed_resolution",
+    });
+  });
+
+  it("does not overwrite a completed assistant message when a worker retry fails later", async () => {
+    state.client_agent_threads = [
+      makeThread({
+        id: "thread_completed_failure",
+        preview_text: "Persisted answer wins.",
+        last_response_status: "answer",
+      }),
+    ];
+    state.client_agent_messages = [
+      makeMessage({
+        id: "message_assistant_completed_failure",
+        thread_id: "thread_completed_failure",
+        role: "assistant",
+        response_status: "answer",
+        text: "Persisted answer wins.",
+      }),
+    ];
+
+    const failed = await failPendingAssistantMessage({
+      assistantMessageId: "message_assistant_completed_failure",
+      threadId: "thread_completed_failure",
+      scope: memberScope,
+      text: "Late failure should not overwrite.",
+    });
+
+    expect(failed).toMatchObject({
+      ok: true,
+      message: {
+        messageId: "message_assistant_completed_failure",
+        status: "answer",
+        text: "Persisted answer wins.",
+      },
+    });
+    expect(
+      state.client_agent_messages.find(
+        (message) => message.id === "message_assistant_completed_failure",
+      ),
+    ).toMatchObject({
+      response_status: "answer",
+      text: "Persisted answer wins.",
+    });
   });
 });
