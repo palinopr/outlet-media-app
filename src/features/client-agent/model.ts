@@ -104,6 +104,23 @@ function safeError(
   };
 }
 
+function buildFallbackAnswerText(
+  referencedEntities: ReferencedEntity[],
+  resolvedRange: z.infer<typeof ResolvedRangeSchema>,
+) {
+  const rangeLabel = resolvedRange.preset.replace(/_/g, " ");
+
+  if (referencedEntities.length === 1) {
+    return `Here's the latest summary I found for ${referencedEntities[0]!.name} (${rangeLabel}).`;
+  }
+
+  if (referencedEntities.length > 1) {
+    return `Here's the latest comparison summary I found for ${rangeLabel}.`;
+  }
+
+  return `Here's the latest summary I found for ${rangeLabel}.`;
+}
+
 function normalizeText(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
@@ -492,6 +509,14 @@ export async function generateClientAgentModelResponse(
   );
   const authoritativeBlocks = toolResult.status === "ok" ? toolResult.blocks : [];
   const authoritativeReferencedEntities = toolResult.referencedEntities;
+  const fallbackAnswer = (providerResponseId: string | null): ClientAgentModelResponse => ({
+    status: "answer",
+    text: buildFallbackAnswerText(authoritativeReferencedEntities, resolvedRange),
+    blocks: authoritativeBlocks,
+    referencedEntities: authoritativeReferencedEntities,
+    resolvedRange,
+    providerResponseId,
+  });
 
   try {
     const response = await getOpenAIClient().responses.parse({
@@ -519,10 +544,18 @@ export async function generateClientAgentModelResponse(
 
     const parsed = ModelResponseSchema.safeParse(extractParsedOutput(response));
     if (!parsed.success) {
+      if (toolResult.status === "ok") {
+        return fallbackAnswer(response.id ?? null);
+      }
+
       return safeError(response.id ?? null);
     }
 
     if (parsed.data.status !== "answer") {
+      if (toolResult.status === "ok") {
+        return fallbackAnswer(response.id ?? null);
+      }
+
       return safeError(response.id ?? null);
     }
 
@@ -534,7 +567,9 @@ export async function generateClientAgentModelResponse(
       resolvedRange,
       providerResponseId: response.id ?? null,
     };
-  } catch {
+  } catch (error) {
+    console.error("[client-agent-model] format failed:", error);
+
     if (toolResult.status === "no_data") {
       return {
         status: "answer",
@@ -546,6 +581,6 @@ export async function generateClientAgentModelResponse(
       };
     }
 
-    return safeError();
+    return fallbackAnswer(null);
   }
 }

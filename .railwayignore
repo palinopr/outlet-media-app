@@ -1,8 +1,7 @@
 .git
 .next
 node_modules
-agent/node_modules
-agent/.next
+/agent/
 .playwright-mcp
 .worktrees
 .claude
