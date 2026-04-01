@@ -15,6 +15,7 @@ import type { ThreadContextPayload } from "./thread-context";
 import type {
   AgentAnswerBlock,
   AgentHistoryMessage,
+  AgentResponseStatus,
   ClientAgentScope,
   ReferencedEntity,
   ResolvedRange,
@@ -45,7 +46,7 @@ type PreviewThread = {
   title: string | null;
   previewText: string | null;
   referencedEntities: ReferencedEntity[];
-  lastResponseStatus: "answer" | "clarify" | "refuse" | "error" | null;
+  lastResponseStatus: AgentResponseStatus | null;
   lastMessageAt: string;
   updatedAt: string;
   createdAt: string;
@@ -57,7 +58,7 @@ type ThreadBody = {
 };
 
 type SendMessageBody = {
-  status: "answer" | "clarify" | "refuse" | "error";
+  status: AgentResponseStatus;
   thread_id: string;
   message_id: string;
   text: string;
@@ -281,7 +282,7 @@ export async function getThread({
   };
 }
 
-function eventNameForStatus(status: "answer" | "clarify" | "refuse" | "error") {
+function eventNameForStatus(status: AgentResponseStatus) {
   if (status === "refuse") {
     return "client_agent_refusal_generated" as const;
   }

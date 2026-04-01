@@ -4,7 +4,12 @@ import { startTransition, useEffect, useMemo, useState } from "react";
 import { ConversationPane } from "./conversation-pane";
 import { ThreadList } from "./thread-list";
 import type { ThreadContextPayload } from "../thread-context";
-import type { AgentAnswerBlock, AgentResponseStatus, ReferencedEntity, ResolvedRange } from "../types";
+import type {
+  AgentAnswerBlock,
+  AgentResponseStatus,
+  ReferencedEntity,
+  ResolvedRange,
+} from "../types";
 
 export type AgentThreadSummary = {
   threadId: string;
@@ -44,7 +49,7 @@ type AgentShellProps = {
 };
 
 type SendMessagePayload = {
-  status: "answer" | "clarify" | "refuse" | "error";
+  status: AgentResponseStatus;
   thread_id: string;
   message_id: string;
   text: string;

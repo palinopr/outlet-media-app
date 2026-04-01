@@ -45,6 +45,41 @@ as $$
 declare
   v_now timestamptz := now();
 begin
+  if p_viewer_context not in ('member', 'admin_preview') then
+    raise exception 'invalid viewer context: %', p_viewer_context;
+  end if;
+
+  if p_viewer_context = 'member' then
+    if p_client_member_id is null then
+      raise exception 'member queued turns require client_member_id';
+    end if;
+    if p_preview_admin_user_id is not null then
+      raise exception 'member queued turns must not set preview_admin_user_id';
+    end if;
+  elsif p_preview_admin_user_id is null then
+    raise exception 'admin preview queued turns require preview_admin_user_id';
+  end if;
+
+  update public.client_agent_threads
+    set viewer_context = p_viewer_context,
+        preview_admin_user_id = case
+          when p_viewer_context = 'admin_preview' then p_preview_admin_user_id
+          else null
+        end,
+        client_member_id = case
+          when p_viewer_context = 'member' then p_client_member_id
+          else null
+        end,
+        last_response_status = 'pending',
+        preview_text = 'Thinking…',
+        last_message_at = v_now,
+        updated_at = v_now
+    where id = p_thread_id;
+
+  if not found then
+    raise exception 'client_agent_thread not found: %', p_thread_id;
+  end if;
+
   select
     user_row.id,
     assistant_row.id,
@@ -200,13 +235,6 @@ begin
       'previewAdminUserId', p_preview_admin_user_id
     )
   where id = agent_task_id;
-
-  update public.client_agent_threads
-    set last_response_status = 'pending',
-        preview_text = 'Thinking…',
-        last_message_at = v_now,
-        updated_at = v_now
-    where id = p_thread_id;
 
   thread_id := p_thread_id;
   client_request_id := p_client_request_id;
