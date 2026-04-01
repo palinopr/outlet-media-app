@@ -865,8 +865,11 @@ export async function runClientAgentRuntime(
     scopeReset,
   });
 
+  const modelHistory =
+    scopeReset == null ? input.history : [];
+
   let responseInput: ResponseInputItem[] = [
-    ...historyToInputItems(input.history),
+    ...historyToInputItems(modelHistory),
     {
       type: "message",
       role: "user",

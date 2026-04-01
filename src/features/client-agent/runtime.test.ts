@@ -453,6 +453,13 @@ describe("client-agent runtime", () => {
         instructions: expect.stringContaining(
           "The current user message broadens scope to the full visible ads portfolio.",
         ),
+        input: [
+          {
+            type: "message",
+            role: "user",
+            content: "how much we have spend on ads?",
+          },
+        ],
       }),
     );
     expect(result).toMatchObject({
