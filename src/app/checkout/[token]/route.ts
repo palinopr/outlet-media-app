@@ -48,7 +48,6 @@ function renderCheckoutPage(targetUrl: string): string {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Secure checkout | Outlet Media</title>
-    <meta http-equiv="refresh" content="0;url=${escapedUrl}" />
     <style>
       body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: radial-gradient(circle at top, #14213d, #0b1020 58%); color: #f7f9fc; }
       main { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
@@ -70,11 +69,6 @@ function renderCheckoutPage(targetUrl: string): string {
         <small>This reservation is time-sensitive.</small>
       </section>
     </main>
-    <script>
-      window.setTimeout(function () {
-        window.location.replace(${JSON.stringify(targetUrl)});
-      }, 50);
-    </script>
   </body>
 </html>`;
 }

@@ -1,6 +1,6 @@
 import type { TicketConciergePreparedOption } from "./types";
 import { buildCheckoutHandoffUrl } from "./checkout-handoff";
-import { getReusableCheckoutAttempt, recordCheckoutAttempt } from "./option-ledger";
+import { recordCheckoutAttempt } from "./option-ledger";
 import { captureTicketmasterCheckout } from "./ticketmaster-browser";
 
 export async function executeConciergeCheckout(input: {
@@ -11,14 +11,6 @@ export async function executeConciergeCheckout(input: {
     expiresAt: new Date(Date.now() + 15 * 60 * 1000),
     optionId: input.option.id,
   });
-
-  const reusable = await getReusableCheckoutAttempt(input.option.id);
-  if (reusable?.checkout_url) {
-    return {
-      checkoutUrl: handoffUrl,
-      status: "checkout_ready" as const,
-    };
-  }
 
   const execution = input.option.execution as Partial<{
     eventUrl: string;

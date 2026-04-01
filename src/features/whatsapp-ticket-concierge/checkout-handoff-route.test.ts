@@ -76,6 +76,7 @@ describe("checkout handoff route", () => {
     const html = await response.text();
     expect(html).toContain("Continue to secure checkout");
     expect(html).toContain("https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc");
+    expect(html).not.toContain("http-equiv=\"refresh\"");
   });
 
   it("returns 410 when the token is valid but no checkout attempt is available", async () => {

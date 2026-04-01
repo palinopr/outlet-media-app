@@ -474,22 +474,6 @@ export async function recordCheckoutAttempt(input: CheckoutAttemptInput) {
   return data;
 }
 
-export async function getReusableCheckoutAttempt(optionId: string) {
-  const db = requireSupabaseAdmin();
-  const { data, error } = await db
-    .from("whatsapp_ticket_concierge_checkout_attempts")
-    .select("checkout_url, created_at, failure_reason, option_id, status, updated_at")
-    .eq("option_id", optionId)
-    .eq("status", "checkout_ready")
-    .maybeSingle();
-
-  if (error) {
-    throw new Error(`[concierge] reusable checkout lookup failed: ${error.message}`);
-  }
-
-  return data;
-}
-
 export async function selectConciergeOption(input: { optionId: string; optionSetId: string }) {
   const db = requireSupabaseAdmin();
   const { error } = await db

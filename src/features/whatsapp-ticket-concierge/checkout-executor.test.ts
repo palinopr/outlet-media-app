@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const ledgerState = vi.hoisted(() => ({
   recorded: [] as Array<Record<string, unknown>>,
-  reusable: null as null | { checkout_url: string },
 }));
 
 const browserState = vi.hoisted(() => ({
@@ -21,7 +20,6 @@ const browserState = vi.hoisted(() => ({
 }));
 
 vi.mock("./option-ledger", () => ({
-  getReusableCheckoutAttempt: vi.fn(async () => ledgerState.reusable),
   recordCheckoutAttempt: vi.fn(async (payload: Record<string, unknown>) => {
     ledgerState.recorded.push(payload);
     return payload;
@@ -43,7 +41,6 @@ describe("executeConciergeCheckout", () => {
 
   beforeEach(() => {
     ledgerState.recorded = [];
-    ledgerState.reusable = null;
     browserState.result = {
       checkoutUrl: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc",
       status: "checkout_ready",
@@ -77,11 +74,7 @@ describe("executeConciergeCheckout", () => {
     totalCents: 39270,
   };
 
-  it("reuses an existing checkout link before opening the browser again", async () => {
-    ledgerState.reusable = {
-      checkout_url: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=reuse",
-    };
-
+  it("captures a fresh checkout even when a prior checkout attempt exists", async () => {
     const result = await executeConciergeCheckout({
       chromeDebugUrl: "http://127.0.0.1:9222",
       option,
@@ -92,8 +85,14 @@ describe("executeConciergeCheckout", () => {
       throw new Error("expected checkout_ready");
     }
     expect(result.checkoutUrl).toMatch(/^https:\/\/www\.outletmedia\.net\/checkout\//);
-
-    expect(ledgerState.recorded).toEqual([]);
+    expect(ledgerState.recorded).toEqual([
+      {
+        checkoutUrl: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc",
+        failureReason: null,
+        optionId: "opt_1",
+        status: "checkout_ready",
+      },
+    ]);
   });
 
   it("records a successful checkout capture in the ledger", async () => {
