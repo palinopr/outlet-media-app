@@ -17,32 +17,6 @@ begin
 end;
 $$;
 
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_constraint
-    where conname = 'client_agent_threads_viewer_owner_check'
-      and conrelid = 'public.client_agent_threads'::regclass
-  ) then
-    alter table public.client_agent_threads
-      add constraint client_agent_threads_viewer_owner_check
-      check (
-        (
-          viewer_context = 'member'
-          and client_member_id is not null
-          and preview_admin_user_id is null
-        )
-        or (
-          viewer_context = 'admin_preview'
-          and client_member_id is null
-          and preview_admin_user_id is not null
-        )
-      );
-  end if;
-end;
-$$;
-
 create index if not exists client_agent_threads_preview_lookup_idx
   on public.client_agent_threads (client_id, preview_admin_user_id, updated_at desc)
   where viewer_context = 'admin_preview';
@@ -61,10 +35,6 @@ alter table public.client_agent_messages
 create unique index if not exists client_agent_messages_user_request_uidx
   on public.client_agent_messages (thread_id, client_request_id)
   where role = 'user' and client_request_id is not null;
-
-create index if not exists client_agent_messages_agent_task_id_idx
-  on public.client_agent_messages (agent_task_id)
-  where agent_task_id is not null;
 
 create or replace function public.queue_client_agent_turn(
   p_thread_id uuid,
