@@ -1,5 +1,5 @@
 import type { TicketConciergePreparedOption } from "./types";
-import { shortenBitlyUrl } from "./bitly";
+import { buildCheckoutHandoffUrl } from "./checkout-handoff";
 import { getReusableCheckoutAttempt, recordCheckoutAttempt } from "./option-ledger";
 import { captureTicketmasterCheckout } from "./ticketmaster-browser";
 
@@ -7,10 +7,15 @@ export async function executeConciergeCheckout(input: {
   chromeDebugUrl: string;
   option: TicketConciergePreparedOption;
 }) {
+  const handoffUrl = buildCheckoutHandoffUrl({
+    expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+    optionId: input.option.id,
+  });
+
   const reusable = await getReusableCheckoutAttempt(input.option.id);
   if (reusable?.checkout_url) {
     return {
-      checkoutUrl: reusable.checkout_url,
+      checkoutUrl: handoffUrl,
       status: "checkout_ready" as const,
     };
   }
@@ -50,16 +55,15 @@ export async function executeConciergeCheckout(input: {
   });
 
   if (result.status === "checkout_ready") {
-    const checkoutUrl = await shortenBitlyUrl(result.checkoutUrl);
     await recordCheckoutAttempt({
-      checkoutUrl,
+      checkoutUrl: result.checkoutUrl,
       failureReason: null,
       optionId: input.option.id,
       status: "checkout_ready",
     });
 
     return {
-      checkoutUrl,
+      checkoutUrl: handoffUrl,
       status: "checkout_ready" as const,
     };
   }

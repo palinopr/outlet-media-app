@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/connect-error(.*)",
+  "/checkout(.*)",
   "/privacy",
   "/terms",
   "/deletion-status(.*)",
@@ -31,6 +32,9 @@ const isPublicRoute = createRouteMatcher([
 export default clerkMiddleware(async (auth, req) => {
   const pathname = req.nextUrl.pathname;
   if (pathname === "/api/agents/email/watch" || pathname.startsWith("/api/agents/email/watch/")) {
+    return;
+  }
+  if (pathname === "/checkout" || pathname.startsWith("/checkout/")) {
     return;
   }
   if (pathname === "/api/whatsapp/webhook" || pathname.startsWith("/api/whatsapp/webhook/")) {

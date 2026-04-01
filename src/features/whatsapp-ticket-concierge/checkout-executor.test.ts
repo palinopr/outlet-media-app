@@ -39,12 +39,19 @@ vi.mock("./bitly", () => ({
 import { executeConciergeCheckout } from "./checkout-executor";
 
 describe("executeConciergeCheckout", () => {
+  const ORIGINAL_ENV = { ...process.env };
+
   beforeEach(() => {
     ledgerState.recorded = [];
     ledgerState.reusable = null;
     browserState.result = {
       checkoutUrl: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc",
       status: "checkout_ready",
+    };
+    process.env = {
+      ...ORIGINAL_ENV,
+      INGEST_SECRET: "test-ingest-secret",
+      NEXT_PUBLIC_APP_URL: "https://www.outletmedia.net",
     };
   });
 
@@ -75,33 +82,35 @@ describe("executeConciergeCheckout", () => {
       checkout_url: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=reuse",
     };
 
-    await expect(
-      executeConciergeCheckout({
-        chromeDebugUrl: "http://127.0.0.1:9222",
-        option,
-      }),
-    ).resolves.toEqual({
-      checkoutUrl: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=reuse",
-      status: "checkout_ready",
+    const result = await executeConciergeCheckout({
+      chromeDebugUrl: "http://127.0.0.1:9222",
+      option,
     });
+
+    expect(result.status).toBe("checkout_ready");
+    if (result.status !== "checkout_ready") {
+      throw new Error("expected checkout_ready");
+    }
+    expect(result.checkoutUrl).toMatch(/^https:\/\/www\.outletmedia\.net\/checkout\//);
 
     expect(ledgerState.recorded).toEqual([]);
   });
 
   it("records a successful checkout capture in the ledger", async () => {
-    await expect(
-      executeConciergeCheckout({
-        chromeDebugUrl: "http://127.0.0.1:9222",
-        option,
-      }),
-    ).resolves.toEqual({
-      checkoutUrl: "https://bit.ly/abc123",
-      status: "checkout_ready",
+    const result = await executeConciergeCheckout({
+      chromeDebugUrl: "http://127.0.0.1:9222",
+      option,
     });
+
+    expect(result.status).toBe("checkout_ready");
+    if (result.status !== "checkout_ready") {
+      throw new Error("expected checkout_ready");
+    }
+    expect(result.checkoutUrl).toMatch(/^https:\/\/www\.outletmedia\.net\/checkout\//);
 
     expect(ledgerState.recorded).toEqual([
       {
-        checkoutUrl: "https://bit.ly/abc123",
+        checkoutUrl: "https://auth.ticketmaster.com/as/authorization.oauth2?TMUO=abc",
         failureReason: null,
         optionId: "opt_1",
         status: "checkout_ready",
