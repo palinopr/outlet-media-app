@@ -516,6 +516,13 @@ describe("client-agent model adapter", () => {
       { entityId: "evt_latest", entityType: "event" },
     ]);
     expect(result.blocks).toEqual([]);
+    expect(getEntityDetails).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityId: "evt_latest",
+        entityType: "event",
+      }),
+    );
+    expect(getEventInsights).not.toHaveBeenCalled();
   });
 
   it("answers 'and before that?' using the previously referenced show from history", async () => {
@@ -600,6 +607,13 @@ describe("client-agent model adapter", () => {
     expect(result.referencedEntities).toMatchObject([
       { entityId: "evt_previous", entityType: "event" },
     ]);
+    expect(getEntityDetails).toHaveBeenCalledWith(
+      expect.objectContaining({
+        entityId: "evt_previous",
+        entityType: "event",
+      }),
+    );
+    expect(getEventInsights).not.toHaveBeenCalled();
   });
 
   it("uses aggregate campaign breakdowns for broad audience questions", async () => {

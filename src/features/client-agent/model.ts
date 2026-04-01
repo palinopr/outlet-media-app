@@ -504,6 +504,19 @@ async function executePlan(
       : { status: "no_data", blocks: [], referencedEntities };
   }
 
+  if (referencedEntities.length === 1) {
+    const result = await getEntityDetails({
+      scope,
+      entityId: referencedEntities[0]!.entityId,
+      entityType: referencedEntities[0]!.entityType,
+      range: resolvedRange,
+    });
+
+    return result.status === "ok"
+      ? result
+      : { status: "no_data", blocks: [], referencedEntities };
+  }
+
   if (entityType === "event" && (referencedEntities.length > 0 || isBroadEventQuestion(lowerMessage))) {
     const eventIds = referencedEntities.length > 0
       ? referencedEntities.map((entity) => entity.entityId)
@@ -513,19 +526,6 @@ async function executePlan(
     const result = await getEventInsights({
       scope,
       eventIds,
-      range: resolvedRange,
-    });
-
-    return result.status === "ok"
-      ? result
-      : { status: "no_data", blocks: [], referencedEntities };
-  }
-
-  if (referencedEntities.length === 1) {
-    const result = await getEntityDetails({
-      scope,
-      entityId: referencedEntities[0]!.entityId,
-      entityType: referencedEntities[0]!.entityType,
       range: resolvedRange,
     });
 
