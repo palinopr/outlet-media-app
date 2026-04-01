@@ -187,6 +187,8 @@ pkill -f 'chrome-devtools-mcp|@playwright/mcp|playwright-chrome-clone|mcp-discor
 For browser debugging, stabilize one MCP path first:
 - get `chrome-devtools` healthy before changing Playwright config
 - do not mix Playwright profile experiments with a broken DevTools session in the same Codex run unless you are explicitly debugging MCP behavior itself
+- if a run launches a dedicated automation Chrome profile, treat teardown as required at handoff: close the browser, remove the temporary profile if applicable, and do not leave extra tabs or debug ports alive after the run finishes
+- when the dedicated browser was started only for a one-off smoke or debug run, prefer killing it by its explicit `--user-data-dir` or debug port instead of leaving cleanup to the next session
 
 When running local Next.js dev with Clerk and a real browser session:
 - prefer `npm run dev -- --hostname localhost --port <port>` over `127.0.0.1`
