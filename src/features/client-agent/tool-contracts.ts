@@ -2,6 +2,22 @@ import { z } from "zod";
 
 import { ReferencedEntitySchema, ResolvedRangeSchema } from "./types";
 
+export const CLIENT_AGENT_TOOL_NAMES = [
+  "search_scope",
+  "get_ads_overview",
+  "get_events_overview",
+  "get_campaign_details",
+  "get_event_details",
+  "get_creative_details",
+  "get_demographic_breakdown",
+  "get_geography_breakdown",
+  "get_placement_breakdown",
+  "compare_entities",
+  "get_timeseries",
+] as const;
+
+export type ClientAgentToolName = (typeof CLIENT_AGENT_TOOL_NAMES)[number];
+
 export const DomainSchema = z.enum(["ads", "events"]);
 export const EntityTypeSchema = z.enum(["campaign", "creative", "event"]);
 export const AdsMetricSchema = z.enum([

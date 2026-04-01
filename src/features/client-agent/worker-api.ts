@@ -6,17 +6,7 @@ import { revalidateClientAgentPath } from "@/features/workflow/revalidation";
 import { supabaseAdmin } from "@/lib/supabase";
 import type { ThreadContextPayload } from "./thread-context";
 import {
-  compareEntities,
-  getAdsOverview,
-  getCampaignDetails,
-  getCreativeDetails,
-  getDemographicBreakdown,
-  getEventDetails,
-  getEventsOverview,
-  getGeographyBreakdown,
-  getPlacementBreakdown,
-  getTimeseries,
-  searchScope,
+  clientAgentToolHandlers,
 } from "./tools";
 import {
   type AgentAnswerBlock,
@@ -25,6 +15,10 @@ import {
   type ReferencedEntity,
   type ResolvedRange,
 } from "./types";
+import {
+  CLIENT_AGENT_TOOL_NAMES,
+  type ClientAgentToolName,
+} from "./tool-contracts";
 import {
   failPendingAssistantMessage,
   getThread,
@@ -51,20 +45,8 @@ const AgentTaskRowSchema = z.object({
   status: z.string().min(1),
 });
 
-export const WorkerToolNameSchema = z.enum([
-  "search_scope",
-  "get_ads_overview",
-  "get_events_overview",
-  "get_campaign_details",
-  "get_event_details",
-  "get_creative_details",
-  "get_demographic_breakdown",
-  "get_geography_breakdown",
-  "get_placement_breakdown",
-  "compare_entities",
-  "get_timeseries",
-]);
-export type WorkerToolName = z.infer<typeof WorkerToolNameSchema>;
+export const WorkerToolNameSchema = z.enum(CLIENT_AGENT_TOOL_NAMES);
+export type WorkerToolName = ClientAgentToolName;
 
 type WorkerApiError = {
   ok: false;
@@ -365,22 +347,12 @@ export async function getTaskContext(
 
 type WorkerToolHandler = (input: {
   scope: ClientAgentScope;
-  args: any;
+  args: unknown;
 }) => WorkerToolResult;
 
 const toolHandlers: Record<WorkerToolName, WorkerToolHandler> = {
-  search_scope: searchScope,
-  get_ads_overview: getAdsOverview,
-  get_events_overview: getEventsOverview,
-  get_campaign_details: getCampaignDetails,
-  get_event_details: getEventDetails,
-  get_creative_details: getCreativeDetails,
-  get_demographic_breakdown: getDemographicBreakdown,
-  get_geography_breakdown: getGeographyBreakdown,
-  get_placement_breakdown: getPlacementBreakdown,
-  compare_entities: compareEntities,
-  get_timeseries: getTimeseries,
-};
+  ...clientAgentToolHandlers,
+} as Record<WorkerToolName, WorkerToolHandler>;
 
 export async function runTool({
   taskId,

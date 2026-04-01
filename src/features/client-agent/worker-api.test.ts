@@ -134,6 +134,19 @@ vi.mock("@/lib/supabase", () => ({
 }));
 
 vi.mock("./tools", () => ({
+  clientAgentToolHandlers: {
+    search_scope: searchScope,
+    get_ads_overview: getAdsOverview,
+    get_events_overview: getEventsOverview,
+    get_campaign_details: getCampaignDetails,
+    get_event_details: getEventDetails,
+    get_creative_details: getCreativeDetails,
+    get_demographic_breakdown: getDemographicBreakdown,
+    get_geography_breakdown: getGeographyBreakdown,
+    get_placement_breakdown: getPlacementBreakdown,
+    compare_entities: compareEntities,
+    get_timeseries: getTimeseries,
+  },
   searchScope,
   getAdsOverview,
   getEventsOverview,

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
@@ -6,7 +8,6 @@ const {
   getStoreThread,
   listStoreThreads,
   queueClientAgentTurn,
-  generateClientAgentModelResponse,
   getMemberAccessForSlug,
   getClientPortalConfig,
   logSystemEvent,
@@ -16,7 +17,6 @@ const {
   createOrLoadPreviewThread: vi.fn(),
   createStoreThread: vi.fn(),
   queueClientAgentTurn: vi.fn(),
-  generateClientAgentModelResponse: vi.fn(),
   getClientPortalConfig: vi.fn(),
   getMemberAccessForSlug: vi.fn(),
   getStoreThread: vi.fn(),
@@ -47,10 +47,6 @@ vi.mock("./store", () => ({
 
 vi.mock("./queue", () => ({
   queueClientAgentTurn,
-}));
-
-vi.mock("./model", () => ({
-  generateClientAgentModelResponse,
 }));
 
 vi.mock("@/features/system-events/server", () => ({
@@ -280,7 +276,6 @@ describe("client-agent server orchestration", () => {
         threadId: "preview_thread_1",
       }),
     );
-    expect(generateClientAgentModelResponse).not.toHaveBeenCalled();
     expect(logSystemEvent).not.toHaveBeenCalled();
     expect(revalidateClientAgentPath).not.toHaveBeenCalled();
   });
@@ -378,7 +373,6 @@ describe("client-agent server orchestration", () => {
         threadId: "thread_1",
       }),
     );
-    expect(generateClientAgentModelResponse).not.toHaveBeenCalled();
     expect(logSystemEvent).not.toHaveBeenCalled();
     expect(revalidateClientAgentPath).not.toHaveBeenCalled();
   });
@@ -399,5 +393,12 @@ describe("client-agent server orchestration", () => {
         error: "Unable to load agent state",
       },
     });
+  });
+
+  it("keeps the server path free of the hosted model import", () => {
+    const source = readFileSync(join(import.meta.dirname, "server.ts"), "utf8");
+
+    expect(source).not.toContain("generateClientAgentModelResponse");
+    expect(source).not.toContain("./model");
   });
 });
