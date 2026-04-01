@@ -32,6 +32,18 @@ export function secretGuard(secret: unknown): Response | null {
   return null;
 }
 
+/** Validate CLIENT_AGENT_WORKER_SECRET from a Bearer Authorization header. */
+export function clientAgentWorkerGuard(authorization: unknown): Response | null {
+  if (
+    !process.env.CLIENT_AGENT_WORKER_SECRET ||
+    typeof authorization !== "string" ||
+    authorization !== `Bearer ${process.env.CLIENT_AGENT_WORKER_SECRET}`
+  ) {
+    return apiError("Unauthorized", 401);
+  }
+  return null;
+}
+
 /** Check Clerk auth + admin role. Returns error Response if not admin, null if OK. */
 export async function adminGuard(): Promise<Response | null> {
   const { error } = await authGuard();
