@@ -104,16 +104,15 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - **Snapshot UPSERT is write-once**: `campaign_snapshots` uses ON CONFLICT DO NOTHING — first sync of the day (by UTC date) creates the snapshot, subsequent syncs only update `meta_campaigns`. First sync fires at 00:00 UTC (6 PM CST previous day), so snapshots capture late-afternoon CST data. Good for consistency (same time daily), but live campaign data may differ from snapshot data within the same day.
 - **Meta intraday reporting lag**: Within-day spend deltas from Meta API are unreliable for real-time monitoring. On Feb 23, ACTIVE campaigns showed <3% of expected daily delivery after 12 hours ($0.22-$1.35 on $100/day budgets). This is normal Meta reporting lag — true daily spend finalizes 24-48h after the day ends. Use daily snapshots (midnight-to-midnight) for trend analysis, not intraday deltas.
 
-## Data Pipeline Status (verified 2026-04-02, Cycle #360)
+## Data Pipeline Status (verified 2026-04-03, Boss Supervision)
 - `daily_budget` ✅ populated for all campaigns in Supabase
 - `start_time` ✅ populated for all campaigns in Supabase
-- `campaign_snapshots` 🔴 **DOWN** — latest snapshot Mar 26. Gap now 7+ days (Mar 27-Apr 2+, growing). Permanent gaps: Feb 20-22, Feb 27-Mar 4, Mar 18, Mar 21-25, Mar 27+.
+- `campaign_snapshots` 🔴 **DOWN** — latest snapshot Mar 26. Gap now 8+ days (Mar 27-Apr 3+, growing). Permanent gaps: Feb 20-22, Feb 27-Mar 4, Mar 18, Mar 21-25, Mar 27+.
 - `event_snapshots` ⚠️ **POPULATED BUT STATIC** — ticket values identical across dates (TM One source frozen).
-- **Meta syncs:** Session cache 7 days stale (Mar 26 18:00). 3 ACTIVE campaigns in Supabase (unchanged since Mar 26).
-- **TM One events:** last-events.json 29+ days stale (Mar 4). TM sync effectively dead.
-- **Supabase status lag:** Supabase shows 32 campaigns (3 ACTIVE: Don Omar BCN, Lead Gen, Sienna — STALE). Live Meta shows Chris R ACTIVE + Vaz Vil ACTIVE, Don Omar PAUSED. Status doesn't sync back automatically.
-- **Supabase vs Meta campaign count:** Supabase has 32 campaigns. Live Meta has ~100+ (most PAUSED). Chris R not in Supabase at all — ingest hasn't run.
-- **Agent system DOWN:** Session cache, snapshots, and heartbeat all stale (heartbeat Mar 8). Think cycles manual trigger only.
+- **Meta syncs:** Session cache 8+ days stale (Mar 26 18:00). Supabase doesn't reflect current 4 ACTIVE campaigns.
+- **TM One events:** last-events.json 30+ days stale (Mar 4). TM sync effectively dead.
+- **Supabase status lag:** Supabase stale. Live Meta has 4 ACTIVE (Proteccion final, Chris R, Vaz Vil, Sienna). Don Omar PAUSED. "Proteccion final" not in Supabase.
+- **Agent system DOWN:** Heartbeat stale since Mar 8. Think cycles manual trigger only.
 
 ## EATA / Vivaticket Integration (added Cycle #76, Mar 5)
 - **Platform:** Vivaticket (entradasatualcance.com/backstage) — AngularJS SPA
@@ -142,28 +141,31 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - ✅ RESOLVED: Don Omar BCN (ACTIVE at $300/day, 6.89× ROAS)
 - ✅ RESOLVED: Sienna (ACTIVE at $30/day), Vaz Vil (PAUSED ✅)
 
-## Current Campaign Landscape (as of 2026-04-02, Boss Supervision — live Meta API pull)
-- **3 campaigns ACTIVE on Meta.** Major changes since Mar 26.
+## Current Campaign Landscape (as of 2026-04-03, Boss Supervision — live Meta API pull)
+- **4 campaigns ACTIVE on Meta.** New lead gen campaign appeared since Apr 2.
 
-### ACTIVE Campaigns (3) — verified Apr 2
+### ACTIVE Campaigns (4) — verified Apr 3
 
-**Chris R - 05/22 — 🟢 NEW CLIENT:**
-- $100/day budget. $160.74 spend (7d). 3.07× ROAS. 4 purchases. Show date likely May 22.
-- Healthy start: freq 1.61, CTR 2.44%, CPC $0.27. Unknown client — need to confirm alias.
+**Proteccion final - Leads - 6 — 🟢 NEW (Lead Gen):**
+- $100/day budget. $52.98 spend (7d). 2 leads. CPL $26.49. Freq 1.13.
+- Lead gen campaign (not ticket sales). No purchase_roas expected.
 
-**Vaz Vil - Kiko Blade - penetrado tour — 🔴 REACTIVATED, ZERO PURCHASES:**
-- $100/day budget. $149.88 spend (7d). 0× ROAS. ZERO purchases. Freq 1.82.
-- Was PAUSED as of Mar 26. Now ACTIVE and burning $100/day with no conversions.
+**Chris R - 05/22 — 🟢 HEALTHY:**
+- $100/day budget. $228.73 spend (7d). 2.94× ROAS. 6 purchases. Show May 22.
+- Freq 1.85, CTR 2.61%, CPC $0.26. Slight ROAS dip from 3.07→2.94 but still healthy.
+
+**Vaz Vil - Kiko Blade - penetrado tour — 🔴 ZERO PURCHASES:**
+- $100/day budget. $149.99 spend (7d). 0× ROAS. ZERO purchases. Freq 1.82.
+- Now $300+ total wasted. Needs immediate attention.
 
 **Sienna - Peace In Mind — ⚠️ ACTIVE (ViewContent only):**
-- $30/day budget. $174.29 spend (7d). 0× ROAS (expected — no purchase pixel).
-- 4,837 ViewContent events, 130k video views. Performing well for awareness objective.
+- $30/day budget. $193.26 spend (7d). 0× ROAS (expected — no purchase pixel).
+- 4,281 ViewContent events, 118k video views. Performing well for awareness.
 
-### KEY CHANGES since Mar 26:
-- 🔴 **Don Omar BCN → PAUSED** — was star performer ($300/day, 6.89× ROAS). Show Jul 23 still 112 days out. WHY?
-- 🟡 **Outlet Media Lead Gen → PAUSED**
-- 🟢 **Chris R - 05/22 → NEW** — unknown client, $100/day, 3.07× ROAS
-- 🔴 **Vaz Vil → REACTIVATED** — burning cash with 0 purchases
+### KEY CHANGES since Apr 2:
+- 🟢 **Proteccion final - Leads - 6 → NEW** — lead gen campaign, $100/day
+- 🔴 **Vaz Vil still burning** — now $300+ total with 0 purchases
+- 🟡 **Chris R ROAS dipped** — 3.07→2.94× (minor, still healthy)
 
 ### PAUSED Campaigns (key ones, verified Apr 2):
 - **Don Omar Barcelona** — PAUSED (was star, show Jul 23)
@@ -181,13 +183,14 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - **May 22:** Chris R (new client, ACTIVE, 3.07× ROAS ✅)
 - **Jul 23:** Don Omar BCN (Estadio Olimpico) — PAUSED ⚠️
 
-### Clients Summary (updated Apr 2)
-- **Chris R:** NEW CLIENT. ACTIVE $100/day, 3.07× ROAS. 🟢
-- **Zamora:** ALL PAUSED. Miami shows start TODAY, no campaign running.
+### Clients Summary (updated Apr 3)
+- **Chris R:** ACTIVE $100/day, 2.94× ROAS, 6 purchases. Show May 22. 🟢
+- **Proteccion final:** NEW lead gen campaign, ACTIVE $100/day, 2 leads. Unknown client/purpose.
+- **Zamora:** ALL PAUSED. Arjona Miami shows happening NOW (Apr 3-7), no campaign.
 - **KYBBA:** PAUSED ✅
 - **Sienna:** ACTIVE $30/day. ViewContent (0× expected). ⚠️
-- **Don Omar BCN:** PAUSED — was $300/day star. Why paused? 🔴
-- **Vaz Vil:** ACTIVE $100/day, 0× ROAS. Burning cash. 🔴
+- **Don Omar BCN:** PAUSED — was $300/day star. Show Jul 23. 🔴
+- **Vaz Vil:** ACTIVE $100/day, 0× ROAS. $300+ wasted. 🔴
 - **Outlet Media:** Lead Gen PAUSED.
 - **El Destilado:** PAUSED ✅
 - **Beamina / Happy Paws:** PAUSED

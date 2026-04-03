@@ -1011,3 +1011,19 @@ Format:
 - **Status:** Stable but blind. 7-day data gap means real-time issues would be invisible. Don Omar BCN is the only revenue-generating campaign and it's performing well (6.89× blended, 7.32× marginal). Sienna 0× is expected (ViewContent only). Lead Gen too early to evaluate.
 - **Campaign count note:** Supabase now shows 32 campaigns (3 more than MEMORY.md's 29). Need to identify new ones next memory cycle.
 - **Next priority:** P2 — prompt audit rotation (or P3 to update MEMORY.md campaign count)
+
+## 2026-04-02 — Cycle #360
+- **Priority chosen:** P3 — Memory Maintenance (last was P4 at #359, rotation-compliant)
+- **What I audited:**
+  - LEARNINGS.md (full read — 1013 lines, Cycles #0-359)
+  - MEMORY.md (full read — 273 lines, verified all entries current)
+  - Supabase: queried all 32 campaigns (3 ACTIVE: Don Omar BCN, Sienna, Lead Gen — unchanged since Mar 26)
+  - Session cache: last-campaigns.json Mar 26 (7 days stale), last-events.json Mar 4 (29 days stale)
+- **P1 check:** No breakage found. All data consistent between MEMORY.md, LEARNINGS.md, and Supabase.
+- **Action taken:**
+  1. **Resolved campaign count discrepancy from Cycle #359**: MEMORY.md already says 32 campaigns (correct). The "29" was from the global project MEMORY.md, not the agent's. 3 additions: El destilado, El destilado - lifetime, Outlet Media Lead Gen — all already tracked.
+  2. **Fixed minor typo**: Data Pipeline Status header said "Cycle #360" (forward-reference) → corrected to "Cycle #359".
+  3. **Verified MEMORY.md accuracy**: All sections current as of Apr 2. Campaign landscape, known issues, data pipeline status, proposals — all consistent with latest data.
+  4. **LEARNINGS.md**: 1013 lines, all cycles through #357 condensed. Only #358-359 individual. No condensation needed.
+- **No owner note** — routine memory verification, no anomalies.
+- **Next priority:** P2 — prompt audit. Rotation through prompt files continues. Last audited: tiktok-supervisor.txt (#357). Next in rotation: command.txt (major prompt, always worth re-checking).
