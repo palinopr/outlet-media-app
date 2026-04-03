@@ -314,9 +314,13 @@ Growth (entire directory):
 
 Growth ledgers:
 - `agent/src/services/growth-ledger-types.ts`
-- `agent/src/services/growth-ledger-read.ts`
-- `agent/src/services/growth-ledger-write.ts`
+- `agent/src/services/growth-ledger-service.ts`
+- `agent/src/services/growth-ledger-writers.ts`
+- `agent/src/services/growth-ledger-resolve.ts`
 - `agent/src/services/ledger-service.ts`
+
+Other:
+- `agent/src/services/email-types.ts`
 
 - [ ] **Step 1: Delete all dead source files**
 
@@ -335,7 +339,8 @@ rm -f services/email-intelligence-service.ts services/email-classify.ts
 rm -f services/gmail-watch-service.ts services/calendar-service.ts
 rm -f services/runtime-state.ts
 rm -rf growth/
-rm -f services/growth-ledger-types.ts services/growth-ledger-read.ts services/growth-ledger-write.ts services/ledger-service.ts
+rm -f services/growth-ledger-types.ts services/growth-ledger-service.ts services/growth-ledger-writers.ts services/growth-ledger-resolve.ts services/ledger-service.ts
+rm -f services/email-types.ts
 ```
 
 - [ ] **Step 2: Delete empty directories**
@@ -430,9 +435,53 @@ git commit -m "chore(agent): remove v2 prototype files"
 
 ---
 
+### Task 10: Simplify webhook service to one identity
+
+**Files:**
+- Modify: `agent/src/services/webhook-service.ts`
+
+- [ ] **Step 1: Simplify webhook-service.ts**
+
+The current webhook service manages per-agent identities (Boss, Media Buyer, Creative, etc. — each with different name and avatar). Replace with a single "Outlet Agent" identity. Remove all persona mappings. The `sendAsAgent()` function should still work but always post as the same identity regardless of the `agentKey` parameter.
+
+- [ ] **Step 2: Run type-check**
+
+```bash
+cd agent && npx tsc --noEmit
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add agent/src/services/webhook-service.ts
+git commit -m "refactor(agent): simplify webhook service to single Outlet Agent identity"
+```
+
+---
+
+### Task 11: Remove unused dependencies
+
+**Files:**
+- Modify: `agent/package.json`
+
+- [ ] **Step 1: Remove grammy and node-cron**
+
+```bash
+cd agent && npm uninstall grammy node-cron @types/node-cron
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add agent/package.json agent/package-lock.json
+git commit -m "chore(agent): remove grammy and node-cron dependencies"
+```
+
+---
+
 ## Chunk 3: Verify & Ship
 
-### Task 10: Final verification
+### Task 12: Final verification
 
 - [ ] **Step 1: Run agent type-check**
 
