@@ -30,3 +30,4 @@ agent/service-account.json
 **/*credentials*.json
 **/*.pem
 **/*.key
+archive/
