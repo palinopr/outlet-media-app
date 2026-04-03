@@ -221,7 +221,7 @@ describe("ClientLayout navigation links", () => {
     );
   });
 
-  it("does not render Reports links even when reports are enabled for the client", async () => {
+  it("shows Reports links in desktop and mobile nav when reports are enabled for the client", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
     mockedGetClientPortalConfig.mockResolvedValue({
       agentEnabled: false,
@@ -237,7 +237,14 @@ describe("ClientLayout navigation links", () => {
     await renderLayout("acme");
     openMobileNav();
 
-    expect(screen.queryByRole("link", { name: "Reports" })).not.toBeInTheDocument();
+    expect(within(getDesktopNav()).getByRole("link", { name: "Reports" })).toHaveAttribute(
+      "href",
+      "/client/acme/reports",
+    );
+    expect(within(getMobileNav()).getByRole("link", { name: "Reports" })).toHaveAttribute(
+      "href",
+      "/client/acme/reports",
+    );
   });
 
   it("renders children inside main content area", async () => {

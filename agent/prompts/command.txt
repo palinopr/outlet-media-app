@@ -78,6 +78,21 @@ Note: `date_preset=today` may return empty `data: []` early in the day or if the
 
 **Common date_preset values:** `today`, `yesterday`, `last_7d`, `last_14d`, `last_30d`, `lifetime`. Use `last_7d` for recent performance, `lifetime` for all-time totals.
 
+### Get day-by-day breakdown (essential for diagnosing trends):
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&date_preset=last_7d&time_increment=1&access_token=$TOKEN"
+```
+Returns one row per day with `date_start`/`date_stop` fields. Use this to:
+- Spot zero-purchase days (KYBBA had 6 consecutive zero-purchase days Mar 11-16 while still spending)
+- See daily spend trends (delivery collapse shows as $50→$35→$0.32)
+- Identify which days had purchases vs which were dead weight
+**`time_increment=1`** = daily granularity. Also works with `last_14d`, `last_30d`, or custom `time_range`.
+
+### 7-day vs lifetime ROAS — which to use:
+- **`last_7d`** = most actionable for current campaign health. Shows how ads are performing RIGHT NOW.
+- **`lifetime`** = blended average diluted by historical performance. A campaign can show 2.52× lifetime while recent 7-day is 1.73× (KYBBA pattern Mar 16).
+- **Rule:** When assessing whether to pause/scale, always check `last_7d` first. Lifetime blended can mask a campaign that stopped converting days ago.
+
 ### Get insights for a custom date range:
 ```bash
 curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=spend,impressions,clicks,purchase_roas,actions&time_range=%7B%22since%22%3A%222026-02-20%22%2C%22until%22%3A%222026-02-24%22%7D&access_token=$TOKEN"
@@ -87,12 +102,28 @@ The `time_range` parameter is a URL-encoded JSON object: `{"since":"YYYY-MM-DD",
 ### Key notes:
 - Use `&level=adset` on the insights endpoint to get per-adset breakdowns from a single campaign-level call
 - Use `&level=ad` to get per-ad breakdowns from a campaign-level call (more efficient than querying each ad individually)
-- `frequency` = impressions / reach. Values above 3-4 indicate ad fatigue — audience is seeing the same ad too many times. Consider refreshing creative.
+- **Meta attribution revisions**: Meta can revise historical spend AND revenue DOWNWARD days after the fact (clawing back conversions it later deems invalid). This causes negative spend deltas in snapshots — spend on Day N+3 is LOWER than Day N. KYBBA pattern Mar 14-17: spend went from $2,755→$2,661→$2,532 (-$223 over 3 days). Revenue crashed $6,706→$5,931 (-$775). This is NOT a sync error — it's Meta reclassifying conversions. Implications: (1) blended ROAS can drop without new spend, (2) marginal ROAS calculations with negative deltas are meaningless — skip them, (3) a "ROAS uptick" from spend revision is artificial (same revenue ÷ lower spend = higher ratio, but no real improvement).
+- `frequency` = impressions / reach. Fatigue thresholds:
+  - **3.0-3.5**: early fatigue warning — monitor closely
+  - **4.0+**: severe fatigue — creative refresh CRITICAL. Audience exhausted, delivery will collapse.
+  - **Action plan at 4.0+**: (1) Pause worst-performing ads, (2) launch new creatives with fresh imagery/copy, (3) consider expanding audience (wider radius, broader age/interest), (4) check if show date is imminent — if <7 days, urgency creatives may buy time.
 - Budgets from Meta are in CENTS (divide by 100 for dollars)
 - spend, cpm, cpc are decimal strings — convert to numbers
 - ROAS comes from purchase_roas[0].value (string like "4.2") — convert to float
 - Revenue = spend × ROAS (Meta doesn't return a direct revenue field)
 - Purchases come from `actions` array where `action_type` = "purchase" — use for CPA = spend / purchases
+- **`cost_per_action_type`** — if included in `fields`, Meta returns CPA directly per action type. Add to fields: `cost_per_action_type` → parse `[{"action_type":"purchase","value":"47.39"}]`. More efficient than computing CPA manually.
+- **Parsing the `actions` array** — example JSON:
+  ```json
+  "actions": [
+    {"action_type": "landing_page_view", "value": "1211"},
+    {"action_type": "add_to_cart", "value": "85"},
+    {"action_type": "initiate_checkout", "value": "520"},
+    {"action_type": "purchase", "value": "50"},
+    {"action_type": "link_click", "value": "1500"}
+  ]
+  ```
+  Find the entry where `action_type === "purchase"` and parse `value` as integer. Not all action types are always present — if no `purchase` entry exists, the campaign has zero purchases. The array order varies.
 - **Funnel action types** in the `actions` array (beyond purchases):
   - `landing_page_view` — arrived at landing page
   - `add_to_cart` — added item to cart
@@ -111,6 +142,9 @@ The `time_range` parameter is a URL-encoded JSON object: `{"since":"YYYY-MM-DD",
   - Starts with "Sienna" → "sienna" (new client, Feb 27)
   - Contains "Vaz Vil" or "Kiko Blade" → "vaz_vil" (new client, Mar 3)
   - Contains "Don Omar" → "don_omar_bcn" (Barcelona concert, Vivaticket/EATA)
+  - Contains "destilado" or "destilero" or "El Destilado" or "El Destilero" → "el_destilero" (active client, pixel 939151375333756)
+  - Contains "Chris R" → "chris_r" (new client, show May 22)
+  - Contains "Outlet Media" → "outlet_media" (internal campaigns, e.g. Lead Gen)
   - Otherwise → "unknown" (log a warning so we can add the mapping)
 
 ---
@@ -435,6 +469,7 @@ Returns `{"id": "VIDEO_ID"}` on success.
 - **ROAS < 2.0** → flag via alerts endpoint, not automatic kill
 - **Never delete** — always pause
 - **Post-show auto-pause**: After a show date passes, verify the campaign is PAUSED with $0 spend. If still ACTIVE or spending, pause it immediately — no confirmation needed. Jaime re-confirmed Mar 9: "if it's paused and hasn't spent, turn it off automatically always."
+- **Zero-purchase detection**: If a campaign is spending but getting ZERO purchases for 3+ consecutive days, that's a conversion crisis — different from delivery stall (not spending) and different from low ROAS (some purchases but expensive). Use `time_increment=1` day-by-day query to identify. KYBBA pattern Mar 11-18: $308 spent, 0 purchases over 7+ days, freq 3.62 (audience exhausted), 111 checkouts → 0 conversions (pixel completely broken). Blended ROAS crashed from 2.72 to 2.16. Budget $100/day but only delivering $44/day. Trend is terminal. Action: flag as CRITICAL, recommend creative refresh or audience expansion. Do NOT auto-pause — the show may be imminent. See Delivery Diagnostics section for full checklist.
 
 ---
 
@@ -560,6 +595,8 @@ Get SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY from .env or ../.env.local.
 
 **Column naming gotchas:**
 - `meta_campaigns`: name column is `name` (NOT `campaign_name`). Use `select=campaign_id,name,status,...`
+- `meta_campaigns`: budget column is `daily_budget` (NOT `daily_budget_cents`) — value is in CENTS. Session cache uses `daily_budget_cents`, Supabase uses `daily_budget`.
+- `meta_campaigns`: does NOT have `purchases` or `frequency` columns — these are **session cache only**. Querying them from Supabase returns error 42703. Use live Meta API (`actions` array) for purchases, or `campaign_snapshots` for historical spend/ROAS trends.
 - `campaign_snapshots`: spend column is `spend` — value is in CENTS despite the generic name. Divide by 100 for dollars. `roas` is a float.
 
 ### Read all campaigns:
@@ -591,6 +628,29 @@ curl -s "${SUPABASE_URL}/rest/v1/tm_events?order=date.asc" \
   -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
 ```
 
+### Read event snapshots (ticket velocity trends):
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/event_snapshots?tm_id=eq.{TM_ID}&order=snapshot_date.desc&limit=7" \
+  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
+```
+Columns: tm_id, tickets_sold, tickets_available, gross, snapshot_date. Note: currently static for TM One events (source frozen). EATA events (eata_14948) have live data.
+
+### Check existing alerts (avoid duplicate alerts):
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/agent_alerts?order=created_at.desc&limit=10" \
+  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
+```
+
+### Check agent heartbeat (is scheduler alive?):
+```bash
+curl -s "${SUPABASE_URL}/rest/v1/agent_runtime_state?key=eq.heartbeat" \
+  -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+  -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}"
+```
+Returns `value` JSON with `last_seen` timestamp. If >5 minutes old, scheduler may be down.
+
 ---
 
 ## Session Cache
@@ -602,6 +662,8 @@ Files in ./session/ persist state between runs:
 Always compare new data against these files to identify what changed.
 
 **Freshness note:** The session cache files are bare JSON arrays with no `scraped_at` wrapper. Use the file's modification time (from `ls -la session/`) to determine when data was last synced. The ingest POST includes `scraped_at` in the payload for Supabase, but the session file itself is just the array.
+
+**Completeness note:** The session cache may not include all ACTIVE campaigns — it reflects what the last sync returned. If MEMORY.md says 3 ACTIVE but the cache only has 1, the sync may have filtered differently or campaigns were paused between sync and your read. Always cross-check against Supabase `meta_campaigns?status=eq.ACTIVE` for the canonical count.
 
 ### Session cache format for campaigns:
 Each campaign in last-campaigns.json should include ALL of these fields:
@@ -631,7 +693,20 @@ Meta returns `{"error":{"message":"...","type":"...","code":NNN}}`. Handle by er
 
 ## Delivery Diagnostics (Campaign/Adset Level)
 
-When a campaign isn't spending or is severely underpacing, diagnose at the adset level:
+When a campaign isn't spending or is severely underpacing, start at campaign level and drill down:
+
+### Step 0: Check campaign-level status first
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}?fields=id,name,status,effective_status,daily_budget,spend_cap,budget_remaining&access_token=$TOKEN"
+```
+If `effective_status` ≠ ACTIVE at campaign level, no adset will deliver. Common blockers:
+- `CAMPAIGN_PAUSED` — someone paused it (check with Jaime)
+- `ADSET_PAUSED` — all adsets paused under an ACTIVE campaign
+- `IN_PROCESS` — under Meta review (wait, don't touch)
+- `WITH_ISSUES` — billing, spending limit, or policy violation. Check `issues_info` for details.
+- `spend_cap` reached — campaign hit its lifetime spend cap. Raise or remove it.
+
+Only after confirming campaign-level is ACTIVE, check adsets:
 
 ### Check adset delivery status and learning phase:
 ```bash
@@ -659,8 +734,10 @@ Returns `daily_outcomes_curve` with estimated reach. If audience is under 100K, 
 4. **Check audience size** — use delivery_estimate above
 5. **Check pixel fires** — are events actually being tracked? `GET /{PIXEL_ID}/stats?aggregation=event&event=Purchase&access_token=$TOKEN`
 6. **Check recent spend trend** — compare snapshots over 3+ days. $0 delta = fully stalled.
+7. **Check `last_7d` ROAS vs lifetime** — a campaign can show 2.52× lifetime while 7-day is 0.47× (KYBBA Mar 17 pattern). Always use `last_7d` for actionability. If 7-day shows <1.0, the campaign is actively losing money RIGHT NOW regardless of lifetime blended.
+8. **Run day-by-day breakdown** — use `time_increment=1` with `last_7d` to see exactly which days had purchases vs zero. Critical for distinguishing "delivery stall" (campaign NOT spending) from "zero-purchase crisis" (campaign IS spending but 0 conversions — much worse).
 
-This checklist directly addresses patterns seen with Vaz Vil (0x stalled), KYBBA (delivery broken at $2/day), Houston (0x at $1,500/day), and Sienna (frozen snapshots).
+This checklist directly addresses patterns seen with Vaz Vil (0x stalled, spend frozen $350 for 5+ snapshots), KYBBA (delivery broken at $44/day on $100/day budget, 0 purchases 14+ days), Houston (0x at $1,500/day), and Sienna (two failure modes: frozen snapshots at $915 for 4+ cycles in Mar 10-13, then delivery stall in Mar 16-17 — was $147-223/day then collapsed to $0.46/day on $200/day budget).
 
 ---
 
@@ -730,11 +807,14 @@ spec = {
 
 **Step 4: POST new creative, create new ad, pause old ad**
 ```bash
-# Create creative
+# Create creative (include degrees_of_freedom_spec to keep Advantage+ OFF per Jaime's rule)
+DOF='{"creative_features_spec":{"standard_enhancements":{"enroll_status":"OPT_OUT"}}}'
+
 curl -s -X POST "https://graph.facebook.com/v21.0/{ACCOUNT}/adcreatives" \
   --data-urlencode "name=Ad name fixed" \
   --data-urlencode "object_story_spec={\"page_id\":\"175118299508364\",\"instagram_user_id\":\"17841402356610735\"}" \
   --data-urlencode "asset_feed_spec=$(echo $SPEC | python3 -c 'import json,sys; print(json.dumps(json.load(sys.stdin)))')" \
+  --data-urlencode "degrees_of_freedom_spec=$DOF" \
   --data-urlencode "access_token=$TOKEN"
 
 # Create new ad (ACTIVE)

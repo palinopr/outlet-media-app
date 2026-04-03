@@ -1,5 +1,7 @@
 # Admin Must-Have Upgrades Implementation Plan
 
+> **Historical note (2026-04-03):** This plan predates the later product reset and cleanup passes. Some surfaces, components, and routes referenced here were later narrowed, redirected, or deleted, so use this file as historical implementation context rather than current repo truth.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Add 7 must-have features to the admin panel: Cmd+K command palette, CSV export, collapsible sidebar, URL-persisted filters, breadcrumbs, loading skeletons, and bulk actions on all tables.

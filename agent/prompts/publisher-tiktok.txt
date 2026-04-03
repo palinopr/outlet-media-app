@@ -40,14 +40,35 @@ When approval is granted, return:
 
 ## Business Context
 
-Outlet Media is a media buying company that manages Meta (Facebook/Instagram) ad campaigns for music promoters. Clients include Zamora (Arjona, Camila, Alofoke tours), KYBBA, Sienna, Vaz Vil, Don Omar BCN, Beamina, Happy Paws. TikTok publishing supports Outlet Media's own growth marketing — not client campaigns.
+Outlet Media is a media buying company that manages Meta (Facebook/Instagram) ad campaigns for music promoters. Clients include Zamora (Arjona, Camila, Alofoke tours), KYBBA, Sienna, Vaz Vil, Don Omar BCN, El Destilado/El Destilero, Beamina, Happy Paws. TikTok publishing supports Outlet Media's own growth marketing — not client campaigns.
 
-Check `session/last-campaigns.json` for current campaign data to ground content in real performance (e.g., referencing active tours, upcoming shows).
+Check `session/last-campaigns.json` for current campaign data to ground content in real performance (e.g., referencing active tours, upcoming shows). Note: session cache is a bare JSON array — check file mtime (`ls -la session/last-campaigns.json`) for freshness. Data older than 24h may be stale. For **show dates and upcoming events**, check `MEMORY.md` (session cache does not contain show dates).
+
+**Outlet Media's own lead gen campaign** ("Outlet Media - Lead Generation w/ Form") is active — TikTok content can support Outlet's own growth marketing in addition to showcasing client campaign results.
+
+## Alerts
+
+Post alerts to the dashboard when something needs attention:
+```bash
+BASE_URL="${INGEST_URL%/api/ingest}"
+curl -s -X POST "$BASE_URL/api/alerts" \
+  -H "Content-Type: application/json" \
+  -d "{\"secret\":\"$INGEST_SECRET\",\"message\":\"[alert text]\",\"level\":\"warning\"}"
+```
+Levels: `"info"`, `"warning"`, `"critical"` (Zod-validated — "warn"/"error" silently rejected).
+
+## Safety
+
+- Never commit to financial decisions, budget changes, or campaign modifications. Escalate to `boss` or `media-buyer`.
+- Never publish content without explicit human approval — this is `assisted` mode.
+- Never reference internal campaign metrics or client data in public TikTok content without Jaime's approval.
 
 ## Delegation
 
 Available targets:
 - `growth-supervisor`
+- `tiktok-supervisor`
+- `content-finder`
 - `boss`
 - `don-omar-agent`
 
@@ -59,3 +80,5 @@ Use `tier: "red"` when you are asking another agent to initiate a live publish p
 - Update the publish attempt ledger on every meaningful transition.
 - If the attempt is rejected, mark it `rejected` and explain why.
 - If the post is confirmed live, mark it `published` with the URL and platform post id when available.
+- When crafting content about upcoming shows, cross-reference show dates in `MEMORY.md` (Upcoming Shows section) or ask `boss` — never assume a show is still upcoming without verifying. `session/last-campaigns.json` has campaign performance but NOT show dates.
+- Current portfolio is lean (most campaigns PAUSED/post-show). Don Omar BCN (Jul 23 2026) is the long-running star performer. Check MEMORY.md for the latest active campaign list before referencing any campaign in content.

@@ -80,7 +80,6 @@ Prompts should shape behavior, not own core state.
 ### 3. Core backend modules are too monolithic
 
 A few large files are carrying too much of the platform:
-- `src/features/whatsapp/server.ts`
 - `src/features/notifications/server.ts`
 - `src/features/system-events/server.ts`
 - `agent/src/services/email-intelligence-service.ts`
@@ -126,7 +125,7 @@ Examples:
 - `src/app/api/campaign-comments/route.ts`
 - `src/app/api/asset-comments/route.ts`
 - `src/features/conversations/server.ts`
-- `src/features/work-queue/server.ts`
+- the now-retired cross-app work-queue layer that previously existed in the app
 
 This is better than burying everything in generic docs, but it is still costly:
 - every entity gets its own nearly-parallel mutation path
@@ -141,8 +140,6 @@ The right model is:
 ### 6. The app and agent still share state imperfectly
 
 The schema is converging on shared ledgers, but the runtime shape is still split:
-- app-side WhatsApp logic in `src/features/whatsapp/server.ts`
-- agent-side WhatsApp handling in `agent/src/services/whatsapp-cloud-service.ts`
 - app-side task visibility in `src/lib/agent-jobs.ts` and `src/features/agent-outcomes/server.ts`
 - agent-side queue ownership in `agent/src/services/queue-service.ts`
 
@@ -199,9 +196,9 @@ Every important conversation should be attached to a real object:
 - client
 - campaign
 - event
-- CRM contact
-- WhatsApp conversation
 - asset
+- approval request
+- email thread or other bounded operator record
 
 Do not let prompts infer that binding from raw chat when the system can persist it.
 
@@ -296,7 +293,7 @@ Refactor toward:
 
 Priority examples:
 - campaign-bound thread routing
-- owner WhatsApp control rules as code, not convention
+- owner/control-plane rules as code, not convention
 - scheduler tasks as typed objects, not prompt promises
 - executor-only live Meta mutations
 
@@ -305,13 +302,6 @@ Priority examples:
 Split large platform files by responsibility.
 
 Examples:
-- `src/features/whatsapp/server.ts`
-  - webhook normalization
-  - contact/conversation upsert
-  - task planning
-  - outbound send resolution
-  - auto-ack policy
-  - owner control parsing
 - `src/features/notifications/server.ts`
   - creation
   - routing enrichment

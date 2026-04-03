@@ -38,7 +38,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const TERMINAL_STATUSES: ReadonlySet<AgentTask["status"]> = new Set(["completed", "failed", "rejected", "expired"]);
 const LIVE_STATUSES: ReadonlySet<AgentTask["status"]> = new Set(["pending", "running", "escalated", "approved"]);
 let taskCounter = 0;
-const EXTERNAL_TASK_SOURCES = new Set(["web-admin", "gmail-push", "whatsapp-cloud"]);
+const EXTERNAL_TASK_SOURCES = new Set(["web-admin", "gmail-push"]);
 
 /** Active tasks per agent (agent key -> task or null) */
 const activeSlots = new Map<string, AgentTask | null>();

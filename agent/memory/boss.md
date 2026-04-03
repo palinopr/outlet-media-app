@@ -149,7 +149,7 @@ ALL SCHEDULED JOBS DISABLED. Manual triggers only via Discord channels.
 <!-- auto-learned 2026-03-08 -->
 - SLC Arjona copy swap: "Hoy" ad 120243055587590525 replacing "Mañana"
 - Swap scheduled midnight MT (1AM CST) — activate Hoy, pause Mañana
-- Ariel Rivas is Don Omar WhatsApp contact (likely don_omar_bcn)
+- Ariel Rivas is Don Omar direct contact (likely don_omar_bcn)
 
 <!-- auto-learned 2026-03-09 -->
 - Sienna meeting contacts: Rosana (Carreman), Edu (EO Entertainment)

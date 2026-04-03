@@ -508,25 +508,3 @@ export async function appendAssistantMessage({
   return { ok: true, message: mapMessageRow(row) };
 }
 
-export async function touchThreadSummary({
-  threadId,
-  scope,
-}: {
-  threadId: string;
-  scope: ClientAgentScope;
-}): Promise<StoreFailure | { ok: true }> {
-  if (scope.viewer === "admin_preview") {
-    return previewUnavailable();
-  }
-
-  const thread = await getThread({ threadId, scope });
-  if (!thread) {
-    return notFound();
-  }
-
-  if (!(await refreshThreadSummary(threadId))) {
-    return writeFailed();
-  }
-
-  return { ok: true };
-}

@@ -8,6 +8,8 @@ import {
   Megaphone,
   CalendarDays,
   Eye,
+  Bot,
+  BarChart3,
 } from "lucide-react";
 import { statusBadge } from "@/lib/formatters";
 import { StatCard } from "@/components/admin/stat-card";
@@ -58,7 +60,7 @@ export function ClientDetailView({ client }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
         <StatCard
           icon={Users}
           label="Members"
@@ -71,6 +73,20 @@ export function ClientDetailView({ client }: Props) {
           label="Active Campaigns"
           value={`${client.activeCampaigns} / ${client.totalCampaigns}`}
           accent="bg-purple-500/10 text-purple-400"
+          variant="compact"
+        />
+        <StatCard
+          icon={Bot}
+          label="Portal Agent"
+          value={client.agentEnabled ? "Enabled" : "Hidden"}
+          accent="bg-cyan-500/10 text-cyan-400"
+          variant="compact"
+        />
+        <StatCard
+          icon={BarChart3}
+          label="Portal Reports"
+          value={client.reportsEnabled ? "Enabled" : "Hidden"}
+          accent="bg-violet-500/10 text-violet-400"
           variant="compact"
         />
         <StatCard
@@ -124,6 +140,7 @@ export function ClientDetailView({ client }: Props) {
           eventsEnabled={client.eventsEnabled}
           logoAlt={client.logoAlt}
           logoUrl={client.logoUrl}
+          reportsEnabled={client.reportsEnabled}
         />
       )}
       {activeTab === "members" && <MembersSection client={client} />}

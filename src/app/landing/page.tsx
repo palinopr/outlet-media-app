@@ -7,6 +7,7 @@ import { LandingFeatures } from "@/components/landing/features";
 import { LandingHowItWorks } from "@/components/landing/how-it-works";
 import { LandingStats } from "@/components/landing/stats";
 import { ContactForm } from "@/components/landing/contact-form";
+import { LandingFAQ } from "@/components/landing/faq";
 import { LandingFooter } from "@/components/landing/footer";
 
 const landingFont = Space_Grotesk({
@@ -43,6 +44,7 @@ export default function LandingPage() {
         <LandingCredibility />
         <LandingHowItWorks />
         <LandingStats />
+        <LandingFAQ />
         <ContactForm />
         <LandingFooter />
       </div>

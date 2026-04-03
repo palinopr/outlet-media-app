@@ -103,21 +103,8 @@ vi.mock("@/features/approvals/server", () => ({
   listApprovalRequests: vi.fn(),
 }));
 
-vi.mock("@/features/crm-follow-up-items/server", () => ({
-  listCrmFollowUpItems: vi.fn(),
-}));
-
-vi.mock("@/features/assets/server", () => ({
-  listAssetLibrary: vi.fn(),
-}));
-
-vi.mock("@/features/assets/summary", () => ({
-  buildAssetLibrarySummary: vi.fn(),
-}));
-
 import { listConversationThreads } from "@/features/conversations/server";
 import { listApprovalRequests } from "@/features/approvals/server";
-import { listCrmFollowUpItems } from "@/features/crm-follow-up-items/server";
 import { getDashboardActionCenter } from "@/features/dashboard/server";
 
 describe("getDashboardActionCenter", () => {
@@ -178,7 +165,6 @@ describe("getDashboardActionCenter", () => {
     currentUser.mockResolvedValue({ publicMetadata: { role: "member" } });
     createClerkSupabaseClient.mockResolvedValue(null);
     vi.mocked(listConversationThreads).mockResolvedValue([]);
-    vi.mocked(listCrmFollowUpItems).mockResolvedValue([]);
   });
 
   it("backfills reassigned campaign approvals on client action-center surfaces", async () => {
@@ -196,5 +182,25 @@ describe("getDashboardActionCenter", () => {
         id: "approval_override",
       }),
     ]);
+  });
+
+  it("does not fetch or expose CRM follow-ups in the action center", async () => {
+    const center = await getDashboardActionCenter({
+      clientSlug: "zamora",
+      limit: 4,
+      mode: "client",
+    });
+
+    expect(center).toEqual({
+      approvals: [
+        expect.objectContaining({
+          campaignId: "cmp_override",
+          campaignName: "Legacy campaign",
+          clientSlug: "legacy",
+          id: "approval_override",
+        }),
+      ],
+      discussions: [],
+    });
   });
 });

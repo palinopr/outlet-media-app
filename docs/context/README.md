@@ -18,4 +18,4 @@ When starting a new build thread, decide the surface explicitly:
 - `both`
 
 Use `docs/plans/` for execution sequencing and milestones.
-Use `.codex/skills/` for Codex/operator skills and `agent/skills/` for runtime agent skills.
+Use repo-local Codex/operator skills only when the repo actually checks them in; runtime agent skills belong in `agent/skills/`.

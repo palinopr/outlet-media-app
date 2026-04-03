@@ -21,8 +21,8 @@ const serverSchema = z.object({
   // Optional integrations
   META_ACCESS_TOKEN: z.string().optional(),
   META_AD_ACCOUNT_ID: z.string().optional(),
-  OPENAI_API_KEY: z.string().optional(),
-  CLIENT_AGENT_OPENAI_MODEL: z.string().optional(),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  CLIENT_AGENT_CLAUDE_MODEL: z.string().optional(),
   TICKETMASTER_API_KEY: z.string().optional(),
   TM1_API_PREFIX: z.string().optional(),
   TM1_BASE_URL: z.string().url().optional(),
@@ -33,25 +33,9 @@ const serverSchema = z.object({
   TM1_TIMEOUT_MS: z.string().optional(),
   TM1_TCODE: z.string().optional(),
   TM1_XSRF_TOKEN: z.string().optional(),
-  WHATSAPP_APP_SECRET: z.string().optional(),
-  WHATSAPP_CLOUD_API_TOKEN: z.string().optional(),
-  WHATSAPP_CLOUD_API_VERSION: z.string().optional(),
-  WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
-  WHATSAPP_WEBHOOK_VERIFY_TOKEN: z.string().optional(),
-  TWILIO_ACCOUNT_SID: z.string().optional(),
-  TWILIO_AUTH_TOKEN: z.string().optional(),
-  TWILIO_VALIDATE_SIGNATURE: z.string().optional(),
-  TWILIO_WHATSAPP_FROM: z.string().optional(),
-  TWILIO_WHATSAPP_STATUS_CALLBACK_URL: z.string().url().optional(),
-  TWILIO_WHATSAPP_TYPING_INDICATOR: z.string().optional(),
-  WHATSAPP_AUTO_ACK_DELAY_MS: z.string().optional(),
-  WHATSAPP_AUTO_ACK_COOLDOWN_SECONDS: z.string().optional(),
-  WHATSAPP_AUTO_ACK_TEXT: z.string().optional(),
 
-  // Meta OAuth (optional until OAuth flow is enabled)
-  META_APP_ID: z.string().optional(),
+  // Meta signed-request verification / legacy callback support
   META_APP_SECRET: z.string().optional(),
-  TOKEN_ENCRYPTION_KEY: z.string().min(32).optional(),
 });
 
 const publicSchema = z.object({
@@ -84,8 +68,8 @@ function validateEnv() {
     INGEST_SECRET: process.env.INGEST_SECRET,
     META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN,
     META_AD_ACCOUNT_ID: process.env.META_AD_ACCOUNT_ID,
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    CLIENT_AGENT_OPENAI_MODEL: process.env.CLIENT_AGENT_OPENAI_MODEL,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    CLIENT_AGENT_CLAUDE_MODEL: process.env.CLIENT_AGENT_CLAUDE_MODEL,
     TICKETMASTER_API_KEY: process.env.TICKETMASTER_API_KEY,
     TM1_API_PREFIX: process.env.TM1_API_PREFIX,
     TM1_BASE_URL: process.env.TM1_BASE_URL,
@@ -96,23 +80,7 @@ function validateEnv() {
     TM1_TIMEOUT_MS: process.env.TM1_TIMEOUT_MS,
     TM1_TCODE: process.env.TM1_TCODE,
     TM1_XSRF_TOKEN: process.env.TM1_XSRF_TOKEN,
-    WHATSAPP_APP_SECRET: process.env.WHATSAPP_APP_SECRET,
-    WHATSAPP_CLOUD_API_TOKEN: process.env.WHATSAPP_CLOUD_API_TOKEN,
-    WHATSAPP_CLOUD_API_VERSION: process.env.WHATSAPP_CLOUD_API_VERSION,
-    WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID,
-    WHATSAPP_WEBHOOK_VERIFY_TOKEN: process.env.WHATSAPP_WEBHOOK_VERIFY_TOKEN,
-    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
-    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
-    TWILIO_VALIDATE_SIGNATURE: process.env.TWILIO_VALIDATE_SIGNATURE,
-    TWILIO_WHATSAPP_FROM: process.env.TWILIO_WHATSAPP_FROM,
-    TWILIO_WHATSAPP_STATUS_CALLBACK_URL: process.env.TWILIO_WHATSAPP_STATUS_CALLBACK_URL,
-    TWILIO_WHATSAPP_TYPING_INDICATOR: process.env.TWILIO_WHATSAPP_TYPING_INDICATOR,
-    WHATSAPP_AUTO_ACK_DELAY_MS: process.env.WHATSAPP_AUTO_ACK_DELAY_MS,
-    WHATSAPP_AUTO_ACK_COOLDOWN_SECONDS: process.env.WHATSAPP_AUTO_ACK_COOLDOWN_SECONDS,
-    WHATSAPP_AUTO_ACK_TEXT: process.env.WHATSAPP_AUTO_ACK_TEXT,
-    META_APP_ID: process.env.META_APP_ID,
     META_APP_SECRET: process.env.META_APP_SECRET,
-    TOKEN_ENCRYPTION_KEY: process.env.TOKEN_ENCRYPTION_KEY,
   });
 
   if (!serverResult.success) {

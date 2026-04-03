@@ -245,19 +245,3 @@ export async function notifyChannel(target: string, text: string): Promise<void>
   }
 }
 
-/** Legacy: send to the configured default channel */
-export async function notifyDiscord(text: string): Promise<void> {
-  if (!discordClient || !channelId) return;
-  try {
-    const channel = await discordClient.channels.fetch(channelId);
-    if (channel && channel.isTextBased()) {
-      const chunks = chunkText(cleanForDiscord(text), 1900);
-      for (const chunk of chunks) {
-        await (channel as TextChannel).send(chunk);
-      }
-    }
-  } catch (err) {
-    const m = toErrorMessage(err);
-    console.warn("[discord] Failed to send notification:", m);
-  }
-}

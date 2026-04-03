@@ -270,3 +270,30 @@ Use daily snapshots for trend analysis, not intraday deltas.
 <!-- auto-learned 2026-03-14 -->
 - Camila all-cities spend cap target: $15,000
 - Camila Sacramento: $1,800/day budget, auto-ends 6pm PDT Mar 14
+
+<!-- auto-learned 2026-03-16 -->
+- Arjona Anaheim campaign (120242623003840525): $0 spent, PAUSED, never activated
+
+<!-- auto-learned 2026-03-16 -->
+- Arjona Anaheim: $100/day budget, $2,000 spend cap, show Mar 15
+
+<!-- auto-learned 2026-03-17 -->
+- Pixel "Life Insurance" created: ID 922342007068757 (ad account AA1)
+
+<!-- auto-learned 2026-03-26 -->
+- Pixel "Kris R" created: ID 2131659944302278 (ad account AA1)
+
+<!-- auto-learned 2026-03-26 -->
+- KYBBA Miami lifetime: $5,697 spend, 173 purchases, 3.38x ROAS
+- KYBBA Miami last 7d ROAS surged to 11.25x (show proximity)
+- KYBBA Miami has 15 adsets total
+
+<!-- auto-learned 2026-04-02 -->
+- Pixel "Dame La Verde" created: ID 1429862625101807 (ad account AA1)
+
+<!-- auto-learned 2026-04-03 -->
+- Page "Proteccion Final": 888584981015944, IG: 17841480235408108
+- Campaign "Proteccion final - Leads - 6": ID 120244284580260525
+- Lead form ID 932558222894847 (Proteccion Final)
+- Meta Lead Gen ToS not yet accepted for Proteccion Final page
+- Lead ad creation fails error_subcode 1892181 until ToS accepted

@@ -37,12 +37,6 @@ const AGENT_ROUTES: Record<string, AgentConfig> = {
     description: "boss-orchestrator",
     injectSnapshot: true,
   },
-  "whatsapp-boss": {
-    promptFile: "boss",
-    maxTurns: 25,
-    description: "boss-whatsapp-orchestrator",
-    injectSnapshot: true,
-  },
   "ops": {
     promptFile: "boss",
     maxTurns: 25,
@@ -115,18 +109,6 @@ const AGENT_ROUTES: Record<string, AgentConfig> = {
     promptFile: "meeting-agent",
     maxTurns: 20,
     description: "meeting-agent",
-  },
-
-  // --- Internal customer liaison route (used for WhatsApp task handoffs) ---
-  "clients": {
-    promptFile: "customer-whatsapp-agent",
-    maxTurns: 18,
-    description: "customer-whatsapp-agent",
-  },
-  "whatsapp-control": {
-    promptFile: "customer-whatsapp-agent",
-    maxTurns: 18,
-    description: "customer-whatsapp-agent",
   },
 
   // --- Read-only channels (bot output, no agent response) ---

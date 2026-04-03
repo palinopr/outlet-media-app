@@ -11,7 +11,7 @@ export interface AgentCommandMetric {
 }
 
 export interface AgentCommandOutcomeBucket {
-  key: "asset" | "campaign" | "crm" | "event" | "other";
+  key: "asset" | "campaign" | "event" | "other";
   label: string;
   value: number;
 }
@@ -60,7 +60,6 @@ function hasLinkedWork(outcome: AgentOutcomeView) {
   return Boolean(
     outcome.linkedActionItemId ??
       outcome.linkedAssetFollowUpItemId ??
-      outcome.linkedCrmFollowUpItemId ??
       outcome.linkedEventFollowUpItemId,
   );
 }
@@ -72,7 +71,6 @@ function isActionableOutcome(outcome: AgentOutcomeView) {
 
 function outcomeBucketKey(outcome: AgentOutcomeView): AgentCommandOutcomeBucket["key"] {
   if (outcome.assetId) return "asset";
-  if (outcome.crmContactId) return "crm";
   if (outcome.eventId) return "event";
   if (outcome.campaignId) return "campaign";
   return "other";
@@ -160,7 +158,6 @@ export function buildAgentCommandSummary(input: {
       { key: "campaign", label: "Campaigns", value: outcomeBuckets.get("campaign") ?? 0 },
       { key: "asset", label: "Assets", value: outcomeBuckets.get("asset") ?? 0 },
       { key: "event", label: "Events", value: outcomeBuckets.get("event") ?? 0 },
-      { key: "crm", label: "CRM", value: outcomeBuckets.get("crm") ?? 0 },
       { key: "other", label: "Other", value: outcomeBuckets.get("other") ?? 0 },
     ],
   };

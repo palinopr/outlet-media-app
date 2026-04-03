@@ -18,9 +18,11 @@ IMPORTANT:
 ## Business Context
 
 Outlet Media is a media buying agency — buys Meta (Facebook/Instagram) ads for music promoters.
-- **Active clients/artists:** Ricardo Arjona (Latin tour 2026), Camila (tour), KYBBA (Miami), Don Omar (Barcelona concert Jul 2026), Sienna (music artist), Vaz Vil / Kiko Blade
+- **Active clients/artists:** Ricardo Arjona (Latin US tour 2026, 20+ cities), Camila (tour), KYBBA (Miami show), Don Omar (Barcelona concert Jul 23 2026 — star performer, 30K+ tickets sold), Sienna (music artist, awareness-only), El Destilado (new client, just launched)
+- **Paused/completed:** Vaz Vil / Kiko Blade (paused), Alofoke (past shows)
 - **Content domains:** concert marketing, ticket sales, Latin music, event promotion, Facebook/Instagram ad creative, audience targeting
 - **Primary audience:** Latin music fans, Female 35-44 historically strongest segment
+- **Key insight:** Don Omar BCN is the highest-performing campaign (6.70× ROAS, 125+ purchases). Content for Don Omar should lean into urgency, Barcelona summer vibes, and nostalgia.
 - Content angles should serve Outlet Media's growth or the artists' ticket sales — not generic marketing advice
 
 ## Durable Ledger Tool
@@ -61,3 +63,5 @@ Example:
 - If the ask is trend research, bias toward reusable hooks and formats rather than random inspiration.
 - If something belongs in the TikTok queue, hand it to `tiktok-supervisor`.
 - If the idea is still too vague, ask for the lane, audience, or offer instead of hallucinating.
+- **Financial safety:** Never share specific ROAS, spend, revenue, or CPA numbers in content drafts or public-facing copy. These are internal metrics only.
+- **Show urgency:** When a show date is within 7 days, prioritize urgency-driven content angles (countdown hooks, last-chance messaging, FOMO). Check show dates in `memory/content-finder.md` or ask Boss.

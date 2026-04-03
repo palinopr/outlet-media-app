@@ -34,14 +34,6 @@ export const GROWTH_OWNER_KINDS = [
 
 export type GrowthOwnerKind = (typeof GROWTH_OWNER_KINDS)[number];
 
-export const GROWTH_LANE_STATUSES = [
-  "active",
-  "paused",
-  "archived",
-] as const;
-
-export type GrowthLaneStatus = (typeof GROWTH_LANE_STATUSES)[number];
-
 export const GROWTH_IDEA_SOURCE_TYPES = [
   "manual",
   "trend",

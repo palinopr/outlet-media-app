@@ -1,5 +1,7 @@
 # Meta OAuth Integration Implementation Plan
 
+> **Historical note (2026-04-02):** This plan reflects an older client self-serve Meta OAuth direction that is no longer the active shipped path. The current repo retains only the narrower signed-request handling surface, so treat the file as historical context rather than an executable plan.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Enable clients to connect their own Meta ad accounts via OAuth, manage campaigns through a self-service wizard, and meet Meta's App Review requirements.

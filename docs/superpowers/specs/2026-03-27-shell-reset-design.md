@@ -1,5 +1,7 @@
 # Outlet Shell Reset Design
 
+> **Historical note (2026-04-02):** This spec is kept as implementation history. The current shipped package is narrower than this draft in a few important ways: admin Activity is no longer a shipped top-level surface, client Reports is now restored as a first-class surface, and retired CRM/assets/workspace shells were collapsed further into minimal redirect compatibility routes.
+
 ## Purpose
 
 This document defines the shell reset for Outlet Media.

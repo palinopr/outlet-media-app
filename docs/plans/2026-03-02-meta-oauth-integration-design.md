@@ -1,5 +1,7 @@
 # Meta OAuth Integration Design
 
+> **Historical note (2026-04-02):** The client self-serve Meta OAuth and encrypted token-management flow described here is not part of the current shipped product reset. The active web repo now keeps only the narrower signed-request handling needed by the remaining Meta integration surface.
+
 Date: 2026-03-02
 
 ## Goal

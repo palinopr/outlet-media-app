@@ -30,7 +30,7 @@ interface AgentWebhook {
 
 /** Agent display config: name, avatar, primary channel */
 const AGENT_PROFILES: Record<string, { name: string; avatar: string; channels: string[] }> = {
-  boss:            { name: "Boss",           avatar: "https://cdn.discordapp.com/avatars/1476648616188968991/caf49673430a14325a2e65ebbe81c702.png?size=512", channels: ["boss", "whatsapp-boss"] },
+  boss:            { name: "Boss",           avatar: "https://cdn.discordapp.com/avatars/1476648616188968991/caf49673430a14325a2e65ebbe81c702.png?size=512", channels: ["boss"] },
   scheduler:       { name: "Boss",           avatar: "https://cdn.discordapp.com/avatars/1476648616188968991/caf49673430a14325a2e65ebbe81c702.png?size=512", channels: ["schedule", "media-buyer"] },
   "media-buyer":   { name: "Media Buyer",    avatar: "https://cdn.discordapp.com/avatars/1476648618441179177/befbaa786048534226b126f23e08b44a.png?size=512", channels: ["media-buyer"] },
   "tm-agent":      { name: "TM Data",        avatar: "https://cdn.discordapp.com/avatars/1476648620404248648/9605f0b209911b9683696681cf50da54.png?size=512", channels: ["tm-data"] },
@@ -41,11 +41,6 @@ const AGENT_PROFILES: Record<string, { name: string; avatar: string; channels: s
   "email-agent":   { name: "Email Agent",    avatar: "https://cdn.discordapp.com/avatars/1479514591859052574/b988bc7a284b9bee783ccd6f91122674.png?size=512", channels: ["email"] },
   "meeting-agent": { name: "Meeting Agent",  avatar: "https://cdn.discordapp.com/avatars/1479528327629770774/f8a2f2fd9ec1c59c841b2be82e3922bf.png?size=512", channels: ["meetings"] },
   "don-omar-agent":{ name: "Don Omar",       avatar: "https://cdn.discordapp.com/avatars/1479566420307087400/2f275dfb289ac4a08547b343e12bba3e.png?size=512", channels: ["don-omar-tickets"] },
-  "customer-whatsapp-agent": {
-    name: "Client Manager",
-    avatar: "https://cdn.discordapp.com/avatars/1476648626007838894/a885030673dee1ac45739239f3cb1da7.png?size=512",
-    channels: ["dashboard", "zamora", "kybba", "don-omar-tickets"],
-  },
   "client-manager":{ name: "Client Manager", avatar: "https://cdn.discordapp.com/avatars/1476648626007838894/a885030673dee1ac45739239f3cb1da7.png?size=512", channels: ["zamora", "kybba"] },
   general: {
     name: "Outlet Agent",

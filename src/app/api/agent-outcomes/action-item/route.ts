@@ -6,12 +6,10 @@ import { getAgentOutcomeContext } from "@/features/agent-outcomes/server";
 import { jsonToText } from "@/features/agent-outcomes/summary";
 import { createSystemAssetFollowUpItem } from "@/features/asset-follow-up-items/server";
 import { createSystemCampaignActionItem } from "@/features/campaign-action-items/server";
-import { createSystemCrmFollowUpItem } from "@/features/crm-follow-up-items/server";
 import { createSystemEventFollowUpItem } from "@/features/event-follow-up-items/server";
 import {
   getAssetWorkflowPaths,
   getCampaignWorkflowPaths,
-  getCrmWorkflowPaths,
   getEventWorkflowPaths,
   revalidateWorkflowPaths,
 } from "@/features/workflow/revalidation";
@@ -39,15 +37,10 @@ function agentLabel(agentId: string) {
 function buildActionItemTitle(context: NonNullable<Awaited<ReturnType<typeof getAgentOutcomeContext>>>) {
   const agentName = agentLabel(context.task?.toAgent ?? "assistant");
   const assetName = metadataString(context.request.metadata, "assetName");
-  const crmContactName = metadataString(context.request.metadata, "crmContactName");
   const eventName = metadataString(context.request.metadata, "eventName");
 
   if (context.task?.status === "failed") {
     return `Investigate ${agentName} outcome`;
-  }
-
-  if (crmContactName) {
-    return `Follow up with ${crmContactName}`;
   }
 
   if (assetName) {
@@ -103,9 +96,6 @@ export async function POST(request: NextRequest) {
   if (context.linkedEventFollowUpItemId) {
     return NextResponse.json({ itemId: context.linkedEventFollowUpItemId }, { status: 200 });
   }
-  if (context.linkedCrmFollowUpItemId) {
-    return NextResponse.json({ itemId: context.linkedCrmFollowUpItemId }, { status: 200 });
-  }
 
   if (!context.task) {
     return apiError("Agent outcome is not ready yet", 409);
@@ -117,7 +107,6 @@ export async function POST(request: NextRequest) {
 
   const campaignId = metadataString(context.request.metadata, "campaignId");
   const assetId = metadataString(context.request.metadata, "assetId");
-  const crmContactId = metadataString(context.request.metadata, "crmContactId");
   const eventId = metadataString(context.request.metadata, "eventId");
   const clientSlug =
     context.request.clientSlug ?? metadataString(context.request.metadata, "clientSlug");
@@ -128,6 +117,13 @@ export async function POST(request: NextRequest) {
   const itemTitle = buildActionItemTitle(context);
   const itemDescription = buildActionItemDescription(context);
   const itemPriority = context.task.status === "failed" ? "high" : "medium";
+
+  if (!campaignId && !assetId && !eventId) {
+    return apiError(
+      "Agent outcome is missing a supported campaign, asset, or event context",
+      400,
+    );
+  }
 
   const item = campaignId
     ? await createSystemCampaignActionItem({
@@ -144,13 +140,13 @@ export async function POST(request: NextRequest) {
         title: itemTitle,
         visibility: context.request.visibility,
       })
-    : crmContactId
-      ? await createSystemCrmFollowUpItem({
+    : assetId
+      ? await createSystemAssetFollowUpItem({
           actorId: actor.actorId,
           actorName: actor.actorName,
           actorType: actor.actorType,
+          assetId,
           clientSlug,
-          contactId: crmContactId,
           description: itemDescription,
           priority: itemPriority,
           sourceEntityId: taskId,
@@ -159,44 +155,25 @@ export async function POST(request: NextRequest) {
           title: itemTitle,
           visibility: context.request.visibility,
         })
-      : assetId
-        ? await createSystemAssetFollowUpItem({
-            actorId: actor.actorId,
-            actorName: actor.actorName,
-            actorType: actor.actorType,
-            assetId,
-            clientSlug,
-            description: itemDescription,
-            priority: itemPriority,
-            sourceEntityId: taskId,
-            sourceEntityType: "agent_task",
-            status: "todo",
-            title: itemTitle,
-            visibility: context.request.visibility,
-          })
-      : eventId
-        ? await createSystemEventFollowUpItem({
-            actorId: actor.actorId,
-            actorName: actor.actorName,
-            actorType: actor.actorType,
-            clientSlug,
-            description: itemDescription,
-            eventId,
-            priority: itemPriority,
-            sourceEntityId: taskId,
-            sourceEntityType: "agent_task",
-            status: "todo",
-            title: itemTitle,
-            visibility: context.request.visibility,
-          })
-      : null;
+      : await createSystemEventFollowUpItem({
+          actorId: actor.actorId,
+          actorName: actor.actorName,
+          actorType: actor.actorType,
+          clientSlug,
+          description: itemDescription,
+          eventId: eventId as string,
+          priority: itemPriority,
+          sourceEntityId: taskId,
+          sourceEntityType: "agent_task",
+          status: "todo",
+          title: itemTitle,
+          visibility: context.request.visibility,
+        });
 
   if (!item) return apiError("Failed to create action item", 500);
 
   if (campaignId) {
     revalidateWorkflowPaths(getCampaignWorkflowPaths(clientSlug, campaignId));
-  } else if (crmContactId) {
-    revalidateWorkflowPaths(getCrmWorkflowPaths(clientSlug, crmContactId));
   } else if (assetId) {
     revalidateWorkflowPaths(getAssetWorkflowPaths(clientSlug, assetId));
   } else if (eventId) {

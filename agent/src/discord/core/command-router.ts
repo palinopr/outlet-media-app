@@ -301,82 +301,6 @@ async function handoffScheduledCopySwapRequestToBoss(
   return true;
 }
 
-async function handleWhatsAppCommand(msg: Message, content: string): Promise<boolean> {
-  const normalized = content.trim();
-  if (!/^(!|\/)whatsapp\b/i.test(normalized)) {
-    return false;
-  }
-
-  if (!canRunCommand("whatsapp", msg.member, msg.author.id)) {
-    await msg.reply("Access denied. WhatsApp controls are owner-only.");
-    return true;
-  }
-
-  const parts = normalized.split(/\s+/);
-  const action = parts[1]?.toLowerCase();
-  const explicitConversationId = parts[2];
-
-  const {
-    actorNameForApproval,
-    formatConversationApprovalSummary,
-    loadConversationRecord,
-    resolveConversationIdForMessage,
-    setConversationAccessStatus,
-  } = await import("../../services/whatsapp-policy-service.js");
-
-  if (!action || !["allow", "deny", "status"].includes(action)) {
-    await msg.reply("Usage: `!whatsapp allow <conversationId>`, `!whatsapp deny <conversationId>`, or `!whatsapp status <conversationId>`. If you're inside a WhatsApp thread, the id is optional.");
-    return true;
-  }
-
-  const conversationId = await resolveConversationIdForMessage(msg, explicitConversationId);
-  if (!conversationId) {
-    await msg.reply("Could not resolve a WhatsApp conversation here. Provide the conversation id or run the command inside the linked WhatsApp thread.");
-    return true;
-  }
-
-  if (action === "status") {
-    const record = await loadConversationRecord(conversationId);
-    const policyLine =
-      record.policy.chatKind === "group"
-        ? `Group policy: ${record.policy.groupPolicy}`
-        : "Direct chat";
-    await msg.reply([
-      `WhatsApp ${formatConversationApprovalSummary(record)}`,
-      `Access: ${record.policy.accessStatus}`,
-      `Mode: ${record.mode ?? "unknown"}`,
-      policyLine,
-      `Conversation: ${record.id}`,
-    ].join("\n"));
-    return true;
-  }
-
-  const status = action === "allow" ? "approved" : "denied";
-  const actorName = actorNameForApproval(msg);
-  const record = await setConversationAccessStatus(conversationId, status, actorName);
-  const summary = formatConversationApprovalSummary(record);
-  const updateText =
-    status === "approved"
-      ? `Jaime approved this WhatsApp ${record.policy.chatKind}. ${record.policy.chatKind === "group" ? "Group policy is mention_only." : "The liaison can work this chat now."} Conversation mode is now ${record.mode ?? "live"}.`
-      : "Jaime denied this WhatsApp chat. The liaison will stay blocked.";
-
-  await msg.reply(`${status === "approved" ? "Allowed" : "Denied"} ${summary}.`);
-
-  const targetChannel = record.discordChannelName ?? "dashboard";
-  await sendAsAgent(
-    "boss",
-    targetChannel,
-    record.discordThreadId
-      ? {
-          content: `**Owner decision**\n${updateText}`,
-          threadId: record.discordThreadId,
-        }
-      : `**Owner decision**\n${updateText}`,
-  ).catch((e) => console.warn("[router] notify failed:", toErrorMessage(e)));
-
-  return true;
-}
-
 // ---------------------------------------------------------------------------
 // Main message router
 // ---------------------------------------------------------------------------
@@ -438,9 +362,7 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
       "  #tm-data -- Ticketmaster events, demographics",
       "  #creative -- ad creative, copy, images",
       "  #dashboard -- reporting, analytics, trends",
-      "  #whatsapp-control -- customer WhatsApp liaison tasks",
       "  #zamora / #kybba -- client forums",
-      "  #whatsapp-boss -- owner-only WhatsApp approvals and supervision",
       "  #boss / #ops / #email / #meetings / #email-log / #schedule -- owner-only",
       "",
       "**Manual triggers:**",
@@ -456,7 +378,6 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
       "  `!supervise` -- Boss reviews all agent activity",
       "  `!ops` -- durable operator snapshot of live tasks, retries, failures, and completions",
       "  `!dashboard` -- update campaign status panel",
-      "  `!whatsapp allow|deny|status <conversationId>` -- owner WhatsApp access control",
       "  `/schedule-copy-swap` -- explicitly schedule an activate/pause ad swap with exact IDs",
       "  `!roles` -- ensure Owner/Admin/Team/Bot/Viewer roles",
       "  `!restructure` -- enforce full server layout",
@@ -475,10 +396,6 @@ export async function routeMessage(msg: Message, discordClient: Client | null): 
   if (content === "!reset" || content === "/reset") {
     channelSessions.delete(msg.channelId);
     await msg.reply("Conversation reset. Starting fresh.");
-    return;
-  }
-
-  if (await handleWhatsAppCommand(msg, content)) {
     return;
   }
 

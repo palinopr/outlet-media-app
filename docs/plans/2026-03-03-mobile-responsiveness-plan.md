@@ -1,5 +1,7 @@
 # Mobile Responsiveness Implementation Plan
 
+> **Historical note (2026-04-03):** This plan describes an earlier, broader web surface set. Some routes and UI areas referenced here were later retired or collapsed during the core reset, so treat the document as historical implementation context only.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Make every admin and client page fully mobile-friendly with card-stack tables, responsive grids, and proper touch UX.

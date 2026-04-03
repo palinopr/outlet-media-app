@@ -163,7 +163,7 @@ export function CampaignDetailDashboard({ campaign }: Props) {
                         <div className="flex relative">
                             {/* Days column */}
                             <div className="w-10 pr-2 flex flex-col justify-between text-[10px] text-muted-foreground py-2">
-                                {days.map((d, i) => <span key={d}>{d}</span>)}
+                                {days.map((d) => <span key={d}>{d}</span>)}
                             </div>
                             {/* Grid */}
                             <div className="flex-1 grid grid-rows-7 gap-0.5 relative pt-2 pb-2">

@@ -28,13 +28,3 @@ export interface AssetRow {
   height: number | null;
 }
 
-export interface FolderGroup {
-  path: string;
-  label: string;
-  assets: Asset[];
-}
-
-export type DeleteTarget =
-  | { type: "asset"; id: string; name: string }
-  | { type: "folder"; folder: string; count: number }
-  | { type: "bulk"; ids: string[]; count: number };

@@ -46,11 +46,7 @@ function getPromptParam(task: ExternalTaskRow): string | null {
 }
 
 function isExternalTask(task: ExternalTaskRow): boolean {
-  return (
-    task.from_agent === "web-admin" ||
-    task.from_agent === "gmail-push" ||
-    task.from_agent === "whatsapp-cloud"
-  );
+  return task.from_agent === "web-admin" || task.from_agent === "gmail-push";
 }
 
 async function claimPendingTask(): Promise<ExternalTaskRow | null> {
@@ -61,7 +57,7 @@ async function claimPendingTask(): Promise<ExternalTaskRow | null> {
     .from("agent_tasks")
     .select("id, from_agent, to_agent, action, params, tier, status")
     .eq("status", "pending")
-    .in("from_agent", ["web-admin", "gmail-push", "whatsapp-cloud"])
+    .in("from_agent", ["web-admin", "gmail-push"])
     .order("started_at", { ascending: true, nullsFirst: true })
     .order("created_at", { ascending: true })
     .limit(20);
@@ -284,11 +280,6 @@ async function executeTask(task: ExternalTaskRow): Promise<string> {
     return await withResourceLocks("gmail-push", ["gmail-inbox"], async () => {
       return await processGmailHistoryPush(historyId);
     });
-  }
-
-  if (task.from_agent === "whatsapp-cloud") {
-    const { processWhatsAppTask } = await import("./whatsapp-cloud-service.js");
-    return await processWhatsAppTask(task);
   }
 
   return await executeWebAdminTask(task);

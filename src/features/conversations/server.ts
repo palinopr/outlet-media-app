@@ -1,12 +1,10 @@
 import type { ScopeFilter } from "@/lib/member-access";
-import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient } from "@/lib/supabase";
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import { listEffectiveCampaignIdsForClientSlug } from "@/lib/campaign-client-assignment";
 import {
-  buildConversationsSummary,
   type ConversationThread,
   type ConversationThreadKind,
-  type ConversationsSummary,
 } from "./summary";
 
 interface GetConversationsCenterOptions {
@@ -16,12 +14,6 @@ interface GetConversationsCenterOptions {
   mode: "admin" | "client";
   scope?: ScopeFilter;
 }
-
-export interface ConversationsCenter {
-  summary: ConversationsSummary;
-  threads: ConversationThread[];
-}
-
 
 function stringValue(value: unknown) {
   return typeof value === "string" && value.length > 0 ? value : null;
@@ -38,7 +30,6 @@ export function matchesConversationKinds(
   if (!kinds || kinds.length === 0) return true;
   return kinds.includes(thread.kind);
 }
-
 export async function listConversationThreads(
   options: GetConversationsCenterOptions,
 ): Promise<ConversationThread[]> {
@@ -55,14 +46,6 @@ export async function listConversationThreads(
   let campaignQuery = db
     .from("campaign_comments")
     .select("id, campaign_id, client_slug, author_name, content, created_at")
-    .eq("resolved", false)
-    .is("parent_comment_id", null)
-    .order("created_at", { ascending: false })
-    .limit(limitPerKind);
-
-  let crmQuery = db
-    .from("crm_comments")
-    .select("id, contact_id, client_slug, author_name, content, created_at")
     .eq("resolved", false)
     .is("parent_comment_id", null)
     .order("created_at", { ascending: false })
@@ -85,7 +68,6 @@ export async function listConversationThreads(
     .limit(limitPerKind);
 
   if (options.clientSlug) {
-    crmQuery = crmQuery.eq("client_slug", options.clientSlug);
     assetQuery = assetQuery.eq("client_slug", options.clientSlug);
     eventQuery = eventQuery.eq("client_slug", options.clientSlug);
   }
@@ -104,20 +86,17 @@ export async function listConversationThreads(
 
   if (options.mode === "client") {
     campaignQuery = campaignQuery.eq("visibility", "shared");
-    crmQuery = crmQuery.eq("visibility", "shared");
     assetQuery = assetQuery.eq("visibility", "shared");
     eventQuery = eventQuery.eq("visibility", "shared");
   }
 
-  const [campaignRes, crmRes, assetRes, eventRes] = await Promise.all([
+  const [campaignRes, assetRes, eventRes] = await Promise.all([
     campaignQuery,
-    crmQuery,
     assetQuery,
     eventQuery,
   ]);
 
   const campaignRows = (campaignRes.data ?? []) as Record<string, unknown>[];
-  const crmRows = (crmRes.data ?? []) as Record<string, unknown>[];
   const rawAssetRows = (assetRes.data ?? []) as Record<string, unknown>[];
   const eventRows = (eventRes.data ?? []) as Record<string, unknown>[];
 
@@ -135,7 +114,6 @@ export async function listConversationThreads(
       : rawAssetRows.filter((row) => scopedAssetIds.has(String(row.asset_id)));
 
   const campaignNames = new Map<string, string>();
-  const contactNames = new Map<string, string>();
   const assetNames = new Map<string, string>();
   const eventNames = new Map<string, string>();
 
@@ -143,13 +121,6 @@ export async function listConversationThreads(
     ...new Set(
       campaignRows
         .map((row) => stringValue(row.campaign_id))
-        .filter((value): value is string => value !== null),
-    ),
-  ];
-  const contactIds = [
-    ...new Set(
-      crmRows
-        .map((row) => stringValue(row.contact_id))
         .filter((value): value is string => value !== null),
     ),
   ];
@@ -168,17 +139,14 @@ export async function listConversationThreads(
     ),
   ];
   const campaignCommentIds = campaignRows.map((row) => String(row.id));
-  const crmCommentIds = crmRows.map((row) => String(row.id));
   const assetCommentIds = assetRows.map((row) => String(row.id));
   const eventCommentIds = eventRows.map((row) => String(row.id));
 
   const [
     campaignNamesRes,
-    contactNamesRes,
     assetNamesRes,
     eventNamesRes,
     linkedCampaignItemRows,
-    linkedCrmItemRows,
     linkedAssetItemRows,
     linkedEventItemRows,
   ] = await Promise.all([
@@ -187,12 +155,6 @@ export async function listConversationThreads(
           .from("meta_campaigns")
           .select("campaign_id, name")
           .in("campaign_id", campaignIds)
-      : Promise.resolve({ data: [] }),
-    contactIds.length > 0
-      ? db
-          .from("crm_contacts" as never)
-          .select("id, full_name")
-          .in("id", contactIds)
       : Promise.resolve({ data: [] }),
     assetIds.length > 0
       ? db
@@ -212,13 +174,6 @@ export async function listConversationThreads(
           .select("id, source_entity_id")
           .eq("source_entity_type", "campaign_comment")
           .in("source_entity_id", campaignCommentIds)
-      : Promise.resolve({ data: [] }),
-    crmCommentIds.length > 0
-      ? db
-          .from("crm_follow_up_items" as never)
-          .select("id, source_entity_id")
-          .eq("source_entity_type", "crm_comment")
-          .in("source_entity_id", crmCommentIds)
       : Promise.resolve({ data: [] }),
     assetCommentIds.length > 0
       ? db
@@ -240,10 +195,6 @@ export async function listConversationThreads(
     campaignNames.set(row.campaign_id, row.name ?? row.campaign_id);
   }
 
-  for (const row of (contactNamesRes.data ?? []) as Record<string, unknown>[]) {
-    contactNames.set(String(row.id), String(row.full_name ?? "CRM contact"));
-  }
-
   for (const row of (assetNamesRes.data ?? []) as { id: string; file_name: string | null }[]) {
     assetNames.set(row.id, row.file_name ?? row.id);
   }
@@ -258,11 +209,6 @@ export async function listConversationThreads(
   const linkedCampaignItems = new Map<string, string>();
   for (const row of (linkedCampaignItemRows.data ?? []) as Record<string, unknown>[]) {
     linkedCampaignItems.set(String(row.source_entity_id), String(row.id));
-  }
-
-  const linkedCrmItems = new Map<string, string>();
-  for (const row of (linkedCrmItemRows.data ?? []) as Record<string, unknown>[]) {
-    linkedCrmItems.set(String(row.source_entity_id), String(row.id));
   }
 
   const linkedAssetItems = new Map<string, string>();
@@ -286,17 +232,6 @@ export async function listConversationThreads(
       linkedFollowUpItemId: linkedCampaignItems.get(String(row.id)) ?? null,
       targetId: row.campaign_id as string,
       targetName: campaignNames.get(row.campaign_id as string) ?? null,
-    })),
-    ...crmRows.map((row) => ({
-      authorName: (row.author_name as string | null) ?? null,
-      clientSlug: stringValue(row.client_slug),
-      content: row.content as string,
-      createdAt: row.created_at as string,
-      id: row.id as string,
-      kind: "crm" as const,
-      linkedFollowUpItemId: linkedCrmItems.get(String(row.id)) ?? null,
-      targetId: row.contact_id as string,
-      targetName: contactNames.get(row.contact_id as string) ?? null,
     })),
     ...assetRows.map((row) => ({
       authorName: (row.author_name as string | null) ?? null,
@@ -325,16 +260,3 @@ export async function listConversationThreads(
     .sort(sortThreads);
 }
 
-export async function getConversationsCenter(
-  options: GetConversationsCenterOptions,
-): Promise<ConversationsCenter> {
-  const threads = await listConversationThreads({
-    ...options,
-    limit: Math.max(options.limit ?? 16, 24),
-  });
-
-  return {
-    summary: buildConversationsSummary(threads),
-    threads: threads.slice(0, options.limit ?? 16),
-  };
-}

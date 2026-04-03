@@ -13,7 +13,6 @@ const {
     agent_tasks: [] as Record<string, unknown>[],
     asset_follow_up_items: [] as Record<string, unknown>[],
     campaign_action_items: [] as Record<string, unknown>[],
-    crm_follow_up_items: [] as Record<string, unknown>[],
     event_follow_up_items: [] as Record<string, unknown>[],
     system_events: [] as Record<string, unknown>[],
   };
@@ -22,7 +21,6 @@ const {
     agent_tasks: [] as Record<string, unknown>[],
     asset_follow_up_items: [] as Record<string, unknown>[],
     campaign_action_items: [] as Record<string, unknown>[],
-    crm_follow_up_items: [] as Record<string, unknown>[],
     event_follow_up_items: [] as Record<string, unknown>[],
     system_events: [] as Record<string, unknown>[],
   };
@@ -170,13 +168,11 @@ describe("agent outcomes read clients", () => {
     serviceState.agent_tasks = [];
     serviceState.asset_follow_up_items = [];
     serviceState.campaign_action_items = [];
-    serviceState.crm_follow_up_items = [];
     serviceState.event_follow_up_items = [];
     serviceState.system_events = [];
     userScopedState.agent_tasks = [];
     userScopedState.asset_follow_up_items = [];
     userScopedState.campaign_action_items = [];
-    userScopedState.crm_follow_up_items = [];
     userScopedState.event_follow_up_items = [];
     userScopedState.system_events = [];
     currentUser.mockResolvedValue({ publicMetadata: { role: "member" } });

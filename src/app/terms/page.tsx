@@ -18,9 +18,9 @@ export default function TermsPage() {
       <h2>3. Acceptable Use</h2>
       <p>You agree not to:</p>
       <ul>
-        <li>Violate Meta's advertising policies through our platform</li>
+        <li>Violate Meta&apos;s advertising policies through our platform</li>
         <li>Provide false or misleading information</li>
-        <li>Attempt to access other users' data</li>
+        <li>Attempt to access other users&apos; data</li>
         <li>Use the platform for any unlawful purpose</li>
       </ul>
 
@@ -31,7 +31,7 @@ export default function TermsPage() {
       <p>Ad spend is billed directly by Meta to the payment method on your ad account. Outlet Media does not process ad spend payments. Any fees for our platform services will be communicated separately.</p>
 
       <h2>6. Limitation of Liability</h2>
-      <p>Outlet Media is not responsible for: campaign performance outcomes, Meta API availability or changes, ad account suspensions by Meta, or data loss caused by third-party services. Our platform is provided "as is" without warranty of any kind.</p>
+      <p>Outlet Media is not responsible for: campaign performance outcomes, Meta API availability or changes, ad account suspensions by Meta, or data loss caused by third-party services. Our platform is provided &quot;as is&quot; without warranty of any kind.</p>
 
       <h2>7. Termination</h2>
       <p>Either party can terminate access at any time. You can disconnect your ad account and request data deletion. We may suspend access if you violate these terms.</p>

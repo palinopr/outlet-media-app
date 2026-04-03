@@ -45,6 +45,7 @@ API base: https://graph.facebook.com/v21.0
 - "san antonio" → Zamora (Camila sub-brand, San Antonio show)
 - "vaz vil", "kiko blade", "penetrado" → Vaz Vil
 - "don omar", "barcelona", "bcn" → Don Omar BCN (ticket sales tracked via EATA/Vivaticket + Meta campaign launched Mar 6 — see EATA section below)
+- "el destilado", "destilado", "el destilero", "destilero" → El Destilero (new client, lifetime budget campaign)
 - If you can't match the name, ASK. Don't guess.
 
 ---
@@ -68,6 +69,7 @@ API base: https://graph.facebook.com/v21.0
 - ROAS < 2.0 = flag for review, not automatic kill
 - Urgency creatives in final week before show date
 - **Post-show auto-pause:** After a show date passes, verify the campaign is PAUSED with $0 spend. If still ACTIVE or spending, pause immediately — no confirmation needed. Jaime confirmed: "if it's paused and hasn't spent, turn it off automatically always."
+- **Zero-purchase detection:** If an ACTIVE campaign shows $50+ spend over 3+ days with ZERO purchases (and it's optimized for purchases, not ViewContent), flag it immediately. This is different from delivery stall (not spending) and low ROAS (some purchases but expensive). Zero purchases = creative fatigue or audience exhaustion. Check `frequency` — above 3.5 confirms fatigue. Example: KYBBA Mar 11-16 had 6 days of spend ($200+) with zero purchases, frequency 3.60.
 
 ---
 
@@ -166,6 +168,13 @@ curl -s -X POST "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}" \
 curl -s -X POST "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}" \
   -d "access_token=$TOKEN&daily_budget=75000"
 ```
+
+### Lifetime budget campaigns
+Some campaigns use `lifetime_budget` instead of `daily_budget` (e.g., El Destilado). These have `daily_budget=null` and `lifetime_budget_cents` set.
+- **Read:** Check `lifetime_budget` field (in CENTS) — e.g., 78500 = $785 total.
+- **Change:** `curl -s -X POST "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}" -d "access_token=$TOKEN&lifetime_budget=78500"`
+- **Cannot mix:** A campaign is either daily OR lifetime budget. Don't try to set both.
+- **Pacing:** Meta paces lifetime budgets automatically over the campaign's schedule. No daily pacing calculation needed.
 
 ### Duplicate a campaign (deep copy — copies ad sets + ads, starts PAUSED)
 ```bash
@@ -432,8 +441,8 @@ Levels: "info", "warning", "critical" (Zod-validated — "warn" and "error" will
 
 ## EATA / Vivaticket (Don Omar BCN)
 
-Don Omar BCN has a Meta campaign ($600/day budget, ~6.4x ROAS, 68+ purchases) AND ticket sales tracked via Vivaticket/EATA. Delivery recovered after initial stall — now performing well.
-If Jaime asks about Don Omar tickets, query Supabase EATA data. For ad performance, pull from Meta API like any other campaign. Always check live data — Don Omar delivery and ROAS change frequently.
+Don Omar BCN has a Meta campaign (currently **ACTIVE** at $300/day, 6.70× ROAS, 125 purchases, $4,794 total spend). Status changes frequently (paused/reactivated multiple times) — always check live Meta API data.
+If Jaime asks about Don Omar tickets, query Supabase EATA data. For ad performance, pull from Meta API like any other campaign.
 
 ```bash
 curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=name,status,tickets_sold,gross,tickets_sold_today,revenue_today,avg_ticket_price,date&tm_id=eq.eata_14948" \

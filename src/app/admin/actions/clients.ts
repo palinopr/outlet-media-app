@@ -50,7 +50,7 @@ async function getClientAccessContextByMemberId(memberId: string) {
   return getClientAccessContextById(member.client_id as string);
 }
 
-const CLIENT_SLUG_REFERENCE_TABLES = [
+const ACTIVE_CLIENT_SLUG_REFERENCE_TABLES = [
   "ad_assets",
   "approval_requests",
   "asset_comments",
@@ -60,9 +60,6 @@ const CLIENT_SLUG_REFERENCE_TABLES = [
   "campaign_client_overrides",
   "campaign_comments",
   "client_accounts",
-  "crm_comments",
-  "crm_contacts",
-  "crm_follow_up_items",
   "email_events",
   "email_reply_examples",
   "event_comments",
@@ -71,8 +68,21 @@ const CLIENT_SLUG_REFERENCE_TABLES = [
   "notifications",
   "system_events",
   "tm_events",
+] as const;
+
+// Historical maintenance only. These are not active product surfaces, but older
+// retained rows should still follow client-slug renames safely.
+const HISTORICAL_CLIENT_SLUG_REFERENCE_TABLES = [
+  "crm_comments",
+  "crm_contacts",
+  "crm_follow_up_items",
   "workspace_pages",
   "workspace_tasks",
+] as const;
+
+const CLIENT_SLUG_REFERENCE_TABLES = [
+  ...ACTIVE_CLIENT_SLUG_REFERENCE_TABLES,
+  ...HISTORICAL_CLIENT_SLUG_REFERENCE_TABLES,
 ] as const;
 
 async function revalidateClientSlugSurfaces(

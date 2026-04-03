@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 export function LandingHero() {
   const proofMetrics = [
     "7+ years building campaigns",
-    "$12M+ managed campaigns",
+    "$12M+ managed volume",
     "150+ sold-out events",
     "370K+ tickets sold on world tours",
   ] as const;
@@ -16,17 +16,18 @@ export function LandingHero() {
   const proofNames = [
     "Rauw Alejandro",
     "Don Omar",
-    "Luis Miguel",
+    "Ivy Queen",
+    "Miguel Bosé",
+    "Grupo Firme",
+    "Vaqueros de Bayamón",
     "Beamina",
-    "9AM",
-    "Gallimbo Studios",
   ] as const;
 
   const signatureWins = [
     { label: "Don Omar", value: "99.38% sell-through" },
     { label: "Rauw Alejandro", value: "370K+ tickets sold" },
-    { label: "Beamina", value: "63K+ sales | ROAS 5.2" },
-    { label: "Brand campaigns", value: "$1M+ ecommerce sales" },
+    { label: "Vaqueros de Bayamón", value: "ROAS 13.6" },
+    { label: "Beamina", value: "ROAS 5.2" },
   ] as const;
 
   const founderNotes = [
@@ -81,7 +82,7 @@ export function LandingHero() {
             transition={{ duration: 0.75, ease: "easeOut", delay: 0.08 }}
             className="mt-6 max-w-3xl text-5xl font-bold tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl"
           >
-            The agency behind sold-out tours, high-pressure launches, and revenue that keeps moving.
+            Fusing culture, content, and commerce to move tickets and revenue.
           </motion.h1>
 
           <motion.p
@@ -90,10 +91,9 @@ export function LandingHero() {
             transition={{ duration: 0.75, ease: "easeOut", delay: 0.16 }}
             className="mt-6 max-w-2xl text-lg leading-8 text-slate-300"
           >
-            Outlet Media helps artists, tours, nightlife brands, venues, and fast-moving companies
-            turn attention into ticket sales, ecommerce revenue, and real campaign momentum. We pair
-            creative, paid media, and our own operating system so clients stay close to the work
-            instead of chasing the agency for answers.
+            Outlet Media is a creative agency built for the high-pressure moment. We help artists,
+            tours, global brands, and fast-moving companies grow with efficiency through
+            strategic creative, paid media, and AI-backed visibility.
           </motion.p>
 
           <motion.div

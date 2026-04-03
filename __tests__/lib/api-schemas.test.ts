@@ -153,18 +153,27 @@ describe("AgentPostSchema", () => {
 // ─── InviteSchema ───────────────────────────────────────────────────────────
 
 describe("InviteSchema", () => {
-  it("accepts valid email", () => {
-    const result = InviteSchema.safeParse({ email: "test@example.com" });
+  it("accepts admin invites without a client id", () => {
+    const result = InviteSchema.safeParse({ email: "test@example.com", role: "admin" });
     expect(result.success).toBe(true);
   });
 
-  it("accepts email with client_slug", () => {
-    const result = InviteSchema.safeParse({ email: "a@b.com", client_slug: "zamora" });
+  it("accepts client invites with clientId", () => {
+    const result = InviteSchema.safeParse({
+      email: "a@b.com",
+      clientId: "client_123",
+      client_role: "member",
+    });
     expect(result.success).toBe(true);
+  });
+
+  it("rejects client invites without clientId", () => {
+    const result = InviteSchema.safeParse({ email: "a@b.com", role: "member" });
+    expect(result.success).toBe(false);
   });
 
   it("rejects invalid email", () => {
-    const result = InviteSchema.safeParse({ email: "not-an-email" });
+    const result = InviteSchema.safeParse({ email: "not-an-email", role: "admin" });
     expect(result.success).toBe(false);
   });
 

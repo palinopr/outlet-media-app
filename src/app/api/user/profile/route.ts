@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
-import { authGuard, apiError, parseJsonBody } from "@/lib/api-helpers";
+import { authGuard, parseJsonBody } from "@/lib/api-helpers";
 
 const ProfileSchema = z.object({
   firstName: z.string().min(1).max(100),

@@ -50,6 +50,30 @@ type NotificationScopeMaps = {
 const NOTIFICATION_SELECT =
   "id, user_id, type, title, message, page_id, task_id, from_user_id, from_user_name, read, created_at, client_slug, entity_type, entity_id";
 
+// Historical-support only. CRM is not a shipped notification destination during the
+// current reset, but old rows may still exist and should be suppressed safely.
+const RETIRED_CRM_NOTIFICATION_ENTITY_TYPES = new Set([
+  "crm_comment",
+  "crm_contact",
+  "crm_follow_up_item",
+]);
+const RETIRED_CRM_ROUTE_ENTITY_TYPES = new Set(["crm_contact"]);
+
+function isRetiredCrmNotificationEntityType(entityType: string | null) {
+  return typeof entityType === "string" && RETIRED_CRM_NOTIFICATION_ENTITY_TYPES.has(entityType);
+}
+
+function isRetiredCrmRouteEntityType(routeEntityType: string | null | undefined) {
+  return typeof routeEntityType === "string" && RETIRED_CRM_ROUTE_ENTITY_TYPES.has(routeEntityType);
+}
+
+function isRetiredCrmNotification(notification: AppNotification) {
+  return (
+    isRetiredCrmNotificationEntityType(notification.entityType) ||
+    isRetiredCrmRouteEntityType(notification.routeEntityType)
+  );
+}
+
 function mapNotificationRow(row: Record<string, unknown>): AppNotification {
   return {
     clientSlug: (row.client_slug as string | null) ?? null,
@@ -145,7 +169,9 @@ export async function listNotificationsForUser(
     return [];
   }
 
-  let notifications = ((data ?? []) as Record<string, unknown>[]).map((row) => mapNotificationRow(row));
+  let notifications = ((data ?? []) as Record<string, unknown>[])
+    .map((row) => mapNotificationRow(row))
+    .filter((notification) => !isRetiredCrmNotificationEntityType(notification.entityType));
 
   if (options.clientSlug) {
     const fallbackNotifications = await listCampaignOwnedNotificationsForClient({
@@ -157,6 +183,7 @@ export async function listNotificationsForUser(
     });
 
     notifications = [...notifications, ...fallbackNotifications]
+      .filter((notification) => !isRetiredCrmNotificationEntityType(notification.entityType))
       .sort((left, right) => right.createdAt.localeCompare(left.createdAt))
       .slice(0, requestedLimit);
   }
@@ -166,7 +193,12 @@ export async function listNotificationsForUser(
       ? await filterNotificationsByScope(notifications, options.clientSlug, options.scope, helperDb)
       : notifications;
 
-  return enrichNotificationsForRouting(visibleNotifications.slice(0, requestedLimit), helperDb);
+  const enrichedNotifications = await enrichNotificationsForRouting(
+    visibleNotifications.slice(0, requestedLimit),
+    helperDb,
+  );
+
+  return enrichedNotifications.filter((notification) => !isRetiredCrmNotification(notification));
 }
 
 export async function listClientNotificationRecipients(
@@ -390,6 +422,13 @@ function extractNotificationContextFromApprovalRow(
   };
 }
 
+export function isRetiredCrmApprovalRow(row: Record<string, unknown>) {
+  const entityType = (row.entity_type as string | null) ?? null;
+  const metadata = (row.metadata as Record<string, unknown> | null) ?? null;
+
+  return entityType === "crm_contact" || typeof metadata?.contactId === "string";
+}
+
 function extractNotificationRouteContextFromApprovalRow(
   row: Record<string, unknown>,
 ): NotificationRouteContext {
@@ -397,11 +436,17 @@ function extractNotificationRouteContextFromApprovalRow(
   const entityId = (row.entity_id as string | null) ?? null;
   const metadata = (row.metadata as Record<string, unknown> | null) ?? null;
 
+  if (isRetiredCrmApprovalRow(row)) {
+    return {
+      pageId: (row.page_id as string | null) ?? null,
+      routeEntityId: null,
+      routeEntityType: "crm_contact",
+      taskId: (row.task_id as string | null) ?? null,
+    };
+  }
+
   const routeEntityType =
-    entityType === "campaign" ||
-    entityType === "event" ||
-    entityType === "asset" ||
-    entityType === "crm_contact"
+    entityType === "campaign" || entityType === "event" || entityType === "asset"
       ? entityType
       : typeof metadata?.campaignId === "string"
         ? "campaign"
@@ -409,9 +454,7 @@ function extractNotificationRouteContextFromApprovalRow(
           ? "event"
           : typeof metadata?.assetId === "string"
             ? "asset"
-            : typeof metadata?.contactId === "string"
-              ? "crm_contact"
-              : null;
+            : null;
   const routeEntityId =
     routeEntityType === entityType && entityId
       ? entityId
@@ -421,9 +464,7 @@ function extractNotificationRouteContextFromApprovalRow(
           ? ((metadata?.eventId as string | undefined) ?? null)
           : routeEntityType === "asset"
             ? ((metadata?.assetId as string | undefined) ?? null)
-            : routeEntityType === "crm_contact"
-              ? ((metadata?.contactId as string | undefined) ?? null)
-              : null;
+            : null;
 
   return {
     pageId: (row.page_id as string | null) ?? null,
@@ -464,7 +505,7 @@ async function mapNotificationRouteRelations(
   table: string,
   idField: string,
   relationField: string,
-  routeEntityType: "asset" | "campaign" | "crm_contact" | "event",
+  routeEntityType: "asset" | "campaign" | "event",
   entityIds: string[],
   db: typeof supabaseAdmin = supabaseAdmin,
 ): Promise<Map<string, NotificationRouteContext>> {
@@ -500,8 +541,6 @@ async function resolveNotificationRouteMaps(
   const eventFollowUpIds: string[] = [];
   const assetCommentIds: string[] = [];
   const assetFollowUpIds: string[] = [];
-  const crmCommentIds: string[] = [];
-  const crmFollowUpIds: string[] = [];
   const approvalIds: string[] = [];
 
   for (const notification of notifications) {
@@ -526,12 +565,6 @@ async function resolveNotificationRouteMaps(
       case "asset_follow_up_item":
         assetFollowUpIds.push(notification.entityId);
         break;
-      case "crm_comment":
-        crmCommentIds.push(notification.entityId);
-        break;
-      case "crm_follow_up_item":
-        crmFollowUpIds.push(notification.entityId);
-        break;
       case "approval_request":
         approvalIds.push(notification.entityId);
         break;
@@ -547,8 +580,6 @@ async function resolveNotificationRouteMaps(
     eventFollowUpMap,
     assetCommentMap,
     assetFollowUpMap,
-    crmCommentMap,
-    crmFollowUpMap,
   ] = await Promise.all([
     mapNotificationRouteRelations(
       "campaign_comments",
@@ -598,22 +629,6 @@ async function resolveNotificationRouteMaps(
       assetFollowUpIds,
       db,
     ),
-    mapNotificationRouteRelations(
-      "crm_comments",
-      "id",
-      "contact_id",
-      "crm_contact",
-      crmCommentIds,
-      db,
-    ),
-    mapNotificationRouteRelations(
-      "crm_follow_up_items",
-      "id",
-      "contact_id",
-      "crm_contact",
-      crmFollowUpIds,
-      db,
-    ),
   ]);
 
   const routeMap = new Map<string, NotificationRouteContext>([
@@ -623,8 +638,6 @@ async function resolveNotificationRouteMaps(
     ...eventFollowUpMap,
     ...assetCommentMap,
     ...assetFollowUpMap,
-    ...crmCommentMap,
-    ...crmFollowUpMap,
   ]);
 
   if (approvalIds.length > 0) {

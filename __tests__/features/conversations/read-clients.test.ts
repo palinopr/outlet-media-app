@@ -15,9 +15,6 @@ const {
     asset_follow_up_items: [] as Record<string, unknown>[],
     campaign_action_items: [] as Record<string, unknown>[],
     campaign_comments: [] as Record<string, unknown>[],
-    crm_comments: [] as Record<string, unknown>[],
-    crm_contacts: [] as Record<string, unknown>[],
-    crm_follow_up_items: [] as Record<string, unknown>[],
     event_comments: [] as Record<string, unknown>[],
     event_follow_up_items: [] as Record<string, unknown>[],
     meta_campaigns: [] as Record<string, unknown>[],
@@ -30,9 +27,6 @@ const {
     asset_follow_up_items: [] as Record<string, unknown>[],
     campaign_action_items: [] as Record<string, unknown>[],
     campaign_comments: [] as Record<string, unknown>[],
-    crm_comments: [] as Record<string, unknown>[],
-    crm_contacts: [] as Record<string, unknown>[],
-    crm_follow_up_items: [] as Record<string, unknown>[],
     event_comments: [] as Record<string, unknown>[],
     event_follow_up_items: [] as Record<string, unknown>[],
     meta_campaigns: [] as Record<string, unknown>[],
@@ -248,4 +242,5 @@ describe("conversation read clients", () => {
     ]);
     expect(createClerkSupabaseClient).not.toHaveBeenCalled();
   });
+
 });

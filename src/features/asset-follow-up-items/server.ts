@@ -3,13 +3,12 @@ import {
   type TaskPriority,
   type TaskStatus,
 } from "@/lib/workspace-types";
-import { FIELD_LABELS, taskStatusLabel } from "@/lib/action-item-labels";
+import { taskStatusLabel } from "@/lib/action-item-labels";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   logSystemEvent,
-  summarizeChangedFields,
   type SystemEventActorType,
 } from "@/features/system-events/server";
 
@@ -68,18 +67,6 @@ interface CreateSystemAssetFollowUpItemInput extends AssetFollowUpItemActor {
   createdBy?: string | null;
   sourceEntityType?: string | null;
   sourceEntityId?: string | null;
-}
-
-interface UpdateSystemAssetFollowUpItemInput extends AssetFollowUpItemActor {
-  itemId: string;
-  title?: string;
-  description?: string | null;
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  visibility?: AssetFollowUpItemVisibility;
-  assigneeId?: string | null;
-  assigneeName?: string | null;
-  dueDate?: string | null;
 }
 
 const ASSET_FOLLOW_UP_ITEM_SELECT =
@@ -409,167 +396,3 @@ export async function createSystemAssetFollowUpItem(
   return item;
 }
 
-export async function updateSystemAssetFollowUpItem(
-  input: UpdateSystemAssetFollowUpItemInput,
-): Promise<AssetFollowUpItem | null> {
-  if (!supabaseAdmin) return null;
-
-  const existing = await getAssetFollowUpItemById(input.itemId);
-  if (!existing) return null;
-
-  const nextValues = {
-    assigneeId: "assigneeId" in input ? input.assigneeId ?? null : existing.assigneeId,
-    assigneeName: "assigneeName" in input ? input.assigneeName ?? null : existing.assigneeName,
-    description: "description" in input ? input.description ?? null : existing.description,
-    dueDate: "dueDate" in input ? input.dueDate ?? null : existing.dueDate,
-    priority: "priority" in input ? input.priority ?? existing.priority : existing.priority,
-    status: "status" in input ? input.status ?? existing.status : existing.status,
-    title: "title" in input ? input.title ?? existing.title : existing.title,
-    visibility:
-      "visibility" in input ? input.visibility ?? existing.visibility : existing.visibility,
-  };
-
-  const changedKeys = Object.keys(input).filter((key) => {
-    switch (key) {
-      case "assigneeId":
-        return nextValues.assigneeId !== existing.assigneeId;
-      case "assigneeName":
-        return nextValues.assigneeName !== existing.assigneeName;
-      case "description":
-        return nextValues.description !== existing.description;
-      case "dueDate":
-        return nextValues.dueDate !== existing.dueDate;
-      case "priority":
-        return nextValues.priority !== existing.priority;
-      case "status":
-        return nextValues.status !== existing.status;
-      case "title":
-        return nextValues.title !== existing.title;
-      case "visibility":
-        return nextValues.visibility !== existing.visibility;
-      default:
-        return false;
-    }
-  });
-
-  if (changedKeys.length === 0) return existing;
-
-  const updates: Record<string, unknown> = {
-    updated_at: new Date().toISOString(),
-  };
-
-  if (nextValues.status !== existing.status) {
-    const { data: maxRow } = await supabaseAdmin
-      .from("asset_follow_up_items" as never)
-      .select("position")
-      .eq("asset_id", existing.assetId)
-      .eq("status", nextValues.status)
-      .order("position", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    updates.position =
-      (((maxRow as Record<string, unknown> | null)?.position as number | null) ?? -1) + 1;
-  }
-
-  if (changedKeys.includes("title")) updates.title = nextValues.title;
-  if (changedKeys.includes("description")) updates.description = nextValues.description;
-  if (changedKeys.includes("status")) updates.status = nextValues.status;
-  if (changedKeys.includes("priority")) updates.priority = nextValues.priority;
-  if (changedKeys.includes("visibility")) updates.visibility = nextValues.visibility;
-  if (changedKeys.includes("assigneeId")) updates.assignee_id = nextValues.assigneeId;
-  if (changedKeys.includes("assigneeName")) updates.assignee_name = nextValues.assigneeName;
-  if (changedKeys.includes("dueDate")) updates.due_date = nextValues.dueDate;
-
-  const { error } = await supabaseAdmin
-    .from("asset_follow_up_items" as never)
-    .update(updates)
-    .eq("id", input.itemId);
-
-  if (error) {
-    console.error("[asset-follow-up-items] update failed:", error.message);
-    return null;
-  }
-
-  const item = await getAssetFollowUpItemById(input.itemId);
-  if (!item) return null;
-
-  const changedFields = changedKeys.map((key) => FIELD_LABELS[key] ?? key);
-  await logSystemEvent({
-    eventName: "asset_follow_up_item_updated",
-    actorId: input.actorId ?? null,
-    actorName: input.actorName ?? null,
-    actorType: input.actorType ?? "user",
-    clientSlug: item.clientSlug,
-    visibility: item.visibility,
-    entityType: "asset_follow_up_item",
-    entityId: item.id,
-    summary: `Updated asset follow-up "${item.title}"`,
-    detail: summarizeChangedFields(changedFields),
-    metadata: {
-      assetId: item.assetId,
-      assetName: item.assetName,
-      priority: item.priority,
-      status: item.status,
-      visibility: item.visibility,
-    },
-  });
-
-  if (item.assigneeId && item.assigneeId !== existing.assigneeId) {
-    await notifyWorkflowAssignee({
-      actorId: input.actorId ?? null,
-      actorName: input.actorName ?? null,
-      assigneeId: item.assigneeId,
-      clientSlug: item.clientSlug,
-      entityId: item.assetId,
-      entityType: "asset",
-      message: item.title,
-      title: "Asset follow-up assigned to you",
-      visibility: item.visibility,
-    });
-  }
-
-  await maybeEnqueueAssetFollowUpItemTriage(item, {
-    priority: existing.priority,
-    status: existing.status,
-  });
-  return item;
-}
-
-export async function deleteAssetFollowUpItem(
-  itemId: string,
-  actor: AssetFollowUpItemActor = {},
-): Promise<AssetFollowUpItem | null> {
-  if (!supabaseAdmin) return null;
-
-  const existing = await getAssetFollowUpItemById(itemId);
-  if (!existing) return null;
-
-  const { error } = await supabaseAdmin
-    .from("asset_follow_up_items" as never)
-    .delete()
-    .eq("id", itemId);
-
-  if (error) {
-    console.error("[asset-follow-up-items] delete failed:", error.message);
-    return null;
-  }
-
-  await logSystemEvent({
-    eventName: "asset_follow_up_item_deleted",
-    actorId: actor.actorId ?? null,
-    actorName: actor.actorName ?? null,
-    actorType: actor.actorType ?? "user",
-    clientSlug: existing.clientSlug,
-    visibility: existing.visibility,
-    entityType: "asset_follow_up_item",
-    entityId: existing.id,
-    summary: `Deleted asset follow-up "${existing.title}"`,
-    metadata: {
-      assetId: existing.assetId,
-      assetName: existing.assetName,
-    },
-  });
-
-  return existing;
-}

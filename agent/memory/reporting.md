@@ -65,3 +65,16 @@ to generate reports, trends, and dashboards.
 - Dashboard: Railway (outlet-media-app-production.up.railway.app)
 - Ingest: POST /api/ingest with x-ingest-secret header
 - Alerts: POST /api/alerts { secret, message, level }
+
+
+<!-- auto-learned 2026-03-16 -->
+- Sienna - Peace In Mind: Spotify streaming campaign, $0.034 CPC, 56.5K clicks
+- Isabel Leal (isalealm_) is a contact in the Meta Business Manager
+- Sienna campaign: $1,919.78 spend over 18 days (Feb 27–Mar 16)
+- Indonesia top-performing country for Sienna campaign clicks
+
+<!-- auto-learned 2026-03-16 -->
+- Sienna funnel: 56,561 clicks → 25,868 LPV → 6,162 streams → 2,289 listeners
+- Sienna cost per stream: $0.31, cost per listener: $0.84
+- Sienna Spotify: 6,162 streams, 2,289 listeners, 128 playlist adds, 196 saves
+- Sienna reach: 553,089 uniques, frequency 1.46, $119.99/day avg spend

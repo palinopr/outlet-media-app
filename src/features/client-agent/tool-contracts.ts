@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { ReferencedEntitySchema, ResolvedRangeSchema } from "./types";
+import { ResolvedRangeSchema } from "./types";
 
 export const DomainSchema = z.enum(["ads", "events"]);
 export const EntityTypeSchema = z.enum(["campaign", "creative", "event"]);
@@ -23,7 +23,6 @@ export const EventsMetricSchema = z.enum([
 ]);
 export const CompareMetricSchema = z.union([AdsMetricSchema, EventsMetricSchema]);
 export const IntervalSchema = z.enum(["day", "week", "month"]);
-export const ToolStatusSchema = z.enum(["ok", "no_data", "invalid_arguments", "error"]);
 
 const adsOnlyMetrics = new Set<string>(AdsMetricSchema.options);
 const eventsOnlyMetrics = new Set<string>(EventsMetricSchema.options);
@@ -315,15 +314,6 @@ export const CompareEntitiesResponseSchema = z.object({
 export const TimeseriesResponseSchema = z.object({
   series: z.array(TimeseriesPointSchema),
 });
-
-export function ToolResponseEnvelopeSchema<TData extends z.ZodTypeAny>(dataSchema: TData) {
-  return z.object({
-    status: ToolStatusSchema,
-    data: dataSchema.optional(),
-    referencedEntities: z.array(ReferencedEntitySchema),
-    warnings: z.array(z.string()).optional(),
-  });
-}
 
 export type SearchScopeRequest = z.infer<typeof SearchScopeRequestSchema>;
 export type AdsOverviewRequest = z.infer<typeof AdsOverviewRequestSchema>;

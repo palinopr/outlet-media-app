@@ -3,7 +3,6 @@ export const TM1_DEFAULT_API_PREFIX = "/api/prd119/api/caui";
 export const TM1_DEFAULT_EVENTBASE_API_PREFIX = "/api/events";
 export const TM1_DEFAULT_EVENT_START = "2026-02-01";
 export const TM1_DEFAULT_EVENT_END = "2029-12-31";
-export const TM1_ETAG_HEADER = "etag";
 export const TM1_EXTERNAL_EVENT_VERSION_HEADER = "Etag-external-event-version";
 export const TM1_IF_MATCH_HEADER = "If-Match";
 export const TM1_INVENTORY_ASSOCIATED_ACTION = "INVENTORY_ASSOCIATED_BACKEND_TO_OBJECT";

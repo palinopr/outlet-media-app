@@ -1,5 +1,7 @@
 # Outlet Web Reset Implementation Plan
 
+> **Historical note (2026-04-02):** This plan predates the later cleanup passes. Current shipped client packaging is Campaigns + Reports + optional Events + optional Agent, and several retired CRM/workspace shells referenced in older reset work have since been collapsed or deleted.
+
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Reset the web product around one Outlet-owned client account model, fix invite/signup/landing/access, remove dead surfaces, and ship a clean client package of Home, Campaigns, optional Events, and Reports.

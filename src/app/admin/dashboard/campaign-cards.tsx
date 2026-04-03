@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, ArrowRight } from "lucide-react";
 import { centsToUsd, fmtUsd, fmtNum, fmtObjective, roasColor } from "@/lib/formatters";
@@ -13,9 +14,12 @@ export function CampaignCards({ campaigns, marginalRoasByCampaign }: Props) {
     <div className="lg:col-span-2">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold">Active Campaigns</h2>
-        <a href="/admin/campaigns" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+        <Link
+          href="/admin/campaigns"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+        >
           View all <ArrowRight className="h-3 w-3" />
-        </a>
+        </Link>
       </div>
       {campaigns.length === 0 ? (
         <Card className="border-border/60 border-dashed">

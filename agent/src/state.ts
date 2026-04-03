@@ -56,16 +56,6 @@ export function isAnyAgentBusy(): boolean {
   return busyAgents.size > 0;
 }
 
-/** Returns the list of agent IDs currently holding locks. */
-export function getBusyAgents(): string[] {
-  return [...busyAgents];
-}
-
-/** Returns the list of currently-held exclusive resources. */
-export function getBusyResources(): string[] {
-  return [...resourceLocks.keys()];
-}
-
 function normalizeResources(resources: string[]): string[] {
   return [...new Set(resources.map((resource) => resource.trim()).filter(Boolean))];
 }

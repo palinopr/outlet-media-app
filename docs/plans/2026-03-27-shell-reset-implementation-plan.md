@@ -1,5 +1,7 @@
 # Outlet Shell Reset Implementation Plan
 
+> **Historical note (2026-04-02):** This plan captured an earlier shell-reset target. Several details have since narrowed further in the live repo: `/admin/activity` is no longer a shipped top-level surface, retired route shells were collapsed into smaller catch-all redirects, and the client package now includes Reports plus optional Agent according to `docs/context/`.
+
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Refactor the existing Outlet web shell to the approved admin and client surfaces, remove the wrong top-level product areas from shipped routes and navigation, and leave the app clean and test-stable before any new `Updates` or Codex feature work begins.

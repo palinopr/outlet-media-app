@@ -1,5 +1,4 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 
 export type SystemEventName =
@@ -30,14 +29,6 @@ export type SystemEventName =
   | "client_agent_refusal_generated"
   | "client_agent_thread_created"
   | "client_agent_user_message_submitted"
-  | "crm_contact_created"
-  | "crm_contact_updated"
-  | "crm_comment_added"
-  | "crm_comment_deleted"
-  | "crm_comment_resolved"
-  | "crm_follow_up_item_created"
-  | "crm_follow_up_item_deleted"
-  | "crm_follow_up_item_updated"
   | "event_comment_added"
   | "event_comment_deleted"
   | "event_comment_resolved"
@@ -45,8 +36,6 @@ export type SystemEventName =
   | "event_follow_up_item_deleted"
   | "event_follow_up_item_updated"
   | "event_updated"
-  | "whatsapp_message_received"
-  | "whatsapp_message_sent"
   | "workspace_comment_added"
   | "workspace_comment_deleted"
   | "workspace_comment_resolved"
@@ -134,27 +123,6 @@ interface ListCampaignSystemEventsOptions {
   limit?: number;
 }
 
-interface ListCrmSystemEventsOptions {
-  audience?: "all" | SystemEventVisibility;
-  clientSlug?: string | null;
-  contactId?: string | null;
-  limit?: number;
-}
-
-interface ListAssetSystemEventsOptions {
-  assetId: string;
-  audience?: "all" | SystemEventVisibility;
-  clientSlug?: string | null;
-  limit?: number;
-}
-
-interface ListEventSystemEventsOptions {
-  eventId: string;
-  audience?: "all" | SystemEventVisibility;
-  clientSlug?: string | null;
-  limit?: number;
-}
-
 const LEGACY_SYSTEM_EVENT_SELECT =
   "id, created_at, event_name, visibility, actor_type, actor_id, actor_name, client_slug, summary, detail, entity_type, entity_id, page_id, task_id, metadata";
 
@@ -169,16 +137,6 @@ function eventMatchesCampaign(event: SystemEvent, campaignId: string) {
 function systemEventCampaignId(event: SystemEvent) {
   if (event.entityType === "campaign" && event.entityId) return event.entityId;
   return typeof event.metadata.campaignId === "string" ? event.metadata.campaignId : null;
-}
-
-function eventMatchesAsset(event: SystemEvent, assetId: string) {
-  if (event.entityType === "asset" && event.entityId === assetId) return true;
-  return event.metadata.assetId === assetId;
-}
-
-function eventMatchesEvent(event: SystemEvent, eventId: string) {
-  if (event.entityType === "event" && event.entityId === eventId) return true;
-  return event.metadata.eventId === eventId;
 }
 
 function systemEventEventId(event: SystemEvent) {
@@ -313,20 +271,6 @@ function buildSystemEventsQuery(
 }
 
 
-export function isCrmSystemEvent(event: SystemEvent) {
-  return (
-    event.entityType === "crm_contact" ||
-    event.entityType === "crm_comment" ||
-    event.entityType === "crm_follow_up_item" ||
-    event.metadata.crmContactId != null
-  );
-}
-
-export function matchesCrmContactSystemEvent(event: SystemEvent, contactId: string) {
-  if (event.entityType === "crm_contact" && event.entityId === contactId) return true;
-  return event.metadata.crmContactId === contactId;
-}
-
 export function filterSystemEventsByScope(
   events: SystemEvent[],
   scope: SystemEventScopeFilter | null | undefined,
@@ -347,29 +291,6 @@ export function filterSystemEventsByScope(
     if (eventId && eventIds?.has(eventId)) return true;
     if (assetId && assetIds?.has(assetId)) return true;
     return false;
-  });
-}
-
-export async function filterSystemEventsByClientScope(
-  clientSlug: string,
-  events: SystemEvent[],
-  scope: SystemEventScopeFilter | null | undefined,
-) {
-  const assetIds = events
-    .map((event) => systemEventAssetId(event))
-    .filter((assetId): assetId is string => assetId != null);
-  const allowedAssetIds =
-    scope && (scope.allowedCampaignIds != null || scope.allowedEventIds != null)
-      ? await listVisibleAssetIdsForScope(clientSlug, assetIds, {
-          allowedCampaignIds: scope.allowedCampaignIds ?? null,
-          allowedEventIds: scope.allowedEventIds ?? null,
-        })
-      : null;
-
-  return filterSystemEventsByScope(events, {
-    allowedCampaignIds: scope?.allowedCampaignIds ?? null,
-    allowedEventIds: scope?.allowedEventIds ?? null,
-    allowedAssetIds,
   });
 }
 
@@ -496,52 +417,6 @@ export async function listCampaignSystemEvents(
   });
 
   return events.filter((event) => eventMatchesCampaign(event, options.campaignId)).slice(0, options.limit ?? 8);
-}
-
-export async function listCrmSystemEvents(
-  options: ListCrmSystemEventsOptions = {},
-): Promise<SystemEvent[]> {
-  const events = await listSystemEvents({
-    audience: options.audience,
-    clientSlug: options.clientSlug,
-    limit: Math.max((options.limit ?? 8) * 6, 24),
-  });
-
-  return events
-    .filter((event) => {
-      if (!isCrmSystemEvent(event)) return false;
-      if (!options.contactId) return true;
-      return matchesCrmContactSystemEvent(event, options.contactId);
-    })
-    .slice(0, options.limit ?? 8);
-}
-
-export async function listAssetSystemEvents(
-  options: ListAssetSystemEventsOptions,
-): Promise<SystemEvent[]> {
-  const events = await listSystemEvents({
-    audience: options.audience,
-    clientSlug: options.clientSlug,
-    limit: Math.max((options.limit ?? 8) * 6, 24),
-  });
-
-  return events
-    .filter((event) => eventMatchesAsset(event, options.assetId))
-    .slice(0, options.limit ?? 8);
-}
-
-export async function listEventSystemEvents(
-  options: ListEventSystemEventsOptions,
-): Promise<SystemEvent[]> {
-  const events = await listSystemEvents({
-    audience: options.audience,
-    clientSlug: options.clientSlug,
-    limit: Math.max((options.limit ?? 8) * 6, 24),
-  });
-
-  return events
-    .filter((event) => eventMatchesEvent(event, options.eventId))
-    .slice(0, options.limit ?? 8);
 }
 
 export function summarizeChangedFields(fields: string[]): string | null {

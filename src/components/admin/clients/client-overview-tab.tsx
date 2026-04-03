@@ -15,6 +15,7 @@ interface ClientOverviewTabProps {
   eventsEnabled: boolean;
   logoAlt: string | null;
   logoUrl: string | null;
+  reportsEnabled: boolean;
 }
 
 type ClientUpdatePatch = Omit<Parameters<typeof updateClient>[0], "clientId">;
@@ -26,9 +27,11 @@ export function ClientOverviewTab({
   eventsEnabled: initialEventsEnabled,
   logoAlt: initialLogoAlt,
   logoUrl: initialLogoUrl,
+  reportsEnabled: initialReportsEnabled,
 }: ClientOverviewTabProps) {
   const [agentEnabled, setAgentEnabled] = useState(initialAgentEnabled);
   const [eventsEnabled, setEventsEnabled] = useState(initialEventsEnabled);
+  const [reportsEnabled, setReportsEnabled] = useState(initialReportsEnabled);
   const [brandName, setBrandName] = useState(initialBrandName ?? "");
   const [logoUrl, setLogoUrl] = useState(initialLogoUrl ?? "");
   const [logoAlt, setLogoAlt] = useState(initialLogoAlt ?? "");
@@ -61,6 +64,15 @@ export function ClientOverviewTab({
     );
   }
 
+  function handleReportsToggle(checked: boolean) {
+    setReportsEnabled(checked);
+    savePortalSettings(
+      { reportsEnabled: checked },
+      () => setReportsEnabled(!checked),
+      `Client Reports ${checked ? "enabled" : "disabled"}`,
+    );
+  }
+
   function handleAgentToggle(checked: boolean) {
     setAgentEnabled(checked);
     savePortalSettings(
@@ -90,8 +102,8 @@ export function ClientOverviewTab({
           <h2 className="text-sm font-semibold">Client Portal Shape</h2>
         </div>
         <p className="mt-2 text-sm text-muted-foreground">
-          The client portal is intentionally narrow: Campaigns, optional Agent, optional Events,
-          and legacy Reports. Clients do not create, edit, approve, or manage work from the portal.
+          The client portal is intentionally narrow: Campaigns, optional Reports, optional Agent,
+          and optional Events. Clients do not create, edit, approve, or manage work from the portal.
         </p>
 
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -130,11 +142,11 @@ export function ClientOverviewTab({
           <div className="rounded-xl border border-border/60 bg-muted/20 p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
               <Eye className="h-4 w-4 text-primary" />
-              Legacy Reports
+              Optional Reports
             </div>
             <p className="mt-2 text-sm text-muted-foreground">
-              Reports remain a legacy portal package. Keep it available only where that older
-              contract is still in use.
+              Reports stay available as a summary-first portal surface when the client account has
+              reporting access enabled.
             </p>
           </div>
         </div>
@@ -167,6 +179,36 @@ export function ClientOverviewTab({
             <p className="mt-2 text-sm text-muted-foreground">
               When disabled, the Agent nav item is removed and direct agent URLs redirect back to
               campaigns.
+            </p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border/60 bg-card p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-sm font-semibold">Portal Reports Access</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Turn this on only for clients that should see the Reports page.
+              </p>
+            </div>
+
+            <Switch
+              aria-label="Toggle client reports access"
+              checked={reportsEnabled}
+              disabled={isPending}
+              onCheckedChange={handleReportsToggle}
+            />
+          </div>
+
+          <div className="mt-4 rounded-xl border border-border/60 bg-muted/20 p-4">
+            <p className="text-sm font-medium">
+              {reportsEnabled
+                ? "Reports are visible in the client portal."
+                : "Reports are hidden from the client portal."}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              When disabled, the Reports nav item is removed and direct reports URLs redirect back to
+              the client portal root.
             </p>
           </div>
         </div>

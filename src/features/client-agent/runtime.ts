@@ -1,10 +1,12 @@
-import OpenAI from "openai";
-import type {
-  FunctionTool,
-  Response,
-  ResponseFunctionToolCall,
-  ResponseInputItem,
-} from "openai/resources/responses/responses";
+import {
+  createSdkMcpServer,
+  query,
+  tool,
+  type SDKAssistantMessage,
+  type SDKMessage,
+  type SDKResultMessage,
+  type SDKResultSuccess,
+} from "@anthropic-ai/claude-agent-sdk";
 import { z } from "zod";
 
 import { evaluatePromptPolicy } from "./policy";
@@ -39,11 +41,11 @@ import {
 } from "./tool-contracts";
 
 const DEFAULT_TIMEZONE = "America/Chicago";
-const CLIENT_AGENT_DEFAULT_MODEL = "gpt-5.4";
+const CLIENT_AGENT_DEFAULT_MODEL = "claude-sonnet-4-6";
 const MAX_TOOL_TURNS = 6;
 const MAX_RUNTIME_MS = 12_000;
-const MAX_INVALID_ARGUMENT_CYCLES = 1;
 const NO_DATA_MESSAGE = "I couldn't find matching campaign or event data for that request.";
+const TOOL_SERVER_NAME = "client-agent-tools";
 
 type ScopeSummary = {
   clientSlug: string;
@@ -92,6 +94,12 @@ type AuthorityState = {
   pronounTargets: string[];
 };
 
+type ConsumedClaudeQuery = {
+  providerResponseId: string | null;
+  text: string;
+  sawRuntimeError: boolean;
+};
+
 type ToolDefinition = {
   name: ToolName;
   schema: z.ZodTypeAny;
@@ -111,26 +119,6 @@ type ToolName =
   | "get_placement_breakdown"
   | "compare_entities"
   | "get_timeseries";
-
-let openaiClient: OpenAI | null = null;
-
-function getOpenAIClient() {
-  if (!openaiClient) {
-    try {
-      openaiClient = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    } catch {
-      openaiClient = (OpenAI as unknown as (options: {
-        apiKey: string | undefined;
-      }) => OpenAI)({
-        apiKey: process.env.OPENAI_API_KEY,
-      });
-    }
-  }
-
-  return openaiClient;
-}
 
 function uniqueReferencedEntities(entities: ReferencedEntity[]) {
   const seen = new Set<string>();
@@ -421,23 +409,6 @@ function parseTaggedOutput(text: string): {
   };
 }
 
-function extractFunctionCalls(response: Response) {
-  return response.output.filter(
-    (item): item is ResponseFunctionToolCall => item.type === "function_call",
-  );
-}
-
-function functionCallsToInputItems(
-  calls: ResponseFunctionToolCall[],
-): ResponseInputItem[] {
-  return calls.map((call) => ({
-    type: "function_call",
-    call_id: call.call_id,
-    name: call.name,
-    arguments: call.arguments,
-  }));
-}
-
 function extractRangeFromArgs(args: unknown): ResolvedRange | null {
   if (!args || typeof args !== "object" || !("range" in args)) {
     return null;
@@ -502,10 +473,6 @@ function mergeAuthorityState(
   if (state.referencedEntities.length > 0) {
     state.primaryDomain = inferPrimaryDomainFromEntities(state.referencedEntities);
   }
-}
-
-function jsonSchema(schema: z.ZodTypeAny) {
-  return z.toJSONSchema(schema, { target: "draft-07" });
 }
 
 const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
@@ -759,62 +726,136 @@ const TOOL_DEFINITIONS: Record<ToolName, ToolDefinition> = {
   },
 };
 
-const RESPONSE_TOOLS: FunctionTool[] = Object.values(TOOL_DEFINITIONS).map((definition) => ({
-  type: "function",
-  name: definition.name,
-  description: definition.description,
-  parameters: jsonSchema(definition.schema),
-  strict: true,
-}));
-
-function parseToolArguments(call: ResponseFunctionToolCall) {
-  try {
-    return JSON.parse(call.arguments) as unknown;
-  } catch {
-    return null;
-  }
+function getToolShape(definition: ToolDefinition) {
+  return (definition.schema as z.ZodObject<Record<string, z.ZodTypeAny>>).shape;
 }
 
-async function executeToolCall({
-  call,
+function buildAllowedToolNames() {
+  return Object.keys(TOOL_DEFINITIONS).map(
+    (toolName) => `mcp__${TOOL_SERVER_NAME}__${toolName}`,
+  );
+}
+
+function extractAssistantText(message: SDKAssistantMessage) {
+  const content = (message.message as { content?: unknown }).content;
+  if (!Array.isArray(content)) {
+    return "";
+  }
+
+  return content
+    .map((block) => {
+      if (
+        block &&
+        typeof block === "object" &&
+        "type" in block &&
+        (block as { type?: unknown }).type === "text" &&
+        "text" in block &&
+        typeof (block as { text?: unknown }).text === "string"
+      ) {
+        return (block as { text: string }).text;
+      }
+
+      return "";
+    })
+    .join("")
+    .trim();
+}
+
+function isSuccessfulResultMessage(
+  message: SDKResultMessage,
+): message is SDKResultSuccess {
+  return message.subtype === "success" && !message.is_error;
+}
+
+function buildToolServer({
   scope,
+  authorityState,
+  sawToolNoData,
 }: {
-  call: ResponseFunctionToolCall;
   scope?: ClientAgentScope;
-}): Promise<ToolExecutionResult> {
-  if (!scope) {
-    return {
-      status: "error",
-      error: "Missing client scope for tool execution.",
-      referencedEntities: [],
-    };
+  authorityState: AuthorityState;
+  sawToolNoData: { current: boolean };
+}) {
+  return createSdkMcpServer({
+    name: TOOL_SERVER_NAME,
+    version: "1.0.0",
+    tools: Object.values(TOOL_DEFINITIONS).map((definition) =>
+      tool(
+        definition.name,
+        definition.description,
+        getToolShape(definition),
+        async (args) => {
+          const parsedArgs = args as unknown;
+          const result = scope
+            ? await definition.run(parsedArgs, scope)
+            : {
+                status: "error" as const,
+                error: "Missing client scope for tool execution.",
+                referencedEntities: [],
+              };
+
+          if (result.status === "ok") {
+            mergeAuthorityState(authorityState, definition.name, result, parsedArgs);
+          } else if (result.status === "no_data") {
+            sawToolNoData.current = true;
+          }
+
+          return {
+            content: [
+              {
+                type: "text" as const,
+                text: JSON.stringify(result),
+              },
+            ],
+          };
+        },
+      ),
+    ),
+  });
+}
+
+async function consumeClaudeQuery(agentQuery: AsyncIterable<SDKMessage>) {
+  let latestSessionId: string | null = null;
+  let latestAssistantText = "";
+  let latestResultText = "";
+  let sawRuntimeError = false;
+
+  for await (const message of agentQuery) {
+    if ("session_id" in message && typeof message.session_id === "string") {
+      latestSessionId = message.session_id;
+    }
+
+    if (message.type === "assistant") {
+      const text = extractAssistantText(message);
+      if (text.length > 0) {
+        latestAssistantText = text;
+      }
+
+      if (message.error) {
+        sawRuntimeError = true;
+      }
+    }
+
+    if (message.type === "result") {
+      if (isSuccessfulResultMessage(message) && typeof message.result === "string") {
+        latestResultText = message.result.trim();
+      } else {
+        sawRuntimeError = true;
+      }
+    }
   }
 
-  const definition = TOOL_DEFINITIONS[call.name as ToolName];
-  if (!definition) {
-    return {
-      status: "error",
-      error: `Unknown tool: ${call.name}`,
-      referencedEntities: [],
-    };
-  }
-
-  const parsedArgs = parseToolArguments(call);
-  if (parsedArgs == null) {
-    return {
-      status: "invalid_arguments",
-      error: "Tool arguments must be valid JSON.",
-      referencedEntities: [],
-    };
-  }
-
-  return definition.run(parsedArgs, scope);
+  return {
+    providerResponseId: latestSessionId,
+    text: latestResultText || latestAssistantText,
+    sawRuntimeError,
+  };
 }
 
 export async function runClientAgentRuntime(
   input: GenerateClientAgentModelResponseInput,
 ): Promise<ClientAgentModelResponse> {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     return safeError(null);
   }
 
@@ -836,7 +877,7 @@ export async function runClientAgentRuntime(
   const defaultRange =
     resolveRangeFromMessage(safePrompt, { timezone }) ??
     resolveRangeFromMessage("lifetime", { timezone })!;
-  const model = process.env.CLIENT_AGENT_OPENAI_MODEL || CLIENT_AGENT_DEFAULT_MODEL;
+  const model = process.env.CLIENT_AGENT_CLAUDE_MODEL || CLIENT_AGENT_DEFAULT_MODEL;
   const authorityState = initializeAuthorityState(input.history);
   if (authorityState.resolvedRange == null) {
     authorityState.resolvedRange = defaultRange;
@@ -854,111 +895,94 @@ export async function runClientAgentRuntime(
     message: safePrompt,
     scopeReset,
   });
-
-  let responseInput: ResponseInputItem[] = [
-    {
-      type: "message",
-      role: "user",
-      content: safePrompt,
-    },
-  ];
-  let toolTurns = 0;
-  let invalidArgumentCycles = 0;
-  let sawToolNoData = false;
-  const startedAt = Date.now();
-
-  while (toolTurns < MAX_TOOL_TURNS && Date.now() - startedAt < MAX_RUNTIME_MS) {
-    const response = await getOpenAIClient().responses.create({
+  const sawToolNoData = { current: false };
+  const toolServer = buildToolServer({
+    scope: input.scope,
+    authorityState,
+    sawToolNoData,
+  });
+  const allowedTools = buildAllowedToolNames();
+  const claudeQuery = query({
+    prompt: safePrompt,
+    options: {
+      cwd: process.cwd(),
       model,
-      store: false,
-      parallel_tool_calls: false,
-      instructions,
-      input: responseInput,
-      tools: RESPONSE_TOOLS,
-      reasoning: {
-        effort: "low",
+      maxTurns: MAX_TOOL_TURNS,
+      permissionMode: "dontAsk",
+      systemPrompt: instructions,
+      mcpServers: {
+        [TOOL_SERVER_NAME]: toolServer,
       },
-    });
+      allowedTools,
+      env: {
+        ...process.env,
+        ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+      },
+    },
+  });
 
-    const functionCalls = extractFunctionCalls(response);
-    if (functionCalls.length === 0) {
-      const parsed = parseTaggedOutput(response.output_text);
-      if (!parsed.text) {
-        return sawToolNoData
-          ? {
-              status: "answer",
-              text:
-                policy.kind === "mixed"
-                  ? `${NO_DATA_MESSAGE} ${policy.refusalNote}`
-                  : NO_DATA_MESSAGE,
-              blocks: [],
-              referencedEntities: authorityState.referencedEntities,
-              resolvedRange: authorityState.resolvedRange,
-              contextPayload: buildContextPayload(authorityState),
-              providerResponseId: response.id ?? null,
-            }
-          : safeError(response.id ?? null);
-      }
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  let consumed: ConsumedClaudeQuery | null = null;
 
-      const finalText =
-        policy.kind === "mixed" && parsed.status === "answer"
-          ? `${parsed.text} ${policy.refusalNote}`
-          : parsed.text;
-
-      return {
-        status: parsed.status,
-        text: finalText,
-        blocks: [],
-        referencedEntities: authorityState.referencedEntities,
-        resolvedRange: authorityState.resolvedRange,
-        contextPayload: buildContextPayload(authorityState),
-        providerResponseId: response.id ?? null,
-      };
+  try {
+    consumed = await Promise.race<ConsumedClaudeQuery | null>([
+      consumeClaudeQuery(claudeQuery),
+      new Promise<null>((resolve) => {
+        timeoutId = setTimeout(() => {
+          claudeQuery.close();
+          resolve(null);
+        }, MAX_RUNTIME_MS);
+      }),
+    ]);
+  } catch {
+    claudeQuery.close();
+    return safeError(null);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
     }
+  }
 
-    const toolOutputs: ResponseInputItem[] = [];
+  claudeQuery.close();
 
-    for (const call of functionCalls) {
-      const parsedArgs = parseToolArguments(call);
-      const toolResult = await executeToolCall({ call, scope: input.scope });
+  if (!consumed) {
+    return safeError(null);
+  }
 
-      if (toolResult.status === "ok") {
-        mergeAuthorityState(authorityState, call.name as ToolName, toolResult, parsedArgs);
-      } else if (toolResult.status === "no_data") {
-        sawToolNoData = true;
-      } else if (toolResult.status === "invalid_arguments") {
-        invalidArgumentCycles += 1;
-        if (invalidArgumentCycles > MAX_INVALID_ARGUMENT_CYCLES) {
-          return safeError(response.id ?? null);
+  const parsed = parseTaggedOutput(consumed.text);
+  if (!parsed.text) {
+    return sawToolNoData.current
+      ? {
+          status: "answer",
+          text:
+            policy.kind === "mixed"
+              ? `${NO_DATA_MESSAGE} ${policy.refusalNote}`
+              : NO_DATA_MESSAGE,
+          blocks: [],
+          referencedEntities: authorityState.referencedEntities,
+          resolvedRange: authorityState.resolvedRange,
+          contextPayload: buildContextPayload(authorityState),
+          providerResponseId: consumed.providerResponseId,
         }
-      }
-
-      toolOutputs.push({
-        type: "function_call_output",
-        call_id: call.call_id,
-        output: JSON.stringify(toolResult),
-      });
-    }
-
-    responseInput = [
-      ...responseInput,
-      ...functionCallsToInputItems(functionCalls),
-      ...toolOutputs,
-    ];
-    toolTurns += 1;
+      : safeError(consumed.providerResponseId);
   }
 
-  if (sawToolNoData) {
-    return {
-      status: "answer",
-      text: policy.kind === "mixed" ? `${NO_DATA_MESSAGE} ${policy.refusalNote}` : NO_DATA_MESSAGE,
-      blocks: [],
-      referencedEntities: authorityState.referencedEntities,
-      resolvedRange: authorityState.resolvedRange,
-      contextPayload: buildContextPayload(authorityState),
-      providerResponseId: null,
-    };
+  if (consumed.sawRuntimeError && parsed.status === "error") {
+    return safeError(consumed.providerResponseId);
   }
 
-  return safeError(null);
+  const finalText =
+    policy.kind === "mixed" && parsed.status === "answer"
+      ? `${parsed.text} ${policy.refusalNote}`
+      : parsed.text;
+
+  return {
+    status: parsed.status,
+    text: finalText,
+    blocks: [],
+    referencedEntities: authorityState.referencedEntities,
+    resolvedRange: authorityState.resolvedRange,
+    contextPayload: buildContextPayload(authorityState),
+    providerResponseId: consumed.providerResponseId,
+  };
 }

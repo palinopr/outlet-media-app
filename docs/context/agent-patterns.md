@@ -20,7 +20,7 @@ Do not let web and Discord drift into separate systems. They should share the sa
 
 Preferred split:
 - Discord is the owner and team workspace plane, with owner-only channels for private supervision, inbox triage, sensitive approvals, and executive alerts.
-- Owner work should stay in private Discord surfaces such as `#boss`, `#whatsapp-boss`, `#email`, `#meetings`, `#email-log`, `#approvals`, and `#schedule`.
+- Owner work should stay in private Discord surfaces such as `#boss`, `#email`, `#meetings`, `#email-log`, `#approvals`, and `#schedule`.
 - Team collaboration should stay in scoped Discord channels such as `#general`, `#media-buyer`, `#tm-data`, `#creative`, and client channels.
 - `#dashboard` is a team work surface, not a bot-only read-only sink. Team members should be able to ask for reporting help there, and those requests can hand off to Boss or other owner workflows when needed.
 - Boss should be the primary assistant surface. Direct messages to the bot and explicit assistant-style asks in mapped work channels should route to Boss and reply in place instead of forcing the operator to remember which specialist lane to use first.
@@ -97,35 +97,6 @@ Preferred split:
 - Direct owner requests to create, move, or cancel meetings count as approval for that calendar action.
 - Scheduling actions should report the exact created/updated event details back into Discord so there is no fake "done" state.
 
-Customer WhatsApp should follow the same event-driven pattern.
-
-Preferred split:
-- Meta WhatsApp Cloud API webhooks land in the app, not directly in Discord prompts.
-- Webhook intake should persist structured records such as `whatsapp_accounts`, `whatsapp_contacts`, `whatsapp_conversations`, and `whatsapp_messages`.
-- Every inbound customer message should be able to create a bounded `whatsapp-cloud` agent task plus an internal `system_events` entry.
-- Customer conversations should mirror into Discord team/client threads so the team can supervise the relationship in context without re-reading raw webhook payloads.
-- WhatsApp is Discord-first. Do not turn it into a default admin/client web inbox or management surface unless a later product decision explicitly asks for that app.
-- Admin CRM and client/account surfaces may read CRM-linked WhatsApp summary data such as latest message time, assigned route, linked contact, or conversation status when that improves account management, but they should not become a second full chat client by default.
-- Boss should supervise customer-facing WhatsApp responses. Specialists do the domain work, but Boss should assemble the customer-safe answer and the WhatsApp agent should be the customer-facing mouthpiece.
-- Evolution transport work is separate from the Discord operating surface. A phone-linked instance can be paired and still not be connected to Outlet if its webhook is pointing somewhere else.
-- Evolution-backed WhatsApp should land in the same `whatsapp_accounts`, `whatsapp_contacts`, `whatsapp_conversations`, and `whatsapp_messages` ledger as the older Twilio/Meta paths. Do not build a parallel Evolution-only inbox model.
-- Preferred transport shape right now: Evolution webhook -> `/api/whatsapp/evolution`, and agent-approved outbound replies -> secret-guarded `/api/whatsapp/send` so the app remains the single writer for WhatsApp ledger rows and `system_events`.
-- For the current WhatsApp lane, prefer a phone-linked Evolution instance over Twilio because it supports real direct chats and real groups on the same account. Keep Twilio only as historical reference in `docs/context/whatsapp-twilio-sender-ops.md`.
-- Conversation-to-client and conversation-to-Discord mapping should be explicit and durable on the conversation record. Do not hide that routing inside prompts.
-- One WhatsApp conversation should map to one Discord thread under the assigned client/team channel. Unassigned conversations can fall back to `#dashboard` until they are mapped.
-- One WhatsApp conversation should also collapse to one latest pending `triage-conversation` task behind the active run. Do not let repeated inbound messages create an unbounded stack of stale pending jobs for the same chat.
-- Discord replies inside those client WhatsApp threads should inherit the parent channel lane for routing. Do not route thread messages by the thread title itself.
-- Client channel routing should live in shared repo config so the app webhook layer and the Discord worker use the same assignment rules.
-- New WhatsApp conversations should be blocked by default until the owner explicitly allows them. Boss should ping the configured owner IDs in `#whatsapp-boss` with the exact conversation id and the owner should decide with `!whatsapp allow <conversationId>` or `!whatsapp deny <conversationId>` there.
-- If a WhatsApp group chat is approved, keep it `mention_only` by default. Do not wake the agent on every group message just because the group is approved.
-- When using Evolution on a real WhatsApp account, direct messages and group messages should share the same ledger and policy model. Groups are still higher risk than 1:1 and should remain deny-by-default until Jaime approves them.
-- If the same personal number needs to be used for both testing and owner control, do not make it silently dual-purpose. Use a strict owner prefix such as `!boss ...` or `!whatsapp ...` on configured owner numbers so the runtime can split Jaime control messages from normal customer-style test traffic.
-- The first shipping mode should be restricted: shadow, draft-only, or assisted. Do not default a new customer WhatsApp agent to autonomous outbound replies.
-- The customer WhatsApp agent should only see customer-safe context. Do not give it broad internal campaign debate, spend analysis, private owner discussion, or granular campaign structure by default.
-- Customer-safe disclosure rules must be explicit per specialist. Media Buyer, Reporting, Creative, Client Manager, Meetings, and Email should each return only the approved customer-safe slice when the destination is WhatsApp. See `docs/context/customer-facing-disclosure-rules.md`.
-- If customer-facing outbound replies are enabled later, they should reuse the same durable conversation state and approval trail rather than bypassing the ledger.
-- Local Discord/WhatsApp agents should run under a restart loop or process manager, not only an ad hoc foreground shell, so pending conversation work resumes after crashes instead of waiting for a manual restart.
-
 Mailbox organization should be explicit and durable.
 
 Examples:
@@ -135,7 +106,7 @@ Examples:
 
 ## Internal Growth Teams
 
-Internal customer-acquisition operations should follow the same Discord-first pattern as owner email and customer WhatsApp.
+Internal customer-acquisition operations should follow the same Discord-first pattern as owner email and other bounded internal control-plane workflows.
 
 Preferred split:
 - Discord is the operating surface for internal growth, creative, paid media, lead ops, and analytics work.
@@ -147,7 +118,7 @@ Preferred pods:
 - growth: platform strategy, trend research, content angles, community response
 - creative: scripts, video/image generation, packaging, QA
 - paid media: campaign structure, ad sets, launch execution, budget changes
-- lead ops: inbound triage, qualification, CRM handoff, appointment setting
+- lead ops: inbound triage, qualification, routing, appointment setting
 - analytics: reporting, attribution, experiment scoring
 - ops / automation: task dispatch, publishers, browser execution, reliability
 
@@ -296,14 +267,7 @@ Use fixtures, evals, or repeatable review cases for new workflows that contact c
 - summary generated
 - client-facing explanation written
 - internal anomalies highlighted
-- report published into the workspace/activity stream
-
-### CRM Follow-Up
-
-- `contact_stage_changed`
-- CRM agent checks follow-up rules
-- task created or reminder sent
-- result logged to activity
+- report published into the shared report/activity surfaces
 
 ### Campaign Action Triage
 

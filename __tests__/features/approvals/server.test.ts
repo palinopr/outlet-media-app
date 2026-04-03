@@ -126,35 +126,6 @@ vi.mock("@/features/assets/server", () => ({
   listVisibleAssetIdsForScope,
 }));
 
-vi.mock("@/lib/agent-dispatch", () => ({
-  enqueueExternalAgentTask: vi.fn(),
-}));
-
-vi.mock("@/lib/member-access", () => ({
-  getMemberAccessForSlug: vi.fn(),
-}));
-
-vi.mock("@/features/campaign-action-items/server", () => ({
-  createSystemCampaignActionItem: vi.fn(),
-  findCampaignActionItemBySource: vi.fn(),
-  updateSystemCampaignActionItem: vi.fn(),
-}));
-
-vi.mock("@/features/notifications/server", () => ({
-  createNotification: vi.fn(),
-  listClientNotificationRecipients: vi.fn(),
-}));
-
-vi.mock("@/features/system-events/server", () => ({
-  getCurrentActor: vi.fn(),
-  logSystemEvent: vi.fn(),
-}));
-
-vi.mock("@/features/workflow/revalidation", () => ({
-  getApprovalWorkflowPaths: vi.fn(() => []),
-  revalidateWorkflowPaths: vi.fn(),
-}));
-
 import { listApprovalRequests } from "@/features/approvals/server";
 
 describe("listApprovalRequests", () => {

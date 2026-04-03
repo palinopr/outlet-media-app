@@ -105,7 +105,6 @@ vi.mock("@/lib/campaign-client-assignment", async () => {
 import {
   getAssetOperatingData,
   listAssetLibrary,
-  listAssets,
   listCampaignAssets,
 } from "@/features/assets/server";
 
@@ -152,16 +151,6 @@ describe("asset read clients", () => {
         tm_event_id: null,
       },
     ]);
-  });
-
-  it("prefers the Clerk-scoped client for client asset galleries", async () => {
-    serviceState.ad_assets = [makeAsset("asset_service", "service.png")];
-    userScopedState.ad_assets = [makeAsset("asset_rls", "rls.png")];
-    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
-
-    const assets = await listAssets("zamora");
-
-    expect(assets.map((asset) => asset.id)).toEqual(["asset_rls"]);
   });
 
   it("prefers the Clerk-scoped client for client asset summaries", async () => {

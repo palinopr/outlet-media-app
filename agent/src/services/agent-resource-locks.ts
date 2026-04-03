@@ -3,7 +3,6 @@ import type { AgentTask } from "./queue-service.js";
 const GMAIL_INBOX_RESOURCE = "gmail-inbox";
 const OWNER_CALENDAR_RESOURCE = "owner-calendar";
 const META_ADS_WRITE_RESOURCE = "meta-ads-write";
-const WHATSAPP_SEND_RESOURCE = "whatsapp-send";
 const DISCORD_OWNER_ACTIONS_RESOURCE = "discord-owner-actions";
 
 function readString(value: unknown): string | undefined {
@@ -58,13 +57,6 @@ export function getDelegatedTaskResources(
 
   if (task.to === "meeting-agent" || targetChannel === "meetings") {
     resources.push(OWNER_CALENDAR_RESOURCE);
-  }
-
-  const conversationId = readString(task.params.conversationId);
-  if (conversationId) {
-    resources.push(`whatsapp-conversation:${conversationId}`);
-  } else if (task.to === "customer-whatsapp-agent") {
-    resources.push(WHATSAPP_SEND_RESOURCE);
   }
 
   if (task.to === "boss" && task.action === "channel-handoff") {

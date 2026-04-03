@@ -15,16 +15,13 @@
 - Outlet Media is not just a workspace app or a Notion clone. It is a **client-facing autonomous agency operating system**.
 - The product should let internal team members, clients, contractors, and agents work in the same environment with shared visibility.
 - The UI can borrow strong Notion-style patterns (sidebar, docs, comments, nested pages, block editing), but the product model should be centered on **agency operations**, not generic documents.
-- Core first-class product areas are:
-  - CRM
+- Current active product core during this reset:
   - Campaigns
-  - Assets / creative pipeline
-  - Tasks / approvals
   - Reports / results
-  - Conversations / collaboration
-  - Agents / automations
-  - Activity / events
-- The long-term direction is to make Outlet an AI-enabled environment where clients can run major parts of their business with guidance, automation, and full visibility, not only media buying.
+  - Events
+  - optional client `Agent` as a read-only conversational reporting surface
+- Supporting workflow concepts such as approvals, discussions, assets, activity, and agent follow-through should stay embedded inside those surviving campaign/event/report/admin surfaces before they earn their own standalone app again.
+- The long-term direction is still to make Outlet an AI-enabled environment where clients can run major parts of their business with guidance, automation, and full visibility, but the current shipped product should stay intentionally narrower than that long-term model.
 
 ## Product Principles
 
@@ -37,11 +34,11 @@
 
 ## Current Packaging Rules
 
-- The current customer-facing web product should stay intentionally narrow:
+- The current active product reset target is intentionally narrow:
   - `Campaigns`
   - `Events`
   - `Reports`
-- `Agent` is the approved exception to that older top-level rule. Treat it as an admin-managed, read-only conversational reporting surface over the same client-safe campaign and optional event backbone, not as a broad new workspace domain.
+- Treat those three areas as the product core for cleanup and architecture decisions until a later explicit product decision changes that scope.
 - Client portal packaging is controlled from Outlet admin. Each client account should have one admin-managed source of truth for enabled apps, branding, portal URL metadata, and memberships.
 - Treat the client account record and `client_members` as the authority for portal access. Do not treat Clerk `publicMetadata.client_slug` or URL slug values as the business source of truth for invites, memberships, or landing behavior.
 - Keep `Events` optional per client account. Campaigns are universal; reports are first-class when enabled; `Agent` is optional per client account and should stay off until explicitly enabled by Outlet admin.
@@ -49,8 +46,9 @@
 - `Agent` may aggregate those same campaign and event insights conversationally, but it must stay read-only and must not expose internal structure, source systems, or admin-only workflow state.
 - Client-facing web is primarily a reporting and visibility surface. Meta account connection, campaign creation, and live campaign mutation should stay internal/admin-only by default unless a later product decision explicitly reopens client self-serve execution.
 - Do not ship client top-level apps for CRM, assets, approvals, conversations, updates, or workspace unless current customers clearly need them and the surface can be maintained without duplicating workflow logic.
-- Admin web remains the broader operating surface for account management, campaign/event operations, CRM, approvals, assets, and internal coordination.
-- CRM is admin-first for now. Evolution/WhatsApp should enrich CRM and account context through durable ledgers and routing state, but customer messaging operations remain Discord-first unless a later product decision explicitly asks for a dedicated admin inbox.
+- Admin web should preserve the required account/access backbone and the active product core, but should not keep broad standalone surfaces merely because they already exist.
+- Keep Clerk, users, client accounts, memberships, invitations, and other access-governance primitives as required infrastructure.
+- Do not treat CRM as part of the active standalone product surface during this reset unless a later explicit product decision restores it.
 
 ## Surface Selection
 
@@ -95,8 +93,6 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
 - `approval_requests` is the first-class approval object. Use it for requests that need an explicit yes/no/cancel decision.
 - `admin_activity` is the internal operator audit log. Do not treat it as the main product activity backbone.
 - Owner email is a private Discord control-plane workflow, not a default web app surface. Keep owner inbox triage in Discord `#email` / `#email-log`; treat `email_events`, `email_drafts`, and related tables as durable backend state for that Discord flow unless a future product decision explicitly asks for a web email app.
-- Customer WhatsApp is also a Discord-first agent workflow, not a default admin/client web inbox. Keep customer chat operations in Discord client/team threads; treat `whatsapp_*` tables as durable backend state for webhook intake, routing, and audit rather than proof that a web WhatsApp app should exist now.
-- Customer-facing WhatsApp replies should follow explicit disclosure rules. Boss is the supervisor, specialist agents provide only the approved customer-safe slice, and the WhatsApp lane is the customer-facing mouthpiece. See `docs/context/customer-facing-disclosure-rules.md`.
 - Internal growth and customer-acquisition teams should also be Discord-first control-plane workflows, not default web app surfaces. Treat platform operations, content production, publishing, community triage, and lead routing as durable backend state and task ledgers behind Discord channels unless a later product decision explicitly asks for a dedicated app.
 - For new autonomous internal teams, separate supervisors, workers, executors, and evaluators. Strategy agents should not publish, send, spend, or mutate live systems directly; only bounded executor/publisher agents should perform approved side effects.
 - For new autonomous internal teams, do not rely on prompt text plus markdown memory alone. Mirror the email-agent pattern with structured ledgers for events, drafts, examples, corrections, outcomes, and promoted playbooks so the system can learn from real outputs and real owner feedback.
@@ -129,7 +125,6 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
 - For library/framework/API behavior, prefer Context7 MCP first.
 - For repository-specific implementation details or upstream source examples, prefer GitHub MCP.
 - If Context7 or GitHub MCP is unavailable or insufficient, say that explicitly and use the next-best primary source instead of pretending certainty.
-- For historical Twilio WhatsApp sender onboarding or repair work, load `docs/context/whatsapp-twilio-sender-ops.md` and the repo skill `.codex/skills/twilio-whatsapp-sender-ops/` before changing sender or callback state.
 
 ## No Garbage Rules
 
@@ -148,7 +143,7 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
 - Work from the main checkout unless there is a specific reason to do otherwise.
 - Keep one active Codex thread per branch. Do not let two Codex threads edit the same files at once.
 - Codex-created branches should use the `codex/` prefix.
-- Use the checked-in `.codex/environments/environment.toml` actions for the common app and agent loops.
+- Use the repo's checked-in scripts, package commands, and documented verification loops for the common app and agent workflows. Do not assume an optional Codex environments file exists unless it is actually present in the checkout.
 - Use `.github/workflows/codex-pr-review.yml` when you want a manual Codex review pass posted back to GitHub.
 
 ## Persistent Context
@@ -159,9 +154,6 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
   - `docs/context/agent-patterns.md`
   - `docs/context/current-priorities.md`
 - When the system feels too broad, too prompt-driven, or split across too many parallel surfaces, also read `docs/context/architecture-reset.md`.
-- Before customer-facing WhatsApp workflow changes, also read `docs/context/customer-facing-disclosure-rules.md`.
-- Before customer-facing WhatsApp transport changes, also read `docs/context/whatsapp-evolution-ops.md`.
-- Before Twilio WhatsApp sender onboarding, repair, or callback changes, also read `docs/context/whatsapp-twilio-sender-ops.md`.
 - Before TM1 seat-map inventory or staged seating changes, also read `docs/context/tm1-dynamic-seating.md`.
 - Before browserless TM1 automation or seat-move API changes, also read `docs/context/tm1-browserless-api.md`.
 - For Codex operating changes, branch conventions, or prompt hygiene decisions, also read `docs/context/codex-workflow.md`.
@@ -169,6 +161,16 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
 - When a durable implementation pattern or architectural lesson is discovered, update `docs/context/` or this `AGENTS.md` so future sessions inherit it.
 - Prefer storing durable project context in repo docs rather than relying on transient conversation history.
 - Treat `docs/plans/` and `docs/screenshots/` as historical reference, not current truth.
+
+## Repo Organization Rules
+
+- Treat the repo as two first-class systems: `src/` for web and `agent/` for the active Discord/autonomous runtime.
+- Keep the repo root focused on active systems, core config, docs, and database assets.
+- Put small durable reference material under `docs/references/` and screenshots worth keeping under `docs/screenshots/`.
+- Put bulky historical material under `archive/` or move it out of the repo entirely when it is no longer useful for normal development.
+- Do not leave one-off screenshots, exported assets, browser output, temp folders, or generated files at the repo root.
+- Do not create ambiguous top-level folders that visually collide with active system ownership.
+- Follow `docs/context/repo-organization.md` and `docs/context/salvage-map.md` before adding new top-level folders, preserving non-core systems, or relocating major material.
 
 ## Key Paths
 
@@ -187,8 +189,10 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
 | Agent memory | `agent/MEMORY.md` |
 | Agent runtime skills | `agent/skills/` |
 | Ephemeral agent runtime scratch | `agent/session/` (gitignored; do not put durable tooling here) |
-| Codex repo skills | `.codex/skills/` |
 | Durable architecture context | `docs/context/` |
+| Repo organization guide | `docs/context/repo-organization.md` |
+| Durable references | `docs/references/` |
+| Historical archive | `archive/` |
 | Execution plans | `docs/plans/` |
 
 ## Data Conventions
@@ -227,11 +231,5 @@ Multi-agent Discord system with per-agent concurrency:
 - 5 core cron jobs run unconditionally on startup (heartbeat, TM check, Meta sync, think cycle, Discord health)
 - Owner email triage is Discord-first and owner-only. Do not add a parallel admin/client web inbox by default; improve the Discord operating surface instead.
 - Owner meeting scheduling is also Discord-first and owner-only in `#meetings`, backed by Google Calendar API rather than a separate shared web surface by default.
-- Customer WhatsApp should mirror into one Discord thread per conversation under the mapped client/team channel, with `#dashboard` only as the temporary fallback for unassigned chats.
-- Repeated inbound WhatsApp messages from the same conversation should collapse into one latest pending triage task behind the active run instead of stacking duplicate pending jobs for that chat.
-- New customer WhatsApp conversations are blocked by default until the owner explicitly allows them. Boss should ask the owner in `#whatsapp-boss`, and owner approval should flow through the `!whatsapp allow|deny` controls there instead of informal prompt-only approval.
-- Approved WhatsApp group chats should stay mention-only by default unless a later explicit policy changes that conversation.
-- Evolution is the current preferred WhatsApp transport for real direct chats and native groups on a phone-linked account. Twilio sender work is legacy fallback only.
-- Local agent runtimes should run under a restart loop or process manager, not only an ad hoc foreground shell, so pending WhatsApp follow-up work resumes after crashes.
-- Twilio WhatsApp sender registration and repair should treat the Senders API as the source of truth. Do not trust the Twilio Console wizard alone when deciding whether sender onboarding succeeded.
+- Local agent runtimes should run under a restart loop or process manager, not only an ad hoc foreground shell, so pending work resumes after crashes.
 - Internal growth-team work should follow the same Discord-first model: use Discord channels and threads as the operating surface, `agent_tasks` as the execution queue, `system_events` as the durable timeline, and feature-specific ledgers for examples, corrections, and measured outcomes.

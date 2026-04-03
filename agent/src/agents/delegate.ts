@@ -17,7 +17,6 @@ import { enqueueTask, escalateTask, completeTask, deferTask, failTask, setTaskEx
 import { evaluateTier } from "../services/approval-service.js";
 import { getDelegatedTaskResources } from "../services/agent-resource-locks.js";
 import { sendAsAgent } from "../services/webhook-service.js";
-import { sendWhatsAppMessage } from "../services/whatsapp-runtime-service.js";
 import { runClaude } from "../runner.js";
 import { getAgentForChannel } from "../discord/core/router.js";
 import { notifyChannel } from "../discord/core/entry.js";
@@ -43,19 +42,6 @@ interface ChannelMessageBlock {
   message: string;
   handoff?: boolean;
   tier?: "green" | "yellow" | "red";
-}
-
-interface WhatsAppSendDirective {
-  approved?: boolean;
-  conversationId?: string;
-  message: string;
-  phoneNumberId?: string;
-  replyToMessageId?: string;
-  toWaId?: string;
-}
-
-interface WhatsAppSendBlock {
-  whatsapp: WhatsAppSendDirective;
 }
 
 interface DelegationProcessingOptions {
@@ -111,7 +97,6 @@ const DELEGATE_TARGETS: Record<string, string> = {
   "meeting-agent": "meetings",
   "meetings": "meetings",
   "calendar": "meetings",
-  "customer-whatsapp-agent": "clients",
   "clients": "clients",
   "zamora": "zamora",
   "kybba": "kybba",
@@ -124,7 +109,6 @@ const CHANNEL_HANDOFF_TARGETS: Record<string, string> = {
   "don-omar-tickets": "don-omar-agent",
   "creative": "creative",
   "dashboard": "reporting",
-  "clients": "customer-whatsapp-agent",
   "zamora": "client-manager",
   "kybba": "client-manager",
   "email": "email-agent",
@@ -267,7 +251,6 @@ function applyCustomerFacingContext(
   return {
     ...mergedParams,
     audience: currentContext?.audience ?? inheritedContext?.audience ?? "customer",
-    delivery: currentContext?.delivery ?? inheritedContext?.delivery ?? "whatsapp",
     disclosure: currentContext?.disclosure ?? inheritedContext?.disclosure ?? "safe",
   };
 }
@@ -322,9 +305,9 @@ function buildDelegatedTaskPrompt(task: AgentTask): string {
   ];
 
   const context = extractCustomerFacingContext(visibleParams);
-  if (context?.audience === "customer" || context?.delivery === "whatsapp") {
+  if (context?.audience === "customer") {
     lines.push(
-      "Delivery context: this work feeds a client-facing WhatsApp response. Return only the customer-safe slice and avoid internal campaign structure, targeting, bid strategy, thresholds, or operator-only reasoning.",
+      "Delivery context: this work feeds a client-facing response. Return only the customer-safe slice and avoid internal campaign structure, targeting, bid strategy, thresholds, or operator-only reasoning.",
     );
   }
 
@@ -424,134 +407,10 @@ export function parseChannelMessageBlocks(text: string): {
   return { blocks: blocks.slice(0, MAX_DELEGATIONS_PER_RESPONSE), cleanText };
 }
 
-export function parseWhatsAppSendBlocks(text: string): {
-  blocks: WhatsAppSendBlock[];
-  cleanText: string;
-} {
-  const blocks: WhatsAppSendBlock[] = [];
-  let cleanText = text;
-
-  const fencedPattern = /```json\s*\n?\s*(\{[^`]*?"whatsapp"[^`]*?\})\s*\n?\s*```/g;
-  let match: RegExpExecArray | null;
-
-  while ((match = fencedPattern.exec(text)) !== null) {
-    try {
-      const raw: unknown = JSON.parse(match[1]);
-      if (raw && typeof raw === "object" && "whatsapp" in raw) {
-        const parsed = raw as WhatsAppSendBlock;
-        blocks.push(parsed);
-        cleanText = cleanText.replace(match[0], "").trim();
-      }
-    } catch {
-      // Invalid JSON, skip
-    }
-  }
-
-  for (const hit of findInlineJsonBlocks(cleanText)) {
-    try {
-      const raw: unknown = JSON.parse(hit.match);
-      if (raw && typeof raw === "object" && "whatsapp" in raw) {
-        const parsed = raw as WhatsAppSendBlock;
-        const signature = JSON.stringify(parsed.whatsapp);
-        if (!blocks.some((block) => JSON.stringify(block.whatsapp) === signature)) {
-          blocks.push(parsed);
-          cleanText = cleanText.replace(hit.match, "").trim();
-        }
-      }
-    } catch {
-      // Invalid JSON, skip
-    }
-  }
-
-  cleanText = cleanText.replace(/\n{3,}/g, "\n\n").trim();
-
-  return { blocks: blocks.slice(0, MAX_DELEGATIONS_PER_RESPONSE), cleanText };
-}
-
 function stringParam(
   value: unknown,
 ): string | undefined {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : undefined;
-}
-
-function resolveWhatsAppDirective(
-  block: WhatsAppSendBlock,
-  inheritedParams?: Record<string, unknown> | null,
-): WhatsAppSendDirective {
-  const payload = block.whatsapp ?? ({} as WhatsAppSendDirective);
-
-  return {
-    approved:
-      typeof payload.approved === "boolean"
-        ? payload.approved
-        : typeof inheritedParams?.approved === "boolean"
-        ? inheritedParams.approved
-        : undefined,
-    conversationId:
-      stringParam(payload.conversationId) ??
-      stringParam(inheritedParams?.conversationId),
-    message: payload.message,
-    phoneNumberId:
-      stringParam(payload.phoneNumberId) ??
-      stringParam(inheritedParams?.phoneNumberId),
-    replyToMessageId:
-      stringParam(payload.replyToMessageId) ??
-      stringParam(inheritedParams?.replyToMessageId) ??
-      stringParam(inheritedParams?.messageId),
-    toWaId:
-      stringParam(payload.toWaId) ??
-      stringParam(inheritedParams?.toWaId),
-  };
-}
-
-export async function processWhatsAppSends(
-  agentResponse: string,
-  sourceChannel: string = "clients",
-  options?: DelegationProcessingOptions,
-): Promise<{
-  cleanText: string;
-  errors: string[];
-  sent: number;
-}> {
-  const { blocks, cleanText } = parseWhatsAppSendBlocks(agentResponse);
-  if (blocks.length === 0) {
-    return { cleanText: agentResponse, errors: [], sent: 0 };
-  }
-
-  const errors: string[] = [];
-  let sent = 0;
-
-  for (const block of blocks) {
-    try {
-      const resolved = resolveWhatsAppDirective(block, options?.inheritedParams);
-      const message = resolved.message?.trim();
-      if (!message) {
-        throw new Error("WhatsApp send block is missing a message.");
-      }
-
-      if (!resolved.conversationId && !(resolved.phoneNumberId && resolved.toWaId)) {
-        throw new Error(
-          "WhatsApp send block requires conversationId or both phoneNumberId and toWaId.",
-        );
-      }
-
-      await sendWhatsAppMessage({
-        approved: resolved.approved,
-        body: message,
-        conversationId: resolved.conversationId,
-        phoneNumberId: resolved.phoneNumberId,
-        replyToMessageId: resolved.replyToMessageId,
-        toWaId: resolved.toWaId,
-      });
-      sent += 1;
-    } catch (error) {
-      const message = toErrorMessage(error);
-      errors.push(message);
-      console.error(`[whatsapp-send] ${sourceChannel}:`, message);
-    }
-  }
-
-  return { cleanText, errors, sent };
 }
 
 /**
@@ -830,19 +689,6 @@ export async function executeAgentTask(
 
       let responseText = result.text ?? "No response.";
       const actionNotes: string[] = [];
-
-      const whatsappSends = await processWhatsAppSends(responseText, targetChannel, {
-        inheritedParams: task.params,
-      });
-      responseText = whatsappSends.cleanText;
-      if (whatsappSends.sent > 0) {
-        actionNotes.push(
-          `Sent ${whatsappSends.sent} WhatsApp message${whatsappSends.sent === 1 ? "" : "s"}.`,
-        );
-      }
-      if (whatsappSends.errors.length > 0) {
-        actionNotes.push(`WhatsApp send failed: ${whatsappSends.errors.join(" | ")}`.slice(0, 500));
-      }
 
       const channelMessages = await processChannelMessages(client, responseText, targetChannel, depth + 1, {
         inheritedParams: task.params,

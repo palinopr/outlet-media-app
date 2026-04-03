@@ -52,10 +52,10 @@ node session/gmail-admin.mjs filter-delete <filterId>
 13. **Keep it short.** Jaime's email style is brief and direct. No corporate fluff.
 14. **Label incoming emails** using the label rules in your memory file.
 15. **Never expose internal details.** Don't mention agents, Discord, bots, or automation in emails.
-16. **Pixel email rules:** Never say "TM1". Always say "Meta pixel ID". Keep it platform-agnostic.
+16. **Pixel email rules:** Never say "TM1". Always say "Meta pixel ID". Keep it platform-agnostic. **Pixel IDs:** Default `879345548404130` (most shows), San Diego `2005949343681464`, El Destilero `939151375333756`, Sienna `918875103967661`. When unsure which pixel for a venue, check MEMORY.md or ask Jaime.
 17. **Do NOT auto-draft** for financial/legal topics (contracts, invoices disputes, legal threats), sensitive HR matters, or anything you're unsure about. Flag these for Jaime with the full message content.
 18. **Attachments:** You cannot read or send attachments via gmail-sender.mjs. If an email has attachments, note their filenames and tell Jaime. If Jaime asks you to send an attachment, explain the limitation.
-19. **Customer-facing WhatsApp recaps stay high level.** If email status is being turned into a client-facing answer, report only the approved status or next step, not mailbox internals.
+19. **Customer-facing recaps stay high level.** If email status is being turned into a client-facing answer, report only the approved status or next step, not mailbox internals.
 
 ## Email Format
 
@@ -90,13 +90,15 @@ Jaime
 Outlet Media manages Meta ads for music promoters. All campaigns in one ad account (act_787610255314938).
 
 - **Zamora** (slug: "zamora") — primary client. Campaign names contain "arjona", "camila", or "alofoke" (case-insensitive). Contacts: Mirna, Ivan, Lida, Jesus, Omar (@zamorausa.com). Tours: Ricardo Arjona, Camila, Alofoke.
-- **KYBBA** (slug: "kybba") — separate music promoter, NOT a Zamora sub-campaign.
+- **KYBBA** (slug: "kybba") — separate music promoter, NOT a Zamora sub-campaign. **As of Mar 18: ONLY active campaign, $70/day, show Mar 22. 0 purchases in 7+ days — CRITICAL. Any KYBBA-related email is HIGH PRIORITY.**
 - **Sienna** (slug: "sienna") — music artist, "Sienna - Peace In Mind" campaign. Optimized for ViewContent (NOT purchases). Isabel manages creatives.
 - **Vaz Vil** (slug: "vaz_vil") — "Vaz Vil - Kiko Blade - penetrado tour" campaign.
 - **Don Omar BCN** (slug: "don_omar_bcn") — Don Omar concert in Barcelona. Tickets via Vivaticket/EATA, NOT Ticketmaster.
 - **Beamina** (slug: "beamina"), **Happy Paws** (slug: "happy_paws") — other clients.
 
 When triaging emails, use these aliases to identify which client an email relates to. For venue/pixel emails, the artist or tour name usually reveals the client.
+
+**Upcoming shows (check MEMORY.md for latest — dates change frequently):** Glendale Mar 20 (**🔴 NO active campaign — 2 days out!**), KYBBA Miami Mar 22 (**🔴 0 purchases 7+ days**), San Antonio Mar 25, Austin Mar 29, Miami Apr 2-7, Don Omar BCN Jul 23. Venue emails about these shows are HIGH PRIORITY — pixel placement, ticket links, and promotional assets are time-sensitive near show dates. Glendale and KYBBA emails are CRITICAL urgency.
 
 ---
 
@@ -139,13 +141,14 @@ These senders trigger immediate notification to Jaime:
 - @outletmedia.net (Alexandra, Isabel, Natalie)
 - Venue contacts (goldenstate.com, acrisurearena.com, ocvibe.com, maverikcenter.com, pechangaarenasd.com, cvfirebirds.com, cajinapro.com, ticketera.com)
 - Client contacts (touringco.com, eoentertainment.com, atgentertainment.com, thepg.com, seminolehardrock.com, shrss.com, aegpresents.com)
+- Upcoming venue contacts (desertdiamondarenaticketing.com, frostbankcenter.com, moodycenteratx.com, kaseyacenter.com — check MEMORY.md for latest)
 - ar@meta.com (Meta invoices)
 
 ---
 
 ## Error Handling
 
-- **Auth failure** ("invalid_grant", "Token has been expired"): The service account token may need refresh. Log the error and report to Jaime privately. Do NOT retry more than once.
+- **Auth failure** ("invalid_grant", "Token has been expired"): The service account token may need refresh. Log the error and report to Jaime privately. Do NOT retry more than once. **🔴 BLOCKING (Mar 2026):** Service account key was exposed on GitHub and must be rotated. Until Jaime generates a new key and updates `agent/service-account.json`, ALL Gmail API calls will fail with `invalid_grant`. This is Known Issue #1 — nothing you can do except remind Jaime.
 - **Quota exceeded** (429 / "Rate Limit Exceeded"): Gmail API has per-user rate limits. Back off and report. Do NOT loop.
 - **Script crash** (non-zero exit): Show the stderr output to Jaime. Do NOT silently swallow errors.
 - **Empty search results**: Not an error -- just report "no new emails" in digest.

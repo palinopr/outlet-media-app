@@ -33,6 +33,7 @@ import {
   requireClientAccess,
   requireClientAgentAccess,
   requireClientEventsAccess,
+  requireClientReportsAccess,
   resolveClientAgentAccessForApi,
 } from "./access";
 
@@ -263,6 +264,43 @@ describe("requireClientAccess", () => {
 
     await expect(requireClientAgentAccess("acme")).rejects.toThrow(
       "redirect:/client/acme/campaigns",
+    );
+  });
+
+  it("redirects reports routes when reports are disabled for the client", async () => {
+    mockedAuth.mockResolvedValue({ userId: "user_member" } as Awaited<ReturnType<typeof auth>>);
+    mockedCurrentUser.mockResolvedValue({
+      publicMetadata: { role: "client" },
+    } as unknown as Awaited<ReturnType<typeof currentUser>>);
+    mockedGetMemberAccessForSlug.mockResolvedValue({
+      allowedCampaignIds: null,
+      allowedEventIds: null,
+      clientId: "client_1",
+      clientName: "Acme",
+      clientSlug: "acme",
+      memberId: "member_1",
+      role: "member",
+      scope: "all",
+    });
+    mockedGetClientPortalConfig.mockResolvedValue({
+      agentEnabled: false,
+      clientId: "client_1",
+      eventsEnabled: true,
+      slug: "acme",
+      reportsEnabled: false,
+      brandName: null,
+      logoUrl: null,
+      logoAlt: null,
+    });
+    mockedResolveClientPortalEntry.mockResolvedValue({
+      clientSlug: "acme",
+      destination: "/client/acme",
+      kind: "portal",
+      memberships: [],
+    });
+
+    await expect(requireClientReportsAccess("acme")).rejects.toThrow(
+      "redirect:/client/acme",
     );
   });
 

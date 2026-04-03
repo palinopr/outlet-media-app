@@ -45,7 +45,7 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 4. **Match Jaime's language.** English or Spanish.
 5. **You are autonomous.** Full API access for reads and pixel management.
 6. **For campaign changes** (budgets, pausing), direct Jaime to #media-buyer.
-7. **Customer-facing WhatsApp work stays high level.** If the output is meant for a client-facing answer, give only the client-safe status slice.
+7. **Customer-facing answers stay high level.** If the output is meant for a client-facing answer, give only the client-safe status slice.
 
 ## Customer-Safe Client Rules
 
@@ -184,6 +184,8 @@ curl -s "${SUPABASE_URL}/rest/v1/tm_events?select=name,tickets_sold,tickets_sold
   -H "Authorization: Bearer ${SUPABASE_KEY}"
 ```
 
+**Session-cache-only fields:** `purchases` and `frequency` are NOT in Supabase `meta_campaigns` table — only available from `session/last-campaigns.json`. Querying Supabase for these returns error 42703.
+
 ### Budget cap tracking
 
 Some clients have total spend caps (e.g., Alofoke had $2K cap). When tracking:
@@ -206,11 +208,11 @@ Some clients have total spend caps (e.g., Alofoke had $2K cap). When tracking:
 - Budget: varies by event proximity
 
 ### KYBBA
-- Event promotion, Miami show Mar 22
-- Budget: $50/day
+- Event promotion, Miami show Mar 22 (6 days as of Mar 16)
+- Budget: **$70/day** (confirmed 7000 cents in Supabase)
 - Pixel: 1553637492361321
-- Adset swap Feb 25: V9+V1 paused, V5+Asset1 activated — ROAS recovered from 2.46x to 2.65x
-- Current: $2,624 spend, 2.65x ROAS, 60 purchases. Delivery has been erratic (Meta spend revisions). Freq 4.76 ⚠️ audience fatigue.
+- 🔴 **CRITICAL:** Zero purchases 5+ consecutive days (Mar 11-15). Delivery collapsed to $0.32/day. Freq 3.60+ (severe fatigue). Blended ROAS 2.52× (snapshot) but **7-day ROAS 1.73×** (Boss live pull). Creative refresh CRITICAL. Meta revising spend DOWN (artificial ROAS bump).
+- History: adset swap Feb 25 recovered ROAS from 2.46→2.65x, but fatigue set in again by mid-March.
 
 ### Sienna (New Client, ~Mar 2026)
 - "Peace In Mind" brand — **music artist, optimized for ViewContent, NOT purchases**
@@ -221,13 +223,13 @@ Some clients have total spend caps (e.g., Alofoke had $2K cap). When tracking:
 ### Vaz Vil (New Client, ~Mar 2026)
 - "Kiko Blade" / "Penetrado" tour
 - Budget: $50/day
-- Status: 🔴 $350 spent, 0x ROAS after 9+ days. Multiple 0x snapshots — alerted. Freq 2.51 (reaching people but zero conversions). Needs Jaime's call: pause or keep running.
+- Status: 🔴 **FROZEN** — $350 spent, 0× ROAS, **16+ days** with zero delivery. $50/day budget but $0 actual spend for 6+ consecutive snapshots (Mar 14-16 identical). Needs Jaime's call: pause or rebuild.
 
 ### Don Omar BCN (New Client, ~Mar 2026)
 - Don Omar concert in Barcelona, Jul 23 2026
 - Venue: Estadio Olimpico Lluis Companys
 - Tickets sold through **Vivaticket/EATA** (entradasatualcance.com), NOT Ticketmaster
-- **Meta campaign:** "Don Omar Barcelona" — ACTIVE, $600/day, 9.59x ROAS ($885 spend, 29 purchases as of Mar 12). Launched Mar 6. ⚠️ **Delivery severely underpacing** — $885 total on $600/day over 6+ days.
+- **Meta campaign:** "Don Omar Barcelona" — **PAUSED** (was ACTIVE at $600/day, 6.32× ROAS, $4,539 total, ~147 purchases). Best campaign in portfolio before pause. Launched Mar 6, paused ~Mar 16. Confirm if Jaime intentionally paused or error.
 - Supabase tm_id: `eata_14948`
 - Slug: `don_omar_bcn`
 - Current: ~30K tickets sold, ~3.2M EUR gross, 442 tickets/day avg
@@ -256,6 +258,11 @@ When preparing client updates, always check upcoming show dates. Shows within 3 
 - Check ROAS — below 2.0 within 3 days of show is a flag
 - After show date passes, verify campaign is PAUSED with $0 new spend
 - **Post-show auto-pause rule:** If a campaign is still ACTIVE after its show date, flag it immediately — no confirmation needed.
+
+**Current show awareness (Mar 16):**
+- KYBBA Miami: Mar 22 (6 days) — 🔴 zero purchases, creative refresh critical
+- Arjona Glendale: Mar 20 (4 days) — 🟡 NO active campaign, 3,698 tickets sold. Needs decision.
+- Don Omar BCN: Jul 23 2026 — far future, campaign PAUSED
 
 Query upcoming shows:
 ```bash

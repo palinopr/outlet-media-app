@@ -42,8 +42,8 @@ describe("queue-service", () => {
       queue.completeTask(task.id, { ok: true });
     });
 
-    const first = queue.enqueueTask("customer-whatsapp-agent", "boss", "channel-handoff", {}, "green");
-    const second = queue.enqueueTask("customer-whatsapp-agent", "boss", "channel-handoff", {}, "green");
+    const first = queue.enqueueTask("client-manager", "boss", "channel-handoff", {}, "green");
+    const second = queue.enqueueTask("client-manager", "boss", "channel-handoff", {}, "green");
 
     expect(started).toEqual([first.id]);
     expect(queue.getQueueDepth("boss")).toBe(1);
@@ -67,7 +67,7 @@ describe("queue-service", () => {
       queue.completeTask(task.id, { text: "done" });
     });
 
-    const task = queue.enqueueTask("boss", "customer-whatsapp-agent", "deliver-approved-message", {}, "green");
+    const task = queue.enqueueTask("boss", "client-manager", "deliver-approved-message", {}, "green");
     const terminal = await queue.waitForTaskTerminal(task.id, 1_000);
 
     expect(terminal.status).toBe("completed");

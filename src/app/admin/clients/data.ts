@@ -43,7 +43,6 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     assetsRes,
     connectedAccountsRes,
     campaignDiscussionsRes,
-    crmDiscussionsRes,
     assetDiscussionsRes,
     eventDiscussionsRes,
   ] = await Promise.all([
@@ -76,11 +75,6 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     supabaseAdmin
       .from("campaign_comments")
       .select("campaign_id")
-      .eq("resolved", false)
-      .is("parent_comment_id", null),
-    supabaseAdmin
-      .from("crm_comments" as never)
-      .select("client_slug")
       .eq("resolved", false)
       .is("parent_comment_id", null),
     supabaseAdmin
@@ -198,7 +192,6 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
   }
 
   for (const dataset of [
-    crmDiscussionsRes.data ?? [],
     assetDiscussionsRes.data ?? [],
     eventDiscussionsRes.data ?? [],
   ]) {
@@ -358,7 +351,6 @@ export async function getClientDetail(
     approvalsRes,
     actionItemsRes,
     campaignDiscussionsRes,
-    crmDiscussionsRes,
     assetDiscussionsRes,
     eventDiscussionsRes,
     pendingInvites,
@@ -404,12 +396,6 @@ export async function getClientDetail(
     supabaseAdmin
       .from("campaign_comments")
       .select("id, campaign_id")
-      .eq("resolved", false)
-      .is("parent_comment_id", null),
-    supabaseAdmin
-      .from("crm_comments" as never)
-      .select("id")
-      .eq("client_slug", client.slug)
       .eq("resolved", false)
       .is("parent_comment_id", null),
     supabaseAdmin
@@ -465,7 +451,6 @@ export async function getClientDetail(
       ((campaignDiscussionsRes.data ?? []) as Array<{ campaign_id: string | null }>)
         .filter((row) => row.campaign_id && clientCampaignIds.has(row.campaign_id))
         .length +
-      ((crmDiscussionsRes.data ?? []) as unknown[]).length +
       ((assetDiscussionsRes.data ?? []) as unknown[]).length +
       ((eventDiscussionsRes.data ?? []) as unknown[]).length,
     pendingApprovals: ((approvalsRes.data ?? []) as Array<Record<string, unknown>>)

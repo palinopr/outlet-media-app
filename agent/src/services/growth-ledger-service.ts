@@ -292,36 +292,3 @@ export async function createGrowthPlaybook(
   return data as GrowthPlaybookRow;
 }
 
-export async function createGrowthAgentTask(
-  input: CreateGrowthAgentTaskInput,
-): Promise<LedgerTask> {
-  if (!isGrowthAgentKey(input.from)) {
-    throw new Error(`Invalid growth task source agent: ${input.from}`);
-  }
-
-  if (!isGrowthAgentKey(input.to)) {
-    throw new Error(`Invalid growth task target agent: ${input.to}`);
-  }
-
-  if (!isGrowthTaskAction(input.action)) {
-    throw new Error(`Invalid growth task action: ${input.action}`);
-  }
-
-  const task = await createLedgerTask({
-    from: input.from,
-    to: input.to,
-    action: input.action,
-    params: input.params ?? {},
-    tier: input.tier ?? "green",
-    timeline: {
-      actorName: input.actorName ?? input.from,
-      causationId: input.causationId ?? null,
-      correlationId: input.correlationId ?? null,
-      detail: null,
-      source: "worker",
-      summary: `Growth task requested: ${input.action} -> ${input.to}`,
-    },
-  });
-
-  return task;
-}

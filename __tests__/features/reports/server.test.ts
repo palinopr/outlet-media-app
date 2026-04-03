@@ -29,7 +29,6 @@ describe("getReportsWorkflowData", () => {
     });
     vi.mocked(getDashboardActionCenter).mockResolvedValue({
       approvals: [],
-      crmFollowUps: [],
       discussions: [],
     });
     vi.mocked(getEventOperationsSummary).mockResolvedValue({

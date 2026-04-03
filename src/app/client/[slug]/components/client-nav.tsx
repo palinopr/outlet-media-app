@@ -9,11 +9,12 @@ interface Props {
   agentEnabled: boolean;
   slug: string;
   eventsEnabled: boolean;
+  reportsEnabled: boolean;
 }
 
-export function ClientNav({ agentEnabled, slug, eventsEnabled }: Props) {
+export function ClientNav({ agentEnabled, slug, eventsEnabled, reportsEnabled }: Props) {
   const pathname = usePathname();
-  const links = getClientNavLinks(slug, { agentEnabled, eventsEnabled });
+  const links = getClientNavLinks(slug, { agentEnabled, eventsEnabled, reportsEnabled });
 
   return (
     <nav aria-label="Client navigation" className="flex-1 px-3 py-1">

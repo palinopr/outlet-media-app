@@ -3,13 +3,23 @@
 agent/.next
 .local
 session
+output
+tmp
+.opencode
+.playwright-mcp
+.superpowers
 root-next-artifact-2026-03-08
 root-next-artifact-2026-03-08-2
 root-next-artifact-2026-03-08-3
+root-next-artifact-*
 .claude
 .worktrees
 node_modules
 agent/node_modules
+supabase/.temp/
+opencode.json
+*.tsbuildinfo
+.DS_Store
 
 # Credentials - NEVER commit
 agent/service-account.json

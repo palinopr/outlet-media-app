@@ -10,6 +10,7 @@
  */
 
 import { query, tool, createSdkMcpServer, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
+import type { ContentBlockParam } from "@anthropic-ai/sdk/resources";
 import { z } from "zod";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -55,14 +56,29 @@ async function supabaseUpdate(
 
 // ─── Image fetching ──────────────────────────────────────────────────────────
 
+type SupportedImageMediaType = "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+
+function normalizeImageMediaType(value: string | null): SupportedImageMediaType | null {
+  switch (value) {
+    case "image/png":
+    case "image/jpeg":
+    case "image/gif":
+    case "image/webp":
+      return value;
+    default:
+      return null;
+  }
+}
+
 async function fetchImageAsBase64(
   url: string,
-): Promise<{ data: string; mediaType: string } | null> {
+): Promise<{ data: string; mediaType: SupportedImageMediaType } | null> {
   try {
     const res = await fetch(url, { signal: AbortSignal.timeout(30000) });
     if (!res.ok) return null;
     const buf = Buffer.from(await res.arrayBuffer());
-    const mediaType = res.headers.get("content-type") ?? "image/png";
+    const mediaType = normalizeImageMediaType(res.headers.get("content-type"));
+    if (!mediaType) return null;
     return { data: buf.toString("base64"), mediaType };
   } catch (err) {
     console.log(`[creative-classify] image fetch failed for ${url}: ${toErrorMessage(err)}`);
@@ -174,10 +190,7 @@ export async function runCreativeClassify(): Promise<string> {
 
   for (const [clientSlug, clientAssets] of byClient) {
     // 3. Build prompt with vision content blocks
-    const contentBlocks: Array<
-      | { type: "text"; text: string }
-      | { type: "image"; source: { type: "base64"; media_type: string; data: string } }
-    > = [];
+    const contentBlocks: ContentBlockParam[] = [];
 
     contentBlocks.push({
       type: "text",

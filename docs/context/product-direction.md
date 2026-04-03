@@ -54,19 +54,18 @@ Internal team should feel:
 
 ## Product Model
 
-The workspace/editor layer is the shell. The actual product is a set of connected apps inside that shell.
+The workspace/editor layer is the shell. The actual product is a set of connected operating surfaces on one shared backbone.
 
-Core first-class areas:
-- CRM
-- Clients
+Current active product core:
+- Clients / account access backbone
 - Campaigns
-- Events / ticketing workflows
-- Assets / creative pipeline
-- Tasks / approvals
 - Reports / results
-- Conversations / comments
-- Activity / audit trail
-- Agents / automations
+- Events / ticketing workflows
+- optional client Agent reporting surface
+
+Supporting workflow concepts such as approvals, discussions, activity, assets, and agent follow-through should usually stay embedded inside those campaign, report, event, and admin account surfaces during the current reset instead of immediately becoming separate top-level apps.
+
+Longer term, Outlet may still expand into more first-class operating areas, but current packaging and cleanup work should treat that broader model as future potential rather than shipped product truth.
 
 ## Current Customer Packaging
 
@@ -74,12 +73,16 @@ The long-term product can expose more first-class apps, but the current customer
 
 For now, the client-facing web surface should center on:
 - campaigns
+- reports
 - events
+- optional agent
 
 That means:
-- campaign and event pages should be the primary place clients read analytics, status, blockers, approvals, activity, and next steps
-- supporting concepts such as assets, discussions, approvals, and agent follow-through should usually appear as embedded panels inside those pages before they earn their own client navigation item
-- CRM, WhatsApp, approvals, assets, reports, workspace, and other deeper operating tools can remain admin-first until customers clearly need them as standalone client surfaces
+- campaign and event pages should stay the primary place clients read analytics, status, blockers, approvals, activity, and next steps
+- reports is the explicit summary-first surface over that same campaign and event backbone rather than a separate product domain
+- agent is the approved optional conversational reporting surface, not a broad client workspace
+- supporting concepts such as assets, discussions, approvals, and agent follow-through should usually appear as embedded panels inside campaign, report, and event views before they earn their own client navigation item
+- CRM, approvals, assets, workspace-style tooling, and other deeper operating tools can remain admin-first or historical until customers clearly need them as standalone client surfaces
 
 Admin users should still operate on the broader system. The customer-facing simplification is about packaging and trust, not about throwing away the shared backbone.
 

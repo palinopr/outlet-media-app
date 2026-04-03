@@ -38,16 +38,12 @@ export interface AgentOutcomeView {
   clientSlug: string | null;
   completedAt: string | null;
   createdAt: string;
-  crmContactId: string | null;
-  crmFollowUpItemId: string | null;
-  crmContactName: string | null;
   errorText: string | null;
   eventFollowUpItemId: string | null;
   eventId: string | null;
   eventName: string | null;
   linkedActionItemId: string | null;
   linkedAssetFollowUpItemId: string | null;
-  linkedCrmFollowUpItemId: string | null;
   linkedEventFollowUpItemId: string | null;
   requestDetail: string | null;
   requestSummary: string;
@@ -87,7 +83,6 @@ export function buildAgentOutcomeView(
   linkedActionItemId?: string | null,
   linkedAssetFollowUpItemId?: string | null,
   linkedEventFollowUpItemId?: string | null,
-  linkedCrmFollowUpItemId?: string | null,
 ): AgentOutcomeView {
   return {
     action: task?.action ?? "agent-task",
@@ -100,16 +95,12 @@ export function buildAgentOutcomeView(
     clientSlug: request.clientSlug,
     completedAt: task?.completedAt ?? null,
     createdAt: task?.createdAt ?? request.createdAt,
-    crmContactId: metadataString(request.metadata, "crmContactId"),
-    crmFollowUpItemId: metadataString(request.metadata, "crmFollowUpItemId"),
-    crmContactName: metadataString(request.metadata, "crmContactName"),
     errorText: task?.error ?? null,
     eventFollowUpItemId: metadataString(request.metadata, "eventFollowUpItemId"),
     eventId: metadataString(request.metadata, "eventId"),
     eventName: metadataString(request.metadata, "eventName"),
     linkedActionItemId: linkedActionItemId ?? null,
     linkedAssetFollowUpItemId: linkedAssetFollowUpItemId ?? null,
-    linkedCrmFollowUpItemId: linkedCrmFollowUpItemId ?? null,
     linkedEventFollowUpItemId: linkedEventFollowUpItemId ?? null,
     requestDetail: request.detail,
     requestSummary: request.summary,

@@ -129,7 +129,7 @@ The moat is not a single feature. It is the connection between features.
 Design examples:
 - asset upload -> campaign review -> Meta agent -> approval -> launch/update
 - Ticketmaster change -> event update -> alert/report -> client visibility
-- CRM note -> task -> follow-up agent -> activity feed
+- campaign comment -> action item -> follow-through agent -> activity feed
 
 When work starts in one app but belongs to another context, preserve that linkage in structured metadata and events immediately. Do not let campaign context disappear just because the upload started in the asset library.
 Campaign-specific next steps should stay attached to the campaign itself instead of falling back to generic workspace task boards.
@@ -185,7 +185,7 @@ Other users want:
 Build both layers on the same underlying objects and events.
 Traditional dashboard summaries should be composed from the same first-class approvals, action items, comments, and `system_events` backbone as the deeper workflow views.
 Summary-first dashboards should include clear action queues, not only passive metrics, so traditional users can see what needs review without navigating the full workflow surface.
-When a new first-class app such as CRM becomes operationally important, surface its key pressure points on the main dashboards instead of burying it only inside a dedicated tab.
+When a new first-class operating area becomes operationally important, surface its key pressure points on the main dashboards instead of burying it only inside a dedicated tab.
 
 ## 12. Correct Weak Architecture Early
 
@@ -244,13 +244,13 @@ Prefer primary sources and concrete examples over memory when:
 Do not promote every capability into its own top-level page.
 
 Prefer to:
-- start with the primary operating context such as campaign detail, event detail, admin CRM, or the admin client/account hub
+- start with the primary operating context such as campaign detail, event detail, reports, or the admin client/account hub
 - embed supporting workflow panels inside that context first
 - add a standalone navigation item only when current users clearly need to manage that capability directly and the surface will not duplicate existing workflow logic
 
 Current packaging rule:
 - client-facing top-level web should stay focused on campaigns and events until another surface has clearly earned its way in
-- deeper capabilities such as approvals, conversations, assets, agent follow-through, and CRM should usually be embedded first instead of immediately becoming separate client tabs
+- deeper capabilities such as approvals, conversations, assets, and agent follow-through should usually be embedded first instead of immediately becoming separate client tabs
 
 ## 17. Remove Dead Paths And Duplicate Flows
 

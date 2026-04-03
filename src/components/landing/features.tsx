@@ -13,21 +13,21 @@ interface StoryPoint {
 const STORY_POINTS: StoryPoint[] = [
   {
     index: "01",
-    title: "We find the angle before we touch the budget",
+    title: "Culture, Content, and Commerce",
     description:
-      "Artists, venues, nightlife brands, and fast-moving launches all need the right story, timing, and tone. The work has to feel native to the audience before the spend can perform.",
+      "We fuse these three pillars to help brands and artists grow with efficiency. The work has to feel native to the culture before the commerce can follow.",
   },
   {
     index: "02",
-    title: "We stay tied to tickets, sales, and sell-through",
+    title: "Direct to Revenue",
     description:
-      "A nice dashboard does not matter if the room is not filling or the product is not moving. Outlet keeps the work close to revenue so the campaign can pivot before momentum leaks.",
+      "From world tours to e-commerce, we stay tied to the money. We prioritize ticket sales, sell-through, and ROAS over generic visibility.",
   },
   {
     index: "03",
-    title: "We keep clients inside the motion, not outside of it",
+    title: "AI Operating System",
     description:
-      "The client should not have to guess what the agency is doing. Outlet makes the work visible while it is happening, which creates faster approvals, sharper pivots, and more trust.",
+      "We use our own technology, like Vera (AI WhatsApp), to keep clients inside the motion with real-time performance dashboards and automated engagement.",
   },
 ] as const;
 
@@ -81,10 +81,14 @@ export function LandingFeatures() {
 
           <div className="grid gap-3 border-t border-white/10 p-5 sm:grid-cols-2 sm:p-6">
             {[
-              "Strategy and positioning that fits the room",
-              "Creative direction that does not look templated",
-              "Paid media tied to sell-through and sales",
-              "Visibility that keeps the client confident",
+              "Estrategia Creativa & Publicidad Digital (Meta, Google, TikTok)",
+              "Optimización y SEO para visibilidad orgánica",
+              "Marketing de Eventos y promoción digital integral",
+              "Estrategia de Marca e identidad diferenciadora",
+              "Social Media Management y contenido viral",
+              "Venta de Boletos para conciertos y festivales",
+              "Conversiones de E-commerce y Retail",
+              "Tecnología Propia (AI WhatsApp Bot + Dashboards)",
             ].map((item) => (
               <div
                 key={item}

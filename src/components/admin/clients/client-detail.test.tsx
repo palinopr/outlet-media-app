@@ -87,15 +87,18 @@ describe("ClientDetailView", () => {
     render(<ClientDetailView client={client} />);
 
     expect(screen.getByText("Client Portal Shape")).toBeInTheDocument();
+    expect(screen.getByText("Portal Agent")).toBeInTheDocument();
+    expect(screen.getByText("Portal Reports")).toBeInTheDocument();
+    expect(screen.getByText("Portal Events")).toBeInTheDocument();
     expect(screen.getByText("Portal Agent Access")).toBeInTheDocument();
+    expect(screen.getByText("Portal Reports Access")).toBeInTheDocument();
     expect(screen.getByText("Portal Events Access")).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Toggle client agent access" })).toBeInTheDocument();
+    expect(screen.getByRole("switch", { name: "Toggle client reports access" })).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Toggle client events access" })).toBeInTheDocument();
-    expect(screen.queryByText("Portal Reports Access")).not.toBeInTheDocument();
-    expect(screen.queryByRole("switch", { name: "Toggle client reports access" })).not.toBeInTheDocument();
     expect(
       screen.getByText(
-        /The client portal is intentionally narrow: Campaigns, optional Agent, optional Events, and legacy Reports\./,
+        /The client portal is intentionally narrow: Campaigns, optional Reports, optional Agent, and optional Events\./,
       ),
     ).toBeInTheDocument();
     expect(
@@ -122,6 +125,21 @@ describe("ClientDetailView", () => {
       expect(mockedUpdateClient).toHaveBeenCalledWith({
         agentEnabled: false,
         clientId: "client-1",
+      });
+    });
+  });
+
+  it("persists the reports toggle from the overview tab", async () => {
+    mockedUpdateClient.mockResolvedValue(undefined);
+
+    render(<ClientDetailView client={client} />);
+
+    fireEvent.click(screen.getByRole("switch", { name: "Toggle client reports access" }));
+
+    await waitFor(() => {
+      expect(mockedUpdateClient).toHaveBeenCalledWith({
+        clientId: "client-1",
+        reportsEnabled: false,
       });
     });
   });

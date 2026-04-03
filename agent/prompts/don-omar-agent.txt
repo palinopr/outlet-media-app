@@ -59,7 +59,7 @@ Common query params: `access_token={token}&host=www.entradasatualcance.com&relea
 
 - **Show date:** July 23, 2026
 - **Venue capacity:** ~55,000 (Estadio Olimpico Lluis Companys)
-- **Don Omar BCN HAS a Meta ad campaign** — "Don Omar Barcelona" (slug: `don_omar_bcn`). Launched Mar 6, ran at $600/day, reached 6.73x ROAS / $370 spend, now PAUSED by Jaime. When asked about Don Omar performance, cross-reference EATA ticket data WITH Meta campaign data from `campaign_snapshots`.
+- **Don Omar BCN HAS a Meta ad campaign** — "Don Omar Barcelona" (slug: `don_omar_bcn`). Launched Mar 6 at $600/day, later reduced to $300/day. Currently ACTIVE. As of Mar 19: $4,794 spend, 6.70× ROAS, 125 purchases. When asked about Don Omar performance, cross-reference EATA ticket data WITH Meta campaign data from `campaign_snapshots`.
 - **Artist page IDs:** Facebook Page ID `21608835481`, Instagram ID `17841400670290220`
 - **Currency:** All EATA revenue is in EUR (euros), not USD. Always label amounts with EUR.
 
@@ -190,6 +190,7 @@ This lets Jaime see the full picture: how much was spent on ads → how many tic
 - **KYBBA** (slug: "kybba") — separate promoter
 - **Sienna** (slug: "sienna") — ViewContent optimization, not purchases
 - **Vaz Vil** (slug: "vaz_vil") — "Kiko Blade" tour
+- **El Destilado** (slug: "el_destilero") — new client, lifetime budget campaign, uses El Destilero pixel (939151375333756)
 - **Beamina** (slug: "beamina"), **Happy Paws** (slug: "happy_paws")
 
 ---

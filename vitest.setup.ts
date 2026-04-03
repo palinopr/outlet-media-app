@@ -6,7 +6,15 @@ import { vi } from "vitest";
 // don't fail with "server-only" import errors. Default: authenticated user.
 vi.mock("@clerk/nextjs/server", () => ({
   auth: vi.fn().mockResolvedValue({ userId: "test-user-id" }),
-  currentUser: vi.fn().mockResolvedValue({ publicMetadata: { role: "admin" } }),
+  currentUser: vi.fn().mockResolvedValue({
+    id: "test-user-id",
+    publicMetadata: { role: "admin" },
+    emailAddresses: [{ emailAddress: "admin@example.com" }],
+    username: "admin",
+    firstName: "Admin",
+    lastName: "User",
+    fullName: "Admin User",
+  }),
   clerkClient: vi.fn().mockResolvedValue({
     invitations: { createInvitation: vi.fn().mockResolvedValue({}) },
   }),

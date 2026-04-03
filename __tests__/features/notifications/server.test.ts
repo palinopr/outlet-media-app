@@ -192,11 +192,40 @@ vi.mock("@/features/assets/server", () => ({
 
 import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import {
+  isRetiredCrmApprovalRow,
   listClientNotificationRecipients,
   listNotificationsForUser,
 } from "@/features/notifications/server";
 
 const mockedListVisibleAssetIdsForScope = vi.mocked(listVisibleAssetIdsForScope);
+
+describe("isRetiredCrmApprovalRow", () => {
+  it("detects CRM-backed approval rows from entity type or metadata", () => {
+    expect(
+      isRetiredCrmApprovalRow({
+        entity_id: "contact_1",
+        entity_type: "crm_contact",
+        metadata: {},
+      }),
+    ).toBe(true);
+
+    expect(
+      isRetiredCrmApprovalRow({
+        entity_id: null,
+        entity_type: null,
+        metadata: { contactId: "contact_2" },
+      }),
+    ).toBe(true);
+
+    expect(
+      isRetiredCrmApprovalRow({
+        entity_id: "cmp_1",
+        entity_type: "campaign",
+        metadata: { campaignId: "cmp_1" },
+      }),
+    ).toBe(false);
+  });
+});
 
 describe("listNotificationsForUser", () => {
   beforeEach(() => {
@@ -509,6 +538,83 @@ describe("listNotificationsForUser", () => {
         }),
       ]),
     );
+  });
+
+  it("keeps CRM notifications out of the shared notification center", async () => {
+    state.notifications = [
+      {
+        id: "notif_campaign",
+        user_id: "user_1",
+        title: "Campaign update",
+        type: "comment",
+        entity_type: "campaign",
+        entity_id: "cmp_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:00:00.000Z",
+      },
+      {
+        id: "notif_crm_comment",
+        user_id: "user_1",
+        title: "CRM thread",
+        type: "comment",
+        entity_type: "crm_comment",
+        entity_id: "crm_comment_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:01:00.000Z",
+      },
+      {
+        id: "notif_crm_follow_up",
+        user_id: "user_1",
+        title: "CRM follow-up",
+        type: "assignment",
+        entity_type: "crm_follow_up_item",
+        entity_id: "crm_follow_up_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:02:00.000Z",
+      },
+      {
+        id: "notif_crm_contact",
+        user_id: "user_1",
+        title: "CRM contact",
+        type: "comment",
+        entity_type: "crm_contact",
+        entity_id: "contact_1",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:03:00.000Z",
+      },
+      {
+        id: "notif_crm_approval",
+        user_id: "user_1",
+        title: "CRM approval",
+        type: "approval",
+        entity_type: "approval_request",
+        entity_id: "approval_crm",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:04:00.000Z",
+      },
+    ];
+    state.approval_requests = [
+      {
+        id: "approval_crm",
+        client_slug: "zamora",
+        entity_type: "crm_contact",
+        entity_id: "contact_1",
+        metadata: { contactId: "contact_1" },
+        page_id: null,
+        task_id: null,
+      },
+    ];
+
+    const notifications = await listNotificationsForUser("user_1", {
+      clientSlug: "zamora",
+    });
+
+    expect(notifications.map((notification) => notification.id)).toEqual(["notif_campaign"]);
   });
 
   it("uses Clerk-scoped relation reads when enriching client notification routes", async () => {

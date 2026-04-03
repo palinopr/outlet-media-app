@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -20,9 +21,12 @@ export function EventsPreviewTable({ events }: Props) {
     <div>
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-sm font-semibold">Active Shows</h2>
-        <a href="/admin/events" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+        <Link
+          href="/admin/events"
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+        >
           View all <ArrowRight className="h-3 w-3" />
-        </a>
+        </Link>
       </div>
       <Card className="border-border/60">
         {events.length === 0 ? (

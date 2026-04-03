@@ -1,6 +1,6 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
-import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
+import { getFeatureReadClient } from "@/lib/supabase";
 
 export type CampaignCommentVisibility = "admin_only" | "shared";
 

@@ -92,36 +92,32 @@ describe("agent outcome summary helpers", () => {
     expect(outcome.linkedActionItemId).toBe("action_123");
   });
 
-  it("preserves CRM contact context on non-campaign agent outcomes", () => {
-    const outcome = buildAgentOutcomeView(
-      {
-        clientSlug: "happy_paws",
-        createdAt: "2026-03-06T12:00:00.000Z",
-        detail: "Prepare an internal follow-up brief only.",
-        metadata: {
-          crmContactId: "contact_123",
-          crmContactName: "Mia Rivera",
-        },
-        summary: 'Queued CRM follow-up triage for "Mia Rivera"',
-        taskId: "web_task_3",
-        visibility: "shared",
+  it("does not expose retired CRM context keys on non-core agent outcomes", () => {
+    const outcome = buildAgentOutcomeView({
+      clientSlug: "happy_paws",
+      createdAt: "2026-03-06T12:00:00.000Z",
+      detail: "Prepare an internal follow-up brief only.",
+      metadata: {
+        crmContactId: "contact_123",
+        crmContactName: "Mia Rivera",
+        crmFollowUpItemId: "crm_follow_up_123",
       },
-      null,
-      null,
-      null,
-      null,
-      "crm_follow_up_123",
-    );
+      summary: 'Queued CRM follow-up triage for "Mia Rivera"',
+      taskId: "web_task_3",
+      visibility: "shared",
+    });
 
     expect(outcome).toMatchObject({
       assetId: null,
       campaignId: null,
-      crmContactId: "contact_123",
-      crmContactName: "Mia Rivera",
-      linkedCrmFollowUpItemId: "crm_follow_up_123",
+      eventId: null,
       status: "pending",
       taskId: "web_task_3",
     });
+    expect(outcome).not.toHaveProperty("crmContactId");
+    expect(outcome).not.toHaveProperty("crmContactName");
+    expect(outcome).not.toHaveProperty("crmFollowUpItemId");
+    expect(outcome).not.toHaveProperty("linkedCrmFollowUpItemId");
   });
 
   it("preserves asset context on creative-focused agent outcomes", () => {
@@ -148,7 +144,6 @@ describe("agent outcome summary helpers", () => {
       linkedAssetFollowUpItemId: null,
       assetName: "miami-story-v3.mp4",
       campaignId: null,
-      crmContactId: null,
       status: "pending",
       taskId: "web_task_4",
     });
@@ -201,7 +196,6 @@ describe("agent outcome summary helpers", () => {
       null,
       null,
       "event_follow_up_123",
-      null,
     );
 
     expect(outcome).toMatchObject({

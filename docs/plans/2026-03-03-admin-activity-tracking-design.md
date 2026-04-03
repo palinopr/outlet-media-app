@@ -1,5 +1,7 @@
 # Admin Activity Tracking Design
 
+> **Historical note (2026-04-02):** The tracking/audit backbone remains relevant, but the dedicated `/admin/activity` web surface was later collapsed into a redirect to `/admin/dashboard`. Treat this document as historical implementation context, not current surface truth.
+
 Track what admin users do in the Outlet Media admin panel: page views, actions, errors, and sessions. All data stored in a single Supabase table with a dedicated viewer page at `/admin/activity`.
 
 ## Data Model

@@ -4,25 +4,6 @@ function uniquePaths(paths: string[]) {
   return [...new Set(paths)];
 }
 
-type RevalidationTarget = {
-  path: string;
-  type?: "layout" | "page";
-};
-
-function uniqueTargets(targets: RevalidationTarget[]) {
-  const seen = new Set<string>();
-  const result: RevalidationTarget[] = [];
-
-  for (const target of targets) {
-    const key = `${target.path}:${target.type ?? "page"}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push(target);
-  }
-
-  return result;
-}
-
 function clientPaths(clientSlug: string | null | undefined, paths: string[]) {
   if (!clientSlug) return [];
   return paths.map((path) => path.replaceAll(":clientSlug", clientSlug));
@@ -43,7 +24,6 @@ export function getCampaignWorkflowPaths(
   campaignId: string,
 ) {
   return uniquePaths([
-    "/admin/activity",
     "/admin/campaigns",
     `/admin/campaigns/${campaignId}`,
     "/admin/dashboard",
@@ -57,18 +37,7 @@ export function getCampaignWorkflowPaths(
 export function getAssetWorkflowPaths(clientSlug: string | null | undefined, assetId: string) {
   void assetId;
   return uniquePaths([
-    "/admin/activity",
     "/admin/campaigns",
-    "/admin/dashboard",
-    ...clientCampaignsPath(clientSlug),
-  ]);
-}
-
-export function getCrmWorkflowPaths(clientSlug: string | null | undefined, contactId: string) {
-  void contactId;
-  return uniquePaths([
-    "/admin/activity",
-    "/admin/clients",
     "/admin/dashboard",
     ...clientCampaignsPath(clientSlug),
   ]);
@@ -76,7 +45,6 @@ export function getCrmWorkflowPaths(clientSlug: string | null | undefined, conta
 
 export function getEventWorkflowPaths(clientSlug: string | null | undefined, eventId: string) {
   return uniquePaths([
-    "/admin/activity",
     "/admin/dashboard",
     "/admin/events",
     `/admin/events/${eventId}`,
@@ -113,51 +81,13 @@ export function getApprovalWorkflowPaths(input: ApprovalWorkflowPathsInput) {
       : input.requestType === "asset_review" || input.requestType === "asset_import_review"
         ? metadataString(input.metadata, "assetId")
         : null;
-  const contactId =
-    input.entityType === "crm_contact" && input.entityId
-      ? input.entityId
-      : metadataString(input.metadata, "contactId");
-
   return uniquePaths([
-    "/admin/activity",
     "/admin/dashboard",
     ...(campaignId ? getCampaignWorkflowPaths(clientSlug, campaignId) : []),
     ...(assetId ? getAssetWorkflowPaths(clientSlug, assetId) : []),
     ...(eventId ? getEventWorkflowPaths(clientSlug, eventId) : []),
-    ...(contactId ? getCrmWorkflowPaths(clientSlug, contactId) : []),
     ...clientCampaignsPath(clientSlug),
   ]);
-}
-
-interface WorkspaceMutationTargetsInput {
-  clientSlug?: string | null;
-  includeActivity?: boolean;
-  includeNotifications?: boolean;
-  includeTasks?: boolean;
-  pageIds?: Array<string | null | undefined>;
-}
-
-export function getWorkspaceMutationTargets(input: WorkspaceMutationTargetsInput) {
-  const {
-    includeActivity,
-    clientSlug: _clientSlug,
-    includeNotifications: _includeNotifications,
-    includeTasks: _includeTasks,
-    pageIds: _pageIds,
-  } = input;
-
-  // Workspace-only routes are retired from the shipped shell. Mutations now only need
-  // to refresh the surviving summary surfaces that can still reflect shared activity.
-  return uniqueTargets([
-    { path: "/admin/dashboard" },
-    ...(includeActivity ? [{ path: "/admin/activity" }] : []),
-  ]);
-}
-
-export function revalidateWorkspaceMutationTargets(input: WorkspaceMutationTargetsInput) {
-  for (const target of getWorkspaceMutationTargets(input)) {
-    revalidatePath(target.path, target.type);
-  }
 }
 
 export function revalidateWorkflowPaths(paths: string[]) {

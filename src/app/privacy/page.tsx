@@ -53,7 +53,7 @@ export default function PrivacyPage() {
       <p>You can request deletion of all your data at any time, regardless of your location. There are no fees, no approval process, and no geographic restrictions. To request deletion:</p>
       <ul>
         <li>Disconnect your ad account in Settings, then contact us at support@outletmedia.co to request full data deletion</li>
-        <li>Or use Facebook's data deletion request (we process these automatically within 48 hours)</li>
+        <li>Or use Facebook&apos;s data deletion request (we process these automatically within 48 hours)</li>
       </ul>
       <p>Upon deletion, we remove your encrypted access token, cached campaign data, and account records from our database.</p>
 
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
       <p>Access tokens are encrypted at rest using AES-256-GCM. All communication uses HTTPS. We follow the principle of least privilege for data access.</p>
 
       <h2>8. Changes to This Policy</h2>
-      <p>We will update this page when our practices change. The "last updated" date at the top reflects the most recent revision.</p>
+      <p>We will update this page when our practices change. The &quot;last updated&quot; date at the top reflects the most recent revision.</p>
     </div>
     </div>
   );

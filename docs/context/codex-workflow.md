@@ -67,12 +67,12 @@ Deeper `AGENTS.md` files narrow behavior for:
 - `agent/`
 - `supabase/`
 
-Repo skills should live in `.codex/skills/` so Codex can load specialized guidance only when it is needed.
+If repo-local Codex/operator skills are introduced later, keep them in one dedicated repo skill directory so Codex can load specialized guidance only when it is needed.
 
-Do not keep duplicate copies of the same repo skill under `.agents/skills/`.
+Do not keep duplicate copies of the same operator skill under multiple local skill roots.
 
 Runtime agent skills belong in `agent/skills/`.
-Codex/operator skills belong in `.codex/skills/`.
+Repo-local Codex/operator skills belong in a dedicated repo skill directory only when that directory is actually checked in.
 Durable architecture rules belong in `docs/context/`.
 Execution sequencing belongs in `docs/plans/`.
 

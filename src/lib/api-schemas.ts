@@ -175,29 +175,6 @@ export const HeartbeatPayloadSchema = z.object({
   secret: z.string().min(1),
 });
 
-// ─── WhatsApp runtime schemas ───────────────────────────────────────────────
-
-export const WhatsAppSendSchema = z
-  .object({
-    body: z.string().trim().min(1).max(4096),
-    conversationId: z.string().uuid().optional(),
-    phoneNumberId: z.string().trim().min(1).optional(),
-    previewUrl: z.boolean().optional(),
-    replyToMessageId: z.string().trim().min(1).optional(),
-    secret: z.string().min(1).optional(),
-    toWaId: z.string().trim().min(1).optional(),
-    approved: z.boolean().optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (!value.conversationId && !(value.phoneNumberId && value.toWaId)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Either conversationId or both phoneNumberId and toWaId are required.",
-        path: ["conversationId"],
-      });
-    }
-  });
-
 // ─── Contact form ────────────────────────────────────────────────────────────
 
 export const ContactFormSchema = z.object({
@@ -206,44 +183,11 @@ export const ContactFormSchema = z.object({
   message: z.string().min(1).max(5000),
 });
 
-// ─── Workspace schemas ──────────────────────────────────────────────────────
-
-import { TASK_STATUSES, TASK_PRIORITIES } from "./workspace-types";
-
-export const CreatePageSchema = z.object({
-  title: z.string().max(500).default("Untitled"),
-  client_slug: z.string().min(1),
-  parent_page_id: z.string().uuid().optional(),
-  icon: z.string().max(10).optional(),
-});
-
-export const UpdatePageSchema = z.object({
-  title: z.string().max(500).optional(),
-  content: z.unknown().optional(),
-  icon: z.string().max(10).optional().nullable(),
-  cover_image: z.string().max(2000).optional().nullable(),
-  parent_page_id: z.string().uuid().optional().nullable(),
-  is_archived: z.boolean().optional(),
-  position: z.number().int().min(0).optional(),
-});
-
-export const CreateCommentSchema = z.object({
-  page_id: z.string().uuid(),
-  content: z.string().min(1).max(10000),
-  parent_comment_id: z.string().uuid().optional(),
-});
+// ─── Shared comment schemas ─────────────────────────────────────────────────
 
 export const CreateCampaignCommentSchema = z.object({
   campaign_id: z.string().min(1),
   client_slug: z.string().min(1),
-  content: z.string().min(1).max(10000),
-  parent_comment_id: z.string().uuid().optional(),
-  visibility: z.enum(["shared", "admin_only"]).default("shared"),
-});
-
-export const CreateCrmCommentSchema = z.object({
-  client_slug: z.string().min(1),
-  contact_id: z.string().uuid(),
   content: z.string().min(1).max(10000),
   parent_comment_id: z.string().uuid().optional(),
   visibility: z.enum(["shared", "admin_only"]).default("shared"),
@@ -268,64 +212,4 @@ export const ResolveCommentSchema = z.object({
   resolved: z.boolean(),
 });
 
-export const CreateTaskSchema = z.object({
-  title: z.string().min(1).max(500),
-  description: z.unknown().optional(),
-  status: z.enum(TASK_STATUSES).default("todo"),
-  priority: z.enum(TASK_PRIORITIES).default("medium"),
-  assignee_id: z.string().optional().nullable(),
-  assignee_name: z.string().optional().nullable(),
-  page_id: z.string().uuid().optional().nullable(),
-  client_slug: z.string().min(1),
-  due_date: z.string().optional().nullable(),
-});
 
-export const UpdateTaskSchema = z.object({
-  title: z.string().min(1).max(500).optional(),
-  description: z.unknown().optional(),
-  status: z.enum(TASK_STATUSES).optional(),
-  priority: z.enum(TASK_PRIORITIES).optional(),
-  assignee_id: z.string().optional().nullable(),
-  assignee_name: z.string().optional().nullable(),
-  page_id: z.string().uuid().optional().nullable(),
-  due_date: z.string().optional().nullable(),
-  position: z.number().int().min(0).optional(),
-});
-
-export const CreateApprovalRequestSchema = z.object({
-  audience: z.enum(["admin", "client", "shared"]).default("shared"),
-  client_slug: z.string().min(1),
-  entity_id: z.string().optional().nullable(),
-  entity_type: z.string().min(1).optional().nullable(),
-  metadata: z.record(z.string(), z.unknown()).optional(),
-  page_id: z.string().uuid().optional().nullable(),
-  request_type: z.string().min(1).max(100),
-  summary: z.string().max(2000).optional().nullable(),
-  task_id: z.string().uuid().optional().nullable(),
-  title: z.string().min(1).max(500),
-});
-
-export const ResolveApprovalRequestSchema = z.object({
-  note: z.string().max(2000).optional().nullable(),
-  status: z.enum(["approved", "rejected", "cancelled"]),
-});
-
-// ─── Asset schemas ─────────────────────────────────────────────────────────
-
-import { ASSET_STATUSES } from "./constants";
-
-export const UpdateAssetSchema = z.object({
-  format: z.string().max(50).optional(),
-  labels: z.array(z.string().max(100)).optional(),
-  placement: z.string().max(100).optional(),
-  status: z.enum(ASSET_STATUSES).optional(),
-  used_in_campaigns: z.array(z.string()).optional(),
-});
-
-export const ImportAssetsSchema = z.object({
-  folder_url: z.string().url().max(2000),
-  client_slug: z.string().min(1).max(100),
-  uploaded_by: z.string().min(1).max(200),
-});
-
-export const ClientImportAssetsSchema = ImportAssetsSchema.omit({ uploaded_by: true });

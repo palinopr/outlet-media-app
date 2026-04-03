@@ -1,5 +1,7 @@
 # Outlet Media Agent — Learning Journal
 
+> Historical note: older cycle entries may mention retired prompts, transports, or workflows (including the removed customer WhatsApp slice). Treat those mentions as implementation history, not current runtime policy.
+
 Written by the proactive think loop. Each cycle logs what was done, what was learned, and what to focus on next.
 
 Format:
@@ -769,188 +771,243 @@ Format:
 - Persistent flags: INGEST_URL localhost, heartbeat stale (Mar 8), TM sync disabled
 - Condensation history: ..., #222-242(#243), #243-249(#250), **#250-259(#260)**
 
-## 2026-03-14 — Cycles #260-268 Summary (Full Day: Memory + Prompts + Monitoring + Infra)
+## 2026-03-14/15 — Cycles #260-274 Summary (Post-Show Transition + KYBBA Crisis + Full Rotation)
 
-> Condensed from 9 detailed entries during Cycle #269 memory maintenance. See git history for originals.
+> Condensed from 15 detailed entries during Cycle #275 memory maintenance. See git history for originals.
 
-- **Memory (P3: #260, #263):** Condensed #250-259. MEMORY.md: CLI v2.1.76, Supabase status lag clarified (7 DB vs 5 Meta), KYBBA trajectory added to Known Issues.
-- **Prompt audits (P2: #261, #264, #267):** command.txt (#261): +35 lines — Delivery Diagnostics section (campaign/adset-level `delivery_info`, `delivery_estimate`, 6-step stall checklist) + CBO/bid_strategy note. general.txt (#264): fixed stale Don Omar underpacing note → "6.4x, 68+ purchases, recovered." think.txt (#267): fixed KYBBA budget $100→$50, added zero-purchase detection (+7 lines), post-show campaign check (+6 lines), updated stall patterns.
-- **Monitoring (P4: #262, #265, #268 — 3 cycles):** 5 ACTIVE stable. Anaheim+SF confirmed PAUSED post-show ✅. Sac show-day surge $1,800/day (show Mar 14). **Don Omar BCN** 5.00× marginal (2-day), $991/day — scaling excellently. **KYBBA** 🔴 5 consecutive blended declines (2.72→2.47), negative marginal (revenue -$248, spend +$96), crosses 2.0 ~Mar 17-18, $50/day limits exposure. **Vaz Vil** FROZEN $350, 14+ days 0×. **Sienna** 107-112% pacing, 0× expected.
-- **Infrastructure (P6: #266):** Production ALL GREEN. CLI v2.1.76. Gmail watch expires Mar 22. Persistent: INGEST_URL localhost, heartbeat stale (Mar 8), TM sync 10 days stale.
+- **Memory (P3: #260, #263, #271):** Condensed #250-259. MEMORY.md: CLI v2.1.76, Supabase status lag, KYBBA trajectory expanded, Known Issue #5 updated.
+- **Prompt audits (P2: #261, #264, #267, #269, #273 — 5 cycles):** command.txt (#261): +35 lines — Delivery Diagnostics section (6-step stall checklist) + CBO/bid_strategy. general.txt (#264): fixed stale Don Omar underpacing note. think.txt (#267): KYBBA budget $100→$50 fix, zero-purchase detection, post-show check. boss.txt (#269): `last_7d` + day-by-day query, Zero-Purchase Detection. media-buyer.txt (#273): `last_7d`, day-by-day breakdown, Creative Fatigue Action Plan (freq 4.0+ threshold), Delivery Issues section (stall vs zero-purchase), KYBBA budget fix.
+- **Monitoring (P4: #262, #265, #268, #270, #272 — 5 cycles):** 5→4 ACTIVE. Sacramento ACTIVE→PAUSED (show Mar 14 ✅). Anaheim PAUSED (Mar 15, $0 ✅). Don Omar BCN 4.83-5.43× marginal, $1,010-1,028/day — excellent. **KYBBA 🔴 NEGATIVE marginal (-1.90×)** — revenue DECLINING (Meta removing conversions), 8+ consecutive blended declines (2.72→2.44), crosses 2.0 ~Mar 22 (show day). Boss flagged CRITICAL. Vaz Vil FROZEN $350/0× for 4+ consecutive snapshots. Sienna 107% pacing, 0× expected.
+- **Infrastructure (P6: #266, #274):** Production ALL GREEN both checks. CLI v2.1.76. Gmail watch renewed (expires Mar 23). 183 snapshots, 16 dates through Mar 15. Persistent: INGEST_URL localhost, heartbeat stale (Mar 8, 7 days), TM sync disabled (last-events.json 11 days stale).
 
-**Key findings preserved from Cycles #260-268:**
-- ✅ command.txt got Delivery Diagnostics section — biggest operational gap (Vaz Vil/KYBBA/Houston stall patterns)
-- ✅ think.txt got zero-purchase detection + post-show campaign check — two new monitoring capabilities
-- 🔴 KYBBA negative marginal — Meta revising both spend and revenue DOWN (attribution closures). Blended 2.47×, crosses 2.0 ~Mar 17-18. $50/day limits risk (~$400 remaining).
-- ⚠️ Vaz Vil frozen delivery 14+ days, $350/0×
-- ⚠️ Post-Sac outlook: 4 ACTIVE (Don Omar $600/day, KYBBA $50/day, Sienna $200/day, Vaz Vil $50/day). Only Don Omar driving meaningful revenue.
+**Key findings preserved from Cycles #260-274:**
+- 🔴 KYBBA negative marginal (-1.90×): revenue declining, 8+ blended declines (2.72→2.44), crosses 2.0 ~Mar 22 = show day. Freq 4.88 (severe fatigue). $50/day limits exposure.
+- ✅ Sacramento + Anaheim correctly PAUSED post-show
+- ✅ Don Omar BCN scaling excellently (4.83× marginal, 96 purchases, $600/day)
+- ✅ 5 prompt files updated: command.txt (Delivery Diagnostics), think.txt (zero-purchase + post-show), boss.txt (Zero-Purchase Detection), general.txt (Don Omar fix), media-buyer.txt (Creative Fatigue + Delivery Issues)
+- 4 ACTIVE: Don Omar BCN ($600/day, 6.34×), KYBBA ($50/day, 2.44× declining), Sienna ($200/day, 0× expected), Vaz Vil ($50/day, 0× frozen)
+- Persistent flags: INGEST_URL localhost, heartbeat stale (Mar 8), TM sync disabled, Vaz Vil 0×
+- Condensation history: ..., #243-249(#250), #250-259(#260), **#260-274(#275)**
+
+## 2026-03-15/16 — Cycles #276-281 Summary (Monitoring + Prompts + Memory)
+
+> Condensed from 6 detailed entries during Cycle #282 memory maintenance. See git history for originals.
+
+- **Monitoring (P4: #276, #279, #281 — 3 cycles):** 4 ACTIVE stable throughout. Don Omar BCN excellent ($3,867, 6.38×, marginal 4.83× Mar 13→15, overpacing ~$1,000/day on $600/day). KYBBA 🔴 marginal -1.92× (Mar 12→15, revenue declining, Meta removing conversions). Blended: 2.65→2.60→2.47→2.437 (10+ consecutive declines). Projection: ~1.95-2.01× by show day (Mar 22). Freq 4.88 (severe fatigue). Sienna $1,772, 0× expected. Vaz Vil $350, 0× frozen (4 consecutive identical snapshots, 14+ days no delivery).
+- **Prompt audits (P2: #277, #280):** tm-agent.txt (#277): +5 fixes (Don Omar BCN client scope, campaign-event cross-ref, upcoming shows calendar, post-show urgency). reporting-agent.txt (#280): 🔴 stale Don Omar delivery note fixed (said "<$70/day" but recovered to $1,000/day), zero-purchase detection rule added, delivery stall patterns updated.
+- **Memory (P3: #278):** LEARNINGS.md verified, MEMORY.md verified, pipeline status dated to Mar 15.
+
+**Key findings preserved from Cycles #276-281:**
+- 🔴 KYBBA blended ROAS declined 10+ consecutive snapshots (2.72→2.437), marginal -1.92×, show Mar 22. Flagged CRITICAL since Cycle #270. Jaime aware.
+- 🔴 reporting-agent.txt had stale Don Omar delivery data — fixed.
+- ⚠️ Vaz Vil frozen at $350/0× for 14+ days.
+- ✅ Don Omar BCN excellent (6.38×, overpacing).
+- ✅ All post-show campaigns PAUSED.
+- Persistent flags: INGEST_URL localhost, heartbeat stale (Mar 8), TM sync disabled.
+- Condensation history: ..., #250-259(#260), #260-274(#275), **#276-281(#282)**
+
+## 2026-03-16 — Cycles #282-287 Summary (Memory + Monitoring + Prompts + Infra)
+
+> Condensed from 6 detailed entries during Cycle #288 memory maintenance. See git history for originals.
+
+- **Memory (P3: #282):** Condensed #276-281. Noted Boss Supervision findings: service account key exposed, KYBBA 7-day ROAS collapsed to 1.73×, Glendale Mar 20 no campaign. Mar 16 snapshots analyzed.
+- **Monitoring (P4: #283, #286 — 2 cycles):** 3 ACTIVE in Supabase (KYBBA, Sienna, Vaz Vil). Don Omar BCN PAUSED (was $600/day, 6.32×). KYBBA blended uptick 2.437→2.52× (broke 10-decline streak) but Boss 7-day = 1.73× (zero purchases 6+ days). Vaz Vil 6+ consecutive frozen snapshots ($350/0×, 16+ days stalled). Sienna $1,919/0× at 74% pacing (normal). All post-show campaigns PAUSED ✅. No new Glendale campaign.
+- **Prompt audits (P2: #284, #287):** command.txt (#284): `actions` JSON parsing example, `cost_per_action_type` field, zero-purchase detection rule. general.txt (#287): Don Omar BCN status corrected (ACTIVE→PAUSED), zero-purchase detection added. Both cross-checked consistent.
+- **Infrastructure (P6: #285):** Production ALL GREEN (health 200, ingest 400, alerts 401). Snapshots 187 rows through Mar 16. Gmail watch expires Mar 23. CLI v2.1.76. Persistent: INGEST_URL localhost (426), heartbeat 8 days stale, TM sync 12 days stale. Service account key exposed (Jaime's action item).
+
+**Key findings preserved from Cycles #282-287:**
+- 🔴 KYBBA: blended 2.52× (snapshot) but 7-day 1.73× (Boss live pull). Zero purchases 6+ consecutive days. Show Mar 22 (6 days). Creative refresh CRITICAL.
+- 🔴 Vaz Vil: 6+ frozen snapshots at $350/0×. 16+ days zero delivery on $50/day. Needs Jaime's decision.
+- 🔴 Service account key exposed on GitHub — Gmail auth broken. Jaime must rotate.
+- 🟡 Don Omar BCN PAUSED (was best performer at 6.32×/$600/day). Investigate if intentional.
+- 🟡 Glendale Mar 20 (4 days) — no active campaign, 3,698 tickets sold.
+- ✅ command.txt + general.txt updated with zero-purchase detection + Don Omar status fix
+- ✅ Infrastructure all green (production), persistent flags unchanged
+- Condensation history: ..., #260-274(#275), #276-281(#282), **#282-287(#288)**
+
+## 2026-03-16 — Cycles #288-291 Summary (Memory + Prompt + Monitoring + Infra)
+
+> Condensed from 4 detailed entries during Cycle #292 memory maintenance. See git history for originals.
+
+- **Cycle #288 (P3 — memory):** Condensed #282-287. MEMORY.md snapshot dates corrected (17 through Mar 16, 187 rows). 3 ACTIVE confirmed (KYBBA/Sienna/Vaz Vil).
+- **Cycle #289 (P2 — think.txt):** 4 fixes: Vaz Vil stall duration (11→16+ days), Don Omar BCN stall/recovery pattern added, KYBBA zero-purchase expanded (5+ days, freq 3.60, $0.32/day delivery, Boss 7-day 1.73×), SF+SLC added to post-show examples.
+- **Cycle #290 (P4 — monitoring):** 3 ACTIVE unchanged. KYBBA ROAS uptick 2.437→2.52 is ARTIFICIAL — Meta removed $93 of spend (now lower than Mar 7). Freq 5.09 (extreme saturation). Boss 7-day 1.73× more reliable. Sienna $1,919/0× (74% pacing, expected). Vaz Vil 5+ frozen snapshots at $350/0×. Don Omar BCN confirmed PAUSED ($4,541, 6.32×). All past-show campaigns PAUSED ✅.
+- **Cycle #291 (P6 — infra):** Production ALL GREEN (health 200, ingest 400, alerts 401). .env 62 vars. CLI v2.1.76. Gmail watch expires Mar 23. Persistent: INGEST_URL localhost (000), heartbeat 8 days stale (Mar 8), TM sync 12 days stale (Mar 4).
+
+**Key findings preserved from Cycles #288-291:**
+- KYBBA ROAS uptick is artificial (Meta spend revision) — 7-day 1.73× is the real picture
+- think.txt updated with current crisis data (KYBBA zero-purchase severity, Vaz Vil stall, Don Omar pattern)
+- Infrastructure stable, all persistent flags unchanged
+- Condensation history: ..., #260-274(#275), #276-281(#282), #282-287(#288 block), **#288-291(#292)**
+
+## 2026-03-16 — Cycles #292-294 Summary (Memory + Monitoring + Prompt)
+
+> Condensed from 3 detailed entries during Cycle #295 memory maintenance.
+
+- **Cycle #292 (P3 — memory):** Condensed #288-291. MEMORY.md verified (3 ACTIVE, Known Issues current). LEARNINGS.md 887→845 lines.
+- **Cycle #293 (P4 — monitoring):** 3 ACTIVE confirmed (KYBBA/Sienna/Vaz Vil). KYBBA spend revised DOWN again (-$93, artificial 2.52× bump). Sienna $1,919/0× normal. Vaz Vil frozen $350/0× for 16+ days. Don Omar BCN PAUSED. All post-show PAUSED ✅. Glendale Mar 20 still no active campaign.
+- **Cycle #294 (P2 — boss.txt):** Added El Destilero pixel (939151375333756) to Pixel Selection — was in 3 other prompts + MEMORY.md but missing from boss.txt. Real operational gap.
+
+**Key findings preserved from Cycles #292-294:**
+- KYBBA budget discrepancy: MEMORY.md says $70/day (Boss Supervision live pull) but Supabase `meta_campaigns.daily_budget` = 5000 ($50/day). Budget bump may not have synced.
+- All known issues unchanged. No new anomalies.
+- Condensation history: ..., #276-281(#282), #282-287(#288 block), #288-291(#292 block), **#292-294(#295)**
+
+## 2026-03-16 — Cycles #295-307 Summary (Full Rotation: Memory + Monitoring + Prompts + Infra + Proposals)
+
+> Condensed from 13 detailed entries. See git history for originals.
+
+- **Memory (P3: #295, #300, #305):** Condensed previous cycles. MEMORY.md: `purchases`/`frequency` as session-cache-only fields (42703 Supabase error).
+- **Monitoring (P4: #296, #299, #302, #306 — 4 cycles):** 3 ACTIVE stable (KYBBA/Sienna/Vaz Vil). KYBBA marginal worsened to **-6.93×** (revenue declining while spend barely increases). Freq 5.09→extreme saturation. Vaz Vil 5+ frozen snapshots at $350/0×. Don Omar BCN PAUSED ($4,541, 6.32×). Glendale Mar 20 no campaign. All flags previously raised.
+- **Prompt audits (P2: #297, #301, #304, #307):** creative-agent.txt (#297): Zero-Purchase Creative Diagnosis + tiered frequency severity. client-manager.txt (#301): KYBBA budget $50→$70, crisis status, Don Omar PAUSED, Vaz Vil stall 16+ days. command.txt (#304): `actions` JSON parsing, zero-purchase detection. media-buyer.txt (#307): session-cache-only fields warning, KYBBA delivery update, frequency tiers.
+- **Proposals (P5: #303):** Added Proposal T (Frequency-Based Creative Refresh Alert). 20 total (A-T).
+- **Infrastructure (P6: #298, #304):** ALL GREEN. KYBBA budget $70/day confirmed in Supabase. CLI v2.1.77.
+
+**Key findings preserved from Cycles #295-307:**
+- 🔴 KYBBA marginal -6.93×, freq 5.09, revenue declining 7+ snapshots. Show Mar 22.
+- 🔑 `purchases` and `frequency` NOT in Supabase `meta_campaigns` — session cache only
+- ✅ creative-agent.txt got zero-purchase diagnosis (real operational gap for KYBBA crisis)
+- ✅ Proposals expanded to 20 (T: Frequency-Based Creative Refresh Alert)
+- Persistent flags: INGEST_URL localhost, heartbeat stale, TM sync disabled, Vaz Vil 0×
+- Condensation history: ..., #282-287(#288), #288-291(#292), #292-294(#295), **#295-307(#308)**
+
+## 2026-03-17 — Cycles #308-312 Summary (KYBBA All-Time Low + Portfolio Collapse to 1 ACTIVE + Infra)
+
+> Condensed from 5 detailed entries during Cycle #313 memory maintenance. See git history for originals.
+
+- **Monitoring (P4: #308, #311 — 2 cycles):** KYBBA blended ROAS hit **2.34× ALL-TIME LOW** (was 2.52×). Revenue crashed -$775 (Meta clawing back). Freq 5.30. Crosses 2.0 ~Mar 19 (3 days before show). **Sienna + Vaz Vil → PAUSED** by Jaime (correct calls). Portfolio collapsed: 3 ACTIVE → 1 ACTIVE (KYBBA only at $70/day). Owner note drafted (Cycle #308).
+- **Memory (P3: #309):** MEMORY.md updated: KYBBA freq 5.30 (was stale 3.38), trajectory through 2.34, revenue crashed, crosses 2.0 Mar 19.
+- **Prompt audit (P2: #310):** command.txt: +4 lines — `daily_budget` column naming + `purchases`/`frequency` session-cache-only warning. Real bug prevention.
+- **Infrastructure (P6: #312):** Production ALL GREEN (health 200, ingest 400, alerts 401). Gmail watch renewed (expires Mar 24). CLI path changed to `/Applications/cmux.app/Contents/Resources/bin/claude`. 190 snapshots through Mar 17. Persistent: INGEST_URL localhost, heartbeat stale (Mar 8, 9 days), TM sync 13 days stale.
+
+**Key findings preserved from Cycles #308-312:**
+- 🔴 KYBBA 2.34× ALL-TIME LOW — revenue crashing, crosses 2.0 ~Mar 19, show Mar 22
+- ✅ Sienna + Vaz Vil correctly PAUSED by Jaime → portfolio = 1 ACTIVE (KYBBA only)
+- 🟡 CLI path changed to `/Applications/cmux.app/Contents/Resources/bin/claude` (cmux.app install)
+- 🟢 Gmail watch auto-renewed (expires Mar 24)
 - Persistent flags: INGEST_URL localhost, heartbeat stale (Mar 8), TM sync disabled
-- Condensation history: ..., #243-249(#250), #250-259(#260), **#260-268(#269)**
+- Condensation history: ..., #292-294(#295), #295-307(#308), **#308-312(#313)**
 
-*(Detailed entries for Cycles #262-268 removed — already captured in the #260-268 summary above.)*
+## 2026-03-18/19 — Cycles #313-324 Summary (KYBBA Accelerating Decline + Full Priority Rotation)
 
-## 2026-03-14 — Cycle #269 (P2 — Prompt Audit: boss.txt)
+> Condensed from 12 detailed entries during Cycle #325 memory maintenance. See git history for originals.
 
-- **Priority chosen:** P4 — Business Monitoring (rotation-compliant, last was P2 Cycle #261)
-- **What I audited or read:**
-  - session/last-campaigns.json (mtime Mar 14 18:01 — fresh, same day)
-  - Supabase: campaign_snapshots (Mar 11-14, all 5 ACTIVE campaigns), meta_campaigns status
-- **P1 check:** No breakage. INGEST_URL still localhost (alerts silently dropped — persistent).
-- **Campaign landscape:** 5 ACTIVE (was 7-8). Down from previous cycles.
-  - **Status changes:** Anaheim ACTIVE→PAUSED (show Mar 13 PAST ✅), SF ACTIVE→PAUSED (show Mar 14 TODAY/PAST ✅). Both expected post-show pauses.
-- **Marginal ROAS analysis (from snapshots, spend in cents):**
-  - **Don Omar BCN:** 3.38× (1-day) / 5.00× (2-day Mar 12→14) — excellent, scaling well. $991/day on $600/day budget.
-  - **Sacramento:** 2.61× (1-day) / 2.71× (3-day Mar 11→14) — healthy. **🔑 Budget surged $1,800/day for show day Mar 14** (was ~$300/day). Show-day surge similar to Anaheim's $2,000/day pattern.
-  - **KYBBA:** 🔴 **4 consecutive blended ROAS declines: 2.70→2.65→2.60→2.47.** Revenue DECLINING while spend increases ($7,210→$6,713 over 3 days = -$497). Meta attribution corrections driving both spend revisions and revenue drops. At accelerating decline rate (-0.137 latest day), crosses 2.0 around Mar 17-18. Show Mar 22 (8 days).
-  - **Vaz Vil:** Delivery FROZEN at $350 for 3 consecutive snapshot days ($0 new spend on $50/day). 12+ days at 0× ROAS.
-  - **Sienna:** Delivering at ~$216/day on $200/day budget (112% pacing). 0× ROAS expected (ViewContent optimization). $1,568 total.
-- **Alert attempted:** KYBBA decline + Sacramento surge. INGEST_URL=localhost → silently dropped (persistent issue).
-- **No owner note** — KYBBA trend is concerning but blended is still 2.47× with 8 days to show. The budget is only $50/day so total exposure is limited (~$400 more before show). Worth watching but not urgent enough for owner alert since the campaign will auto-pause at show date.
-- **Next priority:** P3 — Memory Maintenance. LEARNINGS.md is ~810 lines. Condensation of recent cycles would be useful. Also MEMORY.md may need updates for 5-ACTIVE landscape and Sacramento budget surge.
+- **Memory (P3: #313, #318):** Condensed #308-312 and #313-317. MEMORY.md: Sienna+Vaz Vil→PAUSED, CLI path updated, 1 ACTIVE campaign. LEARNINGS.md 993→903 lines.
+- **Monitoring (P4: #314, #317, #320, #324 — 4 cycles):** 1 ACTIVE (KYBBA only). KYBBA decline ACCELERATING: 2.34× (Mar 17) → 2.16× (Mar 19). Rate worsened: -0.065/day → -0.09/day. Revenue crashed -$650 (Mar 17→19), spend revised DOWN -$89 (Meta clawbacks). Crosses 2.0 ~Mar 21 (day before show). Freq 5.23, 50 purchases (zero new for weeks), delivering ~$2-5/day on $70/day. Mar 18 snapshot MISSING (new gap). Glendale Mar 20 has no campaign. All 28 PAUSED unchanged.
+- **Infrastructure (P6: #315, #322):** .env 62 vars ✅, CLI ✅, Supabase ✅. Mar 19 snapshot arrived (191 rows). Gmail watch expires Mar 26. Persistent: INGEST_URL localhost (000), heartbeat 11 days stale (Mar 8), TM sync 15 days stale.
+- **Prompt audits (P2: #316, #319, #323):** email-agent.txt (#316): KYBBA crisis context, venue domains, service account 🔴 BLOCKING. growth-supervisor.txt (#319, 165-cycle gap): 5 fixes (+20 lines), alerts endpoint, Supabase ref. lead-qualifier.txt (#323, 164-cycle gap): 4 fixes (+36 lines), client list 4→7, alerts endpoint, show urgency scoring.
+- **Proposals (P5: #321):** Re-ranked for post-show phase. O (Post-Show Recap) → #1. 3-phase implementation structure.
 
-## 2026-03-14 — Cycle #263 (P3 — Memory Maintenance)
+**Key findings preserved from Cycles #313-324:**
+- 🔴 KYBBA 2.16× (Mar 19), decline accelerating -0.09/day. Crosses 2.0 ~Mar 21. Show Mar 22.
+- 🔴 Mar 18 snapshot MISSING — new gap (jumped Mar 17→19).
+- 🟢 Gmail watch renewed (expires Mar 26). Session cache + Mar 19 snapshot fresh.
+- ✅ 3 prompts updated: email-agent, growth-supervisor (165-cycle gap), lead-qualifier (164-cycle gap).
+- ✅ Proposals re-ranked for post-KYBBA phase.
+- Persistent flags: INGEST_URL localhost, heartbeat stale (Mar 8), TM sync disabled, Glendale Mar 20 no campaign.
+- Condensation history: ..., #295-307(#308), #308-312(#313), **#313-324(#325)**
 
-- **Priority chosen:** P3 — Memory Maintenance (recommended by Cycle #262, rotation-compliant)
-- **What I audited or read:**
-  - LEARNINGS.md (full, ~823 lines pre-edit)
-  - MEMORY.md (full, 281 lines — recently updated by Boss Supervision Mar 14)
-  - Session cache: last-campaigns.json mtime Mar 14 18:01 (fresh today), last-events.json mtime Mar 4 (10 days stale)
-- **P1 check:** No breakage. Known Issue #1 (service account key exposed) is Jaime's action. All other issues previously raised.
-- **Action taken:**
-  1. **MEMORY.md Known Issue #5 (KYBBA) expanded:** Added 4 consecutive blended ROAS decline trajectory (2.70→2.65→2.60→2.47), Mar 17-18 crossing projection, revenue declining note, and low-budget exposure context ($400 remaining).
-  2. **MEMORY.md Meta sync freshness updated:** Session cache date corrected to Mar 14 18:01 (was showing Mar 13).
-  3. **Condensation deferred:** Only 3 detailed entries (#260-262) exist — too few to condense efficiently. Will condense when 5+ accumulate.
-- **No owner note** — routine memory maintenance, no new business anomaly.
-- **Next priority:** P2 — Prompt Audit. general.txt is next in rotation (last audited Cycle #216, 47 cycles ago). Post-show context for Sac/SF may need updating in prompts.
+## 2026-03-19 — Cycles #325-338 Summary (Full Day: Monitoring + Prompts + Memory + Infra)
 
-## 2026-03-14 — Cycle #264 (P2 — Prompt Audit: general.txt)
+> Condensed from 14 detailed entries during Cycle #339 memory maintenance. See git history for originals.
 
-- **Priority chosen:** P2 — Prompt Audit (rotation-compliant, last was P3 Cycle #263)
-- **What I audited or read:**
-  - general.txt (full, 485 lines — last audited Cycle #216, 48 cycles ago)
-  - MEMORY.md (full, 281 lines — current from Mar 14 Boss Supervision)
-  - Session cache mtime Mar 14 18:01 (fresh)
-- **P1 check:** No breakage. Known issues all previously raised.
-- **Action taken:**
-  1. **Fixed stale Don Omar BCN delivery status** in EATA section (line 435): "delivery has been severely underpacing" → "~6.4x ROAS, 68+ purchases, delivery recovered." The underpacing note was from early March when delivery stalled; it fully recovered by Cycle #243 (~Mar 13). This is a real factual error — agent reading this prompt would mischaracterize Don Omar's status.
-  2. **Full cross-check (10 items):** Client aliases ✅, pixel IDs ✅, alert levels ✅, post-show rule ✅, pagination ✅, API version ✅, context bleed warning ✅, Supabase naming ✅, CBO note ✅, delivery diagnostics section ✅. No other gaps found.
-- **No owner note** — routine prompt maintenance, no business anomaly.
-- **Next priority:** P4 — Business Monitoring. Session cache is fresh (Mar 14 18:01). Sacramento show is tonight (Mar 14), SF show was today, Anaheim show is tomorrow (Mar 15). Post-show status checks important.
+- **Memory (P3: #325, #330, #334):** Condensed #313-324, #325-329, #330-333. Removed duplicate entries. MEMORY.md cleaned (stale shows section removed, Glendale label noted as Boss artifact). 4 ACTIVE confirmed.
+- **Monitoring (P4: #326, #329, #331, #333, #335, #338 — 6 cycles):** 4 ACTIVE stable all day (KYBBA, Don Omar BCN, Sienna, El Destilado). **Don Omar BCN: PAUSED→ACTIVE** at $300/day (was $600), 6.70× ROAS, marginal 13.47-13.49× (3-day). Star performer ramping ($85/day on $300/day = 28% pacing). **El Destilado: NEW** ($785 lifetime budget, $0 spend). **Vaz Vil: ACTIVE→PAUSED** (frozen $350/0× for 16+ days — correct call). **KYBBA 2.16×** — 14th+ consecutive decline, -0.09/day, crosses 2.0 ~Mar 21. Revenue crashed -$2,094 (9 days), spend revised DOWN -$312 (Meta clawbacks). Both negative = marginal incalculable. Zero new purchases for weeks. Budget now $100/day in Supabase (was $50). Sienna FROZEN ($1,919.78 identical Mar 17→19, $30/day budget). Mar 18 snapshot MISSING. Glendale Mar 20 no campaign (38+ cycles, definitively intentional).
+- **Prompt audits (P2: #327, #332, #337):** publisher-tiktok.txt (#327, 166-cycle gap): +20 lines, El Destilado, alerts, safety. tiktok-supervisor.txt (#332, 169-cycle gap): +13 lines, El Destilado, Business Context. don-omar-agent.txt (#337, 128-cycle gap): 🔴 critically stale Meta campaign data fixed (said PAUSED/$600/$370 → actually ACTIVE/$300/$4,794/6.70×), El Destilado added. **All 18 prompts fully audited.**
+- **Infrastructure (P6: #328, #336):** .env 39-62 vars ✅, CLI ✅, Gmail watch expires Mar 26 ✅, snapshots Mar 19 present ✅. Persistent: INGEST_URL localhost (000), heartbeat stale (Mar 8, 11 days), TM sync 15 days stale.
 
-## 2026-03-14 — Cycle #265 (P4 — Business Monitoring)
+**Key findings preserved from Cycles #325-338:**
+- 🔴 KYBBA 2.16× declining -0.09/day, crosses 2.0 ~Mar 21. Show Mar 22. Zero purchases for weeks. Jaime aware since Cycle #270.
+- ✅ Don Omar BCN reactivated at $300/day, 13.47× marginal — star performer
+- ✅ El Destilado new ($785 lifetime), Vaz Vil correctly PAUSED
+- 🔴 don-omar-agent.txt had critically stale campaign data — fixed Cycle #337
+- ⚠️ Sienna frozen delivery ($1,919.78 unchanged 2+ days on $30/day)
+- ⚠️ KYBBA budget now $100/day in Supabase (was $50, may be Jaime bump)
+- Persistent flags: INGEST_URL localhost, heartbeat stale (Mar 8), TM sync disabled
+- Condensation history: ..., #308-312(#313), #313-324(#325), **#325-338(#339)**
 
-- **Priority chosen:** P4 — Business Monitoring (rotation-compliant, last was P2 Cycle #264)
-- **What I audited or read:**
-  - session/last-campaigns.json (mtime Mar 14 18:01 — fresh, same day)
-  - Supabase: campaign_snapshots Mar 11-14, meta_campaigns ACTIVE status
-  - last-events.json 10 days stale (TM sync disabled — persistent)
-- **P1 check:** No breakage. INGEST_URL still localhost (alerts silently dropped — persistent).
-- **Campaign landscape:** 5 ACTIVE (unchanged from Cycle #262). Supabase matches session cache exactly.
-  - SF + Anaheim confirmed PAUSED (not in Mar 14 snapshots or session cache). Post-show pauses ✅.
-- **Marginal ROAS analysis (snapshots, spend in cents):**
-  - **Don Omar BCN:** 3.38× (1-day) / 5.00× (2-day Mar 12→14) — excellent. $991/day on $600/day = 165% pacing. Scaling aggressively.
-  - **Sacramento:** 2.60× (1-day) / 2.56× (2-day) — healthy. **Show TONIGHT (Mar 14).** Budget surged to $1,800/day but only $217 new spend in latest snapshot (surge may have just started). Will likely be paused post-show.
-  - **KYBBA:** 🔴 **5th consecutive blended ROAS decline: 2.70→2.65→2.60→2.47→2.47.** Revenue DECLINING ($6,961→$6,713 = -$248 while spend +$47). Meta attribution corrections driving both. Delivery ~$47/day on $50/day (actually nearly correct). Show Mar 22 (8 days). Budget $50/day limits total exposure to ~$400 more.
-  - **Vaz Vil:** FROZEN at $350 for 3+ consecutive snapshot days ($0 new spend on $50/day). 12+ days at 0×. Delivery completely stalled.
-  - **Sienna:** Delivering ~$215/day on $200/day (107% pacing). 0× expected (ViewContent optimization). $1,568 total.
-- **Post-show outlook:** After Sacramento pauses tonight, likely 4 ACTIVE remain: Don Omar BCN ($600/day, 6.44×), KYBBA ($50/day, 2.47×), Vaz Vil ($50/day, 0× frozen), Sienna ($200/day, 0× expected). Combined $900/day, only Don Omar driving meaningful revenue.
-- **KYBBA 2.0× crossing projection update:** At -0.13/day decline rate, crosses 2.0 around Mar 17-18. However, decline is driven by Meta attribution corrections (closing attribution windows) not real performance degradation. Budget is only $50/day, so total remaining exposure ~$400. Not worth panicking but worth noting.
-- **No owner note** — all flags previously raised (KYBBA decline, Vaz Vil stall). No new anomalies. Low-budget campaigns limit risk.
-- **Next priority:** P6 — Infrastructure Check. Good to rotate through infra, especially checking heartbeat status and Gmail watch expiry (was Mar 14 per earlier notes, then Mar 19-20 in later cycles — should verify).
+## 2026-03-19/26 — Cycles #339-345 Summary (Monitoring + Prompts + Memory + Critical Post-Show)
 
-## 2026-03-14 — Cycle #266 (P6 — Infrastructure Check)
+> Condensed from 7 detailed entries during Cycle #346 memory maintenance. See git history for originals.
 
-- **Priority chosen:** P6 — Infrastructure Check (rotation-compliant, last was P4 Cycle #265)
-- **What I audited or read:**
-  - .env (39 vars ✅), Claude CLI (v2.1.76), session cache mtimes, Supabase endpoints, production Railway
-- **P1 check:** No new breakage. All persistent issues previously raised.
-- **Findings:**
-  - **Production Railway ALL GREEN:** Health 200, Ingest 400, Alerts 401. No Clerk regression.
-  - **INGEST_URL still localhost** → 426 responses (persistent since Cycle #160). Alerts silently dropped during think cycles.
-  - **Heartbeat stale since Mar 8** (6 days). `last_seen: 2026-03-08T23:05:00Z`. Scheduler partially functional: snapshots updating (Mar 14 = latest), gmail_watch refreshing (Mar 15 01:22 UTC). But heartbeat cron itself is broken.
-  - **Gmail watch:** Expires Mar 22. Healthy. Auto-refreshed.
-  - **CLI v2.1.76** (up from v2.1.75 in Cycle #253).
-  - **Snapshots current:** Mar 14 has 5 rows (matches 5 ACTIVE campaigns). Mar 13 had 7 (before Anaheim+SF paused).
-  - **Session cache:** last-campaigns.json Mar 14 18:01 (fresh). last-events.json Mar 4 (10 days stale, TM sync disabled).
-  - **.env:** 39 vars, all critical vars set (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, DISCORD_*, etc.).
-  - **agent_runtime_state:** Only 2 rows (heartbeat + gmail_watch). No other runtime entries.
-- **Action taken:** None needed. All persistent flags previously documented.
-- **Persistent flags (unchanged):**
-  1. INGEST_URL localhost (alerts silently dropped)
-  2. Heartbeat stale (Mar 8, 6 days)
-  3. TM sync disabled (last-events.json 10 days stale)
-- **No owner note** — routine infra check, no new issues.
-- **Next priority:** P2 — Prompt Audit. think.txt is next in rotation (last audited Cycle #220, 46 cycles ago). Should check if delivery stall section needs updating given Vaz Vil persistence and recent campaign pauses.
+- **Memory (P3: #339, #341):** Condensed #325-338. Removed ~115 duplicate lines from LEARNINGS.md (stale detailed entries behind condensed summary). Verified 4 ACTIVE.
+- **Monitoring (P4: #342, #344 — 2 cycles):** 4 ACTIVE (KYBBA, Don Omar BCN, Sienna, El Destilado). KYBBA bounced 2.16→2.36 (late attribution, unreliable — same pattern as Mar 16 bounce→crash). Revenue crashed -$2,096 over 10 days. Meta spend clawbacks continuous. Don Omar BCN 7.55-13.49× marginal, star performer, $300/day pacing 28→77%. Sienna unfrozen ($1,919→$1,945, $30/day). El Destilado first spend ($0→$15, lifetime budget). Second El Destilado campaign staged (PAUSED, $100/day).
+- **Prompt audits (P2: #340, #343):** content-finder.txt (88-cycle gap): client list, Don Omar context, show urgency + financial safety. customer-whatsapp-agent.txt (88-cycle gap): complete client list rewrite, El Destilado in delegation targets, show urgency section.
+- **Critical (P1/P4: #345, after 6-day gap Mar 20→26):** 🔴 KYBBA Miami STILL ACTIVE at $100/day — show was Mar 22 (4 days ago). 🔴 Snapshots stopped after Mar 20 (6-day gap Mar 21-26). 🔴 Session cache 6 days stale. Agent system DOWN. CRITICAL alert posted to dashboard + owner note drafted.
 
-## 2026-03-14 — Cycle #267 (P2 — Prompt Audit: think.txt)
+**Key findings preserved from Cycles #339-345:**
+- 🔴 KYBBA post-show (Mar 22) still ACTIVE at $100/day — waste minimal (near-zero delivery) but should be PAUSED
+- 🔴 Snapshot pipeline broken again — 6-day gap Mar 21-26+ (similar to Feb 27-Mar 4 incident)
+- 🔴 Agent system DOWN — session cache, snapshots, heartbeat all stale. Think cycles not running (manual trigger only).
+- ✅ Don Omar BCN star performer (6.74×, $5K spent, $300/day, show Jul 23 2026)
+- ✅ content-finder.txt + customer-whatsapp-agent.txt updated (88-cycle gaps closed)
+- Persistent flags: INGEST_URL localhost, heartbeat stale (Mar 8), TM sync disabled (22+ days)
+- Condensation history: ..., #313-324(#325), #325-338(#339), **#339-345(#346)**
 
-- **Priority chosen:** P2 — Prompt Audit (rotation-compliant, last was P6 Cycle #266)
-- **What I audited or read:**
-  - think.txt (full, 188 lines — last audited Cycle #220, 47 cycles ago)
-  - MEMORY.md (full, 270 lines — current from Mar 14 Boss Supervision)
-- **P1 check:** No breakage. Known issues all previously raised.
-- **Action taken:**
-  1. **Fixed KYBBA budget error** in delivery stall known patterns: "$100/day" → "$50/day". Was wrong since at least Cycle #35. Also replaced stale Don Omar BCN stall example (delivery recovered Cycle #243) with Vaz Vil ($0 for 11+ days).
-  2. **Added zero-purchase detection section** (+7 lines) — catches campaigns that ARE spending but getting 0 conversions (creative fatigue pattern). Different from delivery stall. Directly addresses KYBBA's current issue (Mar 11-13: $138 spent, 0 purchases, freq 3.96).
-  3. **Added post-show campaign check section** (+6 lines) — cross-references ACTIVE campaigns against MEMORY.md show dates. Flags post-show campaigns still spending as critical. Addresses recurring pattern (Anaheim $2K/day, Sac $1.8K/day, Phoenix $500/day post-show).
-  4. **Cross-checked against MEMORY.md (10 items):** Client slugs ✅, pixel IDs ✅, alert levels ✅, API version ✅, Supabase tables ✅, column naming ✅, 18 prompt files ✅, context bleed warning ✅, localhost warning ✅, delivery stall patterns ✅. No other inconsistencies found.
-  5. **think.txt: 188 → 201 lines.**
-- **No owner note** — routine prompt improvement, no business anomaly.
-- **Next priority:** P4 — Business Monitoring. Session cache is fresh (Mar 14 18:01). Good time to check post-show status (Sac/SF/Anaheim all past) and KYBBA trajectory (show Mar 22, 8 days). The new zero-purchase and post-show checks can be exercised.
+## 2026-03-26 — Cycles #346-349 Summary (Memory + Monitoring + Infra + Prompt)
 
-## 2026-03-14 — Cycle #268 (P4 — Business Monitoring)
+> Condensed from 4 detailed entries during Cycle #350 memory maintenance. See git history for originals.
 
-- **Priority chosen:** P4 — Business Monitoring (rotation-compliant, last was P2 Cycle #267)
-- **What I audited or read:**
-  - session/last-campaigns.json (mtime Mar 14 18:01 — same day, fresh)
-  - Supabase: campaign_snapshots Mar 8-14 for all 5 ACTIVE campaigns
-  - last-events.json 10 days stale (TM sync disabled — persistent)
-- **P1 check:** No breakage. INGEST_URL still localhost (alerts silently dropped — persistent).
-- **Campaign landscape:** 5 ACTIVE (unchanged from Cycle #265). Anaheim + SF confirmed PAUSED (post-show ✅).
-- **Post-show check:** Sacramento show is TODAY (Mar 14). Currently ACTIVE at $1,800/day — expected for show day. Should be PAUSED tomorrow. No past-show campaigns still active.
-- **Marginal ROAS analysis (snapshots, spend in cents):**
-  - **Don Omar BCN:** 3.38× (1-day) / 5.00× (2-day Mar 12→14) — excellent. Scaling well at $991/day on $600/day budget. Revenue growing proportionally.
-  - **Sacramento:** 2.60× (1-day) / 2.71× (2-day) — healthy for show-day push. ROAS declining (4.92→4.70→4.51 over 3 days) but expected with surged budget. Show tonight.
-  - **KYBBA:** 🔴 **ROAS NEGATIVE marginal.** Revenue Mar 12→14: -$248 while spend +$96. Meta is revising BOTH spend and revenue downward (attribution corrections). Blended: 5 consecutive declines (2.72→2.70→2.65→2.60→2.47). At current rate, crosses 2.0 around Mar 17-18. BUT: $50/day budget, show Mar 22, total remaining exposure ~$400.
-  - **Vaz Vil:** FROZEN at $350.00 for 3 consecutive days (Mar 12-14). $0 new spend on $50/day. Delivery completely stalled. 14+ days at 0×.
-  - **Sienna:** $1,568, 0× expected (ViewContent optimization). Delivering at ~$215/day on $200/day.
-- **KYBBA deep dive:** Spend revisions (Meta correcting down) happening simultaneously with revenue corrections (also down, faster). Net effect: ROAS declining AND revenue declining in absolute terms ($7,211→$6,713 over Mar 11→14). This is Meta closing out attribution windows, not new performance degradation. The campaign has essentially stopped generating new attributed purchases while old ones expire.
-- **No owner note** — KYBBA already flagged multiple cycles, budget is only $50/day limiting risk. Vaz Vil already flagged Cycle #136. Sacramento show-day is expected behavior.
-- **Next priority:** P5 — Proposals or P2 — Prompt Audit. Good rotation options. P5 hasn't been done recently (last #257). boss.txt next in P2 rotation (last #179, 89 cycles ago).
+- **Cycle #346 (P3 — memory):** Condensed #339-345. MEMORY.md: moved Glendale/KYBBA/San Antonio to PAST shows. Austin Mar 29 = 3 days out. Don Omar 6.70→6.74×.
+- **Cycle #347 (P4 — monitoring):** 4 ACTIVE in Supabase (KYBBA, Don Omar BCN, Sienna, El Destilado). Data 6 days stale. KYBBA post-show (Mar 22) still ACTIVE $100/day. Don Omar marginal 7.56× healthy. KYBBA spend revised DOWN again ($2,531→$2,437, Meta clawbacks). INGEST_URL localhost → 426 (alerts fail).
+- **Cycle #348 (P6 — infra):** Production Railway ALL GREEN (health 200, ingest 400, alerts 401). KYBBA alert successfully posted to PRODUCTION (bypassed localhost). Agent system DOWN 6+ days. INGEST_URL localhost persistent since Cycle #160 (188+ cycles). .env 39 vars ✅, CLI ✅.
+- **Cycle #349 (P2 — growth-supervisor.txt):** 4 fixes (+8 lines, 113→121): El Destilado added, Don Omar BCN Meta campaign details, Sienna ViewContent note, portfolio context rule.
 
-## 2026-03-14 — Cycle #269 (P2 — Prompt Audit: boss.txt)
+**Key findings preserved from Cycles #346-349:**
+- 🔴 KYBBA post-show (Mar 22) still ACTIVE at $100/day — alerted via production Railway Cycle #348
+- 🔴 Agent system DOWN — 6-day snapshot gap, session cache stale, heartbeat stale 18 days
+- 🔴 INGEST_URL localhost — persistent flag, alerts silently fail unless bypassed to production
+- ✅ Don Omar BCN healthy (6.74×, $300/day, marginal 7.56×)
+- ✅ Production Railway all green
+- ✅ growth-supervisor.txt updated (30-cycle gap closed)
+- Condensation history: ..., #325-338(#339), #339-345(#346), **#346-349(#350)**
 
-- **Priority chosen:** P2 — Prompt Audit (rotation-compliant, last was P4 Cycle #268)
-- **What I audited or read:**
-  - boss.txt (full, 518 lines — last audited Cycle #179, 89 cycles ago)
-  - MEMORY.md (full, 270 lines — current from Mar 14)
-- **P1 check:** No breakage. Known issues all previously raised.
-- **Action taken:**
-  1. **Added `last_7d` and `time_increment=1` day-by-day query** (+10 lines): Boss only had `last_30d` aggregate insights. Added `last_7d` for recent performance and day-by-day breakdown for trend analysis. The day-by-day query is essential for detecting zero-purchase days and daily ROAS trends.
-  2. **Added Zero-Purchase Detection section** (+15 lines): Boss had Delivery Stall Diagnosis but no guidance for campaigns spending money with zero conversions (the KYBBA pattern). Added detection criteria (frequency >3.5, missing omni_purchase), response by show proximity, and creative fatigue indicators.
-  3. **Updated stale example**: "Should I scale Denver?" → "Should I scale Don Omar?" (Denver show was Feb 18, nearly a month past).
-  4. **Enhanced `actions` parsing note**: Added fallback guidance (omni_purchase → purchase), and note about missing actions = 0 purchases.
-  5. **Cross-check (10 items):** Client aliases ✅, pixel IDs (3 pixels) ✅, Supabase column naming ✅, API version v21.0 ✅, alert levels ✅, post-show rule ✅, context bleed warning ✅, delegation targets ✅, show proximity rules ✅, marginal ROAS thresholds ✅.
-  6. **boss.txt: 518 → ~543 lines.**
-- **No owner note** — routine prompt improvement, no business anomaly.
-- **Next priority:** P5 — Proposals (last done Cycle #257, 12 cycles ago). Or P3 — Memory Maintenance if LEARNINGS.md is getting long (918+ lines, may need condensation).
+## 2026-03-26 — Cycles #350-353 Summary (Recovery + Monitoring + Prompt + Memory)
 
-## 2026-03-15 — Cycle #270 (P4 — Business Monitoring)
+> Condensed from 4 detailed entries during Cycle #354 memory maintenance. See git history for originals.
 
-- **Priority chosen:** P4 — Business Monitoring (rotation-compliant, last was P2 Cycle #269)
-- **What I audited or read:**
-  - session/last-campaigns.json (mtime Mar 15 00:00 — fresh, today)
-  - Supabase: campaign_snapshots Mar 11-15 (4 ACTIVE campaigns)
-  - Supabase: meta_campaigns status (4 ACTIVE confirmed)
-  - MEMORY.md (lines 147-200 — recently updated by Boss Supervision Mar 15)
-- **P1 check:** No breakage. INGEST_URL still localhost (persistent). MEMORY.md recently refreshed by Boss.
-- **Campaign landscape:** 4 ACTIVE (down from 5). Sacramento ACTIVE→PAUSED (show Mar 14, expected) ✅.
-- **Post-show check:** No past-show campaigns still ACTIVE ✅. Arjona Anaheim (today Mar 15) already PAUSED, $0 spend. All clear.
-- **Marginal ROAS analysis (Mar 15 snapshots, spend in cents):**
-  - **Don Omar BCN:** 6.23× (1-day) / 5.43× (3-day Mar 12→15) — excellent. $1,028/day on $600/day = 172% pacing. Revenue growing proportionally ($24,675 total). ✅
-  - **KYBBA:** 🔴 **-0.00× marginal (1-day)** — $34.65 new spend, -$0.15 revenue. **3-day marginal = -1.90×** ($130 new spend, -$248 revenue). **6th consecutive blended ROAS decline: 2.72→2.70→2.65→2.60→2.47→2.44.** Revenue flat at ~$6,713 while spend creeps up. Meta attribution corrections driving both. Show Mar 22 (7 days). $50/day = $350 remaining max exposure.
-  - **Vaz Vil:** FROZEN at $350 for 4+ consecutive days (Mar 12-15). 15+ days at 0×. Delivery completely stalled.
-  - **Sienna:** $1,772, 0× (expected ViewContent). $204/day on $200/day = 102% pacing. Normal.
-- **KYBBA 2.0× crossing update:** At -0.03/day blended decline rate, crosses 2.0 around Mar 18-19. Budget only $50/day so total exposure ~$350. MEMORY.md already notes 4 consecutive zero-purchase days (Mar 11-14) with creative fatigue (freq 3.82). Boss Supervision flagged this as CRITICAL with fresh creative recommendation.
-- **No owner note** — all flags previously raised. KYBBA already marked CRITICAL in MEMORY.md by Boss Supervision. Budget is only $50/day limiting risk. Vaz Vil alerted Cycle #136.
-- **Next priority:** P3 — Memory Maintenance. LEARNINGS.md is ~950 lines. Detailed entries #260-269 (10 entries) should be condensed. Also good to verify MEMORY.md snapshot dates are current (Mar 15 now).
+- **Cycle #350 (P3 — memory):** Condensed #346-349. MEMORY.md verified. Data still stale (Mar 20), 4 ACTIVE (KYBBA, Don Omar BCN, Sienna, El Destilado).
+- **Cycle #351 (P4 — monitoring):** KYBBA still ACTIVE post-show (Mar 22) — alert posted to production Railway. Austin Mar 29 has no Meta campaign. Don Omar BCN healthy (7.57× marginal). Snapshot pipeline still DOWN (6-day gap).
+- **Cycle #352 (P2 — publisher-tiktok.txt):** 3 fixes (+5 lines, 82→87): show date reference fix, lead gen campaign note, portfolio awareness rule.
+- **Cycle #353 (P4 — monitoring):** 🟢 **Snapshot pipeline RESUMED** — Mar 26 data arrived. 🟢 **KYBBA correctly PAUSED**. Campaign landscape changed: 4→3 ACTIVE (Don Omar BCN $6,742/6.89×, Sienna $2,105/0×, NEW Outlet Media Lead Gen $12/$25/day). El Destilado disappeared. KYBBA final: $2,437/2.36×.
+
+**Key findings preserved from Cycles #350-353:**
+- 🟢 Snapshot pipeline resumed Mar 26 (gap Mar 21-25 permanent)
+- 🟢 KYBBA correctly PAUSED (final $2,437/2.36×, show Mar 22)
+- 🟢 Don Omar BCN excellent: 6.89× blended, 7.31× marginal, $300/day
+- 🟡 Outlet Media Lead Gen NEW ($25/day, LEADS objective)
+- 🟡 El Destilado removed/PAUSED
+- publisher-tiktok.txt updated (Cycle #352)
+- Condensation history: ..., #339-345(#346), #346-349(#350), **#350-353(#354)**
+
+## 2026-04-02 — Cycles #354-357 Summary (Memory + Monitoring + Infra + Prompt)
+
+> Condensed from 4 detailed entries during Cycle #358 memory maintenance. See git history for originals.
+
+- **Cycle #354 (P3 — memory):** Condensed #350-353. MEMORY.md refreshed: Austin→PAST, Miami starts Apr 2, snapshot gap extended Mar 27+. 3 ACTIVE unchanged in Supabase (Don Omar BCN, Sienna, Lead Gen).
+- **Cycle #355 (P4 — monitoring):** Data 7 days stale (Mar 26). Don Omar BCN marginal 7.32× (Mar 20→26, excellent). Sienna $27/day on $30/day (normal). Lead Gen $12/$25/day (too early). No post-show active campaigns ✅. Snapshot pipeline DOWN — 7-day gap Mar 27-Apr 2+. Gmail watch renewed Apr 2 (only live agent component).
+- **Cycle #356 (P6 — infra):** Production ALL GREEN (health 200, ingest 400, alerts 401). CLI v2.1.91 (major upgrade from v2.1.69). .env 39 vars ✅. INGEST_URL still localhost (persistent 196+ cycles). Heartbeat 25 days stale (Mar 8). Gmail watch renewal is only sign of agent life.
+- **Cycle #357 (P2 — tiktok-supervisor.txt):** 3 fixes (+5 lines, 93→98): Chris R new client added, portfolio context block, session cache staleness warning + show calendar.
+
+**Key findings preserved from Cycles #354-357:**
+- 🔴 Snapshot pipeline DOWN — gap Mar 27-Apr 2+ and growing (3rd major gap)
+- ✅ Don Omar BCN excellent: 6.89× blended, 7.32× marginal, $300/day
+- ✅ No post-show campaigns still ACTIVE
+- 🟢 Gmail watch renewal confirms partial agent functionality
+- 🟡 CLI upgraded to v2.1.91
+- Persistent flags: INGEST_URL localhost, heartbeat stale (Mar 8), TM sync disabled (29+ days)
+- Condensation history: ..., #339-345(#346), #346-349(#350), #350-353(#354), **#354-357(#358)**
+
+## 2026-04-02 — Cycle #359
+- **Priority chosen:** P4 — Business Monitoring (last was P3 condensation at #358)
+- **What I audited:**
+  - Session cache: last-campaigns.json mtime Mar 26 (7 days stale), last-events.json mtime Mar 4 (29 days stale)
+  - Supabase: latest snapshot_date = Mar 26 (7-day gap Mar 27-Apr 2+, 3rd major gap)
+  - 3 ACTIVE campaigns: Don Omar BCN ($6,742/6.89×/$300/day), Sienna ($2,105/0×/$30/day), Lead Gen ($12/0×/$25/day)
+  - 32 total campaigns (was 29 in MEMORY.md — 3 new since last count)
+  - Marginal ROAS Don Omar BCN (Mar 20→26): 7.32× — excellent, unchanged
+  - Post-show check: ✅ No post-show campaigns still ACTIVE
+- **Action taken:** None — no new anomalies vs Cycle #355. All findings identical. Snapshot pipeline remains DOWN.
+- **Status:** Stable but blind. 7-day data gap means real-time issues would be invisible. Don Omar BCN is the only revenue-generating campaign and it's performing well (6.89× blended, 7.32× marginal). Sienna 0× is expected (ViewContent only). Lead Gen too early to evaluate.
+- **Campaign count note:** Supabase now shows 32 campaigns (3 more than MEMORY.md's 29). Need to identify new ones next memory cycle.
+- **Next priority:** P2 — prompt audit rotation (or P3 to update MEMORY.md campaign count)

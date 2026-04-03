@@ -9,7 +9,6 @@ const {
   getTaskExecutor,
   evaluateTier,
   sendAsAgent,
-  sendWhatsAppMessage,
   executeScheduledCopySwap,
   runClaude,
   notifyChannel,
@@ -26,7 +25,6 @@ const {
     getTaskExecutor: () => taskExecutor,
     evaluateTier: vi.fn(),
     sendAsAgent: vi.fn(),
-    sendWhatsAppMessage: vi.fn(),
     executeScheduledCopySwap: vi.fn(),
     runClaude: vi.fn(),
     notifyChannel: vi.fn(),
@@ -49,10 +47,6 @@ vi.mock("../services/webhook-service.js", () => ({
   sendAsAgent,
 }));
 
-vi.mock("../services/whatsapp-runtime-service.js", () => ({
-  sendWhatsAppMessage,
-}));
-
 vi.mock("../services/meta-copy-swap-service.js", () => ({
   executeScheduledCopySwap,
 }));
@@ -73,9 +67,9 @@ vi.mock("../discord/core/router.js", () => ({
   getAgentForChannel: vi.fn((channelName: string) => {
     if (channelName === "clients") {
       return {
-        promptFile: "customer-whatsapp-agent",
-        maxTurns: 18,
-        description: "customer-whatsapp-agent",
+        promptFile: "client-manager",
+        maxTurns: 15,
+        description: "client-manager",
         readOnly: false,
       };
     }
@@ -85,6 +79,15 @@ vi.mock("../discord/core/router.js", () => ({
         promptFile: "email-agent",
         maxTurns: 20,
         description: "email-agent",
+        readOnly: false,
+      };
+    }
+
+    if (channelName === "zamora" || channelName === "kybba") {
+      return {
+        promptFile: "client-manager",
+        maxTurns: 15,
+        description: "client-manager",
         readOnly: false,
       };
     }
@@ -107,7 +110,7 @@ vi.mock("../discord/core/router.js", () => ({
   }),
 }));
 
-import { bindDelegationTaskExecutor, executeAgentTask, processChannelMessages, processWhatsAppSends } from "./delegate.js";
+import { bindDelegationTaskExecutor, executeAgentTask, processChannelMessages } from "./delegate.js";
 
 async function runQueuedTaskFromCall(callIndex: number): Promise<void> {
   const executor = getTaskExecutor();
@@ -166,11 +169,6 @@ describe("processChannelMessages", () => {
       rollbackPerformed: false,
       text: "Executed scheduled copy swap.",
     });
-    sendWhatsAppMessage.mockResolvedValue({
-      conversationId: "conversation-1",
-      messageId: "SM123",
-      ok: true,
-    });
   });
 
   it("posts the channel message and executes a real agent handoff when handoff=true", async () => {
@@ -211,7 +209,7 @@ describe("processChannelMessages", () => {
     expect(result.handoffTargets).toEqual(["boss"]);
   });
 
-  it("auto-attaches customer-facing metadata to handoffs from the WhatsApp lane", async () => {
+  it("auto-attaches customer-facing metadata to handoffs from a customer-facing lane", async () => {
     evaluateTier.mockReturnValue("escalate");
 
     const client = {
@@ -226,149 +224,39 @@ describe("processChannelMessages", () => {
     await processChannelMessages(
       client,
       "```json\n{\"channel\":\"boss\",\"message\":\"Client asked for an update.\",\"handoff\":true}\n```",
-      "clients",
+      "zamora",
       0,
       {
         inheritedParams: {
+          audience: "customer",
+          disclosure: "safe",
           conversationId: "conversation-1",
           messageId: "wamid.latest",
-          toWaId: "13054870475",
         },
       },
     );
 
     expect(enqueueTask).toHaveBeenCalledWith(
-      "customer-whatsapp-agent",
+      "client-manager",
       "boss",
       "channel-handoff",
       expect.objectContaining({
         _queueDepth: 0,
         _queueNotifySource: false,
-        _queueSourceChannel: "clients",
+        _queueSourceChannel: "zamora",
         message: "Client asked for an update.",
-        sourceChannel: "clients",
+        sourceChannel: "zamora",
         targetChannel: "boss",
         audience: "customer",
-        delivery: "whatsapp",
         disclosure: "safe",
         conversationId: "conversation-1",
         messageId: "wamid.latest",
-        toWaId: "13054870475",
       }),
       "green",
     );
     expect(escalateTask).toHaveBeenCalledWith("task-1");
   });
 
-  it("preserves WhatsApp context through Boss handoff so Boss can delegate back to the liaison", async () => {
-    runClaude.mockResolvedValue({
-      text: "```json\n{\"delegate\":\"customer-whatsapp-agent\",\"action\":\"deliver-approved-message\",\"params\":{\"message\":\"Final approved reply.\",\"approved\":true}}\n```",
-    });
-
-    const client = {
-      guilds: {
-        cache: {
-          first: () => ({
-            id: "guild-1",
-            channels: {
-              cache: {
-                find: vi.fn().mockReturnValue(undefined),
-              },
-            },
-          }),
-        },
-      },
-    } as never;
-
-    bindDelegationTaskExecutor(client);
-    await processChannelMessages(
-      client,
-      "```json\n{\"channel\":\"boss\",\"message\":\"Client needs an approved reply.\",\"handoff\":true}\n```",
-      "clients",
-      0,
-      {
-        inheritedParams: {
-          conversationId: "conversation-1",
-          messageId: "wamid.latest",
-          toWaId: "13054870475",
-        },
-      },
-    );
-
-    await runQueuedTaskFromCall(0);
-
-    expect(enqueueTask).toHaveBeenNthCalledWith(
-      1,
-      "customer-whatsapp-agent",
-      "boss",
-      "channel-handoff",
-      expect.objectContaining({
-        _queueDepth: 0,
-        _queueNotifySource: false,
-        _queueSourceChannel: "clients",
-        conversationId: "conversation-1",
-        messageId: "wamid.latest",
-        toWaId: "13054870475",
-      }),
-      "green",
-    );
-
-    expect(enqueueTask).toHaveBeenNthCalledWith(
-      2,
-      "boss",
-      "customer-whatsapp-agent",
-      "deliver-approved-message",
-      expect.objectContaining({
-        _queueDepth: 1,
-        _queueNotifySource: true,
-        _queueSourceChannel: "boss",
-        approved: true,
-        audience: "customer",
-        delivery: "whatsapp",
-        disclosure: "safe",
-        conversationId: "conversation-1",
-        messageId: "wamid.latest",
-        toWaId: "13054870475",
-      }),
-      "green",
-    );
-  });
-});
-
-describe("processWhatsAppSends", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    sendWhatsAppMessage.mockResolvedValue({
-      conversationId: "conversation-1",
-      messageId: "SM123",
-      ok: true,
-    });
-  });
-
-  it("inherits conversation context and executes a real WhatsApp send", async () => {
-    const result = await processWhatsAppSends(
-      '```json\n{"whatsapp":{"message":"Hola, ya esta listo.","approved":true}}\n```',
-      "clients",
-      {
-        inheritedParams: {
-          conversationId: "conversation-1",
-          messageId: "wamid.latest",
-        },
-      },
-    );
-
-    expect(sendWhatsAppMessage).toHaveBeenCalledWith({
-      approved: true,
-      body: "Hola, ya esta listo.",
-      conversationId: "conversation-1",
-      phoneNumberId: undefined,
-      replyToMessageId: "wamid.latest",
-      toWaId: undefined,
-    });
-    expect(result.sent).toBe(1);
-    expect(result.errors).toEqual([]);
-    expect(result.cleanText).toBe("");
-  });
 });
 
 describe("customer-facing delegation propagation", () => {
@@ -421,28 +309,27 @@ describe("customer-facing delegation propagation", () => {
       client,
       {
         id: "boss-task",
-        from: "customer-whatsapp-agent",
+        from: "client-manager",
         to: "boss",
         action: "channel-handoff",
         params: {
           message: "Client wants a performance update.",
-          sourceChannel: "clients",
+          sourceChannel: "zamora",
           targetChannel: "boss",
           audience: "customer",
-          delivery: "whatsapp",
           disclosure: "safe",
         },
         tier: "green",
         created_at: new Date().toISOString(),
         status: "running",
       } as never,
-      "clients",
+      "zamora",
       0,
     );
 
     expect(runClaude).toHaveBeenCalledWith(
       expect.objectContaining({
-        prompt: expect.stringContaining("client-facing WhatsApp response"),
+        prompt: expect.stringContaining("client-facing response"),
       }),
     );
     expect(enqueueTask).toHaveBeenNthCalledWith(
@@ -456,7 +343,6 @@ describe("customer-facing delegation propagation", () => {
         _queueSourceChannel: "boss",
         client: "zamora",
         audience: "customer",
-        delivery: "whatsapp",
         disclosure: "safe",
       }),
       "green",

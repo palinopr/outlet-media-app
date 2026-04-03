@@ -40,5 +40,3 @@ export const mockSupabaseAdmin: Record<string, unknown> = {
 vi.mock("@/lib/supabase", () => ({
   supabaseAdmin: mockSupabaseAdmin,
 }));
-
-

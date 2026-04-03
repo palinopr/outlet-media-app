@@ -10,7 +10,7 @@ export default function NotFound() {
           </div>
         </div>
         <h1 className="text-4xl font-bold tracking-tight">404</h1>
-        <p className="text-sm text-muted-foreground">The page you're looking for doesn't exist.</p>
+        <p className="text-sm text-muted-foreground">The page you&apos;re looking for doesn&apos;t exist.</p>
         <Link
           href="/"
           className="inline-flex items-center px-4 py-2 rounded-lg bg-white text-zinc-900 text-sm font-medium hover:bg-white/90 transition-colors"

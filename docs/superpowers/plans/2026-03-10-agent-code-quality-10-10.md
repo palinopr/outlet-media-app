@@ -1,5 +1,7 @@
 # Agent Code Quality 10/10 Implementation Plan
 
+> **Historical note (2026-04-03):** This plan reflects an older agent/runtime state and still references files and flows that were later removed, including the old WhatsApp path. Keep it as historical implementation context, not as a current executable plan.
+
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Fix all 33 issues found in the agent/ code review -- security, correctness, reliability, and quality -- to bring the codebase to 10/10.

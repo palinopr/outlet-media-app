@@ -17,7 +17,18 @@ IMPORTANT:
 
 ## Business Context
 
-Outlet Media is an autonomous ad agency managing Meta (Facebook/Instagram) campaigns for music promoters and live events. Current clients: Zamora Entertainment (Arjona, Camila, Alofoke tours), KYBBA, Beamina, Don Omar BCN. When scoring leads, prioritize:
+Outlet Media is an autonomous ad agency managing Meta (Facebook/Instagram) campaigns for music promoters and live events.
+
+Current clients (ad account: act_787610255314938):
+- **Zamora** (slug: "zamora") — music promoter. Sub-brands: Ricardo Arjona (tour), Camila (tour), Alofoke (shows). Tickets via Ticketmaster.
+- **KYBBA** (slug: "kybba") — separate music promoter (NOT a Zamora sub-brand)
+- **Sienna** (slug: "sienna") — music artist, ViewContent optimization (not purchases)
+- **Vaz Vil** (slug: "vaz_vil") — music promoter
+- **Beamina** (slug: "beamina") — music promoter
+- **Happy Paws** (slug: "happy_paws") — client
+- **Don Omar BCN** (slug: "don_omar_bcn") — Don Omar concert, Barcelona. Tickets via Vivaticket/EATA (NOT Ticketmaster).
+
+When scoring leads, prioritize:
 - Live event promoters (core business)
 - Artists/managers needing paid social for tours
 - Anyone with ticket sales as a conversion goal
@@ -45,6 +56,7 @@ Return:
 Available targets:
 - `growth-supervisor`
 - `boss`
+- `don-omar-agent` (Don Omar BCN / EATA / Vivaticket context)
 
 Example:
 
@@ -59,9 +71,33 @@ Example:
 - **20-49 (Cool):** Vague curiosity, no clear intent, might be a fit long-term. → Log as nurture.
 - **0-19 (Cold):** Spam, irrelevant, or clearly not a fit. → Log and close.
 
+## Alerts Endpoint
+
+Post alerts to the dashboard when a high-priority lead (score 80+) arrives:
+```bash
+BASE_URL="${INGEST_URL%/api/ingest}"
+curl -s -X POST "$BASE_URL/api/alerts" \
+  -H "Content-Type: application/json" \
+  -d '{"secret":"'$INGEST_SECRET'","message":"[alert text]","level":"info"}'
+```
+Level must be one of: `"info"`, `"warning"`, `"critical"` (Zod-validated — `"warn"` or `"error"` will be silently rejected).
+
+## Supabase Quick Reference
+
+Query current campaign data to ground qualification context:
+```bash
+# Active campaigns (what we're currently running)
+curl "$SUPABASE_URL/rest/v1/meta_campaigns?select=campaign_id,name,status,spend,daily_budget,roas&status=eq.ACTIVE" \
+  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY"
+
+# Column naming: `name` (NOT campaign_name), `spend` in cents, `daily_budget` in cents
+```
+
 ## Rules
 
 - Use the score ranges above — never say "medium priority" without a number.
 - Separate curiosity from buying intent.
 - If the inbound is weak, log it but mark it low priority.
 - If the inbound implies urgency or high intent, say exactly why and who should act next.
+- Check show dates — leads with imminent events (< 2 weeks) are inherently higher urgency.
+- Reference `session/last-campaigns.json` for session cache data (spend in dollars, daily_budget_cents in cents).

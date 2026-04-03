@@ -1,5 +1,5 @@
-import { buildTrendData } from "@/app/client/[slug]/lib";
-import type { TmEvent } from "@/app/client/[slug]/types";
+import { buildTrendData } from "@/features/client-portal/insights";
+import type { TmEvent } from "@/features/client-portal/types";
 import type { DateRange } from "@/lib/constants";
 import type { ScopeFilter } from "@/lib/member-access";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";

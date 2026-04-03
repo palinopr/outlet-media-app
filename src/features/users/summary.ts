@@ -1,20 +1,19 @@
-import type { ClientSummary } from "@/app/admin/clients/data";
-import type { UserRow } from "@/app/admin/users/data";
+import type { ClientSummaryLike, UserRowLike } from "@/features/shared/admin-summary-types";
 import { compareActionableInvitationState } from "@/features/invitations/sort";
 
 export interface UsersAccessSummary {
-  clientsNeedingCoverage: ClientSummary[];
-  accessInvites: UserRow[];
+  clientsNeedingCoverage: ClientSummaryLike[];
+  accessInvites: UserRowLike[];
   expiredInviteCount: number;
   pendingInviteCount: number;
-  unassignedClientUsers: UserRow[];
+  unassignedClientUsers: UserRowLike[];
 }
 
 function compareCreatedAtDesc(left: { created_at?: string | null }, right: { created_at?: string | null }) {
   return new Date(right.created_at ?? 0).getTime() - new Date(left.created_at ?? 0).getTime();
 }
 
-function compareAccessInvitePriority(left: UserRow, right: UserRow) {
+function compareAccessInvitePriority(left: UserRowLike, right: UserRowLike) {
   return compareActionableInvitationState(
     left.invite_status,
     left.created_at,
@@ -23,15 +22,15 @@ function compareAccessInvitePriority(left: UserRow, right: UserRow) {
   );
 }
 
-function compareClientCoverage(left: ClientSummary, right: ClientSummary) {
+function compareClientCoverage(left: ClientSummaryLike, right: ClientSummaryLike) {
   if (left.memberCount !== right.memberCount) return left.memberCount - right.memberCount;
   if (left.needsAttention !== right.needsAttention) return Number(right.needsAttention) - Number(left.needsAttention);
   return left.name.localeCompare(right.name);
 }
 
 export function buildUsersAccessSummary(
-  users: UserRow[],
-  clients: ClientSummary[],
+  users: UserRowLike[],
+  clients: ClientSummaryLike[],
 ): UsersAccessSummary {
   const accessInvites = users
     .filter((user) => user.status === "invited")

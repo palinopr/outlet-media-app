@@ -6,11 +6,11 @@ describe("adminNavItems", () => {
     expect(adminNavItems.map((item) => [item.label, item.href])).toEqual([
       ["Dashboard", "/admin/dashboard"],
       ["Campaigns", "/admin/campaigns"],
+      ["Reports", "/admin/reports"],
       ["Events", "/admin/events"],
       ["Clients", "/admin/clients"],
       ["Users", "/admin/users"],
       ["Settings", "/admin/settings"],
-      ["Activity", "/admin/activity"],
       ["Agents", "/admin/agents"],
     ]);
   });

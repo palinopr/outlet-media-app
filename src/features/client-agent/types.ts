@@ -77,19 +77,6 @@ export const AgentHistoryMessageSchema = z.object({
 });
 export type AgentHistoryMessage = z.infer<typeof AgentHistoryMessageSchema>;
 
-export const PlannerEntityMatchSchema = z.discriminatedUnion("entityType", [
-  CampaignReferencedEntitySchema.extend({
-    timezone: z.string().min(1).optional(),
-  }),
-  EventReferencedEntitySchema.extend({
-    timezone: z.string().min(1).optional(),
-  }),
-  CreativeReferencedEntitySchema.extend({
-    timezone: z.string().min(1).optional(),
-  }),
-]);
-export type PlannerEntityMatch = z.infer<typeof PlannerEntityMatchSchema>;
-
 const MetricCardSchema = z.object({
   label: z.string().min(1),
   value: z.string().min(1),

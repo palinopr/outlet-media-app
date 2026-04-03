@@ -1,5 +1,7 @@
 # Outlet Web Reset Design
 
+> **Historical note (2026-04-02):** This design predates the later core reset cleanup. Current shipped packaging is narrower and now centers on Campaigns + Reports + optional Events + optional client Agent, with older CRM/workspace shells treated as retired compatibility paths or fully deleted.
+
 ## Purpose
 
 This document defines the web product reset for Outlet Media.

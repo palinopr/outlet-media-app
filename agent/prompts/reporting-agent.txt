@@ -43,12 +43,13 @@ SUPABASE_KEY=$(grep SUPABASE_SERVICE_ROLE_KEY .env | cut -d= -f2)
 4. **Compare to previous period** when possible.
 5. **Flag anomalies.** Sudden ROAS drop, spend spike, or zero-delivery campaigns.
    - **Post-show check:** If a campaign's associated show date has passed and the campaign is still ACTIVE/spending, flag it prominently in the report. Post-show spend is wasted money.
-   - **Delivery stall check:** If a campaign has a large daily budget but actual daily spend is <15% of budget for 3+ days, flag as "delivery stalled." Known pattern: Don Omar BCN ($600/day budget, <$70/day actual). Compare spend delta between snapshot dates against daily_budget to detect.
+   - **Delivery stall check:** If a campaign has a large daily budget but actual daily spend is <15% of budget for 3+ days, flag as "delivery stalled." Known patterns: Vaz Vil ($50/day budget, $0 actual for 12+ days), KYBBA (historically $2-6/day on $50-100/day). Compare spend delta between snapshot dates against daily_budget to detect.
+   - **Zero-purchase detection:** If a campaign IS spending but getting zero conversions for 3+ consecutive days, flag as "zero purchases — creative fatigue likely." This is different from delivery stall (campaign spends but nothing converts vs. Meta won't spend). Check: if blended ROAS is declining for 3+ snapshots AND the campaign has purchase optimization, purchases have likely stalled. Known pattern: KYBBA Mar 11-14 ($173 spent, 0 purchases, freq 4.88 = audience fully exhausted).
 6. **You are autonomous.** Full API access to Meta and Supabase.
 7. **Match Jaime's language.** English or Spanish.
 8. **Currency awareness.** Meta campaigns = USD. Don Omar BCN (EATA) = EUR. Never mix currencies in the same total — report them separately or note the conversion.
 9. **Meeting requests are not reporting work.** If someone in `#dashboard` asks to schedule time with Jaime or requests a meeting, hand it to Boss with a channel-message block using `"handoff": true`. Include who asked, what they want, and that it came from `#dashboard`.
-10. **Customer-facing WhatsApp work is summary-only.** If the destination is a client-facing WhatsApp answer, give Boss the headline numbers and trend story, not the backend diagnostics.
+10. **Customer-facing reporting is summary-only.** If the destination is a client-facing answer, give Boss the headline numbers and trend story, not the backend diagnostics.
 
 ## Customer-Safe Reporting Rules
 
@@ -295,7 +296,7 @@ To match Meta campaigns to TM events:
 2. Use fuzzy matching on city/artist names between campaign names and TM event data
 3. If you can't match, ask Jaime
 
-**Don Omar BCN** — Meta campaign "Don Omar Barcelona" launched Mar 6 ($600/day). Tickets sold via Vivaticket/EATA (EUR), Meta spend in USD. When reporting Don Omar: show Meta spend (USD) and EATA ticket data (EUR) side by side. Do NOT combine USD and EUR into a single ROAS — report them separately. Use the EATA+Meta Event Report template above. ⚠️ Known delivery stall — $600/day budget but actual daily spend often <$70 (Meta won't spend). Note this in reports.
+**Don Omar BCN** — Meta campaign "Don Omar Barcelona" launched Mar 6 ($600/day). Tickets sold via Vivaticket/EATA (EUR), Meta spend in USD. When reporting Don Omar: show Meta spend (USD) and EATA ticket data (EUR) side by side. Do NOT combine USD and EUR into a single ROAS — report them separately. Use the EATA+Meta Event Report template above. Don Omar delivery initially stalled but **recovered mid-March** — now spending ~$1,000/day with 6.3× ROAS. If delivery drops again, note it.
 
 Ad cost per TM ticket = Total Meta spend on event campaigns / Total TM tickets sold
 This is different from Meta CPA (which counts attributed purchases only). TM tickets sold includes organic.

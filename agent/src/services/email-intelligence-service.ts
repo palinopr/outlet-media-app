@@ -258,60 +258,6 @@ export async function processWatchedMessage(messageId: string): Promise<EmailPro
 // Owner corrections
 // ---------------------------------------------------------------------------
 
-export async function recordOwnerEmailCorrection(messageId: string, note: string): Promise<{
-  sender: string;
-  subject: string;
-}> {
-  const normalizedNote = note.trim();
-  if (!normalizedNote) {
-    throw new Error("Correction note cannot be empty.");
-  }
-
-  const supabase = getServiceSupabase();
-  const { data, error } = supabase
-    ? await supabase
-      .from("email_events")
-      .select("sender_name, sender_email, subject, contact_email, metadata")
-      .eq("message_id", messageId)
-      .maybeSingle()
-    : { data: null, error: null };
-
-  if (error) {
-    throw new Error(`Failed to load email context: ${error.message}`);
-  }
-
-  const senderEmail = data?.contact_email ?? data?.sender_email ?? null;
-  const sender = data?.sender_name
-    ? `${data.sender_name}${senderEmail ? ` <${senderEmail}>` : ""}`
-    : (senderEmail ?? "unknown sender");
-  const subject = data?.subject ?? "(no subject)";
-  const metadata = typeof data?.metadata === "object" && data.metadata !== null
-    ? data.metadata as Record<string, unknown>
-    : {};
-  const topic = typeof metadata.topic === "string" ? metadata.topic : null;
-
-  const corrections = await loadOwnerCorrections();
-  corrections.unshift({
-    created_at: new Date().toISOString(),
-    message_id: messageId,
-    sender_email: senderEmail,
-    sender_domain: getDomain(senderEmail),
-    subject,
-    topic,
-    note: normalizedNote,
-  });
-
-  await saveOwnerCorrections(corrections.slice(0, 200));
-  await postEmailLog(formatEmailLog("owner-correction", {
-    sender,
-    subject,
-    note: normalizedNote,
-    topic,
-  }));
-
-  return { sender, subject };
-}
-
 // ---------------------------------------------------------------------------
 // Sweep operations
 // ---------------------------------------------------------------------------
@@ -369,7 +315,3 @@ export async function sweepUnreadInboxDetailed(maxMessages = MANUAL_SWEEP_LIMIT)
   };
 }
 
-export async function sweepUnreadInbox(maxMessages = MANUAL_SWEEP_LIMIT): Promise<string> {
-  const result = await sweepUnreadInboxDetailed(maxMessages);
-  return result.summary;
-}

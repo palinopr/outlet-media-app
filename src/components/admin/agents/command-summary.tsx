@@ -23,13 +23,6 @@ function outcomeContext(outcome: AgentOutcomeView) {
       type: "Asset",
     };
   }
-  if (outcome.crmContactId) {
-    return {
-      href: null,
-      label: outcome.crmContactName ?? "Contact",
-      type: "Contact",
-    };
-  }
   if (outcome.eventId) {
     return {
       href: `/admin/events/${outcome.eventId}`,

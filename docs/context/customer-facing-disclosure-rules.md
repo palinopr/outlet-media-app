@@ -1,6 +1,8 @@
 # Customer-Facing Disclosure Rules
 
-This note defines what Outlet agents are allowed to say when the destination is a client-facing surface such as WhatsApp.
+This note defines what Outlet agents are allowed to say when the destination is any future client-facing conversational surface.
+
+During the current reset, Outlet does **not** have an active customer-facing WhatsApp transport or other live conversational delivery lane in the shipped web product. Treat this file as a durable disclosure policy reference for future customer-facing messaging work, not proof that a chat transport is active right now.
 
 The goal is not to hide work from clients. The goal is to give clients useful visibility without leaking internal campaign structure, internal debate, or operator-only execution details.
 
@@ -8,24 +10,24 @@ The goal is not to hide work from clients. The goal is to give clients useful vi
 
 - Boss is the customer-facing supervisor.
 - Specialist agents do the domain work.
-- The customer-facing WhatsApp agent is the mouthpiece to the client.
-- Clients do not talk directly to Media Buyer, Reporting, Creative, or other internal specialists. Those specialists report to Boss, and Boss turns that into a customer-safe answer.
+- Any future customer-facing messenger should be a bounded delivery lane, not a direct line into internal specialist prompts.
+- Clients should not talk directly to Media Buyer, Reporting, Creative, or other internal specialists. Those specialists report to Boss, and Boss turns that into a customer-safe answer.
 
 Preferred loop:
 
-1. Client asks on WhatsApp.
-2. Customer WhatsApp agent captures the request.
+1. Client asks on a client-facing conversational surface.
+2. The bounded customer messenger captures the request.
 3. Boss decides which specialists need to act.
 4. Specialists return only the slice Boss needs.
 5. Boss synthesizes one customer-safe answer.
-6. Customer WhatsApp agent sends the final message.
+6. The customer messenger sends the final message.
 
 Reverse loop:
 
-1. Jaime or the team asks Boss to send something to a client on WhatsApp.
+1. Jaime or the team asks Boss to send something to a client through a customer-facing messaging lane.
 2. Boss gathers the needed specialist inputs.
 3. Boss turns them into a customer-safe message.
-4. Customer WhatsApp agent delivers it.
+4. The customer messenger delivers it.
 
 ## Global Customer-Safe Rules
 
@@ -57,7 +59,7 @@ Not allowed in general unless Jaime explicitly approves it:
 
 Boss decides what can leave the building.
 
-When Boss is preparing a client-facing WhatsApp answer:
+When Boss is preparing a client-facing answer:
 - ask specialists only for the customer-safe slice
 - keep the final answer concise and useful
 - do not forward raw specialist analysis directly to the client
@@ -161,12 +163,11 @@ Not allowed:
 When work is intended for a client-facing answer, use explicit metadata in the task context when practical:
 
 - `audience: customer`
-- `delivery: whatsapp`
 - `disclosure: safe`
 
 That metadata is a reminder that the receiving specialist should answer with the customer-safe slice only.
 
-## Example: Meta Ads Update For WhatsApp
+## Example: Meta Ads Update For A Customer-Facing Reply
 
 Good:
 

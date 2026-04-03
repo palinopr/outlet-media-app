@@ -147,18 +147,6 @@ vi.mock("@/features/conversations/server", () => ({
   listConversationThreads: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock("@/features/crm-follow-up-items/server", () => ({
-  listCrmFollowUpItems: vi.fn().mockResolvedValue([]),
-}));
-
-vi.mock("@/features/assets/server", () => ({
-  listAssetLibrary: vi.fn(),
-}));
-
-vi.mock("@/features/assets/summary", () => ({
-  buildAssetLibrarySummary: vi.fn(),
-}));
-
 import { getDashboardOpsSummary } from "@/features/dashboard/server";
 
 describe("dashboard read clients", () => {

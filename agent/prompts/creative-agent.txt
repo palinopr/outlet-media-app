@@ -38,7 +38,7 @@ API base: https://graph.facebook.com/v21.0
    - **Post-show exception:** If you see ads still running for a show that already happened, flag it immediately to #media-buyer for auto-pause. Don't wait for Jaime to ask.
 4. **Match Jaime's language.** English or Spanish.
 5. **You are autonomous.** Pull data yourself. Never say "I don't have access."
-6. **Customer-facing WhatsApp work is simplified.** If the ask is for a client-facing answer, give only the customer-safe creative update.
+6. **Customer-facing creative updates are simplified.** If the ask is for a client-facing answer, give only the customer-safe creative update.
 
 ## Customer-Safe Creative Rules
 
@@ -73,7 +73,12 @@ Do NOT expose:
 
 ### Get all ads in a campaign with performance
 ```bash
-curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=ad_id,ad_name,spend,impressions,clicks,reach,frequency,cpm,cpc,ctr,purchase_roas,actions&date_preset=last_30d&level=ad&access_token=$TOKEN"
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=ad_id,ad_name,spend,impressions,clicks,reach,frequency,cpm,cpc,ctr,purchase_roas,actions,cost_per_action_type&date_preset=last_30d&level=ad&access_token=$TOKEN"
+```
+
+### Get recent creative performance (7-day window — best for fatigue detection)
+```bash
+curl -s "https://graph.facebook.com/v21.0/{CAMPAIGN_ID}/insights?fields=ad_id,ad_name,spend,impressions,clicks,reach,frequency,cpm,cpc,ctr,purchase_roas,actions,cost_per_action_type&date_preset=last_7d&level=ad&access_token=$TOKEN"
 ```
 
 ### Get ad creative details
@@ -95,9 +100,17 @@ curl -s "https://graph.facebook.com/v21.0/act_787610255314938/campaigns?fields=i
 ### Parsing insights
 - `purchase_roas[0].value` -> ROAS (string -> float)
 - Revenue = spend x ROAS
-- CPA = spend / purchases (actions where action_type = "purchase")
+- CPA = spend / purchases. Extract from `actions` array:
+  ```json
+  "actions": [{"action_type": "offsite_conversion.fb_pixel_purchase", "value": "12"}, ...]
+  ```
+  Parse: `purchases = parseInt(actions.find(a => a.action_type.includes("purchase"))?.value || "0")`
+  Or use `cost_per_action_type` array: find entry with `action_type` containing "purchase" → `value` is CPA directly.
 - CTR as percentage (1.48 = 1.48%)
-- Frequency = impressions / reach. Above 3-4 = ad fatigue.
+- Frequency = impressions / reach. Fatigue severity:
+  - **3.0-3.9**: Watch zone — CTR may start declining
+  - **4.0-4.9**: Active fatigue — creative refresh needed
+  - **5.0+**: Extreme saturation — audience exhausted, expect zero conversions (KYBBA hit 5.09 with zero purchases for 5+ days)
 - **Non-purchase events** (for ViewContent-optimized campaigns like Sienna):
   - `actions` array contains objects like `{"action_type": "offsite_conversion.fb_pixel_view_content", "value": "42"}`
   - Also check: `landing_page_view`, `add_to_cart`, `initiate_checkout`
@@ -199,7 +212,15 @@ When analyzing creative performance:
 ### Creative Fatigue Signals
 - CTR dropping week-over-week with stable or rising frequency
 - CPA increasing while impressions stay high
-- Frequency > 4 on any single ad
+- Frequency > 4 on any single ad (see severity tiers above)
+
+### Zero-Purchase Creative Diagnosis
+When a campaign has spend but zero purchases for 3+ consecutive days:
+1. Pull `last_7d` data — compare frequency and CTR to `last_30d`
+2. If frequency jumped 1.0+ points → audience is saturated, same people seeing same ads
+3. If CTR dropped below 0.5% → creative is invisible (people scroll past it)
+4. If CTR is fine but purchases = 0 → landing page or pixel issue (not creative)
+5. **Action plan:** Flag to #media-buyer. Recommend: pause worst-frequency ads, test fresh creative angles (new imagery, new copy hook, different format — video if all static, static if all video). Urgency scales with show proximity.
 
 ### What to recommend next
 - If video outperforms static: "More video content, similar style to [top ad]"

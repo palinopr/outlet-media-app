@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { responsesCreate } = vi.hoisted(() => ({
-  responsesCreate: vi.fn(),
+const { queryMock, toolMock, createSdkMcpServerMock } = vi.hoisted(() => ({
+  queryMock: vi.fn(),
+  toolMock: vi.fn(),
+  createSdkMcpServerMock: vi.fn(),
 }));
 
 const {
@@ -30,12 +32,10 @@ const {
   searchScope: vi.fn(),
 }));
 
-vi.mock("openai", () => ({
-  default: vi.fn(() => ({
-    responses: {
-      create: responsesCreate,
-    },
-  })),
+vi.mock("@anthropic-ai/claude-agent-sdk", () => ({
+  query: queryMock,
+  tool: toolMock,
+  createSdkMcpServer: createSdkMcpServerMock,
 }));
 
 vi.mock("./tools", () => ({
@@ -71,108 +71,94 @@ const lifetimeRange = {
   timezone: "America/Chicago",
 };
 
-function functionCallResponse({
-  id,
-  name,
-  args,
-  callId = "call_1",
+function sdkResultSuccess({
+  result,
+  sessionId = "sess_client_agent",
 }: {
-  id: string;
-  name: string;
-  args: unknown;
-  callId?: string;
+  result: string;
+  sessionId?: string;
 }) {
   return {
-    id,
-    created_at: 1,
-    output_text: "",
-    error: null,
-    incomplete_details: null,
-    instructions: null,
-    metadata: null,
-    model: "gpt-5.4",
-    object: "response" as const,
-    output: [
-      {
-        id: `fc_${callId}`,
-        type: "function_call" as const,
-        call_id: callId,
-        name,
-        arguments: JSON.stringify(args),
-        status: "completed" as const,
-      },
-    ],
-    parallel_tool_calls: false,
-    temperature: null,
-    tool_choice: "auto" as const,
-    tools: [],
-    top_p: null,
-    truncation: "disabled" as const,
-    usage: {
-      input_tokens: 0,
-      input_tokens_details: { cached_tokens: 0 },
-      output_tokens: 0,
-      output_tokens_details: { reasoning_tokens: 0 },
-      total_tokens: 0,
-    },
-    user: null,
+    type: "result" as const,
+    subtype: "success" as const,
+    duration_ms: 1,
+    duration_api_ms: 1,
+    is_error: false,
+    num_turns: 1,
+    result,
+    stop_reason: null,
+    total_cost_usd: 0,
+    usage: {} as Record<string, unknown>,
+    modelUsage: {},
+    permission_denials: [],
+    uuid: "uuid_result",
+    session_id: sessionId,
   };
 }
 
-function finalMessageResponse({
-  id,
+function sdkAssistantMessage({
   text,
+  sessionId = "sess_client_agent",
 }: {
-  id: string;
   text: string;
+  sessionId?: string;
 }) {
   return {
-    id,
-    created_at: 1,
-    output_text: text,
-    error: null,
-    incomplete_details: null,
-    instructions: null,
-    metadata: null,
-    model: "gpt-5.4",
-    object: "response" as const,
-    output: [
-      {
-        id: "msg_1",
-        type: "message" as const,
-        role: "assistant" as const,
-        status: "completed" as const,
-        content: [
-          {
-            type: "output_text" as const,
-            text,
-            annotations: [],
-          },
-        ],
-      },
-    ],
-    parallel_tool_calls: false,
-    temperature: null,
-    tool_choice: "auto" as const,
-    tools: [],
-    top_p: null,
-    truncation: "disabled" as const,
-    usage: {
-      input_tokens: 0,
-      input_tokens_details: { cached_tokens: 0 },
-      output_tokens: 0,
-      output_tokens_details: { reasoning_tokens: 0 },
-      total_tokens: 0,
+    type: "assistant" as const,
+    parent_tool_use_id: null,
+    error: undefined,
+    uuid: "uuid_assistant",
+    session_id: sessionId,
+    message: {
+      content: [
+        {
+          type: "text",
+          text,
+        },
+      ],
     },
-    user: null,
   };
+}
+
+function getServerFromQueryCall() {
+  const firstCall = queryMock.mock.calls[0]?.[0] as
+    | { options?: { mcpServers?: Record<string, { tools?: Array<{ name: string; handler: (args: unknown, extra: unknown) => Promise<unknown> }> }> } }
+    | undefined;
+
+  return firstCall?.options?.mcpServers?.["client-agent-tools"];
+}
+
+function makeMockQuery(
+  iterate: (params: unknown) => AsyncGenerator<unknown>,
+) {
+  const close = vi.fn();
+
+  return (params: unknown) => ({
+    close,
+    async *[Symbol.asyncIterator]() {
+      yield* iterate(params);
+    },
+  });
 }
 
 describe("client-agent runtime", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    process.env.OPENAI_API_KEY = "test-openai-key";
-    delete process.env.CLIENT_AGENT_OPENAI_MODEL;
+    process.env.ANTHROPIC_API_KEY = "test-anthropic-key";
+    delete process.env.CLIENT_AGENT_CLAUDE_MODEL;
+
+    toolMock.mockImplementation((name, description, inputSchema, handler) => ({
+      name,
+      description,
+      inputSchema,
+      handler,
+    }));
+    createSdkMcpServerMock.mockImplementation((options) => ({
+      type: "sdk",
+      name: options.name,
+      instance: { close: vi.fn() },
+      tools: options.tools ?? [],
+    }));
 
     searchScope.mockResolvedValue({ status: "no_data", referencedEntities: [] });
     getAdsOverview.mockResolvedValue({ status: "no_data", referencedEntities: [] });
@@ -187,7 +173,7 @@ describe("client-agent runtime", () => {
     getTimeseries.mockResolvedValue({ status: "no_data", referencedEntities: [] });
   });
 
-  it("executes sequential tool calls until the model returns final text", async () => {
+  it("executes the ads overview tool through the Claude SDK and returns final prose", async () => {
     getAdsOverview.mockResolvedValue({
       status: "ok",
       data: {
@@ -195,11 +181,6 @@ describe("client-agent runtime", () => {
           spendUsd: 22000,
           revenueUsd: 88000,
           roas: 4,
-          impressions: 1000000,
-          clicks: 35000,
-          ctr: 3.5,
-          cpcUsd: 0.63,
-          cpmUsd: 22,
         },
       },
       referencedEntities: [
@@ -211,20 +192,20 @@ describe("client-agent runtime", () => {
       ],
     });
 
-    responsesCreate
-      .mockResolvedValueOnce(
-        functionCallResponse({
-          id: "resp_1",
-          name: "get_ads_overview",
-          args: { range: lifetimeRange, campaignIds: null, creativeIds: null },
-        }),
-      )
-      .mockResolvedValueOnce(
-        finalMessageResponse({
-          id: "resp_2",
-          text: "ANSWER: Lifetime on Meta ads, you've spent $22,000 and generated $88,000 in tracked revenue.",
-        }),
-      );
+    queryMock.mockImplementation(
+      makeMockQuery(async function* () {
+        const server = getServerFromQueryCall();
+        const adsTool = server?.tools?.find((entry) => entry.name === "get_ads_overview");
+        await adsTool?.handler(
+          { range: lifetimeRange, campaignIds: null, creativeIds: null },
+          {},
+        );
+        yield sdkResultSuccess({
+          result:
+            "ANSWER: Lifetime on Meta ads, you've spent $22,000 and generated $88,000 in tracked revenue.",
+        });
+      }),
+    );
 
     const result = await runClientAgentRuntime({
       history: [],
@@ -244,29 +225,21 @@ describe("client-agent runtime", () => {
         creativeIds: null,
       },
     });
-    expect(responsesCreate).toHaveBeenNthCalledWith(
-      1,
+    expect(queryMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: "gpt-5.4",
-        store: false,
-        parallel_tool_calls: false,
-      }),
-    );
-    expect(responsesCreate).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        input: expect.arrayContaining([
-          expect.objectContaining({
-            type: "function_call_output",
-            call_id: "call_1",
-          }),
-        ]),
+        prompt: "how much have we spent and made",
+        options: expect.objectContaining({
+          model: "claude-sonnet-4-6",
+          permissionMode: "dontAsk",
+          allowedTools: expect.arrayContaining([
+            "mcp__client-agent-tools__get_ads_overview",
+          ]),
+        }),
       }),
     );
     expect(result).toMatchObject({
       status: "answer",
       text: "Lifetime on Meta ads, you've spent $22,000 and generated $88,000 in tracked revenue.",
-      blocks: [],
       referencedEntities: [
         {
           entityId: "cmp_1",
@@ -275,69 +248,16 @@ describe("client-agent runtime", () => {
         },
       ],
       resolvedRange: lifetimeRange,
-      providerResponseId: "resp_2",
+      providerResponseId: "sess_client_agent",
     });
   });
 
-  it("allows one invalid-arguments correction cycle", async () => {
-    getTimeseries.mockResolvedValue({
-      status: "ok",
-      data: {
-        series: [
-          { x: "2026-01", y: 12000 },
-          { x: "2026-02", y: 10000 },
-        ],
-      },
-      referencedEntities: [
-        {
-          entityId: "cmp_1",
-          entityType: "campaign",
-          name: "Zamora - Camila - Phoenix",
-        },
-      ],
-    });
-
-    responsesCreate
-      .mockResolvedValueOnce(
-        functionCallResponse({
-          id: "resp_1",
-          name: "get_timeseries",
-          args: {
-            domain: "ads",
-            entityType: "campaign",
-            entityIds: ["cmp_1"],
-            metric: "bad_metric",
-            range: lifetimeRange,
-            interval: "month",
-          },
-          callId: "call_bad",
-        }),
-      )
-      .mockResolvedValueOnce(
-        functionCallResponse({
-          id: "resp_2",
-          name: "get_timeseries",
-          args: {
-            domain: "ads",
-            entityType: "campaign",
-            entityIds: ["cmp_1"],
-            metric: "spend",
-            range: lifetimeRange,
-            interval: "month",
-          },
-          callId: "call_good",
-        }),
-      )
-      .mockResolvedValueOnce(
-        finalMessageResponse({
-          id: "resp_3",
-          text: "ANSWER: Here is the lifetime spend trend.",
-        }),
-      );
+  it("returns a safe error when the anthropic api key is missing", async () => {
+    delete process.env.ANTHROPIC_API_KEY;
 
     const result = await runClientAgentRuntime({
       history: [],
-      message: "show me lifetime spend trend",
+      message: "how much have we spent",
       scope: memberScope(),
       scopeSummary: {
         clientSlug: "zamora",
@@ -345,47 +265,22 @@ describe("client-agent runtime", () => {
       },
     });
 
-    expect(getTimeseries).toHaveBeenCalledTimes(1);
+    expect(queryMock).not.toHaveBeenCalled();
     expect(result).toMatchObject({
-      status: "answer",
-      text: "Here is the lifetime spend trend.",
-      resolvedRange: lifetimeRange,
-      providerResponseId: "resp_3",
+      status: "error",
+      text: "I'm unable to answer that right now.",
     });
   });
 
   it("appends the refusal note after safe analytics for mixed prompts", async () => {
-    getAdsOverview.mockResolvedValue({
-      status: "ok",
-      data: {
-        totals: {
-          spendUsd: 22000,
-          revenueUsd: 88000,
-          roas: 4,
-          impressions: 1000000,
-          clicks: 35000,
-          ctr: 3.5,
-          cpcUsd: 0.63,
-          cpmUsd: 22,
-        },
-      },
-      referencedEntities: [],
-    });
-
-    responsesCreate
-      .mockResolvedValueOnce(
-        functionCallResponse({
-          id: "resp_1",
-          name: "get_ads_overview",
-          args: { range: lifetimeRange, campaignIds: null, creativeIds: null },
-        }),
-      )
-      .mockResolvedValueOnce(
-        finalMessageResponse({
-          id: "resp_2",
-          text: "ANSWER: Lifetime on Meta ads, you've spent $22,000 and generated $88,000 in tracked revenue.",
-        }),
-      );
+    queryMock.mockImplementation(
+      makeMockQuery(async function* () {
+        yield sdkResultSuccess({
+          result:
+            "ANSWER: Lifetime on Meta ads, you've spent $22,000 and generated $88,000 in tracked revenue.",
+        });
+      }),
+    );
 
     const result = await runClientAgentRuntime({
       history: [],
@@ -402,11 +297,12 @@ describe("client-agent runtime", () => {
     expect(result.text).toContain("I can help with performance");
   });
 
-  it("resets prior creative context when a follow-up broadens back to overall ads", async () => {
-    responsesCreate.mockResolvedValueOnce(
-      finalMessageResponse({
-        id: "resp_1",
-        text: "ANSWER: Lifetime on Meta ads, you've spent $11,559 so far.",
+  it("resets prior creative context when a new turn broadens back to overall ads", async () => {
+    queryMock.mockImplementation(
+      makeMockQuery(async function* () {
+        yield sdkResultSuccess({
+          result: "ANSWER: Lifetime on Meta ads, you've spent $11,559 so far.",
+        });
       }),
     );
 
@@ -448,18 +344,14 @@ describe("client-agent runtime", () => {
       },
     });
 
-    expect(responsesCreate).toHaveBeenCalledWith(
+    expect(queryMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        instructions: expect.stringContaining(
-          "The current user message broadens scope to the full visible ads portfolio.",
-        ),
-        input: [
-          {
-            type: "message",
-            role: "user",
-            content: "how much we have spend on ads?",
-          },
-        ],
+        prompt: "how much we have spend on ads?",
+        options: expect.objectContaining({
+          systemPrompt: expect.stringContaining(
+            "The current user message broadens scope to the full visible ads portfolio.",
+          ),
+        }),
       }),
     );
     expect(result).toMatchObject({
@@ -470,21 +362,28 @@ describe("client-agent runtime", () => {
     });
   });
 
-  it("passes only the current user message plus context memo for real follow-ups", async () => {
-    responsesCreate.mockResolvedValueOnce(
-      finalMessageResponse({
-        id: "resp_1",
-        text: "ANSWER: Before that, the prior show was Camila - Regresa Tour.",
+  it("passes only the current user message and resolved context memo for real follow-ups", async () => {
+    queryMock.mockImplementation(
+      makeMockQuery(async function* (params) {
+        expect(params).toMatchObject({
+          prompt: "and before that?",
+          options: {
+            systemPrompt: expect.stringContaining(
+              "Most recent resolved thread context: primary domain events; referenced entities Ricardo Arjona - LO QUE EL SECO NO DIJO TOUR; resolved range lifetime. Reuse this context for follow-ups unless the user clearly changes direction.",
+            ),
+          },
+        });
+        yield sdkAssistantMessage({
+          text: "ANSWER: Before that, the prior show was Camila - Regresa Tour.",
+        });
       }),
     );
 
-    await runClientAgentRuntime({
+    const result = await runClientAgentRuntime({
       history: [
         {
           role: "user",
           text: "what was my last show?",
-          referencedEntities: [],
-          contextPayload: null,
           resolvedRange: lifetimeRange,
         },
         {
@@ -521,19 +420,10 @@ describe("client-agent runtime", () => {
       },
     });
 
-    expect(responsesCreate).toHaveBeenCalledWith(
-      expect.objectContaining({
-        instructions: expect.stringContaining(
-          "Most recent resolved thread context: primary domain events; referenced entities Ricardo Arjona - LO QUE EL SECO NO DIJO TOUR; resolved range lifetime. Reuse this context for follow-ups unless the user clearly changes direction.",
-        ),
-        input: [
-          {
-            type: "message",
-            role: "user",
-            content: "and before that?",
-          },
-        ],
-      }),
-    );
+    expect(result).toMatchObject({
+      status: "answer",
+      text: "Before that, the prior show was Camila - Regresa Tour.",
+      providerResponseId: "sess_client_agent",
+    });
   });
 });

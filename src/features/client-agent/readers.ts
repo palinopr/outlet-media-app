@@ -1,8 +1,8 @@
 import {
   getCampaignDetail,
   type CampaignDetailRangeInput,
-} from "@/app/client/[slug]/campaign/[campaignId]/data";
-import { getEventDetail } from "@/app/client/[slug]/event/[eventId]/data";
+} from "@/features/client-portal/campaign-detail";
+import { getEventDetail } from "@/features/client-portal/event-detail";
 import type { ScopeFilter } from "@/lib/member-access";
 import type { ResolvedRange } from "./types";
 

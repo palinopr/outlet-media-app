@@ -1,5 +1,7 @@
 # Admin Activity Tracking Implementation Plan
 
+> **Historical note (2026-04-02):** The audit logging backbone remains, but the dedicated `/admin/activity` viewer page described here is no longer a shipped top-level surface. Use this file as historical implementation context only.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** Track admin page views, actions, errors, and sessions in a single Supabase table with a filterable viewer page at `/admin/activity`.

@@ -1,5 +1,7 @@
 # WhatsApp Ticket Concierge Runner Design
 
+> **Historical note (2026-04-02):** The WhatsApp transport and concierge slice described here were later removed from the active repo. Keep this document only as historical design context, not as a current implementation target.
+
 ## Purpose
 
 This document defines the first internal test slice for a WhatsApp ticket concierge runner.

@@ -11,6 +11,7 @@ const NAV_LINKS = [
   { label: "Method", href: "#method" },
   { label: "System", href: "#system" },
   { label: "Contact", href: "#contact" },
+  { label: "Empezar Campaña", href: "#contact" },
 ] as const;
 
 export function LandingNav() {

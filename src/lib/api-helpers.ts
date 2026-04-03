@@ -104,7 +104,3 @@ export function shouldEnqueueCommentTriage(options: {
   return !options.isAdmin && !options.parentCommentId && options.visibility === "shared";
 }
 
-/** Check whether a role value represents an admin. */
-export function isAdminRole(role: unknown): boolean {
-  return typeof role === "string" && role === "admin";
-}
