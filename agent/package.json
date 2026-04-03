@@ -13,13 +13,10 @@
     "@supabase/supabase-js": "^2.49.2",
     "discord.js": "^14.25.1",
     "dotenv": "^16.5.0",
-    "googleapis": "^171.4.0",
-    "grammy": "^1.36.1",
-    "node-cron": "^3.0.3"
+    "googleapis": "^171.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.5",
-    "@types/node-cron": "^3.0.11",
     "tsx": "^4.19.2",
     "typescript": "^5.8.3",
     "vitest": "^4.0.18"
