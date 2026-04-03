@@ -1,5 +1,4 @@
-import type { ClientSummary } from "@/app/admin/clients/data";
-import type { UserRow } from "@/app/admin/users/data";
+import type { ClientSummaryLike, UserRowLike } from "@/features/shared/admin-summary-types";
 import { compareActionableInvitationState } from "@/features/invitations/sort";
 import {
   buildConnectedAccountsSummary,
@@ -26,7 +25,7 @@ export interface PlatformSettingsMetric {
 }
 
 export interface PlatformSettingsSummary {
-  accessInvites: UserRow[];
+  accessInvites: UserRowLike[];
   connectionRiskClients: Array<{
     attentionAccounts: number;
     clientId: string;
@@ -36,7 +35,7 @@ export interface PlatformSettingsSummary {
     totalAccounts: number;
   }>;
   connectionSummary: ReturnType<typeof buildConnectedAccountsSummary>;
-  clientsNeedingSetup: ClientSummary[];
+  clientsNeedingSetup: ClientSummaryLike[];
   expiredInviteCount: number;
   metrics: PlatformSettingsMetric[];
   pendingInviteCount: number;
@@ -44,13 +43,15 @@ export interface PlatformSettingsSummary {
 
 export function buildPlatformSettingsSummary(input: {
   apiKeys: PlatformKeyStatus[];
-  clients: ClientSummary[];
+  clients: ClientSummaryLike[];
   connectedAccounts: ConnectedAccount[];
-  users: UserRow[];
+  now?: Date;
+  users: UserRowLike[];
 }): PlatformSettingsSummary {
+  const now = input.now;
   const configuredIntegrations = input.apiKeys.filter((key) => key.configured).length;
   const missingIntegrations = input.apiKeys.length - configuredIntegrations;
-  const connectionSummary = buildConnectedAccountsSummary(input.connectedAccounts);
+  const connectionSummary = buildConnectedAccountsSummary(input.connectedAccounts, now);
   const accessInvites = input.users
     .filter((user) => user.status === "invited")
     .sort(
@@ -87,7 +88,7 @@ export function buildPlatformSettingsSummary(input: {
     .map((client) => {
       const accounts = accountsBySlug.get(client.slug) ?? [];
       const healthyAccounts = accounts.filter(
-        (account) => getConnectedAccountHealth(account).key === "healthy",
+        (account) => getConnectedAccountHealth(account, now).key === "healthy",
       ).length;
       const attentionAccounts = accounts.length - healthyAccounts;
 

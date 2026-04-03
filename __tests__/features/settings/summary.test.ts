@@ -2,8 +2,12 @@ import { describe, expect, it } from "vitest";
 import { buildPlatformSettingsSummary } from "@/features/settings/summary";
 
 describe("buildPlatformSettingsSummary", () => {
+  // Pin the date so token expiry assertions are stable regardless of when the test runs.
+  const now = new Date("2026-03-06T12:00:00.000Z");
+
   it("builds integration and setup pressure metrics", () => {
     const summary = buildPlatformSettingsSummary({
+      now,
       apiKeys: [{ configured: true }, { configured: false }, { configured: true }],
       clients: [
         {
