@@ -1,12 +1,11 @@
 /**
- * discord.ts -- Thin Discord entry point.
+ * entry.ts -- Discord bot entry point.
  *
- * Wires all services on startup:
- * - Webhooks (agent identities)
- * - Queue (per-agent slots)
- * - Approvals (three-tier)
- * - Buttons, slash commands
- * - Message routing (delegates to command-router.ts)
+ * Wires core services on startup:
+ * - Webhooks (agent identity)
+ * - Queue (per-message slots)
+ * - Slash commands
+ * - Message routing (direct to handleMessage)
  */
 
 import "dotenv/config";
@@ -17,12 +16,10 @@ import {
   Partials,
   type TextChannel,
 } from "discord.js";
-import { initScheduleJobs } from "../commands/schedule.js";
 import { initWebhooks } from "../../services/webhook-service.js";
 import { initQueue } from "../../services/queue-service.js";
-import { initApprovals } from "../../services/approval-service.js";
-import { releaseChannelLock, cleanForDiscord, chunkText } from "../../events/message-handler.js";
-import { routeMessage } from "./command-router.js";
+import { releaseChannelLock, cleanForDiscord, chunkText, handleMessage, isChannelLocked } from "../../events/message-handler.js";
+import { getAgentForChannel } from "./router.js";
 import { toErrorMessage } from "../../utils/error-helpers.js";
 
 const token = process.env.DISCORD_TOKEN;
@@ -42,7 +39,7 @@ export const discordClient = token
     })
   : null;
 
-/** Per-channel Claude session IDs (kept for !reset command compatibility) */
+/** Per-channel Claude session IDs (kept for /reset command compatibility) */
 export const channelSessions = new Map<string, string>();
 
 /**
@@ -52,10 +49,6 @@ export const channelSessions = new Map<string, string>();
 const channelLockTimestamps = new Map<string, number>();
 const CHANNEL_LOCK_MAX_AGE_MS = 300_000; // 5 minutes
 
-/**
- * Check if a channel lock is stale and force-release it if so.
- * Returns true if a stale lock was detected and released.
- */
 export function checkAndReleaseStaleLock(channelId: string): boolean {
   const acquiredAt = channelLockTimestamps.get(channelId);
   if (acquiredAt === undefined) return false;
@@ -72,16 +65,10 @@ export function checkAndReleaseStaleLock(channelId: string): boolean {
   return true;
 }
 
-/**
- * Record when a channel lock is acquired. Called before handleMessage.
- */
 export function markChannelLockAcquired(channelId: string): void {
   channelLockTimestamps.set(channelId, Date.now());
 }
 
-/**
- * Clear a channel lock timestamp. Called when handleMessage completes.
- */
 export function markChannelLockReleased(channelId: string): void {
   channelLockTimestamps.delete(channelId);
 }
@@ -95,68 +82,35 @@ export function startDiscordBot(): void {
   discordClient.once("ready", async (c) => {
     console.log(`Discord bot online: ${c.user.tag}`);
 
-    // Initialize core services
-    const { bindDelegationTaskExecutor } = await import("../../agents/delegate.js");
-    bindDelegationTaskExecutor(discordClient!);
-
     await initQueue();
     console.log("[discord] Queue initialized");
 
-    const { startExternalTaskDispatcher } = await import("../../services/external-task-dispatcher.js");
-    startExternalTaskDispatcher();
-    console.log("[discord] External task dispatcher initialized");
-
     void initWebhooks(discordClient!)
-      .then(() => {
-        console.log("[discord] Webhook service initialized");
-      })
+      .then(() => console.log("[discord] Webhook service initialized"))
       .catch((error) => {
         const message = toErrorMessage(error);
         console.error("[discord] Webhook init failed -- agent identities degraded:", message);
       });
 
-    void initApprovals(discordClient!)
-      .then(() => {
-        console.log("[discord] Approval service initialized");
-      })
-      .catch((error) => {
-        const message = toErrorMessage(error);
-        console.error("[discord] Approval init failed -- approval workflow degraded:", message);
-      });
-
-    // Initialize event-driven triggers and agent spawner
-    const { initTriggers } = await import("../../events/trigger-handler.js");
-    initTriggers();
-    const { initSpawner } = await import("../../agents/spawner.js");
-    initSpawner(discordClient!);
-    console.log("[discord] Triggers and spawner initialized");
-
-    // Start bot presence rotation
-    const { initStatus } = await import("../../services/status-service.js");
-    initStatus(discordClient!);
-    console.log("[discord] Bot presence rotation started");
-
-    const { initDiscordAdmin } = await import("../commands/admin.js");
-    await initDiscordAdmin(discordClient);
-
-    // Wire schedule job runners
-    const { getJobRunners } = await import("../../scheduler.js");
-    initScheduleJobs(getJobRunners());
-    console.log("[discord] Schedule job runners initialized");
-
-    // Register interactive button handler
-    const { registerButtonHandler } = await import("../features/buttons.js");
-    registerButtonHandler(discordClient!);
-    console.log("[discord] Button interaction handler registered");
-
-    // Register slash commands (guild-scoped, instant)
     const { registerSlashCommands, registerSlashHandler } = await import("../commands/slash.js");
     await registerSlashCommands(token!);
     registerSlashHandler(discordClient!);
     console.log("[discord] Slash command handler registered");
   });
 
-  discordClient.on("messageCreate", (msg) => routeMessage(msg, discordClient));
+  discordClient.on("messageCreate", async (msg) => {
+    if (msg.author.bot) return;
+    const channelName = "name" in msg.channel ? (msg.channel as TextChannel).name : "dm";
+    const agent = getAgentForChannel(channelName);
+    if (agent.readOnly) return;
+    if (isChannelLocked(msg.channelId)) {
+      checkAndReleaseStaleLock(msg.channelId);
+      if (isChannelLocked(msg.channelId)) return;
+    }
+    const content = msg.content.trim();
+    if (!content) return;
+    await handleMessage(msg, content, channelName, discordClient);
+  });
 
   discordClient.login(token).catch((err: unknown) => {
     const m = toErrorMessage(err);
@@ -164,40 +118,7 @@ export function startDiscordBot(): void {
   });
 }
 
-// --- Channel Router (outbound notifications) ---
-
-const CHANNEL_ROUTES: Record<string, string> = {
-  "general":       "general",
-  "dashboard":     "dashboard",
-  "media-buyer":   "media-buyer",
-  "tm-data":       "tm-data",
-  "creative":      "creative",
-  "boss":          "boss",
-  "meetings":      "meetings",
-  "zamora":        "zamora",
-  "kybba":         "kybba",
-  "don-omar-tickets": "don-omar-tickets",
-  "agent-feed":    "agent-feed",
-  "email-log":     "email-log",
-  "schedule":      "schedule",
-  "morning-briefing": "morning-briefing",
-  "approvals":     "approvals",
-  "war-room":      "war-room",
-  "ops":           "ops",
-  "audit-log":     "audit-log",
-
-  // Aliases
-  "performance":   "dashboard",
-  "alerts":        "agent-feed",
-  "logs":          "agent-feed",
-  "email-logs":    "email-log",
-  "active-jobs":   "agent-feed",
-  "agent-alerts":  "agent-feed",
-  "agent-logs":    "agent-feed",
-  "bot-logs":      "agent-feed",
-  "meta-api":      "media-buyer",
-  "calendar":      "meetings",
-};
+// --- Channel notifications (outbound) ---
 
 const channelIdCache = new Map<string, string>();
 
@@ -219,14 +140,10 @@ async function resolveChannelId(channelName: string): Promise<string | null> {
   return channelId || null;
 }
 
-/**
- * Send a message to a specific channel by route name.
- */
 export async function notifyChannel(target: string, text: string): Promise<void> {
   if (!discordClient) return;
 
-  const channelName = CHANNEL_ROUTES[target] || target;
-  const resolvedId = await resolveChannelId(channelName);
+  const resolvedId = await resolveChannelId(target);
   if (!resolvedId) return;
 
   try {
@@ -241,7 +158,6 @@ export async function notifyChannel(target: string, text: string): Promise<void>
     }
   } catch (err) {
     const m = toErrorMessage(err);
-    console.warn(`[discord] Failed to send to #${channelName}:`, m);
+    console.warn(`[discord] Failed to send to #${target}:`, m);
   }
 }
-
