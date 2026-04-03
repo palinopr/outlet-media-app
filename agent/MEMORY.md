@@ -57,11 +57,10 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - **Ingest endpoint**: POST /api/ingest with secret header (`x-ingest-secret` or body `secret`)
 - **Alerts endpoint**: POST /api/alerts `{ secret, message, level }` to create an alert visible in dashboard (no client_slug field)
 - **Local agent**: runs on Jaime's Mac, consumes `agent_tasks`, handles Discord, and keeps runtime/watch state in Supabase
-- **Discord bot**: Multi-agent architecture (as of Feb 25 2026). Boss orchestrator routes to specialized agents via Discord channels.
-  - Agents: boss (orchestrator), media-buyer, client-manager, creative-agent, reporting-agent, tm-agent, don-omar-agent, email-agent, meeting-agent
-  - Activity logged to `session/activity-log.json`
-- **Dashboard app**: Railway (formerly localhost:3000 for dev)
-- **Prompt files:** `prompts/boss.txt`, `prompts/media-buyer.txt`, `prompts/client-manager.txt`, `prompts/creative-agent.txt`, `prompts/reporting-agent.txt`, `prompts/tm-agent.txt`, `prompts/don-omar-agent.txt`, `prompts/email-agent.txt`, `prompts/meeting-agent.txt`, `prompts/command.txt`, `prompts/general.txt`, `prompts/think.txt`, `prompts/content-finder.txt`, `prompts/growth-supervisor.txt`, `prompts/lead-qualifier.txt`, `prompts/publisher-tiktok.txt`, `prompts/tiktok-supervisor.txt`
+- **Discord bot**: Single agent (simplified April 2026). One prompt (`prompts/agent.txt`), one identity ("Outlet Agent"), purely reactive.
+  - Tools: Meta Ads API (curl), Gmail (session/gmail-*.mjs), Google Calendar (session/calendar-meet.mjs), Supabase REST
+  - Commands: /status, /help, /reset
+- **Dashboard app**: Railway (https://outlet-media-app-production.up.railway.app)
 
 ## Campaign Strategy (from Arjona tour learnings)
 - CBO (Campaign Budget Optimization) + broad targeting
@@ -104,7 +103,7 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - **Snapshot UPSERT is write-once**: `campaign_snapshots` uses ON CONFLICT DO NOTHING — first sync of the day (by UTC date) creates the snapshot, subsequent syncs only update `meta_campaigns`. First sync fires at 00:00 UTC (6 PM CST previous day), so snapshots capture late-afternoon CST data. Good for consistency (same time daily), but live campaign data may differ from snapshot data within the same day.
 - **Meta intraday reporting lag**: Within-day spend deltas from Meta API are unreliable for real-time monitoring. On Feb 23, ACTIVE campaigns showed <3% of expected daily delivery after 12 hours ($0.22-$1.35 on $100/day budgets). This is normal Meta reporting lag — true daily spend finalizes 24-48h after the day ends. Use daily snapshots (midnight-to-midnight) for trend analysis, not intraday deltas.
 
-## Data Pipeline Status (verified 2026-04-03, Boss Supervision)
+## Data Pipeline Status (verified 2026-04-03)
 - `daily_budget` ✅ populated for all campaigns in Supabase
 - `start_time` ✅ populated for all campaigns in Supabase
 - `campaign_snapshots` 🔴 **DOWN** — latest snapshot Mar 26. Gap now 8+ days (Mar 27-Apr 3+, growing). Permanent gaps: Feb 20-22, Feb 27-Mar 4, Mar 18, Mar 21-25, Mar 27+.
@@ -141,7 +140,7 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - ✅ RESOLVED: Don Omar BCN (ACTIVE at $300/day, 6.89× ROAS)
 - ✅ RESOLVED: Sienna (ACTIVE at $30/day), Vaz Vil (PAUSED ✅)
 
-## Current Campaign Landscape (as of 2026-04-03, Boss Supervision — live Meta API pull)
+## Current Campaign Landscape (as of 2026-04-03 — live Meta API pull)
 - **4 campaigns ACTIVE on Meta.** New lead gen campaign appeared since Apr 2.
 
 ### ACTIVE Campaigns (4) — verified Apr 3
@@ -245,8 +244,8 @@ All campaigns are in one Meta ad account (act_787610255314938). Client is determ
 - Dashboard admin pages: /admin/dashboard (alert banner, ROAS chart), /admin/agents (job history), /admin/campaigns (client filter dropdown), /admin/clients (multi-client dynamic list)
 - All mock data removed from dashboard — all pages read from Supabase
 - **Scheduler timing:** TM One every 2h, Meta every 6h, Think every 30min (8am-10pm only), Heartbeat every 1min. Gmail uses push watch first, with minute-level history polling only as fallback. All cron jobs use fixed UTC schedules, not intervals-from-start.
-- **Email agent:** Monitors jaime@outletmedia.net via Gmail API (service account with domain-wide delegation). Memory at `memory/email-agent.md`. Prompt at `prompts/email-agent.txt`. Tools: `session/gmail-reader.mjs`, `session/gmail-sender.mjs`. Gmail scope `gmail.settings.basic` authorized in Google Admin for filter management. 72 auto-archive filters active. 13 color-coded labels.
-- **Meeting agent:** Schedules Jaime's calendar via Google Calendar API using the same service-account + domain-wide delegation model as Gmail. Memory at `memory/meeting-agent.md`. Prompt at `prompts/meeting-agent.txt`. Tool: `session/calendar-meet.mjs`. Default timezone America/Chicago. Creates Google Meet links by default unless Jaime says otherwise.
+- **Email tools:** Gmail API (service account with domain-wide delegation) for jaime@outletmedia.net. Tools: `session/gmail-reader.mjs`, `session/gmail-sender.mjs`, `session/gmail-admin.mjs`. Gmail scope `gmail.settings.basic` authorized in Google Admin for filter management. 72 auto-archive filters active. 13 color-coded labels.
+- **Calendar tools:** Google Calendar API using the same service-account + domain-wide delegation model as Gmail. Tool: `session/calendar-meet.mjs`. Default timezone America/Chicago. Creates Google Meet links by default unless Jaime says otherwise.
 - **Claude CLI:** v2.1.91 at `/Applications/cmux.app/Contents/Resources/bin/claude` (path changed Cycle #312)
 
 ## Proposals Status (from session/proposals.md, updated Cycle #257)
