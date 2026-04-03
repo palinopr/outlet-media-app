@@ -61,41 +61,17 @@ This creates two problems:
 
 ### 2. Prompt memory still carries too much operational truth
 
-The agent runtime is still too dependent on prompts and markdown memory for business context and routing behavior.
+> **Update (April 2026):** The agent was simplified to a single prompt + single MEMORY.md. The multi-agent routing, delegation, and per-agent memory/skills systems were deleted. This section describes the historical problem that motivated the simplification.
 
-Examples:
-- Discord routing is heavily channel-based in `agent/src/discord/core/router.ts`
-- intake and control logic are concentrated in `agent/src/discord/core/entry.ts`
-- delegation and side-effect execution are concentrated in `agent/src/agents/delegate.ts`
-- specialist prompts still contain operational truth that can go stale
-
-This is exactly the wrong place for truth such as:
-- which campaign or client a conversation belongs to
-- whether a live campaign exists
-- who can approve a conversation
-- which exact object should be acted on
-
-Prompts should shape behavior, not own core state.
+Prompts should shape behavior, not own core state. Business facts like which campaign belongs to which client, whether a campaign is live, and budget thresholds belong in code or database — not in prompt text.
 
 ### 3. Core backend modules are too monolithic
 
 A few large files are carrying too much of the platform:
 - `src/features/notifications/server.ts`
 - `src/features/system-events/server.ts`
-- `agent/src/services/email-intelligence-service.ts`
-- `agent/src/discord/core/entry.ts`
-- `agent/src/agents/delegate.ts`
 
-Large files are not automatically wrong, but these files each combine multiple responsibilities:
-- parsing
-- authorization
-- orchestration
-- persistence
-- routing
-- formatting
-- external side effects
-
-That makes it hard to reason about failures and hard to test narrow behavior.
+Large files are not automatically wrong, but these files each combine multiple responsibilities that make them hard to test narrowly.
 
 ### 4. Service-role reads and writes are still spread too widely
 

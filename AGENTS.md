@@ -8,7 +8,7 @@
 - Auth: Clerk (middleware is `src/proxy.ts`, not `middleware.ts`)
 - DB: Supabase (`https://dbznwsnteogovicllean.supabase.co`)
 - External APIs: Ticketmaster, Meta Marketing API
-- Agent: `agent/` -- autonomous Claude agent with Discord bot + node-cron
+- Agent: `agent/` -- single Discord agent powered by Claude CLI
 
 ## Product Direction
 
@@ -185,9 +185,8 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
 | Migrations | `supabase/migrations/` |
 | Agent code | `agent/src/` (services, events, agents, jobs) |
 | Tracked agent scripts | `agent/scripts/` |
-| Agent prompts | `agent/prompts/` (boss.txt, media-buyer.txt, etc.) |
+| Agent prompt | `agent/prompts/agent.txt` |
 | Agent memory | `agent/MEMORY.md` |
-| Agent runtime skills | `agent/skills/` |
 | Ephemeral agent runtime scratch | `agent/session/` (gitignored; do not put durable tooling here) |
 | Durable architecture context | `docs/context/` |
 | Repo organization guide | `docs/context/repo-organization.md` |
@@ -221,15 +220,16 @@ After every `git push`, run: `railway up --detach`
 
 ## Agent Architecture
 
-Multi-agent Discord system with per-agent concurrency:
-- **Services**: webhook, queue (Supabase ledger), approval (3-tier: Green/Yellow/Red), status (presence rotation)
-- **Events**: message handler (routing), trigger handler (ROAS/capacity alerts), inspect handler (#agent-internals)
-- **Agents**: delegate (structured JSON delegation), spawner (dynamic agent creation)
-- **Jobs**: `cron-sweeps.ts` (10 sweep jobs, start OFF, enable via `!enable <job>`)
-- **Config**: `discord-router.ts` (channel->agent mapping), `rules.json` (approval thresholds)
-- Discord layout: 17 channels, 8 categories
-- 5 core cron jobs run unconditionally on startup (heartbeat, TM check, Meta sync, think cycle, Discord health)
-- Owner email triage is Discord-first and owner-only. Do not add a parallel admin/client web inbox by default; improve the Discord operating surface instead.
-- Owner meeting scheduling is also Discord-first and owner-only in `#meetings`, backed by Google Calendar API rather than a separate shared web surface by default.
+Single-agent Discord system — one prompt, one identity, purely reactive:
+- **Runtime**: Discord.js bot → message handler → Claude CLI subprocess per message
+- **Identity**: Posts as "Outlet Agent" via webhooks (single identity, no personas)
+- **Prompt**: `agent/prompts/agent.txt` (~5KB) — all capabilities in one file
+- **Memory**: `agent/MEMORY.md` — agent reads before every response, writes when learning something important
+- **Tools**: Meta Ads API (curl), Gmail (session/gmail-*.mjs), Google Calendar (session/calendar-meet.mjs), Supabase REST
+- **Services**: webhook (Discord posting), queue (Supabase task ledger), supabase (database access)
+- **Commands**: `/status`, `/help`, `/reset` only
+- **No cron, no sweeps, no scheduled jobs** — agent only acts when spoken to
+- **No delegation** — agent handles everything directly, no spawning other Claude instances
+- **No approval tiers** — removed (was green/yellow/red system for delegated tasks)
+- Owner email triage and meeting scheduling are available on demand via the agent's Gmail and Calendar tools.
 - Local agent runtimes should run under a restart loop or process manager, not only an ad hoc foreground shell, so pending work resumes after crashes.
-- Internal growth-team work should follow the same Discord-first model: use Discord channels and threads as the operating surface, `agent_tasks` as the execution queue, `system_events` as the durable timeline, and feature-specific ledgers for examples, corrections, and measured outcomes.
