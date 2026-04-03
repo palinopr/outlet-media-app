@@ -116,15 +116,18 @@ git commit -m "refactor(agent): simplify router to single agent"
 
 - [ ] **Step 1: Replace message-handler.ts**
 
-Strip out: delegation processing, resource locks, per-agent memory sync, per-agent skills sync, agent activity logging. Keep: conversation context building, Claude CLI invocation, response delivery via webhook with fallback to message edit, channel lock (prevent concurrent processing per channel), typing indicator.
+Strip out: delegation processing, resource locks, per-agent memory sync, per-agent skills sync, agent activity logging, buildSystemPrompt (no snapshot injection, no memory merge — agent reads MEMORY.md itself via Claude CLI), postProcess, logActivity, withResourceLocks wrapper.
 
-Key changes:
-- Remove imports: `delegate.js`, `memory.js`, `skills.js`, `agent-resource-locks.js`, `system-events-service.js`, `state.js`
-- Remove `buildSystemPrompt()` (no snapshot injection, no memory merge — agent reads MEMORY.md itself)
-- Remove `postProcess()` (no memory sync, no skills sync, no activity logging)
-- Remove `logActivity()`
-- Remove `withResourceLocks` wrapper
-- Simplify `handleMessage()` to: lock channel → build context → runClaude → deliver response → unlock
+Remove ALL of these imports:
+- `delegate.js` (processDelegations, processChannelMessages)
+- `memory.js` (loadAgentMemory, maybeUpdateMemory)
+- `skills.js` (maybeCreateSkill)
+- `agent-resource-locks.js` (getInteractiveRouteResources, getDelegatedTaskResources)
+- `system-events-service.js` (logDiscordAgentTurn)
+- `state.js` (ResourceBusyError, withResourceLocks)
+- `admin.js` (buildAdminPrompt)
+
+Simplify `handleMessage()` to: lock channel → build context → runClaude → deliver response → unlock.
 
 - [ ] **Step 2: Run type-check**
 
@@ -141,14 +144,54 @@ git commit -m "refactor(agent): simplify message handler — no delegation, no m
 
 ---
 
-### Task 4: Simplify index.ts
+### Task 4: Rewrite entry.ts
 
 **Files:**
-- Modify: `agent/src/index.ts`
+- Modify: `agent/src/discord/core/entry.ts`
 
-- [ ] **Step 1: Replace index.ts**
+**CRITICAL:** This file has ~12 imports from modules being deleted. It must be rewritten to only keep: Discord client setup, webhook init, queue init, slash command registration, simplified messageCreate handler, notifyChannel helper, stale lock detection.
 
-Remove: `startScheduler`, `stopScheduler`, `stopStatus`, `stopExternalTaskDispatcher`, `stopApprovals` imports and calls. Keep: orphan process cleanup, env validation, Discord bot startup, graceful shutdown (killAllClaude + discordClient.destroy).
+- [ ] **Step 1: Rewrite entry.ts**
+
+Remove ALL of these imports and calls from the `ready` handler:
+- `initScheduleJobs` from `../commands/schedule.js`
+- `initApprovals` from `../../services/approval-service.js`
+- `routeMessage` from `./command-router.js`
+- `bindDelegationTaskExecutor` from `../../agents/delegate.js`
+- `startExternalTaskDispatcher` from `../../services/external-task-dispatcher.js`
+- `initTriggers` from `../../events/trigger-handler.js`
+- `initSpawner` from `../../agents/spawner.js`
+- `initStatus` from `../../services/status-service.js`
+- `initDiscordAdmin` from `../commands/admin.js`
+- `getJobRunners` from `../../scheduler.js`
+- `registerButtonHandler` from `../features/buttons.js`
+
+Replace the `ready` handler with:
+1. `initQueue()`
+2. `initWebhooks(discordClient)`
+3. `registerSlashCommands(token)` + `registerSlashHandler(discordClient)`
+
+Replace the `messageCreate` handler — instead of calling `routeMessage`, wire directly to the simplified `handleMessage`:
+```typescript
+import { handleMessage, isChannelLocked } from "../../events/message-handler.js";
+import { getAgentForChannel } from "./router.js";
+
+discordClient.on("messageCreate", async (msg) => {
+  if (msg.author.bot) return;
+  const channelName = "name" in msg.channel ? (msg.channel as TextChannel).name : "dm";
+  const agent = getAgentForChannel(channelName);
+  if (agent.readOnly) return;
+  if (isChannelLocked(msg.channelId)) {
+    checkAndReleaseStaleLock(msg.channelId);
+    if (isChannelLocked(msg.channelId)) return;
+  }
+  const content = msg.content.trim();
+  if (!content) return;
+  await handleMessage(msg, content, channelName, discordClient);
+});
+```
+
+Keep: `notifyChannel()`, `discordClient`, `channelSessions`, stale lock functions. Remove CHANNEL_ROUTES aliases (simplify to just looking up by channel name).
 
 - [ ] **Step 2: Run type-check**
 
@@ -159,8 +202,8 @@ cd agent && npx tsc --noEmit
 - [ ] **Step 3: Commit**
 
 ```bash
-git add agent/src/index.ts
-git commit -m "refactor(agent): simplify startup — no scheduler, no services"
+git add agent/src/discord/core/entry.ts
+git commit -m "refactor(agent): rewrite entry.ts — remove deleted module imports"
 ```
 
 ---
@@ -196,7 +239,7 @@ git commit -m "refactor(agent): keep only /status, /help, /reset slash commands"
 ### Task 6: Delete old prompts, memory, skills
 
 **Files:**
-- Delete: `agent/prompts/boss.txt`, `agent/prompts/media-buyer.txt`, `agent/prompts/tm-agent.txt`, `agent/prompts/reporting-agent.txt`, `agent/prompts/think.txt`, `agent/prompts/creative-agent.txt`, `agent/prompts/client-manager.txt`, `agent/prompts/email-agent.txt`, `agent/prompts/don-omar-agent.txt`, `agent/prompts/meeting-agent.txt`, `agent/prompts/general.txt`, `agent/prompts/command.txt`, `agent/prompts/growth-supervisor.txt`, `agent/prompts/content-finder.txt`, `agent/prompts/lead-qualifier.txt`, `agent/prompts/publisher-tiktok.txt`, `agent/prompts/tiktok-supervisor.txt`
+- Delete: all prompt files except `agent.txt` (17 files)
 - Delete: `agent/memory/` (entire directory, 15 files)
 - Delete: `agent/skills/` (entire directory, 13 subdirectories)
 
@@ -204,9 +247,7 @@ git commit -m "refactor(agent): keep only /status, /help, /reset slash commands"
 
 ```bash
 cd agent
-# Delete old prompts (keep agent.txt)
 ls prompts/*.txt | grep -v agent.txt | xargs rm
-# Delete per-agent memory and skills
 rm -rf memory/ skills/
 ```
 
@@ -221,26 +262,67 @@ git commit -m "refactor(agent): delete 17 old prompts, per-agent memory and skil
 
 ### Task 7: Delete dead source files
 
-**Files:**
-- Delete: `agent/src/scheduler.ts`
-- Delete: `agent/src/jobs/cron-sweeps.ts`, `agent/src/jobs/creative-classify.ts`
-- Delete: `agent/src/agents/delegate.ts`, `agent/src/agents/spawner.ts`
-- Delete: `agent/src/events/trigger-handler.ts`, `agent/src/events/inspect-handler.ts`
-- Delete: `agent/src/discord/core/command-router.ts`
-- Delete: `agent/src/discord/commands/admin.ts`, `agent/src/discord/commands/schedule.ts`, `agent/src/discord/commands/dashboard.ts`, `agent/src/discord/commands/ops.ts`, `agent/src/discord/commands/supervisor.ts`, `agent/src/discord/commands/growth-publish.ts`
-- Delete: `agent/src/discord/features/buttons.ts`, `agent/src/discord/features/memory.ts`, `agent/src/discord/features/skills.ts`, `agent/src/discord/features/threads.ts`, `agent/src/discord/features/restructure.ts`
-- Delete: `agent/src/services/approval-service.ts`, `agent/src/services/status-service.ts`, `agent/src/services/agent-resource-locks.ts`, `agent/src/services/external-task-dispatcher.ts`
-- Delete: `agent/src/services/owner-discord-service.ts`
-- Delete: `agent/src/services/scheduled-handoff-service.ts`, `agent/src/services/meta-copy-swap-service.ts`
-- Delete: `agent/src/growth/contracts.ts`
-- Delete: `agent/src/services/growth-ledger-types.ts`, `agent/src/services/growth-ledger-read.ts`, `agent/src/services/growth-ledger-write.ts`, `agent/src/services/ledger-service.ts`
-- Delete: `agent/src/discord/core/access.ts`, `agent/src/discord/core/message-prompt.ts`
+**Files to delete:**
 
-- [ ] **Step 1: Delete source files**
+Scheduler & jobs:
+- `agent/src/scheduler.ts`
+- `agent/src/jobs/` (entire directory: `cron-sweeps.ts`, `creative-classify.ts`)
+
+Agents:
+- `agent/src/agents/delegate.ts`
+- `agent/src/agents/spawner.ts`
+
+Events:
+- `agent/src/events/trigger-handler.ts`
+- `agent/src/events/inspect-handler.ts`
+
+Discord core:
+- `agent/src/discord/core/command-router.ts`
+- `agent/src/discord/core/access.ts`
+- `agent/src/discord/core/message-prompt.ts`
+
+Discord commands:
+- `agent/src/discord/commands/admin.ts`
+- `agent/src/discord/commands/schedule.ts`
+- `agent/src/discord/commands/dashboard.ts`
+- `agent/src/discord/commands/ops.ts`
+- `agent/src/discord/commands/supervisor.ts`
+- `agent/src/discord/commands/growth-publish.ts`
+
+Discord features (entire directory):
+- `agent/src/discord/features/` (`buttons.ts`, `memory.ts`, `skills.ts`, `threads.ts`, `restructure.ts`)
+
+Services:
+- `agent/src/services/approval-service.ts`
+- `agent/src/services/status-service.ts`
+- `agent/src/services/agent-resource-locks.ts`
+- `agent/src/services/external-task-dispatcher.ts`
+- `agent/src/services/owner-discord-service.ts`
+- `agent/src/services/scheduled-handoff-service.ts`
+- `agent/src/services/meta-copy-swap-service.ts`
+- `agent/src/services/email-intelligence-service.ts`
+- `agent/src/services/email-classify.ts`
+- `agent/src/services/gmail-watch-service.ts`
+- `agent/src/services/calendar-service.ts`
+
+State:
+- `agent/src/state.ts`
+- `agent/src/services/runtime-state.ts`
+
+Growth (entire directory):
+- `agent/src/growth/` (`contracts.ts` and anything else)
+
+Growth ledgers:
+- `agent/src/services/growth-ledger-types.ts`
+- `agent/src/services/growth-ledger-read.ts`
+- `agent/src/services/growth-ledger-write.ts`
+- `agent/src/services/ledger-service.ts`
+
+- [ ] **Step 1: Delete all dead source files**
 
 ```bash
 cd agent/src
-rm -f scheduler.ts
+rm -f scheduler.ts state.ts
 rm -rf jobs/
 rm -f agents/delegate.ts agents/spawner.ts
 rm -f events/trigger-handler.ts events/inspect-handler.ts
@@ -249,7 +331,10 @@ rm -f discord/commands/admin.ts discord/commands/schedule.ts discord/commands/da
 rm -rf discord/features/
 rm -f services/approval-service.ts services/status-service.ts services/agent-resource-locks.ts services/external-task-dispatcher.ts
 rm -f services/owner-discord-service.ts services/scheduled-handoff-service.ts services/meta-copy-swap-service.ts
-rm -f growth/contracts.ts
+rm -f services/email-intelligence-service.ts services/email-classify.ts
+rm -f services/gmail-watch-service.ts services/calendar-service.ts
+rm -f services/runtime-state.ts
+rm -rf growth/
 rm -f services/growth-ledger-types.ts services/growth-ledger-read.ts services/growth-ledger-write.ts services/ledger-service.ts
 ```
 
@@ -270,10 +355,23 @@ git commit -m "refactor(agent): delete scheduler, delegation, sweeps, growth, an
 
 ### Task 8: Delete dead test files
 
-**Files:**
-- Delete all test files for deleted modules
+**Keep these tests** (they test kept modules):
+- `agent/src/runner.test.ts` — tests Claude CLI spawning (runner.ts is kept)
+- `agent/src/services/queue-service.test.ts` — tests queue service (kept)
 
-- [ ] **Step 1: Delete test files for removed code**
+**Delete these tests** (they test deleted modules):
+- `agent/src/scheduler.test.ts`
+- `agent/src/agents/delegate.test.ts`
+- `agent/src/discord/core/command-router.test.ts`
+- `agent/src/discord/core/message-prompt.test.ts`
+- `agent/src/discord/commands/ops.test.ts`
+- `agent/src/discord/commands/growth-publish.test.ts`
+- `agent/src/services/email-classify.test.ts`
+- `agent/src/services/scheduled-handoff-service.test.ts`
+- `agent/src/services/meta-copy-swap-service.test.ts`
+- `agent/src/events/message-handler.test.ts`
+
+- [ ] **Step 1: Delete dead test files**
 
 ```bash
 cd agent/src
@@ -281,14 +379,9 @@ rm -f scheduler.test.ts
 rm -f agents/delegate.test.ts
 rm -f discord/core/command-router.test.ts discord/core/message-prompt.test.ts
 rm -f discord/commands/ops.test.ts discord/commands/growth-publish.test.ts
-rm -f services/email-classify.test.ts services/queue-service.test.ts services/scheduled-handoff-service.test.ts services/meta-copy-swap-service.test.ts
+rm -f services/email-classify.test.ts services/scheduled-handoff-service.test.ts services/meta-copy-swap-service.test.ts
 rm -f events/message-handler.test.ts
-rm -f runner.test.ts
 ```
-
-Wait — check which tests still apply. `runner.test.ts` tests the Claude CLI spawner which we're keeping. `queue-service.test.ts` tests queue-service which we're keeping. `email-classify.test.ts` tests email classification which may still be used.
-
-**Before deleting, verify:** `grep -rn` each test's import source to confirm the source file is deleted.
 
 - [ ] **Step 2: Run type-check and tests**
 
@@ -306,12 +399,13 @@ git commit -m "refactor(agent): delete tests for removed modules"
 
 ---
 
-### Task 9: Clean up prototype files
+### Task 9: Clean up prototype files and check system-events-service
 
 **Files:**
 - Delete: `agent/src/index-v2.ts`
 - Delete: `agent/src/discord/core/router-v2.ts`
 - Delete: `agent/src/events/message-handler-v2.ts`
+- Check: `agent/src/services/system-events-service.ts` — keep if `email-gmail.ts` still imports it, delete if no remaining consumers
 
 - [ ] **Step 1: Delete v2 prototype files**
 
@@ -319,7 +413,15 @@ git commit -m "refactor(agent): delete tests for removed modules"
 rm -f agent/src/index-v2.ts agent/src/discord/core/router-v2.ts agent/src/events/message-handler-v2.ts
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 2: Check system-events-service consumers**
+
+```bash
+grep -rn "system-events-service" agent/src/ --include="*.ts" | grep -v test | grep -v "system-events-service.ts"
+```
+
+If only `email-gmail.ts` imports it, keep it. If no consumers, delete it.
+
+- [ ] **Step 3: Commit**
 
 ```bash
 git add -A agent/src/
@@ -356,7 +458,7 @@ npm test
 
 ```bash
 find agent/src -type f -name '*.ts' | wc -l
-# Should be significantly less than the original 62
+# Should be ~15 or fewer (down from 62)
 ```
 
 - [ ] **Step 5: Verify prompt count**
