@@ -1,11 +1,10 @@
 /**
- * message-handler.ts -- Routes Discord messages to agents.
+ * message-handler.ts -- Routes Discord messages to the agent.
  *
- * Extracted from discord.ts monolith. Handles:
+ * Handles:
  * - Conversation context building (last N messages)
- * - Agent routing via discord-router.ts
  * - Claude CLI execution with streaming updates
- * - Post-response fire-and-forget: memory, skills, delegation scan
+ * - Response delivery via webhook with fallback
  */
 
 import {
@@ -14,12 +13,8 @@ import {
   type TextChannel,
 } from "discord.js";
 import { runClaude } from "../runner.js";
-import { getAgentForChannel, type AgentConfig } from "../discord/core/router.js";
+import { getAgentForChannel } from "../discord/core/router.js";
 import { sendAsAgent } from "../services/webhook-service.js";
-import { loadAgentMemory } from "../discord/features/memory.js";
-import { getInteractiveRouteResources } from "../services/agent-resource-locks.js";
-import { logDiscordAgentTurn } from "../services/system-events-service.js";
-import { ResourceBusyError, withResourceLocks } from "../state.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
 
 /** Per-channel processing lock to prevent concurrent agent calls */
@@ -68,9 +63,6 @@ function summarizeHistoryAttachments(msg: Message): string {
   return `[attachments: ${names.join(", ")}${suffix}]`;
 }
 
-/**
- * Check if a channel is currently locked for processing.
- */
 export function isChannelLocked(channelId: string): boolean {
   return channelLocks.has(channelId);
 }
@@ -121,60 +113,6 @@ async function buildConversationContext(
   }
 }
 
-async function logActivity(
-  agentKey: string,
-  channel: string,
-  user: string,
-  message: string,
-  agent: string,
-  response: string,
-  messageId: string,
-): Promise<void> {
-  const { notifyChannel } = await import("../discord/core/entry.js");
-  await logDiscordAgentTurn({
-    agentDescription: agent,
-    agentKey,
-    channel,
-    message,
-    messageId,
-    response,
-    user,
-  });
-
-  const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit" });
-  const feedMsg = `\`${timestamp}\` **#${channel}** (${agent}) -- ${user}: "${message.slice(0, 80)}"`;
-  void notifyChannel("agent-feed", feedMsg);
-}
-
-/**
- * Build a system prompt with optional server snapshot and agent memory.
- */
-async function buildSystemPrompt(agent: AgentConfig): Promise<string | undefined> {
-  let systemPrompt: string | undefined;
-  if (agent.injectSnapshot) {
-    const { buildAdminPrompt } = await import("../discord/commands/admin.js");
-    systemPrompt = await buildAdminPrompt(agent.promptFile);
-  }
-
-  const memory = await loadAgentMemory(agent.promptFile);
-  if (memory) {
-    if (systemPrompt) {
-      systemPrompt += memory;
-    } else {
-      const fs = await import("node:fs/promises");
-      const path = await import("node:path");
-      try {
-        const promptPath = path.join(process.cwd(), "prompts", `${agent.promptFile}.txt`);
-        const base = await fs.readFile(promptPath, "utf-8");
-        systemPrompt = base + memory;
-      } catch {
-        // Prompt file not found -- let runner handle the fallback
-      }
-    }
-  }
-  return systemPrompt;
-}
-
 /**
  * Deliver response chunks via webhook, falling back to message edit.
  */
@@ -200,35 +138,13 @@ async function deliverResponse(
 }
 
 /**
- * Fire-and-forget post-processing: durable activity event, memory, skills.
- */
-function postProcess(
-  agentKey: string,
-  agent: AgentConfig,
-  channelName: string,
-  username: string,
-  prompt: string,
-  responseText: string,
-  messageId: string,
-): void {
-  logActivity(agentKey, channelName, username, prompt, agent.description, responseText, messageId).catch((e) => console.warn("[message-handler] log failed:", toErrorMessage(e)));
-  import("../discord/features/memory.js")
-    .then(({ maybeUpdateMemory }) => maybeUpdateMemory(agent.promptFile, prompt, responseText))
-    .catch((e) => console.warn("[message-handler] memory update failed:", toErrorMessage(e)));
-  import("../discord/features/skills.js")
-    .then(({ maybeCreateSkill }) => maybeCreateSkill(agent.promptFile, prompt, responseText))
-    .catch((e) => console.warn("[message-handler] skill creation failed:", toErrorMessage(e)));
-}
-
-/**
- * Route a message to the correct agent and handle the response.
- * Uses per-agent slots instead of global agentBusy lock.
+ * Route a message to the agent and handle the response.
  */
 export async function handleMessage(
   msg: Message,
   prompt: string,
   channelName: string,
-  discordClient: Client | null,
+  _discordClient: Client | null,
 ): Promise<void> {
   const agent = getAgentForChannel(channelName);
   if (agent.readOnly) return;
@@ -247,91 +163,27 @@ export async function handleMessage(
 
     working = await msg.reply("Working on it...");
     const contextualPrompt = await buildConversationContext(msg, prompt);
-    const systemPrompt = await buildSystemPrompt(agent);
-    const interactiveResources = getInteractiveRouteResources(channelName, agent.promptFile);
 
     let buffer = "";
     let lastEdit = Date.now();
-    const result = interactiveResources.length > 0
-      ? await withResourceLocks(`discord-message:${msg.id}`, interactiveResources, async () => {
-          return await runClaude({
-            prompt: contextualPrompt,
-            systemPromptName: agent.promptFile,
-            systemPrompt,
-            maxTurns: agent.maxTurns,
-            onChunk: async (chunk: string) => {
-              buffer += chunk;
-              if (Date.now() - lastEdit > 1500 && buffer.trim()) {
-                const preview = cleanForDiscord(buffer.slice(-1900));
-                await working?.edit(preview || "...").catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
-                lastEdit = Date.now();
-              }
-            },
-          });
-        })
-      : await runClaude({
-          prompt: contextualPrompt,
-          systemPromptName: agent.promptFile,
-          systemPrompt,
-          maxTurns: agent.maxTurns,
-          onChunk: async (chunk: string) => {
-            buffer += chunk;
-            if (Date.now() - lastEdit > 1500 && buffer.trim()) {
-              const preview = cleanForDiscord(buffer.slice(-1900));
-              await working?.edit(preview || "...").catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
-              lastEdit = Date.now();
-            }
-          },
-        });
-
-    let responseText = result.text || "Done.";
-    const actionNotes: string[] = [];
-
-    if (discordClient && agent.promptFile !== "chat") {
-      try {
-        const { processChannelMessages, processDelegations } = await import("../agents/delegate.js");
-
-        const channelMessages = await processChannelMessages(discordClient, responseText, channelName);
-        responseText = channelMessages.cleanText;
-        if (channelMessages.posted > 0) {
-          const targets = channelMessages.targets.map((target) => `#${target}`).join(", ");
-          actionNotes.push(`Posted to ${targets}.`);
+    const result = await runClaude({
+      prompt: contextualPrompt,
+      systemPromptName: agent.promptFile,
+      maxTurns: agent.maxTurns,
+      onChunk: async (chunk: string) => {
+        buffer += chunk;
+        if (Date.now() - lastEdit > 1500 && buffer.trim()) {
+          const preview = cleanForDiscord(buffer.slice(-1900));
+          await working?.edit(preview || "...").catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
+          lastEdit = Date.now();
         }
-        if (channelMessages.handedOff > 0) {
-          const targets = channelMessages.handoffTargets.map((target) => `#${target}`).join(", ");
-          actionNotes.push(`Handoff queued for ${targets}.`);
-        }
+      },
+    });
 
-        const delegations = await processDelegations(discordClient, responseText, channelName);
-        responseText = delegations.cleanText;
-        if (delegations.delegated > 0) {
-          const targets = delegations.targets.map((target) => `#${target}`).join(", ");
-          actionNotes.push(`Queued for ${targets}.`);
-        }
-      } catch (err) {
-        const errMsg = toErrorMessage(err);
-        console.warn(`[message-handler] action processing failed: ${errMsg}`);
-      }
-    }
-
-    const deliveredText = [responseText.trim(), ...actionNotes.map((note) => `_${note}_`)]
-      .filter(Boolean)
-      .join("\n\n")
-      .trim() || "Done.";
-
-    const chunks = chunkText(cleanForDiscord(deliveredText), 1900);
+    const responseText = result.text || "Done.";
+    const chunks = chunkText(cleanForDiscord(responseText), 1900);
     await deliverResponse(agentKey, channelName, chunks, working, msg);
-    postProcess(agentKey, agent, channelName, msg.author.username, prompt, deliveredText, msg.id);
   } catch (err) {
-    if (err instanceof ResourceBusyError) {
-      const blockers = err.blockers.join(", ");
-      const message = `That workflow is waiting on ${blockers}. Try again in a bit.`;
-      if (working) {
-        await working.edit(message).catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
-      }
-      return;
-    }
-
     const errMsg = toErrorMessage(err);
     if (working) {
       await working.edit(`Something went wrong: ${errMsg}`).catch((e) => console.warn("[message-handler] edit failed:", toErrorMessage(e)));
