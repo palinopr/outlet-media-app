@@ -53,6 +53,9 @@ export async function createClerkSupabaseClient() {
  *
  * This is the shared version of the per-feature `get*ReadClient` helpers
  * (e.g. `getCrmReadClient`, `getEventReadClient`, etc.).
+ *
+ * Caller audit (2026-04-03): All callers verified to handle null
+ * return gracefully after security fix in commit 292a866.
  */
 export async function getFeatureReadClient(useClientScope: boolean) {
   if (!supabaseAdmin) return null;
