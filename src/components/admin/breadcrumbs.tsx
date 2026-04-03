@@ -17,16 +17,10 @@ const labelMap: Record<string, string> = {
   reports: "Reports",
   campaigns: "Campaigns",
   events: "Events",
-  assets: "Assets",
-  approvals: "Approvals",
-  notifications: "Notifications",
-  conversations: "Conversations",
   agents: "Agents",
   clients: "Clients",
   users: "Users",
-  activity: "Activity",
   settings: "Settings",
-  workspace: "Workspace",
   tasks: "Tasks",
 };
 
