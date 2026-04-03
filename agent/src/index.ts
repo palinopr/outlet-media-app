@@ -2,11 +2,7 @@ import "dotenv/config";
 import { existsSync, mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { discordClient, startDiscordBot } from "./discord/core/entry.js";
-import { startScheduler, stopScheduler } from "./scheduler.js";
 import { killAllClaude } from "./runner.js";
-import { stopStatus } from "./services/status-service.js";
-import { stopExternalTaskDispatcher } from "./services/external-task-dispatcher.js";
-import { stopApprovals } from "./services/approval-service.js";
 import { toErrorMessage } from "./utils/error-helpers.js";
 
 // Ensure session directory exists for TM One browser state
@@ -84,16 +80,9 @@ console.log("");
 // Start Discord bot (if token configured)
 startDiscordBot();
 
-// Start autonomous scheduler
-startScheduler();
-
 // Graceful shutdown -- kill child Claude processes to prevent orphaned ghosts
 async function shutdown(): Promise<void> {
   killAllClaude();
-  stopStatus();
-  stopExternalTaskDispatcher();
-  stopApprovals();
-  stopScheduler();
   discordClient?.destroy();
 }
 
