@@ -65,8 +65,11 @@ export async function getFeatureReadClient(useClientScope: boolean) {
       return supabaseAdmin;
     }
   } catch {
-    return supabaseAdmin;
+    // Never fall back to service-role for non-admin users — deny access.
+    return null;
   }
 
-  return (await createClerkSupabaseClient()) ?? supabaseAdmin;
+  // Return the Clerk-scoped client with RLS, or null if unavailable.
+  // Never fall back to supabaseAdmin for non-admin users.
+  return await createClerkSupabaseClient();
 }
