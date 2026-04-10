@@ -26,28 +26,14 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-function PhoneShell({ children, width = "max-w-[460px]" }: { children: React.ReactNode; width?: string }) {
-  return (
-    <div className={`relative mx-auto w-full ${width}`}>
-      <div className="absolute inset-0 rounded-[42px] bg-[radial-gradient(circle_at_top,rgba(31,94,255,0.2),transparent_32%),radial-gradient(circle_at_bottom,rgba(80,22,136,0.14),transparent_30%)] blur-2xl" />
-      <div className="relative rounded-[42px] border-[6px] border-[#0c1220] bg-[#060c17] p-3 shadow-[0_55px_120px_-48px_rgba(15,23,42,0.7)]">
-        <div className="absolute left-1/2 top-3 h-7 w-28 -translate-x-1/2 rounded-full bg-black/85" />
-        <div className="min-h-full overflow-hidden rounded-[30px] border border-white/6 bg-[linear-gradient(180deg,#081425_0%,#071120_100%)]">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export default function LandingPage() {
   return (
     <div
       className={`${landingFont.className} min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(232,244,255,0.96)_50%,rgba(223,238,255,0.96)_100%)] text-slate-950`}
     >
       <main className="mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 sm:pt-12 lg:pb-12">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,460px)_minmax(0,380px)] lg:justify-center lg:gap-10 xl:grid-cols-[minmax(0,460px)_minmax(0,390px)]">
-          <PhoneShell width="max-w-[460px]">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,560px)_minmax(0,420px)] lg:items-start lg:justify-center lg:gap-10">
+          <section className="overflow-hidden rounded-[34px] border border-[#0c1d35] bg-[linear-gradient(180deg,#081425_0%,#071120_100%)] shadow-[0_55px_120px_-48px_rgba(15,23,42,0.7)]">
             <LandingHero />
             <LandingCredibility />
             <div className="px-4 pb-4 pt-2 sm:px-5">
@@ -59,9 +45,9 @@ export default function LandingPage() {
                 <ArrowRight className="size-4" />
               </a>
             </div>
-          </PhoneShell>
+          </section>
 
-          <PhoneShell width="max-w-[390px]">
+          <section className="overflow-hidden rounded-[34px] border border-[#0c1d35] bg-[linear-gradient(180deg,#081425_0%,#071120_100%)] shadow-[0_55px_120px_-48px_rgba(15,23,42,0.7)] lg:sticky lg:top-8">
             <LandingFeatures />
             <LandingHowItWorks />
             <LandingFAQ />
@@ -74,7 +60,7 @@ export default function LandingPage() {
                 Agenda tu auditoría
               </a>
             </div>
-          </PhoneShell>
+          </section>
         </div>
       </main>
 
