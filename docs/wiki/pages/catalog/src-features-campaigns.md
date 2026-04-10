@@ -1,6 +1,6 @@
 # src/features / campaigns
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 - Files: 4
 - File kinds: TypeScript module (3), test file (1)
@@ -60,8 +60,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Imported by: src/app/admin/actions/campaigns.ts, src/features/campaigns/ownership-sync.test.ts, src/features/notifications/server.ts
 - Used by groups: src/app / admin, src/features / campaigns, src/features / notifications
 - Feature module: campaigns
-- Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/api/campaign-comments/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx
-- Tests related: src/features/campaigns/ownership-sync.test.ts, __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/api/campaign-comments/route.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, … (+5 more)
+- Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx
+- Tests related: src/features/campaigns/ownership-sync.test.ts, __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, … (+8 more)
 - Tests related (direct): src/features/campaigns/ownership-sync.test.ts
 - Exports: approvalMatchesCampaignOwnership, notificationMatchesCampaignOwnership, systemEventMatchesCampaignOwnership
 - Symbol details: function approvalMatchesCampaignOwnership (exported), function notificationMatchesCampaignOwnership (exported), function systemEventMatchesCampaignOwnership (exported), function isRecord, function metadataCampaignId, interface CampaignLinkedEntitySets

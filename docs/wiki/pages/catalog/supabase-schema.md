@@ -1,6 +1,6 @@
 # Supabase Schema Map
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 This page groups migration-discovered database objects by schema kind and records which migrations define them plus how many code/docs references exist outside the migrations.
 
@@ -111,9 +111,9 @@ This page groups migration-discovered database objects by schema kind and record
 ### `calls`
 - Kinds: table
 - Migrations: supabase/migrations/20260306184000_backend_tables_rls.sql
-- Non-migration references: 33
-- Referenced by groups: Docs / Plans (6), Docs / Superpowers Plans (4), Root Files (3), Tests / API (2), agent / root (2), agent/src / events (2), src/app / client (2), src/features / client-agent (2), src/lib (2), agent/src / root (1), agent/src / services (1), Docs / Context (1), … (+5 more)
-- Routes: src/app/api/ticketmaster/tm1/snapshot/route.ts, src/app/landing/page.tsx
+- Non-migration references: 31
+- Referenced by groups: Docs / Plans (6), Docs / Superpowers Plans (4), Root Files (3), Tests / API (2), agent / root (2), agent/src / events (2), src/app / client (2), src/features / client-agent (2), src/lib (2), agent/src / root (1), agent/src / services (1), Docs / Context (1), … (+3 more)
+- Routes: src/app/api/ticketmaster/tm1/snapshot/route.ts
 - Features/libs/agents: agent/src/events/message-handler.test.ts, agent/src/events/message-handler.ts, agent/src/runner.test.ts, agent/src/services/queue-service.ts, src/features/client-agent/components/agent-shell.test.tsx, src/features/client-agent/runtime.test.ts, src/lib/database.types.ts, src/lib/google-ads.test.ts, src/lib/ticketmaster/tm1-client.test.ts
 - Tests/docs: __tests__/api/agents-jobs.test.ts, __tests__/api/alerts.test.ts, docs/context/google-ads-api.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-design.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, docs/superpowers/plans/2026-03-31-client-agent-tab.md, … (+5 more)
 
@@ -318,11 +318,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `event_comments`
 - Kinds: table
 - Migrations: supabase/migrations/20260306110000_event_comments.sql, supabase/migrations/20260306170500_event_workflow_rls.sql
-- Non-migration references: 10
-- Referenced by groups: src/app / admin (4), Tests / Features (3), src/features / conversations (1), src/features / events (1), src/features / notifications (1)
-- Routes: none
-- Features/libs/agents: src/features/conversations/server.ts, src/features/events/server.ts, src/features/notifications/server.ts
-- Tests/docs: __tests__/features/conversations/read-clients.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/notifications/server.test.ts, src/app/admin/clients/data.test.ts
+- Non-migration references: 13
+- Referenced by groups: src/app / admin (4), Tests / Features (3), src/app / api (2), src/features / conversations (1), src-features-event-comments (1), src/features / events (1), src/features / notifications (1)
+- Routes: src/app/api/event-comments/route.ts
+- Features/libs/agents: src/features/conversations/server.ts, src/features/event-comments/server.ts, src/features/events/server.ts, src/features/notifications/server.ts
+- Tests/docs: __tests__/features/conversations/read-clients.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/notifications/server.test.ts, src/app/admin/clients/data.test.ts, src/app/api/event-comments/route.test.ts
 
 ### `event_follow_up_items`
 - Kinds: table
@@ -435,9 +435,9 @@ This page groups migration-discovered database objects by schema kind and record
 ### `leads`
 - Kinds: table
 - Migrations: supabase/migrations/20260306184000_backend_tables_rls.sql
-- Non-migration references: 11
-- Referenced by groups: src/components / landing (3), agent / root (1), agent / scripts (1), Root Files (1), Docs / Plans (1), src/app / root routes (1), src/features / client-agent (1), src/features / client-portal (1), src/lib (1)
-- Routes: src/app/landing/page.tsx
+- Non-migration references: 7
+- Referenced by groups: agent / root (1), agent / scripts (1), Root Files (1), Docs / Plans (1), src/features / client-agent (1), src/features / client-portal (1), src/lib (1)
+- Routes: none
 - Features/libs/agents: src/features/client-agent/store.test.ts, src/features/client-portal/insights.ts, src/lib/database.types.ts
 - Tests/docs: docs/plans/2026-03-07-discord-growth-team-plan.md
 
@@ -453,11 +453,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `notifications`
 - Kinds: table
 - Migrations: supabase/migrations/20260306111500_notification_entities.sql, supabase/migrations/20260306163500_client_surface_rls.sql
-- Non-migration references: 35
-- Referenced by groups: Tests / Features (5), Root Files (4), Docs / Context (4), src/app / admin (4), Docs / Plans (2), Docs / Superpowers Plans (2), Docs / Superpowers Specs (2), src/app / api (2), src/features / campaign-action-items (2), agent/src / discord (1), src/app / root routes (1), src/features / asset-follow-up-items (1), … (+5 more)
-- Routes: src/app/api/campaign-comments/route.ts, src/app/privacy/page.tsx
+- Non-migration references: 37
+- Referenced by groups: Tests / Features (5), Root Files (4), Docs / Context (4), src/app / admin (4), src/app / api (4), Docs / Plans (2), Docs / Superpowers Plans (2), Docs / Superpowers Specs (2), src/features / campaign-action-items (2), agent/src / discord (1), src/app / root routes (1), src/features / asset-follow-up-items (1), … (+5 more)
+- Routes: src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/privacy/page.tsx
 - Features/libs/agents: agent/src/discord/core/entry.ts, src/features/asset-follow-up-items/server.ts, src/features/campaign-action-items/server.test.ts, src/features/campaign-action-items/server.ts, src/features/campaigns/ownership-sync.test.ts, src/features/event-follow-up-items/server.ts, src/features/notifications/server.ts, src/features/workflow/revalidation.test.ts, src/lib/database.types.ts
-- Tests/docs: __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, docs/context/architecture-reset.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/salvage-map.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, … (+7 more)
+- Tests/docs: __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, docs/context/architecture-reset.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/salvage-map.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, … (+8 more)
 
 ### `recordings`
 - Kinds: table

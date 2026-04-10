@@ -1,9 +1,9 @@
 # src/app / api
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
-- Files: 38
-- File kinds: Next.js route handler (24), test file (11), TypeScript module (3)
+- Files: 40
+- File kinds: Next.js route handler (25), test file (12), TypeScript module (3)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -420,16 +420,57 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: Next.js route handler
 - Construction: App Router route handler, code module, handlers: POST
 - Route: /api/contact
-- Lines: 80
-- Bytes: 2267
+- Lines: 84
+- Bytes: 2435
 - Imports (internal): src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
 - Imports (packages): next/server, resend
 - Depends on groups: src/lib
 - Exports: POST
-- Symbol details: function POST (exported), function withLabel, const resend
-- Defines: withLabel, POST, resend, trimmed, fullMessage
+- Symbol details: function POST (exported), function withLabel, const resend, const contactRecipient
+- Defines: withLabel, POST, resend, contactRecipient, trimmed, fullMessage
 - Route handlers: POST
 - Contents summary: Next.js route handler for `/api/contact`; route handlers: POST; exports: POST; internal imports: 3; package imports: 2
+
+## `src/app/api/event-comments/route.test.ts`
+- Status: tracked-clean
+- System: web
+- Group: src/app / api
+- Ownership: web API route surface
+- Type: test file
+- Construction: test specification
+- Route context: /api/event-comments
+- Lines: 187
+- Bytes: 5277
+- Imports (internal): src/features/event-comments/server.ts, src/app/api/event-comments/route.ts, src/lib/api-helpers.ts, src/lib/supabase.ts, src/features/events/server.ts, src/features/client-portal/scope.ts, src/features/notifications/discussions.ts, src/features/system-events/server.ts, src/lib/agent-dispatch.ts, src/features/workflow/revalidation.ts
+- Imports (packages): next/server, vitest, @clerk/nextjs/server
+- Depends on groups: src-features-event-comments, src/app / api, src/lib, src/features / events, src/features / client-portal, src/features / notifications, src/features / system-events, src/features / workflow
+- Symbol details: function makeGetRequest
+- Defines: makeGetRequest, actual, query, response
+- Tests / describe labels: event comments route, reads client event comment GETs through the Clerk-scoped client, does not fall back to the service role for non-admin event comment GETs when the Clerk-scoped client is unavailable, keeps admin event comment GETs on the service role
+- Contents summary: tests/describes: event comments route; reads client event comment GETs through the Clerk-scoped client; does not fall back to the service role for non-admin event comment GETs when the Clerk-scoped client is unavailable; internal imports: 10; package imports: 3
+
+## `src/app/api/event-comments/route.ts`
+- Status: tracked-clean
+- System: web
+- Group: src/app / api
+- Ownership: web API route surface
+- Type: Next.js route handler
+- Construction: App Router route handler, code module, handlers: GET, POST
+- Route: /api/event-comments
+- Lines: 245
+- Bytes: 7535
+- Imports (internal): src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/text-utils.ts, src/lib/agent-dispatch.ts, src/lib/supabase.ts, src/features/event-comments/server.ts, src/features/events/server.ts, src/features/notifications/discussions.ts, src/features/client-portal/scope.ts, src/features/system-events/server.ts, … (+1 more)
+- Imports (packages): next/server, @clerk/nextjs/server, zod/v4
+- Imported by: src/app/api/event-comments/route.test.ts
+- Depends on groups: src/lib, src-features-event-comments, src/features / events, src/features / notifications, src/features / client-portal, src/features / system-events, src/features / workflow
+- Used by groups: src/app / api
+- Tests related: src/app/api/event-comments/route.test.ts
+- Tests related (direct): src/app/api/event-comments/route.test.ts
+- Exports: GET, POST
+- Symbol details: function GET (exported), function POST (exported), function eventCommentTriagePrompt, const CreateScopedEventCommentSchema
+- Defines: eventCommentTriagePrompt, GET, POST, CreateScopedEventCommentSchema, eventId, clientSlug, access, event, commentsDb, user, authorName, eventName, … (+2 more)
+- Route handlers: GET, POST
+- Contents summary: Next.js route handler for `/api/event-comments`; route handlers: GET, POST; exports: GET, POST; internal imports: 11; package imports: 3
 
 ## `src/app/api/health/route.test.ts`
 - Status: tracked-clean

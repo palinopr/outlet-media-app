@@ -1,6 +1,6 @@
 # API Contract Map
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 This page documents each `src/app/api/**/route.ts` file with its methods, request/response signals, validation symbols, dependency stack, and related tests.
 
@@ -211,6 +211,19 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 - Shared libs touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
 - Related tests: none
 - Contents summary: Next.js route handler for `/api/contact`; route handlers: POST; exports: POST; internal imports: 3; package imports: 2
+
+## `/api/event-comments`
+- Route file: `src/app/api/event-comments/route.ts`
+- Methods: GET, POST
+- Request signals: reads query/search params
+- Response signals: uses NextResponse.json, uses Response.json, explicit statuses: 201
+- Auth signals: imports Clerk server auth, calls currentUser()
+- Validation symbols: CreateScopedEventCommentSchema
+- Direct internal imports: src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/text-utils.ts, src/lib/agent-dispatch.ts, src/lib/supabase.ts, src/features/event-comments/server.ts, src/features/events/server.ts, src/features/notifications/discussions.ts, src/features/client-portal/scope.ts, src/features/system-events/server.ts, … (+1 more)
+- Feature modules touched: event-comments, events, notifications, client-portal, system-events, workflow, assets, campaigns, invitations
+- Shared libs touched: src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/text-utils.ts, src/lib/agent-dispatch.ts, src/lib/supabase.ts, src/lib/member-access.ts, src/lib/campaign-client-assignment.ts, src/lib/client-slug.ts, src/lib/formatters.tsx, src/lib/workspace-types.ts, … (+1 more)
+- Related tests: src/app/api/event-comments/route.test.ts
+- Contents summary: Next.js route handler for `/api/event-comments`; route handlers: GET, POST; exports: GET, POST; internal imports: 11; package imports: 3
 
 ## `/api/health`
 - Route file: `src/app/api/health/route.ts`

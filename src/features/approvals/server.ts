@@ -5,6 +5,7 @@ import { listVisibleAssetIdsForScope } from "@/features/assets/server";
 import {
   approvalAssetId,
   approvalCampaignId,
+  approvalEventId,
   filterApprovalRequestsByScope,
 } from "./summary";
 
@@ -48,6 +49,15 @@ interface ListCampaignApprovalRequestsOptions {
   audience?: ApprovalAudience | "all";
   clientSlug: string;
   campaignId: string;
+  limit?: number;
+  status?: ApprovalStatus | "all";
+}
+
+interface ListEventApprovalRequestsOptions {
+  audience?: ApprovalAudience | "all";
+  clientSlug: string;
+  eventId: string;
+  campaignIds?: string[] | null;
   limit?: number;
   status?: ApprovalStatus | "all";
 }
@@ -207,6 +217,7 @@ export async function listCampaignApprovalRequests(
 ): Promise<ApprovalRequest[]> {
   const approvals = await listApprovalRequests({
     audience: options.audience,
+    clientSlug: options.clientSlug,
     limit: Math.max((options.limit ?? 8) * 10, 40),
     scope: null,
     status: options.status,
@@ -214,6 +225,30 @@ export async function listCampaignApprovalRequests(
 
   return approvals
     .filter((approval) => approvalMatchesCampaign(approval, options.campaignId))
+    .slice(0, options.limit ?? 8);
+}
+
+export async function listEventApprovalRequests(
+  options: ListEventApprovalRequestsOptions,
+): Promise<ApprovalRequest[]> {
+  const linkedCampaignIds = new Set((options.campaignIds ?? []).filter(Boolean));
+  const approvals = await listApprovalRequests({
+    audience: options.audience,
+    clientSlug: options.clientSlug,
+    limit: Math.max((options.limit ?? 8) * 12, 48),
+    scope: null,
+    status: options.status,
+  });
+
+  return approvals
+    .filter((approval) => {
+      if (approvalEventId(approval) === options.eventId) {
+        return true;
+      }
+
+      const campaignId = approvalCampaignId(approval);
+      return !!campaignId && linkedCampaignIds.has(campaignId);
+    })
     .slice(0, options.limit ?? 8);
 }
 

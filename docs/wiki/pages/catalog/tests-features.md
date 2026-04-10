@@ -1,6 +1,6 @@
 # Tests / Features
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 - Files: 36
 - File kinds: test file (36)
@@ -89,19 +89,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: tests/describes: buildAgentCommandSummary; prioritizes failed and active jobs and counts actionable outcomes; groups actionable outcomes by surface and prioritizes failures first; internal imports: 1; package imports: 1
 
 ## `__tests__/features/approvals/server.test.ts`
-- Status: tracked-clean
+- Status: modified
 - System: tests
 - Group: Tests / Features
 - Ownership: feature test suite
 - Type: test file
 - Construction: test specification
-- Lines: 250
-- Bytes: 7462
+- Lines: 368
+- Bytes: 11089
 - Imports (internal): src/features/approvals/server.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/features/assets/server.ts
 - Imports (packages): vitest, @clerk/nextjs/server
 - Depends on groups: src/features / approvals, src/lib, src/features / assets
 - Defines: applyFilters, buildClient, serviceState, userScopedState, values, query, rows, data, supabaseAdminClient, userScopedSupabaseClient, createClerkSupabaseClientFn, currentUserFn, … (+4 more)
-- Tests / describe labels: listApprovalRequests, prefers the Clerk-scoped client for client approval lists, keeps the reassigned-campaign fallback on the service role, keeps admin viewers on the service role for client-scoped approval lists
+- Tests / describe labels: listApprovalRequests, prefers the Clerk-scoped client for client approval lists, keeps the reassigned-campaign fallback on the service role, keeps admin viewers on the service role for client-scoped approval lists, listCampaignApprovalRequests, keeps client campaign approval helpers on the Clerk-scoped client, listEventApprovalRequests, keeps event approval helpers event-aware across event and linked campaign approvals
 - Contents summary: tests/describes: listApprovalRequests; prefers the Clerk-scoped client for client approval lists; keeps the reassigned-campaign fallback on the service role; internal imports: 4; package imports: 2
 
 ## `__tests__/features/approvals/summary.test.ts`

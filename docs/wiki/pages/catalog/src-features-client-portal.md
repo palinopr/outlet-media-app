@@ -1,6 +1,6 @@
 # src/features / client-portal
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 - Files: 13
 - File kinds: TypeScript module (9), test file (4)
@@ -203,14 +203,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 18
 - Bytes: 451
 - Imports (internal): src/lib/member-access.ts
-- Imported by: __tests__/features/client-portal/scope.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/campaign-comments/route.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/event/[eventId]/data.ts, src/features/campaigns/client-operating.ts
+- Imported by: __tests__/features/client-portal/scope.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.test.ts, src/app/api/event-comments/route.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/event/[eventId]/data.ts, src/features/campaigns/client-operating.ts, src/features/events/client-operating.ts
 - Depends on groups: src/lib
-- Used by groups: Tests / Features, src/app / api, src/app / client, src/features / campaigns
+- Used by groups: Tests / Features, src/app / api, src/app / client, src/features / campaigns, src/features / events
 - Feature module: client-portal
-- Route owners: src/app/api/campaign-comments/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.ts, src/app/api/client/[slug]/agent/threads/[threadId]/route.ts, src/app/api/client/[slug]/agent/threads/route.ts, src/app/client/[slug]/agent/page.tsx
-- Routes related (direct): src/app/api/campaign-comments/route.ts
-- Tests related: __tests__/features/client-portal/scope.test.ts, src/app/api/campaign-comments/route.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/shell-import-smoke.test.ts, src/features/client-agent/tools/breakdowns.test.ts, … (+11 more)
-- Tests related (direct): __tests__/features/client-portal/scope.test.ts, src/app/api/campaign-comments/route.test.ts
+- Route owners: src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.ts, src/app/api/client/[slug]/agent/threads/[threadId]/route.ts, src/app/api/client/[slug]/agent/threads/route.ts, src/app/client/[slug]/agent/page.tsx
+- Routes related (direct): src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts
+- Tests related: __tests__/features/client-portal/scope.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, … (+13 more)
+- Tests related (direct): __tests__/features/client-portal/scope.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts
 - Exports: allowsCampaignInScope, allowsEventInScope
 - Symbol details: function allowsCampaignInScope (exported), function allowsEventInScope (exported)
 - Defines: allowsCampaignInScope, allowsEventInScope

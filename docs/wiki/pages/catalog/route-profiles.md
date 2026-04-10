@@ -1,6 +1,6 @@
 # Route Profiles
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 This index links to deep route pages with behavior/context summaries for each Next.js special route file.
 
@@ -22,6 +22,7 @@ This index links to deep route pages with behavior/context summaries for each Ne
 - [/api/client/[slug]/agent/threads/[threadId]](./route-pages/api-client-slug-agent-threads-threadid-route.md) — `src/app/api/client/[slug]/agent/threads/[threadId]/route.ts`; features: 12; db objects: 24; tests: 1
 - [/api/client/[slug]/agent/threads/[threadId]/messages](./route-pages/api-client-slug-agent-threads-threadid-messages-route.md) — `src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.ts`; features: 12; db objects: 24; tests: 1
 - [/api/contact](./route-pages/api-contact-route.md) — `src/app/api/contact/route.ts`; features: 0; db objects: 1; tests: 0
+- [/api/event-comments](./route-pages/api-event-comments-route.md) — `src/app/api/event-comments/route.ts`; features: 9; db objects: 18; tests: 1
 - [/api/health](./route-pages/api-health-route.md) — `src/app/api/health/route.ts`; features: 0; db objects: 0; tests: 1
 - [/api/ingest](./route-pages/api-ingest-route.md) — `src/app/api/ingest/route.ts`; features: 0; db objects: 5; tests: 1
 - [/api/meta/callback](./route-pages/api-meta-callback-route.md) — `src/app/api/meta/callback/route.ts`; features: 0; db objects: 0; tests: 1
@@ -65,7 +66,7 @@ This index links to deep route pages with behavior/context summaries for each Ne
 - [/client/[slug]/campaigns](./route-pages/client-slug-campaigns-loading.md) — `src/app/client/[slug]/campaigns/loading.tsx`; features: 0; db objects: 0; tests: 0
 - [/client/[slug]/campaigns](./route-pages/client-slug-campaigns-page.md) — `src/app/client/[slug]/campaigns/page.tsx`; features: 2; db objects: 10; tests: 2
 - [/client/[slug]/event/[eventId]](./route-pages/client-slug-event-eventid-loading.md) — `src/app/client/[slug]/event/[eventId]/loading.tsx`; features: 0; db objects: 0; tests: 0
-- [/client/[slug]/event/[eventId]](./route-pages/client-slug-event-eventid-page.md) — `src/app/client/[slug]/event/[eventId]/page.tsx`; features: 2; db objects: 11; tests: 2
+- [/client/[slug]/event/[eventId]](./route-pages/client-slug-event-eventid-page.md) — `src/app/client/[slug]/event/[eventId]/page.tsx`; features: 11; db objects: 22; tests: 2
 - [/client/[slug]/events](./route-pages/client-slug-events-loading.md) — `src/app/client/[slug]/events/loading.tsx`; features: 0; db objects: 0; tests: 0
 - [/client/[slug]/events](./route-pages/client-slug-events-page.md) — `src/app/client/[slug]/events/page.tsx`; features: 2; db objects: 10; tests: 2
 - [/client/[slug]/reports](./route-pages/client-slug-reports-page.md) — `src/app/client/[slug]/reports/page.tsx`; features: 10; db objects: 20; tests: 2
@@ -78,7 +79,7 @@ This index links to deep route pages with behavior/context summaries for each Ne
 - [/](./route-pages/page.tsx.md) — `src/app/page.tsx`; features: 1; db objects: 5; tests: 0
 - [/connect-error](./route-pages/connect-error-page.md) — `src/app/connect-error/page.tsx`; features: 0; db objects: 0; tests: 0
 - [/deletion-status/[code]](./route-pages/deletion-status-code-page.md) — `src/app/deletion-status/[code]/page.tsx`; features: 0; db objects: 0; tests: 0
-- [/landing](./route-pages/landing-page.md) — `src/app/landing/page.tsx`; features: 0; db objects: 2; tests: 0
+- [/landing](./route-pages/landing-page.md) — `src/app/landing/page.tsx`; features: 0; db objects: 0; tests: 0
 - [/privacy](./route-pages/privacy-page.md) — `src/app/privacy/page.tsx`; features: 0; db objects: 1; tests: 0
 - [/sign-in/[[...sign-in]]](./route-pages/sign-in-...sign-in-page.md) — `src/app/sign-in/[[...sign-in]]/page.tsx`; features: 0; db objects: 0; tests: 0
 - [/sign-up/[[...sign-up]]](./route-pages/sign-up-...sign-up-page.md) — `src/app/sign-up/[[...sign-up]]/page.tsx`; features: 0; db objects: 0; tests: 1

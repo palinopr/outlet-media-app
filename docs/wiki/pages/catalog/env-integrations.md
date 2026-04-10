@@ -1,10 +1,10 @@
 # Env and Integration Map
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 This page maps environment variables to integration services and to the first-party files that reference them.
 
-- Environment keys tracked: 98
+- Environment keys tracked: 99
 - Integration service buckets: 10
 
 ## Service overview
@@ -58,9 +58,9 @@ This page maps environment variables to integration services and to the first-pa
 - Tests/docs: docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, docs/superpowers/specs/2026-04-03-agent-simplification-design.md, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
 
 ### Other / App
-- Env keys: CHECK_CRON, CHROME_DEBUG_URL, CLIENT_AGENT_OPENAI_MODEL, CODEX_FINAL_MESSAGE, EATA_PASSWORD, EATA_SCHEDULER_ENABLED, EATA_USERNAME, EMAIL_HISTORY_POLL_CRON, EVOLUTION_API_KEY, EVOLUTION_API_URL, EVOLUTION_INSTANCE_NAME, EVOLUTION_WEBHOOK_SECRET, NEXT_PHASE, PR_NUMBER, SCHEDULED_OWNER_NOTIFICATIONS, SHOPIFY_ADMIN_ACCESS_TOKEN, SHOPIFY_ADMIN_API_VERSION, SHOPIFY_STORE_DOMAIN, SHOPIFY_WEBHOOK_SECRET, TELEGRAM_BOT_TOKEN, … (+11 more)
+- Env keys: CHECK_CRON, CHROME_DEBUG_URL, CLIENT_AGENT_OPENAI_MODEL, CODEX_FINAL_MESSAGE, CONTACT_FORM_TO_EMAIL, EATA_PASSWORD, EATA_SCHEDULER_ENABLED, EATA_USERNAME, EMAIL_HISTORY_POLL_CRON, EVOLUTION_API_KEY, EVOLUTION_API_URL, EVOLUTION_INSTANCE_NAME, EVOLUTION_WEBHOOK_SECRET, NEXT_PHASE, PR_NUMBER, SCHEDULED_OWNER_NOTIFICATIONS, SHOPIFY_ADMIN_ACCESS_TOKEN, SHOPIFY_ADMIN_API_VERSION, SHOPIFY_STORE_DOMAIN, SHOPIFY_WEBHOOK_SECRET, … (+12 more)
 - Declared in: .env.local, agent/.env, agent/.env.example
-- Routes: none
+- Routes: src/app/api/contact/route.ts
 - Features/libs: src/lib/env.ts, src/lib/shopify-admin.test.ts, src/lib/shopify-admin.ts
 - Agent files: agent/MEMORY.md
 - Tests/docs: docs/context/shopify-merch-sync.md, docs/context/tm1-browserless-api.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/superpowers/plans/2026-03-31-client-agent-tab.md, docs/superpowers/plans/2026-04-01-client-agent-chatgpt-ux.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
@@ -170,6 +170,16 @@ This page maps environment variables to integration services and to the first-pa
 - Shared libs: none
 - Agent files: none
 - Tests/docs/other: .github/workflows/codex-pr-review.yml
+
+### `CONTACT_FORM_TO_EMAIL`
+- Service: Other / App
+- Declared in: none
+- Mentioned by groups: src/app / api (1)
+- Routes: src/app/api/contact/route.ts
+- Features: none
+- Shared libs: none
+- Agent files: none
+- Tests/docs/other: none
 
 ### `DISCORD_ADMIN_ROLE_NAME`
 - Service: Discord

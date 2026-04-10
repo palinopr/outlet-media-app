@@ -1,5 +1,16 @@
 # Repo Wiki Log
 
+## [2026-04-10] client-events | operating loop slice on event detail
+- Added the client event operating-loop slice to the shipped web surface:
+  - new shared event workflow loader in `src/features/events/client-operating.ts`
+  - new shared event comment reader/access module in `src/features/event-comments/server.ts`
+  - new client workflow UI in `src/app/client/[slug]/components/event-operating-panel.tsx`
+  - new event discussion composer in `src/app/client/[slug]/components/event-discussion-form.tsx`
+  - client event detail now combines ticketing analytics with approvals, shared discussion, event follow-up items, linked agent follow-through, and recent activity
+- Added `GET`/`POST` support for shared event discussion via `src/app/api/event-comments/route.ts`, including scope-aware access checks, system events, notifications, agent triage requests, and workflow revalidation.
+- Extended approval and system-event helpers so event operating views can include event-linked and linked-campaign context without rebuilding route-local filtering.
+- Added component and route coverage for the new event operating panel, event discussion form, event comments API, and approval helper behavior.
+
 ## [2026-04-10] client-campaign | operating loop slice and verification hygiene
 - Added the first client campaign operating-loop slice to the shipped web surface:
   - new shared client campaign workflow loader in `src/features/campaigns/server.ts`

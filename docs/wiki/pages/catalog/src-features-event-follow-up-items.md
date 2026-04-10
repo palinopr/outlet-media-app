@@ -1,6 +1,6 @@
 # src/features / event-follow-up-items
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 - Files: 1
 - File kinds: TypeScript module (1)
@@ -17,13 +17,13 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 593
 - Bytes: 19012
 - Imports (internal): src/lib/workspace-types.ts, src/lib/action-item-labels.ts, src/lib/agent-dispatch.ts, src/features/notifications/workflow.ts, src/lib/supabase.ts, src/features/system-events/server.ts
-- Imported by: __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/admin/actions/event-follow-up-items.ts, src/app/api/agent-outcomes/action-item/route.ts
+- Imported by: __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/admin/actions/event-follow-up-items.ts, src/app/api/agent-outcomes/action-item/route.ts, src/features/events/client-operating.ts
 - Depends on groups: src/lib, src/features / notifications, src/features / system-events
-- Used by groups: Tests / Features, src/app / admin, src/app / api
+- Used by groups: Tests / Features, src/app / admin, src/app / api, src/features / events
 - Feature module: event-follow-up-items
-- Route owners: src/app/api/agent-outcomes/action-item/route.ts
+- Route owners: src/app/api/agent-outcomes/action-item/route.ts, src/app/client/[slug]/event/[eventId]/page.tsx
 - Routes related (direct): src/app/api/agent-outcomes/action-item/route.ts
-- Tests related: __tests__/features/event-follow-up-items/read-clients.test.ts
+- Tests related: __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Tests related (direct): __tests__/features/event-follow-up-items/read-clients.test.ts
 - Exports: listEventFollowUpItems, findEventFollowUpItemBySource, getEventFollowUpItemById, maybeEnqueueEventFollowUpItemTriage, createSystemEventFollowUpItem, updateSystemEventFollowUpItem, deleteEventFollowUpItem, EventFollowUpItemVisibility, EventFollowUpItem
 - Symbol details: function listEventFollowUpItems (exported), function findEventFollowUpItemBySource (exported), function getEventFollowUpItemById (exported), function maybeEnqueueEventFollowUpItemTriage (exported), function createSystemEventFollowUpItem (exported), function updateSystemEventFollowUpItem (exported), function deleteEventFollowUpItem (exported), function shouldEnqueueEventFollowUpItemTriage, function eventFollowUpItemTriagePrompt, function listEventInfo, function mapEventFollowUpItem, const EVENT_FOLLOW_UP_ITEM_SELECT, type EventFollowUpItemVisibility (exported), interface EventFollowUpItem (exported), interface EventFollowUpItemActor, interface EventFollowUpItemTriagePreviousState, … (+3 more)

@@ -1,6 +1,6 @@
 # src/components / ui
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 - Files: 13
 - File kinds: React/TSX module (13)
@@ -60,12 +60,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 2392
 - Imports (internal): src/lib/utils.ts
 - Imports (packages): react, class-variance-authority, radix-ui
-- Imported by: src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/[slug]/components/campaign-discussion-form.tsx, src/app/client/[slug]/components/complete-profile-modal.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/app/landing/page.tsx, src/components/admin/agents/chat-panel.tsx, … (+19 more)
+- Imported by: src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/[slug]/components/campaign-discussion-form.tsx, src/app/client/[slug]/components/complete-profile-modal.tsx, src/app/client/[slug]/components/event-discussion-form.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/components/admin/agents/chat-panel.tsx, … (+17 more)
 - Depends on groups: src/lib
-- Used by groups: src/app / admin, src/app / client, src/app / root routes, src/components / admin, src/components / landing, src/components / shared, src/components / ui
-- Route owners: src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/app/landing/page.tsx, src/app/client/[slug]/layout.tsx, … (+6 more)
-- Routes related (direct): src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/app/landing/page.tsx
-- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/events/page.test.tsx, src/app/client/[slug]/components/campaign-discussion-form.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/components/admin/agents/job-history.test.tsx, src/app/client/[slug]/layout.test.tsx, src/components/admin/clients/client-detail.test.tsx, src/components/admin/users/revoke-invitation-button.test.tsx, … (+1 more)
+- Used by groups: src/app / admin, src/app / client, src/components / admin, src/components / landing, src/components / shared, src/components / ui
+- Route owners: src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/app/client/[slug]/layout.tsx, src/app/admin/clients/page.tsx, … (+7 more)
+- Routes related (direct): src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx
+- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/events/page.test.tsx, src/app/client/[slug]/components/campaign-discussion-form.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/event-discussion-form.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/components/admin/agents/job-history.test.tsx, src/app/client/[slug]/layout.test.tsx, … (+4 more)
 - Exports: Button, buttonVariants
 - Symbol details: function Button, const buttonVariants
 - Defines: Button, buttonVariants, Comp

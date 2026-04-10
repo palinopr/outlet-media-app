@@ -1,9 +1,9 @@
 # Public Assets
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
-- Files: 15
-- File kinds: binary asset (14), file (.txt) (1)
+- Files: 17
+- File kinds: binary asset (16), file (.txt) (1)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -26,6 +26,16 @@ Each entry below documents the file path, system ownership, construction style, 
 - Construction: asset file
 - Bytes: 64202
 - Contents summary: asset/binary file; size: 64202 bytes
+
+## `public/images/brand/logotype-horizontal-blue.png`
+- Status: tracked-clean
+- System: public
+- Group: Public Assets
+- Ownership: public static asset
+- Type: binary asset
+- Construction: asset file
+- Bytes: 94337
+- Contents summary: asset/binary file; size: 94337 bytes
 
 ## `public/images/brand/logotype-horizontal-white.png`
 - Status: tracked-clean
@@ -96,6 +106,16 @@ Each entry below documents the file path, system ownership, construction style, 
 - Construction: asset file
 - Bytes: 730453
 - Contents summary: asset/binary file; size: 730453 bytes
+
+## `public/images/landing/jaime-ortiz-founder.jpg`
+- Status: tracked-clean
+- System: public
+- Group: Public Assets
+- Ownership: public static asset
+- Type: binary asset
+- Construction: asset file
+- Bytes: 183782
+- Contents summary: asset/binary file; size: 183782 bytes
 
 ## `public/images/landing/jaime-ortiz.png`
 - Status: tracked-clean

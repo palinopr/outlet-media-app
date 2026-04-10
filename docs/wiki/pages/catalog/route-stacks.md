@@ -1,6 +1,6 @@
 # Route Stack Map
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 This page documents each Next.js special route file and the internal stack it pulls in through direct and transitive imports.
 
@@ -27,7 +27,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/features / client-portal, src/lib
 - Feature modules touched: client-portal
 - Shared libs/runtime files touched: src/lib/supabase.ts, src/lib/member-access.ts
-- Related tests: src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, … (+23 more)
+- Related tests: src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, … (+24 more)
 
 ### Stack by group
 - src/features / client-portal: src/features/client-portal/entry.ts
@@ -42,7 +42,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / admin, src/components / ui, src/app / admin, src / hooks, src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/utils.ts, src/lib/api-helpers.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/lib/client-slug.ts
-- Related tests: src/components/admin/activity-tracker.test.ts, src/components/admin/nav-config.test.ts, src/app/admin/actions/search.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, … (+28 more)
+- Related tests: src/components/admin/activity-tracker.test.ts, src/components/admin/nav-config.test.ts, src/app/admin/actions/search.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, … (+29 more)
 
 ### Stack by group
 - src / hooks: src/hooks/use-sidebar-state.ts
@@ -75,7 +75,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/app / admin, src/components / admin, src/components / ui, src/features / agent-outcomes, src/features / agents, src/lib, src/features / assets, src/features / operations-center, src/features / invitations
 - Feature modules touched: agent-outcomes, agents, assets, operations-center, invitations
 - Shared libs/runtime files touched: src/lib/agent-jobs.ts, src/lib/formatters.tsx, src/lib/utils.ts, src/lib/supabase.ts, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/member-access.ts, src/lib/client-slug.ts
-- Related tests: src/app/shell-import-smoke.test.ts, src/components/admin/agents/job-history.test.tsx, src/components/admin/agents/command-summary.test.tsx, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/agent-outcomes/server.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, __tests__/features/agents/summary.test.ts, __tests__/api/agents-jobs.test.ts, __tests__/lib/formatters.test.ts, … (+36 more)
+- Related tests: src/app/shell-import-smoke.test.ts, src/components/admin/agents/job-history.test.tsx, src/components/admin/agents/command-summary.test.tsx, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/agent-outcomes/server.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, __tests__/features/agents/summary.test.ts, __tests__/api/agents-jobs.test.ts, __tests__/lib/formatters.test.ts, … (+37 more)
 
 ### Stack by group
 - src/app / admin: src/app/admin/agents/data.ts
@@ -112,7 +112,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / ui, src/components / admin, src/app / admin, src/lib, src/features / invitations, src/features / workflow, src/features / system-events, src/features / campaigns
 - Feature modules touched: invitations, workflow, system-events, campaigns
 - Shared libs/runtime files touched: src/lib/constants.ts, src/lib/formatters.tsx, src/lib/meta-campaigns.ts, src/lib/utils.ts, src/lib/export-csv.ts, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/meta-api.ts, src/lib/supabase.ts, src/lib/api-helpers.ts, … (+1 more)
-- Related tests: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/events/page.test.tsx, __tests__/lib/formatters.test.ts, __tests__/app/client/data.test.ts, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/approvals/server.test.ts, … (+35 more)
+- Related tests: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/events/page.test.tsx, __tests__/lib/formatters.test.ts, __tests__/app/client/data.test.ts, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/approvals/server.test.ts, … (+36 more)
 
 ### Stack by group
 - src/app / admin: src/app/admin/campaigns/data.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/meta-sync.ts
@@ -133,7 +133,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / admin, src/features / campaigns, src/lib, src/app / admin, src/features / assets, src/features / campaign-action-items, src/features / campaign-comments, src/features / approvals, src/features / system-events, src/features / events, src/features / invitations, src/components / ui, … (+2 more)
 - Feature modules touched: campaigns, assets, campaign-action-items, campaign-comments, approvals, system-events, events, invitations, workflow, notifications
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/meta-campaigns.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/lib/action-item-labels.ts, src/lib/workspace-types.ts, src/lib/constants.ts, src/lib/meta-api.ts, src/lib/api-helpers.ts, … (+4 more)
-- Related tests: src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, __tests__/lib/formatters.test.ts, __tests__/app/client/data.test.ts, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/assets/server.test.ts, __tests__/features/conversations/read-clients.test.ts, … (+41 more)
+- Related tests: src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, __tests__/lib/formatters.test.ts, __tests__/app/client/data.test.ts, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/assets/server.test.ts, __tests__/features/conversations/read-clients.test.ts, … (+42 more)
 
 ### Stack by group
 - src/app / admin: src/app/admin/actions/campaigns.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/meta-sync.ts
@@ -175,7 +175,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / ui, src/app / admin, src/lib, src/components / admin, src/features / clients, src/features / invitations, src/features / settings, src/features / access
 - Feature modules touched: clients, invitations, settings, access
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/utils.ts, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/status.ts, src/lib/to-slug.ts, src/lib/export-csv.ts, src/lib/client-slug.ts, src/lib/api-helpers.ts, src/lib/api-schemas.ts
-- Related tests: src/app/shell-import-smoke.test.ts, src/app/admin/clients/data.test.ts, __tests__/lib/formatters.test.ts, __tests__/features/clients/summary.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, … (+35 more)
+- Related tests: src/app/shell-import-smoke.test.ts, src/app/admin/clients/data.test.ts, __tests__/lib/formatters.test.ts, __tests__/features/clients/summary.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, … (+36 more)
 
 ### Stack by group
 - src/app / admin: src/app/admin/clients/data.ts, src/app/admin/clients/types.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/audit.ts
@@ -196,7 +196,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/app / admin, src/components / admin, src/lib, src/features / clients, src/features / invitations, src/features / settings, src/components / ui, src/features / access
 - Feature modules touched: clients, invitations, settings, access
 - Shared libs/runtime files touched: src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/formatters.tsx, src/lib/client-slug.ts, src/lib/status.ts, src/lib/utils.ts, src/lib/api-helpers.ts, src/lib/api-schemas.ts
-- Related tests: src/app/admin/clients/data.test.ts, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, … (+35 more)
+- Related tests: src/app/admin/clients/data.test.ts, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, … (+36 more)
 
 ### Stack by group
 - src/app / admin: src/app/admin/clients/data.ts, src/app/admin/clients/types.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/users.ts
@@ -232,7 +232,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / ui, src/components / charts, src/lib, src/components / admin, src/app / admin, src/features / invitations, src/app / client, src/features / client-portal
 - Feature modules touched: invitations, client-portal
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/utils.ts, src/lib/status.ts, src/lib/supabase.ts, src/lib/agent-jobs.ts, src/lib/campaign-client-assignment.ts, src/lib/campaign-event-match.ts, src/lib/client-slug.ts, src/lib/constants.ts
-- Related tests: src/app/admin/dashboard/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, __tests__/lib/formatters.test.ts, src/components/admin/agents/constants.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, … (+28 more)
+- Related tests: src/app/admin/dashboard/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, __tests__/lib/formatters.test.ts, src/components/admin/agents/constants.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, … (+29 more)
 
 ### Stack by group
 - src/app / admin: src/app/admin/dashboard/data.ts, src/app/admin/dashboard/events-preview-table.tsx, src/app/admin/dashboard/upcoming-shows.tsx, src/app/admin/dashboard/campaign-cards.tsx
@@ -268,7 +268,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / ui, src/components / admin, src/app / admin, src/lib, src/features / invitations, src/features / workflow, src/features / system-events
 - Feature modules touched: invitations, workflow, system-events
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/utils.ts, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/export-csv.ts, src/lib/constants.ts, src/lib/status.ts, src/lib/client-slug.ts, src/lib/campaign-event-match.ts, src/lib/api-helpers.ts
-- Related tests: src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx, __tests__/lib/formatters.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, … (+33 more)
+- Related tests: src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx, __tests__/lib/formatters.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, … (+34 more)
 
 ### Stack by group
 - src/app / admin: src/app/admin/events/data.ts, src/app/admin/actions/events.ts, src/app/admin/actions/audit.ts
@@ -288,7 +288,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / admin, src/features / events, src/lib, src/components / ui, src/app / admin, src/features / system-events, src/features / invitations, src/features / workflow
 - Feature modules touched: events, system-events, invitations, workflow
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/constants.ts, src/lib/member-access.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/lib/status.ts, src/lib/utils.ts, src/lib/api-helpers.ts, src/lib/client-slug.ts, src/lib/workspace-types.ts
-- Related tests: __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, __tests__/lib/formatters.test.ts, src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/approvals/server.test.ts, … (+34 more)
+- Related tests: __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/app/api/event-comments/route.test.ts, __tests__/lib/formatters.test.ts, src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, … (+35 more)
 
 ### Stack by group
 - src/app / admin: src/app/admin/actions/events.ts, src/app/admin/actions/audit.ts
@@ -309,7 +309,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / admin, src/features / reports, src/lib, src/features / client-portal, src/features / agent-outcomes, src/features / dashboard, src/features / events, src/features / invitations, src/features / assets, src/features / approvals, src/features / conversations, src/features / system-events
 - Feature modules touched: reports, client-portal, agent-outcomes, dashboard, events, invitations, assets, approvals, conversations, system-events
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/constants.ts, src/lib/member-access.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/supabase.ts, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
-- Related tests: src/app/admin/reports/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/client/[slug]/reports/page.test.tsx, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/features/client-agent/tools/breakdowns.test.ts, src/features/client-agent/tools/compare-timeseries.test.ts, src/features/client-agent/tools/details.test.ts, src/features/client-agent/tools/overview.test.ts, … (+44 more)
+- Related tests: src/app/admin/reports/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/client/[slug]/reports/page.test.tsx, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/features/client-agent/tools/breakdowns.test.ts, src/features/client-agent/tools/compare-timeseries.test.ts, src/features/client-agent/tools/details.test.ts, src/features/client-agent/tools/overview.test.ts, … (+45 more)
 
 ### Stack by group
 - src/components / admin: src/components/admin/page-header.tsx
@@ -334,7 +334,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / ui, src/components / admin, src/app / admin, src/lib, src/features / settings, src/features / clients, src/features / invitations, src/features / shared, src/features / access
 - Feature modules touched: settings, clients, invitations, shared, access
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/supabase.ts, src/lib/utils.ts, src/lib/to-slug.ts, src/lib/campaign-client-assignment.ts, src/lib/status.ts, src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/client-slug.ts
-- Related tests: src/app/shell-import-smoke.test.ts, src/components/admin/agents/constants.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/admin/clients/data.test.ts, __tests__/lib/formatters.test.ts, __tests__/features/settings/summary.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, … (+39 more)
+- Related tests: src/app/shell-import-smoke.test.ts, src/components/admin/agents/constants.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/admin/clients/data.test.ts, __tests__/lib/formatters.test.ts, __tests__/features/settings/summary.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, … (+40 more)
 
 ### Stack by group
 - src/app / admin: src/app/admin/clients/data.ts, src/app/admin/users/data.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/users.ts, src/app/admin/clients/types.ts, src/app/admin/actions/audit.ts
@@ -371,7 +371,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/app / admin, src/components / admin, src/components / ui, src/lib, src/features / users, src/features / invitations, src/features / clients, src/features / settings, src/features / shared, src/features / access
 - Feature modules touched: users, invitations, clients, settings, shared, access
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/export-csv.ts, src/lib/utils.ts, src/lib/status.ts, src/lib/client-slug.ts, src/lib/api-helpers.ts
-- Related tests: src/app/shell-import-smoke.test.ts, src/app/admin/clients/data.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, __tests__/lib/formatters.test.ts, __tests__/features/users/summary.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, … (+34 more)
+- Related tests: src/app/shell-import-smoke.test.ts, src/app/admin/clients/data.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, __tests__/lib/formatters.test.ts, __tests__/features/users/summary.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, … (+35 more)
 
 ### Stack by group
 - src/app / admin: src/app/admin/users/data.ts, src/app/admin/clients/data.ts, src/app/admin/clients/types.ts, src/app/admin/actions/users.ts, src/app/admin/actions/audit.ts
@@ -394,7 +394,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/supabase.ts
-- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, … (+25 more)
+- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/app/client/campaign-detail-data.test.ts, … (+26 more)
 
 ### Stack by group
 - src/lib: src/lib/api-helpers.ts, src/lib/supabase.ts
@@ -408,7 +408,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/supabase.ts
-- Related tests: src/app/api/admin/invite/route.test.ts, __tests__/lib/api-schemas.test.ts, __tests__/lib/contact-form.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, … (+27 more)
+- Related tests: src/app/api/admin/invite/route.test.ts, __tests__/lib/api-schemas.test.ts, __tests__/lib/contact-form.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, … (+28 more)
 
 ### Stack by group
 - src/lib: src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/supabase.ts
@@ -422,7 +422,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/supabase.ts
-- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, … (+25 more)
+- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/app/client/campaign-detail-data.test.ts, … (+26 more)
 
 ### Stack by group
 - src/lib: src/lib/api-helpers.ts, src/lib/supabase.ts
@@ -436,7 +436,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/features / system-events, src/features / agent-outcomes, src/features / asset-follow-up-items, src/features / campaign-action-items, src/features / event-follow-up-items, src/features / workflow, src/features / assets, src/features / notifications, src/features / campaigns
 - Feature modules touched: system-events, agent-outcomes, asset-follow-up-items, campaign-action-items, event-follow-up-items, workflow, assets, notifications, campaigns
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/text-utils.ts, src/lib/supabase.ts, src/lib/workspace-types.ts, src/lib/action-item-labels.ts, src/lib/agent-dispatch.ts, src/lib/campaign-client-assignment.ts, src/lib/member-access.ts, src/lib/client-slug.ts
-- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, … (+38 more)
+- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, … (+39 more)
 
 ### Stack by group
 - src/features / agent-outcomes: src/features/agent-outcomes/server.ts, src/features/agent-outcomes/summary.ts
@@ -459,7 +459,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/features / system-events, src/lib
 - Feature modules touched: system-events
 - Shared libs/runtime files touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/agent-jobs.ts
-- Related tests: __tests__/api/agents.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/system-events/list.test.ts, __tests__/features/system-events/scope-filter.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/campaign-comments/route.test.ts, src/features/campaign-action-items/server.test.ts, … (+30 more)
+- Related tests: __tests__/api/agents.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/system-events/list.test.ts, __tests__/features/system-events/scope-filter.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, … (+31 more)
 
 ### Stack by group
 - src/features / system-events: src/features/system-events/server.ts
@@ -488,7 +488,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
-- Related tests: __tests__/api/agents-heartbeat.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, … (+28 more)
+- Related tests: __tests__/api/agents-heartbeat.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, … (+29 more)
 
 ### Stack by group
 - src/lib: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
@@ -502,7 +502,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/agent-jobs.ts, src/lib/supabase.ts
-- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, … (+25 more)
+- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/app/client/campaign-detail-data.test.ts, … (+26 more)
 
 ### Stack by group
 - src/lib: src/lib/api-helpers.ts, src/lib/agent-jobs.ts, src/lib/supabase.ts
@@ -516,7 +516,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/agent-jobs.ts, src/lib/supabase.ts
-- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, … (+25 more)
+- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/app/client/campaign-detail-data.test.ts, … (+26 more)
 
 ### Stack by group
 - src/lib: src/lib/api-helpers.ts, src/lib/agent-jobs.ts, src/lib/supabase.ts
@@ -530,7 +530,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
-- Related tests: __tests__/api/alerts.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, … (+28 more)
+- Related tests: __tests__/api/alerts.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, … (+29 more)
 
 ### Stack by group
 - src/lib: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
@@ -544,7 +544,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/features / campaign-comments, src/features / notifications, src/features / client-portal, src/features / system-events, src/features / workflow, src/features / assets, src/features / campaigns
 - Feature modules touched: campaign-comments, notifications, client-portal, system-events, workflow, assets, campaigns
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/text-utils.ts, src/lib/api-schemas.ts, src/lib/agent-dispatch.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/lib/client-slug.ts, src/lib/member-access.ts
-- Related tests: src/app/api/campaign-comments/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/lib/api-schemas.test.ts, __tests__/lib/contact-form.test.ts, … (+38 more)
+- Related tests: src/app/api/campaign-comments/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/lib/api-schemas.test.ts, … (+39 more)
 
 ### Stack by group
 - src/features / assets: src/features/assets/server.ts, src/features/assets/types.ts
@@ -565,7 +565,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/features / campaign-action-items, src/features / workflow, src/features / notifications, src/features / system-events, src/features / assets, src/features / campaigns
 - Feature modules touched: campaign-action-items, workflow, notifications, system-events, assets, campaigns
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/text-utils.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/lib/client-slug.ts, src/lib/workspace-types.ts, src/lib/action-item-labels.ts, src/lib/agent-dispatch.ts, src/lib/member-access.ts
-- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, … (+35 more)
+- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/app/client/campaign-detail-data.test.ts, … (+36 more)
 
 ### Stack by group
 - src/features / assets: src/features/assets/server.ts, src/features/assets/types.ts
@@ -585,7 +585,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/features / client-agent, src/features / client-portal, src/features / system-events, src/features / workflow, src/lib, src/features / reports, src/features / agent-outcomes, src/features / dashboard, src/features / events, src/features / assets, src/features / approvals, src/features / conversations, … (+2 more)
 - Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, invitations
 - Shared libs/runtime files touched: src/lib/member-access.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/formatters.tsx, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
-- Related tests: src/app/api/client/[slug]/agent/threads/route.test.ts, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.test.ts, src/app/api/client/[slug]/agent/threads/[threadId]/route.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/features/client-agent/server.test.ts, src/app/client/[slug]/layout.test.tsx, src/features/client-portal/access.test.ts, src/features/client-portal/config.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, … (+60 more)
+- Related tests: src/app/api/client/[slug]/agent/threads/route.test.ts, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.test.ts, src/app/api/client/[slug]/agent/threads/[threadId]/route.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/features/client-agent/server.test.ts, src/app/client/[slug]/layout.test.tsx, src/features/client-portal/access.test.ts, src/features/client-portal/config.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, … (+61 more)
 
 ### Stack by group
 - src/app / client: src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts
@@ -612,7 +612,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/features / client-agent, src/features / client-portal, src/features / system-events, src/features / workflow, src/lib, src/features / reports, src/features / agent-outcomes, src/features / dashboard, src/features / events, src/features / assets, src/features / approvals, src/features / conversations, … (+2 more)
 - Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, invitations
 - Shared libs/runtime files touched: src/lib/member-access.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/formatters.tsx, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
-- Related tests: src/app/api/client/[slug]/agent/threads/[threadId]/route.test.ts, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.test.ts, src/app/api/client/[slug]/agent/threads/route.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/features/client-agent/server.test.ts, src/app/client/[slug]/layout.test.tsx, src/features/client-portal/access.test.ts, src/features/client-portal/config.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, … (+60 more)
+- Related tests: src/app/api/client/[slug]/agent/threads/[threadId]/route.test.ts, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.test.ts, src/app/api/client/[slug]/agent/threads/route.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/features/client-agent/server.test.ts, src/app/client/[slug]/layout.test.tsx, src/features/client-portal/access.test.ts, src/features/client-portal/config.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, … (+61 more)
 
 ### Stack by group
 - src/app / client: src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts
@@ -639,7 +639,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/features / client-agent, src/features / client-portal, src/features / system-events, src/features / workflow, src/features / reports, src/features / agent-outcomes, src/features / dashboard, src/features / events, src/features / assets, src/features / approvals, src/features / conversations, … (+2 more)
 - Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, invitations
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/member-access.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/formatters.tsx, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, … (+1 more)
-- Related tests: src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, src/app/api/client/[slug]/agent/threads/[threadId]/route.test.ts, … (+65 more)
+- Related tests: src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, … (+66 more)
 
 ### Stack by group
 - src/app / client: src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts
@@ -666,10 +666,33 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
-- Related tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/integration.test.ts, … (+27 more)
+- Related tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/integration.test.ts, … (+28 more)
 
 ### Stack by group
 - src/lib: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
+
+## `/api/event-comments`
+- Route file: `src/app/api/event-comments/route.ts`
+- Type: Next.js route handler
+- Ownership: web API route surface
+- Direct internal imports: src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/text-utils.ts, src/lib/agent-dispatch.ts, src/lib/supabase.ts, src/features/event-comments/server.ts, src/features/events/server.ts, src/features/notifications/discussions.ts, src/features/client-portal/scope.ts, src/features/system-events/server.ts, … (+1 more)
+- Transitive internal stack size: 24
+- Groups touched: src/lib, src-features-event-comments, src/features / events, src/features / notifications, src/features / client-portal, src/features / system-events, src/features / workflow, src/features / assets, src/features / campaigns, src/features / invitations
+- Feature modules touched: event-comments, events, notifications, client-portal, system-events, workflow, assets, campaigns, invitations
+- Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/text-utils.ts, src/lib/agent-dispatch.ts, src/lib/supabase.ts, src/lib/member-access.ts, src/lib/campaign-client-assignment.ts, src/lib/client-slug.ts, src/lib/formatters.tsx, src/lib/workspace-types.ts, … (+1 more)
+- Related tests: src/app/api/event-comments/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, __tests__/lib/api-schemas.test.ts, … (+42 more)
+
+### Stack by group
+- src-features-event-comments: src/features/event-comments/server.ts
+- src/features / assets: src/features/assets/server.ts, src/features/assets/types.ts
+- src/features / campaigns: src/features/campaigns/ownership-sync.ts
+- src/features / client-portal: src/features/client-portal/scope.ts
+- src/features / events: src/features/events/server.ts, src/features/events/summary.ts
+- src/features / invitations: src/features/invitations/types.ts
+- src/features / notifications: src/features/notifications/discussions.ts, src/features/notifications/server.ts, src/features/notifications/types.ts
+- src/features / system-events: src/features/system-events/server.ts
+- src/features / workflow: src/features/workflow/revalidation.ts
+- src/lib: src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/text-utils.ts, src/lib/agent-dispatch.ts, src/lib/supabase.ts, src/lib/member-access.ts, src/lib/campaign-client-assignment.ts, src/lib/client-slug.ts, src/lib/formatters.tsx, src/lib/workspace-types.ts, src/lib/status.ts
 
 ## `/api/health`
 - Route file: `src/app/api/health/route.ts`
@@ -694,7 +717,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/app / api
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
-- Related tests: __tests__/api/ingest.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, … (+28 more)
+- Related tests: __tests__/api/ingest.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, … (+29 more)
 
 ### Stack by group
 - src/app / api: src/app/api/ingest/ingest-tm-events.ts, src/app/api/ingest/ingest-meta-campaigns.ts, src/app/api/ingest/ingest-tm-demographics.ts
@@ -723,7 +746,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/supabase.ts, src/lib/meta-oauth.ts
-- Related tests: src/app/api/meta/data-deletion/route.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, … (+21 more)
+- Related tests: src/app/api/meta/data-deletion/route.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, … (+22 more)
 
 ### Stack by group
 - src/lib: src/lib/supabase.ts, src/lib/meta-oauth.ts
@@ -737,7 +760,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/lib / ticketmaster
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/ticketmaster/tm1-client.ts
-- Related tests: src/app/api/ticketmaster/tm1/move-selection/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, src/lib/ticketmaster/tm1-client.test.ts
+- Related tests: src/app/api/ticketmaster/tm1/move-selection/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, src/lib/ticketmaster/tm1-client.test.ts
 
 ### Stack by group
 - src/lib: src/lib/api-helpers.ts
@@ -752,7 +775,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/lib / ticketmaster
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/ticketmaster/tm1-client.ts
-- Related tests: src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, src/lib/ticketmaster/tm1-client.test.ts
+- Related tests: src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts, src/lib/ticketmaster/tm1-client.test.ts
 
 ### Stack by group
 - src/lib: src/lib/api-helpers.ts
@@ -767,7 +790,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/lib / ticketmaster
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/api-helpers.ts, src/lib/ticketmaster/tm1-client.ts
-- Related tests: src/app/api/ticketmaster/tm1/snapshot/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/lib/api-helpers.test.ts, src/lib/ticketmaster/tm1-client.test.ts
+- Related tests: src/app/api/ticketmaster/tm1/snapshot/route.test.ts, __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/lib/api-helpers.test.ts, src/lib/ticketmaster/tm1-client.test.ts
 
 ### Stack by group
 - src/lib: src/lib/api-helpers.ts
@@ -782,7 +805,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/api-helpers.ts
-- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts
+- Related tests: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, src/lib/api-helpers.test.ts
 
 ### Stack by group
 - src/lib: src/lib/api-helpers.ts
@@ -796,7 +819,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / ui, src/features / client-portal, src/lib
 - Feature modules touched: client-portal
 - Shared libs/runtime files touched: src/lib/utils.ts, src/lib/supabase.ts, src/lib/member-access.ts
-- Related tests: src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, … (+23 more)
+- Related tests: src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, … (+24 more)
 
 ### Stack by group
 - src/components / ui: src/components/ui/button.tsx
@@ -812,7 +835,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/app / client, src/features / client-portal, src/features / invitations, src/components / ui
 - Feature modules touched: client-portal, invitations
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/supabase.ts, src/lib/member-access.ts, src/lib/utils.ts
-- Related tests: src/app/client/[slug]/layout.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/lib/formatters.test.ts, src/app/client/[slug]/components/campaign-detail-header.test.tsx, src/features/client-portal/theme.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, src/features/client-portal/config.test.ts, src/features/client-portal/entry.test.ts, … (+29 more)
+- Related tests: src/app/client/[slug]/layout.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/lib/formatters.test.ts, src/app/client/[slug]/components/campaign-detail-header.test.tsx, src/features/client-portal/theme.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, src/features/client-portal/config.test.ts, src/features/client-portal/entry.test.ts, … (+30 more)
 
 ### Stack by group
 - src/app / client: src/app/client/[slug]/components/client-nav.tsx, src/app/client/[slug]/components/mobile-nav.tsx, src/app/client/[slug]/components/complete-profile-modal.tsx, src/app/client/[slug]/components/nav-config.ts
@@ -876,7 +899,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/features / client-portal, src/features / client-agent, src/features / invitations, src/features / system-events, src/features / workflow, src/features / reports, src/features / agent-outcomes, src/features / dashboard, src/features / events, src/features / assets, src/features / approvals, … (+2 more)
 - Feature modules touched: client-portal, client-agent, invitations, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/member-access.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
-- Related tests: src/app/client/[slug]/agent/page.test.tsx, __tests__/lib/formatters.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, src/app/client/[slug]/layout.test.tsx, src/features/client-portal/config.test.ts, … (+61 more)
+- Related tests: src/app/client/[slug]/agent/page.test.tsx, __tests__/lib/formatters.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, src/app/client/[slug]/layout.test.tsx, src/features/client-portal/config.test.ts, … (+62 more)
 
 ### Stack by group
 - src/app / client: src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts
@@ -919,7 +942,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/app / client, src/components / client, src/features / client-portal, src/features / campaigns, src/features / invitations, src/features / campaign-action-items, src/features / campaign-comments, src/features / approvals, src/features / system-events, src/features / agent-outcomes, src/features / notifications, … (+2 more)
 - Feature modules touched: client-portal, campaigns, invitations, campaign-action-items, campaign-comments, approvals, system-events, agent-outcomes, notifications, assets
 - Shared libs/runtime files touched: src/lib/constants.ts, src/lib/formatters.tsx, src/lib/status.ts, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/member-access.ts, src/lib/meta-api.ts, src/lib/action-item-labels.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts, … (+3 more)
-- Related tests: src/app/shell-import-smoke.test.ts, __tests__/lib/formatters.test.ts, src/app/client/[slug]/lib.test.ts, __tests__/app/client/campaign-detail-data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/components/campaign-detail-header.test.tsx, src/app/client/[slug]/agent/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, … (+48 more)
+- Related tests: src/app/shell-import-smoke.test.ts, __tests__/lib/formatters.test.ts, src/app/client/[slug]/lib.test.ts, __tests__/app/client/campaign-detail-data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/components/campaign-detail-header.test.tsx, src/app/client/[slug]/agent/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, … (+49 more)
 
 ### Stack by group
 - src/app / client: src/app/client/[slug]/types.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/components/client-portal-footer.tsx, src/app/client/[slug]/components/campaign-detail-header.tsx, src/app/client/[slug]/components/campaign-operating-panel.tsx, src/app/client/[slug]/lib.ts, src/app/client/[slug]/data.ts, src/app/client/[slug]/components/campaign-status-badge.tsx, src/app/client/[slug]/components/campaign-discussion-form.tsx
@@ -962,7 +985,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/components / charts, src/lib, src/app / client, src/features / client-portal, src/features / invitations
 - Feature modules touched: client-portal, invitations
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/member-access.ts, src/lib/campaign-client-assignment.ts, src/lib/meta-api.ts, src/lib/client-slug.ts
-- Related tests: src/app/client/[slug]/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/lib/formatters.test.ts, __tests__/app/client/data.test.ts, src/app/client/[slug]/events/page.test.tsx, src/app/client/[slug]/lib.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, src/features/client-agent/server.test.ts, … (+34 more)
+- Related tests: src/app/client/[slug]/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/lib/formatters.test.ts, __tests__/app/client/data.test.ts, src/app/client/[slug]/events/page.test.tsx, src/app/client/[slug]/lib.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, src/features/client-agent/server.test.ts, … (+35 more)
 
 ### Stack by group
 - src/app / client: src/app/client/[slug]/data.ts, src/app/client/[slug]/lib.ts, src/app/client/[slug]/components/insights-panel.tsx, src/app/client/[slug]/components/client-portal-footer.tsx, src/app/client/[slug]/campaigns/campaigns-table.tsx, src/app/client/[slug]/types.ts
@@ -991,19 +1014,29 @@ This page documents each Next.js special route file and the internal stack it pu
 - Route file: `src/app/client/[slug]/event/[eventId]/page.tsx`
 - Type: Next.js page
 - Ownership: web client route surface
-- Direct internal imports: src/lib/formatters.tsx, src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/components/progress-bar.tsx, src/app/client/[slug]/components/event-status-badge.tsx, src/app/client/[slug]/components/audience-section.tsx, src/app/client/[slug]/components/client-portal-footer.tsx, src/components/client/charts/index.ts, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts, src/features/client-portal/access.ts
-- Transitive internal stack size: 35
-- Groups touched: src/lib, src/app / client, src/components / client, src/features / client-portal, src/features / invitations
-- Feature modules touched: client-portal, invitations
-- Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/member-access.ts, src/lib/client-slug.ts, src/lib/constants.ts
-- Related tests: src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/lib/formatters.test.ts, __tests__/app/client/event-detail-data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/lib.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, src/features/client-agent/server.test.ts, … (+34 more)
+- Direct internal imports: src/lib/formatters.tsx, src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/components/progress-bar.tsx, src/app/client/[slug]/components/event-status-badge.tsx, src/app/client/[slug]/components/audience-section.tsx, src/app/client/[slug]/components/client-portal-footer.tsx, src/app/client/[slug]/components/event-operating-panel.tsx, src/components/client/charts/index.ts, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts, … (+2 more)
+- Transitive internal stack size: 56
+- Groups touched: src/lib, src/app / client, src/components / client, src/features / client-portal, src/features / events, src/features / invitations, src-features-event-comments, src/features / agent-outcomes, src/features / approvals, src/features / event-follow-up-items, src/features / system-events, src/components / ui, … (+3 more)
+- Feature modules touched: client-portal, events, invitations, event-comments, agent-outcomes, approvals, event-follow-up-items, system-events, assets, notifications, campaigns
+- Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/member-access.ts, src/lib/action-item-labels.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts, src/lib/constants.ts, src/lib/agent-dispatch.ts, … (+1 more)
+- Related tests: src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/lib/formatters.test.ts, __tests__/app/client/event-detail-data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/client/[slug]/lib.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, … (+46 more)
 
 ### Stack by group
-- src/app / client: src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/components/progress-bar.tsx, src/app/client/[slug]/components/event-status-badge.tsx, src/app/client/[slug]/components/audience-section.tsx, src/app/client/[slug]/components/client-portal-footer.tsx, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts
+- src-features-event-comments: src/features/event-comments/server.ts
+- src/app / client: src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/components/progress-bar.tsx, src/app/client/[slug]/components/event-status-badge.tsx, src/app/client/[slug]/components/audience-section.tsx, src/app/client/[slug]/components/client-portal-footer.tsx, src/app/client/[slug]/components/event-operating-panel.tsx, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts, src/app/client/[slug]/components/event-discussion-form.tsx
 - src/components / client: src/components/client/charts/index.ts, src/components/client/charts/types.ts, src/components/client/charts/age-distribution-chart.tsx, src/components/client/charts/gender-donut-chart.tsx, src/components/client/charts/age-gender-heatmap.tsx, src/components/client/charts/placement-charts.tsx, src/components/client/charts/time-charts.tsx, src/components/client/charts/performance-trend-tabs.tsx, src/components/client/charts/market-charts.tsx, src/components/client/charts/audience-demographics.tsx, src/components/client/charts/placement-bar-chart.tsx, src/components/client/charts/ticket-sales-chart.tsx, … (+2 more)
+- src/components / ui: src/components/ui/button.tsx
+- src/features / agent-outcomes: src/features/agent-outcomes/server.ts, src/features/agent-outcomes/summary.ts
+- src/features / approvals: src/features/approvals/server.ts, src/features/approvals/summary.ts
+- src/features / assets: src/features/assets/server.ts, src/features/assets/types.ts
+- src/features / campaigns: src/features/campaigns/ownership-sync.ts
 - src/features / client-portal: src/features/client-portal/access.ts, src/features/client-portal/scope.ts, src/features/client-portal/types.ts, src/features/client-portal/insights.ts, src/features/client-portal/config.ts, src/features/client-portal/entry.ts
+- src/features / event-follow-up-items: src/features/event-follow-up-items/server.ts
+- src/features / events: src/features/events/client-operating.ts
 - src/features / invitations: src/features/invitations/types.ts
-- src/lib: src/lib/formatters.tsx, src/lib/status.ts, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/member-access.ts, src/lib/client-slug.ts, src/lib/constants.ts
+- src/features / notifications: src/features/notifications/workflow.ts, src/features/notifications/server.ts, src/features/notifications/types.ts
+- src/features / system-events: src/features/system-events/server.ts
+- src/lib: src/lib/formatters.tsx, src/lib/status.ts, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/member-access.ts, src/lib/action-item-labels.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts, src/lib/constants.ts, src/lib/agent-dispatch.ts, src/lib/utils.ts
 
 ## `/client/[slug]/events`
 - Route file: `src/app/client/[slug]/events/loading.tsx`
@@ -1030,7 +1063,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/app / client, src/lib, src/features / client-portal, src/features / invitations
 - Feature modules touched: client-portal, invitations
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/member-access.ts, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/meta-api.ts, src/lib/client-slug.ts
-- Related tests: src/app/client/[slug]/events/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/app/client/data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, __tests__/lib/formatters.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, … (+34 more)
+- Related tests: src/app/client/[slug]/events/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/app/client/data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, __tests__/lib/formatters.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, … (+35 more)
 
 ### Stack by group
 - src/app / client: src/app/client/[slug]/data.ts, src/app/client/[slug]/events/events-filter.tsx, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts, src/app/client/[slug]/components/event-card.tsx, src/app/client/[slug]/components/event-status-badge.tsx, src/app/client/[slug]/components/progress-bar.tsx
@@ -1047,7 +1080,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Groups touched: src/lib, src/features / client-portal, src/features / reports, src/features / invitations, src/features / agent-outcomes, src/features / dashboard, src/features / events, src/features / assets, src/features / approvals, src/features / conversations, src/features / system-events
 - Feature modules touched: client-portal, reports, invitations, agent-outcomes, dashboard, events, assets, approvals, conversations, system-events
 - Shared libs/runtime files touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/member-access.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
-- Related tests: src/app/client/[slug]/reports/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/lib/formatters.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, src/app/admin/reports/page.test.tsx, … (+49 more)
+- Related tests: src/app/client/[slug]/reports/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/lib/formatters.test.ts, src/app/client/[slug]/agent/page.test.tsx, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, src/app/admin/reports/page.test.tsx, … (+50 more)
 
 ### Stack by group
 - src/features / agent-outcomes: src/features/agent-outcomes/server.ts, src/features/agent-outcomes/summary.ts
@@ -1123,15 +1156,15 @@ This page documents each Next.js special route file and the internal stack it pu
 - Route file: `src/app/landing/page.tsx`
 - Type: Next.js page
 - Ownership: web root/shared route surface
-- Direct internal imports: src/components/landing/nav.tsx, src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/stats.tsx, src/components/landing/contact-form.tsx, src/components/landing/faq.tsx, src/components/landing/footer.tsx, src/components/ui/button.tsx
-- Transitive internal stack size: 12
+- Direct internal imports: src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx
+- Transitive internal stack size: 9
 - Groups touched: src/components / landing, src/components / ui, src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/utils.ts
 - Related tests: none
 
 ### Stack by group
-- src/components / landing: src/components/landing/nav.tsx, src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/stats.tsx, src/components/landing/contact-form.tsx, src/components/landing/faq.tsx, src/components/landing/footer.tsx
+- src/components / landing: src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx
 - src/components / ui: src/components/ui/button.tsx, src/components/ui/input.tsx
 - src/lib: src/lib/utils.ts
 

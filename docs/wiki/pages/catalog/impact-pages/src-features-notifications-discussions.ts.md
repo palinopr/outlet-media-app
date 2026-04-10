@@ -1,14 +1,14 @@
 # Impact: src/features/notifications/discussions.ts
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 - Category: Feature files
-- Impact score: 11
+- Impact score: 19
 - Ownership: feature module: notifications
 - Feature module: notifications
-- Route owners: src/app/api/campaign-comments/route.ts
-- Imported by: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/campaign-comments/route.ts
-- Tests related: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts
+- Route owners: src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts
+- Imported by: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.test.ts, src/app/api/event-comments/route.ts
+- Tests related: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts
 - DB objects: none
 - Env vars: none
 - Mutation symbols: none

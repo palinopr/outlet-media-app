@@ -1,6 +1,6 @@
 # Database-to-Code Map
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 This page maps database objects discovered in `supabase/migrations/*` to routes, features, libs, agent files, tests, and docs that mention them.
 
@@ -165,14 +165,14 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `calls`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306184000_backend_tables_rls.sql
-- Mentioned by groups: Docs / Plans (6), Docs / Superpowers Plans (4), Root Files (3), Tests / API (2), agent / root (2), agent/src / events (2), src/app / client (2), src/features / client-agent (2), src/lib (2), agent/src / root (1), agent/src / services (1), Docs / Context (1), … (+5 more)
-- Routes: src/app/api/ticketmaster/tm1/snapshot/route.ts, src/app/landing/page.tsx
+- Mentioned by groups: Docs / Plans (6), Docs / Superpowers Plans (4), Root Files (3), Tests / API (2), agent / root (2), agent/src / events (2), src/app / client (2), src/features / client-agent (2), src/lib (2), agent/src / root (1), agent/src / services (1), Docs / Context (1), … (+3 more)
+- Routes: src/app/api/ticketmaster/tm1/snapshot/route.ts
 - Features: src/features/client-agent/components/agent-shell.test.tsx, src/features/client-agent/runtime.test.ts
 - Shared libs: src/lib/database.types.ts, src/lib/google-ads.test.ts, src/lib/ticketmaster/tm1-client.test.ts
 - Agent runtime files: agent/src/events/message-handler.test.ts, agent/src/events/message-handler.ts, agent/src/runner.test.ts, agent/src/services/queue-service.ts
 - Tests: __tests__/api/agents-jobs.test.ts, __tests__/api/alerts.test.ts, src/app/client/[slug]/components/campaign-detail-header.test.tsx
 - Docs: docs/context/google-ads-api.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-design.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, docs/superpowers/plans/2026-03-31-client-agent-tab.md, docs/superpowers/plans/2026-04-01-client-agent-tool-driven-runtime.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md, … (+2 more)
-- Other mentions: agent/LEARNINGS.md, agent/MEMORY.md, audit/agent-dead-code.md, audit/architecture-smells.md, audit/dead-routes.md, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/components/landing/contact-form.tsx
+- Other mentions: agent/LEARNINGS.md, agent/MEMORY.md, audit/agent-dead-code.md, audit/architecture-smells.md, audit/dead-routes.md, src/app/client/[slug]/campaign/[campaignId]/data.ts
 
 ## `campaign_action_items`
 - Kinds: table
@@ -489,12 +489,12 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `event_comments`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306110000_event_comments.sql, supabase/migrations/20260306170500_event_workflow_rls.sql
-- Mentioned by groups: src/app / admin (4), Tests / Features (3), src/features / conversations (1), src/features / events (1), src/features / notifications (1)
-- Routes: none
-- Features: src/features/conversations/server.ts, src/features/events/server.ts, src/features/notifications/server.ts
+- Mentioned by groups: src/app / admin (4), Tests / Features (3), src/app / api (2), src/features / conversations (1), src-features-event-comments (1), src/features / events (1), src/features / notifications (1)
+- Routes: src/app/api/event-comments/route.ts
+- Features: src/features/conversations/server.ts, src/features/event-comments/server.ts, src/features/events/server.ts, src/features/notifications/server.ts
 - Shared libs: none
 - Agent runtime files: none
-- Tests: __tests__/features/conversations/read-clients.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/notifications/server.test.ts, src/app/admin/clients/data.test.ts
+- Tests: __tests__/features/conversations/read-clients.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/notifications/server.test.ts, src/app/admin/clients/data.test.ts, src/app/api/event-comments/route.test.ts
 - Docs: none
 - Other mentions: src/app/admin/actions/clients.ts, src/app/admin/actions/events.ts, src/app/admin/clients/data.ts
 
@@ -777,14 +777,14 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `leads`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306184000_backend_tables_rls.sql
-- Mentioned by groups: src/components / landing (3), agent / root (1), agent / scripts (1), Root Files (1), Docs / Plans (1), src/app / root routes (1), src/features / client-agent (1), src/features / client-portal (1), src/lib (1)
-- Routes: src/app/landing/page.tsx
+- Mentioned by groups: agent / root (1), agent / scripts (1), Root Files (1), Docs / Plans (1), src/features / client-agent (1), src/features / client-portal (1), src/lib (1)
+- Routes: none
 - Features: src/features/client-agent/store.test.ts, src/features/client-portal/insights.ts
 - Shared libs: src/lib/database.types.ts
 - Agent runtime files: none
 - Tests: none
 - Docs: docs/plans/2026-03-07-discord-growth-team-plan.md
-- Other mentions: agent/MEMORY.md, agent/scripts/growth-ledger.ts, audit/architecture-smells.md, src/components/landing/contact-form.tsx, src/components/landing/faq.tsx, src/components/landing/hero.tsx
+- Other mentions: agent/MEMORY.md, agent/scripts/growth-ledger.ts, audit/architecture-smells.md
 
 ## `meta_campaigns`
 - Kinds: table
@@ -813,12 +813,12 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `notifications`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306111500_notification_entities.sql, supabase/migrations/20260306163500_client_surface_rls.sql
-- Mentioned by groups: Tests / Features (5), Root Files (4), Docs / Context (4), src/app / admin (4), Docs / Plans (2), Docs / Superpowers Plans (2), Docs / Superpowers Specs (2), src/app / api (2), src/features / campaign-action-items (2), agent/src / discord (1), src/app / root routes (1), src/features / asset-follow-up-items (1), … (+5 more)
-- Routes: src/app/api/campaign-comments/route.ts, src/app/privacy/page.tsx
+- Mentioned by groups: Tests / Features (5), Root Files (4), Docs / Context (4), src/app / admin (4), src/app / api (4), Docs / Plans (2), Docs / Superpowers Plans (2), Docs / Superpowers Specs (2), src/features / campaign-action-items (2), agent/src / discord (1), src/app / root routes (1), src/features / asset-follow-up-items (1), … (+5 more)
+- Routes: src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/privacy/page.tsx
 - Features: src/features/asset-follow-up-items/server.ts, src/features/campaign-action-items/server.test.ts, src/features/campaign-action-items/server.ts, src/features/campaigns/ownership-sync.test.ts, src/features/event-follow-up-items/server.ts, src/features/notifications/server.ts, src/features/workflow/revalidation.test.ts
 - Shared libs: src/lib/database.types.ts
 - Agent runtime files: agent/src/discord/core/entry.ts
-- Tests: __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/campaign-comments/route.test.ts
+- Tests: __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts
 - Docs: docs/context/architecture-reset.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/salvage-map.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, docs/superpowers/plans/2026-04-02-core-reset-salvage-map.md, docs/superpowers/specs/2026-03-22-web-reset-design.md, docs/superpowers/specs/2026-03-27-shell-reset-design.md
 - Other mentions: audit/agent-dead-code.md, audit/architecture-smells.md, audit/dead-routes.md, src/app/admin/actions/campaign-action-items.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, tsconfig.tsbuildinfo
 

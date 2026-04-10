@@ -1,6 +1,6 @@
 # Group Dependency Map
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 This page summarizes internal file-to-file dependencies rolled up to the catalog group level.
 
@@ -105,7 +105,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 - Used by groups: none
 
 ## Public Assets
-- Files in group: 15
+- Files in group: 17
 - Depends on groups: none
 - Used by groups: none
 
@@ -120,18 +120,18 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 - Used by groups: src/components / admin (35), src/app / root routes (13)
 
 ## src/app / api
-- Files in group: 38
-- Depends on groups: src/lib (65), src/features / client-agent (8), src/lib / ticketmaster (6), src/features / system-events (4), src/features / workflow (4), src/features / agent-outcomes (2), src/features / campaign-action-items (2), src/features / campaign-comments (2), src/features / notifications (2), src/features / client-portal (2), src/features / asset-follow-up-items (1), src/features / event-follow-up-items (1), … (+1 more)
+- Files in group: 40
+- Depends on groups: src/lib (73), src/features / client-agent (8), src/features / system-events (6), src/features / workflow (6), src/lib / ticketmaster (6), src/features / notifications (4), src/features / client-portal (4), src/features / agent-outcomes (2), src/features / campaign-action-items (2), src/features / campaign-comments (2), src-features-event-comments (2), src/features / events (2), … (+3 more)
 - Used by groups: Tests / API (5)
 
 ## src/app / client
-- Files in group: 59
-- Depends on groups: src/lib (34), src/features / client-portal (25), src/components / client (15), src/components / ui (6), src/features / reports (4), src/features / client-agent (3), src/features / campaigns (3), src/components / charts (2), src/features / campaign-comments (1), src/components / admin (1)
+- Files in group: 63
+- Depends on groups: src/lib (37), src/features / client-portal (25), src/components / client (15), src/components / ui (7), src/features / reports (4), src/features / client-agent (3), src/features / campaigns (3), src/features / events (3), src/components / charts (2), src/features / campaign-comments (1), src-features-event-comments (1), src/components / admin (1)
 - Used by groups: src/app / root routes (6), Tests / App (3), src/components / client (2), src/features / client-portal (2), src/app / admin (1)
 
 ## src/app / root routes
 - Files in group: 18
-- Depends on groups: src/app / admin (13), src/components / landing (9), src/app / client (6), src/components / ui (1), src/features / client-portal (1)
+- Depends on groups: src/app / admin (13), src/components / landing (6), src/app / client (6), src/features / client-portal (1)
 - Used by groups: none
 
 ## src/components / admin
@@ -151,8 +151,8 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 
 ## src/components / landing
 - Files in group: 9
-- Depends on groups: src/components / ui (4)
-- Used by groups: src/app / root routes (9)
+- Depends on groups: src/components / ui (2)
+- Used by groups: src/app / root routes (6)
 
 ## src/components / shared
 - Files in group: 1
@@ -162,7 +162,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## src/components / ui
 - Files in group: 13
 - Depends on groups: src/lib (13)
-- Used by groups: src/components / admin (43), src/app / admin (29), src/app / client (6), src/components / landing (4), src/app / root routes (1), src/components / client (1), src/components / shared (1)
+- Used by groups: src/components / admin (43), src/app / admin (29), src/app / client (7), src/components / landing (2), src/components / client (1), src/components / shared (1)
 
 ## src/features / access
 - Files in group: 1
@@ -172,7 +172,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## src/features / agent-outcomes
 - Files in group: 2
 - Depends on groups: src/features / assets (1), src/lib (1)
-- Used by groups: Tests / Features (6), src/app / api (2), src/features / campaigns (2), src/features / reports (2), src/app / admin (1), src/components / admin (1), src/features / agents (1), src/features / operations-center (1)
+- Used by groups: Tests / Features (6), src/app / api (2), src/features / campaigns (2), src/features / events (2), src/features / reports (2), src/app / admin (1), src/components / admin (1), src/features / agents (1), src/features / operations-center (1)
 
 ## src/features / agents
 - Files in group: 1
@@ -182,7 +182,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## src/features / approvals
 - Files in group: 2
 - Depends on groups: src/lib (4), src/features / assets (1)
-- Used by groups: Tests / Features (6), src/features / campaigns (2), src/features / dashboard (1)
+- Used by groups: Tests / Features (6), src/features / campaigns (2), src/features / dashboard (1), src/features / events (1)
 
 ## src/features / asset-follow-up-items
 - Files in group: 1
@@ -217,7 +217,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## src/features / client-portal
 - Files in group: 13
 - Depends on groups: src/lib (11), src/app / client (2)
-- Used by groups: src/app / client (25), src/features / client-agent (6), Tests / Features (2), src/app / api (2), src/features / reports (2), src/app / root routes (1), src/features / campaigns (1)
+- Used by groups: src/app / client (25), src/features / client-agent (6), src/app / api (4), Tests / Features (2), src/features / reports (2), src/app / root routes (1), src/features / campaigns (1), src/features / events (1)
 
 ## src/features / clients
 - Files in group: 1
@@ -234,15 +234,20 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 - Depends on groups: src/lib (4), src/features / conversations (2), src/features / approvals (1)
 - Used by groups: Tests / Features (6), src/features / reports (2)
 
+## src-features-event-comments
+- Files in group: 1
+- Depends on groups: src/lib (2)
+- Used by groups: src/app / api (2), src/app / client (1), src/features / events (1)
+
 ## src/features / event-follow-up-items
 - Files in group: 1
 - Depends on groups: src/lib (4), src/features / notifications (1), src/features / system-events (1)
-- Used by groups: Tests / Features (1), src/app / admin (1), src/app / api (1)
+- Used by groups: Tests / Features (1), src/app / admin (1), src/app / api (1), src/features / events (1)
 
 ## src/features / events
-- Files in group: 2
-- Depends on groups: src/lib (5), src/features / system-events (1)
-- Used by groups: Tests / Features (4), src/app / admin (2), src/features / reports (2), src/components / admin (1), src/features / campaigns (1)
+- Files in group: 3
+- Depends on groups: src/lib (6), src/features / agent-outcomes (2), src/features / system-events (2), src/features / approvals (1), src/features / client-portal (1), src-features-event-comments (1), src/features / event-follow-up-items (1)
+- Used by groups: Tests / Features (4), src/app / client (3), src/app / admin (2), src/app / api (2), src/features / reports (2), src/components / admin (1), src/features / campaigns (1)
 
 ## src/features / invitations
 - Files in group: 4
@@ -252,7 +257,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## src/features / notifications
 - Files in group: 4
 - Depends on groups: src/lib (3), src/features / assets (1), src/features / campaigns (1)
-- Used by groups: Tests / Features (7), src/app / admin (2), src/app / api (2), src/features / campaign-action-items (2), src/features / asset-follow-up-items (1), src/features / event-follow-up-items (1)
+- Used by groups: Tests / Features (7), src/app / api (4), src/app / admin (2), src/features / campaign-action-items (2), src/features / asset-follow-up-items (1), src/features / event-follow-up-items (1)
 
 ## src/features / operations-center
 - Files in group: 1
@@ -282,7 +287,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## src/features / system-events
 - Files in group: 1
 - Depends on groups: src/lib (1)
-- Used by groups: Tests / Features (6), src/app / admin (4), src/app / api (4), src/features / campaign-action-items (2), src/features / campaigns (2), src/features / client-agent (2), src/features / asset-follow-up-items (1), src/features / event-follow-up-items (1), src/features / events (1), src/lib (1)
+- Used by groups: Tests / Features (6), src/app / api (6), src/app / admin (4), src/features / campaign-action-items (2), src/features / campaigns (2), src/features / client-agent (2), src/features / events (2), src/features / asset-follow-up-items (1), src/features / event-follow-up-items (1), src/lib (1)
 
 ## src/features / users
 - Files in group: 1
@@ -292,7 +297,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## src/features / workflow
 - Files in group: 2
 - Depends on groups: none
-- Used by groups: src/app / admin (5), src/app / api (4), src/features / client-agent (2)
+- Used by groups: src/app / api (6), src/app / admin (5), src/features / client-agent (2)
 
 ## src / hooks
 - Files in group: 1
@@ -302,7 +307,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## src/lib
 - Files in group: 32
 - Depends on groups: src/features / system-events (1), src/features / invitations (1)
-- Used by groups: src/app / api (65), src/app / admin (61), src/components / admin (40), src/app / client (34), Tests / Features (24), src/components / ui (13), src/features / client-portal (11), Tests / App (7), src/features / campaign-action-items (7), src/features / reports (6), src/features / client-agent (5), src/features / events (5), … (+19 more)
+- Used by groups: src/app / api (73), src/app / admin (61), src/components / admin (40), src/app / client (37), Tests / Features (24), src/components / ui (13), src/features / client-portal (11), Tests / App (7), src/features / campaign-action-items (7), src/features / events (6), src/features / reports (6), src/features / client-agent (5), … (+20 more)
 
 ## src/lib / ticketmaster
 - Files in group: 2

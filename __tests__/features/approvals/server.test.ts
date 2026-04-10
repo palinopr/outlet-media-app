@@ -126,7 +126,11 @@ vi.mock("@/features/assets/server", () => ({
   listVisibleAssetIdsForScope,
 }));
 
-import { listApprovalRequests } from "@/features/approvals/server";
+import {
+  listApprovalRequests,
+  listCampaignApprovalRequests,
+  listEventApprovalRequests,
+} from "@/features/approvals/server";
 
 describe("listApprovalRequests", () => {
   beforeEach(() => {
@@ -245,5 +249,119 @@ describe("listApprovalRequests", () => {
 
     expect(approvals.map((approval) => approval.id)).toEqual(["approval_admin"]);
     expect(createClerkSupabaseClient).not.toHaveBeenCalled();
+  });
+});
+
+describe("listCampaignApprovalRequests", () => {
+  beforeEach(() => {
+    createClerkSupabaseClient.mockReset();
+    currentUser.mockReset();
+    listEffectiveCampaignIdsForClientSlug.mockReset();
+    listVisibleAssetIdsForScope.mockReset();
+    serviceState.approval_requests = [];
+    userScopedState.approval_requests = [];
+    currentUser.mockResolvedValue({ publicMetadata: { role: "member" } });
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
+    listEffectiveCampaignIdsForClientSlug.mockResolvedValue([]);
+  });
+
+  it("keeps client campaign approval helpers on the Clerk-scoped client", async () => {
+    serviceState.approval_requests = [
+      {
+        id: "approval_service",
+        client_slug: "zamora",
+        audience: "shared",
+        request_type: "campaign_review",
+        status: "pending",
+        title: "Service approval",
+        entity_type: "campaign",
+        entity_id: "cmp_1",
+        created_at: "2026-03-06T12:00:00.000Z",
+        updated_at: "2026-03-06T12:00:00.000Z",
+        metadata: {},
+      },
+    ];
+    userScopedState.approval_requests = [
+      {
+        id: "approval_rls",
+        client_slug: "zamora",
+        audience: "shared",
+        request_type: "campaign_review",
+        status: "pending",
+        title: "RLS approval",
+        entity_type: "campaign",
+        entity_id: "cmp_1",
+        created_at: "2026-03-06T12:01:00.000Z",
+        updated_at: "2026-03-06T12:01:00.000Z",
+        metadata: {},
+      },
+    ];
+
+    const approvals = await listCampaignApprovalRequests({
+      audience: "shared",
+      campaignId: "cmp_1",
+      clientSlug: "zamora",
+      status: "pending",
+    });
+
+    expect(approvals.map((approval) => approval.id)).toEqual(["approval_rls"]);
+  });
+});
+
+describe("listEventApprovalRequests", () => {
+  beforeEach(() => {
+    createClerkSupabaseClient.mockReset();
+    currentUser.mockReset();
+    listEffectiveCampaignIdsForClientSlug.mockReset();
+    listVisibleAssetIdsForScope.mockReset();
+    serviceState.approval_requests = [];
+    userScopedState.approval_requests = [];
+    currentUser.mockResolvedValue({ publicMetadata: { role: "member" } });
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
+    listEffectiveCampaignIdsForClientSlug.mockResolvedValue([]);
+  });
+
+  it("keeps event approval helpers event-aware across event and linked campaign approvals", async () => {
+    userScopedState.approval_requests = [
+      {
+        id: "approval_event",
+        client_slug: "zamora",
+        audience: "shared",
+        request_type: "event_review",
+        status: "pending",
+        title: "Event approval",
+        entity_type: "event",
+        entity_id: "evt_1",
+        created_at: "2026-03-06T12:00:00.000Z",
+        updated_at: "2026-03-06T12:00:00.000Z",
+        metadata: {},
+      },
+      {
+        id: "approval_campaign",
+        client_slug: "zamora",
+        audience: "shared",
+        request_type: "campaign_review",
+        status: "pending",
+        title: "Campaign approval",
+        entity_type: "campaign",
+        entity_id: "cmp_1",
+        created_at: "2026-03-06T12:01:00.000Z",
+        updated_at: "2026-03-06T12:01:00.000Z",
+        metadata: {},
+      },
+    ];
+
+    const approvals = await listEventApprovalRequests({
+      audience: "shared",
+      campaignIds: ["cmp_1"],
+      clientSlug: "zamora",
+      eventId: "evt_1",
+      status: "pending",
+    });
+
+    expect(approvals.map((approval) => approval.id)).toEqual([
+      "approval_event",
+      "approval_campaign",
+    ]);
   });
 });

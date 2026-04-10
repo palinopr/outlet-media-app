@@ -1,6 +1,6 @@
 # Feature Module Dependency Map
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 This page rolls internal dependencies up to the `src/features/*` module level and shows which route/component groups use each feature module.
 
@@ -15,7 +15,7 @@ This page rolls internal dependencies up to the `src/features/*` module level an
 - Files in module: 2
 - Depends on feature modules: assets (1)
 - Depends on groups: src/features / assets (1), src/lib (1)
-- Used by groups: Tests / Features (6), src/app / api (2), src/features / campaigns (2), src/features / reports (2), src/app / admin (1), src/components / admin (1), src/features / agents (1), src/features / operations-center (1)
+- Used by groups: Tests / Features (6), src/app / api (2), src/features / campaigns (2), src/features / events (2), src/features / reports (2), src/app / admin (1), src/components / admin (1), src/features / agents (1), src/features / operations-center (1)
 - Direct route users: src/app/api/agent-outcomes/action-item/route.ts
 
 ## src/features / agents
@@ -29,7 +29,7 @@ This page rolls internal dependencies up to the `src/features/*` module level an
 - Files in module: 2
 - Depends on feature modules: assets (1)
 - Depends on groups: src/lib (4), src/features / assets (1)
-- Used by groups: Tests / Features (6), src/features / campaigns (2), src/features / dashboard (1)
+- Used by groups: Tests / Features (6), src/features / campaigns (2), src/features / dashboard (1), src/features / events (1)
 - Direct route users: none
 
 ## src/features / asset-follow-up-items
@@ -78,8 +78,8 @@ This page rolls internal dependencies up to the `src/features/*` module level an
 - Files in module: 13
 - Depends on feature modules: none
 - Depends on groups: src/lib (11), src/app / client (2)
-- Used by groups: src/app / client (25), src/features / client-agent (6), Tests / Features (2), src/features / reports (2), src/app / api (2), src/app / root routes (1), src/features / campaigns (1)
-- Direct route users: src/app/api/campaign-comments/route.ts, src/app/client/[slug]/agent/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx, src/app/client/[slug]/events/page.tsx, src/app/client/[slug]/layout.tsx, src/app/client/[slug]/reports/page.tsx, src/app/client/page.tsx, src/app/page.tsx
+- Used by groups: src/app / client (25), src/features / client-agent (6), src/app / api (4), Tests / Features (2), src/features / reports (2), src/app / root routes (1), src/features / campaigns (1), src/features / events (1)
+- Direct route users: src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/client/[slug]/agent/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx, src/app/client/[slug]/events/page.tsx, src/app/client/[slug]/layout.tsx, src/app/client/[slug]/reports/page.tsx, src/app/client/page.tsx, src/app/page.tsx
 
 ## src/features / clients
 - Files in module: 1
@@ -102,19 +102,26 @@ This page rolls internal dependencies up to the `src/features/*` module level an
 - Used by groups: Tests / Features (6), src/features / reports (2)
 - Direct route users: none
 
+## src-features-event-comments
+- Files in module: 1
+- Depends on feature modules: none
+- Depends on groups: src/lib (2)
+- Used by groups: src/app / api (2), src/app / client (1), src/features / events (1)
+- Direct route users: src/app/api/event-comments/route.ts
+
 ## src/features / event-follow-up-items
 - Files in module: 1
 - Depends on feature modules: notifications (1), system-events (1)
 - Depends on groups: src/lib (4), src/features / notifications (1), src/features / system-events (1)
-- Used by groups: Tests / Features (1), src/app / admin (1), src/app / api (1)
+- Used by groups: Tests / Features (1), src/app / admin (1), src/app / api (1), src/features / events (1)
 - Direct route users: src/app/api/agent-outcomes/action-item/route.ts
 
 ## src/features / events
-- Files in module: 2
-- Depends on feature modules: system-events (1)
-- Depends on groups: src/lib (5), src/features / system-events (1)
-- Used by groups: Tests / Features (4), src/app / admin (2), src/features / reports (2), src/components / admin (1), src/features / campaigns (1)
-- Direct route users: src/app/admin/events/[eventId]/page.tsx
+- Files in module: 3
+- Depends on feature modules: agent-outcomes (2), system-events (2), approvals (1), client-portal (1), event-comments (1), event-follow-up-items (1)
+- Depends on groups: src/lib (6), src/features / agent-outcomes (2), src/features / system-events (2), src/features / approvals (1), src/features / client-portal (1), src-features-event-comments (1), src/features / event-follow-up-items (1)
+- Used by groups: Tests / Features (4), src/app / client (3), src/app / admin (2), src/app / api (2), src/features / reports (2), src/components / admin (1), src/features / campaigns (1)
+- Direct route users: src/app/admin/events/[eventId]/page.tsx, src/app/api/event-comments/route.ts, src/app/client/[slug]/event/[eventId]/page.tsx
 
 ## src/features / invitations
 - Files in module: 4
@@ -127,8 +134,8 @@ This page rolls internal dependencies up to the `src/features/*` module level an
 - Files in module: 4
 - Depends on feature modules: assets (1), campaigns (1)
 - Depends on groups: src/lib (3), src/features / assets (1), src/features / campaigns (1)
-- Used by groups: Tests / Features (7), src/app / api (2), src/app / admin (2), src/features / campaign-action-items (2), src/features / asset-follow-up-items (1), src/features / event-follow-up-items (1)
-- Direct route users: src/app/api/campaign-comments/route.ts
+- Used by groups: Tests / Features (7), src/app / api (4), src/app / admin (2), src/features / campaign-action-items (2), src/features / asset-follow-up-items (1), src/features / event-follow-up-items (1)
+- Direct route users: src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts
 
 ## src/features / operations-center
 - Files in module: 1
@@ -162,8 +169,8 @@ This page rolls internal dependencies up to the `src/features/*` module level an
 - Files in module: 1
 - Depends on feature modules: none
 - Depends on groups: src/lib (1)
-- Used by groups: Tests / Features (6), src/app / admin (4), src/app / api (4), src/features / campaign-action-items (2), src/features / campaigns (2), src/features / client-agent (2), src/features / asset-follow-up-items (1), src/features / event-follow-up-items (1), src/features / events (1), src/lib (1)
-- Direct route users: src/app/api/agent-outcomes/action-item/route.ts, src/app/api/agents/route.ts, src/app/api/campaign-comments/route.ts
+- Used by groups: Tests / Features (6), src/app / api (6), src/app / admin (4), src/features / campaign-action-items (2), src/features / campaigns (2), src/features / client-agent (2), src/features / events (2), src/features / asset-follow-up-items (1), src/features / event-follow-up-items (1), src/lib (1)
+- Direct route users: src/app/api/agent-outcomes/action-item/route.ts, src/app/api/agents/route.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts
 
 ## src/features / users
 - Files in module: 1
@@ -176,5 +183,5 @@ This page rolls internal dependencies up to the `src/features/*` module level an
 - Files in module: 2
 - Depends on feature modules: none
 - Depends on groups: none
-- Used by groups: src/app / admin (5), src/app / api (4), src/features / client-agent (2)
-- Direct route users: src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/api/campaign-comments/route.ts
+- Used by groups: src/app / api (6), src/app / admin (5), src/features / client-agent (2)
+- Direct route users: src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts

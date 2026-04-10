@@ -1,6 +1,6 @@
 # src/features / notifications
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 - Files: 4
 - File kinds: TypeScript module (4)
@@ -17,14 +17,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 64
 - Bytes: 1830
 - Imports (internal): src/features/notifications/server.ts
-- Imported by: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/campaign-comments/route.ts
+- Imported by: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.test.ts, src/app/api/event-comments/route.ts
 - Depends on groups: src/features / notifications
 - Used by groups: Tests / Features, src/app / api
 - Feature module: notifications
-- Route owners: src/app/api/campaign-comments/route.ts
-- Routes related (direct): src/app/api/campaign-comments/route.ts
-- Tests related: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts
-- Tests related (direct): __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts
+- Route owners: src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts
+- Routes related (direct): src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts
+- Tests related: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts
+- Tests related (direct): __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts
 - Exports: listDiscussionNotificationRecipientIds, notifyDiscussionAudience, DiscussionNotificationInput
 - Symbol details: function listDiscussionNotificationRecipientIds (exported), function notifyDiscussionAudience (exported), type DiscussionNotificationVisibility, interface DiscussionNotificationInput (exported), interface DiscussionRecipientOptions
 - Defines: listDiscussionNotificationRecipientIds, notifyDiscussionAudience, recipientIds, DiscussionNotificationVisibility, DiscussionRecipientOptions, DiscussionNotificationInput
@@ -45,8 +45,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Depends on groups: src/features / assets, src/features / campaigns, src/lib, src/features / notifications
 - Used by groups: Tests / Features, src/features / notifications
 - Feature module: notifications
-- Route owners: src/app/api/campaign-comments/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx
-- Tests related: __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/api/campaign-comments/route.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts, … (+3 more)
+- Route owners: src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx
+- Tests related: __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, … (+6 more)
 - Tests related (direct): __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts
 - Exports: createNotification, listNotificationsForUser, listClientNotificationRecipients, listAdminNotificationRecipients, isRetiredCrmApprovalRow, filterNotificationsByScope
 - Symbol details: function createNotification (exported), function listNotificationsForUser (exported), function listClientNotificationRecipients (exported), function listAdminNotificationRecipients (exported), function isRetiredCrmApprovalRow (exported), function filterNotificationsByScope (exported), function isRetiredCrmNotificationEntityType, function isRetiredCrmRouteEntityType, function isRetiredCrmNotification, function mapNotificationRow, function getNotificationReadClient, function isScopedNotificationEntity, function emptyNotificationEntityContext, function emptyNotificationRouteContext, function extractNotificationContextFromApprovalRow, function extractNotificationRouteContextFromApprovalRow, … (+8 more)
@@ -65,8 +65,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Imported by: src/features/notifications/server.ts
 - Used by groups: src/features / notifications
 - Feature module: notifications
-- Route owners: src/app/api/campaign-comments/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx
-- Tests related: __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/api/campaign-comments/route.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts, … (+3 more)
+- Route owners: src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx
+- Tests related: __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, … (+6 more)
 - Exports: AppNotification, CreateNotificationInput
 - Symbol details: interface AppNotification (exported), interface CreateNotificationInput (exported)
 - Defines: AppNotification, CreateNotificationInput
@@ -86,8 +86,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Depends on groups: src/features / notifications
 - Used by groups: Tests / Features, src/app / admin, src/features / asset-follow-up-items, src/features / campaign-action-items, src/features / event-follow-up-items
 - Feature module: notifications
-- Route owners: src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx
-- Tests related: __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/app/shell-import-smoke.test.ts
+- Route owners: src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx
+- Tests related: __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, … (+2 more)
 - Tests related (direct): __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts
 - Exports: notifyWorkflowAssignee
 - Symbol details: function notifyWorkflowAssignee (exported), type WorkflowAssignmentVisibility, interface WorkflowAssignmentNotificationInput

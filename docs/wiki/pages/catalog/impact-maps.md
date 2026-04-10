@@ -1,10 +1,10 @@
 # Impact Maps
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 This index links to pages meant to answer: if I touch this file, what else is likely to move?
 
-- Impact candidates tracked: 163
+- Impact candidates tracked: 165
 
 ## Admin actions
 
@@ -42,42 +42,42 @@ This index links to pages meant to answer: if I touch this file, what else is li
 
 ## Feature files
 
-- [src/features/system-events/server.ts](./impact-pages/src-features-system-events-server.ts.md) — score: 131; routes: 15; tests: 32; db: 1
-- [src/features/invitations/types.ts](./impact-pages/src-features-invitations-types.ts.md) — score: 121; routes: 21; tests: 48; db: 0
-- [src/features/assets/server.ts](./impact-pages/src-features-assets-server.ts.md) — score: 107; routes: 12; tests: 43; db: 2
-- [src/features/agent-outcomes/server.ts](./impact-pages/src-features-agent-outcomes-server.ts.md) — score: 83; routes: 9; tests: 24; db: 5
-- [src/features/assets/types.ts](./impact-pages/src-features-assets-types.ts.md) — score: 83; routes: 12; tests: 43; db: 0
+- [src/features/system-events/server.ts](./impact-pages/src-features-system-events-server.ts.md) — score: 146; routes: 17; tests: 35; db: 1
+- [src/features/invitations/types.ts](./impact-pages/src-features-invitations-types.ts.md) — score: 126; routes: 22; tests: 50; db: 0
+- [src/features/assets/server.ts](./impact-pages/src-features-assets-server.ts.md) — score: 116; routes: 14; tests: 46; db: 2
+- [src/features/assets/types.ts](./impact-pages/src-features-assets-types.ts.md) — score: 92; routes: 14; tests: 46; db: 0
+- [src/features/agent-outcomes/server.ts](./impact-pages/src-features-agent-outcomes-server.ts.md) — score: 90; routes: 10; tests: 26; db: 5
+- [src/features/agent-outcomes/summary.ts](./impact-pages/src-features-agent-outcomes-summary.ts.md) — score: 79; routes: 10; tests: 29; db: 0
+- [src/features/approvals/server.ts](./impact-pages/src-features-approvals-server.ts.md) — score: 79; routes: 9; tests: 28; db: 1
+- [src/features/events/server.ts](./impact-pages/src-features-events-server.ts.md) — score: 79; routes: 9; tests: 22; db: 5
+- [src/features/notifications/server.ts](./impact-pages/src-features-notifications-server.ts.md) — score: 76; routes: 7; tests: 14; db: 12
 - [src/features/reports/server.ts](./impact-pages/src-features-reports-server.ts.md) — score: 76; routes: 6; tests: 18; db: 2
-- [src/features/agent-outcomes/summary.ts](./impact-pages/src-features-agent-outcomes-summary.ts.md) — score: 72; routes: 9; tests: 27; db: 0
-- [src/features/approvals/server.ts](./impact-pages/src-features-approvals-server.ts.md) — score: 72; routes: 8; tests: 26; db: 1
+- [src/features/workflow/revalidation.ts](./impact-pages/src-features-workflow-revalidation.ts.md) — score: 76; routes: 12; tests: 12; db: 0
 - [src/features/conversations/server.ts](./impact-pages/src-features-conversations-server.ts.md) — score: 72; routes: 6; tests: 24; db: 9
-- [src/features/events/server.ts](./impact-pages/src-features-events-server.ts.md) — score: 71; routes: 8; tests: 21; db: 5
 - [src/features/client-portal/insights.ts](./impact-pages/src-features-client-portal-insights.ts.md) — score: 70; routes: 11; tests: 27; db: 1
 - [src/features/client-portal/types.ts](./impact-pages/src-features-client-portal-types.ts.md) — score: 70; routes: 11; tests: 27; db: 2
-- [src/features/workflow/revalidation.ts](./impact-pages/src-features-workflow-revalidation.ts.md) — score: 68; routes: 11; tests: 11; db: 0
 - [src/features/client-portal/entry.ts](./impact-pages/src-features-client-portal-entry.ts.md) — score: 67; routes: 12; tests: 13; db: 3
-- [src/features/notifications/server.ts](./impact-pages/src-features-notifications-server.ts.md) — score: 67; routes: 5; tests: 11; db: 12
 - [src/features/client-portal/access.ts](./impact-pages/src-features-client-portal-access.ts.md) — score: 66; routes: 9; tests: 11; db: 0
 - [src/features/client-portal/config.ts](./impact-pages/src-features-client-portal-config.ts.md) — score: 63; routes: 10; tests: 13; db: 1
+- [src/features/client-portal/scope.ts](./impact-pages/src-features-client-portal-scope.ts.md) — score: 63; routes: 8; tests: 21; db: 0
 - [src/features/dashboard/server.ts](./impact-pages/src-features-dashboard-server.ts.md) — score: 62; routes: 6; tests: 22; db: 5
+- [src/features/approvals/summary.ts](./impact-pages/src-features-approvals-summary.ts.md) — score: 59; routes: 9; tests: 28; db: 0
 - [src/features/client-agent/types.ts](./impact-pages/src-features-client-agent-types.ts.md) — score: 59; routes: 4; tests: 17; db: 0
-- [src/features/approvals/summary.ts](./impact-pages/src-features-approvals-summary.ts.md) — score: 54; routes: 8; tests: 26; db: 0
+- [src/features/events/summary.ts](./impact-pages/src-features-events-summary.ts.md) — score: 56; routes: 9; tests: 23; db: 0
 - [src/features/campaign-action-items/server.ts](./impact-pages/src-features-campaign-action-items-server.ts.md) — score: 52; routes: 4; tests: 6; db: 2
-- [src/features/client-portal/scope.ts](./impact-pages/src-features-client-portal-scope.ts.md) — score: 52; routes: 7; tests: 19; db: 0
-- [src/features/events/summary.ts](./impact-pages/src-features-events-summary.ts.md) — score: 52; routes: 8; tests: 22; db: 0
 - [src/features/dashboard/summary.ts](./impact-pages/src-features-dashboard-summary.ts.md) — score: 47; routes: 6; tests: 23; db: 0
+- [src/features/campaigns/ownership-sync.ts](./impact-pages/src-features-campaigns-ownership-sync.ts.md) — score: 46; routes: 8; tests: 16; db: 0
 - [src/features/conversations/summary.ts](./impact-pages/src-features-conversations-summary.ts.md) — score: 46; routes: 6; tests: 24; db: 0
 - [src/features/client-agent/readers.ts](./impact-pages/src-features-client-agent-readers.ts.md) — score: 44; routes: 4; tests: 12; db: 0
+- [src/features/notifications/workflow.ts](./impact-pages/src-features-notifications-workflow.ts.md) — score: 43; routes: 5; tests: 10; db: 0
 - [src/features/client-agent/server.ts](./impact-pages/src-features-client-agent-server.ts.md) — score: 41; routes: 4; tests: 5; db: 0
 - [src/features/reports/summary.ts](./impact-pages/src-features-reports-summary.ts.md) — score: 41; routes: 6; tests: 19; db: 0
 - [src/features/client-agent/tool-contracts.ts](./impact-pages/src-features-client-agent-tool-contracts.ts.md) — score: 39; routes: 4; tests: 13; db: 0
-- [src/features/notifications/workflow.ts](./impact-pages/src-features-notifications-workflow.ts.md) — score: 38; routes: 4; tests: 8; db: 0
-- [src/features/campaigns/ownership-sync.ts](./impact-pages/src-features-campaigns-ownership-sync.ts.md) — score: 37; routes: 6; tests: 13; db: 0
+- [src/features/notifications/types.ts](./impact-pages/src-features-notifications-types.ts.md) — score: 39; routes: 7; tests: 14; db: 0
+- [src/features/event-follow-up-items/server.ts](./impact-pages/src-features-event-follow-up-items-server.ts.md) — score: 38; routes: 2; tests: 4; db: 3
 - [src/features/client-agent/range.ts](./impact-pages/src-features-client-agent-range.ts.md) — score: 35; routes: 4; tests: 9; db: 0
 - [src/features/client-agent/store.ts](./impact-pages/src-features-client-agent-store.ts.md) — score: 34; routes: 4; tests: 6; db: 2
 - [src/features/client-agent/thread-context.ts](./impact-pages/src-features-client-agent-thread-context.ts.md) — score: 34; routes: 4; tests: 10; db: 0
-- [src/features/event-follow-up-items/server.ts](./impact-pages/src-features-event-follow-up-items-server.ts.md) — score: 30; routes: 1; tests: 1; db: 3
-- [src/features/notifications/types.ts](./impact-pages/src-features-notifications-types.ts.md) — score: 30; routes: 5; tests: 11; db: 0
 - [src/features/campaign-comments/server.ts](./impact-pages/src-features-campaign-comments-server.ts.md) — score: 28; routes: 3; tests: 5; db: 1
 - [src/features/client-agent/tools/breakdowns.ts](./impact-pages/src-features-client-agent-tools-breakdowns.ts.md) — score: 28; routes: 4; tests: 8; db: 0
 - [src/features/client-agent/tools/compare-timeseries.ts](./impact-pages/src-features-client-agent-tools-compare-timeseries.ts.md) — score: 28; routes: 4; tests: 8; db: 0
@@ -96,15 +96,17 @@ This index links to pages meant to answer: if I touch this file, what else is li
 - [src/features/client-agent/tools/index.ts](./impact-pages/src-features-client-agent-tools-index.ts.md) — score: 23; routes: 4; tests: 7; db: 0
 - [src/features/client-portal/theme.ts](./impact-pages/src-features-client-portal-theme.ts.md) — score: 22; routes: 2; tests: 4; db: 0
 - [src/features/clients/summary.ts](./impact-pages/src-features-clients-summary.ts.md) — score: 22; routes: 4; tests: 4; db: 0
+- [src/features/event-comments/server.ts](./impact-pages/src-features-event-comments-server.ts.md) — score: 20; routes: 2; tests: 4; db: 1
 - [src/features/client-agent/components/agent-shell.tsx](./impact-pages/src-features-client-agent-components-agent-shell.tsx.md) — score: 19; routes: 1; tests: 2; db: 0
+- [src/features/notifications/discussions.ts](./impact-pages/src-features-notifications-discussions.ts.md) — score: 19; routes: 2; tests: 3; db: 0
 - [src/features/agents/summary.ts](./impact-pages/src-features-agents-summary.ts.md) — score: 17; routes: 1; tests: 4; db: 0
 - [src/features/reports/components/reports-surface.tsx](./impact-pages/src-features-reports-components-reports-surface.tsx.md) — score: 17; routes: 2; tests: 3; db: 0
 - [src/features/shared/admin-summary-types.ts](./impact-pages/src-features-shared-admin-summary-types.ts.md) — score: 16; routes: 2; tests: 4; db: 0
 - [src/features/asset-follow-up-items/server.ts](./impact-pages/src-features-asset-follow-up-items-server.ts.md) — score: 15; routes: 1; tests: 0; db: 3
 - [src/features/settings/summary.ts](./impact-pages/src-features-settings-summary.ts.md) — score: 13; routes: 1; tests: 2; db: 2
+- [src/features/events/client-operating.ts](./impact-pages/src-features-events-client-operating.ts.md) — score: 12; routes: 1; tests: 3; db: 0
 - [src/features/operations-center/summary.ts](./impact-pages/src-features-operations-center-summary.ts.md) — score: 12; routes: 1; tests: 5; db: 0
 - [src/features/campaigns/client-operating.ts](./impact-pages/src-features-campaigns-client-operating.ts.md) — score: 11; routes: 1; tests: 2; db: 0
-- [src/features/notifications/discussions.ts](./impact-pages/src-features-notifications-discussions.ts.md) — score: 11; routes: 1; tests: 2; db: 0
 - [src/features/users/summary.ts](./impact-pages/src-features-users-summary.ts.md) — score: 11; routes: 1; tests: 2; db: 1
 - [src/features/campaigns/server.ts](./impact-pages/src-features-campaigns-server.ts.md) — score: 10; routes: 1; tests: 1; db: 0
 - [src/features/client-agent/components/conversation-pane.tsx](./impact-pages/src-features-client-agent-components-conversation-pane.tsx.md) — score: 7; routes: 1; tests: 2; db: 0
@@ -113,7 +115,7 @@ This index links to pages meant to answer: if I touch this file, what else is li
 
 ## Shared components
 
-- [src/components/ui/button.tsx](./impact-pages/src-components-ui-button.tsx.md) — score: 109; routes: 14; tests: 9; db: 0
+- [src/components/ui/button.tsx](./impact-pages/src-components-ui-button.tsx.md) — score: 111; routes: 15; tests: 12; db: 0
 - [src/components/ui/card.tsx](./impact-pages/src-components-ui-card.tsx.md) — score: 96; routes: 15; tests: 7; db: 0
 - [src/components/admin/page-header.tsx](./impact-pages/src-components-admin-page-header.tsx.md) — score: 50; routes: 9; tests: 5; db: 0
 - [src/components/ui/skeleton.tsx](./impact-pages/src-components-ui-skeleton.tsx.md) — score: 50; routes: 12; tests: 0; db: 0
@@ -160,27 +162,27 @@ This index links to pages meant to answer: if I touch this file, what else is li
 
 ## Shared web libraries
 
-- [src/lib/supabase.ts](./impact-pages/src-lib-supabase.ts.md) — score: 360; routes: 38; tests: 77; db: 0
-- [src/lib/formatters.tsx](./impact-pages/src-lib-formatters.tsx.md) — score: 223; routes: 21; tests: 44; db: 0
-- [src/lib/campaign-client-assignment.ts](./impact-pages/src-lib-campaign-client-assignment.ts.md) — score: 196; routes: 24; tests: 58; db: 2
-- [src/lib/api-helpers.ts](./impact-pages/src-lib-api-helpers.ts.md) — score: 175; routes: 27; tests: 19; db: 0
-- [src/lib/member-access.ts](./impact-pages/src-lib-member-access.ts.md) — score: 161; routes: 19; tests: 56; db: 4
-- [src/lib/client-slug.ts](./impact-pages/src-lib-client-slug.ts.md) — score: 135; routes: 24; tests: 59; db: 0
-- [src/lib/utils.ts](./impact-pages/src-lib-utils.ts.md) — score: 129; routes: 28; tests: 11; db: 0
-- [src/lib/status.ts](./impact-pages/src-lib-status.ts.md) — score: 115; routes: 21; tests: 44; db: 0
+- [src/lib/supabase.ts](./impact-pages/src-lib-supabase.ts.md) — score: 371; routes: 39; tests: 79; db: 0
+- [src/lib/formatters.tsx](./impact-pages/src-lib-formatters.tsx.md) — score: 230; routes: 22; tests: 46; db: 0
+- [src/lib/campaign-client-assignment.ts](./impact-pages/src-lib-campaign-client-assignment.ts.md) — score: 201; routes: 25; tests: 60; db: 2
+- [src/lib/api-helpers.ts](./impact-pages/src-lib-api-helpers.ts.md) — score: 183; routes: 28; tests: 20; db: 0
+- [src/lib/member-access.ts](./impact-pages/src-lib-member-access.ts.md) — score: 170; routes: 20; tests: 58; db: 4
+- [src/lib/client-slug.ts](./impact-pages/src-lib-client-slug.ts.md) — score: 140; routes: 25; tests: 61; db: 0
+- [src/lib/utils.ts](./impact-pages/src-lib-utils.ts.md) — score: 135; routes: 29; tests: 14; db: 0
+- [src/lib/status.ts](./impact-pages/src-lib-status.ts.md) — score: 120; routes: 22; tests: 46; db: 0
 - [src/lib/constants.ts](./impact-pages/src-lib-constants.ts.md) — score: 108; routes: 15; tests: 31; db: 0
+- [src/lib/workspace-types.ts](./impact-pages/src-lib-workspace-types.ts.md) — score: 95; routes: 13; tests: 34; db: 0
+- [src/lib/api-schemas.ts](./impact-pages/src-lib-api-schemas.ts.md) — score: 88; routes: 11; tests: 11; db: 0
 - [src/lib/meta-campaigns.ts](./impact-pages/src-lib-meta-campaigns.ts.md) — score: 85; routes: 11; tests: 24; db: 2
-- [src/lib/workspace-types.ts](./impact-pages/src-lib-workspace-types.ts.md) — score: 84; routes: 11; tests: 31; db: 0
-- [src/lib/api-schemas.ts](./impact-pages/src-lib-api-schemas.ts.md) — score: 82; routes: 10; tests: 10; db: 0
 - [src/lib/meta-api.ts](./impact-pages/src-lib-meta-api.ts.md) — score: 69; routes: 11; tests: 26; db: 0
 - [src/lib/database.types.ts](./impact-pages/src-lib-database.types.ts.md) — score: 68; routes: 0; tests: 0; db: 34
-- [src/lib/agent-dispatch.ts](./impact-pages/src-lib-agent-dispatch.ts.md) — score: 45; routes: 5; tests: 8; db: 1
+- [src/lib/agent-dispatch.ts](./impact-pages/src-lib-agent-dispatch.ts.md) — score: 58; routes: 7; tests: 11; db: 1
 - [src/lib/ticketmaster/tm1-client.ts](./impact-pages/src-lib-ticketmaster-tm1-client.ts.md) — score: 42; routes: 3; tests: 4; db: 0
 - [src/lib/agent-jobs.ts](./impact-pages/src-lib-agent-jobs.ts.md) — score: 40; routes: 5; tests: 7; db: 2
-- [src/lib/action-item-labels.ts](./impact-pages/src-lib-action-item-labels.ts.md) — score: 31; routes: 4; tests: 7; db: 0
+- [src/lib/action-item-labels.ts](./impact-pages/src-lib-action-item-labels.ts.md) — score: 38; routes: 5; tests: 9; db: 0
 - [src/lib/env.ts](./impact-pages/src-lib-env.ts.md) — score: 31; routes: 0; tests: 0; db: 0
 - [src/lib/export-csv.ts](./impact-pages/src-lib-export-csv.ts.md) — score: 23; routes: 4; tests: 3; db: 0
-- [src/lib/text-utils.ts](./impact-pages/src-lib-text-utils.ts.md) — score: 16; routes: 3; tests: 1; db: 0
+- [src/lib/text-utils.ts](./impact-pages/src-lib-text-utils.ts.md) — score: 22; routes: 4; tests: 2; db: 0
 - [src/lib/to-slug.ts](./impact-pages/src-lib-to-slug.ts.md) — score: 14; routes: 2; tests: 2; db: 0
 - [src/lib/campaign-event-match.ts](./impact-pages/src-lib-campaign-event-match.ts.md) — score: 13; routes: 2; tests: 3; db: 0
 - [src/lib/google-ads.ts](./impact-pages/src-lib-google-ads.ts.md) — score: 13; routes: 0; tests: 1; db: 0

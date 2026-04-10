@@ -1,6 +1,6 @@
 # Schema object: pf_update_updated_at
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 - Kinds: function
 - Migrations: supabase/migrations/20260306155500_updated_at_function_search_paths.sql

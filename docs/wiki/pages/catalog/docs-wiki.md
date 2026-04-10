@@ -1,6 +1,6 @@
 # Docs / Wiki (manual control pages)
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 - Files: 10
 - File kinds: Markdown doc (9), file (.py) (1)
@@ -32,16 +32,16 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Outlet Repo Wiki Index \| Primary file-by-file catalog \| Overview \| Structural inventory \| Secondary audit pages \| Operations
 
 ## `docs/wiki/log.md`
-- Status: tracked-clean
+- Status: modified
 - System: docs
 - Group: Docs / Wiki (manual control pages)
 - Ownership: repo wiki source
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 116
-- Bytes: 10205
-- Headings: Repo Wiki Log, [2026-04-10] client-campaign \| operating loop slice and verification hygiene, [2026-04-10] guides \| service boundaries and human read-order pages, [2026-04-10] profiles \| business rules and per-table pages, [2026-04-10] maps \| env/integrations and lifecycle narratives, [2026-04-10] maps \| auth/access, workflow, and mutations, [2026-04-10] profiles \| deep route and feature pages, [2026-04-10] maps \| api contracts, schema grouping, and component trees, [2026-04-10] maps \| database references and test coverage, [2026-04-10] maps \| route stacks and key file symbols, … (+3 more)
-- Contents summary: headings: Repo Wiki Log \| [2026-04-10] client-campaign \| operating loop slice and verification hygiene \| [2026-04-10] guides \| service boundaries and human read-order pages \| [2026-04-10] profiles \| business rules and per-table pages \| [2026-04-10] maps \| env/integrations and lifecycle narratives \| [2026-04-10] maps \|…
+- Lines: 127
+- Bytes: 11404
+- Headings: Repo Wiki Log, [2026-04-10] client-events \| operating loop slice on event detail, [2026-04-10] client-campaign \| operating loop slice and verification hygiene, [2026-04-10] guides \| service boundaries and human read-order pages, [2026-04-10] profiles \| business rules and per-table pages, [2026-04-10] maps \| env/integrations and lifecycle narratives, [2026-04-10] maps \| auth/access, workflow, and mutations, [2026-04-10] profiles \| deep route and feature pages, [2026-04-10] maps \| api contracts, schema grouping, and component trees, [2026-04-10] maps \| database references and test coverage, … (+4 more)
+- Contents summary: headings: Repo Wiki Log \| [2026-04-10] client-events \| operating loop slice on event detail \| [2026-04-10] client-campaign \| operating loop slice and verification hygiene \| [2026-04-10] guides \| service boundaries and human read-order pages \| [2026-04-10] profiles \| business rules and per-table pages \| [2026-04-10] ma…
 
 ## `docs/wiki/pages/audits/dead-ends-and-dead-code.md`
 - Status: tracked-clean

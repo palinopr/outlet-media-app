@@ -1,11 +1,11 @@
 # Repo File Catalog
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
 This catalog is documentation-first: it describes what files exist, what each file contains, how each file is constructed, and which system or folder ownership it belongs to.
 
 ## Scope
-- Cataloged files: 717
+- Cataloged files: 727
 - Catalog uses the current working tree, so modified and untracked source files are included if they live in the documented code/doc paths.
 - Excluded from the generated catalog to avoid noise or recursion: `.git/`, `node_modules/`, `.next/`, `agent/.next/`, `agent/dist/`, `test-results/`, `tmp-playwright/`, `session/`, `.opencode/`, `.claude/`, `.worktrees/`, and `docs/wiki/pages/catalog/`.
 
@@ -14,10 +14,10 @@ This catalog is documentation-first: it describes what files exist, what each fi
 - database: 68
 - docs: 112
 - github: 2
-- public: 15
+- public: 17
 - root: 25
 - tests: 49
-- web: 403
+- web: 411
 
 ## Cross-link and dependency pages
 - [Group Dependency Map](./group-dependencies.md) — internal dependencies rolled up by catalog group
@@ -64,11 +64,11 @@ This catalog is documentation-first: it describes what files exist, what each fi
 - [Docs / Wiki (manual control pages)](./docs-wiki.md) — 10 files
 - [.github](./github.md) — 2 files
 - [Root Mocks](./mocks.md) — 1 files
-- [Public Assets](./public.md) — 15 files
+- [Public Assets](./public.md) — 17 files
 - [Root Files](./root.md) — 24 files
 - [src/app / admin](./src-app-admin.md) — 52 files
-- [src/app / api](./src-app-api.md) — 38 files
-- [src/app / client](./src-app-client.md) — 59 files
+- [src/app / api](./src-app-api.md) — 40 files
+- [src/app / client](./src-app-client.md) — 63 files
 - [src/app / root routes](./src-app-root.md) — 18 files
 - [src/components / admin](./src-components-admin.md) — 62 files
 - [src/components / charts](./src-components-charts.md) — 2 files
@@ -90,8 +90,9 @@ This catalog is documentation-first: it describes what files exist, what each fi
 - [src/features / clients](./src-features-clients.md) — 1 files
 - [src/features / conversations](./src-features-conversations.md) — 2 files
 - [src/features / dashboard](./src-features-dashboard.md) — 2 files
+- [src-features-event-comments](./src-features-event-comments.md) — 1 files
 - [src/features / event-follow-up-items](./src-features-event-follow-up-items.md) — 1 files
-- [src/features / events](./src-features-events.md) — 2 files
+- [src/features / events](./src-features-events.md) — 3 files
 - [src/features / invitations](./src-features-invitations.md) — 4 files
 - [src/features / notifications](./src-features-notifications.md) — 4 files
 - [src/features / operations-center](./src-features-operations-center.md) — 1 files

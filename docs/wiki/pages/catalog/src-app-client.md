@@ -1,9 +1,9 @@
 # src/app / client
 
-Generated from the current working tree on 2026-04-10 15:42:38.
+Generated from the current working tree on 2026-04-10 16:14:38.
 
-- Files: 59
-- File kinds: React/TSX module (25), test file (11), Next.js page (9), Next.js loading UI (6), TypeScript module (6), Next.js layout (2)
+- Files: 63
+- File kinds: React/TSX module (27), test file (13), Next.js page (9), Next.js loading UI (6), TypeScript module (6), Next.js layout (2)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -561,6 +561,89 @@ Each entry below documents the file path, system ownership, construction style, 
 - Defines: EventCard
 - Contents summary: exports: EventCard; internal imports: 4; package imports: 2
 
+## `src/app/client/[slug]/components/event-discussion-form.test.tsx`
+- Status: untracked
+- System: web
+- Group: src/app / client
+- Ownership: web client route surface
+- Type: test file
+- Construction: test specification
+- Route context: /client/[slug]/components
+- Lines: 69
+- Bytes: 2091
+- Imports (internal): src/app/client/[slug]/components/event-discussion-form.tsx
+- Imports (packages): @testing-library/react, vitest, next/navigation
+- Depends on groups: src/app / client
+- Symbol details: const refresh
+- Defines: refresh
+- Tests / describe labels: EventDiscussionForm, posts a shared event comment and refreshes the page, shows an error when the comment request fails
+- Contents summary: tests/describes: EventDiscussionForm; posts a shared event comment and refreshes the page; shows an error when the comment request fails; internal imports: 1; package imports: 3
+
+## `src/app/client/[slug]/components/event-discussion-form.tsx`
+- Status: untracked
+- System: web
+- Group: src/app / client
+- Ownership: web client route surface
+- Type: React/TSX module
+- Construction: component/UI-oriented module, contains `use client`
+- Route context: /client/[slug]/components
+- Lines: 98
+- Bytes: 3415
+- Imports (internal): src/components/ui/button.tsx
+- Imports (packages): react, next/navigation, lucide-react
+- Imported by: src/app/client/[slug]/components/event-discussion-form.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/client/[slug]/components/event-operating-panel.tsx
+- Depends on groups: src/components / ui
+- Used by groups: src/app / client
+- Route owners: src/app/client/[slug]/event/[eventId]/page.tsx
+- Tests related: src/app/client/[slug]/components/event-discussion-form.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related (direct): src/app/client/[slug]/components/event-discussion-form.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx
+- Exports: EventDiscussionForm
+- Symbol details: function EventDiscussionForm (exported), interface EventDiscussionFormProps
+- Defines: EventDiscussionForm, handleSubmit, router, nextContent, response, body, EventDiscussionFormProps
+- Contents summary: contains `use client`; exports: EventDiscussionForm; internal imports: 1; package imports: 3
+
+## `src/app/client/[slug]/components/event-operating-panel.test.tsx`
+- Status: untracked
+- System: web
+- Group: src/app / client
+- Ownership: web client route surface
+- Type: test file
+- Construction: test specification
+- Route context: /client/[slug]/components
+- Lines: 163
+- Bytes: 5737
+- Imports (internal): src/app/client/[slug]/components/event-operating-panel.tsx, src/features/events/client-operating.ts, src/app/client/[slug]/components/event-discussion-form.tsx
+- Imports (packages): @testing-library/react, vitest
+- Depends on groups: src/app / client, src/features / events
+- Symbol details: const data
+- Defines: data
+- Tests / describe labels: EventOperatingPanel, renders the event workflow sections on the client event detail page
+- Contents summary: tests/describes: EventOperatingPanel; renders the event workflow sections on the client event detail page; internal imports: 3; package imports: 2
+
+## `src/app/client/[slug]/components/event-operating-panel.tsx`
+- Status: untracked
+- System: web
+- Group: src/app / client
+- Ownership: web client route surface
+- Type: React/TSX module
+- Construction: component/UI-oriented module
+- Route context: /client/[slug]/components
+- Lines: 368
+- Bytes: 15964
+- Imports (internal): src/lib/formatters.tsx, src/lib/action-item-labels.ts, src/lib/workspace-types.ts, src/features/events/client-operating.ts, src/features/event-comments/server.ts, src/app/client/[slug]/components/event-discussion-form.tsx
+- Imports (packages): lucide-react
+- Imported by: src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/client/[slug]/event/[eventId]/page.tsx
+- Depends on groups: src/lib, src/features / events, src-features-event-comments, src/app / client
+- Used by groups: src/app / client
+- Route owners: src/app/client/[slug]/event/[eventId]/page.tsx
+- Routes related (direct): src/app/client/[slug]/event/[eventId]/page.tsx
+- Tests related: src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related (direct): src/app/client/[slug]/components/event-operating-panel.test.tsx
+- Exports: EventOperatingPanel
+- Symbol details: function EventOperatingPanel (exported), function toneBadge, function followUpPriorityTone, function outcomeTone, function outcomeLabel, function compactText, function groupDiscussionThreads, function SectionCard, function EmptyState, interface EventOperatingPanelProps
+- Defines: toneBadge, followUpPriorityTone, outcomeTone, outcomeLabel, compactText, groupDiscussionThreads, SectionCard, EmptyState, EventOperatingPanel, text, repliesByParent, current, … (+5 more)
+- Contents summary: exports: EventOperatingPanel; internal imports: 6; package imports: 1
+
 ## `src/app/client/[slug]/components/event-status-badge.tsx`
 - Status: tracked-clean
 - System: web
@@ -798,26 +881,26 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: tests/describes: EventDetailPage; links missing events back to the events index; internal imports: 3; package imports: 2
 
 ## `src/app/client/[slug]/event/[eventId]/page.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/app / client
 - Ownership: web client route surface
 - Type: Next.js page
 - Construction: App Router page, component/UI-oriented module
 - Route: /client/[slug]/event/[eventId]
-- Lines: 609
-- Bytes: 25703
-- Imports (internal): src/lib/formatters.tsx, src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/components/progress-bar.tsx, src/app/client/[slug]/components/event-status-badge.tsx, src/app/client/[slug]/components/audience-section.tsx, src/app/client/[slug]/components/client-portal-footer.tsx, src/components/client/charts/index.ts, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts, src/features/client-portal/access.ts
+- Lines: 619
+- Bytes: 26136
+- Imports (internal): src/lib/formatters.tsx, src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/components/progress-bar.tsx, src/app/client/[slug]/components/event-status-badge.tsx, src/app/client/[slug]/components/audience-section.tsx, src/app/client/[slug]/components/client-portal-footer.tsx, src/app/client/[slug]/components/event-operating-panel.tsx, src/components/client/charts/index.ts, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts, … (+2 more)
 - Imports (packages): next/link, lucide-react
 - Imported by: src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/shell-import-smoke.test.ts
-- Depends on groups: src/lib, src/app / client, src/components / client, src/features / client-portal
+- Depends on groups: src/lib, src/app / client, src/components / client, src/features / client-portal, src/features / events
 - Used by groups: src/app / client, src/app / root routes
 - Tests related: src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Tests related (direct): src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Exports: EventDetailPage, default
 - Symbol details: default function EventDetailPage (exported), function PlatformBadge, function MetricCard, function MomentumRow, function TrendIcon, function ChannelCell, function buildEventBrief, interface Props
-- Defines: EventDetailPage, PlatformBadge, MetricCard, MomentumRow, TrendIcon, ChannelCell, buildEventBrief, data, dt, daysUntilEvent, hasTodayData, hasEdpData, … (+7 more)
-- Contents summary: Next.js page for `/client/[slug]/event/[eventId]`; exports: EventDetailPage, default; internal imports: 10; package imports: 2
+- Defines: EventDetailPage, PlatformBadge, MetricCard, MomentumRow, TrendIcon, ChannelCell, buildEventBrief, data, operatingView, dt, daysUntilEvent, hasTodayData, … (+8 more)
+- Contents summary: Next.js page for `/client/[slug]/event/[eventId]`; exports: EventDetailPage, default; internal imports: 12; package imports: 2
 
 ## `src/app/client/[slug]/events/error.tsx`
 - Status: tracked-clean

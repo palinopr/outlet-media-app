@@ -123,6 +123,14 @@ interface ListCampaignSystemEventsOptions {
   limit?: number;
 }
 
+interface ListEventSystemEventsOptions {
+  audience?: "all" | SystemEventVisibility;
+  clientSlug: string;
+  eventId: string;
+  campaignIds?: string[] | null;
+  limit?: number;
+}
+
 const LEGACY_SYSTEM_EVENT_SELECT =
   "id, created_at, event_name, visibility, actor_type, actor_id, actor_name, client_slug, summary, detail, entity_type, entity_id, page_id, task_id, metadata";
 
@@ -132,6 +140,17 @@ const SYSTEM_EVENT_SELECT =
 function eventMatchesCampaign(event: SystemEvent, campaignId: string) {
   if (event.entityType === "campaign" && event.entityId === campaignId) return true;
   return event.metadata.campaignId === campaignId;
+}
+
+function eventMatchesEventContext(
+  event: SystemEvent,
+  eventId: string,
+  linkedCampaignIds: Set<string>,
+) {
+  if (systemEventEventId(event) === eventId) return true;
+
+  const campaignId = systemEventCampaignId(event);
+  return !!campaignId && linkedCampaignIds.has(campaignId);
 }
 
 function systemEventCampaignId(event: SystemEvent) {
@@ -417,6 +436,21 @@ export async function listCampaignSystemEvents(
   });
 
   return events.filter((event) => eventMatchesCampaign(event, options.campaignId)).slice(0, options.limit ?? 8);
+}
+
+export async function listEventSystemEvents(
+  options: ListEventSystemEventsOptions,
+): Promise<SystemEvent[]> {
+  const linkedCampaignIds = new Set((options.campaignIds ?? []).filter(Boolean));
+  const events = await listSystemEvents({
+    audience: options.audience,
+    clientSlug: options.clientSlug,
+    limit: Math.max((options.limit ?? 8) * 8, 32),
+  });
+
+  return events
+    .filter((event) => eventMatchesEventContext(event, options.eventId, linkedCampaignIds))
+    .slice(0, options.limit ?? 8);
 }
 
 export function summarizeChangedFields(fields: string[]): string | null {
