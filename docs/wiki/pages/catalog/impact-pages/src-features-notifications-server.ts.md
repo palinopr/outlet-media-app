@@ -1,0 +1,19 @@
+# Impact: src/features/notifications/server.ts
+
+Generated from the current working tree on 2026-04-10 15:42:38.
+
+- Category: Feature files
+- Impact score: 67
+- Ownership: feature module: notifications
+- Feature module: notifications
+- Route owners: src/app/api/campaign-comments/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx
+- Imported by: __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/features/notifications/discussions.ts, src/features/notifications/workflow.ts
+- Tests related: __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/api/campaign-comments/route.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/app/shell-import-smoke.test.ts
+- DB objects: approval_requests, campaign_action_items, campaign_comments, asset_comments, asset_follow_up_items, event_comments, event_follow_up_items, notifications, clients, client_members, client_member_campaigns, client_member_events
+- Env vars: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+- Mutation symbols: createNotification, requestedLimit, assignedRows
+- Auth signals: imports Clerk server auth, calls currentUser(), references membership/scope access concepts
+- Behavior signals: none
+- Depends on groups: src/features / assets, src/features / campaigns, src/lib, src/features / notifications
+- Used by groups: Tests / Features, src/features / notifications
+- Summary: exports: createNotification, listNotificationsForUser, listClientNotificationRecipients, listAdminNotificationRecipients, isRetiredCrmApprovalRow, filterNotificationsByScope; internal imports: 6; package imports: 1
