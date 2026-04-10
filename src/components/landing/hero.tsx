@@ -1,11 +1,15 @@
 import Image from "next/image";
 
-const PROOF_PILLS = ["370K+ boletos", "ROAS 13.6x", "Dashboards live"] as const;
+const PROOF_PILLS = [
+  "Don Omar BCN 30,052 boletos",
+  "KYBBA 2.8x ROAS",
+  "Portal + agent",
+] as const;
 
 const HERO_STATS = [
-  { value: "PR + US", label: "Mercados operados" },
-  { value: "24h", label: "Tiempo de respuesta" },
-  { value: "Full funnel", label: "Media + reporte" },
+  { value: "30,052", label: "Don Omar BCN tickets" },
+  { value: "2.8x", label: "KYBBA portal ROAS" },
+  { value: "8.73x", label: "Alofoke surge" },
 ] as const;
 
 export function LandingHero() {
@@ -29,18 +33,18 @@ export function LandingHero() {
           Puerto Rico performance operators
         </p>
         <h1 className="mx-auto mt-4 max-w-[12ch] text-[2.15rem] font-bold leading-[0.92] tracking-[-0.06em] text-white sm:text-[3rem]">
-          Resultados reales en PR. Sin “agency blackout”.
+          Resultados reales. Visibilidad real. Sin agency blackout.
         </h1>
         <p className="mx-auto mt-3.5 max-w-[19rem] text-[14px] leading-6 text-slate-300 sm:max-w-[22rem] sm:text-[15px] sm:leading-7">
-          Paid media, creatividad y reporting en tiempo real para operadores que quieren saber qué
-          creativo vende, qué canal escala y dónde se fuga el dinero.
+          Paid media, reporting live y un portal con agente que responde sobre campanas, eventos,
+          creativos y proximos pasos usando la misma data que mueve la operacion.
         </p>
 
         <div className="mt-5 flex flex-wrap justify-center gap-2">
           {PROOF_PILLS.map((pill) => (
             <span
               key={pill}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.06] px-3 py-1.5 text-[9px] font-medium uppercase tracking-[0.18em] text-slate-200 sm:text-[10px]"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/[0.06] px-3 py-1.5 text-[9px] font-medium uppercase tracking-[0.16em] text-slate-200 sm:text-[10px]"
             >
               <span className="size-1.5 rounded-full bg-[#fbbf24]" />
               {pill}

@@ -1,6 +1,6 @@
 # Table: client_agent_threads
 
-Generated from the current working tree on 2026-04-10 18:02:26.
+Generated from the current working tree on 2026-04-10 18:46:37.
 
 - Category: Client agent conversation workflow
 - Kinds: table

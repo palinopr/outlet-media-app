@@ -1,6 +1,6 @@
 # /client/[slug]/event/[eventId]
 
-Generated from the current working tree on 2026-04-10 18:02:26.
+Generated from the current working tree on 2026-04-10 18:46:37.
 
 - Route file: `src/app/client/[slug]/event/[eventId]/page.tsx`
 - Type: Next.js page

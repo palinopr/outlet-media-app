@@ -1,6 +1,6 @@
 # Group Dependency Map
 
-Generated from the current working tree on 2026-04-10 18:02:26.
+Generated from the current working tree on 2026-04-10 18:46:37.
 
 This page summarizes internal file-to-file dependencies rolled up to the catalog group level.
 
@@ -77,7 +77,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## Docs / Screenshots
 - Files in group: 30
 - Depends on groups: none
-- Used by groups: none
+- Used by groups: src/components / landing (2)
 
 ## Docs / Superpowers Plans
 - Files in group: 11
@@ -151,7 +151,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 
 ## src/components / landing
 - Files in group: 9
-- Depends on groups: src/components / ui (2)
+- Depends on groups: src/components / ui (2), Docs / Screenshots (2)
 - Used by groups: src/app / root routes (6)
 
 ## src/components / shared

@@ -1,6 +1,6 @@
 # Table Profiles
 
-Generated from the current working tree on 2026-04-10 18:02:26.
+Generated from the current working tree on 2026-04-10 18:46:37.
 
 This index links to deeper per-table pages for migration-discovered database tables.
 

@@ -1,5 +1,15 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | replace generic proof with sourced wins and real portal AI messaging
+- Reworked the public `/landing` proof and AI sections to reflect repo-grounded evidence instead of generic agency-style claims.
+- Updated the landing hero and credibility sections so the visible success claims now lean on sourced internal examples already tracked in the repo, including:
+  - Don Omar BCN ticket volume and ROAS
+  - KYBBA live portal metrics from captured product screenshots
+  - Alofoke / Arjona / Chris R quick-win metrics
+- Rebuilt the proof area around larger client/artist visuals, a real portal screenshot, and stronger case-study cards instead of the earlier placeholder-style stat tiles.
+- Added a more explicit `portal + agent` card in `src/components/landing/features.tsx` so the landing explains the actual client-safe conversational reporting model already present in the app.
+- Added FAQ coverage clarifying that the portal agent is read-only reporting/help, not a fully autonomous campaign operator.
+
 ## [2026-04-10] landing | tighten typography scale and spacing rhythm
 - Ran a focused visual cleanup pass on the public `/landing` page after the broader proof-layout redesign.
 - Tightened typography and vertical rhythm across the landing route and section components:

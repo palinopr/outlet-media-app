@@ -19,6 +19,11 @@ const FAQS = [
     answer:
       "Revisamos oferta, funnel, creativos, tracking y reporting. Sales pitch no. Sales con una lectura clara de fugas, prioridades y próximos movimientos.",
   },
+  {
+    question: "¿El agente corre todo solo?",
+    answer:
+      "No. El agente del portal ayuda con reporting, contexto y follow-through visible. La ejecucion sigue siendo controlada y el cliente no ve estructura interna ni setup sensible.",
+  },
 ] as const;
 
 export function LandingFAQ() {

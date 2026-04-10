@@ -1,6 +1,6 @@
 # src/app / root routes
 
-Generated from the current working tree on 2026-04-10 18:02:26.
+Generated from the current working tree on 2026-04-10 18:46:37.
 
 - Files: 18
 - File kinds: Next.js page (8), binary asset (3), React/TSX module (2), test file (2), Markdown doc (1), file (.css) (1), Next.js layout (1)
@@ -113,7 +113,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: asset/binary file; size: 64202 bytes
 
 ## `src/app/landing/page.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/app / root routes
 - Ownership: web root/shared route surface

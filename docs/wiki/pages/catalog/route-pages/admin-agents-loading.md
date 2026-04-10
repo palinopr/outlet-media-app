@@ -1,6 +1,6 @@
 # /admin/agents
 
-Generated from the current working tree on 2026-04-10 18:02:26.
+Generated from the current working tree on 2026-04-10 18:46:37.
 
 - Route file: `src/app/admin/agents/loading.tsx`
 - Type: Next.js loading UI

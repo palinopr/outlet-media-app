@@ -13,7 +13,7 @@ const STEPS = [
   },
   {
     title: "3. Escalamiento",
-    description: "Lanzamos con visibilidad total en dashboards.",
+    description: "Lanzamos con reporting live, approvals visibles y follow-through claro.",
     icon: BarChart3,
   },
 ] as const;

@@ -1,6 +1,6 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-10 18:02:26.
+Generated from the current working tree on 2026-04-10 18:46:37.
 
 - Files: 9
 - File kinds: React/TSX module (9)
@@ -8,7 +8,7 @@ Generated from the current working tree on 2026-04-10 18:02:26.
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
 ## `src/components/landing/contact-form.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
@@ -35,17 +35,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 195
-- Bytes: 8371
+- Lines: 240
+- Bytes: 10574
+- Imports (internal): docs/screenshots/campaign-mobile-viewport.png
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
+- Depends on groups: Docs / Screenshots
 - Used by groups: src/app / root routes
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: LandingCredibility
-- Symbol details: function LandingCredibility (exported), const TRUST_ITEMS, const RESULT_CARDS, const DIFFERENTIATORS
-- Defines: LandingCredibility, TRUST_ITEMS, RESULT_CARDS, DIFFERENTIATORS
-- Contents summary: exports: LandingCredibility; package imports: 2
+- Symbol details: function LandingCredibility (exported), const TRUST_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const DON_OMAR_METRICS
+- Defines: LandingCredibility, TRUST_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, DON_OMAR_METRICS
+- Contents summary: exports: LandingCredibility; internal imports: 1; package imports: 2
 
 ## `src/components/landing/faq.tsx`
 - Status: modified
@@ -54,8 +56,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
-- Lines: 73
-- Bytes: 3109
+- Lines: 78
+- Bytes: 3360
 - Imports (packages): react, lucide-react
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
@@ -73,17 +75,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 56
-- Bytes: 2781
-- Imports (packages): next/image
+- Lines: 145
+- Bytes: 6335
+- Imports (internal): docs/screenshots/campaign-mobile-creatives.png
+- Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
+- Depends on groups: Docs / Screenshots
 - Used by groups: src/app / root routes
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: LandingFeatures
-- Symbol details: function LandingFeatures (exported)
-- Defines: LandingFeatures
-- Contents summary: exports: LandingFeatures; package imports: 1
+- Symbol details: function LandingFeatures (exported), const AGENT_FEATURES
+- Defines: LandingFeatures, AGENT_FEATURES, Icon
+- Contents summary: exports: LandingFeatures; internal imports: 1; package imports: 2
 
 ## `src/components/landing/footer.tsx`
 - Status: tracked-clean
@@ -107,8 +111,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 87
-- Bytes: 4205
+- Lines: 91
+- Bytes: 4239
 - Imports (packages): next/image
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
@@ -127,7 +131,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Lines: 57
-- Bytes: 2260
+- Bytes: 2286
 - Imports (packages): lucide-react
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes

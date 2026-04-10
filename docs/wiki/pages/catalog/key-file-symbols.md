@@ -1,6 +1,6 @@
 # Key File Symbol Map
 
-Generated from the current working tree on 2026-04-10 18:02:26.
+Generated from the current working tree on 2026-04-10 18:46:37.
 
 This page highlights key code files and lists their exported symbols, top-level definitions, and route/test ownership links.
 
@@ -2594,11 +2594,11 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Type: React/TSX module
 - Ownership: landing page UI components
 - Exports: LandingCredibility
-- Symbol details: function LandingCredibility (exported), const TRUST_ITEMS, const RESULT_CARDS, const DIFFERENTIATORS
-- Defines: LandingCredibility, TRUST_ITEMS, RESULT_CARDS, DIFFERENTIATORS
+- Symbol details: function LandingCredibility (exported), const TRUST_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const DON_OMAR_METRICS
+- Defines: LandingCredibility, TRUST_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, DON_OMAR_METRICS
 - Imported by: src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
-- Contents summary: exports: LandingCredibility; package imports: 2
+- Contents summary: exports: LandingCredibility; internal imports: 1; package imports: 2
 
 ### `src/components/landing/faq.tsx`
 - Type: React/TSX module
@@ -2614,11 +2614,11 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Type: React/TSX module
 - Ownership: landing page UI components
 - Exports: LandingFeatures
-- Symbol details: function LandingFeatures (exported)
-- Defines: LandingFeatures
+- Symbol details: function LandingFeatures (exported), const AGENT_FEATURES
+- Defines: LandingFeatures, AGENT_FEATURES, Icon
 - Imported by: src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
-- Contents summary: exports: LandingFeatures; package imports: 1
+- Contents summary: exports: LandingFeatures; internal imports: 1; package imports: 2
 
 ### `src/components/landing/footer.tsx`
 - Type: React/TSX module
