@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | make dark background fill mobile viewport
+- Updated `src/app/landing/page.tsx` so the dark landing background fills the full phone viewport on mobile instead of leaving the bright desktop backdrop visible around the content.
+- Kept the bright studio-style outer backdrop for larger screens only, where it still helps sell the mock-inspired presentation.
+- Flattened the mobile outer spacing so the landing sections read as a full-screen page on actual phones rather than dark cards floating on a light canvas.
+
 ## [2026-04-10] admin-web | add client request handling tabs on campaign and event detail
 - Added a shared admin `ClientRequestsPanel` in `src/components/admin/client-requests-panel.tsx` so admins can handle client request threads directly from the owning campaign or event.
 - Added real admin request tabs on:

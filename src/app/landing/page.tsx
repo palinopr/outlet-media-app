@@ -29,17 +29,17 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <div
-      className={`${landingFont.className} relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f7fbff_0%,#ecf4fb_46%,#eef5fb_100%)] text-white`}
+      className={`${landingFont.className} relative min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(31,94,255,0.18),transparent_26%),linear-gradient(180deg,#081320_0%,#060d18_48%,#040913_100%)] text-white lg:bg-[linear-gradient(180deg,#f7fbff_0%,#ecf4fb_46%,#eef5fb_100%)]`}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(31,94,255,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.95),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
-      <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)] [background-size:140px_140px]" />
+      <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_top_left,rgba(31,94,255,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.95),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)] lg:block" />
+      <div className="pointer-events-none absolute inset-0 hidden opacity-30 [background-image:linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)] [background-size:140px_140px] lg:block" />
 
-      <main className="relative mx-auto max-w-[1180px] px-4 pb-24 pt-8 sm:px-6 lg:px-8 lg:pb-16 lg:pt-10">
-        <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:justify-center lg:gap-8 xl:gap-12">
-          <section className="overflow-hidden rounded-[2.4rem] border border-[#10233f] bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)] lg:mt-10">
+      <main className="relative mx-auto max-w-[1180px] px-0 pb-24 pt-0 lg:px-8 lg:pb-16 lg:pt-10">
+        <div className="grid gap-0 lg:grid-cols-2 lg:items-start lg:justify-center lg:gap-8 xl:gap-12">
+          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-10 lg:rounded-[2.4rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)]">
             <LandingHero />
             <LandingCredibility />
-            <div className="px-5 pb-5 pt-2 sm:px-6">
+            <div className="px-5 pb-5 pt-2 sm:px-6 lg:px-6">
               <a
                 href="#audit-form"
                 className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1f5eff] px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-colors hover:bg-[#184de0]"
@@ -50,12 +50,12 @@ export default function LandingPage() {
             </div>
           </section>
 
-          <section className="overflow-hidden rounded-[2.4rem] border border-[#10233f] bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)]">
+          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:rounded-[2.4rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)]">
             <LandingFeatures />
             <LandingHowItWorks />
             <LandingFAQ />
             <ContactForm />
-            <div className="px-5 pb-5 pt-2 sm:px-6">
+            <div className="px-5 pb-5 pt-2 sm:px-6 lg:px-6">
               <a
                 href="#audit-form"
                 className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1f5eff] px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-colors hover:bg-[#184de0]"
