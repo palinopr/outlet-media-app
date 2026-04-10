@@ -1,6 +1,6 @@
 # Feature: client-agent
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 - Files: 33
 - Entry files: src/features/client-agent/model.ts, src/features/client-agent/policy.ts, src/features/client-agent/range.ts, src/features/client-agent/readers.ts, src/features/client-agent/runtime.ts, src/features/client-agent/server.ts, src/features/client-agent/store.ts, src/features/client-agent/thread-context.ts, src/features/client-agent/tool-contracts.ts, src/features/client-agent/tools/breakdowns.ts, src/features/client-agent/tools/compare-timeseries.ts, src/features/client-agent/tools/details.ts, … (+4 more)

@@ -1,6 +1,6 @@
 # Schema object: tm_events_updated_at
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 - Kinds: trigger
 - Migrations: supabase/migrations/20260218000000_initial_schema.sql

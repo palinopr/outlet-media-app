@@ -37,15 +37,15 @@ export function ContactForm() {
   }
 
   return (
-    <section id="audit-form" className="px-4 py-6 text-white sm:px-5">
-      <div className="rounded-[24px] border border-[#f59e0b]/22 bg-[radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.2),transparent_30%),radial-gradient(circle_at_top_left,rgba(31,94,255,0.2),transparent_28%),linear-gradient(180deg,rgba(11,24,45,1)_0%,rgba(7,20,39,1)_100%)] p-5 shadow-[0_26px_60px_-36px_rgba(245,158,11,0.45)]">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
+    <section id="audit-form" className="px-5 py-6 text-white sm:px-6">
+      <div className="rounded-[28px] border border-[#f59e0b]/22 bg-[radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.28),transparent_30%),radial-gradient(circle_at_top_left,rgba(31,94,255,0.22),transparent_28%),linear-gradient(180deg,rgba(11,24,45,1)_0%,rgba(7,20,39,1)_100%)] p-5 shadow-[0_0_0_1px_rgba(245,158,11,0.08),0_30px_70px_-34px_rgba(245,158,11,0.5)]">
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-300">
           Urgent final CTA block
         </p>
-        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
-          Deja de adivinar. Agenda tu auditoría.
+        <h2 className="mt-4 text-[2.1rem] font-semibold leading-[1.02] tracking-tight text-white">
+          Deja de adivinar. Agenda tu auditoría ahora.
         </h2>
-        <p className="mt-3 text-base leading-7 text-slate-300">
+        <p className="mt-3 text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
           Si inviertes en paid media en PR y quieres más visibilidad y mejor ROI, hablemos 30
           minutos.
         </p>
@@ -54,32 +54,34 @@ export function ContactForm() {
           <input type="hidden" name="pageContext" value="landing-audit-funnel" />
           <input type="hidden" name="message" value="Audit request from the Outlet Media landing funnel." />
 
-          <Input
-            name="name"
-            placeholder="Nombre"
-            required
-            maxLength={200}
-            className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
-          />
-          <Input
-            name="email"
-            type="email"
-            placeholder="Email corporativo"
-            required
-            maxLength={320}
-            className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              name="name"
+              placeholder="[Nombre]"
+              required
+              maxLength={200}
+              className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+            />
+            <Input
+              name="email"
+              type="email"
+              placeholder="[Email corporativo]"
+              required
+              maxLength={320}
+              className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+            />
+          </div>
           <Input
             name="phone"
             type="tel"
-            placeholder="Teléfono"
+            placeholder="[Teléfono]"
             required
             maxLength={40}
             className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
           />
           <Input
             name="website"
-            placeholder="Website / link"
+            placeholder="[Website / link]"
             maxLength={240}
             className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
           />
@@ -92,8 +94,12 @@ export function ContactForm() {
           >
             {pending ? "Enviando..." : "Solicitar auditoría"}
           </Button>
-          <p className="text-xs leading-6 text-slate-400">
-            Tu auditoría será con un operador senior, no con un vendedor. 100% confidencial.
+          <p className="flex items-start gap-2 text-xs leading-5 text-slate-300">
+            <span className="mt-0.5 text-amber-300">•</span>
+            <span>
+              Tu auditoría será con un operador senior, no con un vendedor. 100%
+              confidencial.
+            </span>
           </p>
         </form>
       </div>

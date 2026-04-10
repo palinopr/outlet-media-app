@@ -1,21 +1,21 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
-- Files: 9
-- File kinds: React/TSX module (9)
+- Files: 10
+- File kinds: React/TSX module (10)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
 ## `src/components/landing/contact-form.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
-- Lines: 103
-- Bytes: 3895
+- Lines: 109
+- Bytes: 4224
 - Imports (internal): src/components/ui/button.tsx, src/components/ui/input.tsx
 - Imports (packages): react, sonner
 - Imported by: src/app/landing/page.tsx
@@ -29,14 +29,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: contains `use client`; exports: ContactForm; internal imports: 2; package imports: 2
 
 ## `src/components/landing/credibility.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 126
-- Bytes: 5154
+- Lines: 131
+- Bytes: 5461
 - Imports (packages): lucide-react
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
@@ -48,14 +48,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: LandingCredibility; package imports: 1
 
 ## `src/components/landing/faq.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
-- Lines: 48
-- Bytes: 1825
+- Lines: 61
+- Bytes: 2350
 - Imports (packages): react, lucide-react
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
@@ -67,14 +67,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: contains `use client`; exports: LandingFAQ; package imports: 2
 
 ## `src/components/landing/features.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Lines: 39
-- Bytes: 1511
+- Bytes: 1777
 - Imports (packages): next/image
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
@@ -101,14 +101,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: LandingFooter; package imports: 1
 
 ## `src/components/landing/hero.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 51
-- Bytes: 2520
+- Lines: 52
+- Bytes: 2761
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
 - Route owners: src/app/landing/page.tsx
@@ -119,14 +119,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: LandingHero
 
 ## `src/components/landing/how-it-works.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 47
-- Bytes: 1662
+- Lines: 49
+- Bytes: 1762
 - Imports (packages): lucide-react
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
@@ -151,6 +151,27 @@ Each entry below documents the file path, system ownership, construction style, 
 - Symbol details: function LandingNav (exported)
 - Defines: LandingNav
 - Contents summary: exports: LandingNav; package imports: 2
+
+## `src/components/landing/phone-shell.tsx`
+- Status: untracked
+- System: web
+- Group: src/components / landing
+- Ownership: landing page UI components
+- Type: React/TSX module
+- Construction: component/UI-oriented module
+- Lines: 35
+- Bytes: 1492
+- Imports (internal): src/lib/utils.ts
+- Imports (packages): react
+- Imported by: src/app/landing/page.tsx
+- Depends on groups: src/lib
+- Used by groups: src/app / root routes
+- Route owners: src/app/landing/page.tsx
+- Routes related (direct): src/app/landing/page.tsx
+- Exports: LandingPhoneShell
+- Symbol details: function LandingPhoneShell (exported), interface LandingPhoneShellProps
+- Defines: LandingPhoneShell, LandingPhoneShellProps
+- Contents summary: exports: LandingPhoneShell; internal imports: 1; package imports: 1
 
 ## `src/components/landing/stats.tsx`
 - Status: tracked-clean

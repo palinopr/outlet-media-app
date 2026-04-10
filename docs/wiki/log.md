@@ -1,5 +1,13 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | mobile-phone shell redesign and wiki refresh
+- Reworked the public `/landing` page to match the provided mobile mock more closely:
+  - added a new `src/components/landing/phone-shell.tsx` wrapper for the dual phone presentation
+  - updated the hero, credibility, operator profile, how-it-works, FAQ, and audit form sections for the tighter dark-on-light composition
+  - kept the existing contact flow and local verification loop intact while changing the presentation layer
+- Regenerated the repo catalog with `python3 docs/wiki/tools/generate_repo_catalog.py` so the new landing component and current working-tree state are reflected across the generated pages.
+- Updated `docs/wiki/index.md` so it includes links to the generated schema-object and impact-map pages that are already part of the catalog output.
+
 ## [2026-04-10] client-events | replace empty operating-loop shell with request-first UI
 - Reworked `src/app/client/[slug]/components/event-operating-panel.tsx` so the client event detail no longer opens with the heavy multi-card "operating loop" shell.
 - The client event surface is now request-first:

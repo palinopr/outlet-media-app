@@ -1,6 +1,6 @@
 # Schema Object Profiles
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 This index links to deeper pages for migration-discovered functions, views, triggers, and other non-table schema objects.
 

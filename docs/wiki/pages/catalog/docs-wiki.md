@@ -1,6 +1,6 @@
 # Docs / Wiki (manual control pages)
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 - Files: 10
 - File kinds: Markdown doc (9), file (.py) (1)
@@ -20,14 +20,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Outlet Repo Wiki Schema \| Purpose \| Source layers \| Raw sources \| Wiki pages \| Catalog field standard
 
 ## `docs/wiki/index.md`
-- Status: tracked-clean
+- Status: modified
 - System: docs
 - Group: Docs / Wiki (manual control pages)
 - Ownership: repo wiki source
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 42
-- Bytes: 3638
+- Lines: 44
+- Bytes: 3896
 - Headings: Outlet Repo Wiki Index, Primary file-by-file catalog, Overview, Structural inventory, Secondary audit pages, Operations
 - Contents summary: headings: Outlet Repo Wiki Index \| Primary file-by-file catalog \| Overview \| Structural inventory \| Secondary audit pages \| Operations
 
@@ -38,10 +38,10 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo wiki source
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 143
-- Bytes: 12726
-- Headings: Repo Wiki Log, [2026-04-10] client-events \| replace empty operating-loop shell with request-first UI, [2026-04-10] client-campaign \| replace empty operating-loop shell with request-first UI, [2026-04-10] client-events \| operating loop slice on event detail, [2026-04-10] client-campaign \| operating loop slice and verification hygiene, [2026-04-10] guides \| service boundaries and human read-order pages, [2026-04-10] profiles \| business rules and per-table pages, [2026-04-10] maps \| env/integrations and lifecycle narratives, [2026-04-10] maps \| auth/access, workflow, and mutations, [2026-04-10] profiles \| deep route and feature pages, … (+6 more)
-- Contents summary: headings: Repo Wiki Log \| [2026-04-10] client-events \| replace empty operating-loop shell with request-first UI \| [2026-04-10] client-campaign \| replace empty operating-loop shell with request-first UI \| [2026-04-10] client-events \| operating loop slice on event detail \| [2026-04-10] client-campaign \| operating loop s…
+- Lines: 151
+- Bytes: 13565
+- Headings: Repo Wiki Log, [2026-04-10] landing \| mobile-phone shell redesign and wiki refresh, [2026-04-10] client-events \| replace empty operating-loop shell with request-first UI, [2026-04-10] client-campaign \| replace empty operating-loop shell with request-first UI, [2026-04-10] client-events \| operating loop slice on event detail, [2026-04-10] client-campaign \| operating loop slice and verification hygiene, [2026-04-10] guides \| service boundaries and human read-order pages, [2026-04-10] profiles \| business rules and per-table pages, [2026-04-10] maps \| env/integrations and lifecycle narratives, [2026-04-10] maps \| auth/access, workflow, and mutations, … (+7 more)
+- Contents summary: headings: Repo Wiki Log \| [2026-04-10] landing \| mobile-phone shell redesign and wiki refresh \| [2026-04-10] client-events \| replace empty operating-loop shell with request-first UI \| [2026-04-10] client-campaign \| replace empty operating-loop shell with request-first UI \| [2026-04-10] client-events \| operating loop s…
 
 ## `docs/wiki/pages/audits/dead-ends-and-dead-code.md`
 - Status: tracked-clean

@@ -1,6 +1,6 @@
 # Ingest and snapshot lifecycle
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 Files and DB objects involved in external data ingest, campaign/event snapshots, and summary/report surfaces built on them.
 

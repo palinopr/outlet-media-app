@@ -1,6 +1,6 @@
 # /client/[slug]/campaigns
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 - Route file: `src/app/client/[slug]/campaigns/loading.tsx`
 - Type: Next.js loading UI

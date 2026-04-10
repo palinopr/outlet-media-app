@@ -1,6 +1,6 @@
 # Campaign ownership and scope rules
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 Files and DB objects that appear to enforce campaign ownership, effective client assignment, and campaign-scoped reads/writes.
 

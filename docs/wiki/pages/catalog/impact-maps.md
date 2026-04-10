@@ -1,6 +1,6 @@
 # Impact Maps
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 This index links to pages meant to answer: if I touch this file, what else is likely to move?
 
@@ -168,7 +168,7 @@ This index links to pages meant to answer: if I touch this file, what else is li
 - [src/lib/api-helpers.ts](./impact-pages/src-lib-api-helpers.ts.md) — score: 183; routes: 28; tests: 20; db: 0
 - [src/lib/member-access.ts](./impact-pages/src-lib-member-access.ts.md) — score: 170; routes: 20; tests: 58; db: 4
 - [src/lib/client-slug.ts](./impact-pages/src-lib-client-slug.ts.md) — score: 140; routes: 25; tests: 61; db: 0
-- [src/lib/utils.ts](./impact-pages/src-lib-utils.ts.md) — score: 135; routes: 29; tests: 14; db: 0
+- [src/lib/utils.ts](./impact-pages/src-lib-utils.ts.md) — score: 137; routes: 29; tests: 14; db: 0
 - [src/lib/status.ts](./impact-pages/src-lib-status.ts.md) — score: 120; routes: 22; tests: 46; db: 0
 - [src/lib/constants.ts](./impact-pages/src-lib-constants.ts.md) — score: 108; routes: 15; tests: 31; db: 0
 - [src/lib/workspace-types.ts](./impact-pages/src-lib-workspace-types.ts.md) — score: 95; routes: 13; tests: 34; db: 0

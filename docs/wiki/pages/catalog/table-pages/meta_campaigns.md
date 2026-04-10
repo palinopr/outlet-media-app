@@ -1,6 +1,6 @@
 # Table: meta_campaigns
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 - Category: External ingest / reporting tables
 - Kinds: table

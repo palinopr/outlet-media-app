@@ -1,6 +1,6 @@
 # Route Stack Map
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 This page documents each Next.js special route file and the internal stack it pulls in through direct and transitive imports.
 
@@ -1156,15 +1156,15 @@ This page documents each Next.js special route file and the internal stack it pu
 - Route file: `src/app/landing/page.tsx`
 - Type: Next.js page
 - Ownership: web root/shared route surface
-- Direct internal imports: src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx
-- Transitive internal stack size: 9
+- Direct internal imports: src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx, src/components/landing/phone-shell.tsx
+- Transitive internal stack size: 10
 - Groups touched: src/components / landing, src/components / ui, src/lib
 - Feature modules touched: none
 - Shared libs/runtime files touched: src/lib/utils.ts
 - Related tests: none
 
 ### Stack by group
-- src/components / landing: src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx
+- src/components / landing: src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx, src/components/landing/phone-shell.tsx
 - src/components / ui: src/components/ui/button.tsx, src/components/ui/input.tsx
 - src/lib: src/lib/utils.ts
 

@@ -1,6 +1,6 @@
 # Access, membership, and portal-entry rules
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 Files and DB objects that appear to enforce how users gain access, how memberships are resolved, and how users land in the correct portal state.
 

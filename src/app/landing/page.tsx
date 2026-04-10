@@ -7,6 +7,7 @@ import { LandingFeatures } from "@/components/landing/features";
 import { LandingHowItWorks } from "@/components/landing/how-it-works";
 import { LandingFAQ } from "@/components/landing/faq";
 import { ContactForm } from "@/components/landing/contact-form";
+import { LandingPhoneShell } from "@/components/landing/phone-shell";
 
 const landingFont = Space_Grotesk({
   subsets: ["latin"],
@@ -29,25 +30,28 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <div
-      className={`${landingFont.className} min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(31,94,255,0.18),transparent_24%),radial-gradient(circle_at_top_right,rgba(245,158,11,0.12),transparent_22%),linear-gradient(180deg,#07111f_0%,#060d18_52%,#050a13_100%)] text-white`}
+      className={`${landingFont.className} relative min-h-screen overflow-x-hidden bg-[linear-gradient(180deg,#f7fbff_0%,#ecf4fb_46%,#eef5fb_100%)] text-white`}
     >
-      <main className="mx-auto max-w-7xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10 lg:pb-12">
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,560px)_minmax(0,420px)] lg:items-start lg:justify-center lg:gap-10">
-          <section className="overflow-hidden rounded-[34px] border border-[#0c1d35] bg-[linear-gradient(180deg,#081425_0%,#071120_100%)] shadow-[0_55px_120px_-48px_rgba(15,23,42,0.7)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(31,94,255,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.95),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)]" />
+      <div className="pointer-events-none absolute inset-0 opacity-30 [background-image:linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)] [background-size:140px_140px]" />
+
+      <main className="relative mx-auto max-w-[1180px] px-4 pb-24 pt-8 sm:px-6 lg:px-8 lg:pb-16 lg:pt-10">
+        <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:justify-center lg:gap-8 xl:gap-12">
+          <LandingPhoneShell className="lg:mt-10 lg:max-w-[410px] xl:max-w-[430px]">
             <LandingHero />
             <LandingCredibility />
             <div className="px-4 pb-4 pt-2 sm:px-5">
               <a
                 href="#audit-form"
                 className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1f5eff] px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-colors hover:bg-[#184de0]"
-              >
-                Agenda tu auditoría
-                <ArrowRight className="size-4" />
-              </a>
-            </div>
-          </section>
+                >
+                  Agenda tu auditoría
+                  <ArrowRight className="size-4" />
+                </a>
+              </div>
+          </LandingPhoneShell>
 
-          <section className="overflow-hidden rounded-[34px] border border-[#0c1d35] bg-[linear-gradient(180deg,#081425_0%,#071120_100%)] shadow-[0_55px_120px_-48px_rgba(15,23,42,0.7)] lg:sticky lg:top-8">
+          <LandingPhoneShell className="lg:max-w-[410px] xl:max-w-[430px]">
             <LandingFeatures />
             <LandingHowItWorks />
             <LandingFAQ />
@@ -56,15 +60,15 @@ export default function LandingPage() {
               <a
                 href="#audit-form"
                 className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1f5eff] px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-colors hover:bg-[#184de0]"
-              >
-                Agenda tu auditoría
-              </a>
-            </div>
-          </section>
+                >
+                  Agenda tu auditoría
+                </a>
+              </div>
+          </LandingPhoneShell>
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#081220]/88 px-4 py-3 shadow-[0_-18px_50px_-24px_rgba(15,23,42,0.65)] backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#081220]/82 px-4 py-3 shadow-[0_-18px_50px_-24px_rgba(15,23,42,0.45)] backdrop-blur-xl lg:hidden">
         <a
           href="#audit-form"
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1f5eff] px-5 text-sm font-semibold tracking-wide text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-transform active:scale-[0.99]"

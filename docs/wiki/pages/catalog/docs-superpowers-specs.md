@@ -1,6 +1,6 @@
 # Docs / Superpowers Specs
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 - Files: 10
 - File kinds: Markdown doc (10)

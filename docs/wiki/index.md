@@ -10,6 +10,8 @@
 - [Feature Profiles](./pages/catalog/feature-profiles.md) — deeper behavior/context pages for each feature module.
 - [Business Rule Pages](./pages/catalog/business-rules.md) — deeper rule-oriented pages grouped around major business constraints.
 - [Table Profiles](./pages/catalog/table-profiles.md) — deeper per-table pages for migration-discovered tables.
+- [Schema Object Profiles](./pages/catalog/schema-object-profiles.md) — deeper pages for functions, views, triggers, and other non-table schema objects.
+- [Impact Maps](./pages/catalog/impact-maps.md) — if-you-touch-X pages for high-impact shared files.
 - [Service Boundary Map](./pages/catalog/service-boundaries.md) — web vs agent vs database bridge surfaces and shared boundary files.
 - [Onboarding Guides](./pages/catalog/onboarding-guides.md) — human-oriented read-order guides for common work areas.
 - [Key File Symbol Map](./pages/catalog/key-file-symbols.md) — exported symbols and top-level definitions for important code files.

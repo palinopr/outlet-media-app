@@ -1,6 +1,6 @@
 # Group Dependency Map
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 This page summarizes internal file-to-file dependencies rolled up to the catalog group level.
 
@@ -131,7 +131,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 
 ## src/app / root routes
 - Files in group: 18
-- Depends on groups: src/app / admin (13), src/components / landing (6), src/app / client (6), src/features / client-portal (1)
+- Depends on groups: src/app / admin (13), src/components / landing (7), src/app / client (6), src/features / client-portal (1)
 - Used by groups: none
 
 ## src/components / admin
@@ -150,9 +150,9 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 - Used by groups: src/app / client (15)
 
 ## src/components / landing
-- Files in group: 9
-- Depends on groups: src/components / ui (2)
-- Used by groups: src/app / root routes (6)
+- Files in group: 10
+- Depends on groups: src/components / ui (2), src/lib (1)
+- Used by groups: src/app / root routes (7)
 
 ## src/components / shared
 - Files in group: 1
@@ -307,7 +307,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## src/lib
 - Files in group: 32
 - Depends on groups: src/features / system-events (1), src/features / invitations (1)
-- Used by groups: src/app / api (73), src/app / admin (61), src/components / admin (40), src/app / client (37), Tests / Features (24), src/components / ui (13), src/features / client-portal (11), Tests / App (7), src/features / campaign-action-items (7), src/features / events (6), src/features / reports (6), src/features / client-agent (5), … (+20 more)
+- Used by groups: src/app / api (73), src/app / admin (61), src/components / admin (40), src/app / client (37), Tests / Features (24), src/components / ui (13), src/features / client-portal (11), Tests / App (7), src/features / campaign-action-items (7), src/features / events (6), src/features / reports (6), src/features / client-agent (5), … (+21 more)
 
 ## src/lib / ticketmaster
 - Files in group: 2

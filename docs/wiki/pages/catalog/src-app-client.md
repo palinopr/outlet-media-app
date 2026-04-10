@@ -1,6 +1,6 @@
 # src/app / client
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 - Files: 63
 - File kinds: React/TSX module (27), test file (13), Next.js page (9), Next.js loading UI (6), TypeScript module (6), Next.js layout (2)
@@ -562,7 +562,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: EventCard; internal imports: 4; package imports: 2
 
 ## `src/app/client/[slug]/components/event-discussion-form.test.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/app / client
 - Ownership: web client route surface
@@ -580,7 +580,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: tests/describes: EventDiscussionForm; posts a shared event request and refreshes the page; shows an error when the request fails; internal imports: 1; package imports: 3
 
 ## `src/app/client/[slug]/components/event-discussion-form.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/app / client
 - Ownership: web client route surface
@@ -603,7 +603,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: contains `use client`; exports: EventDiscussionForm; internal imports: 1; package imports: 3
 
 ## `src/app/client/[slug]/components/event-operating-panel.test.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/app / client
 - Ownership: web client route surface
@@ -621,7 +621,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: tests/describes: EventOperatingPanel; renders a simpler event request surface and only shows supporting workflow that exists; keeps the empty state minimal when there is no workflow yet; internal imports: 3; package imports: 2
 
 ## `src/app/client/[slug]/components/event-operating-panel.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/app / client
 - Ownership: web client route surface

@@ -1,6 +1,6 @@
 # Table: crm_follow_up_items
 
-Generated from the current working tree on 2026-04-10 16:45:57.
+Generated from the current working tree on 2026-04-10 16:52:39.
 
 - Category: Other tables
 - Kinds: table
