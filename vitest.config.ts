@@ -24,6 +24,7 @@ export default defineConfig({
       ".worktrees/**",
       "agent/dist/**",
       "agent/node_modules/**",
+      "tmp-playwright/**",
       "src/features/whatsapp/**",
       "src/app/api/whatsapp/**",
     ],
