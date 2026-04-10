@@ -7,7 +7,6 @@ import { LandingFeatures } from "@/components/landing/features";
 import { LandingHowItWorks } from "@/components/landing/how-it-works";
 import { LandingFAQ } from "@/components/landing/faq";
 import { ContactForm } from "@/components/landing/contact-form";
-import { LandingPhoneShell } from "@/components/landing/phone-shell";
 
 const landingFont = Space_Grotesk({
   subsets: ["latin"],
@@ -37,34 +36,34 @@ export default function LandingPage() {
 
       <main className="relative mx-auto max-w-[1180px] px-4 pb-24 pt-8 sm:px-6 lg:px-8 lg:pb-16 lg:pt-10">
         <div className="grid gap-10 lg:grid-cols-2 lg:items-start lg:justify-center lg:gap-8 xl:gap-12">
-          <LandingPhoneShell className="lg:mt-10 lg:max-w-[410px] xl:max-w-[430px]">
+          <section className="overflow-hidden rounded-[2.4rem] border border-[#10233f] bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)] lg:mt-10">
             <LandingHero />
             <LandingCredibility />
-            <div className="px-4 pb-4 pt-2 sm:px-5">
+            <div className="px-5 pb-5 pt-2 sm:px-6">
               <a
                 href="#audit-form"
                 className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1f5eff] px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-colors hover:bg-[#184de0]"
-                >
-                  Agenda tu auditoría
-                  <ArrowRight className="size-4" />
-                </a>
-              </div>
-          </LandingPhoneShell>
+              >
+                Agenda tu auditoría
+                <ArrowRight className="size-4" />
+              </a>
+            </div>
+          </section>
 
-          <LandingPhoneShell className="lg:max-w-[410px] xl:max-w-[430px]">
+          <section className="overflow-hidden rounded-[2.4rem] border border-[#10233f] bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)]">
             <LandingFeatures />
             <LandingHowItWorks />
             <LandingFAQ />
             <ContactForm />
-            <div className="px-4 pb-4 pt-2 sm:px-5">
+            <div className="px-5 pb-5 pt-2 sm:px-6">
               <a
                 href="#audit-form"
                 className="inline-flex h-12 w-full items-center justify-center rounded-full bg-[#1f5eff] px-5 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-colors hover:bg-[#184de0]"
-                >
-                  Agenda tu auditoría
-                </a>
-              </div>
-          </LandingPhoneShell>
+              >
+                Agenda tu auditoría
+              </a>
+            </div>
+          </section>
         </div>
       </main>
 
