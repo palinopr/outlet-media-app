@@ -7,6 +7,7 @@ import { apiError, validateRequest } from "@/lib/api-helpers";
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
+const contactRecipient = process.env.CONTACT_FORM_TO_EMAIL ?? "info@outletmedia.net";
 
 function withLabel(label: string, value: string | null | undefined) {
   const trimmed = value?.trim();
@@ -22,6 +23,7 @@ export async function POST(request: Request) {
     email,
     phone,
     company,
+    website,
     goal,
     monthlyBudget,
     preferredContact,
@@ -33,6 +35,7 @@ export async function POST(request: Request) {
     message.trim(),
     "",
     withLabel("Business", company),
+    withLabel("Website", website),
     withLabel("Phone", phone),
     withLabel("Goal", goal),
     withLabel("Monthly budget", monthlyBudget),
@@ -55,13 +58,14 @@ export async function POST(request: Request) {
     try {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL ?? "Outlet Media <noreply@outletmedia.co>",
-        to: "support@outletmedia.co",
-        subject: `New landing lead: ${name}${company?.trim() ? ` (${company.trim()})` : ""}`,
+        to: contactRecipient,
+        subject: `New audit request: ${name}${company?.trim() ? ` (${company.trim()})` : ""}`,
         text: [
           `Name: ${name}`,
           `Email: ${email}`,
           withLabel("Phone", phone),
           withLabel("Business", company),
+          withLabel("Website", website),
           withLabel("Goal", goal),
           withLabel("Monthly budget", monthlyBudget),
           withLabel("Preferred contact", preferredContact),

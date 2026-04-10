@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
-import { CalendarDays, PhoneCall } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { LandingNav } from "@/components/landing/nav";
 import { LandingHero } from "@/components/landing/hero";
 import { LandingCredibility } from "@/components/landing/credibility";
 import { LandingFeatures } from "@/components/landing/features";
 import { LandingHowItWorks } from "@/components/landing/how-it-works";
-import { LandingStats } from "@/components/landing/stats";
-import { ContactForm } from "@/components/landing/contact-form";
 import { LandingFAQ } from "@/components/landing/faq";
+import { ContactForm } from "@/components/landing/contact-form";
 import { LandingFooter } from "@/components/landing/footer";
-import { Button } from "@/components/ui/button";
 
 const landingFont = Space_Grotesk({
   subsets: ["latin"],
@@ -18,13 +16,13 @@ const landingFont = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Puerto Rico Lead Funnels | Outlet Media",
+  title: "Agenda tu auditoría | Outlet Media",
   description:
-    "Mobile-first paid media funnels for Puerto Rico brands, artists, events, ecommerce, and local service businesses. Turn ad clicks into qualified leads and booked calls.",
+    "Resultados reales en Puerto Rico. Estrategia, creatividad y visibilidad total para marcas y operadores que exigen ROI. No más agency blackout.",
   openGraph: {
-    title: "Puerto Rico Lead Funnels | Outlet Media",
+    title: "Agenda tu auditoría | Outlet Media",
     description:
-      "Mobile-first landing pages and paid-media funnels built to turn clicks into booked calls, qualified leads, and revenue.",
+      "Resultados reales en Puerto Rico. Estrategia, creatividad y visibilidad total. No más agency blackout.",
     images: [{ url: "/icon.png", width: 512, height: 512 }],
   },
   robots: { index: true, follow: true },
@@ -33,46 +31,36 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <div
-      className={`${landingFont.className} dark relative min-h-screen overflow-x-hidden bg-[#07111f] pb-24 text-slate-100 sm:pb-0 [background-image:radial-gradient(circle_at_top_left,rgba(74,168,255,0.22),transparent_28%),radial-gradient(circle_at_88%_14%,rgba(249,115,22,0.18),transparent_22%),linear-gradient(180deg,#07111f_0%,#081421_38%,#050b14_100%)]`}
+      className={`${landingFont.className} min-h-screen bg-[radial-gradient(circle_at_top,rgba(31,42,165,0.18),transparent_28%),radial-gradient(circle_at_85%_20%,rgba(80,22,136,0.14),transparent_24%),linear-gradient(180deg,#f5f9ff_0%,#eef5ff_48%,#edf4ff_100%)] text-slate-950`}
     >
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(rgba(148,163,184,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(148,163,184,0.08)_1px,transparent_1px)] [background-size:48px_48px]"
-      />
-      <div className="relative z-10">
-        <LandingNav />
-        <LandingHero />
-        <LandingCredibility />
-        <LandingFeatures />
-        <LandingHowItWorks />
-        <LandingStats />
-        <LandingFAQ />
-        <ContactForm />
-        <LandingFooter />
-      </div>
+      <LandingNav />
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#07111f]/95 px-4 py-3 backdrop-blur-xl sm:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-2 gap-3">
-          <Button
-            asChild
-            variant="outline"
-            className="h-12 rounded-full border-white/15 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]"
-          >
-            <a href="tel:+13053225709">
-              <PhoneCall className="size-4" />
-              Llamar
-            </a>
-          </Button>
-          <Button
-            asChild
-            className="h-12 rounded-full bg-[#4aa8ff] font-semibold text-[#06111d] hover:bg-[#72beff]"
-          >
-            <a href="#contact">
-              <CalendarDays className="size-4" />
-              Solicitar cita
-            </a>
-          </Button>
+      <main className="mx-auto max-w-7xl px-4 pb-28 pt-8 sm:px-6 lg:pb-12 lg:pt-10">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px] lg:items-start">
+          <div className="space-y-6">
+            <LandingHero />
+            <LandingCredibility />
+          </div>
+
+          <aside className="space-y-6 lg:sticky lg:top-24">
+            <LandingFeatures />
+            <LandingHowItWorks />
+            <LandingFAQ />
+            <ContactForm />
+          </aside>
         </div>
+
+        <LandingFooter />
+      </main>
+
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/70 bg-white/88 px-4 py-3 shadow-[0_-18px_50px_-24px_rgba(15,23,42,0.45)] backdrop-blur-xl lg:hidden">
+        <a
+          href="#audit-form"
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1f5eff] px-5 text-sm font-semibold tracking-wide text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-transform active:scale-[0.99]"
+        >
+          Agenda tu auditoría
+          <ArrowRight className="size-4" />
+        </a>
       </div>
     </div>
   );

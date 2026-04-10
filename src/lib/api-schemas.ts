@@ -182,6 +182,7 @@ export const ContactFormSchema = z.object({
   email: z.string().email().max(320),
   phone: z.string().max(40).optional(),
   company: z.string().max(200).optional(),
+  website: z.string().max(240).optional(),
   goal: z.string().max(120).optional(),
   monthlyBudget: z.string().max(120).optional(),
   preferredContact: z.string().max(120).optional(),

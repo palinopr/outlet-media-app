@@ -1,29 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { CalendarDays, CheckCircle2, Mail, PhoneCall, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
-const GOAL_OPTIONS = [
-  "Booked calls / appointments",
-  "Qualified leads",
-  "Ticket sales",
-  "Ecommerce sales",
-  "Need help figuring out the funnel",
-] as const;
-
-const BUDGET_OPTIONS = [
-  "Under $1,500 / month",
-  "$1,500 - $5,000 / month",
-  "$5,000 - $15,000 / month",
-  "$15,000+ / month",
-  "Need to discuss first",
-] as const;
-
-const CONTACT_OPTIONS = ["Call", "Email"] as const;
 
 export function ContactForm() {
   const [pending, setPending] = useState(false);
@@ -47,7 +27,7 @@ export function ContactForm() {
         throw new Error(body?.error ?? "Something went wrong");
       }
 
-      toast.success("Request sent. We’ll reach out to coordinate the call.");
+      toast.success("Solicitud enviada. Te contactamos para coordinar la auditoría.");
       form.reset();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send");
@@ -57,180 +37,69 @@ export function ContactForm() {
   }
 
   return (
-    <section id="contact" className="mx-auto max-w-7xl px-4 pb-24 pt-20 sm:px-6 sm:pb-28">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.55, ease: "easeOut" }}
-        className="overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.05] p-5 sm:p-8 lg:p-10"
-      >
-        <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10">
-          <div>
-            <p className="section-label text-[#9bd0ff]">Contact</p>
-            <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
-              Solicita la cita y te devolvemos la llamada con contexto.
-            </h2>
-            <p className="mt-4 max-w-xl text-base leading-7 text-slate-300">
-              This funnel is meant to open a serious conversation, not dump you into a generic lead
-              form. Tell us what you sell, what the goal is, and where the current path is leaking.
-            </p>
+    <section
+      id="audit-form"
+      className="overflow-hidden rounded-[28px] border border-[#f59e0b]/22 bg-[#071427] text-white shadow-[0_32px_80px_-42px_rgba(15,23,42,0.45)]"
+    >
+      <div className="rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.18),transparent_28%),radial-gradient(circle_at_top_left,rgba(31,94,255,0.18),transparent_28%),linear-gradient(180deg,rgba(11,24,45,1)_0%,rgba(7,20,39,1)_100%)] p-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">
+          Urgent final CTA block
+        </p>
+        <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
+          Deja de adivinar. Agenda tu auditoría.
+        </h2>
+        <p className="mt-3 text-base leading-7 text-slate-300">
+          Si inviertes en paid media en PR y quieres más visibilidad y mejor ROI, hablemos 30
+          minutos.
+        </p>
 
-            <div className="mt-8 space-y-4">
-              {[
-                "We review your goal, current traffic path, and whether the offer fits a call-based funnel.",
-                "If there is fit, we use the submission to guide the first conversation instead of starting cold.",
-                "If the leak is obvious, we can point to where the mobile path is losing people fastest.",
-              ].map((item) => (
-                <div key={item} className="flex gap-3">
-                  <CheckCircle2 className="mt-1 size-4 shrink-0 text-[#9bd0ff]" />
-                  <p className="text-sm leading-6 text-slate-300">{item}</p>
-                </div>
-              ))}
-            </div>
+        <form onSubmit={handleSubmit} className="mt-6 space-y-3">
+          <input type="hidden" name="pageContext" value="landing-audit-funnel" />
+          <input type="hidden" name="message" value="Audit request from the Outlet Media landing funnel." />
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              <a
-                href="tel:+13053225709"
-                className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-[#081421]/92 px-4 py-3 text-sm text-slate-200 transition-colors hover:bg-white/[0.06]"
-              >
-                <PhoneCall className="size-4 text-[#9bd0ff]" />
-                +1 (305) 322-5709
-              </a>
-              <a
-                href="mailto:support@outletmedia.co"
-                className="inline-flex items-center gap-2 rounded-2xl border border-white/10 bg-[#081421]/92 px-4 py-3 text-sm text-slate-200 transition-colors hover:bg-white/[0.06]"
-              >
-                <Mail className="size-4 text-[#9bd0ff]" />
-                support@outletmedia.co
-              </a>
-            </div>
+          <Input
+            name="name"
+            placeholder="Nombre"
+            required
+            maxLength={200}
+            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+          />
+          <Input
+            name="email"
+            type="email"
+            placeholder="Email corporativo"
+            required
+            maxLength={320}
+            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+          />
+          <Input
+            name="phone"
+            type="tel"
+            placeholder="Teléfono"
+            required
+            maxLength={40}
+            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+          />
+          <Input
+            name="website"
+            placeholder="Website / link"
+            maxLength={240}
+            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+          />
 
-            <div className="mt-6 rounded-[28px] border border-[#f97316]/18 bg-[#0b1622] p-5">
-              <div className="flex items-center gap-2 text-[#fbbf94]">
-                <CalendarDays className="size-4" />
-                <p className="text-xs uppercase tracking-[0.22em]">Call expectation</p>
-              </div>
-              <p className="mt-3 text-sm leading-7 text-slate-300">
-                The first call should quickly answer three questions: where the funnel is leaking,
-                what needs to change on mobile, and whether the next 30 days make sense together.
-              </p>
-            </div>
-          </div>
-
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-[28px] border border-white/10 bg-[#081421]/90 p-5 sm:p-7"
+          <Button
+            type="submit"
+            size="lg"
+            className="mt-2 h-12 w-full rounded-full bg-[#1f5eff] text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] hover:bg-[#184de0]"
+            disabled={pending}
           >
-            <input type="hidden" name="pageContext" value="landing-pr-funnel" />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Input
-                name="name"
-                placeholder="Nombre"
-                required
-                maxLength={200}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
-              />
-              <Input
-                name="email"
-                type="email"
-                placeholder="correo@empresa.com"
-                required
-                maxLength={320}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
-              />
-              <Input
-                name="phone"
-                type="tel"
-                placeholder="Teléfono"
-                maxLength={40}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
-              />
-              <Input
-                name="company"
-                placeholder="Negocio / marca"
-                maxLength={200}
-                className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
-              />
-            </div>
-
-            <div className="mt-4 grid gap-4 sm:grid-cols-2">
-              <select
-                name="goal"
-                required
-                defaultValue=""
-                className="h-12 rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-slate-100 outline-none transition-[box-shadow,border-color] focus-visible:border-[#4aa8ff]/50 focus-visible:ring-4 focus-visible:ring-[#4aa8ff]/15"
-              >
-                <option value="" disabled className="bg-[#081421] text-slate-500">
-                  Meta principal
-                </option>
-                {GOAL_OPTIONS.map((option) => (
-                  <option key={option} value={option} className="bg-[#081421] text-slate-100">
-                    {option}
-                  </option>
-                ))}
-              </select>
-
-              <select
-                name="monthlyBudget"
-                defaultValue=""
-                className="h-12 rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-slate-100 outline-none transition-[box-shadow,border-color] focus-visible:border-[#4aa8ff]/50 focus-visible:ring-4 focus-visible:ring-[#4aa8ff]/15"
-              >
-                <option value="" className="bg-[#081421] text-slate-500">
-                  Presupuesto mensual
-                </option>
-                {BUDGET_OPTIONS.map((option) => (
-                  <option key={option} value={option} className="bg-[#081421] text-slate-100">
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mt-4">
-              <select
-                name="preferredContact"
-                defaultValue=""
-                className="h-12 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 text-sm text-slate-100 outline-none transition-[box-shadow,border-color] focus-visible:border-[#4aa8ff]/50 focus-visible:ring-4 focus-visible:ring-[#4aa8ff]/15"
-              >
-                <option value="" className="bg-[#081421] text-slate-500">
-                  Preferencia de contacto
-                </option>
-                {CONTACT_OPTIONS.map((option) => (
-                  <option key={option} value={option} className="bg-[#081421] text-slate-100">
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mt-4">
-              <textarea
-                name="message"
-                placeholder="Cuéntanos qué estás promocionando, a quién quieres llegar, qué anuncios ya corren y dónde sientes que el funnel se está cayendo."
-                required
-                maxLength={5000}
-                rows={6}
-                className="min-h-40 w-full rounded-3xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-100 placeholder:text-slate-500 outline-none transition-[box-shadow,border-color] focus-visible:border-[#4aa8ff]/50 focus-visible:ring-4 focus-visible:ring-[#4aa8ff]/15"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              size="lg"
-              className="mt-4 h-12 w-full rounded-full bg-[#4aa8ff] text-base font-semibold text-[#06111d] hover:bg-[#72beff]"
-              disabled={pending}
-            >
-              <Send className="size-4" />
-              {pending ? "Enviando..." : "Solicitar cita"}
-            </Button>
-            <p className="mt-3 text-xs leading-6 text-slate-400">
-              We use this submission to understand fit and coordinate the call — not to dump you in a
-              generic nurture queue.
-            </p>
-          </form>
-        </div>
-      </motion.div>
+            {pending ? "Enviando..." : "Solicitar auditoría"}
+          </Button>
+          <p className="text-xs leading-6 text-slate-400">
+            Tu auditoría será con un operador senior, no con un vendedor. 100% confidencial.
+          </p>
+        </form>
+      </div>
     </section>
   );
 }
