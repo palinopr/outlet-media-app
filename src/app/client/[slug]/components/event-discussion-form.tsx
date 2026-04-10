@@ -41,7 +41,7 @@ export function EventDiscussionForm({ eventId, slug }: EventDiscussionFormProps)
       const body = (await response.json().catch(() => ({}))) as { error?: string };
 
       if (!response.ok) {
-        throw new Error(body.error ?? "Unable to post the event comment right now.");
+        throw new Error(body.error ?? "Unable to send the event request right now.");
       }
 
       setContent("");
@@ -50,7 +50,7 @@ export function EventDiscussionForm({ eventId, slug }: EventDiscussionFormProps)
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Unable to post the event comment right now.",
+          : "Unable to send the event request right now.",
       );
     } finally {
       setIsSubmitting(false);
@@ -60,26 +60,24 @@ export function EventDiscussionForm({ eventId, slug }: EventDiscussionFormProps)
   return (
     <form onSubmit={handleSubmit} className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
       <label htmlFor={`event-comment-${eventId}`} className="text-sm font-medium text-white">
-        Add an event note
+        Send an event request
       </label>
       <p className="mt-1 text-sm text-white/45">
-        Keep ticketing questions, blockers, and promotion feedback attached to the event so the whole show context stays visible.
+        Ask for a change, flag a blocker, or add context the team should see for this show.
       </p>
 
       <textarea
         id={`event-comment-${eventId}`}
         value={content}
         onChange={(event) => setContent(event.target.value)}
-        placeholder="What changed, what is blocked, or what needs review for this show?"
+        placeholder="What needs to change, be reviewed, or be clarified for this event?"
         rows={4}
         disabled={isSubmitting}
         className="mt-3 w-full rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-3 text-sm text-white placeholder:text-white/25 outline-none transition focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-60"
       />
 
       <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="text-xs text-white/35">
-          Shared comments appear back on the event timeline and can trigger agent triage when needed.
-        </div>
+        <div className="text-xs text-white/35">Your request stays attached to this event.</div>
         <Button
           type="submit"
           size="sm"
@@ -87,7 +85,7 @@ export function EventDiscussionForm({ eventId, slug }: EventDiscussionFormProps)
           className="gap-2 self-start bg-cyan-500 text-slate-950 hover:bg-cyan-400"
         >
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <SendHorizontal className="h-4 w-4" />}
-          {isSubmitting ? "Posting..." : "Post comment"}
+          {isSubmitting ? "Sending..." : "Send request"}
         </Button>
       </div>
 

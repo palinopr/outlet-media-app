@@ -142,21 +142,46 @@ const data = {
 } satisfies ClientEventOperatingView;
 
 describe("EventOperatingPanel", () => {
-  it("renders the event workflow sections on the client event detail page", () => {
+  it("renders a simpler event request surface and only shows supporting workflow that exists", () => {
     render(<EventOperatingPanel data={data} eventId="evt_1" slug="zamora" />);
 
-    expect(screen.getByText("Event operating loop")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Pending approvals" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Event requests" })).toBeInTheDocument();
+    expect(screen.getByText("Client conversation")).toBeInTheDocument();
+    expect(screen.getByText("Already in motion")).toBeInTheDocument();
+    expect(screen.getByText("Waiting for approval")).toBeInTheDocument();
     expect(screen.getByText("Approve updated weekend event copy")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Open next steps" })).toBeInTheDocument();
+    expect(screen.getByText("Open next steps")).toBeInTheDocument();
     expect(screen.getByText("Confirm updated hold count")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Shared discussion" })).toBeInTheDocument();
+    expect(screen.getByText("Agent follow-through")).toBeInTheDocument();
+    expect(screen.getByText("Queued agent triage for show blocker")).toBeInTheDocument();
+    expect(screen.getByText("Recent changes")).toBeInTheDocument();
+    expect(screen.getByText("Commented on Miami Show discussion")).toBeInTheDocument();
     expect(screen.getAllByText("Please confirm the latest hold count before we ramp spend.").length).toBeGreaterThan(0);
     expect(screen.getByText("Got it — we're waiting on the latest venue update.")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Agent follow-through" })).toBeInTheDocument();
-    expect(screen.getByText("Queued agent triage for show blocker")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Recent activity" })).toBeInTheDocument();
-    expect(screen.getByText("Commented on Miami Show discussion")).toBeInTheDocument();
     expect(screen.getByTestId("event-discussion-form")).toHaveAttribute("data-event-id", "evt_1");
+    expect(screen.queryByText("Event operating loop")).not.toBeInTheDocument();
+  });
+
+  it("keeps the empty state minimal when there is no workflow yet", () => {
+    render(
+      <EventOperatingPanel
+        data={{
+          agentOutcomes: [],
+          approvals: [],
+          comments: [],
+          followUpItems: [],
+          systemEvents: [],
+        }}
+        eventId="evt_1"
+        slug="zamora"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Event requests" })).toBeInTheDocument();
+    expect(screen.getByText("No requests yet.")).toBeInTheDocument();
+    expect(screen.queryByText("Already in motion")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pending approvals")).not.toBeInTheDocument();
+    expect(screen.queryByText("Agent follow-through")).not.toBeInTheDocument();
+    expect(screen.queryByText("Recent changes")).not.toBeInTheDocument();
   });
 });

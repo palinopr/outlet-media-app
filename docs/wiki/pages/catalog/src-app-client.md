@@ -1,6 +1,6 @@
 # src/app / client
 
-Generated from the current working tree on 2026-04-10 16:14:38.
+Generated from the current working tree on 2026-04-10 16:45:57.
 
 - Files: 63
 - File kinds: React/TSX module (27), test file (13), Next.js page (9), Next.js loading UI (6), TypeScript module (6), Next.js layout (2)
@@ -338,7 +338,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Construction: test specification
 - Route context: /client/[slug]/components
 - Lines: 69
-- Bytes: 2103
+- Bytes: 2111
 - Imports (internal): src/app/client/[slug]/components/campaign-discussion-form.tsx
 - Imports (packages): @testing-library/react, vitest, next/navigation
 - Depends on groups: src/app / client
@@ -355,8 +355,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
 - Route context: /client/[slug]/components
-- Lines: 101
-- Bytes: 3432
+- Lines: 99
+- Bytes: 3335
 - Imports (internal): src/components/ui/button.tsx
 - Imports (packages): react, next/navigation, lucide-react
 - Imported by: src/app/client/[slug]/components/campaign-discussion-form.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.tsx
@@ -378,15 +378,15 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: test file
 - Construction: test specification
 - Route context: /client/[slug]/components
-- Lines: 160
-- Bytes: 5763
+- Lines: 185
+- Bytes: 6669
 - Imports (internal): src/app/client/[slug]/components/campaign-operating-panel.tsx, src/features/campaigns/client-operating.ts, src/app/client/[slug]/components/campaign-discussion-form.tsx
 - Imports (packages): @testing-library/react, vitest
 - Depends on groups: src/app / client, src/features / campaigns
 - Symbol details: const data
 - Defines: data
-- Tests / describe labels: CampaignOperatingPanel, renders the campaign workflow sections on the client campaign detail page
-- Contents summary: tests/describes: CampaignOperatingPanel; renders the campaign workflow sections on the client campaign detail page; internal imports: 3; package imports: 2
+- Tests / describe labels: CampaignOperatingPanel, renders a simpler campaign request surface and only shows supporting workflow that exists, keeps the empty state minimal when there is no workflow yet
+- Contents summary: tests/describes: CampaignOperatingPanel; renders a simpler campaign request surface and only shows supporting workflow that exists; keeps the empty state minimal when there is no workflow yet; internal imports: 3; package imports: 2
 
 ## `src/app/client/[slug]/components/campaign-operating-panel.tsx`
 - Status: tracked-clean
@@ -396,8 +396,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Route context: /client/[slug]/components
-- Lines: 367
-- Bytes: 15562
+- Lines: 341
+- Bytes: 14673
 - Imports (internal): src/lib/formatters.tsx, src/lib/action-item-labels.ts, src/lib/workspace-types.ts, src/features/campaigns/client-operating.ts, src/features/campaign-comments/server.ts, src/app/client/[slug]/components/campaign-discussion-form.tsx
 - Imports (packages): lucide-react
 - Imported by: src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx
@@ -408,8 +408,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Tests related: src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/shell-import-smoke.test.ts
 - Tests related (direct): src/app/client/[slug]/components/campaign-operating-panel.test.tsx
 - Exports: CampaignOperatingPanel
-- Symbol details: function CampaignOperatingPanel (exported), function toneBadge, function actionItemPriorityTone, function outcomeTone, function outcomeLabel, function compactText, function groupDiscussionThreads, function SectionCard, function EmptyState, interface CampaignOperatingPanelProps
-- Defines: toneBadge, actionItemPriorityTone, outcomeTone, outcomeLabel, compactText, groupDiscussionThreads, SectionCard, EmptyState, CampaignOperatingPanel, text, repliesByParent, current, … (+5 more)
+- Symbol details: function CampaignOperatingPanel (exported), function toneBadge, function actionItemPriorityTone, function outcomeTone, function outcomeLabel, function compactText, function groupDiscussionThreads, function SectionCard, function ThreadList, interface CampaignOperatingPanelProps
+- Defines: toneBadge, actionItemPriorityTone, outcomeTone, outcomeLabel, compactText, groupDiscussionThreads, SectionCard, ThreadList, CampaignOperatingPanel, text, repliesByParent, current, … (+4 more)
 - Contents summary: exports: CampaignOperatingPanel; internal imports: 6; package imports: 1
 
 ## `src/app/client/[slug]/components/campaign-section.tsx`
@@ -562,7 +562,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: EventCard; internal imports: 4; package imports: 2
 
 ## `src/app/client/[slug]/components/event-discussion-form.test.tsx`
-- Status: untracked
+- Status: modified
 - System: web
 - Group: src/app / client
 - Ownership: web client route surface
@@ -576,19 +576,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Depends on groups: src/app / client
 - Symbol details: const refresh
 - Defines: refresh
-- Tests / describe labels: EventDiscussionForm, posts a shared event comment and refreshes the page, shows an error when the comment request fails
-- Contents summary: tests/describes: EventDiscussionForm; posts a shared event comment and refreshes the page; shows an error when the comment request fails; internal imports: 1; package imports: 3
+- Tests / describe labels: EventDiscussionForm, posts a shared event request and refreshes the page, shows an error when the request fails
+- Contents summary: tests/describes: EventDiscussionForm; posts a shared event request and refreshes the page; shows an error when the request fails; internal imports: 1; package imports: 3
 
 ## `src/app/client/[slug]/components/event-discussion-form.tsx`
-- Status: untracked
+- Status: modified
 - System: web
 - Group: src/app / client
 - Ownership: web client route surface
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
 - Route context: /client/[slug]/components
-- Lines: 98
-- Bytes: 3415
+- Lines: 96
+- Bytes: 3312
 - Imports (internal): src/components/ui/button.tsx
 - Imports (packages): react, next/navigation, lucide-react
 - Imported by: src/app/client/[slug]/components/event-discussion-form.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/client/[slug]/components/event-operating-panel.tsx
@@ -603,33 +603,33 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: contains `use client`; exports: EventDiscussionForm; internal imports: 1; package imports: 3
 
 ## `src/app/client/[slug]/components/event-operating-panel.test.tsx`
-- Status: untracked
+- Status: modified
 - System: web
 - Group: src/app / client
 - Ownership: web client route surface
 - Type: test file
 - Construction: test specification
 - Route context: /client/[slug]/components
-- Lines: 163
-- Bytes: 5737
+- Lines: 188
+- Bytes: 6636
 - Imports (internal): src/app/client/[slug]/components/event-operating-panel.tsx, src/features/events/client-operating.ts, src/app/client/[slug]/components/event-discussion-form.tsx
 - Imports (packages): @testing-library/react, vitest
 - Depends on groups: src/app / client, src/features / events
 - Symbol details: const data
 - Defines: data
-- Tests / describe labels: EventOperatingPanel, renders the event workflow sections on the client event detail page
-- Contents summary: tests/describes: EventOperatingPanel; renders the event workflow sections on the client event detail page; internal imports: 3; package imports: 2
+- Tests / describe labels: EventOperatingPanel, renders a simpler event request surface and only shows supporting workflow that exists, keeps the empty state minimal when there is no workflow yet
+- Contents summary: tests/describes: EventOperatingPanel; renders a simpler event request surface and only shows supporting workflow that exists; keeps the empty state minimal when there is no workflow yet; internal imports: 3; package imports: 2
 
 ## `src/app/client/[slug]/components/event-operating-panel.tsx`
-- Status: untracked
+- Status: modified
 - System: web
 - Group: src/app / client
 - Ownership: web client route surface
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Route context: /client/[slug]/components
-- Lines: 368
-- Bytes: 15964
+- Lines: 342
+- Bytes: 15134
 - Imports (internal): src/lib/formatters.tsx, src/lib/action-item-labels.ts, src/lib/workspace-types.ts, src/features/events/client-operating.ts, src/features/event-comments/server.ts, src/app/client/[slug]/components/event-discussion-form.tsx
 - Imports (packages): lucide-react
 - Imported by: src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/client/[slug]/event/[eventId]/page.tsx
@@ -640,8 +640,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Tests related: src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Tests related (direct): src/app/client/[slug]/components/event-operating-panel.test.tsx
 - Exports: EventOperatingPanel
-- Symbol details: function EventOperatingPanel (exported), function toneBadge, function followUpPriorityTone, function outcomeTone, function outcomeLabel, function compactText, function groupDiscussionThreads, function SectionCard, function EmptyState, interface EventOperatingPanelProps
-- Defines: toneBadge, followUpPriorityTone, outcomeTone, outcomeLabel, compactText, groupDiscussionThreads, SectionCard, EmptyState, EventOperatingPanel, text, repliesByParent, current, … (+5 more)
+- Symbol details: function EventOperatingPanel (exported), function toneBadge, function followUpPriorityTone, function outcomeTone, function outcomeLabel, function compactText, function groupDiscussionThreads, function SectionCard, function ThreadList, interface EventOperatingPanelProps
+- Defines: toneBadge, followUpPriorityTone, outcomeTone, outcomeLabel, compactText, groupDiscussionThreads, SectionCard, ThreadList, EventOperatingPanel, text, repliesByParent, current, … (+4 more)
 - Contents summary: exports: EventOperatingPanel; internal imports: 6; package imports: 1
 
 ## `src/app/client/[slug]/components/event-status-badge.tsx`
@@ -881,7 +881,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: tests/describes: EventDetailPage; links missing events back to the events index; internal imports: 3; package imports: 2
 
 ## `src/app/client/[slug]/event/[eventId]/page.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/app / client
 - Ownership: web client route surface

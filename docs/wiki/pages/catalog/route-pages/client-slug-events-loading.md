@@ -1,6 +1,6 @@
 # /client/[slug]/events
 
-Generated from the current working tree on 2026-04-10 16:14:38.
+Generated from the current working tree on 2026-04-10 16:45:57.
 
 - Route file: `src/app/client/[slug]/events/loading.tsx`
 - Type: Next.js loading UI

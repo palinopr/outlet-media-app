@@ -1,6 +1,6 @@
 # Key File Symbol Map
 
-Generated from the current working tree on 2026-04-10 16:14:38.
+Generated from the current working tree on 2026-04-10 16:45:57.
 
 This page highlights key code files and lists their exported symbols, top-level definitions, and route/test ownership links.
 
@@ -641,8 +641,8 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Ownership: web root/shared route surface
 - Route: /landing
 - Exports: LandingPage, metadata, default
-- Symbol details: default function LandingPage (exported), function PhoneShell, const landingFont
-- Defines: PhoneShell, LandingPage, landingFont
+- Symbol details: default function LandingPage (exported), const landingFont
+- Defines: LandingPage, landingFont
 - Contents summary: Next.js page for `/landing`; exports: LandingPage, metadata, default; internal imports: 6; package imports: 3
 
 ### `src/app/privacy/page.tsx`

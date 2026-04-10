@@ -1,6 +1,6 @@
 # Approvals and shared timeline lifecycle
 
-Generated from the current working tree on 2026-04-10 16:14:38.
+Generated from the current working tree on 2026-04-10 16:45:57.
 
 Files and DB objects involved in approvals, notifications, shared events, and summary/reporting surfaces that expose them.
 

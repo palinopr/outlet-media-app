@@ -16,7 +16,7 @@ describe("EventDiscussionForm", () => {
     vi.stubGlobal("fetch", vi.fn());
   });
 
-  it("posts a shared event comment and refreshes the page", async () => {
+  it("posts a shared event request and refreshes the page", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ comment: { id: "comment_1" } }),
@@ -24,10 +24,10 @@ describe("EventDiscussionForm", () => {
 
     render(<EventDiscussionForm eventId="evt_1" slug="zamora" />);
 
-    fireEvent.change(screen.getByLabelText("Add an event note"), {
+    fireEvent.change(screen.getByLabelText("Send an event request"), {
       target: { value: "We need updated ticket counts before the weekend push." },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Post comment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send request" }));
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith("/api/event-comments", {
@@ -47,7 +47,7 @@ describe("EventDiscussionForm", () => {
     expect(refresh).toHaveBeenCalled();
   });
 
-  it("shows an error when the comment request fails", async () => {
+  it("shows an error when the request fails", async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: false,
       json: async () => ({ error: "Forbidden" }),
@@ -55,10 +55,10 @@ describe("EventDiscussionForm", () => {
 
     render(<EventDiscussionForm eventId="evt_1" slug="zamora" />);
 
-    fireEvent.change(screen.getByLabelText("Add an event note"), {
+    fireEvent.change(screen.getByLabelText("Send an event request"), {
       target: { value: "Client-only users should not hit this in the happy path." },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Post comment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send request" }));
 
     await waitFor(() => {
       expect(screen.getByText("Forbidden")).toBeInTheDocument();

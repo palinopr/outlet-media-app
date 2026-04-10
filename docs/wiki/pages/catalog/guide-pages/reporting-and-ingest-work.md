@@ -1,6 +1,6 @@
 # Start here: reporting and ingest work
 
-Generated from the current working tree on 2026-04-10 16:14:38.
+Generated from the current working tree on 2026-04-10 16:45:57.
 
 Recommended read order for someone changing ingest, snapshots, reports, dashboard summaries, or external analytics integrations.
 
@@ -22,4 +22,4 @@ Recommended read order for someone changing ingest, snapshots, reports, dashboar
 
 ## Signals seen in this area
 - Auth signals: imports Clerk server auth (32), references membership/scope access concepts (25), calls currentUser() (13), calls auth() (4), contains explicit access/role guard helper usage (1)
-- Behavior signals: client component/module (10), server action/module (9), calls revalidatePath() (7), calls redirect() (4), calls notFound() (4), defines generateMetadata (2), calls revalidateTag() (1), calls unstable_noStore() (1), sets dynamic rendering mode (1)
+- Behavior signals: client component/module (10), server action/module (9), calls revalidatePath() (7), calls redirect() (4), calls notFound() (4), defines generateMetadata (2), sets dynamic rendering mode (1), calls revalidateTag() (1), calls unstable_noStore() (1)

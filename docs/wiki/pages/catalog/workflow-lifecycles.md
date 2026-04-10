@@ -1,6 +1,6 @@
 # Workflow Lifecycle Pages
 
-Generated from the current working tree on 2026-04-10 16:14:38.
+Generated from the current working tree on 2026-04-10 16:45:57.
 
 This index links to deeper lifecycle pages that group routes, features, libs, tests, and DB objects around major system flows.
 

@@ -1,6 +1,6 @@
 # src/app / root routes
 
-Generated from the current working tree on 2026-04-10 16:14:38.
+Generated from the current working tree on 2026-04-10 16:45:57.
 
 - Files: 18
 - File kinds: Next.js page (8), binary asset (3), React/TSX module (2), test file (2), Markdown doc (1), file (.css) (1), Next.js layout (1)
@@ -120,14 +120,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: Next.js page
 - Construction: App Router page, component/UI-oriented module
 - Route: /landing
-- Lines: 93
-- Bytes: 4398
+- Lines: 79
+- Bytes: 3932
 - Imports (internal): src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx
 - Imports (packages): next, next/font/google, lucide-react
 - Depends on groups: src/components / landing
 - Exports: LandingPage, metadata, default
-- Symbol details: default function LandingPage (exported), function PhoneShell, const landingFont
-- Defines: PhoneShell, LandingPage, landingFont
+- Symbol details: default function LandingPage (exported), const landingFont
+- Defines: LandingPage, landingFont
 - Contents summary: Next.js page for `/landing`; exports: LandingPage, metadata, default; internal imports: 6; package imports: 3
 
 ## `src/app/layout.tsx`

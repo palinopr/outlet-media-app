@@ -1,5 +1,13 @@
 # Repo Wiki Log
 
+## [2026-04-10] client-events | replace empty operating-loop shell with request-first UI
+- Reworked `src/app/client/[slug]/components/event-operating-panel.tsx` so the client event detail no longer opens with the heavy multi-card "operating loop" shell.
+- The client event surface is now request-first:
+  - one primary `Event requests` area
+  - simpler composer copy in `event-discussion-form.tsx`
+  - supporting workflow blocks only render when approvals, follow-up items, agent outcomes, or recent activity actually exist
+- Added coverage proving the event panel stays minimal when there is no workflow data and that the old operating-loop copy is gone.
+
 ## [2026-04-10] client-campaign | replace empty operating-loop shell with request-first UI
 - Reworked `src/app/client/[slug]/components/campaign-operating-panel.tsx` so the client campaign detail no longer opens with the big empty "operating loop" shell.
 - The client campaign surface is now request-first:

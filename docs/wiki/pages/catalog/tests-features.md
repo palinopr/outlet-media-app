@@ -1,6 +1,6 @@
 # Tests / Features
 
-Generated from the current working tree on 2026-04-10 16:14:38.
+Generated from the current working tree on 2026-04-10 16:45:57.
 
 - Files: 36
 - File kinds: test file (36)
@@ -89,7 +89,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: tests/describes: buildAgentCommandSummary; prioritizes failed and active jobs and counts actionable outcomes; groups actionable outcomes by surface and prioritizes failures first; internal imports: 1; package imports: 1
 
 ## `__tests__/features/approvals/server.test.ts`
-- Status: modified
+- Status: tracked-clean
 - System: tests
 - Group: Tests / Features
 - Ownership: feature test suite

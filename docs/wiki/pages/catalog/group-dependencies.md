@@ -1,6 +1,6 @@
 # Group Dependency Map
 
-Generated from the current working tree on 2026-04-10 16:14:38.
+Generated from the current working tree on 2026-04-10 16:45:57.
 
 This page summarizes internal file-to-file dependencies rolled up to the catalog group level.
 
