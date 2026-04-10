@@ -20,15 +20,15 @@ export function LandingFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="overflow-hidden rounded-[28px] border border-white/80 bg-[#071427] text-white shadow-[0_32px_80px_-42px_rgba(15,23,42,0.45)]">
-      <div className="border-b border-white/10 px-6 py-5 text-center text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">
+    <section className="border-b border-white/8 px-4 py-6 text-white sm:px-5">
+      <p className="text-center text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
         FAQ
-      </div>
-      <div className="space-y-3 p-5">
+      </p>
+      <div className="mt-5 space-y-3">
         {FAQS.map((faq, index) => {
           const open = openIndex === index;
           return (
-            <div key={faq.question} className="rounded-[20px] border border-white/10 bg-[#0b182d]">
+            <div key={faq.question} className="rounded-[18px] border border-white/10 bg-[#0b182d]">
               <button
                 type="button"
                 onClick={() => setOpenIndex(open ? null : index)}

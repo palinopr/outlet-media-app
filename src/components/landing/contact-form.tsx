@@ -37,12 +37,9 @@ export function ContactForm() {
   }
 
   return (
-    <section
-      id="audit-form"
-      className="overflow-hidden rounded-[28px] border border-[#f59e0b]/22 bg-[#071427] text-white shadow-[0_32px_80px_-42px_rgba(15,23,42,0.45)]"
-    >
-      <div className="rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.18),transparent_28%),radial-gradient(circle_at_top_left,rgba(31,94,255,0.18),transparent_28%),linear-gradient(180deg,rgba(11,24,45,1)_0%,rgba(7,20,39,1)_100%)] p-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">
+    <section id="audit-form" className="px-4 py-6 text-white sm:px-5">
+      <div className="rounded-[24px] border border-[#f59e0b]/22 bg-[radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.2),transparent_30%),radial-gradient(circle_at_top_left,rgba(31,94,255,0.2),transparent_28%),linear-gradient(180deg,rgba(11,24,45,1)_0%,rgba(7,20,39,1)_100%)] p-5 shadow-[0_26px_60px_-36px_rgba(245,158,11,0.45)]">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">
           Urgent final CTA block
         </p>
         <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white">
@@ -62,7 +59,7 @@ export function ContactForm() {
             placeholder="Nombre"
             required
             maxLength={200}
-            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+            className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
           />
           <Input
             name="email"
@@ -70,7 +67,7 @@ export function ContactForm() {
             placeholder="Email corporativo"
             required
             maxLength={320}
-            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+            className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
           />
           <Input
             name="phone"
@@ -78,13 +75,13 @@ export function ContactForm() {
             placeholder="Teléfono"
             required
             maxLength={40}
-            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+            className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
           />
           <Input
             name="website"
             placeholder="Website / link"
             maxLength={240}
-            className="h-12 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+            className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
           />
 
           <Button
