@@ -1,5 +1,23 @@
 # Repo Wiki Log
 
+## [2026-04-10] admin-web | add client request handling tabs on campaign and event detail
+- Added a shared admin `ClientRequestsPanel` in `src/components/admin/client-requests-panel.tsx` so admins can handle client request threads directly from the owning campaign or event.
+- Added real admin request tabs on:
+  - `src/app/admin/campaigns/[campaignId]/page.tsx`
+  - `src/app/admin/events/[eventId]/page.tsx`
+- The new admin request surface now lets Outlet:
+  - see shared client request threads in one place
+  - reply directly back onto the same thread
+  - resolve and reopen request threads
+- Extended `src/app/api/event-comments/route.ts` with `PATCH` support so event request threads can now be resolved or reopened from admin.
+- Extended `src/features/events/server.ts` so admin event detail can load event comments for the new request tab.
+- Added coverage for the new admin request panel, both admin detail pages, and the new event comment `PATCH` flow.
+
+## [2026-04-10] landing | remove device-frame shell from public page
+- Corrected the public `/landing` presentation after the previous pass misread the reference as an actual in-page phone mock.
+- Removed `src/components/landing/phone-shell.tsx` and changed `src/app/landing/page.tsx` back to plain dark content panels on the bright landing backdrop.
+- Kept the stronger visual treatment from the redesign while removing the literal device frame so the page reads as a normal landing layout.
+
 ## [2026-04-10] landing | mobile-phone shell redesign and wiki refresh
 - Reworked the public `/landing` page to match the provided mobile mock more closely:
   - added a new `src/components/landing/phone-shell.tsx` wrapper for the dual phone presentation

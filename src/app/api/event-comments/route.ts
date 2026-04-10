@@ -11,6 +11,7 @@ import {
 } from "@/lib/api-helpers";
 import {
   CreateEventCommentSchema,
+  ResolveCommentSchema,
 } from "@/lib/api-schemas";
 import { excerpt } from "@/lib/text-utils";
 import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
@@ -241,4 +242,72 @@ export async function POST(request: NextRequest) {
   revalidateWorkflowPaths(getEventWorkflowPaths(body.client_slug, body.event_id));
 
   return NextResponse.json({ comment: data }, { status: 201 });
+}
+
+export async function PATCH(request: NextRequest) {
+  const { userId, error } = await authGuard();
+  if (error) return error;
+  if (!supabaseAdmin) return apiError("DB not configured");
+
+  const id = request.nextUrl.searchParams.get("id");
+  if (!id) return apiError("id required", 400);
+
+  const { data: body, error: validationError } = await validateRequest(
+    request,
+    ResolveCommentSchema,
+  );
+  if (validationError) return validationError;
+
+  const { data: existing } = await supabaseAdmin
+    .from("event_comments")
+    .select("event_id, client_slug, content, resolved, visibility")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!existing) return apiError("Comment not found", 404);
+
+  const event = await getEventRecordById(existing.event_id as string);
+  const effectiveClientSlug = event?.clientSlug ?? (existing.client_slug as string);
+  if (!effectiveClientSlug) return apiError("Comment not found", 404);
+
+  const access = await canAccessEventComments(
+    userId,
+    effectiveClientSlug,
+    existing.visibility as EventCommentVisibility,
+  );
+  if (!access.allowed) return apiError("Forbidden", 403);
+  if (!allowsEventInScope(access.scope, existing.event_id as string)) {
+    return apiError("Comment not found", 404);
+  }
+
+  const { error: dbErr } = await supabaseAdmin
+    .from("event_comments")
+    .update({ resolved: body.resolved, updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (dbErr) return dbError(dbErr);
+
+  if (body.resolved !== existing.resolved) {
+    const eventName = event?.artist ?? event?.name ?? (existing.event_id as string);
+    await logSystemEvent({
+      eventName: "event_comment_resolved",
+      actorId: userId,
+      clientSlug: effectiveClientSlug,
+      visibility: existing.visibility as EventCommentVisibility,
+      entityType: "event_comment",
+      entityId: id,
+      summary: body.resolved
+        ? `Resolved a comment in ${eventName} discussion`
+        : `Reopened a comment in ${eventName} discussion`,
+      detail: excerpt(existing.content as string),
+      metadata: {
+        eventId: existing.event_id,
+        resolved: body.resolved,
+      },
+    });
+  }
+
+  revalidateWorkflowPaths(getEventWorkflowPaths(effectiveClientSlug, existing.event_id as string));
+
+  return NextResponse.json({ success: true });
 }

@@ -7,6 +7,7 @@ import {
   Ticket,
   TrendingUp,
 } from "lucide-react";
+import { ClientRequestsPanel } from "@/components/admin/client-requests-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { EventOperatingPanel } from "@/components/admin/events/event-operating-panel";
@@ -15,6 +16,7 @@ import { centsToUsd, computeBlendedRoas, fmtDate, fmtNum, fmtUsd, slugToLabel } 
 
 interface Props {
   params: Promise<{ eventId: string }>;
+  searchParams?: Promise<{ tab?: string }>;
 }
 
 function eventSellThrough(sold: number, available: number | null) {
@@ -24,8 +26,10 @@ function eventSellThrough(sold: number, available: number | null) {
   return Math.round((sold / capacity) * 100);
 }
 
-export default async function AdminEventDetailPage({ params }: Props) {
+export default async function AdminEventDetailPage({ params, searchParams }: Props) {
   const { eventId } = await params;
+  const { tab } = (await searchParams) ?? {};
+  const activeTab = tab === "requests" ? "requests" : "overview";
   const data = await getEventOperatingData(eventId);
   if (!data) notFound();
 
@@ -39,6 +43,9 @@ export default async function AdminEventDetailPage({ params }: Props) {
     linkedCampaigns.map((c) => ({ spend: c.spend ?? 0, roas: c.roas })),
   );
   const sellThrough = eventSellThrough(event.ticketsSold, event.ticketsAvailable);
+  const openRequestCount = data.comments.filter(
+    (comment) => comment.visibility === "shared" && !comment.parentCommentId && !comment.resolved,
+  ).length;
 
   return (
     <div className="space-y-6">
@@ -106,79 +113,121 @@ export default async function AdminEventDetailPage({ params }: Props) {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.95fr)]">
-        <div className="space-y-6">
-          <EventOperatingPanel event={event} clients={clients} />
-
-          <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
-            <div className="mb-4">
-              <p className="text-sm font-medium text-[#787774]">Linked campaigns</p>
-              <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#2f2f2f]">
-                Promotion campaigns
-              </h2>
-              <p className="mt-1 text-sm text-[#9b9a97]">
-                Campaigns linked to this event through shared promotion activity.
-              </p>
-            </div>
-
-            {linkedCampaigns.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-[#e7e0d3] bg-[#faf8f5] px-4 py-6 text-sm text-[#9b9a97]">
-                No campaigns are linked to this event yet.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {linkedCampaigns.map((campaign) => (
-                  <Link
-                    key={campaign.campaignId}
-                    href={`/admin/campaigns/${campaign.campaignId}`}
-                    className="flex items-start justify-between gap-3 rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4 transition-colors hover:bg-white"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-[#2f2f2f]">{campaign.name}</p>
-                      <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#9b9a97]">
-                        <span>{campaign.status}</span>
-                        <span>&middot;</span>
-                        <span>{fmtNum(campaign.impressions ?? 0)} impressions</span>
-                        <span>&middot;</span>
-                        <span>{fmtNum(campaign.clicks ?? 0)} clicks</span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-[#2f2f2f]">
-                        {fmtUsd(centsToUsd(campaign.spend))}
-                      </p>
-                      <p className="mt-1 text-xs text-[#9b9a97]">
-                        {campaign.roas != null ? `${campaign.roas.toFixed(1)}x ROAS` : "No ROAS yet"}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
+      <div className="flex gap-1 border-b border-border/60">
+        <Link
+          href={`/admin/events/${eventId}`}
+          className={`relative px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "overview"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground/80"
+          }`}
+        >
+          Overview
+          {activeTab === "overview" ? (
+            <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-t bg-foreground" />
+          ) : null}
+        </Link>
+        <Link
+          href={`/admin/events/${eventId}?tab=requests`}
+          className={`relative px-4 py-2 text-sm font-medium transition-colors ${
+            activeTab === "requests"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground/80"
+          }`}
+        >
+          Client requests
+          {openRequestCount > 0 ? <span className="ml-1.5 text-[10px] text-muted-foreground">{openRequestCount}</span> : null}
+          {activeTab === "requests" ? (
+            <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-t bg-foreground" />
+          ) : null}
+        </Link>
       </div>
 
-      <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
-        <p className="text-sm font-medium text-[#787774]">Event snapshot</p>
-        <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#2f2f2f]">
-          Quick context
-        </h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Venue</p>
-            <p className="mt-2 text-sm font-medium text-[#2f2f2f]">{event.venue}</p>
-            <p className="mt-1 text-xs text-[#9b9a97]">{event.city ?? "No city set"}</p>
+      {activeTab === "overview" ? (
+        <>
+          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.95fr)]">
+            <div className="space-y-6">
+              <EventOperatingPanel event={event} clients={clients} />
+
+              <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-[#787774]">Linked campaigns</p>
+                  <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#2f2f2f]">
+                    Promotion campaigns
+                  </h2>
+                  <p className="mt-1 text-sm text-[#9b9a97]">
+                    Campaigns linked to this event through shared promotion activity.
+                  </p>
+                </div>
+
+                {linkedCampaigns.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#e7e0d3] bg-[#faf8f5] px-4 py-6 text-sm text-[#9b9a97]">
+                    No campaigns are linked to this event yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {linkedCampaigns.map((campaign) => (
+                      <Link
+                        key={campaign.campaignId}
+                        href={`/admin/campaigns/${campaign.campaignId}`}
+                        className="flex items-start justify-between gap-3 rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4 transition-colors hover:bg-white"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[#2f2f2f]">{campaign.name}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[#9b9a97]">
+                            <span>{campaign.status}</span>
+                            <span>&middot;</span>
+                            <span>{fmtNum(campaign.impressions ?? 0)} impressions</span>
+                            <span>&middot;</span>
+                            <span>{fmtNum(campaign.clicks ?? 0)} clicks</span>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-[#2f2f2f]">
+                            {fmtUsd(centsToUsd(campaign.spend))}
+                          </p>
+                          <p className="mt-1 text-xs text-[#9b9a97]">
+                            {campaign.roas != null ? `${campaign.roas.toFixed(1)}x ROAS` : "No ROAS yet"}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
           </div>
-          <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Date</p>
-            <p className="mt-2 text-sm font-medium text-[#2f2f2f]">{fmtDate(event.date)}</p>
-            <p className="mt-1 text-xs text-[#9b9a97]">
-              Updated {event.updatedAt ? fmtDate(event.updatedAt) : "recently"}
-            </p>
-          </div>
-        </div>
-      </section>
+
+          <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
+            <p className="text-sm font-medium text-[#787774]">Event snapshot</p>
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#2f2f2f]">
+              Quick context
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Venue</p>
+                <p className="mt-2 text-sm font-medium text-[#2f2f2f]">{event.venue}</p>
+                <p className="mt-1 text-xs text-[#9b9a97]">{event.city ?? "No city set"}</p>
+              </div>
+              <div className="rounded-2xl border border-[#f0ebe2] bg-[#fcfbf8] p-4">
+                <p className="text-xs font-medium uppercase tracking-wide text-[#9b9a97]">Date</p>
+                <p className="mt-2 text-sm font-medium text-[#2f2f2f]">{fmtDate(event.date)}</p>
+                <p className="mt-1 text-xs text-[#9b9a97]">
+                  Updated {event.updatedAt ? fmtDate(event.updatedAt) : "recently"}
+                </p>
+              </div>
+            </div>
+          </section>
+        </>
+      ) : (
+        <ClientRequestsPanel
+          clientSlug={event.clientSlug}
+          comments={data.comments}
+          entityId={event.id}
+          entityLabel={event.artist || event.name}
+          entityType="event"
+        />
+      )}
     </div>
   );
 }
