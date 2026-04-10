@@ -29,9 +29,9 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <div
-      className={`${landingFont.className} min-h-screen bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(232,244,255,0.96)_50%,rgba(223,238,255,0.96)_100%)] text-slate-950`}
+      className={`${landingFont.className} min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(31,94,255,0.18),transparent_24%),radial-gradient(circle_at_top_right,rgba(245,158,11,0.12),transparent_22%),linear-gradient(180deg,#07111f_0%,#060d18_52%,#050a13_100%)] text-white`}
     >
-      <main className="mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 sm:pt-12 lg:pb-12">
+      <main className="mx-auto max-w-7xl px-4 pb-24 pt-6 sm:px-6 sm:pt-10 lg:pb-12">
         <div className="grid gap-8 lg:grid-cols-[minmax(0,560px)_minmax(0,420px)] lg:items-start lg:justify-center lg:gap-10">
           <section className="overflow-hidden rounded-[34px] border border-[#0c1d35] bg-[linear-gradient(180deg,#081425_0%,#071120_100%)] shadow-[0_55px_120px_-48px_rgba(15,23,42,0.7)]">
             <LandingHero />
@@ -64,7 +64,7 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/70 bg-white/88 px-4 py-3 shadow-[0_-18px_50px_-24px_rgba(15,23,42,0.45)] backdrop-blur-xl lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#081220]/88 px-4 py-3 shadow-[0_-18px_50px_-24px_rgba(15,23,42,0.65)] backdrop-blur-xl lg:hidden">
         <a
           href="#audit-form"
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1f5eff] px-5 text-sm font-semibold tracking-wide text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-transform active:scale-[0.99]"
