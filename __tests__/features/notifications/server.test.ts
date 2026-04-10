@@ -289,6 +289,28 @@ describe("listNotificationsForUser", () => {
     expect(notifications.map((notification) => notification.id)).toEqual(["notif_rls"]);
   });
 
+  it("does not fall back to the service role for non-admin client notification reads when the Clerk-scoped client is unavailable", async () => {
+    state.notifications = [
+      {
+        id: "notif_service_role",
+        user_id: "user_1",
+        title: "Service role row",
+        type: "comment",
+        client_slug: "zamora",
+        read: false,
+        created_at: "2026-03-06T12:00:00.000Z",
+      },
+    ];
+
+    createClerkSupabaseClient.mockResolvedValue(null);
+
+    const notifications = await listNotificationsForUser("user_1", {
+      clientSlug: "zamora",
+    });
+
+    expect(notifications).toEqual([]);
+  });
+
   it("filters scoped client notifications by campaign, event, asset, and approval context", async () => {
     state.notifications = [
       {
@@ -386,6 +408,10 @@ describe("listNotificationsForUser", () => {
         metadata: {},
       },
     ];
+    userScopedState.notifications = state.notifications;
+    userScopedState.event_comments = state.event_comments;
+    userScopedState.asset_follow_up_items = state.asset_follow_up_items;
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
 
     mockedListVisibleAssetIdsForScope.mockResolvedValue(
       new Set(["asset_allowed", "asset_from_follow_up"]),
@@ -443,6 +469,8 @@ describe("listNotificationsForUser", () => {
         created_at: "2026-03-06T12:00:00.000Z",
       },
     ];
+    userScopedState.notifications = state.notifications;
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
 
     mockedListVisibleAssetIdsForScope.mockResolvedValue(new Set());
 
@@ -507,6 +535,10 @@ describe("listNotificationsForUser", () => {
         task_id: "task_approval",
       },
     ];
+    userScopedState.notifications = state.notifications;
+    userScopedState.campaign_comments = state.campaign_comments;
+    userScopedState.asset_follow_up_items = state.asset_follow_up_items;
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
 
     const notifications = await listNotificationsForUser("user_1", {
       clientSlug: "zamora",
@@ -609,6 +641,8 @@ describe("listNotificationsForUser", () => {
         task_id: null,
       },
     ];
+    userScopedState.notifications = state.notifications;
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
 
     const notifications = await listNotificationsForUser("user_1", {
       clientSlug: "zamora",
@@ -803,6 +837,9 @@ describe("listNotificationsForUser", () => {
         metadata: {},
       },
     ];
+    userScopedState.notifications = state.notifications;
+    userScopedState.campaign_action_items = state.campaign_action_items;
+    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
 
     const notifications = await listNotificationsForUser("user_1", {
       clientSlug: "zamora",
