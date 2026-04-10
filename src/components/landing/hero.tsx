@@ -2,51 +2,57 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { ArrowRight, BadgeCheck, Sparkles, Star, Ticket } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  CalendarDays,
+  MousePointerClick,
+  PhoneCall,
+  Sparkles,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const PROOF_PILLS = [
+  "20 connected ad accounts reviewed",
+  "1.6K+ historical campaigns visible",
+  "Puerto Rico-first positioning",
+  "Built for mobile traffic",
+] as const;
+
+const FUNNEL_STEPS = [
+  {
+    label: "Ad click",
+    detail: "Meta, Google, or TikTok traffic hits one clear angle instead of a messy homepage.",
+    icon: MousePointerClick,
+  },
+  {
+    label: "Mobile page",
+    detail: "Short copy, fast load, strong proof, and one primary CTA above the fold.",
+    icon: Sparkles,
+  },
+  {
+    label: "Qualified lead",
+    detail: "We capture who they are, what they want, and whether the budget and fit make sense.",
+    icon: BadgeCheck,
+  },
+  {
+    label: "Appointment",
+    detail: "The prospect gets pushed toward a call request instead of drifting after the click.",
+    icon: CalendarDays,
+  },
+] as const;
+
+const CATEGORY_NOTES = [
+  "Artists and entertainment",
+  "Eventos y nightlife",
+  "Ecommerce y retail",
+  "Servicios locales y lead-gen",
+] as const;
+
 export function LandingHero() {
-  const proofMetrics = [
-    "7+ years building campaigns",
-    "$12M+ managed volume",
-    "150+ sold-out events",
-    "370K+ tickets sold on world tours",
-  ] as const;
-
-  const proofNames = [
-    "Rauw Alejandro",
-    "Don Omar",
-    "Ivy Queen",
-    "Miguel Bosé",
-    "Grupo Firme",
-    "Vaqueros de Bayamón",
-    "Beamina",
-  ] as const;
-
-  const signatureWins = [
-    { label: "Don Omar", value: "99.38% sell-through" },
-    { label: "Rauw Alejandro", value: "370K+ tickets sold" },
-    { label: "Vaqueros de Bayamón", value: "ROAS 13.6" },
-    { label: "Beamina", value: "ROAS 5.2" },
-  ] as const;
-
-  const founderNotes = [
-    "Led by Jaime Ortiz",
-    "Recognized by Meta",
-    "Spotify Marquee of the Year 2022",
-    "Speaker at Spotify Masterclasses",
-  ] as const;
-
-  const capabilityNotes = [
-    "Artists and world tours",
-    "Nightlife and venue calendars",
-    "Brands and ecommerce pushes",
-    "Client visibility while campaigns are live",
-  ] as const;
-
   return (
-    <section className="relative overflow-hidden px-6 pb-20 pt-14 sm:pb-24 sm:pt-20">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[720px]" aria-hidden>
+    <section className="relative overflow-hidden px-4 pb-18 pt-12 sm:px-6 sm:pb-24 sm:pt-16">
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[680px]" aria-hidden>
         <motion.div
           animate={{ x: [0, 32, -12, 0], y: [0, -22, 14, 0], scale: [1, 1.08, 0.96, 1] }}
           transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
@@ -57,49 +63,45 @@ export function LandingHero() {
           transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
           className="absolute right-[6%] top-[12%] h-64 w-64 rounded-full bg-[#f97316]/18 blur-[110px]"
         />
-        <motion.div
-          animate={{ x: [0, 14, -10, 0], y: [0, 30, -14, 0], scale: [1, 1.03, 0.97, 1] }}
-          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute left-[34%] top-[28%] h-80 w-80 rounded-full bg-cyan-400/14 blur-[140px]"
-        />
       </div>
 
-      <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1fr_0.95fr] lg:items-center">
+      <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.94fr] lg:items-center">
         <div className="relative">
           <motion.div
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="inline-flex items-center gap-2 rounded-full border border-[#4aa8ff]/20 bg-[#4aa8ff]/10 px-4 py-2 text-xs font-medium uppercase tracking-[0.24em] text-[#9bd0ff]"
+            className="inline-flex items-center gap-2 rounded-full border border-[#4aa8ff]/20 bg-[#4aa8ff]/10 px-4 py-2 text-[11px] font-medium uppercase tracking-[0.24em] text-[#9bd0ff] sm:text-xs"
           >
             <Sparkles className="size-3.5" />
-            Performance Agency + AI Operating System
+            Puerto Rico lead funnels
           </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, ease: "easeOut", delay: 0.08 }}
-            className="mt-6 max-w-3xl text-5xl font-bold tracking-[-0.05em] text-white sm:text-6xl lg:text-7xl"
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.08 }}
+            className="mt-5 max-w-3xl text-4xl font-bold tracking-[-0.05em] text-white sm:text-5xl lg:text-6xl"
           >
-            Fusing culture, content, and commerce to move tickets and revenue.
+            Convierte clicks en citas, leads y ventas.
           </motion.h1>
 
           <motion.p
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.75, ease: "easeOut", delay: 0.16 }}
-            className="mt-6 max-w-2xl text-lg leading-8 text-slate-300"
+            transition={{ duration: 0.7, ease: "easeOut", delay: 0.14 }}
+            className="mt-5 max-w-2xl text-base leading-8 text-slate-300 sm:text-lg"
           >
-            Outlet Media is a creative agency built for the high-pressure moment. We help artists,
-            tours, global brands, and fast-moving companies grow with efficiency through
-            strategic creative, paid media, and AI-backed visibility.
+            Si tus anuncios están generando tráfico pero la página no convierte en el teléfono,
+            el presupuesto se está escapando. Outlet arma el ángulo del anuncio, la landing
+            mobile-first y el camino hacia la cita para marcas, artistas, eventos y negocios en
+            Puerto Rico.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: "easeOut", delay: 0.24 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.22 }}
             className="mt-8 flex flex-col gap-3 sm:flex-row"
           >
             <Button
@@ -107,8 +109,8 @@ export function LandingHero() {
               size="lg"
               className="h-12 rounded-full bg-[#4aa8ff] px-6 text-base font-semibold text-[#06111d] hover:bg-[#72beff]"
             >
-              <a href="#proof">
-                See the Proof
+              <a href="#contact">
+                Solicitar auditoría
                 <ArrowRight className="size-4" />
               </a>
             </Button>
@@ -118,36 +120,41 @@ export function LandingHero() {
               asChild
               className="h-12 rounded-full border-white/15 bg-white/[0.03] px-6 text-base text-slate-100 hover:bg-white/[0.08]"
             >
-              <a href="#contact">Book a Strategy Call</a>
+              <a href="tel:+13053225709">
+                <PhoneCall className="size-4" />
+                Llamar ahora
+              </a>
             </Button>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.65, ease: "easeOut", delay: 0.28 }}
-            className="mt-6"
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.28 }}
+            className="mt-7 flex flex-wrap gap-2"
           >
-            <div className="flex flex-wrap gap-2">
-              {proofMetrics.map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium uppercase tracking-[0.16em] text-slate-200"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">
-              The current proof set already includes {proofNames.join(", ")}, plus named outcomes
-              tied to tickets sold, sell-through, ROAS, and ecommerce growth.
-            </p>
+            {PROOF_PILLS.map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs font-medium uppercase tracking-[0.16em] text-slate-200"
+              >
+                {item}
+              </span>
+            ))}
+          </motion.div>
 
-            <div className="mt-6 flex flex-wrap gap-2">
-              {capabilityNotes.map((item) => (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut", delay: 0.34 }}
+            className="mt-7 rounded-[28px] border border-white/10 bg-white/[0.04] p-5 sm:p-6"
+          >
+            <p className="text-xs uppercase tracking-[0.22em] text-[#9bd0ff]">Best fit</p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {CATEGORY_NOTES.map((item) => (
                 <span
                   key={item}
-                  className="rounded-full border border-white/10 bg-[#081421]/90 px-3 py-1.5 text-xs uppercase tracking-[0.18em] text-slate-200"
+                  className="rounded-full border border-white/10 bg-[#081421]/92 px-3 py-1.5 text-sm text-slate-200"
                 >
                   {item}
                 </span>
@@ -159,97 +166,75 @@ export function LandingHero() {
         <motion.div
           initial={{ opacity: 0, y: 28, scale: 0.98 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.9, ease: "easeOut", delay: 0.18 }}
+          transition={{ duration: 0.85, ease: "easeOut", delay: 0.18 }}
           className="relative lg:justify-self-end"
         >
-          <div className="absolute inset-0 rounded-[32px] bg-gradient-to-br from-[#4aa8ff]/18 via-transparent to-[#f97316]/16 blur-3xl" />
+          <div className="absolute inset-0 rounded-[30px] bg-gradient-to-br from-[#4aa8ff]/18 via-transparent to-[#f97316]/16 blur-3xl" />
           <div className="relative overflow-hidden rounded-[30px] border border-white/12 bg-white/[0.05] p-3 shadow-[0_40px_120px_-40px_rgba(0,0,0,0.82)] backdrop-blur-xl">
-            <div className="space-y-4 rounded-[24px] border border-white/10 bg-[#081421]/95 p-4 sm:p-5">
-              <div className="relative overflow-hidden rounded-[28px] border border-white/10">
-                <div className="relative aspect-[1.16/0.92]">
-                  <Image
-                    src="/images/landing/tour-artist.png"
-                    alt="Featured tour artist performance"
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 42vw"
-                    className="object-cover"
-                    priority
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#04111c] via-[#04111c]/30 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-5">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-[#04111c]/70 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-[#9bd0ff] backdrop-blur">
-                      <Ticket className="size-3.5" />
-                      Tour momentum
-                    </div>
-                    <p className="mt-3 max-w-md text-2xl font-semibold tracking-tight text-white sm:text-[30px]">
-                      370K+ tickets sold on world tours.
-                    </p>
-                    <p className="mt-2 max-w-md text-sm leading-6 text-slate-200">
-                      Real artist work, real launch pressure, and named outcomes already present in
-                      the approved Outlet materials.
-                    </p>
-                  </div>
+            <div className="overflow-hidden rounded-[24px] border border-white/10 bg-[#081421]/95">
+              <div className="relative aspect-[1.15/0.72] border-b border-white/10">
+                <Image
+                  src="/images/landing/tour-artist.png"
+                  alt="Mobile-first campaign creative"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 42vw"
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#04111c] via-[#04111c]/30 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <p className="text-xs uppercase tracking-[0.2em] text-[#9bd0ff]">
+                    Mobile pressure
+                  </p>
+                  <p className="mt-2 max-w-sm text-2xl font-semibold tracking-tight text-white sm:text-[30px]">
+                    El click tiene que llegar a una página que cierre, no a una página que distraiga.
+                  </p>
                 </div>
               </div>
 
-              <div className="grid gap-4 lg:grid-cols-[0.78fr_1.22fr]">
-                <div className="overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.04]">
-                  <div className="relative aspect-[0.84/1]">
-                    <Image
-                      src="/images/landing/jaime-ortiz.png"
-                      alt="Jaime Ortiz"
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 20vw"
-                      className="object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#04111c] via-[#04111c]/18 to-transparent" />
-                  </div>
-                  <div className="p-4">
-                    <p className="text-xs uppercase tracking-[0.22em] text-[#fbbf94]">
-                      Founder credibility
-                    </p>
-                    <div className="mt-4 space-y-2">
-                      {founderNotes.map((note) => (
-                        <div
-                          key={note}
-                          className="rounded-2xl border border-white/10 bg-[#06101b] px-3 py-2.5 text-sm text-slate-200"
-                        >
-                          {note}
-                        </div>
-                      ))}
+              <div className="space-y-4 p-4 sm:p-5">
+                <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
+                  <p className="text-xs uppercase tracking-[0.22em] text-[#fbbf94]">
+                    Fresh inventory snapshot
+                  </p>
+                  <div className="mt-4 grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl border border-white/10 bg-[#06101b] p-3">
+                      <p className="text-2xl font-bold tracking-tight text-white">20</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">
+                        accessible ad accounts
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-[#06101b] p-3">
+                      <p className="text-2xl font-bold tracking-tight text-white">1,683</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">
+                        visible campaigns
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
-                    <div className="flex items-center gap-2 text-[#9bd0ff]">
-                      <BadgeCheck className="size-4" />
-                      <p className="text-xs uppercase tracking-[0.22em]">Signature outcomes</p>
-                    </div>
-                    <div className="mt-4 space-y-3">
-                      {signatureWins.map((item) => (
+                <div className="rounded-[24px] border border-white/10 bg-white/[0.04] p-4">
+                  <p className="text-xs uppercase tracking-[0.22em] text-emerald-300">
+                    Ad click to appointment
+                  </p>
+                  <div className="mt-4 space-y-3">
+                    {FUNNEL_STEPS.map((step) => {
+                      const Icon = step.icon;
+                      return (
                         <div
-                          key={item.label}
-                          className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#06101b] px-4 py-3"
+                          key={step.label}
+                          className="flex gap-3 rounded-2xl border border-white/10 bg-[#06101b] p-3"
                         >
-                          <span className="text-sm text-slate-300">{item.label}</span>
-                          <span className="text-sm font-semibold text-white">{item.value}</span>
+                          <div className="rounded-2xl bg-[#4aa8ff]/12 p-2.5 text-[#9bd0ff]">
+                            <Icon className="size-4" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-white">{step.label}</p>
+                            <p className="mt-1 text-sm leading-6 text-slate-300">{step.detail}</p>
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="rounded-[28px] border border-white/10 bg-white/[0.04] p-5">
-                    <div className="flex items-center gap-2 text-emerald-300">
-                      <Star className="size-4" />
-                      <p className="text-xs uppercase tracking-[0.22em]">Why it feels different</p>
-                    </div>
-                    <p className="mt-4 text-sm leading-7 text-slate-300">
-                      Most agencies send reports after the moment has already moved. Outlet stays
-                      inside the campaign pressure while it is still live, then uses the system to
-                      keep clients clear on what changed, why it changed, and what happens next.
-                    </p>
+                      );
+                    })}
                   </div>
                 </div>
               </div>

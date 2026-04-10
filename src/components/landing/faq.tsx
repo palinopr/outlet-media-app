@@ -1,78 +1,78 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Plus, Minus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { useState } from "react";
 
 const FAQS = [
   {
-    question: "¿Cuáles son los servicios que ofrecen?",
+    question: "¿Esto es para artistas solamente o también para negocios?",
     answer:
-      "Ofrecemos campañas dirigidas en todas las plataformas principales (Meta, Google, TikTok). También contamos con un programa para la evolución del artista o marca, que incluye construcción de redes sociales y creación de contenido viral. Además, nos especializamos en publicidad estratégica para eventos.",
+      "Es para ambos. El enfoque es direct-response: campañas que necesitan convertir el click en una conversación real. Eso puede ser un artista, una promotora, ecommerce, real estate, solar o un negocio local con paid traffic.",
   },
   {
-    question: "¿Cuál es el costo de sus servicios?",
+    question: "¿Pueden usar mis anuncios actuales o hay que empezar de cero?",
     answer:
-      "Todo depende del objetivo. Tenemos múltiples servicios para todo tipo de presupuesto. Por ejemplo, las consultas estratégicas tienen un costo de $250, y el servicio de manejo de campaña tiene un mínimo requerido de inversión de $3,000.",
+      "Podemos partir de lo que ya existe. Si hay campañas activas, revisamos el ángulo, la experiencia mobile y el paso hacia la cita antes de decidir qué hay que rehacer.",
   },
   {
-    question: "¿Se puede hacer una consulta tú a tú?",
+    question: "¿La página puede salir en español, inglés o Spanglish?",
     answer:
-      "Sí. Si desea discutir problemas e ideas específicas para llegar a su meta, puede agendar una <a href='tel:+13053225709' class='text-[#4aa8ff] hover:underline inline-flex items-center gap-1 font-medium'>LLAMADA</a> con un mínimo de una hora de duración.",
+      "Sí. Para Puerto Rico normalmente tiene más sentido una mezcla natural según el tipo de cliente, el ticket promedio y la categoría. La idea es sonar local y claro, no traducido a la fuerza.",
   },
   {
-    question: "¿Cuáles son las características que buscamos para trabajar una campaña?",
+    question: "¿Qué pasa después de llenar el formulario?",
     answer:
-      "Buscamos proyectos que ya cuenten con presencia musical, una marca personal definida y actividad constante en redes sociales para maximizar el impacto de la inversión.",
+      "Revisamos el contexto que nos envías, validamos si hay fit y luego coordinamos la llamada. La meta de esta página no es coleccionar leads fríos; es abrir conversaciones con intención real.",
   },
   {
-    question: "¿Cómo sé si mi campaña fue aceptada?",
+    question: "¿Cuál es el mínimo para empezar?",
     answer:
-      "Si su propuesta es aceptada para trabajar con nosotros, recibirá una confirmación por correo electrónico en un periodo de 5 a 10 días hábiles.",
+      "Depende del tipo de trabajo. Las consultas estratégicas siguen teniendo un costo base, y para manejo de campaña normalmente buscamos suficiente presupuesto para que el funnel tenga espacio real para funcionar.",
   },
   {
-    question: "¿Con quién han trabajado?",
+    question: "Si quiero hablar hoy, ¿los puedo llamar directo?",
     answer:
-      "Hemos ayudado a artistas a evolucionar desde sus comienzos hasta un rango global. Nuestra lista incluye a Rauw Alejandro, Don Omar, Ivy Queen, Miguel Bosé, y marcas como Beamina y Vaqueros de Bayamón. Trabajamos tanto con artistas establecidos como con talentos emergentes y publicidad para eventos masivos.",
+      "Sí. Puedes tocar aquí para llamar ahora mismo: <a href='tel:+13053225709' class='text-[#4aa8ff] hover:underline inline-flex items-center gap-1 font-medium'>+1 (305) 322-5709</a>.",
   },
-];
+] as const;
 
 export function LandingFAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="mx-auto max-w-4xl px-6 py-24 sm:py-28">
+    <section id="faq" className="mx-auto max-w-4xl px-4 py-20 sm:px-6 sm:py-24">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.45 }}
       >
-        <p className="section-label text-center text-[#9bd0ff]">Preguntas Frecuentes</p>
+        <p className="section-label text-center text-[#9bd0ff]">FAQ</p>
         <h2 className="mt-3 text-center text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          Everything you need to know about the method.
+          Objections we want to remove before the call.
         </h2>
       </motion.div>
 
-      <div className="mt-12 space-y-4">
+      <div className="mt-10 space-y-4">
         {FAQS.map((faq, index) => (
           <motion.div
-            key={index}
+            key={faq.question}
             initial={{ opacity: 0, y: 15 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.4, delay: index * 0.05 }}
+            transition={{ duration: 0.35, delay: index * 0.04 }}
             className="overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03]"
           >
             <button
               onClick={() => setOpenIndex(openIndex === index ? null : index)}
-              className="flex w-full items-center justify-between p-6 text-left transition-colors hover:bg-white/[0.05]"
+              className="flex w-full items-center justify-between gap-4 p-6 text-left transition-colors hover:bg-white/[0.05]"
             >
               <span className="text-lg font-medium text-white">{faq.question}</span>
               {openIndex === index ? (
-                <Minus className="size-5 text-[#9bd0ff]" />
+                <Minus className="size-5 shrink-0 text-[#9bd0ff]" />
               ) : (
-                <Plus className="size-5 text-slate-400" />
+                <Plus className="size-5 shrink-0 text-slate-400" />
               )}
             </button>
             {openIndex === index && (

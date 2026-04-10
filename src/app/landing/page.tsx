@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Space_Grotesk } from "next/font/google";
+import { CalendarDays, PhoneCall } from "lucide-react";
 import { LandingNav } from "@/components/landing/nav";
 import { LandingHero } from "@/components/landing/hero";
 import { LandingCredibility } from "@/components/landing/credibility";
@@ -9,6 +10,7 @@ import { LandingStats } from "@/components/landing/stats";
 import { ContactForm } from "@/components/landing/contact-form";
 import { LandingFAQ } from "@/components/landing/faq";
 import { LandingFooter } from "@/components/landing/footer";
+import { Button } from "@/components/ui/button";
 
 const landingFont = Space_Grotesk({
   subsets: ["latin"],
@@ -16,13 +18,13 @@ const landingFont = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Outlet Media | Performance Agency for Artists, Events, and Brands",
+  title: "Puerto Rico Lead Funnels | Outlet Media",
   description:
-    "Performance agency for artists, tours, nightlife, venues, and brands. Creative, paid media, and AI-backed operating visibility built to move tickets and revenue.",
+    "Mobile-first paid media funnels for Puerto Rico brands, artists, events, ecommerce, and local service businesses. Turn ad clicks into qualified leads and booked calls.",
   openGraph: {
-    title: "Outlet Media",
+    title: "Puerto Rico Lead Funnels | Outlet Media",
     description:
-      "Creative, media, and AI-backed operating visibility built to move tickets and revenue.",
+      "Mobile-first landing pages and paid-media funnels built to turn clicks into booked calls, qualified leads, and revenue.",
     images: [{ url: "/icon.png", width: 512, height: 512 }],
   },
   robots: { index: true, follow: true },
@@ -31,7 +33,7 @@ export const metadata: Metadata = {
 export default function LandingPage() {
   return (
     <div
-      className={`${landingFont.className} dark relative min-h-screen overflow-x-hidden bg-[#07111f] text-slate-100 [background-image:radial-gradient(circle_at_top_left,rgba(74,168,255,0.22),transparent_28%),radial-gradient(circle_at_88%_14%,rgba(249,115,22,0.18),transparent_22%),linear-gradient(180deg,#07111f_0%,#081421_38%,#050b14_100%)]`}
+      className={`${landingFont.className} dark relative min-h-screen overflow-x-hidden bg-[#07111f] pb-24 text-slate-100 sm:pb-0 [background-image:radial-gradient(circle_at_top_left,rgba(74,168,255,0.22),transparent_28%),radial-gradient(circle_at_88%_14%,rgba(249,115,22,0.18),transparent_22%),linear-gradient(180deg,#07111f_0%,#081421_38%,#050b14_100%)]`}
     >
       <div
         aria-hidden
@@ -40,13 +42,37 @@ export default function LandingPage() {
       <div className="relative z-10">
         <LandingNav />
         <LandingHero />
-        <LandingFeatures />
         <LandingCredibility />
+        <LandingFeatures />
         <LandingHowItWorks />
         <LandingStats />
         <LandingFAQ />
         <ContactForm />
         <LandingFooter />
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#07111f]/95 px-4 py-3 backdrop-blur-xl sm:hidden">
+        <div className="mx-auto grid max-w-md grid-cols-2 gap-3">
+          <Button
+            asChild
+            variant="outline"
+            className="h-12 rounded-full border-white/15 bg-white/[0.04] text-slate-100 hover:bg-white/[0.08]"
+          >
+            <a href="tel:+13053225709">
+              <PhoneCall className="size-4" />
+              Llamar
+            </a>
+          </Button>
+          <Button
+            asChild
+            className="h-12 rounded-full bg-[#4aa8ff] font-semibold text-[#06111d] hover:bg-[#72beff]"
+          >
+            <a href="#contact">
+              <CalendarDays className="size-4" />
+              Solicitar cita
+            </a>
+          </Button>
+        </div>
       </div>
     </div>
   );

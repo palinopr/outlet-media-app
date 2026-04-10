@@ -2,141 +2,65 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { BadgeCheck, Building2, MapPin, Music4, Sparkles, Star } from "lucide-react";
+import { BadgeCheck, CalendarDays, ChartNoAxesCombined, ShieldCheck, Star } from "lucide-react";
 
-const PROOF_STATS = [
-  { value: "$12M+", label: "Managed campaign volume across approved Outlet materials" },
-  { value: "150+", label: "Sold-out events across tours, nightlife, and partner calendars" },
-  { value: "20", label: "Connected Meta ad accounts reviewed in the live inventory" },
-  { value: "1,659", label: "Campaigns visible in connected Meta history" },
+const SNAPSHOT_STATS = [
+  {
+    value: "20",
+    label: "accessible Meta ad accounts in the current inventory snapshot",
+  },
+  {
+    value: "1,683",
+    label: "historical campaigns visible across those connected accounts",
+  },
+  {
+    value: "PR-first",
+    label: "positioning built for Puerto Rico buyers, founders, promoters, and local operators",
+  },
+  {
+    value: "1 CTA",
+    label: "direct-response bias: one main action instead of a menu of distractions",
+  },
 ] as const;
 
-const FEATURED_WORK = [
-  {
-    name: "Rauw Alejandro",
-    category: "World-tour creative",
-    detail: "R&B/Dancehall pioneer. Sold out over 370k tickets across world tours with multi-platinum impact.",
-    image: "/images/landing/rauw-shauring.png",
-    accent: "from-[#4aa8ff]/55 via-[#4aa8ff]/10 to-transparent",
-  },
-  {
-    name: "Don Omar",
-    category: "Tour performance",
-    detail: "Reggaeton legend. Record-breaking 99.38% sell-through for 'Back to Reggaeton' tour.",
-    image: "/images/landing/luis-miguel.png",
-    accent: "from-[#f97316]/55 via-[#f97316]/10 to-transparent",
-  },
-  {
-    name: "Gilberto Santa Rosa",
-    category: "Latin icon roster",
-    detail: "Strategic positioning and digital presence for the 'Caballero de la Salsa'.",
-    image: "/images/landing/gilberto-santa-rosa.png",
-    accent: "from-emerald-400/45 via-emerald-400/10 to-transparent",
-  },
-  {
-    name: "Beamina",
-    category: "E-commerce & Brand",
-    detail: "Exclusive community growth and $1M+ in generated revenue with 5.2 ROAS.",
-    image: "/images/landing/young-miko-poster.png",
-    accent: "from-fuchsia-400/45 via-fuchsia-400/10 to-transparent",
-  },
+const RECOGNIZABLE_NAMES = [
+  "Rauw Alejandro",
+  "Duars",
+  "Beamina",
+  "TPPR Solar",
+  "Don Omar",
+  "Ivy Queen",
 ] as const;
 
 const OUTCOME_PROOF = [
   {
+    name: "Rauw Alejandro",
+    value: "370K+",
+    label: "tickets sold",
+    detail: "World-tour proof already present in the approved Outlet materials.",
+  },
+  {
     name: "Don Omar",
     value: "99.38%",
     label: "sell-through",
-    detail: "Back to Reggaeton: record sales noted for F1 Miami.",
+    detail: "Recognizable performance proof used to show execution under real pressure.",
   },
   {
     name: "Vaqueros de Bayamón",
     value: "13.6",
     label: "ROAS",
-    detail: "$345K in sales generated for BSN postseason.",
+    detail: "Named Puerto Rico result demonstrating direct-response efficiency.",
   },
   {
     name: "Beamina",
-    value: "63K+",
-    label: "sales generated",
-    detail: "ROAS 5.2 and exclusive community growth.",
-  },
-  {
-    name: "Be Smart Mobile",
-    value: "8.0",
+    value: "5.2",
     label: "ROAS",
-    detail: "E-commerce growth with high-volume efficiency.",
+    detail: "Ecommerce proof from a brand that needed conversion, not just attention.",
   },
 ] as const;
 
-const LOGO_PROOF = [
-  {
-    name: "Duars Live",
-    image: "/images/landing/duars-live.png",
-    width: 160,
-    height: 160,
-  },
-  {
-    name: "9AM",
-    image: "/images/landing/9am.png",
-    width: 200,
-    height: 120,
-  },
-  {
-    name: "Gallimbo Studios",
-    image: "/images/landing/gallimbo-studios.png",
-    width: 180,
-    height: 120,
-  },
-] as const;
-
-const ROSTER_PROOF = [
-  { name: "Rauw Alejandro", proof: "80 matched Meta campaigns" },
-  { name: "Don Omar", proof: "40 matched Meta campaigns" },
-  { name: "Ricardo Arjona", proof: "22 matched Meta campaigns" },
-  { name: "Ivy Queen", proof: "32 matched Meta campaigns" },
-  { name: "Gilberto Santa Rosa", proof: "15 matched Meta campaigns" },
-  { name: "Miguel Bosé", proof: "12 matched Meta campaigns" },
-  { name: "Grupo Firme", proof: "10 matched Meta campaigns" },
-  { name: "Elvis Crespo", proof: "8 matched Meta campaigns" },
-  { name: "De La Ghetto", proof: "8 matched Meta campaigns" },
-  { name: "Vaqueros de Bayamón", proof: "12 matched Meta campaigns" },
-  { name: "Beamina", proof: "36 matched Meta campaigns" },
-  { name: "Chente Ydrach", proof: "5 matched Meta campaigns" },
-] as const;
-
-const CLIENT_PROOF = [
-  "Rauw Alejandro",
-  "Don Omar",
-  "Ivy Queen",
-  "Miguel Bosé",
-  "Elvis Crespo",
-  "Marco Antonio Solís",
-  "Grupo Firme",
-  "Gilberto Santa Rosa",
-  "Chente Ydrach",
-  "De La Ghetto",
-  "Vaqueros de Bayamón",
-  "Vibra Urbana",
-  "9AM Banger",
-  "Beamina",
-  "Be Smart Mobile",
-  "TU Planta PR",
-  "21 Nation",
-  "Leisure Boat Experience",
-] as const;
-
-const VENUE_PROOF = [
-  "Golden 1 Center",
-  "Climate Pledge Arena",
-  "Honda Center",
-  "Chase Center",
-  "State Farm Arena",
-  "Estadio Olimpico Lluis Companys",
-] as const;
-
-const LEADERSHIP_NOTES = [
-  "Jaime Ortiz, CEO",
+const TRUST_POINTS = [
+  "Jaime Ortiz, founder",
   "Recognized by Meta",
   "Spotify Marquee of the Year 2022",
   "Speaker at Spotify Masterclasses",
@@ -144,7 +68,7 @@ const LEADERSHIP_NOTES = [
 
 export function LandingCredibility() {
   return (
-    <section id="proof" className="mx-auto max-w-7xl px-6 py-24 sm:py-28">
+    <section id="proof" className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -153,23 +77,22 @@ export function LandingCredibility() {
       >
         <p className="section-label text-center text-[#9bd0ff]">Proof</p>
         <h2 className="mt-3 text-center text-3xl font-bold tracking-tight text-white sm:text-4xl md:text-5xl">
-          The proof has to be recognizable.
+          Un funnel sin prueba se siente como otro anuncio más.
         </h2>
         <p className="mx-auto mt-4 max-w-3xl text-center text-base leading-7 text-slate-300">
-          These names and numbers are grounded in approved Outlet materials, connected Meta history,
-          and existing campaign records, so the page shows work people can actually recognize
-          instead of anonymous trust copy.
+          Por eso la página enseña proof rápido: qué tipo de trabajo ya existe, qué tan amplia es la
+          historia de campañas accesibles hoy y por qué el prospecto debería confiar en la llamada.
         </p>
       </motion.div>
 
       <div className="mt-10 grid gap-4 lg:grid-cols-4">
-        {PROOF_STATS.map((stat, index) => (
+        {SNAPSHOT_STATS.map((stat, index) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 18 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-40px" }}
-            transition={{ duration: 0.4, delay: index * 0.04 }}
+            transition={{ duration: 0.35, delay: index * 0.04 }}
             className="rounded-[24px] border border-white/10 bg-white/[0.04] p-5"
           >
             <p className="text-3xl font-bold tracking-tight text-white">{stat.value}</p>
@@ -178,11 +101,7 @@ export function LandingCredibility() {
         ))}
       </div>
 
-      <p className="mt-4 text-center text-xs uppercase tracking-[0.22em] text-slate-500">
-        Live Meta inventory snapshot pulled March 10, 2026.
-      </p>
-
-      <div className="mt-8 grid gap-4 xl:grid-cols-[1.18fr_0.82fr]">
+      <div className="mt-8 grid gap-4 xl:grid-cols-[1.02fr_0.98fr]">
         <motion.div
           initial={{ opacity: 0, y: 18 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -192,48 +111,42 @@ export function LandingCredibility() {
         >
           <div className="flex items-center gap-3">
             <div className="rounded-2xl bg-[#4aa8ff]/12 p-3 text-[#9bd0ff]">
-              <Music4 className="size-5" />
+              <ChartNoAxesCombined className="size-5" />
             </div>
             <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-[#9bd0ff]">Featured work</p>
+              <p className="text-xs uppercase tracking-[0.24em] text-[#9bd0ff]">Fresh read</p>
               <h3 className="mt-1 text-xl font-semibold text-white">
-                Artists and event visuals already in the Outlet archive
+                Safe proof pulled from the current accessible Meta inventory
               </h3>
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            {FEATURED_WORK.map((item, index) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.35, delay: index * 0.04 }}
-                className="group relative overflow-hidden rounded-[26px] border border-white/10 bg-[#081421]/92"
+          <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-300">
+            We pulled the accessible Business Manager inventory for this pass and kept the public
+            landing on safe aggregates and recognizable public-facing names instead of exposing
+            internals, ad account IDs, or campaign structure.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            {RECOGNIZABLE_NAMES.map((name) => (
+              <span
+                key={name}
+                className="rounded-full border border-white/10 bg-[#081421]/92 px-3 py-1.5 text-sm text-slate-200"
               >
-                <div className="relative aspect-[1.08/1]">
-                  <Image
-                    src={item.image}
-                    alt={item.name}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 40vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${item.accent}`} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#04111c] via-[#04111c]/24 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-[#9bd0ff]">
-                      {item.category}
-                    </p>
-                    <p className="mt-2 text-xl font-semibold tracking-tight text-white">
-                      {item.name}
-                    </p>
-                    <p className="mt-2 max-w-sm text-sm leading-6 text-slate-200">{item.detail}</p>
-                  </div>
-                </div>
-              </motion.div>
+                {name}
+              </span>
             ))}
+          </div>
+
+          <div className="mt-6 rounded-[28px] border border-white/10 bg-[#081421]/92 p-5">
+            <div className="flex items-center gap-3 text-emerald-300">
+              <ShieldCheck className="size-4" />
+              <p className="text-xs uppercase tracking-[0.22em]">Why this matters in a funnel</p>
+            </div>
+            <p className="mt-4 text-sm leading-7 text-slate-300">
+              The buyer does not need a full case-study vault. They need fast trust signals that say
+              “these people have really run pressure before” and “this call is worth taking.”
+            </p>
           </div>
         </motion.div>
 
@@ -247,14 +160,14 @@ export function LandingCredibility() {
           >
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-emerald-400/12 p-3 text-emerald-300">
-                <Sparkles className="size-5" />
+                <BadgeCheck className="size-5" />
               </div>
               <div>
                 <p className="text-xs uppercase tracking-[0.24em] text-emerald-300">
-                  Selected wins
+                  Selected outcomes
                 </p>
                 <h3 className="mt-1 text-xl font-semibold text-white">
-                  Named wins from the approved Outlet materials
+                  Recognizable wins already inside the Outlet materials
                 </h3>
               </div>
             </div>
@@ -305,17 +218,15 @@ export function LandingCredibility() {
                   <Star className="size-5" />
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-[#fbbf94]">
-                    Leadership credibility
-                  </p>
+                  <p className="text-xs uppercase tracking-[0.24em] text-[#fbbf94]">Trust call</p>
                   <h3 className="mt-1 text-xl font-semibold text-white">
-                    Outlet Media leadership already has public proof points
+                    The call should feel credible before it is booked
                   </h3>
                 </div>
               </div>
 
               <div className="mt-5 space-y-3">
-                {LEADERSHIP_NOTES.map((note) => (
+                {TRUST_POINTS.map((note) => (
                   <div
                     key={note}
                     className="rounded-2xl border border-white/10 bg-[#081421]/92 px-4 py-3 text-sm text-slate-200"
@@ -324,111 +235,14 @@ export function LandingCredibility() {
                   </div>
                 ))}
               </div>
+
+              <div className="mt-5 flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-slate-400">
+                <CalendarDays className="size-4 text-[#9bd0ff]" />
+                Meta inventory snapshot pulled April 10, 2026
+              </div>
             </div>
           </motion.div>
         </div>
-      </div>
-
-      <div className="mt-8 grid gap-4 xl:grid-cols-[0.86fr_1.14fr]">
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.45 }}
-          className="rounded-[32px] border border-white/10 bg-[#081421]/92 p-6"
-        >
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-emerald-400/12 p-3 text-emerald-300">
-              <BadgeCheck className="size-5" />
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-emerald-300">Orbit</p>
-              <h3 className="mt-1 text-xl font-semibold text-white">
-                Promoters, brands, and partner marks already in the materials
-              </h3>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            {LOGO_PROOF.map((item) => (
-              <div
-                key={item.name}
-                className="flex min-h-28 items-center justify-center rounded-[24px] border border-white/10 bg-white/[0.04] p-4"
-              >
-                <Image
-                  src={item.image}
-                  alt={item.name}
-                  width={item.width}
-                  height={item.height}
-                  className="h-auto max-h-20 w-auto"
-                />
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-2">
-            {CLIENT_PROOF.map((name) => (
-              <span
-                key={name}
-                className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-slate-200"
-              >
-                {name}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-6 space-y-3">
-            {VENUE_PROOF.map((venue) => (
-              <div
-                key={venue}
-                className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm text-slate-200"
-              >
-                <MapPin className="size-4 shrink-0 text-[#9bd0ff]" />
-                {venue}
-              </div>
-            ))}
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 18 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-40px" }}
-          transition={{ duration: 0.45, delay: 0.04 }}
-          className="rounded-[32px] border border-white/10 bg-white/[0.04] p-6"
-        >
-          <div className="flex items-center gap-3">
-            <div className="rounded-2xl bg-[#f97316]/12 p-3 text-[#fbbf94]">
-              <Building2 className="size-5" />
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-[#fbbf94]">
-                Live campaign history
-              </p>
-              <h3 className="mt-1 text-xl font-semibold text-white">
-                Artists and brands already visible in connected Meta history
-              </h3>
-            </div>
-          </div>
-
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {ROSTER_PROOF.map((item, index) => (
-              <motion.div
-                key={item.name}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.3, delay: index * 0.015 }}
-                className="rounded-[24px] border border-white/10 bg-[#081421]/92 p-4"
-              >
-                <p className="text-lg font-semibold tracking-tight text-white">{item.name}</p>
-                <p className="mt-4 text-xs font-medium uppercase tracking-[0.18em] text-[#9bd0ff]">
-                  {item.proof}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </section>
   );

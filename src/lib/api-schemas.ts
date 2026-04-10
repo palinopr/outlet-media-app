@@ -180,6 +180,12 @@ export const HeartbeatPayloadSchema = z.object({
 export const ContactFormSchema = z.object({
   name: z.string().min(1).max(200),
   email: z.string().email().max(320),
+  phone: z.string().max(40).optional(),
+  company: z.string().max(200).optional(),
+  goal: z.string().max(120).optional(),
+  monthlyBudget: z.string().max(120).optional(),
+  preferredContact: z.string().max(120).optional(),
+  pageContext: z.string().max(120).optional(),
   message: z.string().min(1).max(5000),
 });
 
