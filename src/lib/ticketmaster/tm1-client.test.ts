@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  TM1_EVENTBASE_ACCESS_TOKEN_HEADER,
   TM1_EXTERNAL_EVENT_VERSION_HEADER,
   TM1_IF_MATCH_HEADER,
   Tm1Client,
@@ -56,6 +57,10 @@ describe("normalizeTm1Summary", () => {
   });
 });
 
+function createTestJwt(payload: Record<string, unknown>): string {
+  return `header.${Buffer.from(JSON.stringify(payload)).toString("base64url")}.signature`;
+}
+
 describe("Tm1Client moveSelection", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
@@ -76,7 +81,7 @@ describe("Tm1Client moveSelection", () => {
         }),
       )
       .mockResolvedValueOnce(
-        new Response(JSON.stringify({ eventId: "evt_123" }), {
+        new Response(JSON.stringify({ eventId: "11111111-1111-1111-1111-111111111123" }), {
           status: 200,
           headers: { [TM1_EXTERNAL_EVENT_VERSION_HEADER]: "12" },
         }),
@@ -102,7 +107,7 @@ describe("Tm1Client moveSelection", () => {
     });
 
     const result = await client.moveSelection({
-      eventId: "evt_123",
+      eventId: "11111111-1111-1111-1111-111111111123",
       selection: {
         rsSectionSelections: [{ sectionId: "107" }],
       },
@@ -116,7 +121,7 @@ describe("Tm1Client moveSelection", () => {
     expect(fetchMock).toHaveBeenCalledTimes(4);
     const [url, init] = fetchMock.mock.calls[3] as [URL, RequestInit];
     expect(String(url)).toBe(
-      "https://one.ticketmaster.com/api/events/events/evt_123/inventory/moveSelection/allocation/hold-4",
+      "https://one.ticketmaster.com/api/events/events/11111111-1111-1111-1111-111111111123/inventory/moveSelection/allocation/hold-4",
     );
     expect(init.method).toBe("POST");
 
@@ -140,7 +145,7 @@ describe("Tm1Client moveSelection", () => {
     });
 
     expect(result).toMatchObject({
-      eventId: "evt_123",
+      eventId: "11111111-1111-1111-1111-111111111123",
       inventoryVersion: 77,
       layoutVersion: "layout-9",
       externalEventVersion: 12,
@@ -169,7 +174,7 @@ describe("Tm1Client moveSelection", () => {
     });
 
     const result = await client.moveSelection({
-      eventId: "evt_open",
+      eventId: "11111111-1111-1111-1111-111111111111",
       inventoryVersion: 91,
       layoutVersion: "layout-open",
       externalEventVersion: null,
@@ -190,7 +195,7 @@ describe("Tm1Client moveSelection", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = fetchMock.mock.calls[0] as [URL, RequestInit];
     expect(String(url)).toBe(
-      "https://one.ticketmaster.com/api/events/events/evt_open/inventory/moveSelection/standardOfferAllocation",
+      "https://one.ticketmaster.com/api/events/events/11111111-1111-1111-1111-111111111111/inventory/moveSelection/standardOfferAllocation",
     );
 
     const headers = init.headers as Headers;
@@ -211,5 +216,245 @@ describe("Tm1Client moveSelection", () => {
     });
 
     expect(result.totalMovedSeats).toBe(8);
+  });
+
+  it("resolves dashboard-style event ids to internal UUIDs before eventbase writes", async () => {
+    const resolvedEventId = "94d7f90f-ac48-458c-af98-edf54ea12f1e";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify(resolvedEventId), { status: 200 }))
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ version: 77 }), {
+          status: 200,
+          headers: { etag: '"77"' },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ version: "layout-9" }), {
+          status: 200,
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ eventId: resolvedEventId }), {
+          status: 200,
+          headers: { [TM1_EXTERNAL_EVENT_VERSION_HEADER]: "12" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ rolledbackAllocationSelections: [], totalMovedSeats: 24 }), {
+          status: 200,
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new Tm1Client({
+      cookie: "tm1=1",
+      tcode: "NTL-QTE",
+    });
+
+    const result = await client.moveSelection({
+      eventId: "vv1AeZkozGkdO8RJs",
+      selection: {
+        rsSectionSelections: [{ sectionId: "GE4Q" }],
+      },
+      target: {
+        kind: "allocation",
+        targetId: "4-HOLD",
+        allocationDisplayName: "4-HOLD",
+      },
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(5);
+    const firstUrl = String((fetchMock.mock.calls[0] as [URL, RequestInit])[0]);
+    expect(firstUrl).toBe(
+      "https://one.ticketmaster.com/api/events/events/vv1AeZkozGkdO8RJs/id",
+    );
+
+    const finalUrl = String((fetchMock.mock.calls[4] as [URL, RequestInit])[0]);
+    expect(finalUrl).toBe(
+      `https://one.ticketmaster.com/api/events/events/${resolvedEventId}/inventory/moveSelection/allocation/4-HOLD`,
+    );
+
+    expect(result).toMatchObject({
+      eventId: "vv1AeZkozGkdO8RJs",
+      inventoryVersion: 77,
+      layoutVersion: "layout-9",
+      externalEventVersion: 12,
+      totalMovedSeats: 24,
+    });
+  });
+});
+
+describe("Tm1Client collaboration move requests", () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("creates move-to-allocation change requests through collaboration messages", async () => {
+    const eventbaseToken = createTestJwt({
+      sub: "C88E27F1-109F-4BB2-8EA8-4612F5A55604",
+      principal: {
+        id: "C88E27F1-109F-4BB2-8EA8-4612F5A55604",
+        firstName: "Jamie",
+        lastName: "Ortiz",
+      },
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { [TM1_EVENTBASE_ACCESS_TOKEN_HEADER]: eventbaseToken },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "message-1",
+            changeRequest: {
+              id: "request-1",
+              status: "CREATED",
+            },
+          }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new Tm1Client({
+      cookie: "tm1=1",
+      tcode: "NTL-QTE",
+    });
+
+    const result = await client.requestMoveToAllocation({
+      eventId: "94d7f90f-ac48-458c-af98-edf54ea12f1e",
+      selection: {
+        placeSelections: [{ sectionId: "GE4Q", rowId: "R1", placeId: "S1" }],
+      },
+      target: {
+        kind: "allocation",
+        targetId: "hold-4",
+        allocationDisplayName: "4-HOLD",
+      },
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const [url, init] = fetchMock.mock.calls[1] as [URL, RequestInit];
+    expect(String(url)).toBe(
+      "https://one.ticketmaster.com/api/events/collaboration/94d7f90f-ac48-458c-af98-edf54ea12f1e/team/messages",
+    );
+    expect(init.method).toBe("POST");
+
+    const headers = init.headers as Headers;
+    expect(headers.get(TM1_EVENTBASE_ACCESS_TOKEN_HEADER)).toBe(`Bearer ${eventbaseToken}`);
+
+    const body = JSON.parse(String(init.body));
+    expect(body).toMatchObject({
+      message: "",
+      mentions: [],
+      changeRequest: {
+        data: {
+          destination: "hold-4",
+          destinationType: 2,
+          totalPlaces: 1,
+          selection: {
+            placeSelections: [{ sectionId: "GE4Q", rowId: "R1", placeId: "S1" }],
+            rowSelections: [],
+            rsSectionSelections: [],
+            partialGaSelections: [],
+            fullGaSelections: [],
+          },
+        },
+        type: "MOVE_TO_ALLOCATION",
+        status: "CREATED",
+        requestorId: "C88E27F1-109F-4BB2-8EA8-4612F5A55604",
+      },
+    });
+    expect(typeof body.id).toBe("string");
+    expect(typeof body.changeRequest.id).toBe("string");
+    expect(typeof body.changeRequest.creationDate).toBe("number");
+
+    expect(result).toMatchObject({
+      eventId: "94d7f90f-ac48-458c-af98-edf54ea12f1e",
+      requestId: "request-1",
+      totalPlaces: 1,
+    });
+  });
+
+  it("resolves change requests through the collaboration resolve endpoint", async () => {
+    const eventbaseToken = createTestJwt({
+      sub: "C88E27F1-109F-4BB2-8EA8-4612F5A55604",
+      principal: {
+        id: "C88E27F1-109F-4BB2-8EA8-4612F5A55604",
+        firstName: "Jamie",
+        lastName: "Ortiz",
+      },
+    });
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify([]), {
+          status: 200,
+          headers: { [TM1_EVENTBASE_ACCESS_TOKEN_HEADER]: eventbaseToken },
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            id: "message-2",
+            changeRequest: {
+              id: "request-1",
+              status: "DELETED",
+              approverId: "C88E27F1-109F-4BB2-8EA8-4612F5A55604",
+            },
+          }),
+          { status: 200 },
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const client = new Tm1Client({
+      cookie: "tm1=1",
+      tcode: "NTL-QTE",
+    });
+
+    const result = await client.resolveChangeRequest({
+      eventId: "94d7f90f-ac48-458c-af98-edf54ea12f1e",
+      requestId: "request-1",
+      status: "DELETED",
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const [url, init] = fetchMock.mock.calls[1] as [URL, RequestInit];
+    expect(String(url)).toBe(
+      "https://one.ticketmaster.com/api/events/collaboration/94d7f90f-ac48-458c-af98-edf54ea12f1e/team/request/request-1/resolve",
+    );
+    expect(init.method).toBe("POST");
+
+    const headers = init.headers as Headers;
+    expect(headers.get(TM1_EVENTBASE_ACCESS_TOKEN_HEADER)).toBe(`Bearer ${eventbaseToken}`);
+
+    const body = JSON.parse(String(init.body));
+    expect(body).toMatchObject({
+      id: "request-1",
+      status: "DELETED",
+      message: {
+        message: "",
+        authorId: "C88E27F1-109F-4BB2-8EA8-4612F5A55604",
+        author: "Jamie Ortiz",
+        mentions: [],
+        messageType: "REQUEST_APPROVAL",
+        changeRequestId: "request-1",
+        justAdded: true,
+      },
+    });
+    expect(typeof body.message.id).toBe("string");
+    expect(typeof body.message.date).toBe("number");
+
+    expect(result).toMatchObject({
+      eventId: "94d7f90f-ac48-458c-af98-edf54ea12f1e",
+      requestId: "request-1",
+      status: "DELETED",
+    });
   });
 });

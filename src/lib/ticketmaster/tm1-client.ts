@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 export const TM1_DEFAULT_BASE_URL = "https://one.ticketmaster.com";
 export const TM1_DEFAULT_API_PREFIX = "/api/prd119/api/caui";
 export const TM1_DEFAULT_EVENTBASE_API_PREFIX = "/api/events";
@@ -8,6 +10,10 @@ export const TM1_IF_MATCH_HEADER = "If-Match";
 export const TM1_INVENTORY_ASSOCIATED_ACTION = "INVENTORY_ASSOCIATED_BACKEND_TO_OBJECT";
 export const TM1_INVENTORY_SET_TYPE_ALLOCATION = "allocationAndSeatstatus";
 export const TM1_OPEN_SEAT_STATUS = "Open";
+export const TM1_EVENTBASE_ACCESS_TOKEN_HEADER = "x-eventbase-access-token";
+export const TM1_COLLABORATION_REQUEST_APPROVAL_MESSAGE = "REQUEST_APPROVAL";
+export const TM1_COLLABORATION_MOVE_TO_ALLOCATION = "MOVE_TO_ALLOCATION";
+export const TM1_ALLOCATION_DESTINATION_TYPE = 2;
 
 type Tm1JsonPayload = Record<string, unknown> | unknown[];
 type Tm1NumericPrimitive = number | string | null | undefined;
@@ -117,6 +123,41 @@ export type Tm1MoveSelectionTarget =
       successAction?: Tm1MoveSelectionSuccessAction;
     };
 
+export type Tm1AllocationMoveTarget = Extract<Tm1MoveSelectionTarget, { kind: "allocation" }>;
+export type Tm1ChangeRequestResolutionStatus = "ACCEPTED" | "DECLINED" | "DELETED";
+
+export interface Tm1RequestMoveToAllocationOptions {
+  eventId: string;
+  message?: string;
+  selection: Tm1BackendSelection;
+  target: Tm1AllocationMoveTarget;
+  totalPlaces?: number;
+}
+
+export interface Tm1RequestMoveToAllocationResult {
+  eventId: string;
+  raw: Record<string, unknown>;
+  requestId: string;
+  requestPath: string;
+  target: Tm1AllocationMoveTarget;
+  totalPlaces: number;
+}
+
+export interface Tm1ResolveChangeRequestOptions {
+  eventId: string;
+  message?: string;
+  requestId: string;
+  status: Tm1ChangeRequestResolutionStatus;
+}
+
+export interface Tm1ResolveChangeRequestResult {
+  eventId: string;
+  raw: Record<string, unknown>;
+  requestId: string;
+  requestPath: string;
+  status: Tm1ChangeRequestResolutionStatus;
+}
+
 export interface Tm1MoveSelectionContext {
   event: Record<string, unknown>;
   eventId: string;
@@ -146,6 +187,12 @@ export interface Tm1MoveSelectionResult {
   requestPath: string;
   target: Tm1MoveSelectionTarget;
   totalMovedSeats: number | null;
+}
+
+interface Tm1EventbaseSessionIdentity {
+  accessToken: string;
+  principalDisplayName: string | null;
+  principalId: string | null;
 }
 
 interface Tm1RequestOptions {
@@ -219,6 +266,10 @@ function parseEtagVersion(value: string | null): number | null {
 
 function encodeIfMatch(version: number): string {
   return `"${version}"`;
+}
+
+function isUuid(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
 function ensureRecordPayload(payload: unknown, label: string): Record<string, unknown> {
@@ -299,6 +350,52 @@ function defaultSuccessAction(target: Tm1MoveSelectionTarget): Tm1MoveSelectionS
     targetType: TM1_INVENTORY_SET_TYPE_ALLOCATION,
     targetId: TM1_OPEN_SEAT_STATUS,
   };
+}
+
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  const [, payload] = token.split(".");
+  if (!payload) return null;
+
+  try {
+    const decoded = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return isRecord(decoded) ? decoded : null;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeCollaborationSelection(
+  selection: Tm1BackendSelection,
+): Required<Tm1BackendSelection> {
+  return {
+    placeSelections: selection.placeSelections ?? [],
+    rowSelections: selection.rowSelections ?? [],
+    rsSectionSelections: selection.rsSectionSelections ?? [],
+    partialGaSelections: selection.partialGaSelections ?? [],
+    fullGaSelections: selection.fullGaSelections ?? [],
+  };
+}
+
+function deriveSelectionTotalPlaces(selection: Tm1BackendSelection): number {
+  return (
+    (selection.placeSelections?.length ?? 0) +
+    (selection.rowSelections?.length ?? 0) +
+    (selection.rsSectionSelections?.length ?? 0) +
+    (selection.partialGaSelections?.length ?? 0) +
+    (selection.fullGaSelections?.length ?? 0)
+  );
+}
+
+function normalizeEventbaseAccessToken(value: string | null): string | null {
+  if (!value) return null;
+  return value.replace(/^Bearer\s+/i, "");
+}
+
+function normalizeDisplayName(firstName: unknown, lastName: unknown): string | null {
+  const parts = [firstName, lastName].filter(
+    (value): value is string => typeof value === "string" && value.trim().length > 0,
+  );
+  return parts.length > 0 ? parts.join(" ") : null;
 }
 
 function normalizeMoveSelectionBody(
@@ -404,10 +501,10 @@ export class Tm1Client {
     this.xsrfToken = config.xsrfToken;
   }
 
-  private async requestWithResponse<T extends Tm1JsonPayload>(
+  private async requestRawText(
     path: string,
     options: Tm1RequestOptions = {},
-  ): Promise<Tm1Response<T>> {
+  ): Promise<{ body: string; headers: Headers; requestPath: string; status: number }> {
     const method = options.method ?? "GET";
     const apiPrefix = options.apiPrefix ?? this.apiPrefix;
     const requestPath = withQuery(`${apiPrefix}${path}`, options.params);
@@ -444,14 +541,6 @@ export class Tm1Client {
         signal: controller.signal,
       });
       const raw = await response.text();
-      let parsed: unknown = {};
-      if (raw.trim().length > 0) {
-        try {
-          parsed = JSON.parse(raw);
-        } catch {
-          parsed = null;
-        }
-      }
 
       if (!response.ok) {
         throw new Tm1ClientError(`TM1 request failed ${response.status} for ${requestPath}`, {
@@ -461,16 +550,8 @@ export class Tm1Client {
         });
       }
 
-      if (parsed == null || (!Array.isArray(parsed) && typeof parsed !== "object")) {
-        throw new Tm1ClientError(`TM1 returned non-JSON for ${requestPath}`, {
-          status: response.status,
-          path: requestPath,
-          body: raw.slice(0, 500),
-        });
-      }
-
       return {
-        data: parsed as T,
+        body: raw,
         headers: response.headers,
         requestPath,
         status: response.status,
@@ -478,6 +559,57 @@ export class Tm1Client {
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  private async requestWithResponse<T extends Tm1JsonPayload>(
+    path: string,
+    options: Tm1RequestOptions = {},
+  ): Promise<Tm1Response<T>> {
+    const response = await this.requestRawText(path, options);
+    let parsed: unknown = {};
+    if (response.body.trim().length > 0) {
+      try {
+        parsed = JSON.parse(response.body);
+      } catch {
+        parsed = null;
+      }
+    }
+
+    if (parsed == null || (!Array.isArray(parsed) && typeof parsed !== "object")) {
+      throw new Tm1ClientError(`TM1 returned non-JSON for ${response.requestPath}`, {
+        status: response.status,
+        path: response.requestPath,
+        body: response.body.slice(0, 500),
+      });
+    }
+
+    return {
+      data: parsed as T,
+      headers: response.headers,
+      requestPath: response.requestPath,
+      status: response.status,
+    };
+  }
+
+  private async resolveEventbaseEventId(eventId: string): Promise<string> {
+    if (isUuid(eventId)) return eventId;
+
+    const response = await this.requestRawText(`/events/${eventId}/id`, {
+      apiPrefix: this.eventbaseApiPrefix,
+    });
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(response.body);
+    } catch {
+      throw new Error(`TM1 event id lookup returned invalid JSON for ${eventId}.`);
+    }
+
+    if (typeof parsed !== "string" || !isUuid(parsed)) {
+      throw new Error(`TM1 event id lookup did not return a valid UUID for ${eventId}.`);
+    }
+
+    return parsed;
   }
 
   async request<T extends Record<string, unknown>>(
@@ -541,38 +673,42 @@ export class Tm1Client {
   }
 
   async getEventbaseInventory(eventId: string): Promise<Record<string, unknown>> {
+    const resolvedEventId = await this.resolveEventbaseEventId(eventId);
     const response = await this.requestWithResponse<Record<string, unknown>>(
-      `/events/${eventId}/inventory`,
+      `/events/${resolvedEventId}/inventory`,
       { apiPrefix: this.eventbaseApiPrefix },
     );
     return ensureRecordPayload(response.data, "inventory");
   }
 
   async getEventbaseLayout(eventId: string): Promise<Record<string, unknown>> {
+    const resolvedEventId = await this.resolveEventbaseEventId(eventId);
     const response = await this.requestWithResponse<Record<string, unknown>>(
-      `/events/${eventId}/geometry`,
+      `/events/${resolvedEventId}/geometry`,
       { apiPrefix: this.eventbaseApiPrefix },
     );
     return ensureRecordPayload(response.data, "layout");
   }
 
   async getEventbaseEvent(eventId: string): Promise<Record<string, unknown>> {
+    const resolvedEventId = await this.resolveEventbaseEventId(eventId);
     const response = await this.requestWithResponse<Record<string, unknown>>(
-      `/events/${eventId}`,
+      `/events/${resolvedEventId}`,
       { apiPrefix: this.eventbaseApiPrefix },
     );
     return ensureRecordPayload(response.data, "event");
   }
 
   async getMoveSelectionContext(eventId: string): Promise<Tm1MoveSelectionContext> {
+    const resolvedEventId = await this.resolveEventbaseEventId(eventId);
     const [inventoryResponse, layoutResponse, eventResponse] = await Promise.all([
-      this.requestWithResponse<Record<string, unknown>>(`/events/${eventId}/inventory`, {
+      this.requestWithResponse<Record<string, unknown>>(`/events/${resolvedEventId}/inventory`, {
         apiPrefix: this.eventbaseApiPrefix,
       }),
-      this.requestWithResponse<Record<string, unknown>>(`/events/${eventId}/geometry`, {
+      this.requestWithResponse<Record<string, unknown>>(`/events/${resolvedEventId}/geometry`, {
         apiPrefix: this.eventbaseApiPrefix,
       }),
-      this.requestWithResponse<Record<string, unknown>>(`/events/${eventId}`, {
+      this.requestWithResponse<Record<string, unknown>>(`/events/${resolvedEventId}`, {
         apiPrefix: this.eventbaseApiPrefix,
       }),
     ]);
@@ -583,16 +719,16 @@ export class Tm1Client {
 
     const inventoryVersion = extractInventoryVersion(inventory);
     if (inventoryVersion == null) {
-      throw new Error(`TM1 inventory version was missing for event ${eventId}.`);
+      throw new Error(`TM1 inventory version was missing for event ${resolvedEventId}.`);
     }
 
     const layoutVersion = extractLayoutVersion(layout);
     if (!layoutVersion) {
-      throw new Error(`TM1 layout version was missing for event ${eventId}.`);
+      throw new Error(`TM1 layout version was missing for event ${resolvedEventId}.`);
     }
 
     return {
-      eventId,
+      eventId: resolvedEventId,
       inventory,
       layout,
       event,
@@ -603,12 +739,13 @@ export class Tm1Client {
   }
 
   async moveSelection(options: Tm1MoveSelectionOptions): Promise<Tm1MoveSelectionResult> {
+    const resolvedEventId = await this.resolveEventbaseEventId(options.eventId);
     const needsContext =
       options.inventoryVersion == null ||
       options.layoutVersion == null ||
       options.externalEventVersion === undefined;
 
-    const context = needsContext ? await this.getMoveSelectionContext(options.eventId) : null;
+    const context = needsContext ? await this.getMoveSelectionContext(resolvedEventId) : null;
     const inventoryVersion = options.inventoryVersion ?? context?.inventoryVersion;
     const layoutVersion = options.layoutVersion ?? context?.layoutVersion;
     const externalEventVersion =
@@ -617,14 +754,14 @@ export class Tm1Client {
         : options.externalEventVersion;
 
     if (inventoryVersion == null) {
-      throw new Error(`TM1 inventory version was not available for event ${options.eventId}.`);
+      throw new Error(`TM1 inventory version was not available for event ${resolvedEventId}.`);
     }
     if (!layoutVersion) {
-      throw new Error(`TM1 layout version was not available for event ${options.eventId}.`);
+      throw new Error(`TM1 layout version was not available for event ${resolvedEventId}.`);
     }
 
     const { body, path } = normalizeMoveSelectionBody(
-      options.eventId,
+      resolvedEventId,
       options.selection,
       layoutVersion,
       options.target,
@@ -657,6 +794,143 @@ export class Tm1Client {
         : [],
       totalMovedSeats: firstNumericValue(raw.totalMovedSeats),
       raw,
+    };
+  }
+
+  private async getEventbaseSessionIdentity(): Promise<Tm1EventbaseSessionIdentity> {
+    const response = await this.requestRawText("/events/pendingPublish", {
+      apiPrefix: this.eventbaseApiPrefix,
+    });
+    const accessToken = normalizeEventbaseAccessToken(
+      response.headers.get(TM1_EVENTBASE_ACCESS_TOKEN_HEADER),
+    );
+
+    if (!accessToken) {
+      throw new Error("TM1 eventbase access token was not available for collaboration requests.");
+    }
+
+    const payload = decodeJwtPayload(accessToken);
+    const principal = payload && isRecord(payload.principal) ? payload.principal : null;
+    const principalId =
+      principal && typeof principal.id === "string"
+        ? principal.id
+        : payload && typeof payload.sub === "string"
+          ? payload.sub
+          : null;
+
+    return {
+      accessToken,
+      principalId,
+      principalDisplayName: normalizeDisplayName(
+        principal?.firstName,
+        principal?.lastName,
+      ),
+    };
+  }
+
+  async requestMoveToAllocation(
+    options: Tm1RequestMoveToAllocationOptions,
+  ): Promise<Tm1RequestMoveToAllocationResult> {
+    const resolvedEventId = await this.resolveEventbaseEventId(options.eventId);
+    const session = await this.getEventbaseSessionIdentity();
+    const totalPlaces = options.totalPlaces ?? deriveSelectionTotalPlaces(options.selection);
+
+    if (totalPlaces <= 0) {
+      throw new Error("TM1 collaboration move requests require at least one selected seat/unit.");
+    }
+
+    const requestId = randomUUID();
+    const changeRequest: Record<string, unknown> = {
+      id: requestId,
+      data: {
+        destination: options.target.targetId,
+        destinationType: TM1_ALLOCATION_DESTINATION_TYPE,
+        totalPlaces,
+        selection: normalizeCollaborationSelection(options.selection),
+      },
+      type: TM1_COLLABORATION_MOVE_TO_ALLOCATION,
+      status: "CREATED",
+      creationDate: Date.now(),
+    };
+
+    if (session.principalId) {
+      changeRequest.requestorId = session.principalId;
+    }
+
+    const response = await this.requestWithResponse<Record<string, unknown>>(
+      `/collaboration/${resolvedEventId}/team/messages`,
+      {
+        apiPrefix: this.eventbaseApiPrefix,
+        method: "POST",
+        body: {
+          id: randomUUID(),
+          message: options.message ?? "",
+          mentions: [],
+          changeRequest,
+        },
+        headers: {
+          [TM1_EVENTBASE_ACCESS_TOKEN_HEADER]: `Bearer ${session.accessToken}`,
+        },
+      },
+    );
+    const raw = ensureRecordPayload(response.data, "moveSelectionRequest");
+    const rawChangeRequest = isRecord(raw.changeRequest) ? raw.changeRequest : null;
+
+    return {
+      eventId: options.eventId,
+      requestId: typeof rawChangeRequest?.id === "string" ? rawChangeRequest.id : requestId,
+      requestPath: response.requestPath,
+      target: options.target,
+      totalPlaces,
+      raw,
+    };
+  }
+
+  async resolveChangeRequest(
+    options: Tm1ResolveChangeRequestOptions,
+  ): Promise<Tm1ResolveChangeRequestResult> {
+    const resolvedEventId = await this.resolveEventbaseEventId(options.eventId);
+    const session = await this.getEventbaseSessionIdentity();
+
+    const message: Record<string, unknown> = {
+      id: randomUUID(),
+      message: options.message ?? "",
+      date: Date.now(),
+      mentions: [],
+      messageType: TM1_COLLABORATION_REQUEST_APPROVAL_MESSAGE,
+      changeRequestId: options.requestId,
+      justAdded: true,
+    };
+
+    if (session.principalId) {
+      message.authorId = session.principalId;
+    }
+    if (session.principalDisplayName) {
+      message.author = session.principalDisplayName;
+    }
+
+    const response = await this.requestWithResponse<Record<string, unknown>>(
+      `/collaboration/${resolvedEventId}/team/request/${options.requestId}/resolve`,
+      {
+        apiPrefix: this.eventbaseApiPrefix,
+        method: "POST",
+        body: {
+          id: options.requestId,
+          status: options.status,
+          message,
+        },
+        headers: {
+          [TM1_EVENTBASE_ACCESS_TOKEN_HEADER]: `Bearer ${session.accessToken}`,
+        },
+      },
+    );
+
+    return {
+      eventId: options.eventId,
+      requestId: options.requestId,
+      requestPath: response.requestPath,
+      status: options.status,
+      raw: ensureRecordPayload(response.data, "changeRequestResolution"),
     };
   }
 

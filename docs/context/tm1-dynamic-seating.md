@@ -98,3 +98,4 @@ Important constraints:
 - TM1 sign-in is still required in principle
 - automation uses env-managed TM1 session values rather than a visible browser session
 - if the TM1 session expires, browserless writes stop working until the session values are refreshed
+- real TM1 dashboard URLs may use a public-style event id that is not the internal eventbase UUID; browserless write paths should resolve `/api/events/events/{publicId}/id` before writing inventory moves
