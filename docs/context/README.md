@@ -7,6 +7,9 @@ Read these files before making major product, architecture, or agent decisions.
 - [agent-patterns.md](./agent-patterns.md): how agents should be triggered, bounded, approved, and logged
 - [current-priorities.md](./current-priorities.md): what matters most right now so work stays aligned
 - [codex-workflow.md](./codex-workflow.md): how this repo should be operated inside the Codex app, including threads, branches, review, and default settings
+- [meta-ads-playbook.md](./meta-ads-playbook.md): durable rules for Context7-first uncertainty handling, canonical local Meta credential sourcing, and cross-repo ads workflow boundaries
+- [google-ads-api.md](./google-ads-api.md): manager-level developer-token setup, OAuth Playground rules, Cloud project/API enablement, and dedicated Google Ads env naming
+- [shopify-merch-sync.md](./shopify-merch-sync.md): how to connect an existing Shopify merch store into Outlet's reporting, audience, and ticket-buyer join workflow
 
 These docs are meant to be durable context, not one-off plans.
 

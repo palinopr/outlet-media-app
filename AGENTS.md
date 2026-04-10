@@ -107,9 +107,9 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
 - When a slice reaches its first real end-to-end path, stop expanding scope and switch to stabilization. In practice, that means stop adding new agents, channels, routes, or platforms once the current slice has the domain model, routing, approvals, executor path, and user-visible outcome wired together.
 - Treat any slice that touches live side effects, approvals, concurrency, schedulers, or cross-surface state as test-first after wiring. At that point, the next work should bias toward verification, fixtures, manual runbooks, evals, and bug fixing instead of more breadth.
 - Do not leave testing to the user if the agent can run it. For every completed slice, run the relevant verification yourself:
-  - `npm run type-check` at minimum for app changes
-  - targeted lint for the touched files
-  - targeted tests when the code path already has test coverage or a focused test is practical
+  - web app baseline: `npm run type-check`, `npm run lint`, `npm test`, and `npm run build`
+  - agent runtime baseline: `npm --prefix agent run type-check` and `npm --prefix agent run test`
+  - targeted lint or focused tests on touched paths when the slice needs faster iteration before the full loop
 - For new autonomous workflows, the minimum "stop building and test now" gate is:
   - one end-to-end happy path works
   - approval rules are enforced
@@ -208,6 +208,8 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
 - Use `asset_feed_spec` with `asset_customization_rules` to split by placement
 - Label convention: `{city}_post_v` / `{city}_story_v` (videos), `{name}_post` / `{name}_story` (images)
 - Never create single-video/single-image ads -- always split post + story
+- If Meta or third-party ad-platform behavior is unclear, use **Context7** before improvising payloads, SDK fields, or webhook logic
+- Treat the root `.env.local` as the canonical local Meta credential source; document variable names only and never copy secret values into docs or prompts
 
 ## Deployment
 
@@ -220,16 +222,19 @@ After every `git push`, run: `railway up --detach`
 
 ## Agent Architecture
 
-Single-agent Discord system — one prompt, one identity, purely reactive:
-- **Runtime**: Discord.js bot → message handler → Claude CLI subprocess per message
+Single-agent Discord system — one prompt, one identity, one runtime:
+- **Runtime**: Discord.js bot → message handler → Claude CLI subprocess per message, plus persisted `agent_tasks` polling for supported admin-web requests
 - **Identity**: Posts as "Outlet Agent" via webhooks (single identity, no personas)
 - **Prompt**: `agent/prompts/agent.txt` (~5KB) — all capabilities in one file
 - **Memory**: `agent/MEMORY.md` — agent reads before every response, writes when learning something important
 - **Tools**: Meta Ads API (curl), Gmail (session/gmail-*.mjs), Google Calendar (session/calendar-meet.mjs), Supabase REST
-- **Services**: webhook (Discord posting), queue (Supabase task ledger), supabase (database access)
+- **Services**: webhook (Discord posting), queue (Supabase task ledger + `web-admin` recovery), runtime-state heartbeat, supabase (database access)
 - **Commands**: `/status`, `/help`, `/reset` only
-- **No cron, no sweeps, no scheduled jobs** — agent only acts when spoken to
+- **No cron, no sweeps, no scheduled jobs** — agent only acts when spoken to in Discord or when a supported persisted admin-web task is queued for the same runtime
 - **No delegation** — agent handles everything directly, no spawning other Claude instances
 - **No approval tiers** — removed (was green/yellow/red system for delegated tasks)
+- Admin web chat and quick-run flows must execute through this same single runtime by persisting `agent_tasks` and letting the queue service recover `web-admin` work. Do not rebuild a separate web-only agent architecture.
+- `gmail-push` background queueing is retired. Owner email remains an on-demand Discord/control-plane workflow rather than a background web-triggered sweep.
+- Runtime liveness is tracked in `agent_runtime_state`; heartbeat writes come from the runtime lifecycle itself rather than an external monitor.
 - Owner email triage and meeting scheduling are available on demand via the agent's Gmail and Calendar tools.
 - Local agent runtimes should run under a restart loop or process manager, not only an ad hoc foreground shell, so pending work resumes after crashes.

@@ -56,6 +56,8 @@ Implications:
 - Make client campaign and event pages the primary analytics and collaboration surfaces instead of spreading customer value across many top-level tabs.
 - Keep `Agent` read-only and client-safe: it can aggregate campaign and event insights conversationally, but it must not expose internal structure, source systems, or admin-only workflow state.
 - Keep client `Agent` on the tool-driven runtime: the model should choose among normalized read-only analytics tools at answer time, default vague business questions to lifetime Meta ads first, and use stored thread context for follow-ups instead of a regex planner deciding the route in advance.
+- Keep admin agent actions on the same single-agent runtime too: admin web requests should persist `agent_tasks` for `web-admin` and let the live runtime recover and execute them instead of growing a second web-only agent stack.
+- Keep background Gmail push queueing retired. Owner email remains a Discord/control-plane workflow, not a background web-triggered sweep.
 - Make the root landing and `/client` entrypoints resolve from actual Outlet account membership and pending invites before consulting route preferences or old metadata.
 - Keep admin client/account hubs as the main web operating surfaces for access, portal packaging, and the surviving campaign/report/event backbone.
 - Do not treat CRM, standalone asset/conversation/inbox rebuilds, customer WhatsApp, or the retired workspace shell as near-term web rebuild targets during the current reset.

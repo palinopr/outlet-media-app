@@ -6,7 +6,10 @@
   "scripts": {
     "start": "node --import tsx/esm src/index.ts",
     "dev": "node --watch --import tsx/esm src/index.ts",
-    "daemon": "bash scripts/run-agent-daemon.sh"
+    "daemon": "bash scripts/run-agent-daemon.sh",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run type-check && npm run test"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.69",

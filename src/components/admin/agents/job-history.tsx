@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, type ChangeEvent } from "react";
 import {
   type Row,
   ColumnDef,
@@ -166,10 +166,6 @@ export function JobHistory({ jobs }: Props) {
     initialState: { pagination: { pageSize: 20 } },
   });
 
-  useEffect(() => {
-    table.setPageIndex(0);
-  }, [filter, normalizedQuery, table]);
-
   const filterCounts = useMemo(
     () => ({
       active: data.filter((job) => job.status === "pending" || job.status === "running").length,
@@ -187,6 +183,16 @@ export function JobHistory({ jobs }: Props) {
     { key: "completed", label: "Completed" },
   ];
 
+  function handleFilterChange(nextFilter: JobHistoryFilter) {
+    setFilter(nextFilter);
+    table.setPageIndex(0);
+  }
+
+  function handleQueryChange(event: ChangeEvent<HTMLInputElement>) {
+    setQuery(event.target.value);
+    table.setPageIndex(0);
+  }
+
   function toggleRow(id: string) {
     setExpandedRows((prev) => {
       const next = new Set(prev);
@@ -199,7 +205,7 @@ export function JobHistory({ jobs }: Props) {
   return (
     <div>
       <h2 className="text-sm font-semibold mb-3">
-        Automated Run History
+        Outlet Agent Run History
         <span className="text-muted-foreground font-normal ml-2">({data.length})</span>
       </h2>
       <Card className="border-border/60">
@@ -216,7 +222,7 @@ export function JobHistory({ jobs }: Props) {
                   variant={isActive ? "default" : "outline"}
                   size="sm"
                   className="h-8 rounded-full"
-                  onClick={() => setFilter(option.key)}
+                  onClick={() => handleFilterChange(option.key)}
                 >
                   {option.label}
                   <span className={isActive ? "text-primary-foreground/80" : "text-muted-foreground"}>
@@ -230,7 +236,7 @@ export function JobHistory({ jobs }: Props) {
             <Input
               aria-label="Search automated runs"
               className="h-8"
-              onChange={(event) => setQuery(event.target.value)}
+              onChange={handleQueryChange}
               placeholder="Search agent, prompt, or output"
               value={query}
             />
@@ -238,7 +244,7 @@ export function JobHistory({ jobs }: Props) {
         </div>
         {data.length === 0 ? (
           <div className="py-10 text-center text-xs text-muted-foreground">
-            No automated runs yet -- the agent runs Meta sync every 6h and think cycles every 30m
+            No automated runs yet -- the single Discord runtime will show task output here when it runs.
           </div>
         ) : (
           <>

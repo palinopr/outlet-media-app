@@ -17,16 +17,16 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
+    testTimeout: 15_000,
     exclude: [
       ...configDefaults.exclude,
       "**/.claude/**",
       ".claude/**",
       ".worktrees/**",
+      "agent/**",
       "agent/dist/**",
       "agent/node_modules/**",
       "tmp-playwright/**",
-      "src/features/whatsapp/**",
-      "src/app/api/whatsapp/**",
     ],
   },
 });

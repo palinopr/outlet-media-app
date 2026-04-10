@@ -31,3 +31,6 @@ agent/service-account.json
 **/*.pem
 **/*.key
 archive/
+test-results/
+tmp-playwright/
+audit/

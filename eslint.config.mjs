@@ -23,6 +23,7 @@ const eslintConfig = defineConfig([
     // Compiled agent output (should not be linted)
     "agent/dist/**",
     "agent/.next/**",
+    "agent/session/**",
   ]),
 ]);
 

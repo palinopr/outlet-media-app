@@ -11,7 +11,8 @@ The agent was simplified from an 11-persona multi-agent system to a single-agent
 - **One prompt** (`agent/prompts/agent.txt`, ~5KB) containing all capabilities
 - **One identity** ("Outlet Agent") posting via webhooks
 - **One memory file** (`agent/MEMORY.md`) — read before every response, written when learning something important
-- **Purely reactive** — no cron jobs, no scheduled tasks, no background work. Agent only acts when spoken to in Discord.
+- **One runtime** — Discord conversations and supported admin-web runs execute through the same Claude-backed process model
+- **Reactive intake only** — no cron jobs, no scheduled tasks, and no autonomous sweeps. Work starts from Discord messages or persisted `agent_tasks` created by a supported caller.
 - **No delegation** — agent handles everything directly. No spawning other Claude instances.
 - **Tools**: Meta Graph API (curl), Gmail (session scripts), Google Calendar (session scripts), Supabase REST
 
@@ -37,6 +38,9 @@ The previous system had 11 agents (boss, media-buyer, creative, reporting, tm-ag
 - **Discord** is the operating surface for internal agent work
 - **Web** is the product surface for admin and client views
 - Both share the same Supabase database, domain objects, and `system_events` backbone
+- Supported persisted queue source: `web-admin`. The runtime polls `agent_tasks`, recovers pending admin requests, and executes them through the same single-agent prompt/runtime used for Discord.
+- Retired persisted queue source: `gmail-push`. Owner email stays Discord-first and on demand; do not revive background Gmail webhook sweeps as a parallel agent path.
+- Runtime heartbeat is written directly by the agent process into `agent_runtime_state`, so liveness should be derived from runtime lifecycle updates instead of an external watcher.
 - Email and calendar operations are available on demand via the agent's tools
 - Do not duplicate Discord workflows into web surfaces unless there's a clear product need
 

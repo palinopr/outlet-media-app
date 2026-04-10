@@ -17,9 +17,12 @@ import {
   type TextChannel,
 } from "discord.js";
 import { initWebhooks } from "../../services/webhook-service.js";
-import { initQueue } from "../../services/queue-service.js";
+import { initQueue, setTaskExecutor, stopPersistedTaskPoller } from "../../services/queue-service.js";
+import { startRuntimeHeartbeat, stopRuntimeHeartbeat } from "../../services/runtime-state-service.js";
+import { createWebTaskExecutor } from "../../services/web-task-executor.js";
 import { releaseChannelLock, cleanForDiscord, chunkText, handleMessage, isChannelLocked } from "../../events/message-handler.js";
 import { getAgentForChannel } from "./router.js";
+import { RUNNER_INACTIVITY_TIMEOUT_MS } from "../../runner.js";
 import { toErrorMessage } from "../../utils/error-helpers.js";
 
 const token = process.env.DISCORD_TOKEN;
@@ -39,15 +42,16 @@ export const discordClient = token
     })
   : null;
 
-/** Per-channel Claude session IDs (kept for /reset command compatibility) */
+/** Per-channel Claude sessions so /reset can clear runtime conversation state. */
 export const channelSessions = new Map<string, string>();
 
 /**
- * Per-channel lock timestamps. Tracks when each channel lock was acquired
- * so we can detect and force-release stale locks (e.g. Claude hangs > 5 min).
+ * Per-channel lock timestamps. Tracks the latest heartbeat for each active
+ * channel run so we only force-release locks after the runner has exceeded
+ * its own inactivity timeout.
  */
 const channelLockTimestamps = new Map<string, number>();
-const CHANNEL_LOCK_MAX_AGE_MS = 300_000; // 5 minutes
+const CHANNEL_LOCK_MAX_AGE_MS = RUNNER_INACTIVITY_TIMEOUT_MS + 60_000;
 
 export function checkAndReleaseStaleLock(channelId: string): boolean {
   const acquiredAt = channelLockTimestamps.get(channelId);
@@ -69,6 +73,11 @@ export function markChannelLockAcquired(channelId: string): void {
   channelLockTimestamps.set(channelId, Date.now());
 }
 
+export function markChannelLockHeartbeat(channelId: string): void {
+  if (!channelLockTimestamps.has(channelId)) return;
+  channelLockTimestamps.set(channelId, Date.now());
+}
+
 export function markChannelLockReleased(channelId: string): void {
   channelLockTimestamps.delete(channelId);
 }
@@ -82,8 +91,11 @@ export function startDiscordBot(): void {
   discordClient.once("ready", async (c) => {
     console.log(`Discord bot online: ${c.user.tag}`);
 
+    setTaskExecutor(createWebTaskExecutor());
     await initQueue();
     console.log("[discord] Queue initialized");
+    startRuntimeHeartbeat();
+    console.log("[discord] Runtime heartbeat started");
 
     void initWebhooks(discordClient!)
       .then(() => console.log("[discord] Webhook service initialized"))
@@ -116,6 +128,11 @@ export function startDiscordBot(): void {
     const m = toErrorMessage(err);
     console.error("[discord] Login failed:", m);
   });
+}
+
+export async function stopDiscordRuntimeState(): Promise<void> {
+  stopPersistedTaskPoller();
+  await stopRuntimeHeartbeat();
 }
 
 // --- Channel notifications (outbound) ---

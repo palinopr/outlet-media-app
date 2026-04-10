@@ -78,4 +78,14 @@ describe("JobHistory", () => {
     expect(screen.queryByText("Draft ready")).not.toBeInTheDocument();
     expect(screen.getByText("Showing 2 of 4 automated runs.")).toBeInTheDocument();
   });
+
+  it("uses single-runtime empty state copy", () => {
+    render(<JobHistory jobs={[]} />);
+
+    expect(
+      screen.getByText("No automated runs yet -- the single Discord runtime will show task output here when it runs."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Outlet Agent Run History")).toBeInTheDocument();
+    expect(screen.getByText("(0)")).toBeInTheDocument();
+  });
 });

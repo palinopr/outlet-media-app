@@ -1,60 +1,58 @@
 import "dotenv/config";
-import { existsSync, mkdirSync } from "node:fs";
-import { execSync } from "node:child_process";
-import { discordClient, startDiscordBot } from "./discord/core/entry.js";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { discordClient, startDiscordBot, stopDiscordRuntimeState } from "./discord/core/entry.js";
 import { killAllClaude } from "./runner.js";
 import { toErrorMessage } from "./utils/error-helpers.js";
 
 // Ensure session directory exists for TM One browser state
+const agentRootDir = new URL("..", import.meta.url).pathname;
 const sessionDir = new URL("../session", import.meta.url).pathname;
 if (!existsSync(sessionDir)) mkdirSync(sessionDir, { recursive: true });
+const runtimePidFile = new URL("../session/runtime.pid", import.meta.url).pathname;
 
-// Kill orphaned processes from previous bot runs to prevent double responses.
-// Two sources of ghosts:
-// 1. Claude CLI children that outlive the parent Node process
-// 2. Stale tsx dev-mode instances that stay connected to Discord
-try {
-  const myPid = process.pid;
-
-  // Kill orphaned Claude CLI processes spawned by previous bot runs
-  const staleClaude = execSync(
-    `pgrep -f "claude.*--dangerously-skip-permissions.*--setting-sources local" || true`,
-    { encoding: "utf-8" },
-  ).trim();
-  if (staleClaude) {
-    const pids = staleClaude.split("\n").filter(Boolean);
-    console.log(`[startup] Killing ${pids.length} orphaned Claude CLI process(es): ${pids.join(", ")}`);
-    execSync(`kill ${pids.join(" ")} 2>/dev/null || true`);
+function readCommandForPid(pid: number): string | null {
+  try {
+    return execFileSync("ps", ["-p", String(pid), "-o", "command="], {
+      encoding: "utf-8",
+    }).trim();
+  } catch {
+    return null;
   }
-
-  // Kill stale tsx/node bot instances (from `npm exec tsx src/index.ts`)
-  const staleTsx = execSync(
-    `pgrep -f "tsx.*src/index.ts|node.*src/index.ts" || true`,
-    { encoding: "utf-8" },
-  ).trim();
-  if (staleTsx) {
-    const pids = staleTsx.split("\n").filter(Boolean).filter(p => p !== String(myPid));
-    if (pids.length > 0) {
-      console.log(`[startup] Killing ${pids.length} stale tsx bot instance(s): ${pids.join(", ")}`);
-      execSync(`kill -9 ${pids.join(" ")} 2>/dev/null || true`);
-    }
-  }
-
-  // Kill stale compiled bot instances (from `node dist/index.js`)
-  const staleNode = execSync(
-    `pgrep -f "node dist/index.js" || true`,
-    { encoding: "utf-8" },
-  ).trim();
-  if (staleNode) {
-    const pids = staleNode.split("\n").filter(Boolean).filter(p => p !== String(myPid));
-    if (pids.length > 0) {
-      console.log(`[startup] Killing ${pids.length} stale bot instance(s): ${pids.join(", ")}`);
-      execSync(`kill ${pids.join(" ")} 2>/dev/null || true`);
-    }
-  }
-} catch {
-  // pgrep not found or no matches -- safe to ignore
 }
+
+function registerRuntimePid(): void {
+  try {
+    if (existsSync(runtimePidFile)) {
+      const previousPid = Number.parseInt(readFileSync(runtimePidFile, "utf-8").trim(), 10);
+      if (Number.isInteger(previousPid) && previousPid !== process.pid) {
+        const command = readCommandForPid(previousPid);
+        if (command?.includes(agentRootDir)) {
+          console.error(`[startup] Another Outlet agent runtime is already active (pid ${previousPid}).`);
+          process.exit(1);
+        }
+      }
+    }
+
+    writeFileSync(runtimePidFile, String(process.pid));
+  } catch (error) {
+    console.warn("[startup] Failed to register runtime pid:", toErrorMessage(error));
+  }
+}
+
+function cleanupRuntimePid(): void {
+  try {
+    if (!existsSync(runtimePidFile)) return;
+    const registeredPid = Number.parseInt(readFileSync(runtimePidFile, "utf-8").trim(), 10);
+    if (registeredPid === process.pid) {
+      unlinkSync(runtimePidFile);
+    }
+  } catch (error) {
+    console.warn("[startup] Failed to clear runtime pid:", toErrorMessage(error));
+  }
+}
+
+registerRuntimePid();
 
 // Validate required env vars -- fail fast with a clear error
 function validateEnv(): void {
@@ -82,8 +80,10 @@ startDiscordBot();
 
 // Graceful shutdown -- kill child Claude processes to prevent orphaned ghosts
 async function shutdown(): Promise<void> {
+  await stopDiscordRuntimeState();
   killAllClaude();
   discordClient?.destroy();
+  cleanupRuntimePid();
 }
 
 async function gracefulExit(signal: string): Promise<void> {

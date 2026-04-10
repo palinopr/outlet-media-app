@@ -13,6 +13,12 @@ import {
   type TextChannel,
 } from "discord.js";
 import { runClaude } from "../runner.js";
+import {
+  channelSessions,
+  markChannelLockAcquired,
+  markChannelLockHeartbeat,
+  markChannelLockReleased,
+} from "../discord/core/entry.js";
 import { getAgentForChannel } from "../discord/core/router.js";
 import { sendAsAgent } from "../services/webhook-service.js";
 import { toErrorMessage } from "../utils/error-helpers.js";
@@ -148,21 +154,29 @@ export async function handleMessage(
 ): Promise<void> {
   const agent = getAgentForChannel(channelName);
   if (agent.readOnly) return;
+  if (!acquireChannelLock(msg.channelId)) return;
 
   const agentKey = agent.promptFile;
+  const resumeSessionId = channelSessions.get(msg.channelId);
 
   let typingInterval: ReturnType<typeof setInterval> | undefined;
   let working: Message | undefined;
 
   try {
+    markChannelLockAcquired(msg.channelId);
+    markChannelLockHeartbeat(msg.channelId);
+
     const ch = msg.channel;
     if ("sendTyping" in ch) await (ch as TextChannel).sendTyping().catch(() => {});
     typingInterval = setInterval(() => {
+      markChannelLockHeartbeat(msg.channelId);
       if ("sendTyping" in ch) (ch as TextChannel).sendTyping().catch(() => {});
     }, 8000);
 
     working = await msg.reply("Working on it...");
-    const contextualPrompt = await buildConversationContext(msg, prompt);
+    const contextualPrompt = resumeSessionId
+      ? prompt
+      : await buildConversationContext(msg, prompt);
 
     let buffer = "";
     let lastEdit = Date.now();
@@ -170,7 +184,11 @@ export async function handleMessage(
       prompt: contextualPrompt,
       systemPromptName: agent.promptFile,
       maxTurns: agent.maxTurns,
+      onActivity: () => {
+        markChannelLockHeartbeat(msg.channelId);
+      },
       onChunk: async (chunk: string) => {
+        markChannelLockHeartbeat(msg.channelId);
         buffer += chunk;
         if (Date.now() - lastEdit > 1500 && buffer.trim()) {
           const preview = cleanForDiscord(buffer.slice(-1900));
@@ -178,7 +196,12 @@ export async function handleMessage(
           lastEdit = Date.now();
         }
       },
+      resumeSessionId,
     });
+
+    if (result.sessionId) {
+      channelSessions.set(msg.channelId, result.sessionId);
+    }
 
     const responseText = result.text || "Done.";
     const chunks = chunkText(cleanForDiscord(responseText), 1900);
@@ -190,5 +213,7 @@ export async function handleMessage(
     }
   } finally {
     if (typingInterval) clearInterval(typingInterval);
+    releaseChannelLock(msg.channelId);
+    markChannelLockReleased(msg.channelId);
   }
 }

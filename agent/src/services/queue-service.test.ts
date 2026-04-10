@@ -5,11 +5,13 @@ const {
   safeLogAgentTaskRequested,
   safeLogAgentTaskStarted,
   safeLogAgentTaskStatus,
+  createClientMock,
 } = vi.hoisted(() => ({
   safeLogAgentTaskDeferred: vi.fn().mockResolvedValue(undefined),
   safeLogAgentTaskRequested: vi.fn().mockResolvedValue(undefined),
   safeLogAgentTaskStarted: vi.fn().mockResolvedValue(undefined),
   safeLogAgentTaskStatus: vi.fn().mockResolvedValue(undefined),
+  createClientMock: vi.fn(),
 }));
 
 vi.mock("./system-events-service.js", () => ({
@@ -19,10 +21,16 @@ vi.mock("./system-events-service.js", () => ({
   safeLogAgentTaskStatus,
 }));
 
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: createClientMock,
+}));
+
 describe("queue-service", () => {
   afterEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    delete process.env.SUPABASE_URL;
+    delete process.env.SUPABASE_SERVICE_ROLE_KEY;
   });
 
   it("runs queued tasks through the registered executor one at a time per target agent", async () => {
@@ -95,5 +103,157 @@ describe("queue-service", () => {
     expect(terminal.status).toBe("completed");
     expect(terminal.result).toEqual({ ok: true });
     expect(safeLogAgentTaskDeferred).toHaveBeenCalledTimes(1);
+  });
+
+  it("recovers pending web-admin tasks and retires unsupported gmail-push tasks", async () => {
+    process.env.SUPABASE_URL = "https://example.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role";
+
+    const runningEq = vi.fn().mockResolvedValue({ data: [], error: null });
+    const updateEq = vi.fn().mockResolvedValue({ error: null });
+    const pendingOrder = vi.fn().mockResolvedValue({
+      data: [
+        {
+          id: "task_web",
+          from_agent: "web-admin",
+          to_agent: "assistant",
+          action: "chat",
+          params: {},
+          tier: "green",
+          status: "pending",
+          result: null,
+          error: null,
+          created_at: "2026-04-03T12:00:00.000Z",
+          started_at: null,
+          completed_at: null,
+          discord_message_id: null,
+          approved_by: null,
+        },
+        {
+          id: "task_gmail",
+          from_agent: "gmail-push",
+          to_agent: "email-agent",
+          action: "gmail-history",
+          params: {},
+          tier: "green",
+          status: "pending",
+          result: null,
+          error: null,
+          created_at: "2026-04-03T12:01:00.000Z",
+          started_at: null,
+          completed_at: null,
+          discord_message_id: null,
+          approved_by: null,
+        },
+      ],
+      error: null,
+    });
+    const update = vi.fn(() => ({ eq: updateEq }));
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    const select = vi.fn((columns: string) => {
+      if (columns === "id") {
+        return { eq: runningEq };
+      }
+
+      return {
+        eq: vi.fn(() => ({
+          order: pendingOrder,
+        })),
+      };
+    });
+
+    createClientMock.mockReturnValue({
+      from: vi.fn(() => ({
+        select,
+        update,
+        upsert,
+      })),
+    });
+
+    const queue = await import("./queue-service.js");
+    const executed: string[] = [];
+
+    queue.setTaskExecutor(async (task) => {
+      executed.push(task.id);
+      queue.completeTask(task.id, { ok: true });
+    });
+
+    await queue.initQueue();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(executed).toEqual(["task_web"]);
+    expect(update).toHaveBeenCalledWith({
+      completed_at: expect.any(String),
+      error: "gmail-push tasks are no longer supported by the single-agent runtime",
+      status: "failed",
+    });
+    expect(updateEq).toHaveBeenCalledWith("id", "task_gmail");
+  });
+
+  it("polls newly persisted web-admin tasks after startup", async () => {
+    process.env.SUPABASE_URL = "https://example.supabase.co";
+    process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role";
+
+    const runningEq = vi.fn().mockResolvedValue({ data: [], error: null });
+    const pendingOrder = vi
+      .fn()
+      .mockResolvedValueOnce({ data: [], error: null })
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "task_live",
+            from_agent: "web-admin",
+            to_agent: "assistant",
+            action: "chat",
+            params: { prompt: "hello" },
+            tier: "green",
+            status: "pending",
+            result: null,
+            error: null,
+            created_at: "2026-04-03T12:05:00.000Z",
+            started_at: null,
+            completed_at: null,
+            discord_message_id: null,
+            approved_by: null,
+          },
+        ],
+        error: null,
+      });
+    const update = vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ error: null }) }));
+    const upsert = vi.fn().mockResolvedValue({ error: null });
+    const select = vi.fn((columns: string) => {
+      if (columns === "id") {
+        return { eq: runningEq };
+      }
+
+      return {
+        eq: vi.fn(() => ({
+          order: pendingOrder,
+        })),
+      };
+    });
+
+    createClientMock.mockReturnValue({
+      from: vi.fn(() => ({
+        select,
+        update,
+        upsert,
+      })),
+    });
+
+    const queue = await import("./queue-service.js");
+    const executed: string[] = [];
+
+    queue.setTaskExecutor(async (task) => {
+      executed.push(task.id);
+      queue.completeTask(task.id, { ok: true });
+    });
+
+    await queue.initQueue();
+    await queue.pollPersistedTasksNow();
+    const terminal = await queue.waitForTaskTerminal("task_live", 1_000);
+
+    expect(executed).toEqual(["task_live"]);
+    expect(terminal.status).toBe("completed");
   });
 });

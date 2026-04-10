@@ -16,7 +16,7 @@ vi.mock("node:child_process", async (importOriginal) => {
 vi.mock("node:fs", async (importOriginal) => {
   const actual = await importOriginal<typeof import("node:fs")>();
   const readFileSync = vi.fn((path: string, _encoding?: string) => {
-    if (typeof path === "string" && path.includes("command.txt")) return "You are a command agent.";
+    if (typeof path === "string" && path.includes("agent.txt")) return "You are the outlet agent.";
     if (typeof path === "string" && path.includes("think.txt")) return "You are the think loop.";
     throw Object.assign(new Error(`ENOENT: no such file: ${path}`), { code: "ENOENT" });
   });
@@ -106,6 +106,7 @@ describe("runner", () => {
     expect(args).toContain("-p");
     expect(args).toContain("sync meta");
     expect(args).toContain("--system-prompt");
+    expect(args).toContain("You are the outlet agent.");
     expect(args).toContain("--max-turns");
     expect(args).toContain("10");
     expect(args).toContain("--dangerously-skip-permissions");

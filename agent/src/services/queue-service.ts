@@ -38,7 +38,10 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const TERMINAL_STATUSES: ReadonlySet<AgentTask["status"]> = new Set(["completed", "failed", "rejected", "expired"]);
 const LIVE_STATUSES: ReadonlySet<AgentTask["status"]> = new Set(["pending", "running", "escalated", "approved"]);
 let taskCounter = 0;
-const EXTERNAL_TASK_SOURCES = new Set(["web-admin", "gmail-push"]);
+const RECOVERABLE_EXTERNAL_TASK_SOURCES = new Set(["web-admin"]);
+const RETIRED_EXTERNAL_TASK_ERRORS = new Map([
+  ["gmail-push", "gmail-push tasks are no longer supported by the single-agent runtime"],
+]);
 
 /** Active tasks per agent (agent key -> task or null) */
 const activeSlots = new Map<string, AgentTask | null>();
@@ -57,12 +60,14 @@ const taskRetryCounts = new Map<string, number>();
 const TASK_TIMEOUT_MS = 600_000; // 10 minutes
 const TASK_RETRY_BASE_MS = 2_000;
 const TASK_RETRY_MAX_MS = 30_000;
+const PERSISTED_TASK_POLL_MS = 5_000;
 
 /** Event bus for task lifecycle events */
 export const taskEvents = new EventEmitter();
 
 let supabase: SupabaseClient | null = null;
 let taskExecutor: ((task: AgentTask) => Promise<void>) | null = null;
+let persistedTaskPoller: ReturnType<typeof setInterval> | null = null;
 
 interface PersistedTaskRow {
   id: string;
@@ -79,6 +84,23 @@ interface PersistedTaskRow {
   completed_at: string | null;
   discord_message_id: string | null;
   approved_by: string | null;
+}
+
+async function retirePendingTask(row: PersistedTaskRow, reason: string): Promise<void> {
+  if (!supabase) return;
+
+  const { error } = await supabase
+    .from("agent_tasks")
+    .update({
+      completed_at: new Date().toISOString(),
+      error: reason,
+      status: "failed",
+    })
+    .eq("id", row.id);
+
+  if (error) {
+    console.error(`[queue] Failed to retire task ${row.id}:`, error.message);
+  }
 }
 
 function reviveTask(row: PersistedTaskRow): AgentTask {
@@ -156,6 +178,92 @@ export function setTaskExecutor(executor: ((task: AgentTask) => Promise<void>) |
   taskExecutor = executor;
 }
 
+export function stopPersistedTaskPoller(): void {
+  if (!persistedTaskPoller) return;
+
+  clearInterval(persistedTaskPoller);
+  persistedTaskPoller = null;
+}
+
+async function fetchPendingPersistedTasks(): Promise<PersistedTaskRow[]> {
+  if (!supabase) return [];
+
+  const { data, error } = await supabase
+    .from("agent_tasks")
+    .select(
+      "id, from_agent, to_agent, action, params, tier, status, result, error, created_at, started_at, completed_at, discord_message_id, approved_by",
+    )
+    .eq("status", "pending")
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("[queue] Failed to recover pending task(s):", error.message);
+    return [];
+  }
+
+  return (data ?? []) as PersistedTaskRow[];
+}
+
+export async function pollPersistedTasksNow(): Promise<void> {
+  const pendingRows = await fetchPendingPersistedTasks();
+  if (pendingRows.length === 0) return;
+
+  const recoverableRows: PersistedTaskRow[] = [];
+  const retiredRows: Array<{ reason: string; row: PersistedTaskRow }> = [];
+
+  for (const row of pendingRows) {
+    if (taskRegistry.has(row.id)) continue;
+
+    const retiredReason = RETIRED_EXTERNAL_TASK_ERRORS.get(row.from_agent);
+    if (retiredReason) {
+      retiredRows.push({ row, reason: retiredReason });
+      continue;
+    }
+
+    if (RECOVERABLE_EXTERNAL_TASK_SOURCES.has(row.from_agent) || !row.from_agent.includes("-")) {
+      recoverableRows.push(row);
+      continue;
+    }
+
+    recoverableRows.push(row);
+  }
+
+  for (const retired of retiredRows) {
+    await retirePendingTask(retired.row, retired.reason);
+  }
+
+  for (const row of recoverableRows) {
+    const task = reviveTask(row);
+    taskRegistry.set(task.id, task);
+
+    const agentSlot = activeSlots.get(task.to);
+    if (!agentSlot && countActive() < MAX_CONCURRENT) {
+      startTask(task);
+    } else {
+      if (!pendingQueues.has(task.to)) pendingQueues.set(task.to, []);
+      pendingQueues.get(task.to)!.push(task);
+      taskEvents.emit("queued", task);
+    }
+  }
+
+  if (recoverableRows.length > 0) {
+    console.log(`[queue] Recovered ${recoverableRows.length} pending delegated task(s)`);
+  }
+
+  if (retiredRows.length > 0) {
+    console.log(`[queue] Retired ${retiredRows.length} unsupported pending task(s)`);
+  }
+}
+
+function startPersistedTaskPoller(): void {
+  if (persistedTaskPoller || !supabase) return;
+
+  persistedTaskPoller = setInterval(() => {
+    void pollPersistedTasksNow();
+  }, PERSISTED_TASK_POLL_MS);
+  persistedTaskPoller.unref?.();
+}
+
 export async function initQueue(): Promise<void> {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -174,41 +282,8 @@ export async function initQueue(): Promise<void> {
       console.log(`[queue] Recovered ${data.length} orphaned running task(s)`);
     }
 
-    const { data: pendingRows, error } = await supabase
-      .from("agent_tasks")
-      .select(
-        "id, from_agent, to_agent, action, params, tier, status, result, error, created_at, started_at, completed_at, discord_message_id, approved_by",
-      )
-      .eq("status", "pending")
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("[queue] Failed to recover pending task(s):", error.message);
-      return;
-    }
-
-    const recoverableRows = ((pendingRows ?? []) as PersistedTaskRow[]).filter(
-      (row) => !EXTERNAL_TASK_SOURCES.has(row.from_agent),
-    );
-
-    for (const row of recoverableRows) {
-      const task = reviveTask(row);
-      taskRegistry.set(task.id, task);
-      void safeLogAgentTaskRequested(toTimelineTask(task));
-
-      const agentSlot = activeSlots.get(task.to);
-      if (!agentSlot && countActive() < MAX_CONCURRENT) {
-        startTask(task);
-      } else {
-        if (!pendingQueues.has(task.to)) pendingQueues.set(task.to, []);
-        pendingQueues.get(task.to)!.push(task);
-        taskEvents.emit("queued", task);
-      }
-    }
-
-    if (recoverableRows.length > 0) {
-      console.log(`[queue] Recovered ${recoverableRows.length} pending delegated task(s)`);
-    }
+    await pollPersistedTasksNow();
+    startPersistedTaskPoller();
   }
 }
 

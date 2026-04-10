@@ -10,7 +10,6 @@ import {
   SlashCommandBuilder,
   type Client,
   type ChatInputCommandInteraction,
-  type TextChannel,
 } from "discord.js";
 import { toErrorMessage } from "../../utils/error-helpers.js";
 
@@ -82,7 +81,10 @@ export function registerSlashHandler(client: Client): void {
         case "reset": {
           const { channelSessions } = await import("../core/entry.js");
           channelSessions.delete(cmd.channelId);
-          await cmd.reply({ content: "Conversation reset. Starting fresh.", ephemeral: true });
+          await cmd.reply({
+            content: "Conversation reset. The agent will start a fresh session on the next message.",
+            ephemeral: true,
+          });
           break;
         }
 
@@ -106,7 +108,7 @@ function buildHelpText(): string {
     "",
     "`/status` — check if the agent is idle or busy",
     "`/help` — this message",
-    "`/reset` — clear conversation context in this channel",
+    "`/reset` — clear the active conversation session in this channel",
     "",
     "**Just type naturally in any channel** — the agent handles Meta Ads, email, calendar, database queries, and general ops.",
   ].join("\n");

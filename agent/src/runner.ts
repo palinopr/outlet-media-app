@@ -41,7 +41,7 @@ export function killAllClaude(): void {
 
 export interface RunnerOptions {
   prompt: string;
-  /** Which prompts/*.txt file to use as system prompt. Default: "command" */
+  /** Which prompts/*.txt file to use as system prompt. Default: "agent" */
   systemPromptName?: string;
   /** Direct system prompt text. Takes precedence over systemPromptName. */
   systemPrompt?: string;
@@ -49,6 +49,8 @@ export interface RunnerOptions {
   maxTurns?: number;
   /** Called with each stdout chunk — use for live streaming to Supabase */
   onChunk?: (text: string) => void;
+  /** Called whenever the claude subprocess produces stdout or stderr activity. */
+  onActivity?: () => void;
   /** Resume an existing session by ID (for multi-turn chat context) */
   resumeSessionId?: string;
 }
@@ -67,15 +69,16 @@ function loadPrompt(name: string): string {
 }
 
 /** Inactivity timeout: kill only if no output (stdout+stderr) for this long. */
-const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes of silence
+export const RUNNER_INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes of silence
 
 export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
   const {
     prompt,
-    systemPromptName = "command",
+    systemPromptName = "agent",
     systemPrompt: directSystemPrompt,
     maxTurns = 20,
     onChunk,
+    onActivity,
     resumeSessionId,
   } = opts;
 
@@ -139,7 +142,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
     const resetInactivityTimer = () => {
       clearTimeout(inactivityHandle);
       inactivityHandle = setTimeout(() => {
-        console.error(`[runner] No output for ${INACTIVITY_TIMEOUT_MS / 1000}s -- killing (inactive)`);
+        console.error(`[runner] No output for ${RUNNER_INACTIVITY_TIMEOUT_MS / 1000}s -- killing (inactive)`);
         timedOut = true;
         try {
           proc.kill("SIGTERM");
@@ -147,7 +150,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
         setTimeout(() => {
           try { proc.kill("SIGKILL"); } catch { /* already dead */ }
         }, 3000);
-      }, INACTIVITY_TIMEOUT_MS);
+      }, RUNNER_INACTIVITY_TIMEOUT_MS);
     };
     resetInactivityTimer();
 
@@ -159,6 +162,7 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
 
     proc.stdout.on("data", (chunk: Buffer) => {
       resetInactivityTimer();
+      onActivity?.();
       lineBuffer += chunk.toString();
       const lines = lineBuffer.split("\n");
       // Last element is incomplete — keep in buffer
@@ -210,10 +214,11 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
 
     proc.stderr.on("data", (chunk: Buffer) => {
       resetInactivityTimer();
+      onActivity?.();
       errorText += chunk.toString();
     });
 
-    proc.on("close", (code, signal) => {
+    proc.on("close", (code) => {
       clearTimeout(inactivityHandle);
       activeProcs.delete(proc);
 
@@ -233,11 +238,11 @@ export async function runClaude(opts: RunnerOptions): Promise<RunnerResult> {
       const text = (assembledText.trim() || fallbackResult.trim() || "Done.").trim();
 
       if (timedOut) {
-        console.error(`[runner] claude killed after ${INACTIVITY_TIMEOUT_MS / 1000}s inactivity`);
+        console.error(`[runner] claude killed after ${RUNNER_INACTIVITY_TIMEOUT_MS / 1000}s inactivity`);
         resolve({
           text: text || "Agent went inactive — no output received",
           success: false,
-          error: `Agent inactive for ${INACTIVITY_TIMEOUT_MS / 1000}s (no output)`,
+          error: `Agent inactive for ${RUNNER_INACTIVITY_TIMEOUT_MS / 1000}s (no output)`,
           sessionId: capturedSessionId,
         });
       } else if (code === 0) {
