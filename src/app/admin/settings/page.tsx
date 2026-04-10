@@ -19,6 +19,12 @@ import { supabaseAdmin } from "@/lib/supabase";
 function getApiKeyStatus() {
   const keys = [
     { label: "META_ACCESS_TOKEN", envVar: "META_ACCESS_TOKEN", source: ".env.local" },
+    { label: "GOOGLE_ADS_DEVELOPER_TOKEN", envVar: "GOOGLE_ADS_DEVELOPER_TOKEN", source: ".env.local" },
+    { label: "GOOGLE_ADS_CLIENT_ID", envVar: "GOOGLE_ADS_CLIENT_ID", source: ".env.local" },
+    { label: "GOOGLE_ADS_CLIENT_SECRET", envVar: "GOOGLE_ADS_CLIENT_SECRET", source: ".env.local" },
+    { label: "GOOGLE_ADS_REFRESH_TOKEN", envVar: "GOOGLE_ADS_REFRESH_TOKEN", source: ".env.local" },
+    { label: "GOOGLE_ADS_LOGIN_CUSTOMER_ID", envVar: "GOOGLE_ADS_LOGIN_CUSTOMER_ID", source: ".env.local" },
+    { label: "GOOGLE_ADS_CUSTOMER_ID", envVar: "GOOGLE_ADS_CUSTOMER_ID", source: ".env.local" },
     { label: "TICKETMASTER_KEY", envVar: "TICKETMASTER_API_KEY", source: ".env" },
     { label: "CLERK_SECRET_KEY", envVar: "CLERK_SECRET_KEY", source: ".env.local" },
     { label: "NEXT_PUBLIC_SUPABASE_URL", envVar: "NEXT_PUBLIC_SUPABASE_URL", source: ".env.local" },
