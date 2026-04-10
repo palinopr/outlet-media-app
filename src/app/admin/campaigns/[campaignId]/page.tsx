@@ -65,7 +65,7 @@ export default async function AdminCampaignDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <CampaignDetailDashboard campaign={campaign} />
+      <CampaignDetailDashboard data={data} />
     </div>
   );
 }

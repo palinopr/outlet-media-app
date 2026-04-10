@@ -4,6 +4,7 @@ import { listCampaignActionItems } from "@/features/campaign-action-items/server
 import { listCampaignComments } from "@/features/campaign-comments/server";
 import { listCampaignApprovalRequests } from "@/features/approvals/server";
 import { listCampaignSystemEvents } from "@/features/system-events/server";
+import { getEventRecordById, type EventOperatingRecord } from "@/features/events/server";
 import type { MetaCampaignCard } from "@/lib/meta-campaigns";
 import { getEffectiveCampaignRowById } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -35,14 +36,26 @@ interface CampaignOperatingRow {
   cpm: number | string | null;
   daily_budget: number | string | null;
   start_time: string | null;
+  tm_event_id: string | null;
 }
 
-export async function getCampaignOperatingData(campaignId: string) {
+export interface CampaignOperatingData {
+  actionItems: Awaited<ReturnType<typeof listCampaignActionItems>>;
+  approvals: Awaited<ReturnType<typeof listCampaignApprovalRequests>>;
+  assets: ReturnType<typeof mapAssetRows>;
+  campaign: MetaCampaignCard;
+  comments: Awaited<ReturnType<typeof listCampaignComments>>;
+  linkedEvents: EventOperatingRecord[];
+  systemEvents: Awaited<ReturnType<typeof listCampaignSystemEvents>>;
+}
+
+
+export async function getCampaignOperatingData(campaignId: string): Promise<CampaignOperatingData | null> {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
   const data = await getEffectiveCampaignRowById<CampaignOperatingRow>(
     campaignId,
-    "campaign_id, name, status, objective, client_slug, campaign_type, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time",
+    "campaign_id, name, status, objective, client_slug, campaign_type, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time, tm_event_id",
   );
   if (!data) return null;
 
@@ -75,11 +88,12 @@ export async function getCampaignOperatingData(campaignId: string) {
       assets: [],
       campaign,
       comments: [],
-      events: [],
+      linkedEvents: [],
+      systemEvents: [],
     };
   }
 
-  const [events, approvals, assetRows, actionItems, comments] = await Promise.all([
+  const [systemEvents, approvals, assetRows, actionItems, comments, linkedEvent] = await Promise.all([
     listCampaignSystemEvents({
       audience: "all",
       clientSlug: data.client_slug,
@@ -105,6 +119,7 @@ export async function getCampaignOperatingData(campaignId: string) {
       campaignId,
       clientSlug: data.client_slug,
     }),
+    data.tm_event_id ? getEventRecordById(data.tm_event_id) : Promise.resolve(null),
   ]);
 
   return {
@@ -113,6 +128,8 @@ export async function getCampaignOperatingData(campaignId: string) {
     assets: mapAssetRows(assetRows),
     campaign,
     comments,
-    events,
+    linkedEvents: linkedEvent ? [linkedEvent] : [],
+    systemEvents,
   };
 }
+
