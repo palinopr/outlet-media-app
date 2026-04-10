@@ -1,6 +1,6 @@
 # Schema object: is_current_client_member
 
-Generated from the current working tree on 2026-04-10 17:55:29.
+Generated from the current working tree on 2026-04-10 18:02:26.
 
 - Kinds: function
 - Migrations: supabase/migrations/20260307143000_client_member_roster_rls.sql

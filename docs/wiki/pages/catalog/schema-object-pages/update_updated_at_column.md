@@ -1,6 +1,6 @@
 # Schema object: update_updated_at_column
 
-Generated from the current working tree on 2026-04-10 17:55:29.
+Generated from the current working tree on 2026-04-10 18:02:26.
 
 - Kinds: function
 - Migrations: supabase/migrations/20260306155500_updated_at_function_search_paths.sql

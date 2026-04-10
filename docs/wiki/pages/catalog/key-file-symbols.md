@@ -1,6 +1,6 @@
 # Key File Symbol Map
 
-Generated from the current working tree on 2026-04-10 17:55:29.
+Generated from the current working tree on 2026-04-10 18:02:26.
 
 This page highlights key code files and lists their exported symbols, top-level definitions, and route/test ownership links.
 

@@ -36,14 +36,14 @@ export default function LandingPage() {
       <div className="pointer-events-none absolute inset-x-0 top-0 hidden h-[28rem] bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_56%)] lg:block" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-[20rem] bg-[radial-gradient(circle_at_bottom,rgba(2,6,23,0.16),transparent_70%)] lg:block" />
 
-      <main className="relative mx-auto max-w-[1240px] px-0 pb-24 pt-0 lg:px-8 lg:pb-16 lg:pt-10">
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.82fr)] lg:items-start lg:justify-center lg:gap-10 xl:gap-14">
-          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-8 lg:rounded-[2.4rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)]">
+      <main className="relative mx-auto max-w-[1240px] px-0 pb-28 pt-0 lg:px-8 lg:pb-18 lg:pt-12">
+        <div className="grid gap-0 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.82fr)] lg:items-start lg:justify-center lg:gap-12 xl:gap-16">
+          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-10 lg:rounded-[2.4rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)]">
             <LandingHero />
             <LandingCredibility />
           </section>
 
-          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-4 lg:rounded-[2.4rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)]">
+          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-6 lg:rounded-[2.4rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)]">
             <LandingFeatures />
             <LandingHowItWorks />
             <LandingFAQ />

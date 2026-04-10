@@ -1,5 +1,14 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | tighten typography scale and spacing rhythm
+- Ran a focused visual cleanup pass on the public `/landing` page after the broader proof-layout redesign.
+- Tightened typography and vertical rhythm across the landing route and section components:
+  - adjusted hero spacing, heading width, body size, pill sizing, and proof-stat card rhythm
+  - normalized section `py` spacing across proof, operator, process, FAQ, and CTA blocks
+  - softened a few oversized mobile headings and gave long text blocks clearer max widths
+  - improved accordion, proof-card, and CTA spacing so the page reads more like one composed surface instead of stacked feature cards
+- Updated the main landing route spacing so mobile has more comfortable bottom room above the sticky CTA and desktop panels keep a cleaner stagger.
+
 ## [2026-04-10] landing | remove wireframe feel and strengthen proof layout
 - Reworked the public `/landing` page presentation to feel closer to a finished campaign page instead of a labeled mock.
 - Updated the landing hero, proof sections, operator profile, process section, FAQ, CTA form, and desktop column balance:

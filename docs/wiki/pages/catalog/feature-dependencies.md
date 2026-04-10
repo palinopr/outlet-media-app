@@ -1,6 +1,6 @@
 # Feature Module Dependency Map
 
-Generated from the current working tree on 2026-04-10 17:55:29.
+Generated from the current working tree on 2026-04-10 18:02:26.
 
 This page rolls internal dependencies up to the `src/features/*` module level and shows which route/component groups use each feature module.
 

@@ -1,6 +1,6 @@
 # Feature: notifications
 
-Generated from the current working tree on 2026-04-10 17:55:29.
+Generated from the current working tree on 2026-04-10 18:02:26.
 
 - Files: 4
 - Entry files: src/features/notifications/discussions.ts, src/features/notifications/server.ts, src/features/notifications/types.ts, src/features/notifications/workflow.ts

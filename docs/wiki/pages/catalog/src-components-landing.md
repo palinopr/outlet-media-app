@@ -1,6 +1,6 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-10 17:55:29.
+Generated from the current working tree on 2026-04-10 18:02:26.
 
 - Files: 9
 - File kinds: React/TSX module (9)
@@ -15,7 +15,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
 - Lines: 123
-- Bytes: 4742
+- Bytes: 4813
 - Imports (internal): src/components/ui/button.tsx, src/components/ui/input.tsx
 - Imports (packages): react, sonner
 - Imported by: src/app/landing/page.tsx
@@ -36,7 +36,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Lines: 195
-- Bytes: 8181
+- Bytes: 8371
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
@@ -54,8 +54,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
-- Lines: 71
-- Bytes: 3027
+- Lines: 73
+- Bytes: 3109
 - Imports (packages): react, lucide-react
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
@@ -74,7 +74,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Lines: 56
-- Bytes: 2754
+- Bytes: 2781
 - Imports (packages): next/image
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
@@ -107,8 +107,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 85
-- Bytes: 4124
+- Lines: 87
+- Bytes: 4205
 - Imports (packages): next/image
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
@@ -126,8 +126,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 55
-- Bytes: 2173
+- Lines: 57
+- Bytes: 2260
 - Imports (packages): lucide-react
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes

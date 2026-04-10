@@ -25,17 +25,17 @@ export function LandingFAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="border-b border-white/8 px-5 py-6 text-white sm:px-6">
+    <section className="border-b border-white/8 px-5 py-7 text-white sm:px-6">
       <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
         FAQ
       </p>
-      <h2 className="mt-3 text-center text-[2rem] font-semibold leading-[1.02] tracking-tight text-white">
+      <h2 className="mt-3 text-center text-[2rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.1rem]">
         Preguntas frecuentes
       </h2>
-      <p className="mx-auto mt-3 max-w-[18rem] text-center text-[14px] leading-6 text-slate-300 sm:max-w-[20rem] sm:text-[15px]">
+      <p className="mx-auto mt-2.5 max-w-[18rem] text-center text-[14px] leading-6 text-slate-300 sm:max-w-[20rem] sm:text-[15px]">
         Lo que casi siempre preguntan antes de entrar a una auditoría.
       </p>
-      <div className="mt-5 space-y-3">
+      <div className="mt-6 space-y-3.5">
         {FAQS.map((faq, index) => {
           const open = openIndex === index;
           return (
@@ -46,7 +46,7 @@ export function LandingFAQ() {
               <button
                 type="button"
                 onClick={() => setOpenIndex(open ? null : index)}
-                className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 p-4 text-left"
+                className="grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 p-4 sm:p-5 text-left"
               >
                 <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${open ? "border-[#61c0ff]/25 bg-[#61c0ff]/10 text-[#b9e5ff]" : "border-white/10 bg-white/[0.04] text-slate-300"}`}>
                   {String(index + 1).padStart(2, "0")}
@@ -59,7 +59,9 @@ export function LandingFAQ() {
                 />
               </button>
               {open ? (
-                <p className="px-4 pb-4 text-sm leading-7 text-slate-300">{faq.answer}</p>
+                <p className="px-4 pb-5 pr-10 text-[14px] leading-6 text-slate-300 sm:px-5">
+                  {faq.answer}
+                </p>
               ) : null}
             </div>
           );

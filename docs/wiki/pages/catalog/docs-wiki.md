@@ -1,6 +1,6 @@
 # Docs / Wiki (manual control pages)
 
-Generated from the current working tree on 2026-04-10 17:55:29.
+Generated from the current working tree on 2026-04-10 18:02:26.
 
 - Files: 10
 - File kinds: Markdown doc (9), file (.py) (1)
@@ -38,10 +38,10 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo wiki source
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 185
-- Bytes: 16586
-- Headings: Repo Wiki Log, [2026-04-10] landing \| remove wireframe feel and strengthen proof layout, [2026-04-10] landing \| make dark background fill mobile viewport, [2026-04-10] admin-web \| add client request handling tabs on campaign and event detail, [2026-04-10] landing \| remove device-frame shell from public page, [2026-04-10] landing \| mobile-phone shell redesign and wiki refresh, [2026-04-10] client-events \| replace empty operating-loop shell with request-first UI, [2026-04-10] client-campaign \| replace empty operating-loop shell with request-first UI, [2026-04-10] client-events \| operating loop slice on event detail, [2026-04-10] client-campaign \| operating loop slice and verification hygiene, … (+10 more)
-- Contents summary: headings: Repo Wiki Log \| [2026-04-10] landing \| remove wireframe feel and strengthen proof layout \| [2026-04-10] landing \| make dark background fill mobile viewport \| [2026-04-10] admin-web \| add client request handling tabs on campaign and event detail \| [2026-04-10] landing \| remove device-frame shell from public p…
+- Lines: 194
+- Bytes: 17410
+- Headings: Repo Wiki Log, [2026-04-10] landing \| tighten typography scale and spacing rhythm, [2026-04-10] landing \| remove wireframe feel and strengthen proof layout, [2026-04-10] landing \| make dark background fill mobile viewport, [2026-04-10] admin-web \| add client request handling tabs on campaign and event detail, [2026-04-10] landing \| remove device-frame shell from public page, [2026-04-10] landing \| mobile-phone shell redesign and wiki refresh, [2026-04-10] client-events \| replace empty operating-loop shell with request-first UI, [2026-04-10] client-campaign \| replace empty operating-loop shell with request-first UI, [2026-04-10] client-events \| operating loop slice on event detail, … (+10 more)
+- Contents summary: headings: Repo Wiki Log \| [2026-04-10] landing \| tighten typography scale and spacing rhythm \| [2026-04-10] landing \| remove wireframe feel and strengthen proof layout \| [2026-04-10] landing \| make dark background fill mobile viewport \| [2026-04-10] admin-web \| add client request handling tabs on campaign and event de…
 
 ## `docs/wiki/pages/audits/dead-ends-and-dead-code.md`
 - Status: tracked-clean

@@ -2,8 +2,8 @@ import Image from "next/image";
 
 export function LandingFeatures() {
   return (
-    <section className="border-b border-white/8 px-5 pb-6 pt-6 text-white sm:px-6">
-      <div className="mt-4 overflow-hidden rounded-[28px] border border-[#61c0ff]/20 bg-[radial-gradient(circle_at_top,rgba(97,192,255,0.12),transparent_28%),linear-gradient(180deg,#0a172a_0%,#081220_100%)] shadow-[0_0_0_1px_rgba(97,192,255,0.06),0_30px_64px_-36px_rgba(36,99,235,0.5)]">
+    <section className="border-b border-white/8 px-5 pb-7 pt-7 text-white sm:px-6">
+      <div className="overflow-hidden rounded-[28px] border border-[#61c0ff]/20 bg-[radial-gradient(circle_at_top,rgba(97,192,255,0.12),transparent_28%),linear-gradient(180deg,#0a172a_0%,#081220_100%)] shadow-[0_0_0_1px_rgba(97,192,255,0.06),0_30px_64px_-36px_rgba(36,99,235,0.5)]">
         <div className="relative aspect-[1.05/0.9] border-b border-white/10">
           <Image
             src="/images/landing/jaime-ortiz-founder.jpg"
@@ -21,7 +21,7 @@ export function LandingFeatures() {
           </div>
         </div>
         <div className="p-5 sm:p-6">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {[
               "Paid media",
               "Ticketing",
@@ -35,10 +35,10 @@ export function LandingFeatures() {
               </span>
             ))}
           </div>
-          <h2 className="mt-4 text-[1.95rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.1rem]">
+          <h2 className="mt-4 max-w-[11ch] text-[1.95rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.15rem]">
             Operadores, no creativos de vitrina.
           </h2>
-          <div className="mt-4 space-y-4 text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
+          <div className="mt-4 max-w-[28rem] space-y-3.5 text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
             <p>
               Outlet no vende humo de agencia. Diagnostica, decide, ejecuta y enseña la data para
               que el crecimiento no dependa de fe.

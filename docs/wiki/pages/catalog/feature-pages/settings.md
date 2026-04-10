@@ -1,6 +1,6 @@
 # Feature: settings
 
-Generated from the current working tree on 2026-04-10 17:55:29.
+Generated from the current working tree on 2026-04-10 18:02:26.
 
 - Files: 2
 - Entry files: src/features/settings/connected-accounts.ts, src/features/settings/summary.ts

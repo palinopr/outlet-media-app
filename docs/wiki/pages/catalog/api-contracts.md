@@ -1,6 +1,6 @@
 # API Contract Map
 
-Generated from the current working tree on 2026-04-10 17:55:29.
+Generated from the current working tree on 2026-04-10 18:02:26.
 
 This page documents each `src/app/api/**/route.ts` file with its methods, request/response signals, validation symbols, dependency stack, and related tests.
 
