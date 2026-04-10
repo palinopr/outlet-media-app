@@ -1,6 +1,6 @@
 # Feature Profiles
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 This index links to deep feature-module pages with semantic and behavior-oriented summaries.
 
@@ -18,7 +18,7 @@ This index links to deep feature-module pages with semantic and behavior-oriente
 - [clients](./feature-pages/clients.md) — files: 1; routes: 4; db objects: 0
 - [conversations](./feature-pages/conversations.md) — files: 2; routes: 6; db objects: 9
 - [dashboard](./feature-pages/dashboard.md) — files: 2; routes: 6; db objects: 5
-- [event-comments](./feature-pages/event-comments.md) — files: 1; routes: 2; db objects: 1
+- [event-comments](./feature-pages/event-comments.md) — files: 1; routes: 10; db objects: 1
 - [event-follow-up-items](./feature-pages/event-follow-up-items.md) — files: 1; routes: 2; db objects: 3
 - [events](./feature-pages/events.md) — files: 3; routes: 10; db objects: 5
 - [invitations](./feature-pages/invitations.md) — files: 4; routes: 22; db objects: 2

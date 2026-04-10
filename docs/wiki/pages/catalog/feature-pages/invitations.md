@@ -1,6 +1,6 @@
 # Feature: invitations
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 4
 - Entry files: src/features/invitations/server.ts, src/features/invitations/sort.ts, src/features/invitations/types.ts
@@ -14,7 +14,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Auth/access signals: imports Clerk server auth
 - Behavior signals: none
 - Direct tests: src/app/admin/clients/data.test.ts, src/features/invitations/server.test.ts
-- All linked tests: src/app/admin/clients/data.test.ts, src/features/invitations/server.test.ts, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx, __tests__/features/settings/summary.test.ts, __tests__/features/users/summary.test.ts, __tests__/features/shared/admin-summary-types.test.ts, __tests__/lib/formatters.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/admin/dashboard/page.test.tsx, … (+40 more)
+- All linked tests: src/app/admin/clients/data.test.ts, src/features/invitations/server.test.ts, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx, __tests__/features/settings/summary.test.ts, __tests__/features/users/summary.test.ts, __tests__/features/shared/admin-summary-types.test.ts, __tests__/lib/formatters.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, … (+43 more)
 
 ## Exporting files
 - `src/features/invitations/server.ts` — exports: buildActionableInvitations, listActionableInvitations

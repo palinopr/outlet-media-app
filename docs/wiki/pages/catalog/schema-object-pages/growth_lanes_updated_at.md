@@ -1,6 +1,6 @@
 # Schema object: growth_lanes_updated_at
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Kinds: trigger
 - Migrations: supabase/migrations/20260307120000_growth_ledgers.sql

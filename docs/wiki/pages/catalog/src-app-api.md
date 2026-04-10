@@ -1,6 +1,6 @@
 # src/app / api
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 40
 - File kinds: Next.js route handler (25), test file (12), TypeScript module (3)
@@ -439,14 +439,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: test file
 - Construction: test specification
 - Route context: /api/event-comments
-- Lines: 187
-- Bytes: 5277
+- Lines: 258
+- Bytes: 7536
 - Imports (internal): src/features/event-comments/server.ts, src/app/api/event-comments/route.ts, src/lib/api-helpers.ts, src/lib/supabase.ts, src/features/events/server.ts, src/features/client-portal/scope.ts, src/features/notifications/discussions.ts, src/features/system-events/server.ts, src/lib/agent-dispatch.ts, src/features/workflow/revalidation.ts
 - Imports (packages): next/server, vitest, @clerk/nextjs/server
 - Depends on groups: src-features-event-comments, src/app / api, src/lib, src/features / events, src/features / client-portal, src/features / notifications, src/features / system-events, src/features / workflow
 - Symbol details: function makeGetRequest
 - Defines: makeGetRequest, actual, query, response
-- Tests / describe labels: event comments route, reads client event comment GETs through the Clerk-scoped client, does not fall back to the service role for non-admin event comment GETs when the Clerk-scoped client is unavailable, keeps admin event comment GETs on the service role
+- Tests / describe labels: event comments route, reads client event comment GETs through the Clerk-scoped client, does not fall back to the service role for non-admin event comment GETs when the Clerk-scoped client is unavailable, keeps admin event comment GETs on the service role, lets admins resolve an event request thread
 - Contents summary: tests/describes: event comments route; reads client event comment GETs through the Clerk-scoped client; does not fall back to the service role for non-admin event comment GETs when the Clerk-scoped client is unavailable; internal imports: 10; package imports: 3
 
 ## `src/app/api/event-comments/route.ts`
@@ -455,10 +455,10 @@ Each entry below documents the file path, system ownership, construction style, 
 - Group: src/app / api
 - Ownership: web API route surface
 - Type: Next.js route handler
-- Construction: App Router route handler, code module, handlers: GET, POST
+- Construction: App Router route handler, code module, handlers: GET, POST, PATCH
 - Route: /api/event-comments
-- Lines: 245
-- Bytes: 7535
+- Lines: 314
+- Bytes: 9857
 - Imports (internal): src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/text-utils.ts, src/lib/agent-dispatch.ts, src/lib/supabase.ts, src/features/event-comments/server.ts, src/features/events/server.ts, src/features/notifications/discussions.ts, src/features/client-portal/scope.ts, src/features/system-events/server.ts, … (+1 more)
 - Imports (packages): next/server, @clerk/nextjs/server, zod/v4
 - Imported by: src/app/api/event-comments/route.test.ts
@@ -466,11 +466,11 @@ Each entry below documents the file path, system ownership, construction style, 
 - Used by groups: src/app / api
 - Tests related: src/app/api/event-comments/route.test.ts
 - Tests related (direct): src/app/api/event-comments/route.test.ts
-- Exports: GET, POST
-- Symbol details: function GET (exported), function POST (exported), function eventCommentTriagePrompt, const CreateScopedEventCommentSchema
-- Defines: eventCommentTriagePrompt, GET, POST, CreateScopedEventCommentSchema, eventId, clientSlug, access, event, commentsDb, user, authorName, eventName, … (+2 more)
-- Route handlers: GET, POST
-- Contents summary: Next.js route handler for `/api/event-comments`; route handlers: GET, POST; exports: GET, POST; internal imports: 11; package imports: 3
+- Exports: GET, POST, PATCH
+- Symbol details: function GET (exported), function POST (exported), function PATCH (exported), function eventCommentTriagePrompt, const CreateScopedEventCommentSchema
+- Defines: eventCommentTriagePrompt, GET, POST, PATCH, CreateScopedEventCommentSchema, eventId, clientSlug, access, event, commentsDb, user, authorName, … (+5 more)
+- Route handlers: GET, POST, PATCH
+- Contents summary: Next.js route handler for `/api/event-comments`; route handlers: GET, POST, PATCH; exports: GET, POST, PATCH; internal imports: 11; package imports: 3
 
 ## `src/app/api/health/route.test.ts`
 - Status: tracked-clean

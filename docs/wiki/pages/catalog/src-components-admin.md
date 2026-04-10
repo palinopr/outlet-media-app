@@ -1,9 +1,9 @@
 # src/components / admin
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
-- Files: 62
-- File kinds: React/TSX module (52), test file (8), TypeScript module (2)
+- Files: 64
+- File kinds: React/TSX module (53), test file (9), TypeScript module (2)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -254,12 +254,13 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 4528
 - Imports (internal): src/lib/formatters.tsx, src/lib/meta-campaigns.ts, src/components/admin/confirm-dialog.tsx, src/app/admin/actions/campaigns.ts
 - Imports (packages): sonner, lucide-react
-- Imported by: src/app/admin/campaigns/[campaignId]/page.tsx, src/components/admin/campaigns/columns.tsx
+- Imported by: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/components/admin/campaigns/columns.tsx
 - Depends on groups: src/lib, src/components / admin, src/app / admin
 - Used by groups: src/app / admin, src/components / admin
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx
 - Routes related (direct): src/app/admin/campaigns/[campaignId]/page.tsx
-- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related (direct): src/app/admin/campaigns/[campaignId]/page.test.tsx
 - Exports: BudgetBar, RoasBadge, RoasSparkline, SyncButton
 - Symbol details: function BudgetBar (exported), function RoasBadge (exported), function RoasSparkline (exported), function SyncButton (exported)
 - Defines: BudgetBar, RoasBadge, RoasSparkline, SyncButton, pct, color, vals, W, min, max, range, coords, … (+8 more)
@@ -293,13 +294,13 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 267
 - Bytes: 11595
 - Imports (internal): src/features/campaigns/server.ts, src/lib/formatters.tsx, src/lib/action-item-labels.ts, src/lib/workspace-types.ts
-- Imported by: src/app/admin/campaigns/[campaignId]/page.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
+- Imported by: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
 - Depends on groups: src/features / campaigns, src/lib
 - Used by groups: src/app / admin, src/components / admin
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx
 - Routes related (direct): src/app/admin/campaigns/[campaignId]/page.tsx
-- Tests related: src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
-- Tests related (direct): src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
+- Tests related (direct): src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
 - Exports: CampaignDetailDashboard
 - Symbol details: function CampaignDetailDashboard (exported), function SectionCard, function EmptyState, function KpiCard, function badgeClass, interface Props
 - Defines: SectionCard, EmptyState, KpiCard, badgeClass, CampaignDetailDashboard, unresolvedComments, openActionItems, Props
@@ -414,6 +415,46 @@ Each entry below documents the file path, system ownership, construction style, 
 - Symbol details: function ClientOnboardForm (exported)
 - Defines: ClientOnboardForm, handleNameChange, handleSubmit, client, res, data
 - Contents summary: contains `use client`; exports: ClientOnboardForm; internal imports: 4; package imports: 3
+
+## `src/components/admin/client-requests-panel.test.tsx`
+- Status: tracked-clean
+- System: web
+- Group: src/components / admin
+- Ownership: shared admin UI components
+- Type: test file
+- Construction: test specification
+- Lines: 126
+- Bytes: 3677
+- Imports (internal): src/components/admin/client-requests-panel.tsx
+- Imports (packages): @testing-library/react, vitest, next/navigation
+- Depends on groups: src/components / admin
+- Symbol details: const refresh
+- Defines: refresh
+- Tests / describe labels: ClientRequestsPanel, renders shared request threads and posts campaign replies back onto the thread, uses the event comment endpoint when resolving an event request
+- Contents summary: tests/describes: ClientRequestsPanel; renders shared request threads and posts campaign replies back onto the thread; uses the event comment endpoint when resolving an event request; internal imports: 1; package imports: 3
+
+## `src/components/admin/client-requests-panel.tsx`
+- Status: tracked-clean
+- System: web
+- Group: src/components / admin
+- Ownership: shared admin UI components
+- Type: React/TSX module
+- Construction: component/UI-oriented module, contains `use client`
+- Lines: 328
+- Bytes: 13115
+- Imports (internal): src/components/ui/button.tsx, src/lib/formatters.tsx
+- Imports (packages): react, next/navigation, lucide-react
+- Imported by: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/[eventId]/page.tsx, src/components/admin/client-requests-panel.test.tsx
+- Depends on groups: src/components / ui, src/lib
+- Used by groups: src/app / admin, src/components / admin
+- Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/events/[eventId]/page.tsx
+- Routes related (direct): src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/events/[eventId]/page.tsx
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, src/components/admin/client-requests-panel.test.tsx
+- Tests related (direct): src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, src/components/admin/client-requests-panel.test.tsx
+- Exports: ClientRequestsPanel, AdminRequestComment
+- Symbol details: function ClientRequestsPanel (exported), function groupDiscussionThreads, function requestEndpoint, function requestEntityKey, type AdminRequestComment (exported), interface ThreadComment, interface ClientRequestsPanelProps
+- Defines: groupDiscussionThreads, requestEndpoint, requestEntityKey, ClientRequestsPanel, handleReply, handleResolvedChange, repliesByParent, current, router, threads, openThreadCount, endpoint, … (+11 more)
+- Contents summary: contains `use client`; exports: ClientRequestsPanel, AdminRequestComment; internal imports: 2; package imports: 3
 
 ## `src/components/admin/clients/assignment-manager.tsx`
 - Status: tracked-clean
@@ -737,7 +778,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Depends on groups: src/components / ui
 - Used by groups: src/components / admin
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/campaigns/page.tsx
-- Tests related: src/components/admin/users/revoke-invitation-button.test.tsx, src/components/admin/clients/client-detail.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/users/revoke-invitation-button.test.tsx, src/components/admin/clients/client-detail.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx
 - Exports: ConfirmDialog
 - Symbol details: function ConfirmDialog (exported), interface Props
 - Defines: ConfirmDialog, handleKeyDown, handleConfirm, dialogRef, titleId, dialog, focusable, first, last, Props
@@ -919,7 +960,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Depends on groups: src/lib
 - Used by groups: src/components / admin
 - Route owners: src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx
-- Tests related: src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Exports: SellBarVisual, ClientSelect
 - Symbol details: function SellBarVisual (exported), function ClientSelect (exported)
 - Defines: SellBarVisual, ClientSelect, handleChange, capacity, pct, barColor
@@ -936,11 +977,13 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 7544
 - Imports (internal): src/app/admin/actions/events.ts, src/components/admin/inline-edit.tsx, src/components/admin/status-select.tsx, src/components/admin/events/event-cells.tsx, src/features/events/server.ts, src/lib/formatters.tsx, src/lib/constants.ts
 - Imports (packages): next/link, lucide-react, sonner
-- Imported by: src/app/admin/events/[eventId]/page.tsx
+- Imported by: src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/[eventId]/page.tsx
 - Depends on groups: src/app / admin, src/components / admin, src/features / events, src/lib
 - Used by groups: src/app / admin
 - Route owners: src/app/admin/events/[eventId]/page.tsx
 - Routes related (direct): src/app/admin/events/[eventId]/page.tsx
+- Tests related: src/app/admin/events/[eventId]/page.test.tsx
+- Tests related (direct): src/app/admin/events/[eventId]/page.test.tsx
 - Exports: EventOperatingPanel
 - Symbol details: function EventOperatingPanel (exported), interface EventOperatingPanelProps
 - Defines: EventOperatingPanel, parsed, EventOperatingPanelProps
@@ -982,7 +1025,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Imported by: src/components/admin/clients/columns.tsx, src/components/admin/events/columns.tsx, src/components/admin/events/event-operating-panel.tsx
 - Used by groups: src/components / admin
 - Route owners: src/app/admin/events/[eventId]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/events/page.tsx
-- Tests related: src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Exports: InlineEdit
 - Symbol details: function InlineEdit (exported), interface Props
 - Defines: InlineEdit, save, Props
@@ -1078,7 +1121,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Used by groups: src/app / admin
 - Route owners: src/app/admin/agents/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/reports/page.tsx, src/app/admin/settings/page.tsx, … (+1 more)
 - Routes related (direct): src/app/admin/agents/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/reports/page.tsx, src/app/admin/settings/page.tsx, … (+1 more)
-- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/admin/reports/page.test.tsx
+- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/admin/reports/page.test.tsx
 - Exports: AdminPageHeader
 - Symbol details: function AdminPageHeader (exported), interface AdminPageHeaderProps
 - Defines: AdminPageHeader, AdminPageHeaderProps
@@ -1141,7 +1184,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Used by groups: src/app / admin, src/app / client, src/components / admin
 - Route owners: src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/admin/clients/[id]/page.tsx
 - Routes related (direct): src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx
-- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/page.test.tsx, src/components/admin/clients/client-detail.test.tsx
+- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, src/components/admin/clients/client-detail.test.tsx
 - Exports: StatCard, StatCardProps
 - Symbol details: function StatCard (exported), interface StatCardProps (exported)
 - Defines: StatCard, isLg, StatCardProps
@@ -1160,7 +1203,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Imported by: src/components/admin/campaigns/columns.tsx, src/components/admin/events/columns.tsx, src/components/admin/events/event-operating-panel.tsx, src/components/admin/users/columns.tsx
 - Used by groups: src/components / admin
 - Route owners: src/app/admin/events/[eventId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/events/page.tsx, src/app/admin/users/page.tsx
-- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Exports: StatusSelect
 - Symbol details: function StatusSelect (exported), interface Props
 - Defines: StatusSelect, handleChange, Props

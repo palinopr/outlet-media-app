@@ -1,6 +1,6 @@
 # src/features / campaigns
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 4
 - File kinds: TypeScript module (3), test file (1)
@@ -61,7 +61,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Used by groups: src/app / admin, src/features / campaigns, src/features / notifications
 - Feature module: campaigns
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx
-- Tests related: src/features/campaigns/ownership-sync.test.ts, __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, … (+8 more)
+- Tests related: src/features/campaigns/ownership-sync.test.ts, __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, … (+9 more)
 - Tests related (direct): src/features/campaigns/ownership-sync.test.ts
 - Exports: approvalMatchesCampaignOwnership, notificationMatchesCampaignOwnership, systemEventMatchesCampaignOwnership
 - Symbol details: function approvalMatchesCampaignOwnership (exported), function notificationMatchesCampaignOwnership (exported), function systemEventMatchesCampaignOwnership (exported), function isRecord, function metadataCampaignId, interface CampaignLinkedEntitySets
@@ -78,14 +78,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 136
 - Bytes: 4555
 - Imports (internal): src/features/assets/lib.ts, src/features/assets/server.ts, src/features/campaign-action-items/server.ts, src/features/campaign-comments/server.ts, src/features/approvals/server.ts, src/features/system-events/server.ts, src/features/events/server.ts, src/lib/meta-campaigns.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts
-- Imported by: src/app/admin/campaigns/[campaignId]/page.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx
+- Imported by: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx
 - Depends on groups: src/features / assets, src/features / campaign-action-items, src/features / campaign-comments, src/features / approvals, src/features / system-events, src/features / events, src/lib
 - Used by groups: src/app / admin, src/components / admin
 - Feature module: campaigns
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx
 - Routes related (direct): src/app/admin/campaigns/[campaignId]/page.tsx
-- Tests related: src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
-- Tests related (direct): src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
+- Tests related (direct): src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
 - Exports: getCampaignOperatingData, CampaignOperatingData
 - Symbol details: function getCampaignOperatingData (exported), function toNumber, function centsToDollars, interface CampaignOperatingData (exported), interface CampaignOperatingRow
 - Defines: toNumber, centsToDollars, getCampaignOperatingData, amount, data, CampaignOperatingRow, CampaignOperatingData

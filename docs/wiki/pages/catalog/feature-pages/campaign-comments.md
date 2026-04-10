@@ -1,6 +1,6 @@
 # Feature: campaign-comments
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 1
 - Entry files: src/features/campaign-comments/server.ts
@@ -14,7 +14,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Auth/access signals: imports Clerk server auth, calls currentUser(), references membership/scope access concepts
 - Behavior signals: none
 - Direct tests: __tests__/features/campaign-comments/read-clients.test.ts, src/app/api/campaign-comments/route.test.ts
-- All linked tests: __tests__/features/campaign-comments/read-clients.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/app/shell-import-smoke.test.ts
+- All linked tests: __tests__/features/campaign-comments/read-clients.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/app/shell-import-smoke.test.ts
 
 ## Exporting files
 - `src/features/campaign-comments/server.ts` — exports: listCampaignComments, canAccessCampaignComments, CampaignCommentVisibility, CampaignComment

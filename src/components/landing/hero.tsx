@@ -1,20 +1,39 @@
-const PROOF_PILLS = ["+370K boletos", "ROAS 13.6x local", "Culture & Data"] as const;
+import Image from "next/image";
+
+const PROOF_PILLS = ["370K+ boletos", "ROAS 13.6x", "Dashboards live"] as const;
+
+const HERO_STATS = [
+  { value: "PR + US", label: "Mercados operados" },
+  { value: "24h", label: "Tiempo de respuesta" },
+  { value: "Full funnel", label: "Media + reporte" },
+] as const;
 
 export function LandingHero() {
   return (
-    <section className="relative overflow-hidden border-b border-white/8 px-5 pb-7 pt-8 text-white sm:px-6">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(31,94,255,0.28),transparent_30%),radial-gradient(circle_at_top_right,rgba(245,158,11,0.16),transparent_24%),linear-gradient(180deg,rgba(8,19,36,1)_0%,rgba(6,15,28,1)_100%)]" />
+    <section className="relative overflow-hidden border-b border-white/8 px-5 pb-6 pt-6 text-white sm:px-6 sm:pb-7">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(31,94,255,0.32),transparent_30%),radial-gradient(circle_at_top_right,rgba(245,158,11,0.18),transparent_24%),linear-gradient(180deg,rgba(8,19,36,1)_0%,rgba(6,15,28,1)_100%)]" />
       <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:44px_44px]" />
-      <div className="absolute inset-x-12 bottom-0 h-32 bg-[radial-gradient(circle,rgba(31,94,255,0.2),transparent_70%)] blur-2xl" />
+      <div className="absolute inset-x-10 -top-8 h-28 bg-[radial-gradient(circle,rgba(59,130,246,0.28),transparent_70%)] blur-3xl" />
+      <div className="absolute inset-x-12 bottom-0 h-32 bg-[radial-gradient(circle,rgba(31,94,255,0.24),transparent_70%)] blur-2xl" />
 
       <div className="relative text-center">
-        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">Hero</p>
-        <h1 className="mx-auto mt-4 max-w-[12ch] text-[2.2rem] font-bold leading-[0.96] tracking-[-0.06em] text-white sm:text-[2.9rem]">
-          Resultados reales en PR. No más “Agency Blackout”.
+        <Image
+          src="/images/brand/logotype-horizontal-white.png"
+          alt="Outlet Media"
+          width={170}
+          height={28}
+          className="mx-auto h-auto w-[150px] sm:w-[170px]"
+          priority
+        />
+        <p className="mx-auto mt-4 inline-flex rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300">
+          Puerto Rico performance operators
+        </p>
+        <h1 className="mx-auto mt-5 max-w-[11ch] text-[2.05rem] font-bold leading-[0.94] tracking-[-0.06em] text-white sm:text-[2.85rem]">
+          Resultados reales en PR. Sin “agency blackout”.
         </h1>
-        <p className="mx-auto mt-4 max-w-[18rem] text-[13px] leading-6 text-slate-300 sm:max-w-[20rem] sm:text-[15px] sm:leading-7">
-          Estrategia, creatividad y visibilidad total para marcas y operadores que exigen ROI.
-          Deja de adivinar. Empieza a escalar con data en tiempo real.
+        <p className="mx-auto mt-4 max-w-[18.5rem] text-[13px] leading-6 text-slate-300 sm:max-w-[21rem] sm:text-[15px] sm:leading-7">
+          Paid media, creatividad y reporting en tiempo real para operadores que quieren saber qué
+          creativo vende, qué canal escala y dónde se fuga el dinero.
         </p>
 
         <div className="mt-4 flex flex-wrap justify-center gap-2">
@@ -31,12 +50,12 @@ export function LandingHero() {
 
         <a
           href="#audit-form"
-          className="mt-6 inline-flex h-12 w-full max-w-[18rem] items-center justify-center rounded-full bg-[#1f5eff] px-6 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_18px_38px_-18px_rgba(31,94,255,0.9)] transition-colors hover:bg-[#184de0]"
+          className="mt-5 inline-flex h-12 w-full max-w-[18rem] items-center justify-center rounded-full bg-[#1f5eff] px-6 text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_18px_38px_-18px_rgba(31,94,255,0.9)] transition-colors hover:bg-[#184de0]"
         >
           Agenda tu auditoría
         </a>
 
-        <div className="mt-4 text-[13px] text-slate-300 sm:text-sm">
+        <div className="mt-3 text-[13px] text-slate-300 sm:text-sm">
           ¿Prefieres hablar ahora?{" "}
           <a
             href="tel:+13053225709"
@@ -44,6 +63,20 @@ export function LandingHero() {
           >
             Llama directa.
           </a>
+        </div>
+
+        <div className="mx-auto mt-5 grid max-w-[20rem] grid-cols-3 gap-2 text-left sm:max-w-[22rem]">
+          {HERO_STATS.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-[18px] border border-white/8 bg-white/[0.04] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+            >
+              <p className="text-sm font-semibold text-white sm:text-base">{item.value}</p>
+              <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-slate-400">
+                {item.label}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

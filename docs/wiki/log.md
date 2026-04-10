@@ -1,5 +1,16 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | remove wireframe feel and strengthen proof layout
+- Reworked the public `/landing` page presentation to feel closer to a finished campaign page instead of a labeled mock.
+- Updated the landing hero, proof sections, operator profile, process section, FAQ, CTA form, and desktop column balance:
+  - removed wireframe-style section labels like `Hero`, `Trust strip`, `Differentiator`, and `Operator profile`
+  - tightened the hero so more proof appears above the fold on mobile
+  - replaced the text-only proof strip with asset-backed tiles from `public/images/landing/`
+  - rebuilt the signature result cards with stronger stats, media blocks, and clearer hierarchy
+  - removed duplicate mid-page CTA buttons so the page now centers on the hero CTA, sticky mobile CTA, and final form CTA
+  - strengthened the operator image crop/overlay, FAQ open state, and desktop asymmetry
+- Updated the audit form copy and inputs so the CTA block reads like final product copy instead of placeholder field treatment.
+
 ## [2026-04-10] landing | make dark background fill mobile viewport
 - Updated `src/app/landing/page.tsx` so the dark landing background fills the full phone viewport on mobile instead of leaving the bright desktop backdrop visible around the content.
 - Kept the bright studio-style outer backdrop for larger screens only, where it still helps sell the mock-inspired presentation.

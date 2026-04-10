@@ -1,11 +1,11 @@
 # /api/event-comments
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Route file: `src/app/api/event-comments/route.ts`
 - Type: Next.js route handler
 - Ownership: web API route surface
-- Methods: GET, POST
+- Methods: GET, POST, PATCH
 - Auth signals: imports Clerk server auth, calls currentUser()
 - Behavior signals: none
 - Direct internal imports: src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/text-utils.ts, src/lib/agent-dispatch.ts, src/lib/supabase.ts, src/features/event-comments/server.ts, src/features/events/server.ts, src/features/notifications/discussions.ts, src/features/client-portal/scope.ts, src/features/system-events/server.ts, … (+1 more)
@@ -14,7 +14,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Database objects touched: event_comments, notifications, agent_tasks, tm_events, meta_campaigns, event_follow_up_items, clients, system_events, client_members, client_member_campaigns, client_member_events, campaign_client_overrides, approval_requests, campaign_action_items, … (+4 more)
 - Direct tests: src/app/api/event-comments/route.test.ts
 - All linked tests: src/app/api/event-comments/route.test.ts
-- Contents summary: Next.js route handler for `/api/event-comments`; route handlers: GET, POST; exports: GET, POST; internal imports: 11; package imports: 3
+- Contents summary: Next.js route handler for `/api/event-comments`; route handlers: GET, POST, PATCH; exports: GET, POST, PATCH; internal imports: 11; package imports: 3
 
 ## Stack by group
 - src-features-event-comments: src/features/event-comments/server.ts

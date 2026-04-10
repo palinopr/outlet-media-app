@@ -1,6 +1,6 @@
 # Feature: campaigns
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 4
 - Entry files: src/features/campaigns/client-operating.ts, src/features/campaigns/ownership-sync.ts, src/features/campaigns/server.ts
@@ -13,8 +13,8 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Used by feature modules: notifications (1)
 - Auth/access signals: references membership/scope access concepts
 - Behavior signals: none
-- Direct tests: src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/features/campaigns/ownership-sync.test.ts, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
-- All linked tests: src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/shell-import-smoke.test.ts, src/features/campaigns/ownership-sync.test.ts, __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, … (+6 more)
+- Direct tests: src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/features/campaigns/ownership-sync.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
+- All linked tests: src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/shell-import-smoke.test.ts, src/features/campaigns/ownership-sync.test.ts, __tests__/features/notifications/discussions.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, … (+7 more)
 
 ## Exporting files
 - `src/features/campaigns/client-operating.ts` — exports: getClientCampaignOperatingView, ClientCampaignOperatingView

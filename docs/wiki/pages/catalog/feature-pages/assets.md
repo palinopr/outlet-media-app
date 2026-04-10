@@ -1,6 +1,6 @@
 # Feature: assets
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 3
 - Entry files: src/features/assets/lib.ts, src/features/assets/server.ts, src/features/assets/types.ts
@@ -14,7 +14,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Auth/access signals: imports Clerk server auth, calls currentUser(), references membership/scope access concepts
 - Behavior signals: none
 - Direct tests: __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/assets/server.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/system-events/list.test.ts
-- All linked tests: src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/assets/server.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/system-events/list.test.ts, __tests__/features/agent-outcomes/server.test.ts, __tests__/features/events/read-clients.test.ts, … (+36 more)
+- All linked tests: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/assets/server.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/system-events/list.test.ts, __tests__/features/agent-outcomes/server.test.ts, … (+37 more)
 
 ## Exporting files
 - `src/features/assets/lib.ts` — exports: statusColor, mapAssetRow, mapAssetRows

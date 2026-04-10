@@ -1,6 +1,6 @@
 # Database-to-Code Map
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 This page maps database objects discovered in `supabase/migrations/*` to routes, features, libs, agent files, tests, and docs that mention them.
 
@@ -345,12 +345,12 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `clients`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260311120000_client_events_enabled.sql, supabase/migrations/20260322100000_client_portal_reset.sql, supabase/migrations/20260331160000_client_agent_tab.sql, supabase/migrations/20260403120000_clients_read_member_policy.sql
-- Mentioned by groups: src/components / admin (25), src/app / admin (21), Docs / Plans (19), Tests / Features (14), Docs / Context (7), Root Files (5), Docs / Superpowers Specs (5), src/features / client-agent (5), Docs / Superpowers Plans (4), src/app / api (3), src/features / client-portal (3), src/lib (3), … (+11 more)
+- Mentioned by groups: src/components / admin (25), src/app / admin (22), Docs / Plans (19), Tests / Features (14), Docs / Context (7), Root Files (5), Docs / Superpowers Specs (5), src/features / client-agent (5), Docs / Superpowers Plans (4), src/app / api (3), src/features / client-portal (3), src/lib (3), … (+11 more)
 - Routes: src/app/admin/campaigns/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts
 - Features: src/features/access/revalidation.ts, src/features/client-agent/tools/breakdowns.test.ts, src/features/client-agent/tools/compare-timeseries.test.ts, src/features/client-agent/tools/details.test.ts, src/features/client-agent/tools/overview.test.ts, src/features/client-agent/tools/search.test.ts, src/features/client-portal/config.test.ts, src/features/client-portal/config.ts, src/features/client-portal/entry.ts, src/features/events/server.ts, … (+5 more)
 - Shared libs: src/lib/database.types.ts, src/lib/member-access.ts, src/lib/meta-campaigns.ts
 - Agent runtime files: none
-- Tests: __tests__/features/access/revalidation.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/clients/summary.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/events/read-clients.test.ts, … (+15 more)
+- Tests: __tests__/features/access/revalidation.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/clients/summary.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/events/read-clients.test.ts, … (+16 more)
 - Docs: docs/context/current-priorities.md, docs/context/customer-facing-disclosure-rules.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/context/tm1-capability-map.md, docs/context/tm1-prd130-capability-map.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-03-02-admin-crud-design.md, … (+25 more)
 - Other mentions: AGENTS.md, README.md, agent/LEARNINGS.md, agent/MEMORY.md, agent/prompts/agent.txt, audit/architecture-smells.md, audit/dead-routes.md, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.ts, … (+29 more)
 

@@ -1,6 +1,6 @@
 # Component Tree Map
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 This page focuses on admin and client UI surface files and summarizes the component-oriented tree they pull in through direct and transitive imports.
 
@@ -81,13 +81,13 @@ This page focuses on admin and client UI surface files and summarizes the compon
 
 ### `/admin/campaigns/[campaignId]`
 - Surface file: `src/app/admin/campaigns/[campaignId]/page.tsx`
-- Direct component imports: src/components/admin/campaigns/campaign-cells.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx
-- Feature modules touched: campaigns, assets, campaign-action-items, campaign-comments, approvals, system-events, events, invitations, workflow, notifications
-- Shared libs touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/meta-campaigns.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/lib/action-item-labels.ts, src/lib/workspace-types.ts, src/lib/constants.ts, src/lib/meta-api.ts, src/lib/api-helpers.ts, … (+4 more)
-- Related tests: none
+- Direct component imports: src/components/admin/campaigns/campaign-cells.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx, src/components/admin/client-requests-panel.tsx
+- Feature modules touched: campaigns, assets, campaign-action-items, campaign-comments, approvals, system-events, events, invitations, workflow, notifications, … (+1 more)
+- Shared libs touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/meta-campaigns.ts, src/lib/action-item-labels.ts, src/lib/workspace-types.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-api.ts, src/lib/api-helpers.ts, … (+4 more)
+- Related tests: src/app/admin/campaigns/[campaignId]/page.test.tsx
 
 - Route-local modules/components: src/app/admin/actions/campaigns.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/meta-sync.ts
-- Shared admin components: src/components/admin/campaigns/campaign-cells.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx, src/components/admin/confirm-dialog.tsx
+- Shared admin components: src/components/admin/campaigns/campaign-cells.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx, src/components/admin/client-requests-panel.tsx, src/components/admin/confirm-dialog.tsx
 - UI primitives: src/components/ui/button.tsx
 
 ### `/admin/clients`
@@ -197,19 +197,19 @@ This page focuses on admin and client UI surface files and summarizes the compon
 
 ### `/admin/events/[eventId]`
 - Surface file: `src/app/admin/events/[eventId]/page.tsx`
-- Direct component imports: src/components/admin/page-header.tsx, src/components/admin/stat-card.tsx, src/components/admin/events/event-operating-panel.tsx
-- Feature modules touched: events, system-events, invitations, workflow
+- Direct component imports: src/components/admin/client-requests-panel.tsx, src/components/admin/page-header.tsx, src/components/admin/stat-card.tsx, src/components/admin/events/event-operating-panel.tsx
+- Feature modules touched: events, event-comments, system-events, invitations, workflow
 - Shared libs touched: src/lib/formatters.tsx, src/lib/constants.ts, src/lib/member-access.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/lib/status.ts, src/lib/utils.ts, src/lib/api-helpers.ts, src/lib/client-slug.ts, src/lib/workspace-types.ts
-- Related tests: none
+- Related tests: src/app/admin/events/[eventId]/page.test.tsx
 
 - Route-local modules/components: src/app/admin/actions/events.ts, src/app/admin/actions/audit.ts
-- Shared admin components: src/components/admin/page-header.tsx, src/components/admin/stat-card.tsx, src/components/admin/events/event-operating-panel.tsx, src/components/admin/inline-edit.tsx, src/components/admin/status-select.tsx, src/components/admin/events/event-cells.tsx
-- UI primitives: src/components/ui/card.tsx
+- Shared admin components: src/components/admin/client-requests-panel.tsx, src/components/admin/page-header.tsx, src/components/admin/stat-card.tsx, src/components/admin/events/event-operating-panel.tsx, src/components/admin/inline-edit.tsx, src/components/admin/status-select.tsx, src/components/admin/events/event-cells.tsx
+- UI primitives: src/components/ui/button.tsx, src/components/ui/card.tsx
 
 ### `/admin/reports`
 - Surface file: `src/app/admin/reports/page.tsx`
 - Direct component imports: src/components/admin/page-header.tsx, src/features/reports/components/reports-surface.tsx
-- Feature modules touched: reports, client-portal, agent-outcomes, dashboard, events, invitations, assets, approvals, conversations, system-events
+- Feature modules touched: reports, client-portal, agent-outcomes, dashboard, events, invitations, assets, approvals, conversations, event-comments, … (+1 more)
 - Shared libs touched: src/lib/formatters.tsx, src/lib/constants.ts, src/lib/member-access.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/supabase.ts, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
 - Related tests: src/app/admin/reports/page.test.tsx, src/app/shell-import-smoke.test.ts
 
@@ -333,7 +333,7 @@ This page focuses on admin and client UI surface files and summarizes the compon
 ### `/client/[slug]/agent`
 - Surface file: `src/app/client/[slug]/agent/page.tsx`
 - Direct component imports: src/features/client-agent/components/agent-shell.tsx
-- Feature modules touched: client-portal, client-agent, invitations, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, … (+2 more)
+- Feature modules touched: client-portal, client-agent, invitations, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, … (+3 more)
 - Shared libs touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/member-access.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
 - Related tests: src/app/client/[slug]/agent/page.test.tsx
 
@@ -472,7 +472,7 @@ This page focuses on admin and client UI surface files and summarizes the compon
 ### `/client/[slug]/reports`
 - Surface file: `src/app/client/[slug]/reports/page.tsx`
 - Direct component imports: src/features/reports/components/reports-surface.tsx
-- Feature modules touched: client-portal, reports, invitations, agent-outcomes, dashboard, events, assets, approvals, conversations, system-events
+- Feature modules touched: client-portal, reports, invitations, agent-outcomes, dashboard, events, assets, approvals, conversations, event-comments, … (+1 more)
 - Shared libs touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/member-access.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
 - Related tests: src/app/client/[slug]/reports/page.test.tsx, src/app/shell-import-smoke.test.ts
 

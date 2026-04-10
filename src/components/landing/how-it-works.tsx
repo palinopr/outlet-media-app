@@ -21,8 +21,14 @@ const STEPS = [
 export function LandingHowItWorks() {
   return (
     <section className="border-b border-white/8 px-5 py-6 text-white sm:px-6">
-      <p className="text-center text-[10px] font-bold uppercase tracking-[0.3em] text-slate-400">
-        How we work
+      <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+        Así operamos
+      </p>
+      <h2 className="mt-3 text-center text-[1.95rem] font-semibold leading-[1.02] tracking-tight text-white">
+        Tres movimientos. Cero teatro.
+      </h2>
+      <p className="mx-auto mt-3 max-w-[18rem] text-center text-[14px] leading-6 text-slate-300 sm:max-w-[20rem] sm:text-[15px]">
+        Auditamos rápido, definimos el ángulo y dejamos la operación visible desde el primer día.
       </p>
       <div className="mt-6 space-y-7">
         {STEPS.map((step, index) => {

@@ -1,9 +1,9 @@
 # src/app / admin
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
-- Files: 52
-- File kinds: TypeScript module (17), Next.js page (11), React/TSX module (9), test file (8), Next.js loading UI (6), Next.js layout (1)
+- Files: 54
+- File kinds: TypeScript module (17), Next.js page (11), test file (10), React/TSX module (9), Next.js loading UI (6), Next.js layout (1)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -23,7 +23,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Depends on groups: src/lib
 - Used by groups: src/app / admin
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/users/page.tsx, src/app/admin/clients/[id]/page.tsx
-- Tests related: src/app/admin/actions/campaign-action-items.test.ts, src/components/admin/clients/client-detail.test.tsx, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: src/app/admin/actions/campaign-action-items.test.ts, src/components/admin/clients/client-detail.test.tsx, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Tests related (direct): src/app/admin/actions/campaign-action-items.test.ts
 - Exports: logActivity, logAudit, ActivityEventType
 - Symbol details: function logActivity (exported), function logAudit (exported), type ActivityEventType (exported)
@@ -86,7 +86,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Depends on groups: src/features / workflow, src/lib, src/app / admin, src/features / system-events, src/features / campaigns
 - Used by groups: src/components / admin
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx
-- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Exports: updateCampaignStatus, updateCampaignType, updateCampaignBudget, assignCampaignClient, bulkAssignClient, syncCampaignToMeta
 - Symbol details: function updateCampaignStatus (exported), function updateCampaignType (exported), function updateCampaignBudget (exported), function assignCampaignClient (exported), function bulkAssignClient (exported), function syncCampaignToMeta (exported), function eventVisibility, function centsLabel, function revalidateCampaignPaths, function revalidateClientAccountPaths, function ensureClientExists, function upsertCampaignClientOverrides, function syncCampaignLinkedClientSlug, const UpdateStatusSchema, const UpdateTypeSchema, const UpdateBudgetSchema, … (+2 more)
 - Defines: eventVisibility, centsLabel, revalidateCampaignPaths, revalidateClientAccountPaths, ensureClientExists, upsertCampaignClientOverrides, syncCampaignLinkedClientSlug, updateCampaignStatus, updateCampaignType, updateCampaignBudget, assignCampaignClient, bulkAssignClient, … (+28 more)
@@ -183,7 +183,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Depends on groups: src/features / workflow, src/lib, src/app / admin, src/features / system-events
 - Used by groups: src/components / admin
 - Route owners: src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx
-- Tests related: src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Exports: updateEventStatus, assignEventClient, bulkAssignEventClient, bulkUpdateEventStatus, updateEventTickets
 - Symbol details: function updateEventStatus (exported), function assignEventClient (exported), function bulkAssignEventClient (exported), function bulkUpdateEventStatus (exported), function updateEventTickets (exported), function eventVisibility, function syncEventWorkflowClientSlug, function revalidateEventPaths, const UpdateEventStatusSchema, const AssignEventClientSchema, const UpdateTicketsSchema, const BulkAssignEventClientSchema, const BulkUpdateEventStatusSchema
 - Defines: eventVisibility, syncEventWorkflowClientSlug, revalidateEventPaths, updateEventStatus, assignEventClient, bulkAssignEventClient, bulkUpdateEventStatus, updateEventTickets, uniqueClientSlugs, UpdateEventStatusSchema, err, parsed, … (+9 more)
@@ -205,7 +205,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Depends on groups: src/lib
 - Used by groups: src/app / admin
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx
-- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Exports: syncCampaignStatus, syncCampaignBudget
 - Symbol details: function syncCampaignStatus (exported), function syncCampaignBudget (exported), function getMetaCredentials
 - Defines: getMetaCredentials, syncCampaignStatus, syncCampaignBudget, token, rawAccountId, url, res, data
@@ -351,6 +351,24 @@ Each entry below documents the file path, system ownership, construction style, 
 - Defines: AgentsPage, dynamic, chatJobs
 - Contents summary: Next.js page for `/admin/agents`; exports: AgentsPage, dynamic, default; internal imports: 8; package imports: 1
 
+## `src/app/admin/campaigns/[campaignId]/page.test.tsx`
+- Status: tracked-clean
+- System: web
+- Group: src/app / admin
+- Ownership: web admin route surface
+- Type: test file
+- Construction: test specification
+- Route context: /admin/campaigns/[campaignId]
+- Lines: 90
+- Bytes: 2534
+- Imports (internal): src/features/campaigns/server.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/components/admin/campaigns/campaign-cells.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx, src/components/admin/client-requests-panel.tsx
+- Imports (packages): @testing-library/react, vitest, next/navigation
+- Depends on groups: src/features / campaigns, src/app / admin, src/components / admin
+- Symbol details: const getCampaignOperatingData, const data
+- Defines: getCampaignOperatingData, data, element
+- Tests / describe labels: AdminCampaignDetailPage, renders the client requests tab when requested
+- Contents summary: tests/describes: AdminCampaignDetailPage; renders the client requests tab when requested; internal imports: 5; package imports: 3
+
 ## `src/app/admin/campaigns/[campaignId]/page.tsx`
 - Status: tracked-clean
 - System: web
@@ -359,15 +377,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: Next.js page
 - Construction: App Router page, component/UI-oriented module
 - Route: /admin/campaigns/[campaignId]
-- Lines: 72
-- Bytes: 3031
-- Imports (internal): src/components/admin/campaigns/campaign-cells.tsx, src/features/campaigns/server.ts, src/lib/formatters.tsx, src/lib/status.ts, src/components/admin/campaigns/campaign-detail-dashboard.tsx
+- Lines: 120
+- Bytes: 5059
+- Imports (internal): src/components/admin/campaigns/campaign-cells.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx, src/components/admin/client-requests-panel.tsx, src/features/campaigns/server.ts, src/lib/formatters.tsx, src/lib/status.ts
 - Imports (packages): next/link, next/navigation, lucide-react
+- Imported by: src/app/admin/campaigns/[campaignId]/page.test.tsx
 - Depends on groups: src/components / admin, src/features / campaigns, src/lib
+- Used by groups: src/app / admin
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx
+- Tests related (direct): src/app/admin/campaigns/[campaignId]/page.test.tsx
 - Exports: AdminCampaignDetailPage, default
 - Symbol details: default function AdminCampaignDetailPage (exported), interface Props
-- Defines: AdminCampaignDetailPage, data, statusCfg, Props
-- Contents summary: Next.js page for `/admin/campaigns/[campaignId]`; exports: AdminCampaignDetailPage, default; internal imports: 5; package imports: 3
+- Defines: AdminCampaignDetailPage, activeTab, data, statusCfg, requestClientSlug, openRequestCount, Props
+- Contents summary: Next.js page for `/admin/campaigns/[campaignId]`; exports: AdminCampaignDetailPage, default; internal imports: 6; package imports: 3
 
 ## `src/app/admin/campaigns/data.ts`
 - Status: tracked-clean
@@ -757,6 +779,24 @@ Each entry below documents the file path, system ownership, construction style, 
 - Defines: daysUntil, UpcomingShows, diff, days, linked, hasActive, hasPaused, urgent, borderColor, bgColor, Props
 - Contents summary: exports: UpcomingShows; internal imports: 3; package imports: 2
 
+## `src/app/admin/events/[eventId]/page.test.tsx`
+- Status: tracked-clean
+- System: web
+- Group: src/app / admin
+- Ownership: web admin route surface
+- Type: test file
+- Construction: test specification
+- Route context: /admin/events/[eventId]
+- Lines: 82
+- Bytes: 2356
+- Imports (internal): src/features/events/server.ts, src/app/admin/events/[eventId]/page.tsx, src/components/admin/events/event-operating-panel.tsx, src/components/admin/client-requests-panel.tsx
+- Imports (packages): @testing-library/react, vitest, next/navigation
+- Depends on groups: src/features / events, src/app / admin, src/components / admin
+- Symbol details: const getEventOperatingData, const data
+- Defines: getEventOperatingData, data, element
+- Tests / describe labels: AdminEventDetailPage, renders the client requests tab when requested
+- Contents summary: tests/describes: AdminEventDetailPage; renders the client requests tab when requested; internal imports: 4; package imports: 3
+
 ## `src/app/admin/events/[eventId]/page.tsx`
 - Status: tracked-clean
 - System: web
@@ -765,15 +805,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: Next.js page
 - Construction: App Router page, component/UI-oriented module
 - Route: /admin/events/[eventId]
-- Lines: 185
-- Bytes: 7708
-- Imports (internal): src/components/admin/page-header.tsx, src/components/admin/stat-card.tsx, src/components/admin/events/event-operating-panel.tsx, src/features/events/server.ts, src/lib/formatters.tsx
+- Lines: 234
+- Bytes: 9897
+- Imports (internal): src/components/admin/client-requests-panel.tsx, src/components/admin/page-header.tsx, src/components/admin/stat-card.tsx, src/components/admin/events/event-operating-panel.tsx, src/features/events/server.ts, src/lib/formatters.tsx
 - Imports (packages): next/link, next/navigation, lucide-react
+- Imported by: src/app/admin/events/[eventId]/page.test.tsx
 - Depends on groups: src/components / admin, src/features / events, src/lib
+- Used by groups: src/app / admin
+- Tests related: src/app/admin/events/[eventId]/page.test.tsx
+- Tests related (direct): src/app/admin/events/[eventId]/page.test.tsx
 - Exports: AdminEventDetailPage, default
 - Symbol details: default function AdminEventDetailPage (exported), function eventSellThrough, interface Props
-- Defines: eventSellThrough, AdminEventDetailPage, capacity, data, totalCampaignSpend, averageRoas, sellThrough, Props
-- Contents summary: Next.js page for `/admin/events/[eventId]`; exports: AdminEventDetailPage, default; internal imports: 5; package imports: 3
+- Defines: eventSellThrough, AdminEventDetailPage, capacity, activeTab, data, totalCampaignSpend, averageRoas, sellThrough, openRequestCount, Props
+- Contents summary: Next.js page for `/admin/events/[eventId]`; exports: AdminEventDetailPage, default; internal imports: 6; package imports: 3
 
 ## `src/app/admin/events/data.ts`
 - Status: tracked-clean

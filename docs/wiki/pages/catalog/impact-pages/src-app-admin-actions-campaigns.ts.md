@@ -1,14 +1,14 @@
 # Impact: src/app/admin/actions/campaigns.ts
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Category: Admin actions
-- Impact score: 58
+- Impact score: 59
 - Ownership: web admin route surface
 - Feature module: none
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx
 - Imported by: src/components/admin/campaigns/campaign-cells.tsx, src/components/admin/campaigns/campaign-table.tsx, src/components/admin/campaigns/columns.tsx
-- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
 - DB objects: meta_campaigns, system_events, approval_requests, campaign_action_items, campaign_comments, notifications, clients, campaign_client_overrides
 - Env vars: none
 - Mutation symbols: updateCampaignStatus, updateCampaignType, updateCampaignBudget, assignCampaignClient, bulkAssignClient, syncCampaignToMeta, upsertCampaignClientOverrides, syncCampaignLinkedClientSlug, updateResults, UpdateStatusSchema, UpdateTypeSchema, UpdateBudgetSchema, … (+2 more)

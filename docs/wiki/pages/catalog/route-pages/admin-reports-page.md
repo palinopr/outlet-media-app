@@ -1,6 +1,6 @@
 # /admin/reports
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Route file: `src/app/admin/reports/page.tsx`
 - Type: Next.js page
@@ -9,7 +9,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Auth signals: none
 - Behavior signals: none
 - Direct internal imports: src/components/admin/page-header.tsx, src/features/reports/components/reports-surface.tsx, src/features/reports/server.ts
-- Feature modules touched: reports, client-portal, agent-outcomes, dashboard, events, invitations, assets, approvals, conversations, system-events
+- Feature modules touched: reports, client-portal, agent-outcomes, dashboard, events, invitations, assets, approvals, conversations, event-comments, system-events
 - Shared libs/runtime touched: src/lib/formatters.tsx, src/lib/constants.ts, src/lib/member-access.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/supabase.ts, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
 - Database objects touched: tm_events, clients, leads, tm_event_demographics, client_members, client_member_campaigns, client_member_events, meta_campaigns, agent_tasks, system_events, campaign_action_items, asset_follow_up_items, event_follow_up_items, campaign_comments, … (+5 more)
 - Direct tests: src/app/admin/reports/page.test.tsx, src/app/shell-import-smoke.test.ts
@@ -17,6 +17,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Contents summary: Next.js page for `/admin/reports`; exports: AdminReportsPage, default; internal imports: 3
 
 ## Stack by group
+- src-features-event-comments: src/features/event-comments/server.ts
 - src/components / admin: src/components/admin/page-header.tsx
 - src/features / agent-outcomes: src/features/agent-outcomes/server.ts, src/features/agent-outcomes/summary.ts
 - src/features / approvals: src/features/approvals/server.ts, src/features/approvals/summary.ts

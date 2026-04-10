@@ -1,6 +1,6 @@
 # Feature: notifications
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 4
 - Entry files: src/features/notifications/discussions.ts, src/features/notifications/server.ts, src/features/notifications/types.ts, src/features/notifications/workflow.ts
@@ -14,7 +14,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Auth/access signals: imports Clerk server auth, calls currentUser(), references membership/scope access concepts
 - Behavior signals: none
 - Direct tests: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts
-- All linked tests: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, … (+4 more)
+- All linked tests: __tests__/features/notifications/discussions.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/notifications/workflow.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, … (+5 more)
 
 ## Exporting files
 - `src/features/notifications/discussions.ts` — exports: listDiscussionNotificationRecipientIds, notifyDiscussionAudience, DiscussionNotificationInput

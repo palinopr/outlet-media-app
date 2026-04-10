@@ -1,6 +1,6 @@
 # src/features / assets
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 3
 - File kinds: TypeScript module (3)
@@ -22,7 +22,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Used by groups: src/features / campaigns
 - Feature module: assets
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx
-- Tests related: src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
 - Exports: statusColor, mapAssetRow, mapAssetRows
 - Symbol details: function statusColor (exported), function mapAssetRow (exported), function mapAssetRows (exported)
 - Defines: statusColor, mapAssetRow, mapAssetRows
@@ -44,7 +44,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Used by groups: Tests / Features, src/features / agent-outcomes, src/features / approvals, src/features / campaigns, src/features / conversations, src/features / notifications
 - Feature module: assets
 - Route owners: src/app/api/agent-outcomes/action-item/route.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/agents/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx, src/app/admin/reports/page.tsx, src/app/client/[slug]/reports/page.tsx, src/app/api/campaign-comments/route.ts, … (+6 more)
-- Tests related: __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/assets/server.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/system-events/list.test.ts, __tests__/features/agent-outcomes/server.test.ts, … (+38 more)
+- Tests related: __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/assets/server.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/system-events/list.test.ts, __tests__/features/agent-outcomes/server.test.ts, … (+39 more)
 - Tests related (direct): __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/assets/server.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/system-events/list.test.ts
 - Exports: getClientAssetScope, assetMatchesScopedCampaigns, listVisibleAssetIdsForScope, getAssetRecordById, listAssetLibrary, getAssetOperatingData, listCampaignAssets, AssetOperatingRecord, AssetLinkedCampaign, AssetLibraryRecord, AssetOperatingData
 - Symbol details: function getClientAssetScope (exported), function assetMatchesScopedCampaigns (exported), function listVisibleAssetIdsForScope (exported), function getAssetRecordById (exported), function listAssetLibrary (exported), function getAssetOperatingData (exported), function listCampaignAssets (exported), function filterCampaignsForScope, function listClientCampaignsForAssets, function getAssetReadContext, function normalizeCampaignName, function assetNameTokens, function assetMatchesCampaignName, function toNullableNumber, const ASSET_SELECT, const ASSET_OPERATING_SELECT, … (+5 more)
@@ -65,7 +65,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Used by groups: src/features / assets
 - Feature module: assets
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/api/agent-outcomes/action-item/route.ts, src/app/admin/agents/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx, src/app/admin/reports/page.tsx, src/app/client/[slug]/reports/page.tsx, src/app/api/campaign-comments/route.ts, … (+6 more)
-- Tests related: __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/assets/server.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/system-events/list.test.ts, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, … (+38 more)
+- Tests related: __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/assets/server.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/system-events/list.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, … (+39 more)
 - Exports: Asset, AssetRow
 - Symbol details: interface Asset (exported), interface AssetRow (exported)
 - Defines: Asset, AssetRow

@@ -1,6 +1,6 @@
 # Feature Module Dependency Map
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 This page rolls internal dependencies up to the `src/features/*` module level and shows which route/component groups use each feature module.
 
@@ -64,7 +64,7 @@ This page rolls internal dependencies up to the `src/features/*` module level an
 - Files in module: 4
 - Depends on feature modules: campaign-action-items (2), campaign-comments (2), approvals (2), system-events (2), agent-outcomes (2), assets (2), client-portal (1), events (1)
 - Depends on groups: src/lib (4), src/features / campaign-action-items (2), src/features / campaign-comments (2), src/features / approvals (2), src/features / system-events (2), src/features / agent-outcomes (2), src/features / assets (2), src/features / client-portal (1), src/features / events (1)
-- Used by groups: src/app / client (3), src/app / admin (2), src/components / admin (2), src/features / notifications (1)
+- Used by groups: src/app / client (3), src/app / admin (3), src/components / admin (2), src/features / notifications (1)
 - Direct route users: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx
 
 ## src/features / client-agent
@@ -106,7 +106,7 @@ This page rolls internal dependencies up to the `src/features/*` module level an
 - Files in module: 1
 - Depends on feature modules: none
 - Depends on groups: src/lib (2)
-- Used by groups: src/app / api (2), src/app / client (1), src/features / events (1)
+- Used by groups: src/app / api (2), src/features / events (2), src/app / client (1)
 - Direct route users: src/app/api/event-comments/route.ts
 
 ## src/features / event-follow-up-items
@@ -118,9 +118,9 @@ This page rolls internal dependencies up to the `src/features/*` module level an
 
 ## src/features / events
 - Files in module: 3
-- Depends on feature modules: agent-outcomes (2), system-events (2), approvals (1), client-portal (1), event-comments (1), event-follow-up-items (1)
-- Depends on groups: src/lib (6), src/features / agent-outcomes (2), src/features / system-events (2), src/features / approvals (1), src/features / client-portal (1), src-features-event-comments (1), src/features / event-follow-up-items (1)
-- Used by groups: Tests / Features (4), src/app / client (3), src/app / admin (2), src/app / api (2), src/features / reports (2), src/components / admin (1), src/features / campaigns (1)
+- Depends on feature modules: agent-outcomes (2), event-comments (2), system-events (2), approvals (1), client-portal (1), event-follow-up-items (1)
+- Depends on groups: src/lib (6), src/features / agent-outcomes (2), src-features-event-comments (2), src/features / system-events (2), src/features / approvals (1), src/features / client-portal (1), src/features / event-follow-up-items (1)
+- Used by groups: Tests / Features (4), src/app / client (3), src/app / admin (3), src/app / api (2), src/features / reports (2), src/components / admin (1), src/features / campaigns (1)
 - Direct route users: src/app/admin/events/[eventId]/page.tsx, src/app/api/event-comments/route.ts, src/app/client/[slug]/event/[eventId]/page.tsx
 
 ## src/features / invitations

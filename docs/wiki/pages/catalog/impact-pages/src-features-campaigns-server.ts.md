@@ -1,14 +1,14 @@
 # Impact: src/features/campaigns/server.ts
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Category: Feature files
-- Impact score: 10
+- Impact score: 13
 - Ownership: feature module: campaigns
 - Feature module: campaigns
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx
-- Imported by: src/app/admin/campaigns/[campaignId]/page.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx
-- Tests related: src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
+- Imported by: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
 - DB objects: none
 - Env vars: none
 - Mutation symbols: none

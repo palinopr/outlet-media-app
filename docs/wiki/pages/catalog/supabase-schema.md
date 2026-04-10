@@ -1,6 +1,6 @@
 # Supabase Schema Map
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 This page groups migration-discovered database objects by schema kind and records which migrations define them plus how many code/docs references exist outside the migrations.
 
@@ -228,11 +228,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `clients`
 - Kinds: table
 - Migrations: supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260311120000_client_events_enabled.sql, supabase/migrations/20260322100000_client_portal_reset.sql, supabase/migrations/20260331160000_client_agent_tab.sql, supabase/migrations/20260403120000_clients_read_member_policy.sql
-- Non-migration references: 126
-- Referenced by groups: src/components / admin (25), src/app / admin (21), Docs / Plans (19), Tests / Features (14), Docs / Context (7), Root Files (5), Docs / Superpowers Specs (5), src/features / client-agent (5), Docs / Superpowers Plans (4), src/app / api (3), src/features / client-portal (3), src/lib (3), … (+11 more)
+- Non-migration references: 127
+- Referenced by groups: src/components / admin (25), src/app / admin (22), Docs / Plans (19), Tests / Features (14), Docs / Context (7), Root Files (5), Docs / Superpowers Specs (5), src/features / client-agent (5), Docs / Superpowers Plans (4), src/app / api (3), src/features / client-portal (3), src/lib (3), … (+11 more)
 - Routes: src/app/admin/campaigns/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/api/admin/invite/route.ts, … (+1 more)
 - Features/libs/agents: src/features/access/revalidation.ts, src/features/client-agent/tools/breakdowns.test.ts, src/features/client-agent/tools/compare-timeseries.test.ts, src/features/client-agent/tools/details.test.ts, src/features/client-agent/tools/overview.test.ts, src/features/client-agent/tools/search.test.ts, src/features/client-portal/config.test.ts, src/features/client-portal/config.ts, src/features/client-portal/entry.ts, src/features/events/server.ts, … (+8 more)
-- Tests/docs: __tests__/features/access/revalidation.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/clients/summary.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/events/read-clients.test.ts, … (+50 more)
+- Tests/docs: __tests__/features/access/revalidation.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/clients/summary.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/events/read-clients.test.ts, … (+51 more)
 
 ### `compliance_logs`
 - Kinds: table

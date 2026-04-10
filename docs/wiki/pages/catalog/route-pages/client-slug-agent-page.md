@@ -1,6 +1,6 @@
 # /client/[slug]/agent
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Route file: `src/app/client/[slug]/agent/page.tsx`
 - Type: Next.js page
@@ -9,7 +9,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Auth signals: none
 - Behavior signals: defines generateMetadata
 - Direct internal imports: src/lib/formatters.tsx, src/features/client-portal/access.ts, src/features/client-portal/config.ts, src/features/client-agent/server.ts, src/features/client-agent/components/agent-shell.tsx
-- Feature modules touched: client-portal, client-agent, invitations, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations
+- Feature modules touched: client-portal, client-agent, invitations, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, … (+1 more)
 - Shared libs/runtime touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/member-access.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
 - Database objects touched: clients, client_members, client_member_campaigns, client_member_events, client_access_invites, system_events, client_agent_threads, client_agent_messages, tm_events, leads, tm_event_demographics, meta_campaigns, agent_tasks, campaign_action_items, … (+10 more)
 - Direct tests: src/app/client/[slug]/agent/page.test.tsx
@@ -17,6 +17,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Contents summary: Next.js page for `/client/[slug]/agent`; exports: ClientAgentPage, generateMetadata, default; internal imports: 5; package imports: 1
 
 ## Stack by group
+- src-features-event-comments: src/features/event-comments/server.ts
 - src/app / client: src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts
 - src/features / agent-outcomes: src/features/agent-outcomes/server.ts, src/features/agent-outcomes/summary.ts
 - src/features / approvals: src/features/approvals/server.ts, src/features/approvals/summary.ts

@@ -1,6 +1,6 @@
 # src/components / ui
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 13
 - File kinds: React/TSX module (13)
@@ -60,12 +60,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 2392
 - Imports (internal): src/lib/utils.ts
 - Imports (packages): react, class-variance-authority, radix-ui
-- Imported by: src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/[slug]/components/campaign-discussion-form.tsx, src/app/client/[slug]/components/complete-profile-modal.tsx, src/app/client/[slug]/components/event-discussion-form.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/components/admin/agents/chat-panel.tsx, … (+17 more)
+- Imported by: src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/[slug]/components/campaign-discussion-form.tsx, src/app/client/[slug]/components/complete-profile-modal.tsx, src/app/client/[slug]/components/event-discussion-form.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/components/admin/agents/chat-panel.tsx, … (+18 more)
 - Depends on groups: src/lib
 - Used by groups: src/app / admin, src/app / client, src/components / admin, src/components / landing, src/components / shared, src/components / ui
-- Route owners: src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/app/client/[slug]/layout.tsx, src/app/admin/clients/page.tsx, … (+7 more)
+- Route owners: src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/app/client/[slug]/layout.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, … (+8 more)
 - Routes related (direct): src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx
-- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/events/page.test.tsx, src/app/client/[slug]/components/campaign-discussion-form.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/event-discussion-form.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/components/admin/agents/job-history.test.tsx, src/app/client/[slug]/layout.test.tsx, … (+4 more)
+- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/events/page.test.tsx, src/app/client/[slug]/components/campaign-discussion-form.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/event-discussion-form.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/components/admin/agents/job-history.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, … (+7 more)
 - Exports: Button, buttonVariants
 - Symbol details: function Button, const buttonVariants
 - Defines: Button, buttonVariants, Comp
@@ -87,7 +87,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Used by groups: src/app / admin, src/components / admin
 - Route owners: src/app/admin/agents/loading.tsx, src/app/admin/campaigns/loading.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/loading.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/loading.tsx, … (+7 more)
 - Routes related (direct): src/app/admin/agents/loading.tsx, src/app/admin/campaigns/loading.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/loading.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/loading.tsx, … (+4 more)
-- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/page.test.tsx, src/components/admin/agents/command-summary.test.tsx, src/components/admin/agents/job-history.test.tsx, src/components/admin/clients/client-detail.test.tsx
+- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/page.test.tsx, src/components/admin/agents/command-summary.test.tsx, src/components/admin/agents/job-history.test.tsx, src/components/admin/clients/client-detail.test.tsx, src/app/admin/events/[eventId]/page.test.tsx
 - Exports: Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent
 - Symbol details: function Card, function CardHeader, function CardTitle, function CardDescription, function CardAction, function CardContent, function CardFooter
 - Defines: Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter

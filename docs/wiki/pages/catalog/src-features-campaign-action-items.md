@@ -1,6 +1,6 @@
 # src/features / campaign-action-items
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 2
 - File kinds: test file (1), TypeScript module (1)
@@ -40,7 +40,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Feature module: campaign-action-items
 - Route owners: src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx
 - Routes related (direct): src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts
-- Tests related: __tests__/features/campaign-action-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: __tests__/features/campaign-action-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/app/shell-import-smoke.test.ts
 - Tests related (direct): __tests__/features/campaign-action-items/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/features/campaign-action-items/server.test.ts
 - Exports: listCampaignActionItems, findCampaignActionItemBySource, getCampaignActionItemById, maybeEnqueueCampaignActionItemTriage, createSystemCampaignActionItem, updateSystemCampaignActionItem, CampaignActionItemVisibility, CampaignActionItem
 - Symbol details: function listCampaignActionItems (exported), function findCampaignActionItemBySource (exported), function getCampaignActionItemById (exported), function maybeEnqueueCampaignActionItemTriage (exported), function createSystemCampaignActionItem (exported), function updateSystemCampaignActionItem (exported), function shouldEnqueueCampaignActionItemTriage, function campaignActionItemTriagePrompt, function mapCampaignActionItem, const CAMPAIGN_ACTION_ITEM_SELECT, type CampaignActionItemVisibility (exported), interface CampaignActionItem (exported), interface CampaignActionItemActor, interface CampaignActionItemTriagePreviousState, interface ListCampaignActionItemsOptions, interface CreateSystemCampaignActionItemInput, … (+1 more)

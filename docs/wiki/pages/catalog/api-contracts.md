@@ -1,6 +1,6 @@
 # API Contract Map
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 This page documents each `src/app/api/**/route.ts` file with its methods, request/response signals, validation symbols, dependency stack, and related tests.
 
@@ -168,7 +168,7 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 - Auth signals: none
 - Validation symbols: none
 - Direct internal imports: src/features/client-agent/server.ts
-- Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, invitations
+- Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, event-comments, … (+1 more)
 - Shared libs touched: src/lib/member-access.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/formatters.tsx, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
 - Related tests: src/app/api/client/[slug]/agent/threads/route.test.ts
 - Contents summary: Next.js route handler for `/api/client/[slug]/agent/threads`; route handlers: GET, POST; exports: GET, POST; internal imports: 1; package imports: 1
@@ -181,7 +181,7 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 - Auth signals: none
 - Validation symbols: none
 - Direct internal imports: src/features/client-agent/server.ts
-- Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, invitations
+- Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, event-comments, … (+1 more)
 - Shared libs touched: src/lib/member-access.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/formatters.tsx, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
 - Related tests: src/app/api/client/[slug]/agent/threads/[threadId]/route.test.ts
 - Contents summary: Next.js route handler for `/api/client/[slug]/agent/threads/[threadId]`; route handlers: GET; exports: GET; internal imports: 1; package imports: 1
@@ -194,7 +194,7 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 - Auth signals: none
 - Validation symbols: SendMessageSchema, parsed
 - Direct internal imports: src/lib/api-helpers.ts, src/features/client-agent/server.ts, src/features/client-agent/types.ts, src/features/client-agent/thread-context.ts
-- Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, invitations
+- Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, event-comments, … (+1 more)
 - Shared libs touched: src/lib/api-helpers.ts, src/lib/member-access.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/formatters.tsx, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, … (+1 more)
 - Related tests: src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.test.ts
 - Contents summary: Next.js route handler for `/api/client/[slug]/agent/threads/[threadId]/messages`; route handlers: POST; exports: POST; internal imports: 4; package imports: 2
@@ -214,7 +214,7 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 
 ## `/api/event-comments`
 - Route file: `src/app/api/event-comments/route.ts`
-- Methods: GET, POST
+- Methods: GET, POST, PATCH
 - Request signals: reads query/search params
 - Response signals: uses NextResponse.json, uses Response.json, explicit statuses: 201
 - Auth signals: imports Clerk server auth, calls currentUser()
@@ -223,7 +223,7 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 - Feature modules touched: event-comments, events, notifications, client-portal, system-events, workflow, assets, campaigns, invitations
 - Shared libs touched: src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/text-utils.ts, src/lib/agent-dispatch.ts, src/lib/supabase.ts, src/lib/member-access.ts, src/lib/campaign-client-assignment.ts, src/lib/client-slug.ts, src/lib/formatters.tsx, src/lib/workspace-types.ts, … (+1 more)
 - Related tests: src/app/api/event-comments/route.test.ts
-- Contents summary: Next.js route handler for `/api/event-comments`; route handlers: GET, POST; exports: GET, POST; internal imports: 11; package imports: 3
+- Contents summary: Next.js route handler for `/api/event-comments`; route handlers: GET, POST, PATCH; exports: GET, POST, PATCH; internal imports: 11; package imports: 3
 
 ## `/api/health`
 - Route file: `src/app/api/health/route.ts`

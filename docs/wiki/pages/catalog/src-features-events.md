@@ -1,6 +1,6 @@
 # src/features / events
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Files: 3
 - File kinds: TypeScript module (3)
@@ -37,21 +37,21 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: feature module: events
 - Type: TypeScript module
 - Construction: code module
-- Lines: 300
-- Bytes: 9416
-- Imports (internal): src/lib/member-access.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/features/system-events/server.ts, src/features/events/summary.ts
-- Imported by: __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/app/admin/actions/event-follow-up-items.ts, src/app/admin/events/[eventId]/page.tsx, src/app/api/event-comments/route.test.ts, src/app/api/event-comments/route.ts, src/components/admin/events/event-operating-panel.tsx, src/features/campaigns/server.ts, src/features/reports/server.ts
-- Depends on groups: src/lib, src/features / system-events, src/features / events
+- Lines: 311
+- Bytes: 9727
+- Imports (internal): src/lib/member-access.ts, src/lib/campaign-client-assignment.ts, src/lib/supabase.ts, src/features/event-comments/server.ts, src/features/system-events/server.ts, src/features/events/summary.ts
+- Imported by: __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/app/admin/actions/event-follow-up-items.ts, src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/api/event-comments/route.test.ts, src/app/api/event-comments/route.ts, src/components/admin/events/event-operating-panel.tsx, src/features/campaigns/server.ts, … (+1 more)
+- Depends on groups: src/lib, src-features-event-comments, src/features / system-events, src/features / events
 - Used by groups: Tests / Features, src/app / admin, src/app / api, src/components / admin, src/features / campaigns, src/features / reports
 - Feature module: events
 - Route owners: src/app/admin/events/[eventId]/page.tsx, src/app/api/event-comments/route.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/reports/page.tsx, src/app/client/[slug]/reports/page.tsx, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.ts, src/app/api/client/[slug]/agent/threads/[threadId]/route.ts, src/app/api/client/[slug]/agent/threads/route.ts, … (+1 more)
 - Routes related (direct): src/app/admin/events/[eventId]/page.tsx, src/app/api/event-comments/route.ts
-- Tests related: __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/app/api/event-comments/route.test.ts, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, src/app/admin/reports/page.test.tsx, … (+14 more)
-- Tests related (direct): __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/app/api/event-comments/route.test.ts
+- Tests related: __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/app/admin/events/[eventId]/page.test.tsx, src/app/api/event-comments/route.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, __tests__/features/reports/integration.test.ts, … (+16 more)
+- Tests related (direct): __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/app/admin/events/[eventId]/page.test.tsx, src/app/api/event-comments/route.test.ts
 - Exports: getEventRecordById, getEventOperatingData, getEventOperationsSummary, EventOperatingRecord, EventLinkedCampaign, EventClientOption, EventOperatingData
 - Symbol details: function getEventRecordById (exported), function getEventOperatingData (exported), function getEventOperationsSummary (exported), function mapEventRow, interface EventOperatingRecord (exported), interface EventLinkedCampaign (exported), interface EventClientOption (exported), interface EventOperatingData (exported), interface EventLinkedCampaignRow, interface GetEventOperationsSummaryOptions
-- Defines: mapEventRow, getEventRecordById, getEventOperatingData, getEventOperationsSummary, event, linkedCampaignRows, db, allowedEventIds, recentSince, allowedEventSet, eventId, EventOperationsCommentRecord, … (+9 more)
-- Contents summary: exports: getEventRecordById, getEventOperatingData, getEventOperationsSummary, EventOperatingRecord, EventLinkedCampaign, EventClientOption, EventOperatingData; internal imports: 5
+- Defines: mapEventRow, getEventRecordById, getEventOperatingData, getEventOperationsSummary, event, linkedCampaignRows, comments, db, allowedEventIds, recentSince, allowedEventSet, eventId, … (+10 more)
+- Contents summary: exports: getEventRecordById, getEventOperatingData, getEventOperationsSummary, EventOperatingRecord, EventLinkedCampaign, EventClientOption, EventOperatingData; internal imports: 6
 
 ## `src/features/events/summary.ts`
 - Status: tracked-clean
@@ -68,7 +68,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Used by groups: Tests / Features, src/features / events, src/features / reports
 - Feature module: events
 - Route owners: src/app/admin/events/[eventId]/page.tsx, src/app/api/event-comments/route.ts, src/app/admin/reports/page.tsx, src/app/client/[slug]/reports/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.ts, src/app/api/client/[slug]/agent/threads/[threadId]/route.ts, src/app/api/client/[slug]/agent/threads/route.ts, … (+1 more)
-- Tests related: __tests__/features/events/summary.test.ts, __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/app/api/event-comments/route.test.ts, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, src/app/admin/reports/page.test.tsx, … (+15 more)
+- Tests related: __tests__/features/events/summary.test.ts, __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/app/admin/events/[eventId]/page.test.tsx, src/app/api/event-comments/route.test.ts, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, … (+17 more)
 - Tests related (direct): __tests__/features/events/summary.test.ts
 - Exports: buildEventOperationsSummary, EventOperationsMetricKey, EventOperationsMetric, EventOperationsEventRecord, EventOperationsFollowUpRecord, EventOperationsCommentRecord, EventOperationsUpdateRecord, EventAttentionRecord, EventOperationsSummary
 - Symbol details: function buildEventOperationsSummary (exported), function sortDateDesc, function ensureAggregate, function bumpLastActivity, type EventOperationsMetricKey (exported), interface EventOperationsMetric (exported), interface EventOperationsEventRecord (exported), interface EventOperationsFollowUpRecord (exported), interface EventOperationsCommentRecord (exported), interface EventOperationsUpdateRecord (exported), interface EventAttentionRecord (exported), interface EventOperationsSummary (exported), interface BuildEventOperationsSummaryInput

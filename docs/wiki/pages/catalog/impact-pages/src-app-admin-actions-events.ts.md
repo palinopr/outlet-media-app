@@ -1,14 +1,14 @@
 # Impact: src/app/admin/actions/events.ts
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Category: Admin actions
-- Impact score: 42
+- Impact score: 43
 - Ownership: web admin route surface
 - Feature module: none
 - Route owners: src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx
 - Imported by: src/components/admin/events/columns.tsx, src/components/admin/events/event-operating-panel.tsx, src/components/admin/events/event-table.tsx
-- Tests related: src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Tests related: src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
 - DB objects: tm_events, event_comments, event_follow_up_items
 - Env vars: none
 - Mutation symbols: updateEventStatus, assignEventClient, bulkAssignEventClient, bulkUpdateEventStatus, updateEventTickets, syncEventWorkflowClientSlug, UpdateEventStatusSchema, AssignEventClientSchema, UpdateTicketsSchema, BulkAssignEventClientSchema, BulkUpdateEventStatusSchema

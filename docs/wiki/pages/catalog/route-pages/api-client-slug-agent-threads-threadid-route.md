@@ -1,6 +1,6 @@
 # /api/client/[slug]/agent/threads/[threadId]
 
-Generated from the current working tree on 2026-04-10 16:52:39.
+Generated from the current working tree on 2026-04-10 17:55:29.
 
 - Route file: `src/app/api/client/[slug]/agent/threads/[threadId]/route.ts`
 - Type: Next.js route handler
@@ -9,7 +9,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Auth signals: none
 - Behavior signals: none
 - Direct internal imports: src/features/client-agent/server.ts
-- Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, invitations
+- Feature modules touched: client-agent, client-portal, system-events, workflow, reports, agent-outcomes, dashboard, events, assets, approvals, conversations, event-comments, … (+1 more)
 - Shared libs/runtime touched: src/lib/member-access.ts, src/lib/supabase.ts, src/lib/constants.ts, src/lib/meta-campaigns.ts, src/lib/meta-api.ts, src/lib/formatters.tsx, src/lib/status.ts, src/lib/campaign-client-assignment.ts, src/lib/workspace-types.ts, src/lib/client-slug.ts
 - Database objects touched: clients, system_events, client_members, client_member_campaigns, client_member_events, client_agent_threads, client_agent_messages, client_access_invites, tm_events, leads, tm_event_demographics, meta_campaigns, agent_tasks, campaign_action_items, … (+10 more)
 - Direct tests: src/app/api/client/[slug]/agent/threads/[threadId]/route.test.ts
@@ -17,6 +17,7 @@ Generated from the current working tree on 2026-04-10 16:52:39.
 - Contents summary: Next.js route handler for `/api/client/[slug]/agent/threads/[threadId]`; route handlers: GET; exports: GET; internal imports: 1; package imports: 1
 
 ## Stack by group
+- src-features-event-comments: src/features/event-comments/server.ts
 - src/app / client: src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/event/[eventId]/data.ts, src/app/client/[slug]/types.ts, src/app/client/[slug]/lib.ts
 - src/features / agent-outcomes: src/features/agent-outcomes/server.ts, src/features/agent-outcomes/summary.ts
 - src/features / approvals: src/features/approvals/server.ts, src/features/approvals/summary.ts
