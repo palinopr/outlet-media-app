@@ -139,21 +139,46 @@ const data = {
 } satisfies ClientCampaignOperatingView;
 
 describe("CampaignOperatingPanel", () => {
-  it("renders the campaign workflow sections on the client campaign detail page", () => {
+  it("renders a simpler campaign request surface and only shows supporting workflow that exists", () => {
     render(<CampaignOperatingPanel campaignId="cmp_1" data={data} slug="zamora" />);
 
-    expect(screen.getByText("Campaign operating loop")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Pending approvals" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Campaign requests" })).toBeInTheDocument();
+    expect(screen.getByText("Client conversation")).toBeInTheDocument();
+    expect(screen.getByText("Already in motion")).toBeInTheDocument();
+    expect(screen.getByText("Waiting for approval")).toBeInTheDocument();
     expect(screen.getByText("Approve Barcelona launch creative")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Open next steps" })).toBeInTheDocument();
+    expect(screen.getByText("Open next steps")).toBeInTheDocument();
     expect(screen.getByText("Confirm refreshed venue copy")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Shared discussion" })).toBeInTheDocument();
+    expect(screen.getByText("Agent follow-through")).toBeInTheDocument();
+    expect(screen.getByText("Queued agent triage for new campaign blocker")).toBeInTheDocument();
+    expect(screen.getByText("Recent changes")).toBeInTheDocument();
+    expect(screen.getByText("Commented on Barcelona Push discussion")).toBeInTheDocument();
     expect(screen.getAllByText("We need confirmation on the updated venue line before launch.").length).toBeGreaterThan(0);
     expect(screen.getByText("Got it — waiting on final confirmation from the venue partner.")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Agent follow-through" })).toBeInTheDocument();
-    expect(screen.getByText("Queued agent triage for new campaign blocker")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Recent activity" })).toBeInTheDocument();
-    expect(screen.getByText("Commented on Barcelona Push discussion")).toBeInTheDocument();
     expect(screen.getByTestId("campaign-discussion-form")).toHaveAttribute("data-campaign-id", "cmp_1");
+    expect(screen.queryByText("Campaign operating loop")).not.toBeInTheDocument();
+  });
+
+  it("keeps the empty state minimal when there is no workflow yet", () => {
+    render(
+      <CampaignOperatingPanel
+        campaignId="cmp_1"
+        data={{
+          actionItems: [],
+          agentOutcomes: [],
+          approvals: [],
+          comments: [],
+          systemEvents: [],
+        }}
+        slug="zamora"
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Campaign requests" })).toBeInTheDocument();
+    expect(screen.getByText("No requests yet.")).toBeInTheDocument();
+    expect(screen.queryByText("Already in motion")).not.toBeInTheDocument();
+    expect(screen.queryByText("Pending approvals")).not.toBeInTheDocument();
+    expect(screen.queryByText("Agent follow-through")).not.toBeInTheDocument();
+    expect(screen.queryByText("Recent changes")).not.toBeInTheDocument();
   });
 });

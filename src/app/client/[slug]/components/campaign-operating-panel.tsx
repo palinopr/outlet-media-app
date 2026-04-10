@@ -4,7 +4,6 @@ import {
   ListTodo,
   MessageSquareMore,
   ShieldCheck,
-  Sparkles,
 } from "lucide-react";
 import { fmtDate } from "@/lib/formatters";
 import { taskStatusLabel } from "@/lib/action-item-labels";
@@ -80,24 +79,55 @@ function SectionCard({
   children,
 }: {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   children: React.ReactNode;
 }) {
   return (
     <section className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
       <div className="mb-4">
         <h2 className="text-sm font-semibold text-white">{title}</h2>
-        <p className="mt-1 text-sm text-white/45">{subtitle}</p>
+        {subtitle ? <p className="mt-1 text-sm text-white/45">{subtitle}</p> : null}
       </div>
       {children}
     </section>
   );
 }
 
-function EmptyState({ message }: { message: string }) {
+function ThreadList({ comments }: { comments: ReturnType<typeof groupDiscussionThreads> }) {
   return (
-    <div className="rounded-2xl border border-dashed border-white/[0.08] bg-black/10 px-4 py-5 text-sm text-white/45">
-      {message}
+    <div className="space-y-3">
+      {comments.map((thread) => (
+        <article key={thread.id} className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm font-medium text-white">{thread.authorName ?? "Unknown author"}</p>
+            <span
+              className={`rounded-full border px-2 py-0.5 text-[11px] ${toneBadge(
+                thread.resolved ? "success" : "neutral",
+              )}`}
+            >
+              {thread.resolved ? "Resolved" : "Open"}
+            </span>
+            <span className="text-xs text-white/35">{fmtDate(thread.createdAt)}</span>
+          </div>
+          <p className="mt-3 text-sm leading-6 text-white/60">{thread.content}</p>
+
+          {thread.replies.length > 0 ? (
+            <div className="mt-4 space-y-2 border-l border-white/[0.08] pl-4">
+              {thread.replies.map((reply) => (
+                <div key={reply.id} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="text-xs font-medium text-white/80">
+                      {reply.authorName ?? "Unknown author"}
+                    </p>
+                    <span className="text-[11px] text-white/35">{fmtDate(reply.createdAt)}</span>
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-white/50">{reply.content}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </article>
+      ))}
     </div>
   );
 }
@@ -109,258 +139,202 @@ export function CampaignOperatingPanel({
 }: CampaignOperatingPanelProps) {
   const discussionThreads = groupDiscussionThreads(data.comments);
   const openThreads = discussionThreads.filter((comment) => !comment.resolved);
-
-  const summaryCards = [
-    {
-      icon: ShieldCheck,
-      label: "Pending approvals",
-      value: String(data.approvals.length),
-      detail:
-        data.approvals.length === 1 ? "Decision waiting on this campaign" : "Decisions waiting on this campaign",
-    },
-    {
-      icon: ListTodo,
-      label: "Open next steps",
-      value: String(data.actionItems.length),
-      detail:
-        data.actionItems.length === 1 ? "Shared follow-through item" : "Shared follow-through items",
-    },
-    {
-      icon: MessageSquareMore,
-      label: "Open discussion",
-      value: String(openThreads.length),
-      detail: openThreads.length === 1 ? "Active thread" : "Active threads",
-    },
-    {
-      icon: Bot,
-      label: "Agent follow-through",
-      value: String(data.agentOutcomes.length),
-      detail:
-        data.agentOutcomes.length === 1 ? "Visible agent outcome" : "Visible agent outcomes",
-    },
-  ];
+  const hasSupportColumn =
+    data.approvals.length > 0 ||
+    data.actionItems.length > 0 ||
+    data.agentOutcomes.length > 0 ||
+    data.systemEvents.length > 0;
 
   return (
     <section className="space-y-4">
-      <div className="rounded-3xl border border-white/[0.08] bg-white/[0.03] p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="mb-2 flex items-center gap-2 text-cyan-300/80">
-              <Sparkles className="h-4 w-4" />
-              <span className="text-xs font-semibold uppercase tracking-[0.2em]">Campaign operating loop</span>
-            </div>
-            <h2 className="text-2xl font-semibold tracking-tight text-white">
-              Shared approvals, discussion, next steps, and agent follow-through
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-white/50">
-              Keep the workflow attached to this campaign instead of splitting context across separate tools.
-              Clients can raise blockers, review what is waiting, and see what the system already surfaced.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {summaryCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div key={card.label} className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
-                <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
-                  <Icon className="h-3.5 w-3.5" />
-                  {card.label}
-                </div>
-                <p className="mt-3 text-2xl font-semibold tracking-tight text-white">{card.value}</p>
-                <p className="mt-1 text-xs text-white/40">{card.detail}</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
+      <div className={hasSupportColumn ? "grid gap-4 xl:grid-cols-[1.05fr_0.95fr]" : undefined}>
         <SectionCard
-          title="Pending approvals"
-          subtitle="Explicit decisions that still need review before work can move forward."
+          title="Campaign requests"
+          subtitle="Ask for changes, flag blockers, or leave context for the team right on the campaign."
         >
-          {data.approvals.length === 0 ? (
-            <EmptyState message="No pending approvals are attached to this campaign right now." />
-          ) : (
-            <div className="space-y-3">
-              {data.approvals.map((approval) => (
-                <article key={approval.id} className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-medium text-white">{approval.title}</h3>
-                    <span className={`rounded-full border px-2 py-0.5 text-[11px] ${toneBadge("warning")}`}>
-                      {approval.requestType}
-                    </span>
-                  </div>
-                  {approval.summary ? (
-                    <p className="mt-2 text-sm leading-6 text-white/50">{approval.summary}</p>
-                  ) : null}
-                  <p className="mt-3 text-xs text-white/35">
-                    Requested {fmtDate(approval.createdAt)}
-                    {approval.requestedByName ? ` by ${approval.requestedByName}` : ""}
-                  </p>
-                </article>
-              ))}
-            </div>
-          )}
-        </SectionCard>
-
-        <SectionCard
-          title="Open next steps"
-          subtitle="Shared follow-through already attached to the campaign."
-        >
-          {data.actionItems.length === 0 ? (
-            <EmptyState message="No shared action items are open for this campaign." />
-          ) : (
-            <div className="space-y-3">
-              {data.actionItems.map((item) => (
-                <article key={item.id} className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-sm font-medium text-white">{item.title}</h3>
-                    <span className={`rounded-full border px-2 py-0.5 text-[11px] ${toneBadge("neutral")}`}>
-                      {taskStatusLabel(item.status)}
-                    </span>
-                    <span
-                      className={`rounded-full border px-2 py-0.5 text-[11px] ${actionItemPriorityTone(item.priority)}`}
-                    >
-                      {TASK_PRIORITY_LABELS[item.priority]}
-                    </span>
-                  </div>
-                  {item.description ? (
-                    <p className="mt-2 text-sm leading-6 text-white/50">{item.description}</p>
-                  ) : null}
-                  <div className="mt-3 flex flex-wrap gap-3 text-xs text-white/35">
-                    <span>Assignee: {item.assigneeName ?? "Unassigned"}</span>
-                    {item.dueDate ? <span>Due: {fmtDate(item.dueDate)}</span> : null}
-                    <span>Updated: {fmtDate(item.updatedAt)}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          )}
-        </SectionCard>
-      </div>
-
-      <div className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-        <SectionCard
-          title="Shared discussion"
-          subtitle="Comments stay attached to the campaign so blockers and follow-up are visible in context."
-        >
-          <div className="mb-4">
-            <CampaignDiscussionForm campaignId={campaignId} slug={slug} />
+          <div className="mb-4 flex flex-wrap items-center gap-2 text-cyan-300/80">
+            <MessageSquareMore className="h-4 w-4" />
+            <span className="text-xs font-semibold uppercase tracking-[0.2em]">Client conversation</span>
+            {openThreads.length > 0 ? (
+              <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-2 py-0.5 text-[11px] text-cyan-200">
+                {openThreads.length} open
+              </span>
+            ) : null}
           </div>
 
-          {discussionThreads.length === 0 ? (
-            <EmptyState message="No campaign discussion has started yet. Leave the first note, blocker, or question here." />
-          ) : (
-            <div className="space-y-3">
-              {discussionThreads.map((thread) => (
-                <article key={thread.id} className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-sm font-medium text-white">{thread.authorName ?? "Unknown author"}</p>
-                    <span className={`rounded-full border px-2 py-0.5 text-[11px] ${toneBadge(thread.resolved ? "success" : "neutral")}`}>
-                      {thread.resolved ? "Resolved" : "Open"}
-                    </span>
-                    <span className="text-xs text-white/35">{fmtDate(thread.createdAt)}</span>
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-white/60">{thread.content}</p>
+          <CampaignDiscussionForm campaignId={campaignId} slug={slug} />
 
-                  {thread.replies.length > 0 ? (
-                    <div className="mt-4 space-y-2 border-l border-white/[0.08] pl-4">
-                      {thread.replies.map((reply) => (
-                        <div key={reply.id} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-xs font-medium text-white/80">
-                              {reply.authorName ?? "Unknown author"}
+          <div className="mt-4">
+            {discussionThreads.length === 0 ? (
+              <p className="text-sm text-white/45">No requests yet.</p>
+            ) : (
+              <ThreadList comments={discussionThreads} />
+            )}
+          </div>
+        </SectionCard>
+
+        {hasSupportColumn ? (
+          <div className="space-y-4">
+            {(data.approvals.length > 0 ||
+              data.actionItems.length > 0 ||
+              data.agentOutcomes.length > 0) ? (
+              <SectionCard
+                title="Already in motion"
+                subtitle="Only the campaign items that already exist are shown here."
+              >
+                <div className="space-y-4">
+                  {data.approvals.length > 0 ? (
+                    <div>
+                      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        Waiting for approval
+                      </div>
+                      <div className="space-y-3">
+                        {data.approvals.map((approval) => (
+                          <article
+                            key={approval.id}
+                            className="rounded-2xl border border-white/[0.08] bg-black/15 p-4"
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-sm font-medium text-white">{approval.title}</h3>
+                              <span
+                                className={`rounded-full border px-2 py-0.5 text-[11px] ${toneBadge("warning")}`}
+                              >
+                                {approval.requestType}
+                              </span>
+                            </div>
+                            {approval.summary ? (
+                              <p className="mt-2 text-sm leading-6 text-white/50">{approval.summary}</p>
+                            ) : null}
+                            <p className="mt-3 text-xs text-white/35">
+                              Requested {fmtDate(approval.createdAt)}
+                              {approval.requestedByName ? ` by ${approval.requestedByName}` : ""}
                             </p>
-                            <span className="text-[11px] text-white/35">{fmtDate(reply.createdAt)}</span>
-                          </div>
-                          <p className="mt-2 text-sm leading-6 text-white/50">{reply.content}</p>
-                        </div>
-                      ))}
+                          </article>
+                        ))}
+                      </div>
                     </div>
                   ) : null}
-                </article>
-              ))}
-            </div>
-          )}
-        </SectionCard>
 
-        <div className="space-y-4">
-          <SectionCard
-            title="Agent follow-through"
-            subtitle="Bounded agent work requested from this campaign and surfaced back into the same context."
-          >
-            {data.agentOutcomes.length === 0 ? (
-              <EmptyState message="No shared agent outcomes are visible on this campaign yet." />
-            ) : (
-              <div className="space-y-3">
-                {data.agentOutcomes.map((outcome) => (
-                  <article key={outcome.taskId} className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-sm font-medium text-white">{outcome.requestSummary}</h3>
-                      <span className={`rounded-full border px-2 py-0.5 text-[11px] ${toneBadge(outcomeTone(outcome.status))}`}>
-                        {outcomeLabel(outcome.status)}
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm leading-6 text-white/50">
-                      {compactText(outcome.resultText, 200) ?? compactText(outcome.requestDetail, 200) ?? "Waiting for a result or linked next step."}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-3 text-xs text-white/35">
-                      <span>{outcome.agentId}</span>
-                      <span>{fmtDate(outcome.createdAt)}</span>
-                      {outcome.linkedActionItemId ? <span>Linked to a campaign next step</span> : null}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-
-          <SectionCard
-            title="Recent activity"
-            subtitle="Shared timeline signals attached to this campaign."
-          >
-            {data.systemEvents.length === 0 ? (
-              <EmptyState message="No recent shared activity is attached to this campaign." />
-            ) : (
-              <div className="space-y-3">
-                {data.systemEvents.map((event) => (
-                  <article key={event.id} className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 rounded-full border border-white/[0.08] bg-white/[0.03] p-2 text-white/55">
-                        <Activity className="h-3.5 w-3.5" />
+                  {data.actionItems.length > 0 ? (
+                    <div>
+                      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                        <ListTodo className="h-3.5 w-3.5" />
+                        Open next steps
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-white">{event.summary}</p>
-                        {event.detail ? (
-                          <p className="mt-1 text-sm leading-6 text-white/50">{event.detail}</p>
-                        ) : null}
-                        <div className="mt-2 flex flex-wrap gap-3 text-xs text-white/35">
-                          <span>{fmtDate(event.occurredAt)}</span>
-                          {event.actorName ? <span>{event.actorName}</span> : null}
-                          <span>{event.eventName}</span>
+                      <div className="space-y-3">
+                        {data.actionItems.map((item) => (
+                          <article
+                            key={item.id}
+                            className="rounded-2xl border border-white/[0.08] bg-black/15 p-4"
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-sm font-medium text-white">{item.title}</h3>
+                              <span
+                                className={`rounded-full border px-2 py-0.5 text-[11px] ${toneBadge("neutral")}`}
+                              >
+                                {taskStatusLabel(item.status)}
+                              </span>
+                              <span
+                                className={`rounded-full border px-2 py-0.5 text-[11px] ${actionItemPriorityTone(
+                                  item.priority,
+                                )}`}
+                              >
+                                {TASK_PRIORITY_LABELS[item.priority]}
+                              </span>
+                            </div>
+                            {item.description ? (
+                              <p className="mt-2 text-sm leading-6 text-white/50">{item.description}</p>
+                            ) : null}
+                            <div className="mt-3 flex flex-wrap gap-3 text-xs text-white/35">
+                              <span>Assignee: {item.assigneeName ?? "Unassigned"}</span>
+                              {item.dueDate ? <span>Due: {fmtDate(item.dueDate)}</span> : null}
+                              <span>Updated: {fmtDate(item.updatedAt)}</span>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {data.agentOutcomes.length > 0 ? (
+                    <div>
+                      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                        <Bot className="h-3.5 w-3.5" />
+                        Agent follow-through
+                      </div>
+                      <div className="space-y-3">
+                        {data.agentOutcomes.map((outcome) => (
+                          <article
+                            key={outcome.taskId}
+                            className="rounded-2xl border border-white/[0.08] bg-black/15 p-4"
+                          >
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h3 className="text-sm font-medium text-white">{outcome.requestSummary}</h3>
+                              <span
+                                className={`rounded-full border px-2 py-0.5 text-[11px] ${toneBadge(
+                                  outcomeTone(outcome.status),
+                                )}`}
+                              >
+                                {outcomeLabel(outcome.status)}
+                              </span>
+                            </div>
+                            <p className="mt-2 text-sm leading-6 text-white/50">
+                              {compactText(outcome.resultText, 200) ??
+                                compactText(outcome.requestDetail, 200) ??
+                                "Waiting for a result or linked next step."}
+                            </p>
+                            <div className="mt-3 flex flex-wrap gap-3 text-xs text-white/35">
+                              <span>{outcome.agentId}</span>
+                              <span>{fmtDate(outcome.createdAt)}</span>
+                              {outcome.linkedActionItemId ? (
+                                <span>Linked to a campaign next step</span>
+                              ) : null}
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              </SectionCard>
+            ) : null}
+
+            {data.systemEvents.length > 0 ? (
+              <SectionCard
+                title="Recent changes"
+                subtitle="Shared updates already attached to this campaign."
+              >
+                <div className="space-y-3">
+                  {data.systemEvents.map((event) => (
+                    <article
+                      key={event.id}
+                      className="rounded-2xl border border-white/[0.08] bg-black/15 p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 rounded-full border border-white/[0.08] bg-white/[0.03] p-2 text-white/55">
+                          <Activity className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-white">{event.summary}</p>
+                          {event.detail ? (
+                            <p className="mt-1 text-sm leading-6 text-white/50">{event.detail}</p>
+                          ) : null}
+                          <div className="mt-2 flex flex-wrap gap-3 text-xs text-white/35">
+                            <span>{fmtDate(event.occurredAt)}</span>
+                            {event.actorName ? <span>{event.actorName}</span> : null}
+                            <span>{event.eventName}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </SectionCard>
-        </div>
+                    </article>
+                  ))}
+                </div>
+              </SectionCard>
+            ) : null}
+          </div>
+        ) : null}
       </div>
-
-      {data.approvals.length === 0 &&
-      data.actionItems.length === 0 &&
-      discussionThreads.length === 0 &&
-      data.agentOutcomes.length === 0 &&
-      data.systemEvents.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-white/[0.08] bg-black/10 px-5 py-4 text-sm text-white/45">
-          This campaign has not built much workflow pressure yet. Use the discussion panel to keep new requests and blockers attached here as activity grows.
-        </div>
-      ) : null}
     </section>
   );
 }

@@ -24,10 +24,10 @@ describe("CampaignDiscussionForm", () => {
 
     render(<CampaignDiscussionForm campaignId="cmp_1" slug="zamora" />);
 
-    fireEvent.change(screen.getByLabelText("Add a campaign note"), {
+    fireEvent.change(screen.getByLabelText("Send a campaign request"), {
       target: { value: "Need final venue approval before we launch." },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Post comment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send request" }));
 
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith("/api/campaign-comments", {
@@ -55,10 +55,10 @@ describe("CampaignDiscussionForm", () => {
 
     render(<CampaignDiscussionForm campaignId="cmp_1" slug="zamora" />);
 
-    fireEvent.change(screen.getByLabelText("Add a campaign note"), {
+    fireEvent.change(screen.getByLabelText("Send a campaign request"), {
       target: { value: "Client-only users should not hit this in the happy path." },
     });
-    fireEvent.click(screen.getByRole("button", { name: "Post comment" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send request" }));
 
     await waitFor(() => {
       expect(screen.getByText("Forbidden")).toBeInTheDocument();
