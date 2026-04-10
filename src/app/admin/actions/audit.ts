@@ -1,6 +1,7 @@
 "use server";
 
 import { currentUser } from "@clerk/nextjs/server";
+import { adminGuard } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 
 export type ActivityEventType = "page_view" | "action" | "error" | "session_start";
@@ -11,6 +12,8 @@ export async function logActivity(
   page?: string | null,
   metadata?: Record<string, unknown>,
 ) {
+  const err = await adminGuard();
+  if (err) return;
   const user = await currentUser();
   if (!user || !supabaseAdmin) return;
 

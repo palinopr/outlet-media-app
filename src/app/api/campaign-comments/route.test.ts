@@ -150,6 +150,25 @@ describe("campaign comments route", () => {
     });
   });
 
+  it("does not fall back to the service role for non-admin comment GETs when the Clerk-scoped client is unavailable", async () => {
+    canAccessCampaignComments.mockResolvedValue({
+      allowed: true,
+      isAdmin: false,
+      scope: undefined,
+    });
+    createClerkSupabaseClient.mockResolvedValue(null);
+
+    const { GET } = await import("./route");
+    const response = await GET(
+      makeGetRequest("https://example.com/api/campaign-comments?campaign_id=cmp_1&client_slug=zamora"),
+    );
+
+    expect(response.status).toBe(200);
+    expect(commentsDb.from).not.toHaveBeenCalled();
+    expect(supabaseAdmin.from).not.toHaveBeenCalled();
+    await expect(response.json()).resolves.toEqual({ comments: [] });
+  });
+
   it("keeps admin comment GETs on the service role", async () => {
     canAccessCampaignComments.mockResolvedValue({
       allowed: true,

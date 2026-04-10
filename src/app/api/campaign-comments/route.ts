@@ -96,9 +96,10 @@ export async function GET(request: NextRequest) {
     return apiError("Campaign not found", 404);
   }
 
-  const commentsDb = !access.isAdmin
-    ? (await createClerkSupabaseClient()) ?? supabaseAdmin
-    : supabaseAdmin;
+  const commentsDb = access.isAdmin ? supabaseAdmin : await createClerkSupabaseClient();
+  if (!commentsDb) {
+    return NextResponse.json({ comments: [] });
+  }
 
   let query = commentsDb
     .from("campaign_comments")

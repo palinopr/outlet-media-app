@@ -95,12 +95,9 @@ function mapNotificationRow(row: Record<string, unknown>): AppNotification {
   };
 }
 
-async function getNotificationHelperReadClient(options: {
-  clientSlug?: string | null;
-  db: NonNullable<typeof supabaseAdmin>;
-}) {
-  if (!options.clientSlug) {
-    return supabaseAdmin;
+async function getNotificationReadClient(clientSlug?: string | null) {
+  if (!clientSlug) {
+    return (await createClerkSupabaseClient()) ?? supabaseAdmin;
   }
 
   try {
@@ -110,10 +107,10 @@ async function getNotificationHelperReadClient(options: {
       return supabaseAdmin;
     }
   } catch {
-    return supabaseAdmin;
+    return null;
   }
 
-  return options.db;
+  return await createClerkSupabaseClient();
 }
 
 export async function createNotification(data: CreateNotificationInput) {
@@ -143,12 +140,9 @@ export async function listNotificationsForUser(
 ): Promise<AppNotification[]> {
   if (!userId) return [];
 
-  const notificationsDb = (await createClerkSupabaseClient()) ?? supabaseAdmin;
+  const notificationsDb = await getNotificationReadClient(options.clientSlug);
   if (!notificationsDb) return [];
-  const helperDb = await getNotificationHelperReadClient({
-    clientSlug: options.clientSlug,
-    db: notificationsDb,
-  });
+  const helperDb = notificationsDb;
 
   const requestedLimit = options.limit ?? 50;
   let query = notificationsDb

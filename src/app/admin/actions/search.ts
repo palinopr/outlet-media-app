@@ -1,5 +1,6 @@
 "use server";
 
+import { adminGuard } from "@/lib/api-helpers";
 import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -12,6 +13,8 @@ export type SearchableRecord = {
 };
 
 export async function fetchSearchableRecords(): Promise<SearchableRecord[]> {
+  const err = await adminGuard();
+  if (err) return [];
   if (!supabaseAdmin) return [];
 
   const [campaignsRes, eventsRes, clientsRes] = await Promise.all([

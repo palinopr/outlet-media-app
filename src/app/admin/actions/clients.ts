@@ -14,6 +14,7 @@ import {
 } from "@/lib/api-schemas";
 import { logAudit } from "./audit";
 import { revalidateAccessManagementPaths } from "@/features/access/revalidation";
+import { getClientSlugRevalidationPaths } from "./clients.revalidation";
 
 const RenameClientSchema = z.object({
   oldSlug: z.string().min(1),
@@ -94,12 +95,9 @@ async function revalidateClientSlugSurfaces(
     clientId,
     clientSlug: newSlug,
   });
-  revalidatePath("/admin/assets");
-  revalidatePath("/admin/campaigns");
-  revalidatePath("/admin/clients");
-  revalidatePath(`/admin/clients/${clientId}`);
-  revalidatePath("/admin/dashboard");
-  revalidatePath("/admin/events");
+  for (const path of getClientSlugRevalidationPaths()) {
+    revalidatePath(path);
+  }
   revalidatePath(`/client/${oldSlug}`, "layout");
   revalidatePath(`/client/${newSlug}`, "layout");
 }
