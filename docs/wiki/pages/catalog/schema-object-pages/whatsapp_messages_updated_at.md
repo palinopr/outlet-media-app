@@ -1,6 +1,6 @@
 # Schema object: whatsapp_messages_updated_at
 
-Generated from the current working tree on 2026-04-10 21:27:09.
+Generated from the current working tree on 2026-04-10 21:37:00.
 
 - Kinds: trigger
 - Migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql

@@ -1,6 +1,6 @@
 # Client-agent read-only reporting rules
 
-Generated from the current working tree on 2026-04-10 21:27:09.
+Generated from the current working tree on 2026-04-10 21:37:00.
 
 Files and DB objects that appear to keep the client agent constrained to read-only reporting and scoped conversational context.
 

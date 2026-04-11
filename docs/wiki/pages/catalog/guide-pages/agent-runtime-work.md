@@ -1,6 +1,6 @@
 # Start here: agent runtime work
 
-Generated from the current working tree on 2026-04-10 21:27:09.
+Generated from the current working tree on 2026-04-10 21:37:00.
 
 Recommended read order for someone changing the Discord/runtime agent, queued tasks, runtime state, or web-admin queue recovery.
 
@@ -22,4 +22,4 @@ Recommended read order for someone changing the Discord/runtime agent, queued ta
 
 ## Signals seen in this area
 - Auth signals: references membership/scope access concepts (12), imports Clerk server auth (9), calls currentUser() (4), calls auth() (2), contains explicit access/role guard helper usage (1)
-- Behavior signals: server action/module (4), client component/module (4), calls revalidatePath() (3), calls redirect() (1), calls notFound() (1), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1)
+- Behavior signals: client component/module (4), server action/module (4), calls revalidatePath() (3), calls redirect() (1), calls notFound() (1), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1)

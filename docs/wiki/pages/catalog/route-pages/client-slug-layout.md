@@ -1,6 +1,6 @@
 # /client/[slug]
 
-Generated from the current working tree on 2026-04-10 21:27:09.
+Generated from the current working tree on 2026-04-10 21:37:00.
 
 - Route file: `src/app/client/[slug]/layout.tsx`
 - Type: Next.js layout

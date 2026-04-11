@@ -1,15 +1,16 @@
+import campaignMobileViewport from "../../../docs/screenshots/campaign-mobile-viewport.png";
 import Image from "next/image";
 
 const PROOF_PILLS = [
   "Don Omar BCN 30,052 boletos",
-  "KYBBA 2.8x ROAS",
+  "KYBBA $12.0K tracked",
   "Portal + agent",
 ] as const;
 
 const HERO_STATS = [
   { value: "30,052", label: "Don Omar BCN tickets" },
   { value: "2.8x", label: "KYBBA portal ROAS" },
-  { value: "8.73x", label: "Alofoke surge" },
+  { value: "4.7x", label: "Top creative ROAS" },
 ] as const;
 
 export function LandingHero() {
@@ -33,11 +34,11 @@ export function LandingHero() {
           Puerto Rico performance operators
         </p>
         <h1 className="mx-auto mt-4 max-w-[12ch] text-[2.15rem] font-bold leading-[0.92] tracking-[-0.06em] text-white sm:text-[3rem]">
-          Resultados reales. Visibilidad real. Sin agency blackout.
+          Performance real. Reporting vivo. Contexto compartido.
         </h1>
         <p className="mx-auto mt-3.5 max-w-[19rem] text-[14px] leading-6 text-slate-300 sm:max-w-[22rem] sm:text-[15px] sm:leading-7">
-          Paid media, reporting live y un portal con agente que responde sobre campanas, eventos,
-          creativos y proximos pasos usando la misma data que mueve la operacion.
+          Paid media, dashboards live y un portal con agente que responde sobre campanas,
+          eventos, creativos y proximos pasos usando tu data real.
         </p>
 
         <div className="mt-5 flex flex-wrap justify-center gap-2">
@@ -69,7 +70,57 @@ export function LandingHero() {
           </a>
         </div>
 
-        <div className="mx-auto mt-6 grid max-w-[20.5rem] grid-cols-3 gap-2.5 text-left sm:max-w-[22.5rem]">
+        <div className="mx-auto mt-7 max-w-[22rem] overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.03)_100%)] p-3 shadow-[0_26px_54px_-34px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.08)] sm:max-w-[24rem]">
+          <div className="relative overflow-hidden rounded-[22px] border border-white/8 bg-[#08111f]">
+            <div className="relative aspect-[1.08/1] sm:aspect-[1.2/1]">
+              <Image
+                src="/images/landing/rauw-shauring.png"
+                alt="Artist campaign proof"
+                fill
+                sizes="(max-width: 640px) 100vw, 420px"
+                className="object-cover object-left"
+              />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.18),transparent_30%),linear-gradient(180deg,rgba(4,10,18,0.06)_12%,rgba(4,10,18,0.74)_100%)]" />
+
+              <div className="absolute left-3 top-3 rounded-full border border-white/10 bg-[#081220]/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200 backdrop-blur-md">
+                Art + analytics
+              </div>
+
+              <div className="absolute bottom-3 left-3 max-w-[9.75rem] rounded-[20px] border border-white/10 bg-[#081220]/88 p-3 text-left backdrop-blur-md">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8fd4ff]">
+                  Don Omar BCN
+                </p>
+                <p className="mt-1 text-[1.65rem] font-bold leading-none tracking-tight text-white">
+                  30,052
+                </p>
+                <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-slate-300">
+                  tickets sold
+                </p>
+              </div>
+
+              <div className="absolute bottom-3 right-3 w-[7.4rem] overflow-hidden rounded-[20px] border border-white/10 bg-[#09111d]/95 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.7)] sm:w-[8rem]">
+                <div className="relative aspect-[0.7/1]">
+                  <Image
+                    src={campaignMobileViewport}
+                    alt="Portal KPI preview"
+                    fill
+                    sizes="160px"
+                    className="object-cover object-top"
+                  />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.02)_18%,rgba(5,11,19,0.66)_100%)]" />
+                </div>
+                <div className="border-t border-white/10 px-2.5 py-2 text-left">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-300">
+                    KYBBA portal
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-white">2.8x ROAS</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto mt-3 grid max-w-[20.5rem] grid-cols-3 gap-2.5 text-left sm:max-w-[22.5rem]">
           {HERO_STATS.map((item) => (
             <div
               key={item.label}

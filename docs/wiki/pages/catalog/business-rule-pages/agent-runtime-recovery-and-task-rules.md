@@ -1,6 +1,6 @@
 # Agent runtime recovery and task rules
 
-Generated from the current working tree on 2026-04-10 21:27:09.
+Generated from the current working tree on 2026-04-10 21:37:00.
 
 Files and DB objects that appear to govern queued agent tasks, runtime heartbeat, recovery, and runtime-side task execution boundaries.
 

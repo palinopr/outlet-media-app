@@ -1,9 +1,27 @@
 "use client";
 
 import { useState } from "react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+const CTA_OUTCOMES = [
+  {
+    title: "Fugas",
+    body: "Donde se pierde dinero o claridad operativa.",
+  },
+  {
+    title: "Creativos",
+    body: "Que pieza esta empujando resultado y cual no.",
+  },
+  {
+    title: "Plan",
+    body: "Que mover primero despues de la llamada.",
+  },
+] as const;
+
+const CTA_STEPS = ["Comparte contexto", "Auditamos live", "Sales con plan"] as const;
 
 export function ContactForm() {
   const [pending, setPending] = useState(false);
@@ -43,10 +61,11 @@ export function ContactForm() {
           Auditoría estratégica
         </p>
         <h2 className="mt-4 max-w-[12ch] text-[2rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.15rem]">
-          Agenda tu auditoría con un operador.
+          Si estas invirtiendo y todavia adivinando, esta llamada es para ti.
         </h2>
         <p className="mt-3 max-w-[22rem] text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
-          Revisamos fugas, ángulo creativo, funnel y reporting. Sin decks eternos. Sin vendedores.
+          Entramos a oferta, tracking, creativos, funnel y reporting. Sales con una lectura clara
+          de fugas, presion y siguientes movimientos.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -64,58 +83,92 @@ export function ContactForm() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-3.5">
-          <input type="hidden" name="pageContext" value="landing-audit-funnel" />
-          <input type="hidden" name="message" value="Audit request from the Outlet Media landing funnel." />
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          {CTA_OUTCOMES.map((item) => (
+            <div
+              key={item.title}
+              className="rounded-[20px] border border-white/10 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+            >
+              <CheckCircle2 className="size-4 text-[#8fd4ff]" />
+              <p className="mt-3 text-[14px] font-semibold text-white">{item.title}</p>
+              <p className="mt-1 text-[13px] leading-6 text-slate-300">{item.body}</p>
+            </div>
+          ))}
+        </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              name="name"
-              placeholder="Nombre"
-              required
-              maxLength={200}
-              className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
-            />
-            <Input
-              name="email"
-              type="email"
-              placeholder="Email corporativo"
-              required
-              maxLength={320}
-              className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
-            />
+        <div className="mt-6 rounded-[24px] border border-white/10 bg-[#08111f]/78 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-md sm:p-5">
+          <div className="grid grid-cols-3 gap-2">
+            {CTA_STEPS.map((step, index) => (
+              <div
+                key={step}
+                className="rounded-[16px] border border-white/8 bg-white/[0.03] px-3 py-2 text-center"
+              >
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8fd4ff]">
+                  {String(index + 1).padStart(2, "0")}
+                </p>
+                <p className="mt-1 text-[11px] leading-4 text-slate-300">{step}</p>
+              </div>
+            ))}
           </div>
-          <Input
-            name="phone"
-            type="tel"
-            placeholder="Teléfono"
-            required
-            maxLength={40}
-            className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
-          />
-          <Input
-            name="website"
-            placeholder="Website / link"
-            maxLength={240}
-            className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
-          />
 
-          <Button
-            type="submit"
-            size="lg"
-            className="mt-3 h-12 w-full rounded-full bg-[#1f5eff] text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] hover:bg-[#184de0]"
-            disabled={pending}
-          >
-            {pending ? "Enviando..." : "Solicitar auditoría"}
-          </Button>
-          <p className="mt-1 flex items-start gap-2 text-xs leading-5 text-slate-300">
-            <span className="mt-0.5 text-amber-300">•</span>
-            <span>
-              Tu auditoría será con un operador senior, no con un vendedor. 100%
-              confidencial.
-            </span>
-          </p>
-        </form>
+          <form onSubmit={handleSubmit} className="mt-5 space-y-3.5">
+            <input type="hidden" name="pageContext" value="landing-audit-funnel" />
+            <input
+              type="hidden"
+              name="message"
+              value="Audit request from the Outlet Media landing funnel."
+            />
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input
+                name="name"
+                placeholder="Nombre"
+                required
+                maxLength={200}
+                className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+              />
+              <Input
+                name="email"
+                type="email"
+                placeholder="Email corporativo"
+                required
+                maxLength={320}
+                className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+              />
+            </div>
+            <Input
+              name="phone"
+              type="tel"
+              placeholder="Teléfono"
+              required
+              maxLength={40}
+              className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+            />
+            <Input
+              name="website"
+              placeholder="Website / link"
+              maxLength={240}
+              className="h-11 rounded-2xl border-white/10 bg-white/[0.04] px-4 text-slate-100 placeholder:text-slate-500"
+            />
+
+            <Button
+              type="submit"
+              size="lg"
+              className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1f5eff] text-sm font-semibold uppercase tracking-[0.12em] text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] hover:bg-[#184de0]"
+              disabled={pending}
+            >
+              {pending ? "Enviando..." : "Solicitar auditoría"}
+              {pending ? null : <ArrowRight className="size-4" />}
+            </Button>
+            <p className="mt-1 flex items-start gap-2 text-xs leading-5 text-slate-300">
+              <span className="mt-0.5 text-amber-300">•</span>
+              <span>
+                Tu auditoría será con un operador senior, no con un vendedor. 100%
+                confidencial.
+              </span>
+            </p>
+          </form>
+        </div>
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 # Key File Symbol Map
 
-Generated from the current working tree on 2026-04-10 21:27:09.
+Generated from the current working tree on 2026-04-10 21:37:00.
 
 This page highlights key code files and lists their exported symbols, top-level definitions, and route/test ownership links.
 
@@ -2584,11 +2584,11 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Type: React/TSX module
 - Ownership: landing page UI components
 - Exports: ContactForm
-- Symbol details: function ContactForm (exported)
-- Defines: ContactForm, handleSubmit, form, data, res, body
+- Symbol details: function ContactForm (exported), const CTA_OUTCOMES, const CTA_STEPS
+- Defines: ContactForm, handleSubmit, CTA_OUTCOMES, CTA_STEPS, form, data, res, body
 - Imported by: src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
-- Contents summary: contains `use client`; exports: ContactForm; internal imports: 2; package imports: 2
+- Contents summary: contains `use client`; exports: ContactForm; internal imports: 2; package imports: 3
 
 ### `src/components/landing/credibility.tsx`
 - Type: React/TSX module
@@ -2636,7 +2636,7 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Defines: LandingHero, PROOF_PILLS, HERO_STATS
 - Imported by: src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
-- Contents summary: exports: LandingHero; package imports: 1
+- Contents summary: exports: LandingHero; internal imports: 1; package imports: 1
 
 ### `src/components/landing/how-it-works.tsx`
 - Type: React/TSX module

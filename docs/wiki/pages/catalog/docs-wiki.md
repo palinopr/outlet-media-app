@@ -1,6 +1,6 @@
 # Docs / Wiki (manual control pages)
 
-Generated from the current working tree on 2026-04-10 21:27:09.
+Generated from the current working tree on 2026-04-10 21:37:00.
 
 - Files: 10
 - File kinds: Markdown doc (9), file (.py) (1)
@@ -38,10 +38,10 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo wiki source
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 212
-- Bytes: 19179
-- Headings: Repo Wiki Log, [2026-04-10] landing \| art direct proof visuals and add desktop portal collage, [2026-04-10] landing \| replace generic proof with sourced wins and real portal AI messaging, [2026-04-10] landing \| tighten typography scale and spacing rhythm, [2026-04-10] landing \| remove wireframe feel and strengthen proof layout, [2026-04-10] landing \| make dark background fill mobile viewport, [2026-04-10] admin-web \| add client request handling tabs on campaign and event detail, [2026-04-10] landing \| remove device-frame shell from public page, [2026-04-10] landing \| mobile-phone shell redesign and wiki refresh, [2026-04-10] client-events \| replace empty operating-loop shell with request-first UI, … (+10 more)
-- Contents summary: headings: Repo Wiki Log \| [2026-04-10] landing \| art direct proof visuals and add desktop portal collage \| [2026-04-10] landing \| replace generic proof with sourced wins and real portal AI messaging \| [2026-04-10] landing \| tighten typography scale and spacing rhythm \| [2026-04-10] landing \| remove wireframe feel and…
+- Lines: 224
+- Bytes: 20057
+- Headings: Repo Wiki Log, [2026-04-10] landing \| build standout hero composite and premium audit CTA, [2026-04-10] landing \| art direct proof visuals and add desktop portal collage, [2026-04-10] landing \| replace generic proof with sourced wins and real portal AI messaging, [2026-04-10] landing \| tighten typography scale and spacing rhythm, [2026-04-10] landing \| remove wireframe feel and strengthen proof layout, [2026-04-10] landing \| make dark background fill mobile viewport, [2026-04-10] admin-web \| add client request handling tabs on campaign and event detail, [2026-04-10] landing \| remove device-frame shell from public page, [2026-04-10] landing \| mobile-phone shell redesign and wiki refresh, … (+10 more)
+- Contents summary: headings: Repo Wiki Log \| [2026-04-10] landing \| build standout hero composite and premium audit CTA \| [2026-04-10] landing \| art direct proof visuals and add desktop portal collage \| [2026-04-10] landing \| replace generic proof with sourced wins and real portal AI messaging \| [2026-04-10] landing \| tighten typography…
 
 ## `docs/wiki/pages/audits/dead-ends-and-dead-code.md`
 - Status: tracked-clean

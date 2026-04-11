@@ -1,6 +1,6 @@
 # Route Stack Map
 
-Generated from the current working tree on 2026-04-10 21:27:09.
+Generated from the current working tree on 2026-04-10 21:37:00.
 
 This page documents each Next.js special route file and the internal stack it pulls in through direct and transitive imports.
 
@@ -1172,7 +1172,7 @@ This page documents each Next.js special route file and the internal stack it pu
 - Related tests: none
 
 ### Stack by group
-- Docs / Screenshots: docs/screenshots/campaign-desktop.png, docs/screenshots/campaign-mobile-viewport.png, docs/screenshots/campaign-mobile-creatives.png
+- Docs / Screenshots: docs/screenshots/campaign-mobile-viewport.png, docs/screenshots/campaign-desktop.png, docs/screenshots/campaign-mobile-creatives.png
 - src/components / landing: src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx
 - src/components / ui: src/components/ui/button.tsx, src/components/ui/input.tsx
 - src/lib: src/lib/utils.ts

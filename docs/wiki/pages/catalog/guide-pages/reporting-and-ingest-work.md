@@ -1,6 +1,6 @@
 # Start here: reporting and ingest work
 
-Generated from the current working tree on 2026-04-10 21:27:09.
+Generated from the current working tree on 2026-04-10 21:37:00.
 
 Recommended read order for someone changing ingest, snapshots, reports, dashboard summaries, or external analytics integrations.
 

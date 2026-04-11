@@ -1,5 +1,17 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | build standout hero composite and premium audit CTA
+- Reworked the top and bottom conversion blocks on the public `/landing` page for a stronger first-screen impression and a more premium intake experience.
+- Updated `src/components/landing/hero.tsx` to:
+  - tighten the top-line positioning copy
+  - replace the plain hero ending with a composite art-plus-analytics card using a real artist image and a layered KYBBA portal preview
+  - shift the stat row to support that composite instead of carrying the whole hero by itself
+- Updated `src/components/landing/contact-form.tsx` to:
+  - tighten the CTA copy line by line
+  - add explicit audit-outcome cards
+  - wrap the inputs in a darker premium inner panel with a three-step intake strip
+  - strengthen the submit button treatment so the bottom CTA feels more intentional than a generic form block
+
 ## [2026-04-10] landing | art direct proof visuals and add desktop portal collage
 - Tightened the visual art direction of the public `/landing` proof sections after the previous repo-grounded proof rewrite.
 - Rebuilt the credibility strip in `src/components/landing/credibility.tsx` into:

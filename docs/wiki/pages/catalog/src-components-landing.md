@@ -1,6 +1,6 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-10 21:27:09.
+Generated from the current working tree on 2026-04-10 21:37:00.
 
 - Files: 9
 - File kinds: React/TSX module (9)
@@ -8,28 +8,28 @@ Generated from the current working tree on 2026-04-10 21:27:09.
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
 ## `src/components/landing/contact-form.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
-- Lines: 123
-- Bytes: 4813
+- Lines: 176
+- Bytes: 6933
 - Imports (internal): src/components/ui/button.tsx, src/components/ui/input.tsx
-- Imports (packages): react, sonner
+- Imports (packages): react, lucide-react, sonner
 - Imported by: src/app/landing/page.tsx
 - Depends on groups: src/components / ui
 - Used by groups: src/app / root routes
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: ContactForm
-- Symbol details: function ContactForm (exported)
-- Defines: ContactForm, handleSubmit, form, data, res, body
-- Contents summary: contains `use client`; exports: ContactForm; internal imports: 2; package imports: 2
+- Symbol details: function ContactForm (exported), const CTA_OUTCOMES, const CTA_STEPS
+- Defines: ContactForm, handleSubmit, CTA_OUTCOMES, CTA_STEPS, form, data, res, body
+- Contents summary: contains `use client`; exports: ContactForm; internal imports: 2; package imports: 3
 
 ## `src/components/landing/credibility.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
@@ -105,23 +105,25 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: LandingFooter; package imports: 1
 
 ## `src/components/landing/hero.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 91
-- Bytes: 4239
+- Lines: 142
+- Bytes: 7214
+- Imports (internal): docs/screenshots/campaign-mobile-viewport.png
 - Imports (packages): next/image
 - Imported by: src/app/landing/page.tsx
+- Depends on groups: Docs / Screenshots
 - Used by groups: src/app / root routes
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: LandingHero
 - Symbol details: function LandingHero (exported), const PROOF_PILLS, const HERO_STATS
 - Defines: LandingHero, PROOF_PILLS, HERO_STATS
-- Contents summary: exports: LandingHero; package imports: 1
+- Contents summary: exports: LandingHero; internal imports: 1; package imports: 1
 
 ## `src/components/landing/how-it-works.tsx`
 - Status: tracked-clean
