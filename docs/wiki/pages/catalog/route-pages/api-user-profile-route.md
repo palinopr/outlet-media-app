@@ -1,6 +1,6 @@
 # /api/user/profile
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 - Route file: `src/app/api/user/profile/route.ts`
 - Type: Next.js route handler

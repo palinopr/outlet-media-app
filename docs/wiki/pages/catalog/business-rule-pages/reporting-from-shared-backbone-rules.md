@@ -1,6 +1,6 @@
 # Reporting-from-shared-backbone rules
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 Files and DB objects that appear to connect reports and dashboards back to shared workflow, event, and snapshot data instead of isolated summary-only state.
 
@@ -11,7 +11,7 @@ Files and DB objects that appear to connect reports and dashboards back to share
 - Mutation-oriented files: agent/src/services/system-events-service.ts, src/app/admin/actions/campaign-action-items.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/event-follow-up-items.ts, src/app/admin/actions/events.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/features/agent-outcomes/server.ts, src/features/approvals/server.ts, … (+9 more)
 - Tests: __tests__/api/ingest.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/integration.test.ts, __tests__/features/dashboard/read-clients.test.ts, __tests__/features/dashboard/server.test.ts, __tests__/features/dashboard/summary.test.ts, … (+28 more)
 - Docs: AGENTS.md, docs/context/agent-patterns.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, … (+9 more)
-- Behavior signals: server action/module (6), calls notFound() (3), calls revalidatePath() (3), calls redirect() (2), client component/module (2), defines generateMetadata (2), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: server action/module (6), calls notFound() (3), calls revalidatePath() (3), defines generateMetadata (2), calls redirect() (2), client component/module (2), calls revalidateTag() (1), calls unstable_noStore() (1)
 - Auth signals: imports Clerk server auth (32), references membership/scope access concepts (23), calls currentUser() (12), calls auth() (1), contains explicit access/role guard helper usage (1)
 
 ## Database objects

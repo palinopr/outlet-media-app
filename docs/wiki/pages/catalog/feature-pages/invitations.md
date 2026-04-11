@@ -1,6 +1,6 @@
 # Feature: invitations
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 - Files: 4
 - Entry files: src/features/invitations/server.ts, src/features/invitations/sort.ts, src/features/invitations/types.ts

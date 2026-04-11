@@ -1,6 +1,6 @@
 # Service Boundary Map
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 This page summarizes the major system boundaries in the repo: web, agent runtime, database, and the bridge files that connect them.
 

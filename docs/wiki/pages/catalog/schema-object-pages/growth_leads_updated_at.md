@@ -1,6 +1,6 @@
 # Schema object: growth_leads_updated_at
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 - Kinds: trigger
 - Migrations: supabase/migrations/20260307124500_growth_lead_ops.sql

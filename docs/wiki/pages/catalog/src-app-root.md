@@ -1,6 +1,6 @@
 # src/app / root routes
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 - Files: 18
 - File kinds: Next.js page (8), binary asset (3), React/TSX module (2), test file (2), Markdown doc (1), file (.css) (1), Next.js layout (1)
@@ -88,14 +88,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: contains `use client`; exports: GlobalError, default; package imports: 1
 
 ## `src/app/globals.css`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/app / root routes
 - Ownership: web root/shared route surface
 - Type: file (.css)
 - Route context: /
-- Lines: 226
-- Bytes: 5813
+- Lines: 294
+- Bytes: 7107
 - Imported by: src/app/layout.tsx
 - Used by groups: src/app / root routes
 - Route owners: src/app/layout.tsx
@@ -113,7 +113,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: asset/binary file; size: 64202 bytes
 
 ## `src/app/landing/page.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/app / root routes
 - Ownership: web root/shared route surface
@@ -121,7 +121,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Construction: App Router page, component/UI-oriented module
 - Route: /landing
 - Lines: 67
-- Bytes: 4107
+- Bytes: 4126
 - Imports (internal): src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx
 - Imports (packages): next, next/font/google, lucide-react
 - Depends on groups: src/components / landing

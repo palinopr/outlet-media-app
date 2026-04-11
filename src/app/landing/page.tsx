@@ -16,11 +16,11 @@ const landingFont = Space_Grotesk({
 export const metadata: Metadata = {
   title: "Agenda tu auditoría | Outlet Media",
   description:
-    "Resultados reales en Puerto Rico. Estrategia, creatividad y visibilidad total para marcas y operadores que exigen ROI. No más agency blackout.",
+    "Paid media, reporting live y portal con agente para operadores que necesitan ver qué mueve revenue. Sin agency blackout.",
   openGraph: {
     title: "Agenda tu auditoría | Outlet Media",
     description:
-      "Resultados reales en Puerto Rico. Estrategia, creatividad y visibilidad total. No más agency blackout.",
+      "Paid media, reporting live y portal con agente para operadores que necesitan ver qué mueve revenue.",
     images: [{ url: "/icon.png", width: 512, height: 512 }],
   },
   robots: { index: true, follow: true },
@@ -36,14 +36,14 @@ export default function LandingPage() {
       <div className="pointer-events-none absolute inset-x-0 top-0 hidden h-[28rem] bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_56%)] lg:block" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-[20rem] bg-[radial-gradient(circle_at_bottom,rgba(2,6,23,0.16),transparent_70%)] lg:block" />
 
-      <main className="relative mx-auto max-w-[1240px] px-0 pb-28 pt-0 lg:px-8 lg:pb-18 lg:pt-12">
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.82fr)] lg:items-start lg:justify-center lg:gap-12 xl:gap-16">
-          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-10 lg:rounded-[2.4rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)]">
+      <main className="relative mx-auto max-w-[1280px] px-0 pb-28 pt-0 lg:px-8 lg:pb-20 lg:pt-14">
+        <div className="grid gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.76fr)] lg:items-start lg:justify-center lg:gap-14 xl:gap-20">
+          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-8 lg:rounded-[2.5rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)] xl:-translate-y-2">
             <LandingHero />
             <LandingCredibility />
           </section>
 
-          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-6 lg:rounded-[2.4rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)]">
+          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-22 lg:rounded-[2.5rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)] xl:mt-26 xl:translate-y-2">
             <LandingFeatures />
             <LandingHowItWorks />
             <LandingFAQ />

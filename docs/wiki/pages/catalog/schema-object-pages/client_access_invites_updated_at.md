@@ -1,6 +1,6 @@
 # Schema object: client_access_invites_updated_at
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 - Kinds: trigger
 - Migrations: supabase/migrations/20260322100000_client_portal_reset.sql

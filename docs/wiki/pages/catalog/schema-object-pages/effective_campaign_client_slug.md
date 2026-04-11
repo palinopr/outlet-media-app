@@ -1,6 +1,6 @@
 # Schema object: effective_campaign_client_slug
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 - Kinds: function
 - Migrations: supabase/migrations/20260306230000_campaign_comments_membership_rls.sql

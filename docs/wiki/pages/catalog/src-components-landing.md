@@ -1,6 +1,6 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 - Files: 9
 - File kinds: React/TSX module (9)
@@ -15,7 +15,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
 - Lines: 176
-- Bytes: 6933
+- Bytes: 6997
 - Imports (internal): src/components/ui/button.tsx, src/components/ui/input.tsx
 - Imports (packages): react, lucide-react, sonner
 - Imported by: src/app/landing/page.tsx
@@ -29,14 +29,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: contains `use client`; exports: ContactForm; internal imports: 2; package imports: 3
 
 ## `src/components/landing/credibility.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 295
-- Bytes: 13029
+- Lines: 298
+- Bytes: 13257
 - Imports (internal): docs/screenshots/campaign-desktop.png, docs/screenshots/campaign-mobile-viewport.png
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
@@ -69,14 +69,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: contains `use client`; exports: LandingFAQ; package imports: 2
 
 ## `src/components/landing/features.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 145
-- Bytes: 6335
+- Lines: 146
+- Bytes: 6387
 - Imports (internal): docs/screenshots/campaign-mobile-creatives.png
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
@@ -112,7 +112,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Lines: 142
-- Bytes: 7214
+- Bytes: 7285
 - Imports (internal): docs/screenshots/campaign-mobile-viewport.png
 - Imports (packages): next/image
 - Imported by: src/app/landing/page.tsx

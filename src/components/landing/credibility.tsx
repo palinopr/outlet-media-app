@@ -10,6 +10,7 @@ const FEATURED_VISUALS = [
     imageClassName: "object-cover object-left",
     layoutClassName: "col-span-2 sm:col-span-4",
     label: "Tour creative",
+    motionClassName: "landing-float-soft",
   },
   {
     name: "Young Miko",
@@ -17,6 +18,7 @@ const FEATURED_VISUALS = [
     imageClassName: "object-cover object-top",
     layoutClassName: "sm:col-span-2 sm:row-span-2",
     label: "Poster creative",
+    motionClassName: "landing-float-delayed",
   },
   {
     name: "Luis Miguel",
@@ -24,6 +26,7 @@ const FEATURED_VISUALS = [
     imageClassName: "object-cover object-center",
     layoutClassName: "sm:col-span-2",
     label: "Artist campaign",
+    motionClassName: "landing-card-hover",
   },
   {
     name: "Gilberto Santa Rosa",
@@ -31,6 +34,7 @@ const FEATURED_VISUALS = [
     imageClassName: "object-cover object-center",
     layoutClassName: "sm:col-span-2",
     label: "Event promo",
+    motionClassName: "landing-card-hover",
   },
 ] as const;
 
@@ -104,7 +108,7 @@ export function LandingCredibility() {
           {FEATURED_VISUALS.map((item) => (
             <article
               key={item.name}
-              className={`relative overflow-hidden rounded-[20px] border border-white/8 bg-[#08111f] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${item.layoutClassName}`}
+              className={`relative overflow-hidden rounded-[20px] border border-white/8 bg-[#08111f] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${item.layoutClassName} ${item.motionClassName}`}
             >
               <Image
                 src={item.src}
@@ -130,7 +134,7 @@ export function LandingCredibility() {
           {PARTNER_ITEMS.map((item) => (
             <article
               key={item.name}
-              className="relative flex h-20 items-center justify-center overflow-hidden rounded-[18px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.03)_100%)] px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+              className="landing-card-hover relative flex h-20 items-center justify-center overflow-hidden rounded-[18px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.03)_100%)] px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
             >
               <Image
                 src={item.src}
@@ -175,9 +179,8 @@ export function LandingCredibility() {
             Tu ventaja injusta: visibilidad radical.
           </h3>
           <p className="mx-auto mt-4 max-w-[19rem] text-center text-[15px] leading-6 text-slate-200 sm:max-w-[22rem] sm:text-base sm:leading-7">
-            La mayoria de las agencias esconden los datos. Nosotros te damos las llaves.
-            Dashboards en tiempo real y reportes impulsados por IA para que veas exactamente que
-            creativo genera revenue.
+            La mayoría te manda un PDF. Nosotros abrimos el sistema para que veas qué creativo
+            gana, qué canal escala y qué está bloqueando el siguiente paso.
           </p>
           <div className="mt-6 space-y-3.5">
             {DIFFERENTIATORS.map((item) => (
@@ -200,7 +203,7 @@ export function LandingCredibility() {
         </p>
 
         <div className="mt-6 space-y-4">
-          <article className="overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.05)_100%)] shadow-[0_22px_44px_-26px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.08)]">
+          <article className="landing-card-hover overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.05)_100%)] shadow-[0_22px_44px_-26px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.08)]">
             <div className="grid gap-3 border-b border-white/10 p-3 sm:grid-cols-[0.72fr_1.28fr]">
               <div className="relative h-[18rem] overflow-hidden rounded-[18px] border border-white/10 bg-[#08111f] sm:h-[23rem]">
                 <Image
@@ -253,7 +256,7 @@ export function LandingCredibility() {
             </div>
           </article>
 
-          <article className="rounded-[24px] border border-[#61c0ff]/18 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_32%),linear-gradient(180deg,#0a1526_0%,#08111f_100%)] p-5 shadow-[0_22px_44px_-26px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-6">
+          <article className="landing-card-hover rounded-[24px] border border-[#61c0ff]/18 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_32%),linear-gradient(180deg,#0a1526_0%,#08111f_100%)] p-5 shadow-[0_22px_44px_-26px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-6">
             <p className="text-[11px] uppercase tracking-[0.18em] text-[#8fd4ff]">Don Omar BCN</p>
             <h3 className="mt-2 max-w-[13ch] text-[1.7rem] font-semibold leading-[1.02] text-white sm:text-[1.95rem]">
               Escala de evento mas paid media que si empuja revenue.
@@ -274,7 +277,7 @@ export function LandingCredibility() {
             {QUICK_WINS.map((item) => (
               <article
                 key={item.name}
-                className="rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.04)_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+                className="landing-card-hover rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.04)_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
               >
                 <p className="text-[11px] uppercase tracking-[0.16em] text-[#8fd4ff]">Selected win</p>
                 <p className="mt-2 text-[15px] font-semibold leading-5 text-white">{item.name}</p>

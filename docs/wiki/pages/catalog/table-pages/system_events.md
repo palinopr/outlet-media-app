@@ -1,6 +1,6 @@
 # Table: system_events
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 - Category: Shared timeline / approvals / notifications
 - Kinds: table

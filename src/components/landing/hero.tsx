@@ -4,7 +4,7 @@ import Image from "next/image";
 const PROOF_PILLS = [
   "Don Omar BCN 30,052 boletos",
   "KYBBA $12.0K tracked",
-  "Portal + agent",
+  "Portal con agente",
 ] as const;
 
 const HERO_STATS = [
@@ -31,14 +31,14 @@ export function LandingHero() {
           priority
         />
         <p className="mx-auto mt-3 inline-flex rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300">
-          Puerto Rico performance operators
+          Founder-led performance system
         </p>
         <h1 className="mx-auto mt-4 max-w-[12ch] text-[2.15rem] font-bold leading-[0.92] tracking-[-0.06em] text-white sm:text-[3rem]">
-          Performance real. Reporting vivo. Contexto compartido.
+          No necesitas otra agencia. Necesitas ver qué mueve revenue.
         </h1>
         <p className="mx-auto mt-3.5 max-w-[19rem] text-[14px] leading-6 text-slate-300 sm:max-w-[22rem] sm:text-[15px] sm:leading-7">
-          Paid media, dashboards live y un portal con agente que responde sobre campanas,
-          eventos, creativos y proximos pasos usando tu data real.
+          Corremos paid media, abrimos la data y dejamos a cliente y equipo viendo el mismo
+          sistema para decidir más rápido.
         </p>
 
         <div className="mt-5 flex flex-wrap justify-center gap-2">
@@ -70,7 +70,7 @@ export function LandingHero() {
           </a>
         </div>
 
-        <div className="mx-auto mt-7 max-w-[22rem] overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.03)_100%)] p-3 shadow-[0_26px_54px_-34px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.08)] sm:max-w-[24rem]">
+        <div className="landing-float-soft landing-glow-pulse mx-auto mt-7 max-w-[22rem] overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.03)_100%)] p-3 shadow-[0_26px_54px_-34px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.08)] sm:max-w-[24rem]">
           <div className="relative overflow-hidden rounded-[22px] border border-white/8 bg-[#08111f]">
             <div className="relative aspect-[1.08/1] sm:aspect-[1.2/1]">
               <Image
@@ -83,7 +83,7 @@ export function LandingHero() {
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.18),transparent_30%),linear-gradient(180deg,rgba(4,10,18,0.06)_12%,rgba(4,10,18,0.74)_100%)]" />
 
               <div className="absolute left-3 top-3 rounded-full border border-white/10 bg-[#081220]/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200 backdrop-blur-md">
-                Art + analytics
+                Outlet operating view
               </div>
 
               <div className="absolute bottom-3 left-3 max-w-[9.75rem] rounded-[20px] border border-white/10 bg-[#081220]/88 p-3 text-left backdrop-blur-md">
@@ -98,7 +98,7 @@ export function LandingHero() {
                 </p>
               </div>
 
-              <div className="absolute bottom-3 right-3 w-[7.4rem] overflow-hidden rounded-[20px] border border-white/10 bg-[#09111d]/95 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.7)] sm:w-[8rem]">
+              <div className="landing-float-delayed absolute bottom-3 right-3 w-[7.4rem] overflow-hidden rounded-[20px] border border-white/10 bg-[#09111d]/95 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.7)] sm:w-[8rem]">
                 <div className="relative aspect-[0.7/1]">
                   <Image
                     src={campaignMobileViewport}
@@ -124,7 +124,7 @@ export function LandingHero() {
           {HERO_STATS.map((item) => (
             <div
               key={item.label}
-              className="rounded-[18px] border border-white/8 bg-white/[0.04] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
+              className="landing-card-hover rounded-[18px] border border-white/8 bg-white/[0.04] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
             >
               <p className="text-[15px] font-semibold leading-5 text-white sm:text-base">
                 {item.value}

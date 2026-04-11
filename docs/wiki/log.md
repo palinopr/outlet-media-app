@@ -1,5 +1,19 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | add subtle motion and founder-led final polish
+- Ran a final landing polish pass focused on motion, composition, and sharper positioning voice.
+- Updated `src/app/landing/page.tsx` so desktop feels more editorial instead of two evenly stacked panels:
+  - increased the left/right asymmetry
+  - pushed the right column lower on desktop for a clearer stagger
+  - tightened the metadata description to match the current positioning
+- Updated `src/components/landing/hero.tsx`, `src/components/landing/credibility.tsx`, `src/components/landing/features.tsx`, and `src/components/landing/contact-form.tsx` to:
+  - shift the copy into a more direct founder-led voice
+  - sharpen the hero promise around seeing what moves revenue
+  - strengthen the founder/operator section and portal-agent explanation
+  - tighten the CTA copy around immediate diagnostic value
+  - add subtle motion-safe floating and hover-lift treatment on key hero and proof cards
+- Added reusable landing polish motion classes in `src/app/globals.css` rather than scattering one-off inline animation strings across the route.
+
 ## [2026-04-10] landing | build standout hero composite and premium audit CTA
 - Reworked the top and bottom conversion blocks on the public `/landing` page for a stronger first-screen impression and a more premium intake experience.
 - Updated `src/components/landing/hero.tsx` to:

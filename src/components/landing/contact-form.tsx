@@ -9,15 +9,15 @@ import { Input } from "@/components/ui/input";
 const CTA_OUTCOMES = [
   {
     title: "Fugas",
-    body: "Donde se pierde dinero o claridad operativa.",
+    body: "Dónde se está yendo el dinero o la claridad operativa.",
   },
   {
     title: "Creativos",
-    body: "Que pieza esta empujando resultado y cual no.",
+    body: "Qué pieza está moviendo resultado y cuál no.",
   },
   {
     title: "Plan",
-    body: "Que mover primero despues de la llamada.",
+    body: "Qué mover primero después de la llamada.",
   },
 ] as const;
 
@@ -61,11 +61,11 @@ export function ContactForm() {
           Auditoría estratégica
         </p>
         <h2 className="mt-4 max-w-[12ch] text-[2rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.15rem]">
-          Si estas invirtiendo y todavia adivinando, esta llamada es para ti.
+          Si estás gastando y nadie te puede decir qué mueve revenue, hablemos.
         </h2>
         <p className="mt-3 max-w-[22rem] text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
-          Entramos a oferta, tracking, creativos, funnel y reporting. Sales con una lectura clara
-          de fugas, presion y siguientes movimientos.
+          En 30 minutos te digo dónde está la fuga, qué creativo está empujando y qué mover primero
+          sin perder otra semana.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-2">
@@ -87,7 +87,7 @@ export function ContactForm() {
           {CTA_OUTCOMES.map((item) => (
             <div
               key={item.title}
-              className="rounded-[20px] border border-white/10 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+              className="landing-card-hover rounded-[20px] border border-white/10 bg-white/[0.04] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
             >
               <CheckCircle2 className="size-4 text-[#8fd4ff]" />
               <p className="mt-3 text-[14px] font-semibold text-white">{item.title}</p>
@@ -96,12 +96,12 @@ export function ContactForm() {
           ))}
         </div>
 
-        <div className="mt-6 rounded-[24px] border border-white/10 bg-[#08111f]/78 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-md sm:p-5">
+        <div className="landing-card-hover mt-6 rounded-[24px] border border-white/10 bg-[#08111f]/78 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-md sm:p-5">
           <div className="grid grid-cols-3 gap-2">
             {CTA_STEPS.map((step, index) => (
               <div
                 key={step}
-                className="rounded-[16px] border border-white/8 bg-white/[0.03] px-3 py-2 text-center"
+                className="landing-card-hover rounded-[16px] border border-white/8 bg-white/[0.03] px-3 py-2 text-center"
               >
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8fd4ff]">
                   {String(index + 1).padStart(2, "0")}

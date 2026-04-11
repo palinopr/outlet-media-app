@@ -1,6 +1,6 @@
 # Access and invite lifecycle
 
-Generated from the current working tree on 2026-04-10 21:37:00.
+Generated from the current working tree on 2026-04-10 21:51:44.
 
 Files and DB objects involved in client access, invites, membership resolution, and portal entry.
 
@@ -11,7 +11,7 @@ Files and DB objects involved in client access, invites, membership resolution, 
 - Mutation-oriented files: src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/users.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/components/client-portal-footer.tsx, src/app/client/[slug]/components/complete-profile-modal.tsx, src/components/admin/campaigns/campaign-table.tsx, src/components/admin/clients/assignment-manager.tsx, src/components/admin/clients/client-table.tsx, … (+8 more)
 - Tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/access/revalidation.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/client-portal/scope.test.ts, __tests__/features/clients/summary.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, … (+37 more)
 - Docs: AGENTS.md, README.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/customer-facing-disclosure-rules.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/context/tm1-capability-map.md, docs/context/tm1-dynamic-seating.md, docs/context/tm1-prd130-capability-map.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, … (+34 more)
-- Behavior signals: client component/module (35), calls redirect() (11), server action/module (9), calls revalidatePath() (8), sets dynamic rendering mode (6), defines generateMetadata (6), calls notFound() (4), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: client component/module (35), calls redirect() (11), server action/module (9), calls revalidatePath() (8), defines generateMetadata (6), sets dynamic rendering mode (6), calls notFound() (4), calls revalidateTag() (1), calls unstable_noStore() (1)
 - Auth signals: imports Clerk server auth (47), references membership/scope access concepts (40), calls currentUser() (19), calls auth() (10), contains explicit access/role guard helper usage (1)
 
 ## Database objects

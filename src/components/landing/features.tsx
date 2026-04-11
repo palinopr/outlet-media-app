@@ -67,22 +67,23 @@ export function LandingFeatures() {
             ))}
           </div>
           <h2 className="mt-4 max-w-[11ch] text-[1.95rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.15rem]">
-            Operadores, no creativos de vitrina.
+            Soy Jaime. Operación antes que pose.
           </h2>
           <div className="mt-4 max-w-[28rem] space-y-3.5 text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
             <p>
-              Outlet no vende humo de agencia. Diagnostica, decide, ejecuta y ensena la data para
-              que el crecimiento no dependa de fe.
+              No armé Outlet para vender dashboards bonitos. Lo armé porque estaba cansado de ver
+              equipos gastando sin saber qué pieza cerraba, dónde se fugaba el dinero y qué hacer
+              después.
             </p>
             <p>
-              La meta no es entregarte un deck bonito. Es que sepas que creativo cerro, que canal
-              escalo y cual es el proximo movimiento con menos friccion.
+              Si entramos, entramos a operar: media, ticketing, reporting, contexto compartido y
+              seguimiento claro para cliente y equipo.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-5 overflow-hidden rounded-[28px] border border-[#61c0ff]/20 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_28%),linear-gradient(180deg,#0a172a_0%,#081220_100%)] shadow-[0_0_0_1px_rgba(97,192,255,0.06),0_30px_64px_-36px_rgba(36,99,235,0.5)]">
+      <div className="landing-card-hover mt-5 overflow-hidden rounded-[28px] border border-[#61c0ff]/20 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_28%),linear-gradient(180deg,#0a172a_0%,#081220_100%)] shadow-[0_0_0_1px_rgba(97,192,255,0.06),0_30px_64px_-36px_rgba(36,99,235,0.5)]">
         <div className="relative aspect-[1.04/0.86] border-b border-white/10">
           <Image
             src={campaignMobileCreatives}
@@ -99,18 +100,18 @@ export function LandingFeatures() {
 
         <div className="p-5 sm:p-6">
           <h3 className="max-w-[14ch] text-[1.9rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.05rem]">
-            Pregunta que cambio, que creativo va ganando y que necesita aprobacion.
+            Pregúntale al portal qué cambió, qué está ganando y qué sigue.
           </h3>
           <p className="mt-4 max-w-[28rem] text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
-            El agente del portal es read-only y responde sobre campanas y eventos usando la misma
-            data que ves en dashboards, breakdowns, requests y timeline. No es chat inventado.
+            El agente no improvisa. Lee la misma data, requests, approvals y timeline que sostiene
+            la operación. Por eso responde con contexto, no con humo.
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2">
             {[
-              "Que cambio esta semana?",
-              "Que creativo esta vendiendo?",
-              "Que necesita aprobacion?",
+              "Qué cambió hoy?",
+              "Qué creativo vende?",
+              "Qué sigue después?",
             ].map((chip) => (
               <span
                 key={chip}
@@ -128,7 +129,7 @@ export function LandingFeatures() {
               return (
                 <div
                   key={feature.title}
-                  className="rounded-[20px] border border-white/10 bg-white/[0.04] p-4"
+                  className="landing-card-hover rounded-[20px] border border-white/10 bg-white/[0.04] p-4"
                 >
                   <Icon className="size-5 text-[#8fd4ff]" />
                   <p className="mt-3 text-[14px] font-semibold text-white">{feature.title}</p>
