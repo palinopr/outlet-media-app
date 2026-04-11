@@ -1,5 +1,13 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | add media-vs-ticketing comparison section and premium mobile sticky cta
+- Extended the illustrative landing proof system beyond standalone metric cards.
+- Updated `src/components/landing/sample-metric-card.tsx` so cards now carry a second visual axis for `media`, `ticketing`, or `system`, not just accent color. The card now renders track badges and subtle surface treatment so sample metrics feel like distinct operator modes instead of generic KPI tiles.
+- Updated `src/components/landing/credibility.tsx` to add a new `media vs ticketing` comparison section with animated comparison bars that show how the two readings sit side by side on one board.
+- Updated the hero, portal collage, and portal-agent overlays to use the richer card system with track-specific treatment.
+- Reworked the mobile sticky CTA in `src/app/landing/page.tsx` so it matches the premium audit intake styling instead of reading like a generic floating button.
+- Added reusable animated comparison-bar styles in `src/app/globals.css` for the new landing chart section.
+
 ## [2026-04-10] landing | add designed sample metric cards and richer portal overlays
 - Upgraded the illustrative-metrics landing proof treatment so it feels more like a designed reporting surface instead of plain text tiles.
 - Added `src/components/landing/sample-metric-card.tsx` as a reusable landing-only metric card with:

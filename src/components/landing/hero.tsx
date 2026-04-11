@@ -15,6 +15,7 @@ const HERO_STATS = [
     caption: "roas blend",
     delta: "+14%",
     accent: "blue",
+    track: "media",
     trendPoints: "6,26 20,22 34,23 48,16 62,14 78,11 94,8",
   },
   {
@@ -23,6 +24,7 @@ const HERO_STATS = [
     caption: "tracked gross",
     delta: "+22%",
     accent: "emerald",
+    track: "system",
     trendPoints: "6,28 20,25 34,21 48,18 62,15 78,10 94,6",
   },
   {
@@ -31,6 +33,7 @@ const HERO_STATS = [
     caption: "7d volume",
     delta: "+8%",
     accent: "violet",
+    track: "media",
     trendPoints: "6,27 20,24 34,20 48,21 62,17 78,13 94,11",
   },
 ] as const;
@@ -115,6 +118,7 @@ export function LandingHero() {
                   caption="sample ticket actions"
                   delta="+19%"
                   accent="amber"
+                  track="ticketing"
                   size="compact"
                   trendPoints="6,26 20,23 34,22 48,19 62,16 78,10 94,7"
                 />
@@ -138,6 +142,7 @@ export function LandingHero() {
                       caption="roas"
                       delta="+11%"
                       accent="blue"
+                      track="media"
                       size="compact"
                       trendPoints="6,26 20,24 34,20 48,18 62,14 78,10 94,8"
                     />
@@ -147,6 +152,7 @@ export function LandingHero() {
                       caption="sample tracked"
                       delta="+9%"
                       accent="emerald"
+                      track="system"
                       size="compact"
                       trendPoints="6,27 20,24 34,22 48,19 62,16 78,12 94,9"
                     />
@@ -166,6 +172,7 @@ export function LandingHero() {
               caption={item.caption}
               delta={item.delta}
               accent={item.accent}
+              track={item.track}
               trendPoints={item.trendPoints}
               className="landing-card-hover"
             />

@@ -1,6 +1,6 @@
 # Supabase Schema Map
 
-Generated from the current working tree on 2026-04-10 22:12:57.
+Generated from the current working tree on 2026-04-10 22:25:15.
 
 This page groups migration-discovered database objects by schema kind and records which migrations define them plus how many code/docs references exist outside the migrations.
 

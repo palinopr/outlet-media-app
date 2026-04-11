@@ -1,8 +1,12 @@
 import campaignDesktop from "../../../docs/screenshots/campaign-desktop.png";
 import campaignMobileViewport from "../../../docs/screenshots/campaign-mobile-viewport.png";
+import type { CSSProperties } from "react";
 import Image from "next/image";
 import { CheckCircle2, TriangleAlert } from "lucide-react";
 import { LandingSampleMetricCard } from "@/components/landing/sample-metric-card";
+
+type LandingBarStyle = CSSProperties &
+  Record<"--landing-bar-width" | "--landing-bar-delay", string>;
 
 const FEATURED_VISUALS = [
   {
@@ -67,6 +71,7 @@ const QUICK_WINS = [
     detail: "sample blended ROAS",
     delta: "+16%",
     accent: "blue",
+    track: "media",
     trendPoints: "6,27 20,23 34,22 48,18 62,14 78,10 94,8",
   },
   {
@@ -75,6 +80,7 @@ const QUICK_WINS = [
     detail: "sample tracked revenue",
     delta: "+12%",
     accent: "emerald",
+    track: "media",
     trendPoints: "6,28 20,24 34,22 48,19 62,16 78,11 94,7",
   },
   {
@@ -83,6 +89,7 @@ const QUICK_WINS = [
     detail: "sample creative ROAS",
     delta: "+9%",
     accent: "violet",
+    track: "media",
     trendPoints: "6,27 20,24 34,20 48,21 62,17 78,13 94,10",
   },
   {
@@ -91,6 +98,7 @@ const QUICK_WINS = [
     detail: "sample CTR lift",
     delta: "+6%",
     accent: "amber",
+    track: "ticketing",
     trendPoints: "6,29 20,27 34,24 48,19 62,18 78,12 94,9",
   },
 ] as const;
@@ -102,6 +110,7 @@ const PORTAL_METRICS = [
     caption: "portal preview",
     delta: "+11%",
     accent: "blue",
+    track: "media",
     trendPoints: "6,26 20,24 34,20 48,18 62,14 78,10 94,8",
   },
   {
@@ -110,6 +119,7 @@ const PORTAL_METRICS = [
     caption: "tracked gross",
     delta: "+22%",
     accent: "emerald",
+    track: "system",
     trendPoints: "6,28 20,25 34,21 48,18 62,15 78,10 94,6",
   },
   {
@@ -118,6 +128,7 @@ const PORTAL_METRICS = [
     caption: "7d volume",
     delta: "+8%",
     accent: "violet",
+    track: "media",
     trendPoints: "6,27 20,24 34,20 48,21 62,17 78,13 94,11",
   },
   {
@@ -126,6 +137,7 @@ const PORTAL_METRICS = [
     caption: "quality signal",
     delta: "+5%",
     accent: "amber",
+    track: "ticketing",
     trendPoints: "6,29 20,27 34,24 48,19 62,18 78,12 94,9",
   },
 ] as const;
@@ -137,6 +149,7 @@ const TOUR_METRICS = [
     caption: "onsale week",
     delta: "+19%",
     accent: "blue",
+    track: "ticketing",
     trendPoints: "6,26 20,23 34,22 48,19 62,16 78,10 94,7",
   },
   {
@@ -145,6 +158,7 @@ const TOUR_METRICS = [
     caption: "tracked sales",
     delta: "+14%",
     accent: "emerald",
+    track: "ticketing",
     trendPoints: "6,28 20,26 34,23 48,18 62,16 78,11 94,8",
   },
   {
@@ -153,6 +167,7 @@ const TOUR_METRICS = [
     caption: "paid efficiency",
     delta: "+10%",
     accent: "violet",
+    track: "media",
     trendPoints: "6,27 20,25 34,22 48,20 62,16 78,12 94,9",
   },
   {
@@ -161,7 +176,31 @@ const TOUR_METRICS = [
     caption: "demand signal",
     delta: "+7%",
     accent: "amber",
+    track: "ticketing",
     trendPoints: "6,29 20,28 34,25 48,20 62,18 78,13 94,10",
+  },
+] as const;
+
+const COMPARISON_ROWS = [
+  {
+    label: "Lead quality",
+    media: 84,
+    ticketing: 58,
+  },
+  {
+    label: "Conversion signal",
+    media: 73,
+    ticketing: 81,
+  },
+  {
+    label: "Revenue visibility",
+    media: 67,
+    ticketing: 76,
+  },
+  {
+    label: "Next-step clarity",
+    media: 92,
+    ticketing: 88,
   },
 ] as const;
 
@@ -262,6 +301,103 @@ export function LandingCredibility() {
         </div>
       </div>
 
+      <div className="border-b border-white/8 px-5 py-7 sm:px-6">
+        <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+          Media vs ticketing
+        </p>
+        <h3 className="mx-auto mt-3 max-w-[14ch] text-center text-[1.9rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.05rem]">
+          No los separamos. Los leemos en la misma pantalla.
+        </h3>
+        <p className="mx-auto mt-3 max-w-[20rem] text-center text-[14px] leading-6 text-slate-300 sm:max-w-[24rem] sm:text-[15px]">
+          Paid media empuja demanda. Ticketing confirma senal. El valor sale cuando ambas lecturas
+          viven juntas.
+        </p>
+
+        <div className="mt-5 rounded-[26px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.03)_100%)] p-4 shadow-[0_24px_48px_-32px_rgba(2,6,23,0.72),inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-5">
+          <div className="grid gap-4 sm:grid-cols-[0.98fr_1.02fr]">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <LandingSampleMetricCard
+                label="media side"
+                value="3.9x"
+                caption="sample blended roas"
+                delta="+14%"
+                accent="blue"
+                track="media"
+                trendPoints="6,26 20,22 34,23 48,16 62,14 78,11 94,8"
+                className="landing-card-hover"
+                size="compact"
+              />
+              <LandingSampleMetricCard
+                label="ticketing side"
+                value="18.2%"
+                caption="sample conversion"
+                delta="+7%"
+                accent="amber"
+                track="ticketing"
+                trendPoints="6,29 20,28 34,25 48,20 62,18 78,13 94,10"
+                className="landing-card-hover"
+                size="compact"
+              />
+            </div>
+
+            <div className="rounded-[22px] border border-white/10 bg-[#08111f]/76 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+              <div className="flex items-center justify-between gap-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+                <span>Illustrative comparison</span>
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center gap-1.5 text-[#bfeaff]"><span className="size-2 rounded-full bg-[#8fd4ff]" />Media</span>
+                  <span className="inline-flex items-center gap-1.5 text-amber-200"><span className="size-2 rounded-full bg-amber-300" />Ticketing</span>
+                </div>
+              </div>
+
+              <div className="mt-4 space-y-4">
+                {COMPARISON_ROWS.map((row, index) => (
+                  <div key={row.label} className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-[13px] font-semibold text-white">{row.label}</p>
+                      <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">sample</p>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.14em] text-[#bfeaff]">
+                          <span>Media</span>
+                          <span>{row.media}%</span>
+                        </div>
+                        <div className="landing-chart-track">
+                          <div
+                            className="landing-chart-fill landing-chart-media"
+                            style={{
+                              "--landing-bar-width": `${row.media}%`,
+                              "--landing-bar-delay": `${index * 120}ms`,
+                            } as LandingBarStyle}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.14em] text-amber-200">
+                          <span>Ticketing</span>
+                          <span>{row.ticketing}%</span>
+                        </div>
+                        <div className="landing-chart-track">
+                          <div
+                            className="landing-chart-fill landing-chart-ticketing"
+                            style={{
+                              "--landing-bar-width": `${row.ticketing}%`,
+                              "--landing-bar-delay": `${index * 120 + 100}ms`,
+                            } as LandingBarStyle}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="px-5 pb-8 pt-7 sm:px-6">
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
           Operacion real. Metricas ilustrativas.
@@ -294,6 +430,7 @@ export function LandingCredibility() {
                     caption="mobile read"
                     delta="+11%"
                     accent="blue"
+                    track="media"
                     size="compact"
                     trendPoints="6,26 20,24 34,20 48,18 62,14 78,10 94,8"
                   />
@@ -320,6 +457,7 @@ export function LandingCredibility() {
                     caption="desktop trend"
                     delta="+22%"
                     accent="emerald"
+                    track="system"
                     size="compact"
                     trendPoints="6,28 20,25 34,21 48,18 62,15 78,10 94,6"
                   />
@@ -345,6 +483,7 @@ export function LandingCredibility() {
                     caption={item.caption}
                     delta={item.delta}
                     accent={item.accent}
+                    track={item.track}
                     trendPoints={item.trendPoints}
                     className="landing-card-hover"
                     size="compact"
@@ -368,6 +507,7 @@ export function LandingCredibility() {
                   caption={item.caption}
                   delta={item.delta}
                   accent={item.accent}
+                  track={item.track}
                   trendPoints={item.trendPoints}
                   className="landing-card-hover"
                   size="compact"
@@ -385,6 +525,7 @@ export function LandingCredibility() {
                 caption={item.detail}
                 delta={item.delta}
                 accent={item.accent}
+                track={item.track}
                 trendPoints={item.trendPoints}
                 className="landing-card-hover"
               />

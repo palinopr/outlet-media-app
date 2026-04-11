@@ -1,6 +1,6 @@
 # Start here: admin web work
 
-Generated from the current working tree on 2026-04-10 22:12:57.
+Generated from the current working tree on 2026-04-10 22:25:15.
 
 Recommended read order for someone changing admin surfaces, admin actions, admin workflow, or admin reporting views.
 
@@ -22,4 +22,4 @@ Recommended read order for someone changing admin surfaces, admin actions, admin
 
 ## Signals seen in this area
 - Auth signals: imports Clerk server auth (47), references membership/scope access concepts (30), calls currentUser() (18), calls auth() (5), contains explicit access/role guard helper usage (1)
-- Behavior signals: client component/module (63), server action/module (13), calls revalidatePath() (8), sets dynamic rendering mode (5), calls redirect() (5), calls notFound() (5), defines generateMetadata (2), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: client component/module (63), server action/module (13), calls revalidatePath() (8), calls redirect() (5), calls notFound() (5), sets dynamic rendering mode (5), defines generateMetadata (2), calls revalidateTag() (1), calls unstable_noStore() (1)

@@ -1,6 +1,6 @@
 # Feature: campaigns
 
-Generated from the current working tree on 2026-04-10 22:12:57.
+Generated from the current working tree on 2026-04-10 22:25:15.
 
 - Files: 4
 - Entry files: src/features/campaigns/client-operating.ts, src/features/campaigns/ownership-sync.ts, src/features/campaigns/server.ts

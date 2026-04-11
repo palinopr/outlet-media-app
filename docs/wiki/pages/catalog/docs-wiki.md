@@ -1,6 +1,6 @@
 # Docs / Wiki (manual control pages)
 
-Generated from the current working tree on 2026-04-10 22:12:57.
+Generated from the current working tree on 2026-04-10 22:25:15.
 
 - Files: 10
 - File kinds: Markdown doc (9), file (.py) (1)
@@ -38,10 +38,10 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo wiki source
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 260
-- Bytes: 23707
-- Headings: Repo Wiki Log, [2026-04-10] landing \| add designed sample metric cards and richer portal overlays, [2026-04-10] landing \| switch proof blocks to illustrative metrics instead of blank placeholders, [2026-04-10] landing \| remove public customer metrics from landing proof, [2026-04-10] landing \| add subtle motion and founder-led final polish, [2026-04-10] landing \| build standout hero composite and premium audit CTA, [2026-04-10] landing \| art direct proof visuals and add desktop portal collage, [2026-04-10] landing \| replace generic proof with sourced wins and real portal AI messaging, [2026-04-10] landing \| tighten typography scale and spacing rhythm, [2026-04-10] landing \| remove wireframe feel and strengthen proof layout, … (+10 more)
-- Contents summary: headings: Repo Wiki Log \| [2026-04-10] landing \| add designed sample metric cards and richer portal overlays \| [2026-04-10] landing \| switch proof blocks to illustrative metrics instead of blank placeholders \| [2026-04-10] landing \| remove public customer metrics from landing proof \| [2026-04-10] landing \| add subtle…
+- Lines: 268
+- Bytes: 24780
+- Headings: Repo Wiki Log, [2026-04-10] landing \| add media-vs-ticketing comparison section and premium mobile sticky cta, [2026-04-10] landing \| add designed sample metric cards and richer portal overlays, [2026-04-10] landing \| switch proof blocks to illustrative metrics instead of blank placeholders, [2026-04-10] landing \| remove public customer metrics from landing proof, [2026-04-10] landing \| add subtle motion and founder-led final polish, [2026-04-10] landing \| build standout hero composite and premium audit CTA, [2026-04-10] landing \| art direct proof visuals and add desktop portal collage, [2026-04-10] landing \| replace generic proof with sourced wins and real portal AI messaging, [2026-04-10] landing \| tighten typography scale and spacing rhythm, … (+10 more)
+- Contents summary: headings: Repo Wiki Log \| [2026-04-10] landing \| add media-vs-ticketing comparison section and premium mobile sticky cta \| [2026-04-10] landing \| add designed sample metric cards and richer portal overlays \| [2026-04-10] landing \| switch proof blocks to illustrative metrics instead of blank placeholders \| [2026-04-10]…
 
 ## `docs/wiki/pages/audits/dead-ends-and-dead-code.md`
 - Status: tracked-clean

@@ -1,6 +1,6 @@
 # Key File Symbol Map
 
-Generated from the current working tree on 2026-04-10 22:12:57.
+Generated from the current working tree on 2026-04-10 22:25:15.
 
 This page highlights key code files and lists their exported symbols, top-level definitions, and route/test ownership links.
 
@@ -2594,11 +2594,11 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Type: React/TSX module
 - Ownership: landing page UI components
 - Exports: LandingCredibility
-- Symbol details: function LandingCredibility (exported), const FEATURED_VISUALS, const PARTNER_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const TOUR_METRICS
-- Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, TOUR_METRICS
+- Symbol details: function LandingCredibility (exported), const FEATURED_VISUALS, const PARTNER_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const TOUR_METRICS, const COMPARISON_ROWS, type LandingBarStyle
+- Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, TOUR_METRICS, COMPARISON_ROWS, LandingBarStyle
 - Imported by: src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
-- Contents summary: exports: LandingCredibility; internal imports: 3; package imports: 2
+- Contents summary: exports: LandingCredibility; internal imports: 3; package imports: 3
 
 ### `src/components/landing/faq.tsx`
 - Type: React/TSX module
@@ -2660,8 +2660,8 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Type: React/TSX module
 - Ownership: landing page UI components
 - Exports: LandingSampleMetricCard
-- Symbol details: function LandingSampleMetricCard (exported), type LandingMetricAccent, type LandingMetricSize, interface LandingSampleMetricCardProps
-- Defines: LandingSampleMetricCard, gradientId, accentStyle, compact, LandingMetricAccent, LandingMetricSize, LandingSampleMetricCardProps
+- Symbol details: function LandingSampleMetricCard (exported), type LandingMetricAccent, type LandingMetricSize, type LandingMetricTrack, interface LandingSampleMetricCardProps
+- Defines: LandingSampleMetricCard, gradientId, accentStyle, trackStyle, compact, LandingMetricAccent, LandingMetricSize, LandingMetricTrack, LandingSampleMetricCardProps
 - Imported by: src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/hero.tsx
 - Route owners: src/app/landing/page.tsx
 - Contents summary: exports: LandingSampleMetricCard; internal imports: 1; package imports: 1

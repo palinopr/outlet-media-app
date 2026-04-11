@@ -233,6 +233,18 @@
   }
 }
 
+@keyframes landing-bar-grow {
+  from {
+    opacity: 0.35;
+    transform: scaleX(0.18);
+  }
+
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
 .landing-card-hover {
   transition:
     transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
@@ -250,6 +262,29 @@
   }
 }
 
+.landing-chart-track {
+  height: 0.625rem;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.landing-chart-fill {
+  height: 100%;
+  width: var(--landing-bar-width, 100%);
+  transform-origin: left center;
+  border-radius: 9999px;
+}
+
+.landing-chart-media {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.38), rgba(143, 212, 255, 1));
+}
+
+.landing-chart-ticketing {
+  background: linear-gradient(90deg, rgba(251, 191, 36, 0.38), rgba(252, 211, 77, 1));
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .landing-float-soft {
     animation: landing-float-soft 8s ease-in-out infinite;
@@ -261,6 +296,11 @@
 
   .landing-glow-pulse {
     animation: landing-glow-pulse 6s ease-in-out infinite;
+  }
+
+  .landing-chart-fill {
+    animation: landing-bar-grow 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--landing-bar-delay, 0ms);
   }
 }
 

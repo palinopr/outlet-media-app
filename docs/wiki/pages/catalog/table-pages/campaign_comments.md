@@ -1,6 +1,6 @@
 # Table: campaign_comments
 
-Generated from the current working tree on 2026-04-10 22:12:57.
+Generated from the current working tree on 2026-04-10 22:25:15.
 
 - Category: Campaign / event / asset workflow
 - Kinds: table

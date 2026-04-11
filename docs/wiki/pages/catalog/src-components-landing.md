@@ -1,6 +1,6 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-10 22:12:57.
+Generated from the current working tree on 2026-04-10 22:25:15.
 
 - Files: 10
 - File kinds: React/TSX module (10)
@@ -35,19 +35,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 398
-- Bytes: 15649
+- Lines: 539
+- Bytes: 21517
 - Imports (internal): docs/screenshots/campaign-desktop.png, docs/screenshots/campaign-mobile-viewport.png, src/components/landing/sample-metric-card.tsx
-- Imports (packages): next/image, lucide-react
+- Imports (packages): react, next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
 - Depends on groups: Docs / Screenshots, src/components / landing
 - Used by groups: src/app / root routes
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: LandingCredibility
-- Symbol details: function LandingCredibility (exported), const FEATURED_VISUALS, const PARTNER_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const TOUR_METRICS
-- Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, TOUR_METRICS
-- Contents summary: exports: LandingCredibility; internal imports: 3; package imports: 2
+- Symbol details: function LandingCredibility (exported), const FEATURED_VISUALS, const PARTNER_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const TOUR_METRICS, const COMPARISON_ROWS, type LandingBarStyle
+- Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, TOUR_METRICS, COMPARISON_ROWS, LandingBarStyle
+- Contents summary: exports: LandingCredibility; internal imports: 3; package imports: 3
 
 ## `src/components/landing/faq.tsx`
 - Status: tracked-clean
@@ -75,8 +75,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 174
-- Bytes: 7422
+- Lines: 176
+- Bytes: 7482
 - Imports (internal): docs/screenshots/campaign-mobile-creatives.png, src/components/landing/sample-metric-card.tsx
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
@@ -111,8 +111,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 178
-- Bytes: 8031
+- Lines: 185
+- Bytes: 8234
 - Imports (internal): docs/screenshots/campaign-mobile-viewport.png, src/components/landing/sample-metric-card.tsx
 - Imports (packages): next/image
 - Imported by: src/app/landing/page.tsx
@@ -160,14 +160,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: LandingNav; package imports: 2
 
 ## `src/components/landing/sample-metric-card.tsx`
-- Status: untracked
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 136
-- Bytes: 4391
+- Lines: 177
+- Bytes: 5881
 - Imports (internal): src/lib/utils.ts
 - Imports (packages): react
 - Imported by: src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/hero.tsx
@@ -175,8 +175,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Used by groups: src/components / landing
 - Route owners: src/app/landing/page.tsx
 - Exports: LandingSampleMetricCard
-- Symbol details: function LandingSampleMetricCard (exported), type LandingMetricAccent, type LandingMetricSize, interface LandingSampleMetricCardProps
-- Defines: LandingSampleMetricCard, gradientId, accentStyle, compact, LandingMetricAccent, LandingMetricSize, LandingSampleMetricCardProps
+- Symbol details: function LandingSampleMetricCard (exported), type LandingMetricAccent, type LandingMetricSize, type LandingMetricTrack, interface LandingSampleMetricCardProps
+- Defines: LandingSampleMetricCard, gradientId, accentStyle, trackStyle, compact, LandingMetricAccent, LandingMetricSize, LandingMetricTrack, LandingSampleMetricCardProps
 - Contents summary: exports: LandingSampleMetricCard; internal imports: 1; package imports: 1
 
 ## `src/components/landing/stats.tsx`

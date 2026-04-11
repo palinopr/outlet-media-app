@@ -1,6 +1,6 @@
 # Start here: auth and access work
 
-Generated from the current working tree on 2026-04-10 22:12:57.
+Generated from the current working tree on 2026-04-10 22:25:15.
 
 Recommended read order for someone changing sign-in/up flows, invites, memberships, portal-entry behavior, or scope enforcement.
 
@@ -22,4 +22,4 @@ Recommended read order for someone changing sign-in/up flows, invites, membershi
 
 ## Signals seen in this area
 - Auth signals: references membership/scope access concepts (40), imports Clerk server auth (40), calls currentUser() (17), calls auth() (10), contains explicit access/role guard helper usage (1)
-- Behavior signals: client component/module (35), calls redirect() (11), server action/module (9), calls revalidatePath() (8), sets dynamic rendering mode (6), defines generateMetadata (6), calls notFound() (4), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: client component/module (35), calls redirect() (11), server action/module (9), calls revalidatePath() (8), defines generateMetadata (6), sets dynamic rendering mode (6), calls notFound() (4), calls revalidateTag() (1), calls unstable_noStore() (1)

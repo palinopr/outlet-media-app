@@ -52,14 +52,27 @@ export default function LandingPage() {
         </div>
       </main>
 
-      <div className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-[#081220]/82 px-4 py-3 shadow-[0_-18px_50px_-24px_rgba(15,23,42,0.45)] backdrop-blur-xl lg:hidden">
-        <a
-          href="#audit-form"
-          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full bg-[#1f5eff] px-5 text-sm font-semibold tracking-wide text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-transform active:scale-[0.99]"
-        >
-          Agenda tu auditoría
-          <ArrowRight className="size-4" />
-        </a>
+      <div className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 pt-2 lg:hidden">
+        <div className="mx-auto max-w-md rounded-[26px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(31,94,255,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.14),transparent_36%),rgba(8,18,32,0.88)] p-3 shadow-[0_-18px_50px_-24px_rgba(15,23,42,0.45),0_18px_44px_-28px_rgba(2,6,23,0.8)] backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8fd4ff]">
+                Auditoria con operador
+              </p>
+              <p className="mt-1 max-w-[11rem] text-[13px] leading-5 text-slate-200">
+                Ve fugas, creativos y siguiente movimiento.
+              </p>
+            </div>
+
+            <a
+              href="#audit-form"
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-[#1f5eff] px-4 text-sm font-semibold tracking-wide text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-transform active:scale-[0.99]"
+            >
+              Agenda
+              <ArrowRight className="size-4" />
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   );

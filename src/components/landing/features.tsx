@@ -105,6 +105,7 @@ export function LandingFeatures() {
               caption="roas signal"
               delta="+13%"
               accent="violet"
+              track="media"
               size="compact"
               trendPoints="6,28 20,24 34,23 48,18 62,16 78,12 94,9"
             />
@@ -117,6 +118,7 @@ export function LandingFeatures() {
               caption="tracked view"
               delta="+6%"
               accent="amber"
+              track="ticketing"
               size="compact"
               trendPoints="6,29 20,26 34,25 48,21 62,18 78,14 94,12"
             />
