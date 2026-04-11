@@ -1,44 +1,58 @@
+import campaignDesktop from "../../../docs/screenshots/campaign-desktop.png";
 import campaignMobileViewport from "../../../docs/screenshots/campaign-mobile-viewport.png";
 import Image from "next/image";
 import { CheckCircle2, TriangleAlert } from "lucide-react";
 
-const TRUST_ITEMS = [
+const FEATURED_VISUALS = [
   {
     name: "Rauw Alejandro",
     src: "/images/landing/rauw-shauring.png",
-    imageClassName: "object-cover object-center",
+    imageClassName: "object-cover object-left",
+    layoutClassName: "col-span-2 sm:col-span-4",
+    label: "Tour creative",
   },
   {
     name: "Young Miko",
     src: "/images/landing/young-miko-poster.png",
     imageClassName: "object-cover object-top",
+    layoutClassName: "sm:col-span-2 sm:row-span-2",
+    label: "Poster creative",
   },
   {
     name: "Luis Miguel",
     src: "/images/landing/luis-miguel.png",
     imageClassName: "object-cover object-center",
+    layoutClassName: "sm:col-span-2",
+    label: "Artist campaign",
   },
   {
     name: "Gilberto Santa Rosa",
     src: "/images/landing/gilberto-santa-rosa.png",
-    imageClassName: "object-cover object-top",
+    imageClassName: "object-cover object-center",
+    layoutClassName: "sm:col-span-2",
+    label: "Event promo",
   },
+] as const;
+
+const PARTNER_ITEMS = [
   {
     name: "Gallimbo Studios",
     src: "/images/landing/gallimbo-studios.png",
-    imageClassName: "object-contain p-4",
+  },
+  {
+    name: "9AM",
+    src: "/images/landing/9am.png",
   },
   {
     name: "Duars Live",
     src: "/images/landing/duars-live.png",
-    imageClassName: "object-contain p-4",
   },
 ] as const;
 
 const DIFFERENTIATORS = [
   "Mira el ROAS en vivo, no una vez al mes.",
   "Entiende el por que detras del rendimiento.",
-  "Cero \"Agency Blackout\". Control total.",
+  'Cero "Agency Blackout". Control total.',
 ] as const;
 
 const QUICK_WINS = [
@@ -85,25 +99,46 @@ export function LandingCredibility() {
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
           Marcas, tours y operadores
         </p>
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {TRUST_ITEMS.map((item) => (
+
+        <div className="mt-5 grid auto-rows-[8.75rem] grid-cols-2 gap-3 sm:grid-cols-6 sm:auto-rows-[7.75rem]">
+          {FEATURED_VISUALS.map((item) => (
             <article
               key={item.name}
-              className="relative overflow-hidden rounded-[18px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.03)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+              className={`relative overflow-hidden rounded-[20px] border border-white/8 bg-[#08111f] shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] ${item.layoutClassName}`}
             >
-              <div className="relative h-28 border-b border-white/6 bg-[#08111f] sm:h-24">
-                <Image
-                  src={item.src}
-                  alt={item.name}
-                  fill
-                  sizes="(max-width: 640px) 50vw, 160px"
-                  className={item.imageClassName}
-                />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,10,18,0.02)_20%,rgba(4,10,18,0.62)_100%)]" />
+              <Image
+                src={item.src}
+                alt={item.name}
+                fill
+                sizes="(max-width: 640px) 50vw, 260px"
+                className={item.imageClassName}
+              />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(4,10,18,0.08)_12%,rgba(4,10,18,0.68)_100%)]" />
+              <div className="absolute inset-x-0 bottom-0 p-3">
+                <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#8fd4ff]">
+                  {item.label}
+                </p>
+                <p className="mt-1 text-[13px] font-semibold leading-4 text-white sm:text-[14px]">
+                  {item.name}
+                </p>
               </div>
-              <p className="px-2 py-2 text-center text-[9px] font-semibold uppercase leading-4 tracking-[0.12em] text-slate-300 sm:text-[10px]">
-                {item.name}
-              </p>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          {PARTNER_ITEMS.map((item) => (
+            <article
+              key={item.name}
+              className="relative flex h-20 items-center justify-center overflow-hidden rounded-[18px] border border-white/8 bg-[linear-gradient(180deg,rgba(255,255,255,0.08)_0%,rgba(255,255,255,0.03)_100%)] px-3 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
+            >
+              <Image
+                src={item.src}
+                alt={item.name}
+                fill
+                sizes="(max-width: 640px) 33vw, 160px"
+                className="object-contain p-4"
+              />
             </article>
           ))}
         </div>
@@ -166,25 +201,45 @@ export function LandingCredibility() {
 
         <div className="mt-6 space-y-4">
           <article className="overflow-hidden rounded-[24px] border border-white/12 bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.05)_100%)] shadow-[0_22px_44px_-26px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.08)]">
-            <div className="relative h-[18rem] border-b border-white/10 bg-[#08111f] sm:h-[22rem]">
-              <Image
-                src={campaignMobileViewport}
-                alt="Actual client portal view"
-                fill
-                sizes="(max-width: 768px) 100vw, 520px"
-                className="object-cover object-top"
-              />
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.04)_20%,rgba(5,11,19,0.7)_100%)]" />
-              <p className="absolute left-4 top-4 rounded-full border border-white/10 bg-[#081220]/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200">
-                Actual client portal view
-              </p>
+            <div className="grid gap-3 border-b border-white/10 p-3 sm:grid-cols-[0.72fr_1.28fr]">
+              <div className="relative h-[18rem] overflow-hidden rounded-[18px] border border-white/10 bg-[#08111f] sm:h-[23rem]">
+                <Image
+                  src={campaignMobileViewport}
+                  alt="Actual client portal mobile view"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 320px"
+                  className="object-cover object-top"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.04)_20%,rgba(5,11,19,0.7)_100%)]" />
+                <p className="absolute left-3 top-3 rounded-full border border-white/10 bg-[#081220]/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200">
+                  Mobile portal
+                </p>
+              </div>
+
+              <div className="relative h-[18rem] overflow-hidden rounded-[18px] border border-white/10 bg-[#08111f] sm:h-[23rem]">
+                <Image
+                  src={campaignDesktop}
+                  alt="Actual client portal desktop view"
+                  fill
+                  sizes="(max-width: 640px) 100vw, 560px"
+                  className="object-cover object-top"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.04)_8%,rgba(5,11,19,0.78)_100%)]" />
+                <p className="absolute left-3 top-3 rounded-full border border-white/10 bg-[#081220]/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200">
+                  Desktop reporting surface
+                </p>
+              </div>
             </div>
 
             <div className="p-5 sm:p-6">
               <p className="text-[11px] uppercase tracking-[0.18em] text-[#8fd4ff]">KYBBA Miami</p>
               <h3 className="mt-2 text-[1.55rem] font-semibold leading-[1.02] text-white sm:text-[1.8rem]">
-                Reporting live que no se siente generico.
+                Reporting live que se ve bien en mobile y desktop.
               </h3>
+              <p className="mt-3 max-w-[28rem] text-[14px] leading-6 text-slate-300 sm:text-[15px]">
+                Mismo sistema, dos modos de lectura: cliente en mobile para claridad inmediata y
+                equipo en desktop para breakdowns, trends, creatives e insights accionables.
+              </p>
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {PORTAL_METRICS.map(([value, label]) => (
                   <div key={label} className="rounded-[18px] border border-white/10 bg-white/[0.04] p-3">

@@ -1,6 +1,6 @@
 # Event follow-up lifecycle
 
-Generated from the current working tree on 2026-04-10 18:46:37.
+Generated from the current working tree on 2026-04-10 21:27:09.
 
 Files and DB objects involved in event follow-up work, event reporting, and ticket/event workflow surfaces.
 
@@ -11,7 +11,7 @@ Files and DB objects involved in event follow-up work, event reporting, and tick
 - Mutation-oriented files: agent/src/discord/core/entry.ts, agent/src/services/system-events-service.ts, src/app/admin/actions/campaign-action-items.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/event-follow-up-items.ts, src/app/admin/actions/events.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.ts, src/features/agent-outcomes/server.ts, src/features/asset-follow-up-items/server.ts, … (+4 more)
 - Tests: __tests__/api/ingest.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/integration.test.ts, __tests__/features/dashboard/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/events/integration.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/events/summary.test.ts, … (+22 more)
 - Docs: AGENTS.md, docs/context/agent-patterns.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/salvage-map.md, docs/context/tm1-browserless-api.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-03-02-admin-crud-design.md, docs/plans/2026-03-02-admin-crud-plan.md, … (+18 more)
-- Behavior signals: client component/module (12), server action/module (10), calls revalidatePath() (7), calls redirect() (4), calls notFound() (3), defines generateMetadata (2), sets dynamic rendering mode (1), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: client component/module (12), server action/module (10), calls revalidatePath() (7), calls redirect() (4), calls notFound() (3), defines generateMetadata (2), calls revalidateTag() (1), calls unstable_noStore() (1), sets dynamic rendering mode (1)
 - Auth signals: imports Clerk server auth (32), references membership/scope access concepts (20), calls currentUser() (12), calls auth() (4), contains explicit access/role guard helper usage (1)
 
 ## Database objects

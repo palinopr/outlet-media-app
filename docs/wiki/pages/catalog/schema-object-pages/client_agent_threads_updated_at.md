@@ -1,6 +1,6 @@
 # Schema object: client_agent_threads_updated_at
 
-Generated from the current working tree on 2026-04-10 18:46:37.
+Generated from the current working tree on 2026-04-10 21:27:09.
 
 - Kinds: trigger
 - Migrations: supabase/migrations/20260331160000_client_agent_tab.sql

@@ -1,6 +1,6 @@
 # Database-to-Code Map
 
-Generated from the current working tree on 2026-04-10 18:46:37.
+Generated from the current working tree on 2026-04-10 21:27:09.
 
 This page maps database objects discovered in `supabase/migrations/*` to routes, features, libs, agent files, tests, and docs that mention them.
 

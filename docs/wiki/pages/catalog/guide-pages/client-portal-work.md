@@ -1,6 +1,6 @@
 # Start here: client portal work
 
-Generated from the current working tree on 2026-04-10 18:46:37.
+Generated from the current working tree on 2026-04-10 21:27:09.
 
 Recommended read order for someone changing client portal routing, access, campaign/event pages, reports, or the client agent surface.
 

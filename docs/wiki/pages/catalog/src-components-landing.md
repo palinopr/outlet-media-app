@@ -1,6 +1,6 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-10 18:46:37.
+Generated from the current working tree on 2026-04-10 21:27:09.
 
 - Files: 9
 - File kinds: React/TSX module (9)
@@ -35,9 +35,9 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 240
-- Bytes: 10574
-- Imports (internal): docs/screenshots/campaign-mobile-viewport.png
+- Lines: 295
+- Bytes: 13029
+- Imports (internal): docs/screenshots/campaign-desktop.png, docs/screenshots/campaign-mobile-viewport.png
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
 - Depends on groups: Docs / Screenshots
@@ -45,12 +45,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: LandingCredibility
-- Symbol details: function LandingCredibility (exported), const TRUST_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const DON_OMAR_METRICS
-- Defines: LandingCredibility, TRUST_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, DON_OMAR_METRICS
-- Contents summary: exports: LandingCredibility; internal imports: 1; package imports: 2
+- Symbol details: function LandingCredibility (exported), const FEATURED_VISUALS, const PARTNER_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const DON_OMAR_METRICS
+- Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, DON_OMAR_METRICS
+- Contents summary: exports: LandingCredibility; internal imports: 2; package imports: 2
 
 ## `src/components/landing/faq.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
@@ -69,7 +69,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: contains `use client`; exports: LandingFAQ; package imports: 2
 
 ## `src/components/landing/features.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
@@ -105,7 +105,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: LandingFooter; package imports: 1
 
 ## `src/components/landing/hero.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
@@ -124,7 +124,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: LandingHero; package imports: 1
 
 ## `src/components/landing/how-it-works.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components

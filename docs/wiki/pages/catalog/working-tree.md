@@ -1,17 +1,13 @@
 # Working Tree Snapshot
 
-Generated from the current working tree on 2026-04-10 18:46:37.
+Generated from the current working tree on 2026-04-10 21:27:09.
 
 ## Git status summary
-- modified: 6
+- modified: 2
 
 ## Changed paths currently present
 - `docs/wiki/log.md` — modified
 - `src/components/landing/credibility.tsx` — modified
-- `src/components/landing/faq.tsx` — modified
-- `src/components/landing/features.tsx` — modified
-- `src/components/landing/hero.tsx` — modified
-- `src/components/landing/how-it-works.tsx` — modified
 
 ## Excluded local/generated directories currently present
 - `.next`

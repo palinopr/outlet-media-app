@@ -1,5 +1,13 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | art direct proof visuals and add desktop portal collage
+- Tightened the visual art direction of the public `/landing` proof sections after the previous repo-grounded proof rewrite.
+- Rebuilt the credibility strip in `src/components/landing/credibility.tsx` into:
+  - a featured artist/project mosaic with stronger image-first crops
+  - a separate promoter/logo strip for Gallimbo Studios, 9AM, and Duars Live
+  - a mobile-plus-desktop KYBBA portal collage that shows the product on both surfaces instead of repeating a single screenshot treatment
+- Added `docs/screenshots/campaign-desktop.png` as a real landing dependency so the proof flow now shows both the compact client view and the fuller reporting surface.
+
 ## [2026-04-10] landing | replace generic proof with sourced wins and real portal AI messaging
 - Reworked the public `/landing` proof and AI sections to reflect repo-grounded evidence instead of generic agency-style claims.
 - Updated the landing hero and credibility sections so the visible success claims now lean on sourced internal examples already tracked in the repo, including:
