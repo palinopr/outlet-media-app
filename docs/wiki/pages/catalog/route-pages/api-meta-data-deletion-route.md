@@ -1,6 +1,6 @@
 # /api/meta/data-deletion
 
-Generated from the current working tree on 2026-04-10 21:59:58.
+Generated from the current working tree on 2026-04-10 22:05:59.
 
 - Route file: `src/app/api/meta/data-deletion/route.ts`
 - Type: Next.js route handler

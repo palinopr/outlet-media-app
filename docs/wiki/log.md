@@ -1,5 +1,11 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | switch proof blocks to illustrative metrics instead of blank placeholders
+- Updated the public `/landing` proof sections again after deciding the marketing surface can use believable sample metrics as long as they are not real client numbers.
+- Replaced the fully qualitative proof labels in `src/components/landing/hero.tsx` and `src/components/landing/credibility.tsx` with illustrative KPI-style numbers and sample metric cards.
+- Kept the underlying screenshot blur/obscuration in place and shifted the section framing to make it clear these are illustrative metrics layered onto real product visuals, not exposed customer data.
+- Updated the portal section copy in `src/components/landing/features.tsx` so the page now signals `metricas ilustrativas` instead of implying that the public view is showing actual live client numbers.
+
 ## [2026-04-10] landing | remove public customer metrics from landing proof
 - Scrubbed exact customer metrics from the public `/landing` page after deciding that client numbers should not be exposed on the marketing surface.
 - Updated `src/components/landing/hero.tsx`, `src/components/landing/credibility.tsx`, and `src/components/landing/features.tsx` to replace exact tickets / ROAS / revenue figures with qualitative proof language and generalized operator-facing labels.

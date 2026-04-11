@@ -1,6 +1,6 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-10 21:59:58.
+Generated from the current working tree on 2026-04-10 22:05:59.
 
 - Files: 9
 - File kinds: React/TSX module (9)
@@ -36,7 +36,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Lines: 298
-- Bytes: 13398
+- Bytes: 13371
 - Imports (internal): docs/screenshots/campaign-desktop.png, docs/screenshots/campaign-mobile-viewport.png
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
@@ -76,7 +76,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Lines: 149
-- Bytes: 6574
+- Bytes: 6566
 - Imports (internal): docs/screenshots/campaign-mobile-creatives.png
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
@@ -112,7 +112,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Lines: 142
-- Bytes: 7306
+- Bytes: 7317
 - Imports (internal): docs/screenshots/campaign-mobile-viewport.png
 - Imports (packages): next/image
 - Imported by: src/app/landing/page.tsx

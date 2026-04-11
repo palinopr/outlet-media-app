@@ -61,39 +61,39 @@ const DIFFERENTIATORS = [
 
 const QUICK_WINS = [
   {
-    name: "Tour launches",
-    stat: "Fast signal",
-    detail: "ticketing + paid media",
+    name: "Launch week",
+    stat: "4.2x",
+    detail: "sample blended ROAS",
   },
   {
-    name: "Ecom pushes",
-    stat: "Clear winners",
-    detail: "creative + funnel read",
+    name: "Retargeting",
+    stat: "$18.4K",
+    detail: "sample tracked revenue",
   },
   {
-    name: "Local events",
-    stat: "Shared view",
-    detail: "client + operator context",
+    name: "Creative A",
+    stat: "3.7x",
+    detail: "sample creative ROAS",
   },
   {
-    name: "Portal agent",
-    stat: "Faster answers",
-    detail: "reporting in plain English",
+    name: "Offer shift",
+    stat: "+26%",
+    detail: "sample CTR lift",
   },
 ] as const;
 
 const PORTAL_METRICS = [
-  ["Live", "Reporting"],
-  ["Shared", "Context"],
-  ["Visible", "Approvals"],
-  ["Clear", "Next step"],
+  ["3.9x", "Sample ROAS"],
+  ["$48.2K", "Sample revenue"],
+  ["118K", "Sample clicks"],
+  ["2.4%", "Sample CTR"],
 ] as const;
 
 const TOUR_METRICS = [
-  ["Onsale", "Visibility"],
-  ["Gross", "Tracking"],
-  ["Blended", "View"],
-  ["Demand", "Signal"],
+  ["37.4K", "Sample actions"],
+  ["$182K", "Sample gross"],
+  ["4.6x", "Sample blend"],
+  ["18.2%", "Sample conversion"],
 ] as const;
 
 export function LandingCredibility() {
@@ -195,11 +195,11 @@ export function LandingCredibility() {
 
       <div className="px-5 pb-8 pt-7 sm:px-6">
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-          Trabajo real. Datos reservados.
+          Operacion real. Metricas ilustrativas.
         </p>
         <p className="mx-auto mt-4 max-w-[19rem] text-center text-[14px] leading-6 text-slate-300 sm:max-w-[22rem] sm:text-[15px]">
-          Los visuales son reales. Los numeros sensibles se ocultan por confidencialidad, pero la
-          operacion, el portal y el sistema son los mismos.
+          Los visuales son reales. Los numeros debajo son ilustrativos para mostrar el tipo de
+          lectura sin exponer datos de clientes.
         </p>
 
         <div className="mt-6 space-y-4">
@@ -235,7 +235,7 @@ export function LandingCredibility() {
             </div>
 
             <div className="p-5 sm:p-6">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[#8fd4ff]">Client portal view</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-[#8fd4ff]">Sample portal view</p>
               <h3 className="mt-2 text-[1.55rem] font-semibold leading-[1.02] text-white sm:text-[1.8rem]">
                 Reporting live que se lee bien en mobile y desktop.
               </h3>
@@ -257,9 +257,9 @@ export function LandingCredibility() {
           </article>
 
           <article className="landing-card-hover rounded-[24px] border border-[#61c0ff]/18 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_32%),linear-gradient(180deg,#0a1526_0%,#08111f_100%)] p-5 shadow-[0_22px_44px_-26px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-6">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-[#8fd4ff]">Tour + ticketing operations</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-[#8fd4ff]">Sample event snapshot</p>
             <h3 className="mt-2 max-w-[13ch] text-[1.7rem] font-semibold leading-[1.02] text-white sm:text-[1.95rem]">
-              Escala de evento con visibilidad suficiente para mover mas rapido.
+              Asi se ve una lectura rapida cuando el sistema esta bien instrumentado.
             </h3>
             <div className="mt-5 grid grid-cols-2 gap-3">
               {TOUR_METRICS.map(([value, label]) => (
@@ -279,7 +279,7 @@ export function LandingCredibility() {
                 key={item.name}
                 className="landing-card-hover rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.04)_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
               >
-                <p className="text-[11px] uppercase tracking-[0.16em] text-[#8fd4ff]">Selected win</p>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-[#8fd4ff]">Illustrative win</p>
                 <p className="mt-2 text-[15px] font-semibold leading-5 text-white">{item.name}</p>
                 <p className="mt-4 text-[1.55rem] font-bold leading-none tracking-tight text-white">
                   {item.stat}

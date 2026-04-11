@@ -1,6 +1,6 @@
 # Access, membership, and portal-entry rules
 
-Generated from the current working tree on 2026-04-10 21:59:58.
+Generated from the current working tree on 2026-04-10 22:05:59.
 
 Files and DB objects that appear to enforce how users gain access, how memberships are resolved, and how users land in the correct portal state.
 
@@ -12,7 +12,7 @@ Files and DB objects that appear to enforce how users gain access, how membershi
 - Tests: __tests__/features/access/revalidation.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/clients/summary.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, __tests__/features/events/read-clients.test.ts, __tests__/features/notifications/server.test.ts, __tests__/features/reports/integration.test.ts, … (+29 more)
 - Docs: AGENTS.md, README.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/customer-facing-disclosure-rules.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/context/tm1-capability-map.md, docs/context/tm1-dynamic-seating.md, docs/context/tm1-prd130-capability-map.md, docs/plans/2026-02-23-client-portal-redesign.md, … (+32 more)
 - Behavior signals: client component/module (35), calls redirect() (11), server action/module (9), calls revalidatePath() (8), defines generateMetadata (6), sets dynamic rendering mode (6), calls notFound() (4), calls revalidateTag() (1), calls unstable_noStore() (1)
-- Auth signals: references membership/scope access concepts (40), imports Clerk server auth (40), calls currentUser() (17), calls auth() (10), contains explicit access/role guard helper usage (1)
+- Auth signals: imports Clerk server auth (40), references membership/scope access concepts (40), calls currentUser() (17), calls auth() (10), contains explicit access/role guard helper usage (1)
 
 ## Database objects
 

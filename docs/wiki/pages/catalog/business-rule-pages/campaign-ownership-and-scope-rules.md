@@ -1,6 +1,6 @@
 # Campaign ownership and scope rules
 
-Generated from the current working tree on 2026-04-10 21:59:58.
+Generated from the current working tree on 2026-04-10 22:05:59.
 
 Files and DB objects that appear to enforce campaign ownership, effective client assignment, and campaign-scoped reads/writes.
 
@@ -11,7 +11,7 @@ Files and DB objects that appear to enforce campaign ownership, effective client
 - Mutation-oriented files: agent/src/discord/core/entry.ts, src/app/admin/actions/campaign-action-items.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/components/admin/campaigns/campaign-cells.tsx, src/components/admin/campaigns/campaign-table.tsx, src/components/admin/client-requests-panel.tsx, src/features/agent-outcomes/server.ts, … (+5 more)
 - Tests: __tests__/api/ingest.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/client-portal/scope.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/integration.test.ts, __tests__/features/dashboard/read-clients.test.ts, … (+25 more)
 - Docs: docs/context/architecture-reset.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-03-02-admin-crud-design.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-admin-activity-tracking-design.md, docs/plans/2026-03-03-admin-activity-tracking-plan.md, … (+20 more)
-- Behavior signals: client component/module (16), server action/module (9), calls revalidatePath() (8), calls notFound() (4), calls redirect() (4), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1), sets dynamic rendering mode (1)
+- Behavior signals: client component/module (16), server action/module (9), calls revalidatePath() (8), calls redirect() (4), calls notFound() (4), sets dynamic rendering mode (1), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1)
 - Auth signals: imports Clerk server auth (32), references membership/scope access concepts (25), calls currentUser() (12), calls auth() (4), contains explicit access/role guard helper usage (1)
 
 ## Database objects

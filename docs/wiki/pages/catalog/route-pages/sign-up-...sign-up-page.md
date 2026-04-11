@@ -1,6 +1,6 @@
 # /sign-up/[[...sign-up]]
 
-Generated from the current working tree on 2026-04-10 21:59:58.
+Generated from the current working tree on 2026-04-10 22:05:59.
 
 - Route file: `src/app/sign-up/[[...sign-up]]/page.tsx`
 - Type: Next.js page

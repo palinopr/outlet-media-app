@@ -1,6 +1,6 @@
 # Schema object: whatsapp_ticket_concierge_bans_updated_at
 
-Generated from the current working tree on 2026-04-10 21:59:58.
+Generated from the current working tree on 2026-04-10 22:05:59.
 
 - Kinds: trigger
 - Migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql

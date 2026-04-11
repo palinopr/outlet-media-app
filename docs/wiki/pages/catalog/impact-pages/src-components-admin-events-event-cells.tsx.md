@@ -1,6 +1,6 @@
 # Impact: src/components/admin/events/event-cells.tsx
 
-Generated from the current working tree on 2026-04-10 21:59:58.
+Generated from the current working tree on 2026-04-10 22:05:59.
 
 - Category: Shared components
 - Impact score: 15

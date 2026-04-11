@@ -107,7 +107,7 @@ export function LandingFeatures() {
             la operacion. Por eso responde con contexto, no con humo.
           </p>
           <p className="mt-3 max-w-[28rem] text-[12px] uppercase tracking-[0.14em] text-slate-400">
-            Numeros y datos sensibles ocultos en la vista publica.
+            Metricas ilustrativas. Vista real del sistema.
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2">

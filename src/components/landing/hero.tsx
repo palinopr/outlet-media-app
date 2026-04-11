@@ -2,15 +2,15 @@ import campaignMobileViewport from "../../../docs/screenshots/campaign-mobile-vi
 import Image from "next/image";
 
 const PROOF_PILLS = [
-  "Tours + events",
-  "Portal reporting live",
+  "37.4K ticket actions",
+  "$48.2K tracked revenue",
   "Portal con agente",
 ] as const;
 
 const HERO_STATS = [
-  { value: "Live", label: "reporting" },
-  { value: "Shared", label: "client context" },
-  { value: "Clear", label: "next moves" },
+  { value: "3.9x", label: "sample blend" },
+  { value: "$48.2K", label: "sample revenue" },
+  { value: "118K", label: "sample clicks" },
 ] as const;
 
 export function LandingHero() {
@@ -88,13 +88,13 @@ export function LandingHero() {
 
               <div className="absolute bottom-3 left-3 max-w-[9.75rem] rounded-[20px] border border-white/10 bg-[#081220]/88 p-3 text-left backdrop-blur-md">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8fd4ff]">
-                  Tour + events
+                  Launch week
                 </p>
-                <p className="mt-1 text-[1.1rem] font-semibold leading-5 text-white">
-                  Shared visibility
+                <p className="mt-1 text-[1.65rem] font-bold leading-none tracking-tight text-white">
+                  37.4K
                 </p>
                 <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-slate-300">
-                  media + ticketing
+                  sample ticket actions
                 </p>
               </div>
 
@@ -111,9 +111,9 @@ export function LandingHero() {
                 </div>
                 <div className="border-t border-white/10 px-2.5 py-2 text-left">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-300">
-                    Portal preview
+                    Sample portal
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-white">Live reporting</p>
+                  <p className="mt-1 text-sm font-semibold text-white">3.9x ROAS</p>
                 </div>
               </div>
             </div>
