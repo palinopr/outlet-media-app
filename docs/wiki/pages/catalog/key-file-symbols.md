@@ -1,6 +1,6 @@
 # Key File Symbol Map
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
 This page highlights key code files and lists their exported symbols, top-level definitions, and route/test ownership links.
 
@@ -1608,7 +1608,7 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Exports: cn
 - Symbol details: function cn (exported)
 - Defines: cn
-- Imported by: src/components/admin/agents/command-summary.tsx, src/components/admin/collapsible-sidebar.tsx, src/components/admin/data-table/column-header.tsx, src/components/admin/nav-links.tsx, src/components/ui/badge.tsx, src/components/ui/breadcrumb.tsx, src/components/ui/button.tsx, src/components/ui/card.tsx, src/components/ui/command.tsx, src/components/ui/dialog.tsx, … (+7 more)
+- Imported by: src/components/admin/agents/command-summary.tsx, src/components/admin/collapsible-sidebar.tsx, src/components/admin/data-table/column-header.tsx, src/components/admin/nav-links.tsx, src/components/landing/sample-metric-card.tsx, src/components/ui/badge.tsx, src/components/ui/breadcrumb.tsx, src/components/ui/button.tsx, src/components/ui/card.tsx, src/components/ui/command.tsx, … (+8 more)
 - Route owners: src/app/admin/agents/page.tsx, src/app/admin/layout.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/events/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, … (+21 more)
 - Tests related: src/components/admin/agents/command-summary.test.tsx, src/app/shell-import-smoke.test.ts, src/components/admin/agents/job-history.test.tsx, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/client/[slug]/components/campaign-discussion-form.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/event-discussion-form.test.tsx, … (+9 more)
 - Contents summary: exports: cn; package imports: 2
@@ -2598,7 +2598,7 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, TOUR_METRICS
 - Imported by: src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
-- Contents summary: exports: LandingCredibility; internal imports: 2; package imports: 2
+- Contents summary: exports: LandingCredibility; internal imports: 3; package imports: 2
 
 ### `src/components/landing/faq.tsx`
 - Type: React/TSX module
@@ -2618,7 +2618,7 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Defines: LandingFeatures, AGENT_FEATURES, Icon
 - Imported by: src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
-- Contents summary: exports: LandingFeatures; internal imports: 1; package imports: 2
+- Contents summary: exports: LandingFeatures; internal imports: 2; package imports: 2
 
 ### `src/components/landing/footer.tsx`
 - Type: React/TSX module
@@ -2636,7 +2636,7 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Defines: LandingHero, PROOF_PILLS, HERO_STATS
 - Imported by: src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
-- Contents summary: exports: LandingHero; internal imports: 1; package imports: 1
+- Contents summary: exports: LandingHero; internal imports: 2; package imports: 1
 
 ### `src/components/landing/how-it-works.tsx`
 - Type: React/TSX module
@@ -2655,6 +2655,16 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Symbol details: function LandingNav (exported)
 - Defines: LandingNav
 - Contents summary: exports: LandingNav; package imports: 2
+
+### `src/components/landing/sample-metric-card.tsx`
+- Type: React/TSX module
+- Ownership: landing page UI components
+- Exports: LandingSampleMetricCard
+- Symbol details: function LandingSampleMetricCard (exported), type LandingMetricAccent, type LandingMetricSize, interface LandingSampleMetricCardProps
+- Defines: LandingSampleMetricCard, gradientId, accentStyle, compact, LandingMetricAccent, LandingMetricSize, LandingSampleMetricCardProps
+- Imported by: src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/hero.tsx
+- Route owners: src/app/landing/page.tsx
+- Contents summary: exports: LandingSampleMetricCard; internal imports: 1; package imports: 1
 
 ### `src/components/landing/stats.tsx`
 - Type: React/TSX module

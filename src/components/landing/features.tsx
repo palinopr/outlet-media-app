@@ -6,6 +6,7 @@ import {
   MessageSquareText,
   ShieldCheck,
 } from "lucide-react";
+import { LandingSampleMetricCard } from "@/components/landing/sample-metric-card";
 
 const AGENT_FEATURES = [
   {
@@ -95,6 +96,30 @@ export function LandingFeatures() {
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,9,21,0.18)_0%,rgba(3,9,21,0.3)_36%,rgba(8,20,33,0.98)_100%)]" />
           <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-[#07111d]/82 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200 backdrop-blur-md">
             Portal + agent
+          </div>
+
+          <div className="absolute bottom-3 left-3 w-[9rem]">
+            <LandingSampleMetricCard
+              label="sample creative"
+              value="4.1x"
+              caption="roas signal"
+              delta="+13%"
+              accent="violet"
+              size="compact"
+              trendPoints="6,28 20,24 34,23 48,18 62,16 78,12 94,9"
+            />
+          </div>
+
+          <div className="absolute bottom-3 right-3 w-[9rem]">
+            <LandingSampleMetricCard
+              label="sample spend"
+              value="$8.4K"
+              caption="tracked view"
+              delta="+6%"
+              accent="amber"
+              size="compact"
+              trendPoints="6,29 20,26 34,25 48,21 62,18 78,14 94,12"
+            />
           </div>
         </div>
 

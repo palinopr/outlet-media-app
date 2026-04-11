@@ -1,6 +1,6 @@
 # Table: conversation_checkpoints
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
 - Category: Other tables
 - Kinds: table

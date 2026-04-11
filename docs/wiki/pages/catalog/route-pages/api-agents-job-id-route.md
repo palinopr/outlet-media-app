@@ -1,6 +1,6 @@
 # /api/agents/job/[id]
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
 - Route file: `src/app/api/agents/job/[id]/route.ts`
 - Type: Next.js route handler

@@ -1,5 +1,6 @@
 import campaignMobileViewport from "../../../docs/screenshots/campaign-mobile-viewport.png";
 import Image from "next/image";
+import { LandingSampleMetricCard } from "@/components/landing/sample-metric-card";
 
 const PROOF_PILLS = [
   "37.4K ticket actions",
@@ -8,9 +9,30 @@ const PROOF_PILLS = [
 ] as const;
 
 const HERO_STATS = [
-  { value: "3.9x", label: "sample blend" },
-  { value: "$48.2K", label: "sample revenue" },
-  { value: "118K", label: "sample clicks" },
+  {
+    value: "3.9x",
+    label: "sample blend",
+    caption: "roas blend",
+    delta: "+14%",
+    accent: "blue",
+    trendPoints: "6,26 20,22 34,23 48,16 62,14 78,11 94,8",
+  },
+  {
+    value: "$48.2K",
+    label: "sample revenue",
+    caption: "tracked gross",
+    delta: "+22%",
+    accent: "emerald",
+    trendPoints: "6,28 20,25 34,21 48,18 62,15 78,10 94,6",
+  },
+  {
+    value: "118K",
+    label: "sample clicks",
+    caption: "7d volume",
+    delta: "+8%",
+    accent: "violet",
+    trendPoints: "6,27 20,24 34,20 48,21 62,17 78,13 94,11",
+  },
 ] as const;
 
 export function LandingHero() {
@@ -87,18 +109,18 @@ export function LandingHero() {
               </div>
 
               <div className="absolute bottom-3 left-3 max-w-[9.75rem] rounded-[20px] border border-white/10 bg-[#081220]/88 p-3 text-left backdrop-blur-md">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8fd4ff]">
-                  Launch week
-                </p>
-                <p className="mt-1 text-[1.65rem] font-bold leading-none tracking-tight text-white">
-                  37.4K
-                </p>
-                <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-slate-300">
-                  sample ticket actions
-                </p>
+                <LandingSampleMetricCard
+                  label="launch week"
+                  value="37.4K"
+                  caption="sample ticket actions"
+                  delta="+19%"
+                  accent="amber"
+                  size="compact"
+                  trendPoints="6,26 20,23 34,22 48,19 62,16 78,10 94,7"
+                />
               </div>
 
-              <div className="landing-float-delayed absolute bottom-3 right-3 w-[7.4rem] overflow-hidden rounded-[20px] border border-white/10 bg-[#09111d]/95 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.7)] sm:w-[8rem]">
+              <div className="landing-float-delayed absolute bottom-3 right-3 w-[8.4rem] overflow-hidden rounded-[20px] border border-white/10 bg-[#09111d]/95 shadow-[0_18px_40px_-28px_rgba(0,0,0,0.7)] sm:w-[9rem]">
                 <div className="relative aspect-[0.7/1]">
                   <Image
                     src={campaignMobileViewport}
@@ -108,12 +130,27 @@ export function LandingHero() {
                     className="scale-[1.03] object-cover object-top blur-[2px]"
                   />
                   <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.26)_18%,rgba(5,11,19,0.82)_100%)]" />
-                </div>
-                <div className="border-t border-white/10 px-2.5 py-2 text-left">
-                  <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-300">
-                    Sample portal
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-white">3.9x ROAS</p>
+
+                  <div className="absolute inset-x-2 bottom-2 space-y-2">
+                    <LandingSampleMetricCard
+                      label="sample portal"
+                      value="3.9x"
+                      caption="roas"
+                      delta="+11%"
+                      accent="blue"
+                      size="compact"
+                      trendPoints="6,26 20,24 34,20 48,18 62,14 78,10 94,8"
+                    />
+                    <LandingSampleMetricCard
+                      label="rev"
+                      value="$12.6K"
+                      caption="sample tracked"
+                      delta="+9%"
+                      accent="emerald"
+                      size="compact"
+                      trendPoints="6,27 20,24 34,22 48,19 62,16 78,12 94,9"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -122,17 +159,16 @@ export function LandingHero() {
 
         <div className="mx-auto mt-3 grid max-w-[20.5rem] grid-cols-3 gap-2.5 text-left sm:max-w-[22.5rem]">
           {HERO_STATS.map((item) => (
-            <div
+            <LandingSampleMetricCard
               key={item.label}
-              className="landing-card-hover rounded-[18px] border border-white/8 bg-white/[0.04] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-            >
-              <p className="text-[15px] font-semibold leading-5 text-white sm:text-base">
-                {item.value}
-              </p>
-              <p className="mt-1 text-[10px] uppercase leading-4 tracking-[0.16em] text-slate-400">
-                {item.label}
-              </p>
-            </div>
+              label={item.label}
+              value={item.value}
+              caption={item.caption}
+              delta={item.delta}
+              accent={item.accent}
+              trendPoints={item.trendPoints}
+              className="landing-card-hover"
+            />
           ))}
         </div>
       </div>

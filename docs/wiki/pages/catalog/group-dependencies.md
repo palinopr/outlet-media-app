@@ -1,6 +1,6 @@
 # Group Dependency Map
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
 This page summarizes internal file-to-file dependencies rolled up to the catalog group level.
 
@@ -150,8 +150,8 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 - Used by groups: src/app / client (15)
 
 ## src/components / landing
-- Files in group: 9
-- Depends on groups: Docs / Screenshots (4), src/components / ui (2)
+- Files in group: 10
+- Depends on groups: Docs / Screenshots (4), src/components / ui (2), src/lib (1)
 - Used by groups: src/app / root routes (6)
 
 ## src/components / shared
@@ -307,7 +307,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 ## src/lib
 - Files in group: 32
 - Depends on groups: src/features / system-events (1), src/features / invitations (1)
-- Used by groups: src/app / api (73), src/app / admin (61), src/components / admin (41), src/app / client (37), Tests / Features (24), src/components / ui (13), src/features / client-portal (11), Tests / App (7), src/features / campaign-action-items (7), src/features / events (6), src/features / reports (6), src/features / client-agent (5), … (+20 more)
+- Used by groups: src/app / api (73), src/app / admin (61), src/components / admin (41), src/app / client (37), Tests / Features (24), src/components / ui (13), src/features / client-portal (11), Tests / App (7), src/features / campaign-action-items (7), src/features / events (6), src/features / reports (6), src/features / client-agent (5), … (+21 more)
 
 ## src/lib / ticketmaster
 - Files in group: 2

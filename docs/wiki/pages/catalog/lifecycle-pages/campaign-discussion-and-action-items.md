@@ -1,6 +1,6 @@
 # Campaign discussion and action-item lifecycle
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
 Files and DB objects involved in campaign comments, campaign action items, notifications, and shared system events.
 

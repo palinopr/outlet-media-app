@@ -1,5 +1,15 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | add designed sample metric cards and richer portal overlays
+- Upgraded the illustrative-metrics landing proof treatment so it feels more like a designed reporting surface instead of plain text tiles.
+- Added `src/components/landing/sample-metric-card.tsx` as a reusable landing-only metric card with:
+  - color-coded accents
+  - inline sparkline trend visuals
+  - delta pills
+  - compact and default layouts for hero, portal overlays, and proof grids
+- Replaced the remaining flat sample metric blocks in `src/components/landing/hero.tsx` and `src/components/landing/credibility.tsx` with the new card treatment.
+- Added richer sample portal overlays to the hero composite, the KYBBA-style collage in the credibility section, and the portal/agent screenshot card in `src/components/landing/features.tsx` so the blurred product shots still feel alive without exposing real customer data.
+
 ## [2026-04-10] landing | switch proof blocks to illustrative metrics instead of blank placeholders
 - Updated the public `/landing` proof sections again after deciding the marketing surface can use believable sample metrics as long as they are not real client numbers.
 - Replaced the fully qualitative proof labels in `src/components/landing/hero.tsx` and `src/components/landing/credibility.tsx` with illustrative KPI-style numbers and sample metric cards.

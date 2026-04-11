@@ -1,11 +1,11 @@
 # Repo File Catalog
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
 This catalog is documentation-first: it describes what files exist, what each file contains, how each file is constructed, and which system or folder ownership it belongs to.
 
 ## Scope
-- Cataloged files: 731
+- Cataloged files: 732
 - Catalog uses the current working tree, so modified and untracked source files are included if they live in the documented code/doc paths.
 - Excluded from the generated catalog to avoid noise or recursion: `.git/`, `node_modules/`, `.next/`, `agent/.next/`, `agent/dist/`, `test-results/`, `tmp-playwright/`, `session/`, `.opencode/`, `.claude/`, `.worktrees/`, and `docs/wiki/pages/catalog/`.
 
@@ -17,7 +17,7 @@ This catalog is documentation-first: it describes what files exist, what each fi
 - public: 17
 - root: 25
 - tests: 49
-- web: 415
+- web: 416
 
 ## Cross-link and dependency pages
 - [Group Dependency Map](./group-dependencies.md) — internal dependencies rolled up by catalog group
@@ -73,7 +73,7 @@ This catalog is documentation-first: it describes what files exist, what each fi
 - [src/components / admin](./src-components-admin.md) — 64 files
 - [src/components / charts](./src-components-charts.md) — 2 files
 - [src/components / client](./src-components-client.md) — 17 files
-- [src/components / landing](./src-components-landing.md) — 9 files
+- [src/components / landing](./src-components-landing.md) — 10 files
 - [src/components / shared](./src-components-shared.md) — 1 files
 - [src/components / ui](./src-components-ui.md) — 13 files
 - [src/features / access](./src-features-access.md) — 1 files

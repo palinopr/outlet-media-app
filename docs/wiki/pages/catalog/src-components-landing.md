@@ -1,9 +1,9 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
-- Files: 9
-- File kinds: React/TSX module (9)
+- Files: 10
+- File kinds: React/TSX module (10)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -35,19 +35,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 298
-- Bytes: 13371
-- Imports (internal): docs/screenshots/campaign-desktop.png, docs/screenshots/campaign-mobile-viewport.png
+- Lines: 398
+- Bytes: 15649
+- Imports (internal): docs/screenshots/campaign-desktop.png, docs/screenshots/campaign-mobile-viewport.png, src/components/landing/sample-metric-card.tsx
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
-- Depends on groups: Docs / Screenshots
+- Depends on groups: Docs / Screenshots, src/components / landing
 - Used by groups: src/app / root routes
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: LandingCredibility
 - Symbol details: function LandingCredibility (exported), const FEATURED_VISUALS, const PARTNER_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const TOUR_METRICS
 - Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, TOUR_METRICS
-- Contents summary: exports: LandingCredibility; internal imports: 2; package imports: 2
+- Contents summary: exports: LandingCredibility; internal imports: 3; package imports: 2
 
 ## `src/components/landing/faq.tsx`
 - Status: tracked-clean
@@ -75,19 +75,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 149
-- Bytes: 6566
-- Imports (internal): docs/screenshots/campaign-mobile-creatives.png
+- Lines: 174
+- Bytes: 7422
+- Imports (internal): docs/screenshots/campaign-mobile-creatives.png, src/components/landing/sample-metric-card.tsx
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
-- Depends on groups: Docs / Screenshots
+- Depends on groups: Docs / Screenshots, src/components / landing
 - Used by groups: src/app / root routes
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: LandingFeatures
 - Symbol details: function LandingFeatures (exported), const AGENT_FEATURES
 - Defines: LandingFeatures, AGENT_FEATURES, Icon
-- Contents summary: exports: LandingFeatures; internal imports: 1; package imports: 2
+- Contents summary: exports: LandingFeatures; internal imports: 2; package imports: 2
 
 ## `src/components/landing/footer.tsx`
 - Status: tracked-clean
@@ -111,19 +111,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 142
-- Bytes: 7317
-- Imports (internal): docs/screenshots/campaign-mobile-viewport.png
+- Lines: 178
+- Bytes: 8031
+- Imports (internal): docs/screenshots/campaign-mobile-viewport.png, src/components/landing/sample-metric-card.tsx
 - Imports (packages): next/image
 - Imported by: src/app/landing/page.tsx
-- Depends on groups: Docs / Screenshots
+- Depends on groups: Docs / Screenshots, src/components / landing
 - Used by groups: src/app / root routes
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: LandingHero
 - Symbol details: function LandingHero (exported), const PROOF_PILLS, const HERO_STATS
 - Defines: LandingHero, PROOF_PILLS, HERO_STATS
-- Contents summary: exports: LandingHero; internal imports: 1; package imports: 1
+- Contents summary: exports: LandingHero; internal imports: 2; package imports: 1
 
 ## `src/components/landing/how-it-works.tsx`
 - Status: tracked-clean
@@ -158,6 +158,26 @@ Each entry below documents the file path, system ownership, construction style, 
 - Symbol details: function LandingNav (exported)
 - Defines: LandingNav
 - Contents summary: exports: LandingNav; package imports: 2
+
+## `src/components/landing/sample-metric-card.tsx`
+- Status: untracked
+- System: web
+- Group: src/components / landing
+- Ownership: landing page UI components
+- Type: React/TSX module
+- Construction: component/UI-oriented module
+- Lines: 136
+- Bytes: 4391
+- Imports (internal): src/lib/utils.ts
+- Imports (packages): react
+- Imported by: src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/hero.tsx
+- Depends on groups: src/lib
+- Used by groups: src/components / landing
+- Route owners: src/app/landing/page.tsx
+- Exports: LandingSampleMetricCard
+- Symbol details: function LandingSampleMetricCard (exported), type LandingMetricAccent, type LandingMetricSize, interface LandingSampleMetricCardProps
+- Defines: LandingSampleMetricCard, gradientId, accentStyle, compact, LandingMetricAccent, LandingMetricSize, LandingSampleMetricCardProps
+- Contents summary: exports: LandingSampleMetricCard; internal imports: 1; package imports: 1
 
 ## `src/components/landing/stats.tsx`
 - Status: tracked-clean

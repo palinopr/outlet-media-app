@@ -1,6 +1,6 @@
 # Test Coverage Map
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
 This page maps code files to the exact direct and transitive tests currently linked through imports.
 
@@ -1505,10 +1505,10 @@ This page maps code files to the exact direct and transitive tests currently lin
 - Imported by: src/components/client/charts/placement-charts.tsx
 
 ## src/components / landing
-- Code files: 9
+- Code files: 10
 - With direct test links: 0
 - With transitive test links: 0
-- With no linked tests: 9
+- With no linked tests: 10
 
 ### `src/components/landing/contact-form.tsx`
 - Direct tests: none
@@ -1557,6 +1557,12 @@ This page maps code files to the exact direct and transitive tests currently lin
 - All linked tests: none
 - Route owners: none
 - Imported by: none
+
+### `src/components/landing/sample-metric-card.tsx`
+- Direct tests: none
+- All linked tests: none
+- Route owners: src/app/landing/page.tsx
+- Imported by: src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/hero.tsx
 
 ### `src/components/landing/stats.tsx`
 - Direct tests: none
@@ -2396,7 +2402,7 @@ This page maps code files to the exact direct and transitive tests currently lin
 - Direct tests: none
 - All linked tests: src/components/admin/agents/command-summary.test.tsx, src/app/shell-import-smoke.test.ts, src/components/admin/agents/job-history.test.tsx, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/client/[slug]/components/campaign-discussion-form.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/event-discussion-form.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, … (+7 more)
 - Route owners: src/app/admin/agents/page.tsx, src/app/admin/layout.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/events/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, … (+21 more)
-- Imported by: src/components/admin/agents/command-summary.tsx, src/components/admin/collapsible-sidebar.tsx, src/components/admin/data-table/column-header.tsx, src/components/admin/nav-links.tsx, src/components/ui/badge.tsx, src/components/ui/breadcrumb.tsx, src/components/ui/button.tsx, src/components/ui/card.tsx, … (+9 more)
+- Imported by: src/components/admin/agents/command-summary.tsx, src/components/admin/collapsible-sidebar.tsx, src/components/admin/data-table/column-header.tsx, src/components/admin/nav-links.tsx, src/components/landing/sample-metric-card.tsx, src/components/ui/badge.tsx, src/components/ui/breadcrumb.tsx, src/components/ui/button.tsx, … (+10 more)
 
 ### `src/lib/workspace-types.ts`
 - Direct tests: none

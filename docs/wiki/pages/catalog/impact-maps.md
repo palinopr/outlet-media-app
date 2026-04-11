@@ -1,10 +1,10 @@
 # Impact Maps
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
 This index links to pages meant to answer: if I touch this file, what else is likely to move?
 
-- Impact candidates tracked: 167
+- Impact candidates tracked: 168
 
 ## Admin actions
 
@@ -161,6 +161,7 @@ This index links to pages meant to answer: if I touch this file, what else is li
 - [src/components/client/charts/ticket-sales-chart.tsx](./impact-pages/src-components-client-charts-ticket-sales-chart.tsx.md) — score: 10; routes: 2; tests: 2; db: 0
 - [src/components/client/charts/time-charts.tsx](./impact-pages/src-components-client-charts-time-charts.tsx.md) — score: 10; routes: 2; tests: 2; db: 0
 - [src/components/client/platform-icons.tsx](./impact-pages/src-components-client-platform-icons.tsx.md) — score: 10; routes: 2; tests: 2; db: 0
+- [src/components/landing/sample-metric-card.tsx](./impact-pages/src-components-landing-sample-metric-card.tsx.md) — score: 9; routes: 1; tests: 0; db: 0
 
 ## Shared web libraries
 
@@ -170,7 +171,7 @@ This index links to pages meant to answer: if I touch this file, what else is li
 - [src/lib/api-helpers.ts](./impact-pages/src-lib-api-helpers.ts.md) — score: 185; routes: 28; tests: 22; db: 0
 - [src/lib/member-access.ts](./impact-pages/src-lib-member-access.ts.md) — score: 172; routes: 20; tests: 60; db: 4
 - [src/lib/client-slug.ts](./impact-pages/src-lib-client-slug.ts.md) — score: 142; routes: 25; tests: 63; db: 0
-- [src/lib/utils.ts](./impact-pages/src-lib-utils.ts.md) — score: 138; routes: 29; tests: 17; db: 0
+- [src/lib/utils.ts](./impact-pages/src-lib-utils.ts.md) — score: 140; routes: 29; tests: 17; db: 0
 - [src/lib/status.ts](./impact-pages/src-lib-status.ts.md) — score: 123; routes: 22; tests: 49; db: 0
 - [src/lib/constants.ts](./impact-pages/src-lib-constants.ts.md) — score: 110; routes: 15; tests: 33; db: 0
 - [src/lib/workspace-types.ts](./impact-pages/src-lib-workspace-types.ts.md) — score: 97; routes: 13; tests: 36; db: 0

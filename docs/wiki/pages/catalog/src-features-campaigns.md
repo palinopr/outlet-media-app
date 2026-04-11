@@ -1,6 +1,6 @@
 # src/features / campaigns
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
 - Files: 4
 - File kinds: TypeScript module (3), test file (1)

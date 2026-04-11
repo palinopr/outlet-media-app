@@ -2,6 +2,7 @@ import campaignDesktop from "../../../docs/screenshots/campaign-desktop.png";
 import campaignMobileViewport from "../../../docs/screenshots/campaign-mobile-viewport.png";
 import Image from "next/image";
 import { CheckCircle2, TriangleAlert } from "lucide-react";
+import { LandingSampleMetricCard } from "@/components/landing/sample-metric-card";
 
 const FEATURED_VISUALS = [
   {
@@ -64,36 +65,104 @@ const QUICK_WINS = [
     name: "Launch week",
     stat: "4.2x",
     detail: "sample blended ROAS",
+    delta: "+16%",
+    accent: "blue",
+    trendPoints: "6,27 20,23 34,22 48,18 62,14 78,10 94,8",
   },
   {
     name: "Retargeting",
     stat: "$18.4K",
     detail: "sample tracked revenue",
+    delta: "+12%",
+    accent: "emerald",
+    trendPoints: "6,28 20,24 34,22 48,19 62,16 78,11 94,7",
   },
   {
     name: "Creative A",
     stat: "3.7x",
     detail: "sample creative ROAS",
+    delta: "+9%",
+    accent: "violet",
+    trendPoints: "6,27 20,24 34,20 48,21 62,17 78,13 94,10",
   },
   {
     name: "Offer shift",
     stat: "+26%",
     detail: "sample CTR lift",
+    delta: "+6%",
+    accent: "amber",
+    trendPoints: "6,29 20,27 34,24 48,19 62,18 78,12 94,9",
   },
 ] as const;
 
 const PORTAL_METRICS = [
-  ["3.9x", "Sample ROAS"],
-  ["$48.2K", "Sample revenue"],
-  ["118K", "Sample clicks"],
-  ["2.4%", "Sample CTR"],
+  {
+    value: "3.9x",
+    label: "sample roas",
+    caption: "portal preview",
+    delta: "+11%",
+    accent: "blue",
+    trendPoints: "6,26 20,24 34,20 48,18 62,14 78,10 94,8",
+  },
+  {
+    value: "$48.2K",
+    label: "sample revenue",
+    caption: "tracked gross",
+    delta: "+22%",
+    accent: "emerald",
+    trendPoints: "6,28 20,25 34,21 48,18 62,15 78,10 94,6",
+  },
+  {
+    value: "118K",
+    label: "sample clicks",
+    caption: "7d volume",
+    delta: "+8%",
+    accent: "violet",
+    trendPoints: "6,27 20,24 34,20 48,21 62,17 78,13 94,11",
+  },
+  {
+    value: "2.4%",
+    label: "sample ctr",
+    caption: "quality signal",
+    delta: "+5%",
+    accent: "amber",
+    trendPoints: "6,29 20,27 34,24 48,19 62,18 78,12 94,9",
+  },
 ] as const;
 
 const TOUR_METRICS = [
-  ["37.4K", "Sample actions"],
-  ["$182K", "Sample gross"],
-  ["4.6x", "Sample blend"],
-  ["18.2%", "Sample conversion"],
+  {
+    value: "37.4K",
+    label: "sample actions",
+    caption: "onsale week",
+    delta: "+19%",
+    accent: "blue",
+    trendPoints: "6,26 20,23 34,22 48,19 62,16 78,10 94,7",
+  },
+  {
+    value: "$182K",
+    label: "sample gross",
+    caption: "tracked sales",
+    delta: "+14%",
+    accent: "emerald",
+    trendPoints: "6,28 20,26 34,23 48,18 62,16 78,11 94,8",
+  },
+  {
+    value: "4.6x",
+    label: "sample blend",
+    caption: "paid efficiency",
+    delta: "+10%",
+    accent: "violet",
+    trendPoints: "6,27 20,25 34,22 48,20 62,16 78,12 94,9",
+  },
+  {
+    value: "18.2%",
+    label: "sample conversion",
+    caption: "demand signal",
+    delta: "+7%",
+    accent: "amber",
+    trendPoints: "6,29 20,28 34,25 48,20 62,18 78,13 94,10",
+  },
 ] as const;
 
 export function LandingCredibility() {
@@ -217,6 +286,18 @@ export function LandingCredibility() {
                 <p className="absolute left-3 top-3 rounded-full border border-white/10 bg-[#081220]/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200">
                   Mobile portal
                 </p>
+
+                <div className="absolute bottom-3 left-3 right-3">
+                  <LandingSampleMetricCard
+                    label="sample roas"
+                    value="3.9x"
+                    caption="mobile read"
+                    delta="+11%"
+                    accent="blue"
+                    size="compact"
+                    trendPoints="6,26 20,24 34,20 48,18 62,14 78,10 94,8"
+                  />
+                </div>
               </div>
 
               <div className="relative h-[18rem] overflow-hidden rounded-[18px] border border-white/10 bg-[#08111f] sm:h-[23rem]">
@@ -231,6 +312,18 @@ export function LandingCredibility() {
                 <p className="absolute left-3 top-3 rounded-full border border-white/10 bg-[#081220]/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200">
                   Desktop reporting surface
                 </p>
+
+                <div className="absolute right-3 top-12 w-[10rem]">
+                  <LandingSampleMetricCard
+                    label="sample revenue"
+                    value="$48.2K"
+                    caption="desktop trend"
+                    delta="+22%"
+                    accent="emerald"
+                    size="compact"
+                    trendPoints="6,28 20,25 34,21 48,18 62,15 78,10 94,6"
+                  />
+                </div>
               </div>
             </div>
 
@@ -244,13 +337,18 @@ export function LandingCredibility() {
                 equipo en desktop para breakdowns, trends, creatives e insights accionables.
               </p>
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {PORTAL_METRICS.map(([value, label]) => (
-                  <div key={label} className="rounded-[18px] border border-white/10 bg-white/[0.04] p-3">
-                    <p className="text-[1.15rem] font-semibold text-white">{value}</p>
-                    <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-slate-400">
-                      {label}
-                    </p>
-                  </div>
+                {PORTAL_METRICS.map((item) => (
+                  <LandingSampleMetricCard
+                    key={item.label}
+                    label={item.label}
+                    value={item.value}
+                    caption={item.caption}
+                    delta={item.delta}
+                    accent={item.accent}
+                    trendPoints={item.trendPoints}
+                    className="landing-card-hover"
+                    size="compact"
+                  />
                 ))}
               </div>
             </div>
@@ -262,32 +360,34 @@ export function LandingCredibility() {
               Asi se ve una lectura rapida cuando el sistema esta bien instrumentado.
             </h3>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              {TOUR_METRICS.map(([value, label]) => (
-                <div key={label} className="rounded-[18px] border border-white/10 bg-white/[0.04] p-3.5">
-                  <p className="text-[1.15rem] font-semibold text-white sm:text-[1.3rem]">{value}</p>
-                  <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-slate-400">
-                    {label}
-                  </p>
-                </div>
+              {TOUR_METRICS.map((item) => (
+                <LandingSampleMetricCard
+                  key={item.label}
+                  label={item.label}
+                  value={item.value}
+                  caption={item.caption}
+                  delta={item.delta}
+                  accent={item.accent}
+                  trendPoints={item.trendPoints}
+                  className="landing-card-hover"
+                  size="compact"
+                />
               ))}
             </div>
           </article>
 
           <div className="grid grid-cols-2 gap-3">
             {QUICK_WINS.map((item) => (
-              <article
+              <LandingSampleMetricCard
                 key={item.name}
-                className="landing-card-hover rounded-[22px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.04)_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]"
-              >
-                <p className="text-[11px] uppercase tracking-[0.16em] text-[#8fd4ff]">Illustrative win</p>
-                <p className="mt-2 text-[15px] font-semibold leading-5 text-white">{item.name}</p>
-                <p className="mt-4 text-[1.55rem] font-bold leading-none tracking-tight text-white">
-                  {item.stat}
-                </p>
-                <p className="mt-2 text-[11px] uppercase tracking-[0.14em] text-slate-400">
-                  {item.detail}
-                </p>
-              </article>
+                label={item.name}
+                value={item.stat}
+                caption={item.detail}
+                delta={item.delta}
+                accent={item.accent}
+                trendPoints={item.trendPoints}
+                className="landing-card-hover"
+              />
             ))}
           </div>
         </div>

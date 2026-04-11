@@ -1,6 +1,6 @@
 # /landing
 
-Generated from the current working tree on 2026-04-10 22:05:59.
+Generated from the current working tree on 2026-04-10 22:12:57.
 
 - Route file: `src/app/landing/page.tsx`
 - Type: Next.js page
@@ -18,6 +18,6 @@ Generated from the current working tree on 2026-04-10 22:05:59.
 
 ## Stack by group
 - Docs / Screenshots: docs/screenshots/campaign-mobile-viewport.png, docs/screenshots/campaign-desktop.png, docs/screenshots/campaign-mobile-creatives.png
-- src/components / landing: src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx
+- src/components / landing: src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx, src/components/landing/sample-metric-card.tsx
 - src/components / ui: src/components/ui/button.tsx, src/components/ui/input.tsx
 - src/lib: src/lib/utils.ts
