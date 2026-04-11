@@ -61,39 +61,39 @@ const DIFFERENTIATORS = [
 
 const QUICK_WINS = [
   {
-    name: "Alofoke Boston",
-    stat: "8.73x",
-    detail: "ROAS, 6 purchases",
+    name: "Tour launches",
+    stat: "Fast signal",
+    detail: "ticketing + paid media",
   },
   {
-    name: "Arjona Sac V2",
-    stat: "8.91x",
-    detail: "ROAS campaign",
+    name: "Ecom pushes",
+    stat: "Clear winners",
+    detail: "creative + funnel read",
   },
   {
-    name: "Chris R",
-    stat: "2.94x",
-    detail: "ROAS, 6 purchases",
+    name: "Local events",
+    stat: "Shared view",
+    detail: "client + operator context",
   },
   {
-    name: "Top creative",
-    stat: "4.7x",
-    detail: "KYBBA winning ad",
+    name: "Portal agent",
+    stat: "Faster answers",
+    detail: "reporting in plain English",
   },
 ] as const;
 
 const PORTAL_METRICS = [
-  ["2.8x", "ROAS"],
-  ["$12.0K", "Revenue"],
-  ["424.8K", "Impressions"],
-  ["10.4K", "Clicks"],
+  ["Live", "Reporting"],
+  ["Shared", "Context"],
+  ["Visible", "Approvals"],
+  ["Clear", "Next step"],
 ] as const;
 
-const DON_OMAR_METRICS = [
-  ["30,052", "Boletos vendidos"],
-  ["EUR 3.23M", "Gross"],
-  ["6.89x", "Blended ROAS"],
-  ["7.32x", "Marginal ROAS"],
+const TOUR_METRICS = [
+  ["Onsale", "Visibility"],
+  ["Gross", "Tracking"],
+  ["Blended", "View"],
+  ["Demand", "Signal"],
 ] as const;
 
 export function LandingCredibility() {
@@ -195,11 +195,11 @@ export function LandingCredibility() {
 
       <div className="px-5 pb-8 pt-7 sm:px-6">
         <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-          Resultados con nombre y data
+          Trabajo real. Datos reservados.
         </p>
         <p className="mx-auto mt-4 max-w-[19rem] text-center text-[14px] leading-6 text-slate-300 sm:max-w-[22rem] sm:text-[15px]">
-          Casos donde la visibilidad no se quedo en un deck. Se sintio en tickets, revenue,
-          creativos ganadores y decisiones mas rapidas.
+          Los visuales son reales. Los numeros sensibles se ocultan por confidencialidad, pero la
+          operacion, el portal y el sistema son los mismos.
         </p>
 
         <div className="mt-6 space-y-4">
@@ -211,9 +211,9 @@ export function LandingCredibility() {
                   alt="Actual client portal mobile view"
                   fill
                   sizes="(max-width: 640px) 100vw, 320px"
-                  className="object-cover object-top"
+                  className="scale-[1.03] object-cover object-top blur-[2px]"
                 />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.04)_20%,rgba(5,11,19,0.7)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.2)_18%,rgba(5,11,19,0.82)_100%)]" />
                 <p className="absolute left-3 top-3 rounded-full border border-white/10 bg-[#081220]/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200">
                   Mobile portal
                 </p>
@@ -225,9 +225,9 @@ export function LandingCredibility() {
                   alt="Actual client portal desktop view"
                   fill
                   sizes="(max-width: 640px) 100vw, 560px"
-                  className="object-cover object-top"
+                  className="scale-[1.01] object-cover object-top blur-[2px]"
                 />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.04)_8%,rgba(5,11,19,0.78)_100%)]" />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.16)_8%,rgba(5,11,19,0.86)_100%)]" />
                 <p className="absolute left-3 top-3 rounded-full border border-white/10 bg-[#081220]/88 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-200">
                   Desktop reporting surface
                 </p>
@@ -235,9 +235,9 @@ export function LandingCredibility() {
             </div>
 
             <div className="p-5 sm:p-6">
-              <p className="text-[11px] uppercase tracking-[0.18em] text-[#8fd4ff]">KYBBA Miami</p>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-[#8fd4ff]">Client portal view</p>
               <h3 className="mt-2 text-[1.55rem] font-semibold leading-[1.02] text-white sm:text-[1.8rem]">
-                Reporting live que se ve bien en mobile y desktop.
+                Reporting live que se lee bien en mobile y desktop.
               </h3>
               <p className="mt-3 max-w-[28rem] text-[14px] leading-6 text-slate-300 sm:text-[15px]">
                 Mismo sistema, dos modos de lectura: cliente en mobile para claridad inmediata y
@@ -257,12 +257,12 @@ export function LandingCredibility() {
           </article>
 
           <article className="landing-card-hover rounded-[24px] border border-[#61c0ff]/18 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_32%),linear-gradient(180deg,#0a1526_0%,#08111f_100%)] p-5 shadow-[0_22px_44px_-26px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.08)] sm:p-6">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-[#8fd4ff]">Don Omar BCN</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-[#8fd4ff]">Tour + ticketing operations</p>
             <h3 className="mt-2 max-w-[13ch] text-[1.7rem] font-semibold leading-[1.02] text-white sm:text-[1.95rem]">
-              Escala de evento mas paid media que si empuja revenue.
+              Escala de evento con visibilidad suficiente para mover mas rapido.
             </h3>
             <div className="mt-5 grid grid-cols-2 gap-3">
-              {DON_OMAR_METRICS.map(([value, label]) => (
+              {TOUR_METRICS.map(([value, label]) => (
                 <div key={label} className="rounded-[18px] border border-white/10 bg-white/[0.04] p-3.5">
                   <p className="text-[1.15rem] font-semibold text-white sm:text-[1.3rem]">{value}</p>
                   <p className="mt-1 text-[10px] uppercase tracking-[0.16em] text-slate-400">
@@ -281,7 +281,7 @@ export function LandingCredibility() {
               >
                 <p className="text-[11px] uppercase tracking-[0.16em] text-[#8fd4ff]">Selected win</p>
                 <p className="mt-2 text-[15px] font-semibold leading-5 text-white">{item.name}</p>
-                <p className="mt-4 text-[1.8rem] font-bold leading-none tracking-tight text-white">
+                <p className="mt-4 text-[1.55rem] font-bold leading-none tracking-tight text-white">
                   {item.stat}
                 </p>
                 <p className="mt-2 text-[11px] uppercase tracking-[0.14em] text-slate-400">

@@ -1,6 +1,6 @@
 # Approval visibility and notification rules
 
-Generated from the current working tree on 2026-04-10 21:51:44.
+Generated from the current working tree on 2026-04-10 21:59:58.
 
 Files and DB objects that appear to control who sees approvals, notifications, and shared timeline events.
 
@@ -11,7 +11,7 @@ Files and DB objects that appear to control who sees approvals, notifications, a
 - Mutation-oriented files: agent/scripts/tm1-crawl-capabilities.mjs, agent/src/discord/core/entry.ts, agent/src/services/queue-service.ts, agent/src/services/system-events-service.ts, src/app/admin/actions/campaign-action-items.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/events.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/api/admin/users/[id]/route.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, … (+16 more)
 - Tests: __tests__/api/ingest.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/approvals/summary.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/client-portal/scope.test.ts, __tests__/features/clients/summary.test.ts, __tests__/features/dashboard/integration.test.ts, __tests__/features/dashboard/read-clients.test.ts, __tests__/features/dashboard/server.test.ts, __tests__/features/dashboard/summary.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, … (+43 more)
 - Docs: AGENTS.md, README.md, docs/context/agent-patterns.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/context/tm1-browserless-api.md, docs/context/tm1-dynamic-seating.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, … (+45 more)
-- Behavior signals: client component/module (14), server action/module (9), calls redirect() (8), calls revalidatePath() (7), defines generateMetadata (3), calls notFound() (3), sets dynamic rendering mode (1), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: client component/module (14), server action/module (9), calls redirect() (8), calls revalidatePath() (7), calls notFound() (3), defines generateMetadata (3), calls revalidateTag() (1), calls unstable_noStore() (1), sets dynamic rendering mode (1)
 - Auth signals: imports Clerk server auth (37), references membership/scope access concepts (35), calls currentUser() (16), calls auth() (7), contains explicit access/role guard helper usage (1)
 
 ## Database objects

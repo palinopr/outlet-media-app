@@ -67,13 +67,13 @@ export function LandingFeatures() {
             ))}
           </div>
           <h2 className="mt-4 max-w-[11ch] text-[1.95rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.15rem]">
-            Soy Jaime. Operación antes que pose.
+            Soy Jaime. Operacion antes que pose.
           </h2>
           <div className="mt-4 max-w-[28rem] space-y-3.5 text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
             <p>
-              No armé Outlet para vender dashboards bonitos. Lo armé porque estaba cansado de ver
-              equipos gastando sin saber qué pieza cerraba, dónde se fugaba el dinero y qué hacer
-              después.
+              No arme Outlet para vender dashboards bonitos. Lo arme porque estaba cansado de ver
+              equipos gastando sin saber que pieza cerraba, donde se fugaba el dinero y que hacer
+              despues.
             </p>
             <p>
               Si entramos, entramos a operar: media, ticketing, reporting, contexto compartido y
@@ -90,9 +90,9 @@ export function LandingFeatures() {
             alt="Creative performance portal view"
             fill
             sizes="(max-width: 1024px) 100vw, 360px"
-            className="object-cover object-top"
+            className="scale-[1.03] object-cover object-top blur-[2px]"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,9,21,0.06)_0%,rgba(3,9,21,0.2)_36%,rgba(8,20,33,0.98)_100%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,9,21,0.18)_0%,rgba(3,9,21,0.3)_36%,rgba(8,20,33,0.98)_100%)]" />
           <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-[#07111d]/82 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200 backdrop-blur-md">
             Portal + agent
           </div>
@@ -100,18 +100,21 @@ export function LandingFeatures() {
 
         <div className="p-5 sm:p-6">
           <h3 className="max-w-[14ch] text-[1.9rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.05rem]">
-            Pregúntale al portal qué cambió, qué está ganando y qué sigue.
+            Preguntale al portal que cambio, que esta ganando y que sigue.
           </h3>
           <p className="mt-4 max-w-[28rem] text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
             El agente no improvisa. Lee la misma data, requests, approvals y timeline que sostiene
-            la operación. Por eso responde con contexto, no con humo.
+            la operacion. Por eso responde con contexto, no con humo.
+          </p>
+          <p className="mt-3 max-w-[28rem] text-[12px] uppercase tracking-[0.14em] text-slate-400">
+            Numeros y datos sensibles ocultos en la vista publica.
           </p>
 
           <div className="mt-4 flex flex-wrap gap-2">
             {[
-              "Qué cambió hoy?",
-              "Qué creativo vende?",
-              "Qué sigue después?",
+              "Que cambio hoy?",
+              "Que creativo vende?",
+              "Que sigue despues?",
             ].map((chip) => (
               <span
                 key={chip}

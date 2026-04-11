@@ -1,6 +1,6 @@
 # Feature: agents
 
-Generated from the current working tree on 2026-04-10 21:51:44.
+Generated from the current working tree on 2026-04-10 21:59:58.
 
 - Files: 1
 - Entry files: src/features/agents/summary.ts

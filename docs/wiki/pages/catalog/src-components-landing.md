@@ -1,6 +1,6 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-10 21:51:44.
+Generated from the current working tree on 2026-04-10 21:59:58.
 
 - Files: 9
 - File kinds: React/TSX module (9)
@@ -8,7 +8,7 @@ Generated from the current working tree on 2026-04-10 21:51:44.
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
 ## `src/components/landing/contact-form.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
@@ -36,7 +36,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Lines: 298
-- Bytes: 13257
+- Bytes: 13398
 - Imports (internal): docs/screenshots/campaign-desktop.png, docs/screenshots/campaign-mobile-viewport.png
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
@@ -45,8 +45,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: LandingCredibility
-- Symbol details: function LandingCredibility (exported), const FEATURED_VISUALS, const PARTNER_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const DON_OMAR_METRICS
-- Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, DON_OMAR_METRICS
+- Symbol details: function LandingCredibility (exported), const FEATURED_VISUALS, const PARTNER_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const TOUR_METRICS
+- Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, TOUR_METRICS
 - Contents summary: exports: LandingCredibility; internal imports: 2; package imports: 2
 
 ## `src/components/landing/faq.tsx`
@@ -75,8 +75,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 146
-- Bytes: 6387
+- Lines: 149
+- Bytes: 6574
 - Imports (internal): docs/screenshots/campaign-mobile-creatives.png
 - Imports (packages): next/image, lucide-react
 - Imported by: src/app/landing/page.tsx
@@ -112,7 +112,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module
 - Lines: 142
-- Bytes: 7285
+- Bytes: 7306
 - Imports (internal): docs/screenshots/campaign-mobile-viewport.png
 - Imports (packages): next/image
 - Imported by: src/app/landing/page.tsx

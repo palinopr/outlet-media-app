@@ -1,5 +1,11 @@
 # Repo Wiki Log
 
+## [2026-04-10] landing | remove public customer metrics from landing proof
+- Scrubbed exact customer metrics from the public `/landing` page after deciding that client numbers should not be exposed on the marketing surface.
+- Updated `src/components/landing/hero.tsx`, `src/components/landing/credibility.tsx`, and `src/components/landing/features.tsx` to replace exact tickets / ROAS / revenue figures with qualitative proof language and generalized operator-facing labels.
+- Soft-obscured the imported portal screenshots with stronger blur/overlay treatment so the product shape is still visible without showing sensitive customer numbers directly on the page.
+- Updated the landing metadata copy to avoid leaning on client-specific quantified claims.
+
 ## [2026-04-10] landing | add subtle motion and founder-led final polish
 - Ran a final landing polish pass focused on motion, composition, and sharper positioning voice.
 - Updated `src/app/landing/page.tsx` so desktop feels more editorial instead of two evenly stacked panels:

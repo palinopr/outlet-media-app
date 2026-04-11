@@ -1,6 +1,6 @@
 # Agent runtime lifecycle
 
-Generated from the current working tree on 2026-04-10 21:51:44.
+Generated from the current working tree on 2026-04-10 21:59:58.
 
 Files and DB objects involved in queued agent work, runtime heartbeat, alerts, and runtime state.
 
@@ -12,7 +12,7 @@ Files and DB objects involved in queued agent work, runtime heartbeat, alerts, a
 - Tests: __tests__/api/agents-heartbeat.test.ts, __tests__/api/agents-jobs.test.ts, __tests__/api/agents.test.ts, __tests__/api/alerts.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, agent/src/services/queue-service.test.ts, agent/src/services/runtime-state-service.test.ts, agent/src/services/web-task-executor.test.ts
 - Docs: AGENTS.md, docs/context/agent-patterns.md, docs/context/architecture-reset.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-admin-activity-tracking-plan.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/superpowers/plans/2026-03-10-agent-code-quality-10-10.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md, … (+6 more)
 - Behavior signals: client component/module (4), server action/module (2), calls redirect() (1), calls notFound() (1), calls revalidatePath() (1), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1)
-- Auth signals: references membership/scope access concepts (7), imports Clerk server auth (4), calls currentUser() (2), calls auth() (2), contains explicit access/role guard helper usage (1)
+- Auth signals: references membership/scope access concepts (7), imports Clerk server auth (4), calls auth() (2), calls currentUser() (2), contains explicit access/role guard helper usage (1)
 
 ## Database objects
 

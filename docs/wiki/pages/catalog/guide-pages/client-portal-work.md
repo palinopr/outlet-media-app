@@ -1,6 +1,6 @@
 # Start here: client portal work
 
-Generated from the current working tree on 2026-04-10 21:51:44.
+Generated from the current working tree on 2026-04-10 21:59:58.
 
 Recommended read order for someone changing client portal routing, access, campaign/event pages, reports, or the client agent surface.
 
@@ -22,4 +22,4 @@ Recommended read order for someone changing client portal routing, access, campa
 
 ## Signals seen in this area
 - Auth signals: imports Clerk server auth (42), references membership/scope access concepts (38), calls currentUser() (18), calls auth() (9), contains explicit access/role guard helper usage (1)
-- Behavior signals: client component/module (49), server action/module (11), calls redirect() (10), calls revalidatePath() (8), defines generateMetadata (6), calls notFound() (6), sets dynamic rendering mode (3), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: client component/module (49), server action/module (11), calls redirect() (10), calls revalidatePath() (8), calls notFound() (6), defines generateMetadata (6), sets dynamic rendering mode (3), calls revalidateTag() (1), calls unstable_noStore() (1)

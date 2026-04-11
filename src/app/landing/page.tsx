@@ -16,11 +16,11 @@ const landingFont = Space_Grotesk({
 export const metadata: Metadata = {
   title: "Agenda tu auditoría | Outlet Media",
   description:
-    "Paid media, reporting live y portal con agente para operadores que necesitan ver qué mueve revenue. Sin agency blackout.",
+    "Paid media, reporting live y portal con agente para operadores que necesitan ver que mueve revenue. Sin agency blackout.",
   openGraph: {
     title: "Agenda tu auditoría | Outlet Media",
     description:
-      "Paid media, reporting live y portal con agente para operadores que necesitan ver qué mueve revenue.",
+      "Paid media, reporting live y portal con agente para operadores que necesitan ver que mueve revenue.",
     images: [{ url: "/icon.png", width: 512, height: 512 }],
   },
   robots: { index: true, follow: true },

@@ -1,6 +1,6 @@
 # Reporting-from-shared-backbone rules
 
-Generated from the current working tree on 2026-04-10 21:51:44.
+Generated from the current working tree on 2026-04-10 21:59:58.
 
 Files and DB objects that appear to connect reports and dashboards back to shared workflow, event, and snapshot data instead of isolated summary-only state.
 

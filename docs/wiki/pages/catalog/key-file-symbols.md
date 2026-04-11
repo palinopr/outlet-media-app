@@ -1,6 +1,6 @@
 # Key File Symbol Map
 
-Generated from the current working tree on 2026-04-10 21:51:44.
+Generated from the current working tree on 2026-04-10 21:59:58.
 
 This page highlights key code files and lists their exported symbols, top-level definitions, and route/test ownership links.
 
@@ -2594,8 +2594,8 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Type: React/TSX module
 - Ownership: landing page UI components
 - Exports: LandingCredibility
-- Symbol details: function LandingCredibility (exported), const FEATURED_VISUALS, const PARTNER_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const DON_OMAR_METRICS
-- Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, DON_OMAR_METRICS
+- Symbol details: function LandingCredibility (exported), const FEATURED_VISUALS, const PARTNER_ITEMS, const DIFFERENTIATORS, const QUICK_WINS, const PORTAL_METRICS, const TOUR_METRICS
+- Defines: LandingCredibility, FEATURED_VISUALS, PARTNER_ITEMS, DIFFERENTIATORS, QUICK_WINS, PORTAL_METRICS, TOUR_METRICS
 - Imported by: src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
 - Contents summary: exports: LandingCredibility; internal imports: 2; package imports: 2

@@ -1,6 +1,6 @@
 # src/features / invitations
 
-Generated from the current working tree on 2026-04-10 21:51:44.
+Generated from the current working tree on 2026-04-10 21:59:58.
 
 - Files: 4
 - File kinds: TypeScript module (3), test file (1)

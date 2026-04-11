@@ -1,6 +1,6 @@
 # Client agent conversation lifecycle
 
-Generated from the current working tree on 2026-04-10 21:51:44.
+Generated from the current working tree on 2026-04-10 21:59:58.
 
 Files and DB objects involved in client-agent threads, messages, runtime responses, and client agent UI/API routes.
 

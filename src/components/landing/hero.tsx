@@ -2,15 +2,15 @@ import campaignMobileViewport from "../../../docs/screenshots/campaign-mobile-vi
 import Image from "next/image";
 
 const PROOF_PILLS = [
-  "Don Omar BCN 30,052 boletos",
-  "KYBBA $12.0K tracked",
+  "Tours + events",
+  "Portal reporting live",
   "Portal con agente",
 ] as const;
 
 const HERO_STATS = [
-  { value: "30,052", label: "Don Omar BCN tickets" },
-  { value: "2.8x", label: "KYBBA portal ROAS" },
-  { value: "4.7x", label: "Top creative ROAS" },
+  { value: "Live", label: "reporting" },
+  { value: "Shared", label: "client context" },
+  { value: "Clear", label: "next moves" },
 ] as const;
 
 export function LandingHero() {
@@ -34,11 +34,11 @@ export function LandingHero() {
           Founder-led performance system
         </p>
         <h1 className="mx-auto mt-4 max-w-[12ch] text-[2.15rem] font-bold leading-[0.92] tracking-[-0.06em] text-white sm:text-[3rem]">
-          No necesitas otra agencia. Necesitas ver qué mueve revenue.
+          No necesitas mas reporting. Necesitas ver que mueve revenue.
         </h1>
         <p className="mx-auto mt-3.5 max-w-[19rem] text-[14px] leading-6 text-slate-300 sm:max-w-[22rem] sm:text-[15px] sm:leading-7">
-          Corremos paid media, abrimos la data y dejamos a cliente y equipo viendo el mismo
-          sistema para decidir más rápido.
+          Paid media, dashboards live y un portal con agente que responde sobre campanas,
+          eventos, creativos y proximos pasos usando tu data real.
         </p>
 
         <div className="mt-5 flex flex-wrap justify-center gap-2">
@@ -88,13 +88,13 @@ export function LandingHero() {
 
               <div className="absolute bottom-3 left-3 max-w-[9.75rem] rounded-[20px] border border-white/10 bg-[#081220]/88 p-3 text-left backdrop-blur-md">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8fd4ff]">
-                  Don Omar BCN
+                  Tour + events
                 </p>
-                <p className="mt-1 text-[1.65rem] font-bold leading-none tracking-tight text-white">
-                  30,052
+                <p className="mt-1 text-[1.1rem] font-semibold leading-5 text-white">
+                  Shared visibility
                 </p>
                 <p className="mt-1 text-[11px] uppercase tracking-[0.14em] text-slate-300">
-                  tickets sold
+                  media + ticketing
                 </p>
               </div>
 
@@ -105,15 +105,15 @@ export function LandingHero() {
                     alt="Portal KPI preview"
                     fill
                     sizes="160px"
-                    className="object-cover object-top"
+                    className="scale-[1.03] object-cover object-top blur-[2px]"
                   />
-                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.02)_18%,rgba(5,11,19,0.66)_100%)]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,11,19,0.26)_18%,rgba(5,11,19,0.82)_100%)]" />
                 </div>
                 <div className="border-t border-white/10 px-2.5 py-2 text-left">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-300">
-                    KYBBA portal
+                    Portal preview
                   </p>
-                  <p className="mt-1 text-sm font-semibold text-white">2.8x ROAS</p>
+                  <p className="mt-1 text-sm font-semibold text-white">Live reporting</p>
                 </div>
               </div>
             </div>

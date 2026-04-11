@@ -1,6 +1,6 @@
 # Table: campaign_action_items
 
-Generated from the current working tree on 2026-04-10 21:51:44.
+Generated from the current working tree on 2026-04-10 21:59:58.
 
 - Category: Campaign / event / asset workflow
 - Kinds: table
