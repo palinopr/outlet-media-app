@@ -102,23 +102,53 @@ interface RawDailyInsight extends RawInsight {
 async function loadCampaignTypes(): Promise<Map<string, string>> {
   const types = new Map<string, string>();
   if (!supabaseAdmin) return types;
-  const { data } = await supabaseAdmin
-    .from("meta_campaigns")
-    .select("campaign_id, campaign_type");
-  if (data) {
-    for (const row of data) {
-      if (row.campaign_type) types.set(row.campaign_id, row.campaign_type);
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("meta_campaigns")
+      .select("campaign_id, campaign_type");
+
+    if (error) {
+      console.error("[meta-campaigns] campaign type read failed:", error.message);
+      return types;
     }
+
+    if (data) {
+      for (const row of data) {
+        if (row.campaign_type) types.set(row.campaign_id, row.campaign_type);
+      }
+    }
+  } catch (err) {
+    console.error(
+      "[meta-campaigns] campaign type read failed:",
+      err instanceof Error ? err.message : err,
+    );
   }
+
   return types;
 }
 
 async function loadAllClientSlugs(): Promise<string[]> {
   if (!supabaseAdmin) return [];
-  const { data } = await supabaseAdmin
-    .from("clients")
-    .select("slug");
-  return data?.map((r) => r.slug).filter(Boolean) ?? [];
+
+  try {
+    const { data, error } = await supabaseAdmin
+      .from("clients")
+      .select("slug");
+
+    if (error) {
+      console.error("[meta-campaigns] client slug read failed:", error.message);
+      return [];
+    }
+
+    return data?.map((r) => r.slug).filter(Boolean) ?? [];
+  } catch (err) {
+    console.error(
+      "[meta-campaigns] client slug read failed:",
+      err instanceof Error ? err.message : err,
+    );
+    return [];
+  }
 }
 
 function safeParseFloat(s: string | null | undefined): number | null {

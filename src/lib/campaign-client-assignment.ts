@@ -32,7 +32,10 @@ export async function getCampaignClientOverrideMap(
   }
 
   const { data, error } = await query;
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[campaign-client-assignment] override read failed:", error.message);
+    return overrides;
+  }
 
   for (const row of data ?? []) {
     if (row.campaign_id && row.client_slug) {
