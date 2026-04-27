@@ -59,6 +59,19 @@ export default async function ClientLayout({ children, params }: Props) {
 
     const isAdmin = meta.role === "admin";
 
+    // Clerk invitations carry client metadata before the client_members row
+    // exists. Create the durable membership before the access check so the
+    // first post-password visit can enter the portal instead of dead-ending.
+    if (!isAdmin && meta.client_slug === slug && supabaseAdmin && portalConfig?.clientId) {
+      const enrollRole = meta.client_role === "owner" ? "owner" : "member";
+      await supabaseAdmin
+        .from("client_members")
+        .upsert(
+          { client_id: portalConfig.clientId, clerk_user_id: userId, role: enrollRole },
+          { onConflict: "client_id,clerk_user_id" }
+        );
+    }
+
     if (!isAdmin) {
       // Check access via client_members table (supports multi-client)
       const access = await getMemberAccessForSlug(userId, slug);
@@ -89,17 +102,6 @@ export default async function ClientLayout({ children, params }: Props) {
     }
 
     needsName = !isAdmin && (!user?.firstName || !user?.lastName);
-
-    // Auto-enroll: ensure client_members row exists for invited users
-    if (!isAdmin && supabaseAdmin && portalConfig?.clientId) {
-      const enrollRole = meta.client_role === "owner" ? "owner" : "member";
-      await supabaseAdmin
-        .from("client_members")
-        .upsert(
-          { client_id: portalConfig.clientId, clerk_user_id: userId, role: enrollRole },
-          { onConflict: "client_id,clerk_user_id" }
-        );
-    }
   }
 
   const clientName = slugToLabel(slug);

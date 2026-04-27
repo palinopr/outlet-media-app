@@ -118,10 +118,10 @@ export const AgentPostSchema = z.object({
 // ─── Admin schemas ──────────────────────────────────────────────────────────
 
 export const InviteSchema = z.object({
-  email: z.string().email(),
-  client_slug: z.string().optional(),
+  email: z.string().trim().toLowerCase().email(),
+  client_slug: z.string().regex(/^[a-z0-9_]+$/).optional(),
   client_role: z.enum(["owner", "member"]).optional(),
-  role: z.string().optional(),
+  role: z.enum(["admin"]).optional(),
 });
 
 // ─── Client management schemas ──────────────────────────────────────────────
