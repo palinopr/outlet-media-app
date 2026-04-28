@@ -1,4 +1,4 @@
-import { SignOutButton } from "@clerk/nextjs";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function PendingPage() {
@@ -14,11 +14,9 @@ export default function PendingPage() {
           invite. If you still land here after accepting the invite, your portal
           access has not finished syncing yet.
         </p>
-        <SignOutButton>
-          <Button variant="outline" size="sm">
-            Sign Out
-          </Button>
-        </SignOutButton>
+        <Button asChild variant="outline" size="sm">
+          <Link href="/sign-in">Sign in again</Link>
+        </Button>
       </div>
     </div>
   );
