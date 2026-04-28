@@ -7,6 +7,7 @@ import {
   CreateAssetCommentSchema,
   CreateCampaignCommentSchema,
   CreateEventCommentSchema,
+  ContactFormSchema,
   InviteSchema,
   VALID_AGENTS,
 } from "@/lib/api-schemas";
@@ -147,6 +148,26 @@ describe("AgentPostSchema", () => {
   it("rejects prompt over 10000 chars", () => {
     const result = AgentPostSchema.safeParse({ agent: "tm-monitor", prompt: "x".repeat(10001) });
     expect(result.success).toBe(false);
+  });
+});
+
+// ─── ContactFormSchema ─────────────────────────────────────────────────────
+
+describe("ContactFormSchema", () => {
+  it("accepts the mobile fallback audit form payload", () => {
+    const result = ContactFormSchema.safeParse({
+      name: "Jaime Ortiz",
+      phone: "+1 305 322 5709",
+      email: "jaime@example.com",
+      company: "Outlet Live",
+      monthlyBudget: "$5K — $20K",
+      goal: "Sell more tickets next week",
+      preferredContact: "WhatsApp",
+      pageContext: "landing-audit-funnel",
+      message: "Fallback audit request from the Outlet Media landing funnel.",
+    });
+
+    expect(result.success).toBe(true);
   });
 });
 

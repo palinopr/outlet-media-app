@@ -1,0 +1,256 @@
+<!--
+OUTLET MEDIA — CAMPAIGN REPORT TEMPLATE
+=========================================
+Template for client-facing campaign performance reports.
+
+Brand colors:
+  - Background:  #000000 (black)
+  - Accent 1:    #23ffa9 (green)
+  - Accent 2:    #1b25b2 (blue)
+
+Layout: 11in x 8.5in landscape, 1 page, page-by-page format.
+
+Variables to replace per report:
+  {{CAMPAIGN_NAME}}     e.g. "Chris R - 05/22"
+  {{DATE_RANGE}}        e.g. "Mar 31 - Apr 20, 2026"
+  {{DAYS_RUNNING}}      e.g. "20 days"
+
+  KEY METRIC (hero):
+  {{ROAS}}              e.g. "3.36x"
+  {{ROAS_LABEL}}        e.g. "Return on Ad Spend"
+
+  PERFORMANCE GRID (6 metrics):
+  {{SPEND}}             e.g. "$982.13"
+  {{REVENUE}}           e.g. "$3,297.01"
+  {{PURCHASES}}         e.g. "29"
+  {{IMPRESSIONS}}       e.g. "137,506"
+  {{CLICKS}}            e.g. "2,954"
+  {{CTR}}               e.g. "2.15%"
+
+  BUDGET:
+  {{BUDGET_TOTAL}}      e.g. "$2,000.00"
+  {{BUDGET_SPENT}}      e.g. "$982.13"
+  {{BUDGET_REMAINING}}  e.g. "$1,017.87"
+  {{BUDGET_PCT}}        e.g. "49"  (percentage spent, used for progress bar width)
+  {{CC_FEE}}            e.g. "$74.75"
+
+  HIGHLIGHTS (3 short bullets, optional):
+  {{HIGHLIGHT_1}}
+  {{HIGHLIGHT_2}}
+  {{HIGHLIGHT_3}}
+-->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { size: 11in 8.5in; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background: #000; color: #fff; }
+
+  .page {
+    width: 11in; height: 8.5in;
+    padding: 0.55in 0.7in;
+    position: relative;
+    overflow: hidden;
+    background: #000;
+    display: flex; flex-direction: column;
+  }
+  .page::before {
+    content: ''; position: absolute; left: 0; top: 0.9in; bottom: 0.9in;
+    width: 3px; background: linear-gradient(180deg, #1b25b2, #23ffa9);
+    border-radius: 2px;
+  }
+
+  /* Header */
+  .header { display: flex; justify-content: space-between; align-items: center; }
+  .logo { font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; color: #23ffa9; }
+  .tag { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.35); }
+
+  /* Title block */
+  .title-block { margin-top: 0.25in; margin-bottom: 0.2in; }
+  .kicker { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: #23ffa9; font-weight: 700; margin-bottom: 8px; }
+  .title { font-size: 28px; font-weight: 800; color: #fff; line-height: 1.15; }
+  .subtitle { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 6px; letter-spacing: 0.5px; }
+
+  /* Hero ROAS + Highlights row */
+  .hero-row { display: flex; gap: 0.3in; margin-bottom: 0.2in; }
+  .hero-roas {
+    background: linear-gradient(135deg, #1b25b2, #0d1466);
+    border-radius: 10px;
+    padding: 0.25in 0.35in;
+    width: 3.4in;
+    display: flex; flex-direction: column; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .hero-roas::before {
+    content: ''; position: absolute; top: -30px; right: -30px;
+    width: 120px; height: 120px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(35,255,169,0.2), transparent 70%);
+  }
+  .hero-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #23ffa9; font-weight: 700; margin-bottom: 4px; }
+  .hero-value { font-size: 56px; font-weight: 800; color: #fff; line-height: 1; }
+  .hero-sub { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+
+  .highlights {
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 0.2in 0.3in;
+  }
+  .highlights-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #23ffa9; font-weight: 700; margin-bottom: 8px; }
+  .highlights ul { list-style: none; }
+  .highlights li {
+    font-size: 11.5px; color: rgba(255,255,255,0.7); line-height: 1.5;
+    padding-left: 14px; position: relative; margin-bottom: 4px;
+  }
+  .highlights li::before {
+    content: ''; position: absolute; left: 0; top: 7px;
+    width: 5px; height: 5px; border-radius: 50%; background: #23ffa9;
+  }
+
+  /* Performance grid */
+  .section-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.4); font-weight: 700; margin-bottom: 8px; }
+
+  .perf-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.12in; margin-bottom: 0.2in; }
+  .perf-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 0.2in 0.18in;
+    position: relative;
+  }
+  .perf-card::before {
+    content: ''; position: absolute; top: 0; left: 12px; right: 12px; height: 2px;
+    background: linear-gradient(90deg, #1b25b2, #23ffa9);
+  }
+  .perf-label { font-size: 8.5px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); font-weight: 600; margin-bottom: 6px; }
+  .perf-value { font-size: 19px; font-weight: 800; color: #fff; line-height: 1.1; }
+
+  /* Budget section */
+  .budget-section {
+    margin-top: auto;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 0.25in 0.3in;
+    display: flex; gap: 0.3in; align-items: stretch;
+  }
+  .budget-main { flex: 1; }
+  .budget-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .budget-title { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: #23ffa9; font-weight: 700; }
+  .budget-totals { font-size: 11px; color: rgba(255,255,255,0.6); }
+  .budget-totals strong { color: #fff; font-weight: 700; }
+
+  .budget-bar {
+    height: 14px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 7px;
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 8px;
+  }
+  .budget-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1b25b2, #23ffa9);
+    border-radius: 7px;
+  }
+  .budget-stats { display: flex; justify-content: space-between; }
+  .budget-stat { display: flex; flex-direction: column; }
+  .budget-stat-label { font-size: 8.5px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); font-weight: 600; margin-bottom: 2px; }
+  .budget-stat-value { font-size: 16px; font-weight: 800; color: #fff; }
+  .budget-stat-value.green { color: #23ffa9; }
+
+  .budget-fee {
+    width: 1.6in;
+    border-left: 1px solid rgba(255,255,255,0.08);
+    padding-left: 0.25in;
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .budget-fee-label { font-size: 8.5px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.45); font-weight: 600; margin-bottom: 4px; }
+  .budget-fee-value { font-size: 18px; font-weight: 800; color: #fff; }
+  .budget-fee-sub { font-size: 9px; color: rgba(255,255,255,0.4); margin-top: 4px; line-height: 1.4; }
+
+  /* Footer */
+  .footer { display: flex; justify-content: space-between; align-items: center; margin-top: 0.15in; }
+  .footer span { font-size: 8.5px; color: rgba(255,255,255,0.25); letter-spacing: 1px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="header">
+    <div class="logo">Outlet Media</div>
+    <div class="tag">Campaign Performance Report</div>
+  </div>
+
+  <div class="title-block">
+    <div class="kicker">Reporte de Campaña &bull; {{DATE_RANGE}}</div>
+    <h1 class="title">{{CAMPAIGN_NAME}}</h1>
+    <div class="subtitle">{{DAYS_RUNNING}} en aire &nbsp;&bull;&nbsp; Meta Ads</div>
+  </div>
+
+  <div class="hero-row">
+    <div class="hero-roas">
+      <div class="hero-label">{{ROAS_LABEL}}</div>
+      <div class="hero-value">{{ROAS}}</div>
+      <div class="hero-sub">Por cada $1 invertido</div>
+    </div>
+    <div class="highlights">
+      <div class="highlights-label">Highlights</div>
+      <ul>
+        <li>{{HIGHLIGHT_1}}</li>
+        <li>{{HIGHLIGHT_2}}</li>
+        <li>{{HIGHLIGHT_3}}</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section-label">Performance</div>
+  <div class="perf-grid">
+    <div class="perf-card"><div class="perf-label">Inversión</div><div class="perf-value">{{SPEND}}</div></div>
+    <div class="perf-card"><div class="perf-label">Revenue</div><div class="perf-value">{{REVENUE}}</div></div>
+    <div class="perf-card"><div class="perf-label">Compras</div><div class="perf-value">{{PURCHASES}}</div></div>
+    <div class="perf-card"><div class="perf-label">Impresiones</div><div class="perf-value">{{IMPRESSIONS}}</div></div>
+    <div class="perf-card"><div class="perf-label">Clicks</div><div class="perf-value">{{CLICKS}}</div></div>
+    <div class="perf-card"><div class="perf-label">CTR</div><div class="perf-value">{{CTR}}</div></div>
+  </div>
+
+  <div class="budget-section">
+    <div class="budget-main">
+      <div class="budget-header">
+        <div class="budget-title">Budget</div>
+        <div class="budget-totals">{{BUDGET_PCT}}% utilizado</div>
+      </div>
+      <div class="budget-bar"><div class="budget-bar-fill" style="width: {{BUDGET_PCT}}%;"></div></div>
+      <div class="budget-stats">
+        <div class="budget-stat">
+          <div class="budget-stat-label">Total</div>
+          <div class="budget-stat-value">{{BUDGET_TOTAL}}</div>
+        </div>
+        <div class="budget-stat">
+          <div class="budget-stat-label">Gastado</div>
+          <div class="budget-stat-value">{{BUDGET_SPENT}}</div>
+        </div>
+        <div class="budget-stat">
+          <div class="budget-stat-label">Restante</div>
+          <div class="budget-stat-value green">{{BUDGET_REMAINING}}</div>
+        </div>
+      </div>
+    </div>
+    <div class="budget-fee">
+      <div class="budget-fee-label">Fee Tarjeta de Crédito</div>
+      <div class="budget-fee-value">{{CC_FEE}}</div>
+      <div class="budget-fee-sub">Cargo procesamiento</div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>OUTLET MEDIA &bull; CONFIDENCIAL</span>
+    <span>outletmedia.net</span>
+  </div>
+</div>
+
+</body>
+</html>

@@ -196,6 +196,21 @@
   color: oklch(0.75 0 0);
 }
 
+.landing-gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #8fd4ff 50%, #1f5eff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.landing-glass-card {
+  background:
+    radial-gradient(ellipse at top, rgba(31, 94, 255, 0.06), transparent 50%),
+    rgba(255, 255, 255, 0.015);
+  backdrop-filter: blur(1px);
+}
+
 @keyframes landing-float-soft {
   0%,
   100% {
@@ -330,4 +345,97 @@
   .gradient-bar {
     background: #4f46e5 !important;
   }
+}
+
+/* Landing ROI calculator slider */
+.landing-roi-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  outline: none;
+  cursor: pointer;
+}
+.landing-roi-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 3px solid #1e1fb8;
+  box-shadow: 0 6px 16px -4px rgba(30, 31, 184, 0.6);
+  cursor: grab;
+  transition: transform 0.1s;
+}
+.landing-roi-slider::-webkit-slider-thumb:active {
+  transform: scale(1.1);
+  cursor: grabbing;
+}
+.landing-roi-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 3px solid #1e1fb8;
+  box-shadow: 0 6px 16px -4px rgba(30, 31, 184, 0.6);
+  cursor: grab;
+}
+
+/* Marquee keyframes for magicui Marquee component */
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-100% - var(--gap)));
+  }
+}
+@keyframes marquee-vertical {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(calc(-100% - var(--gap)));
+  }
+}
+.animate-marquee {
+  animation: marquee var(--duration) linear infinite;
+}
+.animate-marquee-vertical {
+  animation: marquee-vertical var(--duration) linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .animate-marquee-vertical {
+    animation: none;
+  }
+}
+
+/* Shiny text shimmer */
+@keyframes shiny-text {
+  0%, 90%, 100% {
+    background-position: calc(-100% - var(--shiny-width)) 0;
+  }
+  30%, 60% {
+    background-position: calc(100% + var(--shiny-width)) 0;
+  }
+}
+.animate-shiny-text {
+  animation: shiny-text 6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-shiny-text {
+    animation: none;
+  }
+}
+
+/* Hide horizontal scrollbar on landing artist slider */
+.landing-hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.landing-hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }

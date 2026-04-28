@@ -162,6 +162,30 @@ Do not create disconnected versions of the same workflow. Web and Discord work s
 - Prefer storing durable project context in repo docs rather than relying on transient conversation history.
 - Treat `docs/plans/` and `docs/screenshots/` as historical reference, not current truth.
 
+## Wiki Maintenance
+
+The repo has a persistent LLM-maintained wiki at `docs/wiki/`. The wiki compiles repo understanding into structured, interlinked pages so future sessions start with context instead of re-deriving it.
+
+### Read first
+- At the start of any session that involves code changes, read `docs/wiki/index.md` to orient.
+- Before touching an unfamiliar area, check the relevant catalog page (route profiles, feature profiles, etc.) before reading raw source.
+- The wiki is a compiled understanding layer, not the source of truth. When wiki and code disagree, trust the code and update the wiki.
+
+### Update after work
+- After completing a meaningful slice of work (feature, fix, refactor), append a dated entry to `docs/wiki/log.md` summarizing what changed and why.
+- Log entries should be concise (3-8 lines). Focus on structural changes, new files, removed files, and decisions -- not cosmetic edits.
+- If the work added/removed routes, features, tables, or major files, update the relevant overview or inventory pages in `docs/wiki/pages/`.
+- If the work was purely cosmetic or iterative on an existing surface, a log entry alone is sufficient.
+
+### Full catalog regeneration
+- Run `python3 docs/wiki/tools/generate_repo_catalog.py` only after structural changes (new routes, new feature modules, new tables, major file reorganization).
+- Do not run the generator after every commit. It is a full repo scan and the output diff is large.
+
+### What not to put in the wiki
+- Ephemeral task state, conversation context, or in-progress plans.
+- Exact code snippets that will drift. Describe what a file does and why, not its line-by-line contents.
+- Debug logs, test output, or session artifacts.
+
 ## Repo Organization Rules
 
 - Treat the repo as two first-class systems: `src/` for web and `agent/` for the active Discord/autonomous runtime.

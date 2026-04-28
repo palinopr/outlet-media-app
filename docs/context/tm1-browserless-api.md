@@ -11,6 +11,13 @@ Use this note when building TM1 automation that should not depend on a foregroun
 - For TM1-only reporting and seat-map operations, use a server-side HTTP client against the TM1 internal endpoints instead of AppleScript or browser driving:
   - `caui` for analytics/reporting reads
   - `eventbase` (`/api/events/...`) for inventory layout and move-selection writes
+- For buyer-geo reporting, the browserless CAUI location read is:
+  - `GET /api/prd119/api/caui/v1/sales/locations/statistics?eventGlobalIds=<tm1_public_global_id>`
+- Important id rule for that geo endpoint:
+  - it expects the TM1 public/global event id like `vv1AeZkozGkdO8RJs`
+  - it does **not** accept the surrogate reporting id like `4328284920683167746`
+  - it does **not** accept the eventbase UUID either
+- So standard reporting endpoints and the location-statistics endpoint do **not** all use the same event identifier shape
 
 ## Why
 

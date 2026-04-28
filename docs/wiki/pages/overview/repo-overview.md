@@ -1,7 +1,7 @@
 ---
 title: Repo Overview
 status: active
-updated: 2026-04-10
+updated: 2026-04-13
 ---
 
 # Repo Overview
@@ -29,7 +29,20 @@ The web app uses:
 
 Current shipped shape worth noting:
 - client navigation is already narrowed to campaigns, reports, events, and optional agent
-- client campaign detail now mixes analytics with the shared operating loop panels for approvals, discussion, next steps, agent follow-through, and recent activity instead of acting as a charts-only page
+- client campaign and event detail pages now combine analytics with operating loop panels for approvals, discussion, next steps, agent follow-through, and recent activity
+- client surfaces are request-first: workflow blocks only render when the underlying data exists, avoiding empty shells
+- admin campaign and event detail pages now include client request tabs so admins can view, reply to, and resolve client request threads in context
+- event comments API (`src/app/api/event-comments/route.ts`) supports GET/POST/PATCH for shared discussion and resolve/reopen
+- public `/landing` page is a Spanish-language audit intake funnel with illustrative sample metrics, not real client data
+
+### New files since last catalog generation (Apr 10)
+- `src/app/api/event-comments/route.ts` — event comment API
+- `src/features/event-comments/server.ts` — shared event comment reader
+- `src/features/events/client-operating.ts` — client event workflow loader
+- `src/app/client/[slug]/components/event-operating-panel.tsx` — client event operating panel
+- `src/app/client/[slug]/components/event-discussion-form.tsx` — client event comment composer
+- `src/components/admin/client-requests-panel.tsx` — shared admin request panel for campaign/event detail
+- `src/components/landing/sample-metric-card.tsx` — designed metric cards for landing page
 
 ### Agent
 The agent docs describe a simplified single-runtime system:

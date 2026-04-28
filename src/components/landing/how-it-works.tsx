@@ -1,56 +1,60 @@
-import { BarChart3, Search, Sparkles } from "lucide-react";
+"use client";
+
+import { motion } from "framer-motion";
 
 const STEPS = [
   {
-    title: "1. La Auditoría",
-    description: "Encontramos las fugas de dinero en tus ads actuales.",
-    icon: Search,
+    label: "1",
+    title: "Mandas tus números",
+    body: "Compartes tu cuenta, negocio y objetivo principal.",
   },
   {
-    title: "2. La Estrategia",
-    description: "Diseñamos el ángulo creativo y el funnel de conversión.",
-    icon: Sparkles,
+    label: "2",
+    title: "Auditamos en 24h",
+    body: "Revisamos campañas, anuncios, audiencias, presupuesto y rendimiento real.",
   },
   {
-    title: "3. Escalamiento",
-    description: "Lanzamos con reporting live, approvals visibles y follow-through claro.",
-    icon: BarChart3,
+    label: "3",
+    title: "Te decimos qué hacer",
+    body: "Recibes un plan claro con acciones específicas para mejorar resultados desde mañana.",
   },
 ] as const;
 
 export function LandingHowItWorks() {
   return (
-    <section className="border-b border-white/8 px-5 py-7 text-white sm:px-6">
-      <p className="text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-        Así operamos
+    <motion.section
+      className="mt-16 lg:mt-24"
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.5 }}
+    >
+      <p className="text-center font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.22em] text-[color:var(--landing-brand-soft)]">
+        Cómo funciona
       </p>
-      <h2 className="mt-3 text-center text-[1.95rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.1rem]">
-        Tres movimientos. Cero teatro.
+      <h2 className="mt-3 text-center font-[family-name:var(--font-landing-heading)] text-[2.25rem] font-extrabold tracking-[-0.035em] text-white lg:text-[3rem]">
+        3 pasos. Tú decides si seguimos.
       </h2>
-      <p className="mx-auto mt-3 max-w-[18rem] text-center text-[14px] leading-6 text-slate-300 sm:max-w-[20rem] sm:text-[15px]">
-        Auditamos rápido, definimos el ángulo y dejamos la operación visible desde el primer día.
-      </p>
-      <div className="mt-7 space-y-8">
-        {STEPS.map((step, index) => {
-          const Icon = step.icon;
-          return (
-            <div key={step.title} className="relative text-center">
-              {index !== STEPS.length - 1 ? (
-                <div className="absolute left-1/2 top-12 h-[4.5rem] w-px -translate-x-1/2 bg-gradient-to-b from-[#1f5eff] via-[#61c0ff] to-transparent" />
-              ) : null}
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[#1f5eff]/30 bg-[#0c1c33] text-[#61c0ff] shadow-[0_0_0_1px_rgba(31,94,255,0.08)]">
-                <Icon className="size-5" />
-              </div>
-              <h3 className="mt-3 text-[1.45rem] font-semibold leading-[1.05] text-white sm:text-[1.6rem]">
+      <div className="mt-8 grid gap-4 lg:grid-cols-3 lg:gap-7">
+        {STEPS.map((step) => (
+          <div
+            key={step.label}
+            className="flex gap-4 border-l border-[color:var(--landing-border)] py-2 pl-4 lg:block lg:border-l-0 lg:border-t lg:py-0 lg:pt-6"
+          >
+            <p className="flex size-9 shrink-0 items-center justify-center rounded-full bg-[color:var(--landing-brand)]/25 font-[family-name:var(--font-landing-heading)] text-[16px] font-extrabold text-white shadow-[0_0_34px_-10px_rgba(30,31,184,0.9)] lg:size-auto lg:justify-start lg:rounded-none lg:bg-transparent lg:font-[family-name:var(--font-landing-mono)] lg:text-[13px] lg:font-normal lg:tracking-[0.18em] lg:text-[color:var(--landing-brand-soft)] lg:shadow-none">
+              {step.label}
+            </p>
+            <div>
+              <h3 className="font-[family-name:var(--font-landing-heading)] text-[1.25rem] font-bold tracking-[-0.02em] text-white lg:mt-3.5 lg:text-[1.35rem]">
                 {step.title}
               </h3>
-              <p className="mx-auto mt-2 max-w-[15rem] text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
-                {step.description}
+              <p className="mt-2 text-[14px] leading-relaxed text-[color:var(--landing-muted)]">
+                {step.body}
               </p>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
-    </section>
+    </motion.section>
   );
 }

@@ -127,6 +127,16 @@ The main catalog should answer:
 
 If deeper evaluation is needed, keep it in separate secondary pages instead of mixing judgment into the file catalog.
 
+## Integration with Claude Code
+
+The root `AGENTS.md` contains a "Wiki Maintenance" section that instructs Claude Code to:
+- Read `docs/wiki/index.md` at the start of sessions involving code changes
+- Append to `log.md` after completing meaningful work
+- Update overview/inventory pages when structure changes
+- Run the full catalog generator only after structural changes
+
+This wiki schema and those root instructions should stay aligned. If you update the workflow here, update the root `AGENTS.md` section too.
+
 ## Writing style
 
 Be concise and factual.

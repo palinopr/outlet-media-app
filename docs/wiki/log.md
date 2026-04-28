@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-28] landing | mobile-first lead funnel
+- Reworked `/landing` around a mobile-first audit-call funnel: hero, stats, problem, deliverables, proof carousel, booking, fallback form, and FAQ.
+- Made booking the primary CTA with an on-page Cal embed and kept the contact form as a structured fallback lead path.
+- Aligned the fallback form payload with `/api/contact` schema keys so submissions validate before reaching Supabase/Resend.
+
 ## [2026-04-27] client-web | actual placement platform icons
 - Replaced text-only placement badges in campaign detail with the shared Facebook and Instagram platform icons.
 - Kept full readable placement names in the Markets & Placements panel so clients can still scan Feed, Stories, and Reels clearly.
@@ -23,16 +28,6 @@
 - Restyled client campaign detail toward the accepted dark Outlet Media mockup: charcoal/navy surfaces, blue-violet chart accents, and green reserved for active/positive signals.
 - Reorganized the campaign detail reporting grid into metric cards, top insight strip, timeline, markets/placements, hourly delivery, creative performance, audience breakdown, and campaign requests.
 - Kept the surface client-safe by avoiding strategy, targeting, interests, internal notes, and invented revenue/ROAS when unavailable.
-
-## [2026-04-27] client-web | visual campaign detail graphs
-- Reworked client campaign detail pages away from strategy/recommendation copy and toward metric-first visual reporting.
-- Added top metric cards, clearer performance snapshot cards, larger timeline placement, and renamed sections for markets, hourly delivery, creative performance, and audience breakdown.
-- Upgraded the performance timeline chart into metric toggles for Spend, Clicks, Impressions, CTR, CPC, and Revenue when available, with a useful Today single-day state.
-
-## [2026-04-27] client-web | default campaign portal to today
-- Changed client campaign list and detail pages so missing or retired `range=30` URLs resolve to Today by default.
-- Kept 7d, Lifetime, and Custom as explicit client range choices while removing 30d from client detail controls and guidance copy.
-- Added regression coverage for stale 30-day login redirects and assigned new-campaign detail access.
 
 ## [2026-04-27] client-web | campaign range picker and new-campaign detail fallback
 - Changed the client Campaigns page default reporting window to Last 7 Days and added Today, Last 7 Days, Lifetime, and Custom range controls.
@@ -66,6 +61,27 @@
 - Diagnosed campaign list blanks caused by Supabase being unreachable while `fetchAllCampaigns` was reading optional enrichment data.
 - Wrapped campaign overrides, client slugs, and campaign type reads with fallbacks so Meta campaign rows can still render when Supabase is paused or DNS is unavailable.
 - Added `src/lib/meta-campaigns.test.ts` to verify Meta campaigns return even when optional Supabase queries reject.
+
+## [2026-04-13] wiki | catch-up after 21 commits since last update
+- Wiki was generated Apr 10 and not maintained through Apr 10-13 landing and client feature work.
+- Added wiki maintenance rules to root `AGENTS.md` so future Claude Code sessions read the wiki at session start and update it after completing work.
+- Updated this log and `pages/overview/repo-overview.md` to reflect current state.
+
+## [2026-04-10 to 2026-04-13] landing | 15+ iterations on public landing page
+- Rebuilt `/landing` as an audit booking funnel with hero composite, proof sections, FAQ, and premium CTA form.
+- Went through multiple rounds: phone frame shell (added then removed), proof grounded in real wins, art-directed visuals, typography tightening, motion polish, illustrative sample metrics, media-vs-ticketing comparison.
+- Added `src/components/landing/sample-metric-card.tsx` for designed metric cards with sparklines and delta pills.
+- Net result: landing page is a polished Spanish-language audit intake funnel with illustrative metrics, not real client data.
+
+## [2026-04-10] client-web | event operating loop and request-first surfaces
+- Added client event operating loop: `src/app/client/[slug]/components/event-operating-panel.tsx`, `event-discussion-form.tsx`, and shared loader `src/features/events/client-operating.ts`.
+- Added event comments API: `src/app/api/event-comments/route.ts` with GET/POST/PATCH.
+- Added shared event comment reader: `src/features/event-comments/server.ts`.
+- Then simplified both campaign and event client surfaces to request-first UI -- workflow blocks only render when data exists.
+
+## [2026-04-10] admin-web | client request tabs on campaign and event detail
+- Added shared `src/components/admin/client-requests-panel.tsx` so admins can see/reply/resolve client request threads from campaign and event detail pages.
+- Extended event comments route with PATCH for resolve/reopen.
 
 ## [2026-04-10] landing | add media-vs-ticketing comparison section and premium mobile sticky cta
 - Extended the illustrative landing proof system beyond standalone metric cards.

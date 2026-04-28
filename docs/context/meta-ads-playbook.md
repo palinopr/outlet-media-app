@@ -48,10 +48,13 @@ The agent runtime also reads Meta credentials from the parent app env rather tha
 - if a secondary video test is producing views or LPV but not purchases, cap it or pause it before scaling the campaign
 - if a third-party ticketing path like Eventbrite is already firing Meta purchase / LPV events, backend access is not required for first-pass warm retargeting; a website custom audience can still be built from the stable ticket URL token plus purchase exclusion
 - if a low-budget ticket campaign also has a customer-provided spreadsheet that matches the live buyer skew, clean it into an adult deduped customer-list audience and merge it into the existing warm ad set before creating multiple extra CRM ad sets
+- if TM1 or ticketing geo reads show a few far ZIPs or outer markets buying, treat that as directional expansion signal, not automatic proof that cold prospecting should go all-USA; expand in tiers (`core market -> nearest proven spillover -> small capped outer tests`) and require purchase proof before scaling national or out-of-core lines
 - if a vendor delivers `IGP` / `IGS` / `TVH` video variants, prioritize `IGP + IGS` first for Meta paid; hold `TVH` unless a specific horizontal use case exists
 - when creating a placement-split `asset_feed_spec`, keep one shared link URL and use unique body/title asset values per labeled variant or Meta can reject the creative as a duplicate-asset payload
 - freshly uploaded videos may not be ad-ready immediately; wait for the video processing status to be `ready` before creating the ad creative
 - when a new support creative is meant to help an existing winner structure, add it inside the strongest live ad sets before creating overlapping duplicate-audience test ad sets
+- for ad-account readiness checks, use `account_status` plus `funding_source` / `funding_source_details` to judge whether an account is actually available for delivery; Meta's standard ad-account read does not surface a direct billing-threshold field
+- if `funding_source` is missing, ads can still be created but they should not be expected to deliver until a payment method exists
 
 ## CBO spend controls
 
