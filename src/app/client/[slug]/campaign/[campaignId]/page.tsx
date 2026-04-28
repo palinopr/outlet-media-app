@@ -3,21 +3,17 @@ import {
   ArrowLeft,
   BarChart3,
   Calendar,
+  DollarSign,
+  Eye,
+  Gauge,
   Image as ImageIcon,
-  Lightbulb,
+  MousePointerClick,
   Globe2,
   Users,
+  type LucideIcon,
 } from "lucide-react";
 import { parseClientCampaignRange } from "@/lib/constants";
 import { fmtDate, fmtUsd, fmtNum } from "@/lib/formatters";
-import type {
-  AdCard,
-  AgeGenderBreakdown,
-  CampaignCard,
-  DailyPoint,
-  GeographyBreakdown,
-  HourlyBreakdown,
-} from "../../types";
 import { getCampaignDetail } from "./data";
 import { AdsPreview } from "@/components/client/ads-preview";
 import {
@@ -33,7 +29,7 @@ import { requireClientAccess } from "@/features/client-portal/access";
 import { getClientPortalTheme } from "@/features/client-portal/theme";
 import { getClientCampaignOperatingView } from "@/features/campaigns/client-operating";
 import { CampaignOperatingPanel } from "../../components/campaign-operating-panel";
-import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket, roasLabel } from "../../lib";
+import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket } from "../../lib";
 
 interface Props {
   params: Promise<{ slug: string; campaignId: string }>;
@@ -78,7 +74,6 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
     ads,
     hourly,
     daily,
-    recommendations,
     dataSource,
     rangeLabel,
   } = data;
@@ -86,54 +81,55 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const trackedDays = daily.length;
   const totalDailySpend = daily.reduce((sum, row) => sum + row.spend, 0);
   const avgDailySpend = trackedDays > 0 ? totalDailySpend / trackedDays : null;
-  const pacePct =
-    c.dailyBudget != null && avgDailySpend != null && c.dailyBudget > 0
-      ? (avgDailySpend / c.dailyBudget) * 100
-      : null;
   const daysLive = getDaysLive(c.startTime);
-  const hasWindowDelivery = hasMeaningfulCampaignWindow(c, daily);
   const bestDay = findBestDayOfWeek(daily);
   const bestHour = findBestHour(hourly);
   const topCreative = findTopCreative(ads);
   const topMarket = findTopMarket(geography);
-  const topAge = findTopAge(ageGender);
-  const leadingGender = findLeadingGender(ageGender);
-  const brief = buildCampaignBrief({
-    campaign: c,
-    rangeLabel,
-    trackedDays,
-    hasWindowDelivery,
-    pacePct,
-    bestDay,
-    bestHour,
-    topCreative,
-    topMarket,
-  });
 
-  const snapshotCards = [
-    topAge
-      ? {
-          label: "Best Age",
-          value: topAge.age,
-          detail:
-            topAge.ctr != null
-              ? `${topAge.ctr.toFixed(2)}% CTR`
-              : `${fmtNum(topAge.impressions)} impressions`,
-        }
-      : null,
-    leadingGender
-      ? {
-          label: "Leading Gender",
-          value: leadingGender.gender,
-          detail:
-            leadingGender.ctr != null
-              ? `${leadingGender.ctr.toFixed(2)}% CTR`
-              : `${leadingGender.pct.toFixed(0)}% of reach`,
-        }
-      : null,
+  const performanceCards = [
+    {
+      label: "Spend",
+      value: fmtUsd(c.spend),
+      detail: rangeLabel,
+      icon: DollarSign,
+    },
+    {
+      label: "Impressions",
+      value: fmtNum(c.impressions),
+      detail: "Ad views",
+      icon: Eye,
+    },
+    {
+      label: "Clicks",
+      value: fmtNum(c.clicks),
+      detail: "Link clicks",
+      icon: MousePointerClick,
+    },
+    {
+      label: "CTR",
+      value: c.ctr != null ? `${c.ctr.toFixed(2)}%` : "--",
+      detail: "Click rate",
+      icon: Gauge,
+    },
+    {
+      label: "CPC",
+      value: c.cpc != null ? fmtUsd(c.cpc) : "--",
+      detail: "Cost per click",
+      icon: MousePointerClick,
+    },
+    {
+      label: "CPM",
+      value: c.cpm != null ? fmtUsd(c.cpm) : "--",
+      detail: "Cost per 1,000 views",
+      icon: BarChart3,
+    },
+  ];
+
+  const breakdownCards = [
     topMarket
       ? {
-          label: "Best Market",
+          label: "Top Market",
           value: topMarket.market,
           detail:
             topMarket.ctr != null
@@ -143,7 +139,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       : null,
     bestDay
       ? {
-          label: "Best Day",
+          label: "Top Day",
           value: formatDay(bestDay.label),
           detail:
             bestDay.roas != null
@@ -153,7 +149,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       : null,
     bestHour
       ? {
-          label: "Best Hour",
+          label: "Top Hour",
           value: formatHour(bestHour.hour),
           detail:
             bestHour.ctr != null
@@ -163,7 +159,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       : null,
     topCreative
       ? {
-          label: "Top Creative",
+          label: "Top Ad",
           value: topCreative.name,
           detail:
             topCreative.roas != null
@@ -171,11 +167,11 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
               : `${fmtNum(topCreative.clicks)} clicks`,
         }
       : null,
-    pacePct != null
+    avgDailySpend != null
       ? {
-          label: "Budget Pace",
-          value: `${pacePct.toFixed(0)}%`,
-          detail: avgDailySpend != null ? `${fmtUsd(avgDailySpend)}/day avg` : "Average daily pace",
+          label: "Daily Avg",
+          value: fmtUsd(avgDailySpend),
+          detail: trackedDays > 1 ? `${trackedDays} tracked days` : "Today",
         }
       : daysLive != null
         ? {
@@ -205,6 +201,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       impressions: row.impressions,
       clicks: row.clicks,
       ctr: row.ctr,
+      cpc: row.clicks > 0 ? row.spend / row.clicks : null,
     };
   });
 
@@ -237,17 +234,6 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
     ctr: row.ctr,
   }));
 
-  const operatingRecommendations =
-    recommendations.length > 0
-      ? recommendations.map((item) => ({
-          title: item.title,
-          detail: item.detail,
-        }))
-      : brief.watchItems.map((item) => ({
-          title: item.label,
-          detail: item.detail,
-        }));
-
   return (
     <div className="space-y-4">
       {/* -- Header -- */}
@@ -259,62 +245,30 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         theme={theme}
       />
 
-      {/* -- Intelligence Brief (simple text) -- */}
-      <CampaignIntelligenceBrief brief={brief} theme={theme} />
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+        {performanceCards.map((card) => (
+          <MetricCard key={card.label} {...card} />
+        ))}
+      </div>
 
-      {/* -- Audience Snapshot (horizontal row) -- */}
-      {snapshotCards.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-          {snapshotCards.map((card) => (
+      {breakdownCards.length > 0 && (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {breakdownCards.map((card) => (
             <SnapshotCard key={card.label} {...card} />
           ))}
         </div>
       )}
 
-      {/* -- Row 2: Performance Timeline | Daypart Heatmap | Audience Demographics -- */}
-      <div className="grid gap-3 xl:grid-cols-3">
-        <section className="min-w-0">
-          <div className="mb-2 flex items-center gap-2">
-            <Calendar className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Strong performance timeline</span>
-            <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
-          </div>
-          <PerformanceTrendTabs data={trendData} />
-        </section>
+      <section className="min-w-0">
+        <div className="mb-2 flex items-center gap-2">
+          <Calendar className="h-3.5 w-3.5 text-white/50" />
+          <span className="section-label">Performance timeline</span>
+          <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
+        </div>
+        <PerformanceTrendTabs data={trendData} />
+      </section>
 
-        <section className="min-w-0">
-          <div className="mb-2 flex items-center gap-2">
-            <BarChart3 className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">True daypart heatmap</span>
-          </div>
-          {hourlyData.length > 0 ? (
-            <HourlyHeatmap data={hourlyData} />
-          ) : (
-            <FallbackCard
-              title="Daypart Heatmap"
-              detail="Hourly delivery data is not available for this selected range yet."
-            />
-          )}
-        </section>
-
-        <section className="min-w-0">
-          <div className="mb-2 flex items-center gap-2">
-            <Users className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Audience demographics</span>
-          </div>
-          {ageGender.length > 0 ? (
-            <AudienceDemographics data={ageGender} />
-          ) : (
-            <FallbackCard
-              title="Audience Demographics"
-              detail="Demographic breakdowns are not available from the current data source."
-            />
-          )}
-        </section>
-      </div>
-
-      {/* -- Row 3: Markets & Placements | Ad Performance + Recommendations -- */}
-      <div className="grid gap-3 xl:grid-cols-2">
+      <div className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
         {(marketData.length > 0 || placementData.length > 0) && (
           <section className="min-w-0">
             <div className="mb-2 flex items-center gap-2">
@@ -329,27 +283,55 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           </section>
         )}
 
-        <div className="space-y-3 min-w-0">
-          <section>
-            <div className="mb-2 flex items-center gap-2">
-              <ImageIcon className="h-3.5 w-3.5 text-white/50" />
-              <span className="section-label">Ad performance</span>
-              <span className="ml-auto text-xs text-white/45">
-                {ads.length > 0 ? `${ads.length} ads` : "No ad previews"}
-              </span>
-            </div>
-            {ads.length > 0 ? (
-              <AdsPreview ads={ads} />
-            ) : (
-              <FallbackCard
-                title="Ad Performance"
-                detail="Creative-level previews are not available from the current data source."
-              />
-            )}
-          </section>
+        <section className="min-w-0">
+          <div className="mb-2 flex items-center gap-2">
+            <BarChart3 className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Hourly delivery</span>
+          </div>
+          {hourlyData.length > 0 ? (
+            <HourlyHeatmap data={hourlyData} />
+          ) : (
+            <FallbackCard
+              title="Hourly Delivery"
+              detail="Hourly delivery data is not available for this selected range yet."
+            />
+          )}
+        </section>
+      </div>
 
-          <OperatingRecommendations items={operatingRecommendations} />
-        </div>
+      <div className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+        <section className="min-w-0">
+          <div className="mb-2 flex items-center gap-2">
+            <ImageIcon className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Creative performance</span>
+            <span className="ml-auto text-xs text-white/45">
+              {ads.length > 0 ? `${ads.length} ads` : "No ad previews"}
+            </span>
+          </div>
+          {ads.length > 0 ? (
+            <AdsPreview ads={ads} />
+          ) : (
+            <FallbackCard
+              title="Creative Performance"
+              detail="Creative-level previews are not available from the current data source."
+            />
+          )}
+        </section>
+
+        <section className="min-w-0">
+          <div className="mb-2 flex items-center gap-2">
+            <Users className="h-3.5 w-3.5 text-white/50" />
+            <span className="section-label">Audience breakdown</span>
+          </div>
+          {ageGender.length > 0 ? (
+            <AudienceDemographics data={ageGender} />
+          ) : (
+            <FallbackCard
+              title="Audience Breakdown"
+              detail="Audience breakdowns are not available from the current data source."
+            />
+          )}
+        </section>
       </div>
 
       <CampaignOperatingPanel campaignId={campaignId} data={operatingView} slug={slug} />
@@ -369,9 +351,33 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   );
 }
 
+function MetricCard({
+  label,
+  value,
+  detail,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  icon: LucideIcon;
+}) {
+  return (
+    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
+      <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.05] text-white/62">
+        <Icon className="h-4 w-4" />
+      </div>
+      <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
+      <p className="mt-1.5 text-2xl font-bold tracking-tight text-white leading-none">{value}</p>
+      <p className="mt-2 text-[11px] leading-4 text-white/38">{detail}</p>
+    </div>
+  );
+}
+
 function SnapshotCard({
   label,
   value,
+  detail,
 }: {
   label: string;
   value: string;
@@ -380,7 +386,8 @@ function SnapshotCard({
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
       <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
-      <p className="mt-1.5 text-lg font-bold tracking-tight text-white leading-tight truncate">{value}</p>
+      <p className="mt-1.5 truncate text-lg font-bold leading-tight tracking-tight text-white">{value}</p>
+      <p className="mt-1 text-[11px] leading-4 text-white/38">{detail}</p>
     </div>
   );
 }
@@ -394,322 +401,12 @@ function FallbackCard({ title, detail }: { title: string; detail: string }) {
   );
 }
 
-function OperatingRecommendations({
-  items,
-}: {
-  items: Array<{ title: string; detail: string }>;
-}) {
-  return (
-    <section>
-      <div className="mb-3 flex items-center gap-2">
-        <Lightbulb className="h-3.5 w-3.5 text-white/50" />
-        <span className="section-label">Recommendations</span>
-      </div>
-      <div className="glass-card p-5">
-        {items.length > 0 ? (
-          <div className="space-y-4">
-            {items.slice(0, 4).map((item, index) => (
-              <div key={`${item.title}-${index}`} className="flex items-start gap-3">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-300" />
-                <div className="min-w-0">
-                  <p className="text-xs leading-5 text-white/45">
-                    <span className="font-semibold text-white/80">Strategy:</span>{" "}
-                    {item.detail}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-xs leading-6 text-white/42">
-            Recommendations will appear here once the campaign has enough signal for a confident
-            next step.
-          </p>
-        )}
-      </div>
-    </section>
-  );
-}
-
-function findTopAge(rows: AgeGenderBreakdown[]) {
-  if (rows.length === 0) return null;
-
-  const byAge = new Map<string, { age: string; impressions: number; clicks: number; ctr: number | null }>();
-  for (const row of rows) {
-    const existing = byAge.get(row.age) ?? {
-      age: row.age,
-      impressions: 0,
-      clicks: 0,
-      ctr: null,
-    };
-    const impressions = existing.impressions + row.impressions;
-    const clicks = existing.clicks + row.clicks;
-    byAge.set(row.age, {
-      age: row.age,
-      impressions,
-      clicks,
-      ctr: impressions > 0 ? (clicks / impressions) * 100 : null,
-    });
-  }
-
-  return Array.from(byAge.values()).sort((a, b) => {
-    if ((b.ctr ?? 0) !== (a.ctr ?? 0)) return (b.ctr ?? 0) - (a.ctr ?? 0);
-    if (b.clicks !== a.clicks) return b.clicks - a.clicks;
-    return b.impressions - a.impressions;
-  })[0] ?? null;
-}
-
-function findLeadingGender(rows: AgeGenderBreakdown[]) {
-  if (rows.length === 0) return null;
-
-  const totalImpressions = rows.reduce((sum, row) => sum + row.impressions, 0);
-  const byGender = new Map<string, { gender: string; impressions: number; clicks: number; ctr: number | null; pct: number }>();
-
-  for (const row of rows) {
-    const existing = byGender.get(row.gender) ?? {
-      gender: row.gender,
-      impressions: 0,
-      clicks: 0,
-      ctr: null,
-      pct: 0,
-    };
-    const impressions = existing.impressions + row.impressions;
-    const clicks = existing.clicks + row.clicks;
-    byGender.set(row.gender, {
-      gender: row.gender,
-      impressions,
-      clicks,
-      ctr: impressions > 0 ? (clicks / impressions) * 100 : null,
-      pct: totalImpressions > 0 ? (impressions / totalImpressions) * 100 : 0,
-    });
-  }
-
-  return Array.from(byGender.values()).sort((a, b) => {
-    if (b.impressions !== a.impressions) return b.impressions - a.impressions;
-    return (b.ctr ?? 0) - (a.ctr ?? 0);
-  })[0] ?? null;
-}
-
 function getDaysLive(startTime: string | null): number | null {
   if (!startTime) return null;
   const start = new Date(startTime);
   if (Number.isNaN(start.getTime())) return null;
   const diff = Date.now() - start.getTime();
   return Math.max(1, Math.floor(diff / 86_400_000) + 1);
-}
-
-function CampaignIntelligenceBrief({
-  brief,
-  theme,
-}: {
-  brief: {
-    headline: string;
-    body: string;
-    highlights: Array<{ label: string; value: string; detail: string }>;
-    watchItems: Array<{ label: string; detail: string }>;
-  };
-  theme: ReturnType<typeof getClientPortalTheme>;
-}) {
-  return (
-    <section
-      className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.03] px-6 py-5"
-      style={{
-        backgroundImage: `linear-gradient(135deg, rgba(${theme.accentRgb}, 0.10), rgba(${theme.secondaryRgb}, 0.05) 60%, transparent 100%)`,
-      }}
-    >
-      <div className="relative">
-        <p className="text-sm font-semibold text-white/80">Campaign Intelligence Brief</p>
-        <p className="mt-2 text-sm leading-6 text-white/50">{brief.body}</p>
-      </div>
-    </section>
-  );
-}
-
-function hasMeaningfulCampaignWindow(campaign: CampaignCard, daily: DailyPoint[]) {
-  if (campaign.spend > 0 || campaign.impressions > 0 || campaign.clicks > 0) return true;
-  return daily.some(
-    (row) =>
-      row.spend > 0 ||
-      row.impressions > 0 ||
-      row.clicks > 0 ||
-      (row.revenue ?? 0) > 0,
-  );
-}
-
-function buildCampaignBrief({
-  campaign,
-  rangeLabel,
-  trackedDays,
-  hasWindowDelivery,
-  pacePct,
-  bestDay,
-  bestHour,
-  topCreative,
-  topMarket,
-}: {
-  campaign: CampaignCard;
-  rangeLabel: string;
-  trackedDays: number;
-  hasWindowDelivery: boolean;
-  pacePct: number | null;
-  bestDay: ReturnType<typeof findBestDayOfWeek>;
-  bestHour: HourlyBreakdown | null;
-  topCreative: AdCard | null;
-  topMarket: GeographyBreakdown | null;
-}) {
-  const normalizedStatus = formatStatus(campaign.status);
-
-  if (!hasWindowDelivery) {
-    return {
-      headline: `No meaningful delivery is showing in ${rangeLabel.toLowerCase()}.`,
-      body:
-        normalizedStatus === "Paused"
-          ? `${campaign.name} is currently paused, so this window has no spend, impressions, or clicks to analyze with confidence. The client view should steer people toward a wider range before claiming a top audience, market, or hour.`
-          : `${campaign.name} does not have enough spend, impressions, or clicks in this range to support a confident performance story. Use 7d or Lifetime for a stronger client-facing readout.`,
-      highlights: [
-        {
-          label: "Status",
-          value: normalizedStatus,
-          detail: "Current campaign state in Meta",
-        },
-        {
-          label: "Daily Budget",
-          value: campaign.dailyBudget != null ? `${fmtUsd(campaign.dailyBudget)}/day` : "--",
-          detail: "Configured budget ceiling",
-        },
-        {
-          label: "Recommended Range",
-          value: trackedDays <= 1 ? "7d or Lifetime" : "Wider range",
-          detail: "Use a fuller window before ranking signals",
-        },
-      ],
-      watchItems: [
-        {
-          label: "Range Confidence",
-          detail: "There is not enough current-window delivery to rank audience, timing, or geography credibly.",
-        },
-        {
-          label: "Budget Pacing",
-          detail:
-            pacePct != null
-              ? `Average spend in this range is ${pacePct.toFixed(0)}% of the configured daily budget.`
-              : "No pacing read is available yet in this selected range.",
-        },
-        {
-          label: "Client Story",
-          detail: "Show a wider range before presenting “best day”, “best hour”, or “winning creative” claims to the client.",
-        },
-      ],
-    };
-  }
-
-  if (bestDay && bestHour && topMarket) {
-    return {
-      headline: `${formatDay(bestDay.label)} around ${formatHour(bestHour.hour)} is the strongest delivery window.`,
-      body: `${campaign.name} has enough signal to talk about timing and geography with confidence. ${topMarket.market} is the cleanest market benchmark, and this window should anchor the client story before budget shifts or creative refreshes.`,
-      highlights: [
-        {
-          label: "ROAS",
-          value: campaign.roas != null ? `${campaign.roas.toFixed(1)}x` : "--",
-          detail: roasLabel(campaign.roas),
-        },
-        {
-          label: "Best Day",
-          value: formatDay(bestDay.label),
-          detail:
-            bestDay.roas != null
-              ? `${bestDay.roas.toFixed(2)}x ROAS`
-              : `${fmtNum(bestDay.clicks)} clicks in the strongest weekday`,
-        },
-        {
-          label: "Lead Market",
-          value: topMarket.market,
-          detail:
-            topMarket.ctr != null
-              ? `${topMarket.ctr.toFixed(2)}% CTR`
-              : `${fmtNum(topMarket.impressions)} impressions in market`,
-        },
-      ],
-      watchItems: [
-        {
-          label: "Best Hour",
-          detail:
-            bestHour.ctr != null
-              ? `${formatHour(bestHour.hour)} is returning ${bestHour.ctr.toFixed(2)}% CTR.`
-              : `${formatHour(bestHour.hour)} is producing the heaviest delivery volume.`,
-        },
-        {
-          label: "Creative Benchmark",
-          detail: topCreative
-            ? `${topCreative.name} is the current benchmark creative for this campaign.`
-            : "Timing and geography are clearer than creative differentiation right now.",
-        },
-        {
-          label: "Budget Pacing",
-          detail:
-            pacePct != null
-              ? `Average spend is pacing at ${pacePct.toFixed(0)}% of the daily budget.`
-              : "Use daily trend data to decide whether the budget should stay where it is.",
-        },
-      ],
-    };
-  }
-
-  return {
-    headline: topCreative
-      ? `${topCreative.name} is the clearest creative benchmark right now.`
-      : `${campaign.name} is building a directional performance story.`,
-    body: `This view now groups the strongest available signals into one operating brief so the client sees what matters first, then the supporting charts below.`,
-    highlights: [
-      {
-        label: "ROAS",
-        value: campaign.roas != null ? `${campaign.roas.toFixed(1)}x` : "--",
-        detail: roasLabel(campaign.roas),
-      },
-      {
-        label: "Top Creative",
-        value: topCreative?.name ?? "Still emerging",
-        detail: topCreative?.revenue != null && topCreative.revenue > 0
-          ? `${fmtUsd(topCreative.revenue)} attributed revenue`
-          : "Creative differentiation is still forming",
-      },
-      {
-        label: "Top Market",
-        value: topMarket?.market ?? "Still emerging",
-        detail: topMarket?.ctr != null
-          ? `${topMarket.ctr.toFixed(2)}% CTR`
-          : "Market mix needs more delivery for a strong read",
-      },
-    ],
-    watchItems: [
-      {
-        label: "Timing",
-        detail: bestHour
-          ? `${formatHour(bestHour.hour)} is currently the strongest hour for response.`
-          : "Wait for more delivery before ranking hours with confidence.",
-      },
-      {
-        label: "Weekday Pattern",
-        detail: bestDay
-          ? `${formatDay(bestDay.label)} is the strongest weekday in this selected range.`
-          : "Weekday performance is still too thin to call a winner.",
-      },
-      {
-        label: "Budget Pacing",
-        detail:
-          pacePct != null
-            ? `Average spend is pacing at ${pacePct.toFixed(0)}% of the configured daily budget.`
-            : "Budget pacing becomes clearer once the range has more delivery volume.",
-      },
-    ],
-  };
-}
-
-function formatStatus(status: string) {
-  return status
-    .toLowerCase()
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function formatHour(hour: number): string {

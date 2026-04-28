@@ -59,6 +59,7 @@ export interface PerformanceTrendRow {
   impressions: number;
   clicks: number;
   ctr: number | null;
+  cpc?: number | null;
 }
 
 export interface MarketRow {

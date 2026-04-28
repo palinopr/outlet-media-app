@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-web | visual campaign detail graphs
+- Reworked client campaign detail pages away from strategy/recommendation copy and toward metric-first visual reporting.
+- Added top metric cards, clearer performance snapshot cards, larger timeline placement, and renamed sections for markets, hourly delivery, creative performance, and audience breakdown.
+- Upgraded the performance timeline chart into metric toggles for Spend, Clicks, Impressions, CTR, CPC, and Revenue when available, with a useful Today single-day state.
+
 ## [2026-04-27] client-web | default campaign portal to today
 - Changed client campaign list and detail pages so missing or retired `range=30` URLs resolve to Today by default.
 - Kept 7d, Lifetime, and Custom as explicit client range choices while removing 30d from client detail controls and guidance copy.
