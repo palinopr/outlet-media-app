@@ -57,7 +57,7 @@ export default async function ClientsPage() {
       {/* Header */}
       <AdminPageHeader
         title="Clients"
-        description="Manage promoter accounts, client access, and which accounts need an operating response right now."
+        description="Manage client accounts, portal access, and campaign assignments."
       >
         <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block" />
@@ -81,9 +81,9 @@ export default async function ClientsPage() {
         <CardContent className="space-y-4 p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-sm font-semibold">Client health snapshot</p>
+              <p className="text-sm font-semibold">Client account snapshot</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Accounts with active campaigns, spend, and connection issues that need attention.
+                Active campaigns, managed spend, and connected-account issues in one place.
               </p>
             </div>
             <div className="text-right">

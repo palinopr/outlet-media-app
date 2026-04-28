@@ -57,7 +57,9 @@ npm run playwright:install # once per machine/CI image
 npm run test:e2e
 ```
 
-Authenticated Playwright smoke tests create a temporary Clerk admin with a sign-in token, then delete it after the run. Set `E2E_BASE_URL` to the real app domain for the Clerk environment being tested (production auth uses `https://outletmedia.net`, not the Railway preview URL) and provide `E2E_CLERK_SECRET_KEY`.
+Authenticated Playwright smoke tests create temporary Clerk users with sign-in tokens, then delete them after the run. Set `E2E_BASE_URL` to the real app domain for the Clerk environment being tested (production auth uses `https://outletmedia.net`, not the Railway preview URL) and provide `E2E_CLERK_SECRET_KEY`.
+
+See `docs/references/production-smoke-runbook.md` for the production deploy smoke checklist and the manual GitHub Actions smoke path.
 
 ## Deploy
 

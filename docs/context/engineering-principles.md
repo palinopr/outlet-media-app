@@ -28,7 +28,7 @@ No dead nav items, placeholder routes, duplicate surfaces, or speculative UI bre
 
 ## Authenticated Browser Smoke Tests
 
-Use Playwright for repeatable authenticated app smoke tests. The production Clerk instance only accepts the real `outletmedia.net` origin, so production E2E must target `https://outletmedia.net` rather than the Railway preview URL. Prefer temporary Clerk users plus backend sign-in tokens, and always delete temporary users in teardown.
+Use Playwright for repeatable authenticated app smoke tests. The production Clerk instance only accepts the real `outletmedia.net` origin, so production E2E must target `https://outletmedia.net` rather than the Railway preview URL. Prefer temporary Clerk users plus backend sign-in tokens, always cover signed-out and non-admin access denial, and always delete temporary users in teardown.
 
 ## Agent Runtime Status
 

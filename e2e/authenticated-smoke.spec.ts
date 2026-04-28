@@ -14,26 +14,54 @@ type ClerkSignInToken = {
   url: string;
 };
 
-let tempUser: ClerkUser | null = null;
+let adminUser: ClerkUser | null = null;
+let nonAdminUser: ClerkUser | null = null;
+const temporaryUsers: ClerkUser[] = [];
 
-test.describe("authenticated production smoke", () => {
+test.describe("authenticated smoke", () => {
   test.skip(!clerkSecretKey, "Set E2E_CLERK_SECRET_KEY or CLERK_SECRET_KEY to run authenticated smoke tests.");
 
   test.beforeAll(async () => {
-    tempUser = await createTemporaryAdminUser();
+    adminUser = await createTemporaryUser({ label: "admin", role: "admin" });
+    nonAdminUser = await createTemporaryUser({ label: "member" });
   });
 
   test.afterAll(async () => {
-    if (tempUser) {
-      await deleteClerkUser(tempUser.id);
-      tempUser = null;
+    const cleanupResults = await Promise.allSettled(
+      temporaryUsers.map(async (user) => {
+        await deleteClerkUser(user.id);
+      }),
+    );
+    temporaryUsers.length = 0;
+    adminUser = null;
+    nonAdminUser = null;
+
+    const cleanupFailures = cleanupResults.filter((result) => result.status === "rejected");
+    if (cleanupFailures.length > 0) {
+      throw new Error(`Failed to delete ${cleanupFailures.length} temporary Clerk E2E user(s).`);
     }
   });
 
-  test("admin and client surfaces stay narrow and usable", async ({ page }) => {
-    if (!tempUser) throw new Error("Temporary Clerk admin user was not created.");
+  test("signed-out users are sent to sign in for protected pages", async ({ page }) => {
+    await assertSignedOutRedirect(page, "/admin/dashboard");
+    await assertSignedOutRedirect(page, `/client/${clientPortalSlug}/campaigns`);
+  });
 
-    await signInWithToken(page, tempUser.id);
+  test("non-admin users cannot access the admin shell", async ({ page }) => {
+    if (!nonAdminUser) throw new Error("Temporary non-admin Clerk user was not created.");
+
+    await signInWithToken(page, nonAdminUser.id);
+    await page.goto(appUrl("/admin/dashboard"), { waitUntil: "domcontentloaded" });
+
+    await expect(page).toHaveURL(/\/admin\/dashboard(?:[/?#]|$)/);
+    await expect(page.getByText("Access denied", { exact: true })).toBeVisible();
+    await expect(page.locator("aside nav")).toHaveCount(0);
+  });
+
+  test("admin and client surfaces stay narrow and usable", async ({ page }) => {
+    if (!adminUser) throw new Error("Temporary admin Clerk user was not created.");
+
+    await signInAsAdmin(page, adminUser.id);
 
     await expect(page).toHaveURL(/\/admin\/dashboard(?:[/?#]|$)/);
     await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
@@ -47,6 +75,18 @@ test.describe("authenticated production smoke", () => {
   });
 });
 
+async function assertSignedOutRedirect(page: Page, path: string) {
+  await page.goto(appUrl(path), { waitUntil: "domcontentloaded" });
+  await expect(page).toHaveURL(/\/sign-in(?:[/?#]|$)/);
+  await expect(page.locator("body")).toContainText(/Sign in to Outlet Media|Email address/);
+}
+
+async function signInAsAdmin(page: Page, userId: string) {
+  await signInWithToken(page, userId);
+  await expect(page).toHaveURL(/\/admin\/dashboard(?:[/?#]|$)/, { timeout: 45_000 });
+  await page.waitForLoadState("networkidle").catch(() => undefined);
+}
+
 async function signInWithToken(page: Page, userId: string) {
   const token = await clerkRequest<ClerkSignInToken>("/sign_in_tokens", {
     method: "POST",
@@ -58,7 +98,7 @@ async function signInWithToken(page: Page, userId: string) {
 
   const signInUrl = rewriteUrlOrigin(token.url, baseURL);
   await page.goto(signInUrl, { waitUntil: "domcontentloaded" });
-  await expect(page).toHaveURL(/\/admin\/dashboard(?:[/?#]|$)/, { timeout: 45_000 });
+  await page.waitForURL((url) => !url.pathname.startsWith("/sign-in"), { timeout: 45_000 });
   await page.waitForLoadState("networkidle").catch(() => undefined);
 }
 
@@ -140,22 +180,29 @@ async function assertRetiredRoutesRedirect(page: Page, slug: string) {
   await expect(page).toHaveURL(new RegExp(`/client/${slug}/campaigns(?:[/?#]|$)`));
 }
 
-async function createTemporaryAdminUser(): Promise<ClerkUser> {
+async function createTemporaryUser({
+  label,
+  role,
+}: {
+  label: string;
+  role?: "admin";
+}): Promise<ClerkUser> {
   const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const email = `outlet-e2e-${stamp}@outletmedia.net`;
+  const email = `outlet-e2e-${label}-${stamp}@outletmedia.net`;
   const password = `OutletE2E-${stamp}-Pass!`;
-
-  return clerkRequest<ClerkUser>("/users", {
+  const user = await clerkRequest<ClerkUser>("/users", {
     method: "POST",
     body: JSON.stringify({
       email_address: [email],
       first_name: "Outlet",
-      last_name: "E2E",
+      last_name: label === "admin" ? "E2E Admin" : "E2E Member",
       password,
-      public_metadata: { role: "admin" },
+      public_metadata: role ? { role } : {},
       skip_password_checks: true,
     }),
   });
+  temporaryUsers.push(user);
+  return user;
 }
 
 async function deleteClerkUser(userId: string) {

@@ -1,0 +1,56 @@
+name: E2E Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "App URL to smoke test"
+        required: true
+        default: "https://outletmedia.net"
+      client_slug:
+        description: "Client portal slug with campaign data"
+        required: true
+        default: "sienna"
+
+jobs:
+  authenticated-smoke:
+    name: Authenticated Playwright smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      E2E_BASE_URL: ${{ inputs.base_url }}
+      E2E_CLIENT_SLUG: ${{ inputs.client_slug }}
+      E2E_CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npm run playwright:install
+
+      - name: Verify E2E secret is configured
+        run: |
+          if [ -z "$E2E_CLERK_SECRET_KEY" ]; then
+            echo "Missing E2E_CLERK_SECRET_KEY GitHub secret."
+            exit 1
+          fi
+
+      - name: Run authenticated smoke
+        run: npm run test:e2e
+
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-smoke-artifacts
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
