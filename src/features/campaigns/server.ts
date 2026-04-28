@@ -1,4 +1,4 @@
-import type { MetaCampaignCard } from "@/lib/meta-campaigns";
+import { fetchCampaignById, type MetaCampaignCard } from "@/lib/meta-campaigns";
 import { getEffectiveCampaignRowById } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -42,7 +42,10 @@ export async function getCampaignOperatingData(campaignId: string): Promise<Camp
     campaignId,
     "campaign_id, name, status, objective, client_slug, campaign_type, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time",
   );
-  if (!data) return null;
+  if (!data) {
+    const metaResult = await fetchCampaignById(campaignId);
+    return metaResult.campaign ? { campaign: metaResult.campaign } : null;
+  }
 
   const spend = centsToDollars(data.spend) ?? 0;
   const roas = toNumber(data.roas);

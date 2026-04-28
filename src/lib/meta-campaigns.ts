@@ -137,6 +137,59 @@ function safeParseFloat(s: string | null | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function getPurchaseRoas(insight: Pick<RawInsight, "purchase_roas"> | undefined): number | null {
+  const roasVal = insight?.purchase_roas?.find(
+    (r) => r.action_type === "omni_purchase",
+  )?.value;
+  return roasVal ? parseFloat(roasVal) : null;
+}
+
+function toCampaignCard(
+  campaign: RawCampaign,
+  insight: RawInsight | undefined,
+  clientSlug: string,
+  campaignType: string,
+): MetaCampaignCard {
+  const spend = insight ? parseFloat(insight.spend) || 0 : 0;
+  const roas = getPurchaseRoas(insight);
+
+  return {
+    campaignId: campaign.id,
+    name: campaign.name,
+    status: campaign.status,
+    objective: campaign.objective ?? "",
+    clientSlug,
+    campaignType,
+    spend,
+    roas,
+    revenue: roas != null ? spend * roas : null,
+    impressions: insight ? parseInt(insight.impressions) || 0 : 0,
+    clicks: insight ? parseInt(insight.clicks) || 0 : 0,
+    ctr: insight ? safeParseFloat(insight.ctr) : null,
+    cpc: insight ? safeParseFloat(insight.cpc) : null,
+    cpm: insight ? safeParseFloat(insight.cpm) : null,
+    dailyBudget: campaign.daily_budget ? centsToUsd(parseInt(campaign.daily_budget)) : null,
+    startTime: campaign.start_time ?? null,
+  };
+}
+
+async function fetchMetaJson<T>(url: string, label: string): Promise<T | null> {
+  const res = await fetch(url, { next: { revalidate: 300 } });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    console.error(`[meta-campaigns] ${label} failed (${res.status}): ${body.slice(0, 500)}`);
+    return null;
+  }
+
+  const json = await res.json();
+  if (json.error) {
+    console.error(`[meta-campaigns] ${label} API error:`, json.error.message ?? json.error);
+    return null;
+  }
+
+  return json as T;
+}
+
 function buildCampaignFilter(ids: string[]): string {
   return JSON.stringify([
     { field: "campaign.id", operator: "IN", value: ids },
@@ -147,7 +200,7 @@ function buildInsightsUrl(
   base: string,
   token: string,
   range: CampaignRangeInput | MetaInsightsTimeRange,
-  filter: string,
+  filter: string | null,
   fields: string,
   limit: string,
   timeIncrement?: string,
@@ -156,15 +209,92 @@ function buildInsightsUrl(
   url.searchParams.set("access_token", token);
   url.searchParams.set("level", "campaign");
   url.searchParams.set("fields", fields);
+  if (filter) url.searchParams.set("filtering", filter);
   if (typeof range === "string") {
     url.searchParams.set("date_preset", META_PRESETS[range]);
   } else {
     url.searchParams.set("time_range", JSON.stringify({ since: range.since, until: range.until }));
   }
-  url.searchParams.set("filtering", filter);
   url.searchParams.set("limit", limit);
   if (timeIncrement) url.searchParams.set("time_increment", timeIncrement);
   return url.toString();
+}
+
+export async function fetchCampaignById(
+  campaignId: string,
+  range: CampaignRangeInput | MetaInsightsTimeRange = "today",
+): Promise<{ campaign: MetaCampaignCard | null; dailyInsights: DailyInsight[]; error: string | null }> {
+  const creds = getCredentials();
+  if (!creds) {
+    return {
+      campaign: null,
+      dailyInsights: [],
+      error: "Meta API credentials not configured",
+    };
+  }
+
+  const { token } = creds;
+  const base = `https://graph.facebook.com/${META_API_VERSION}/${campaignId}`;
+  const campaignUrl = new URL(base);
+  campaignUrl.searchParams.set("access_token", token);
+  campaignUrl.searchParams.set(
+    "fields",
+    "id,name,status,objective,daily_budget,start_time",
+  );
+
+  try {
+    const [rawCampaign, overrides, campaignTypes] = await Promise.all([
+      fetchMetaJson<RawCampaign>(campaignUrl.toString(), `campaign-${campaignId}`),
+      readOptionalSupabaseData("campaign overrides", () => getCampaignClientOverrideMap(), new Map<string, string>()),
+      readOptionalSupabaseData("campaign types", () => loadCampaignTypes(), new Map<string, string>()),
+    ]);
+
+    if (!rawCampaign) {
+      return { campaign: null, dailyInsights: [], error: "Campaign not found in Meta" };
+    }
+
+    const fields = "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,purchase_roas";
+    const [rawInsights, rawDaily] = await Promise.all([
+      fetchAllPages<RawInsight>(
+        buildInsightsUrl(base, token, range, null, fields, "25"),
+        `campaign-insights-${campaignId}`,
+      ),
+      fetchAllPages<RawDailyInsight>(
+        buildInsightsUrl(base, token, range, null, "campaign_id,spend,purchase_roas", "5000", "1"),
+        `campaign-daily-${campaignId}`,
+      ),
+    ]);
+
+    const clientSlug = resolveEffectiveCampaignClientSlug(
+      {
+        campaign_id: rawCampaign.id,
+        client_slug: null,
+        name: rawCampaign.name,
+      },
+      overrides,
+    ) ?? "unknown";
+
+    const dailyInsights: DailyInsight[] = rawDaily.map((d) => ({
+      campaignId: d.campaign_id,
+      date: d.date_start,
+      spend: parseFloat(d.spend) || 0,
+      roas: getPurchaseRoas(d),
+    }));
+
+    return {
+      campaign: toCampaignCard(
+        rawCampaign,
+        rawInsights.find((row) => row.campaign_id === campaignId) ?? rawInsights[0],
+        clientSlug,
+        campaignTypes.get(rawCampaign.id) ?? "sales",
+      ),
+      dailyInsights,
+      error: null,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Meta API request failed";
+    return { campaign: null, dailyInsights: [], error: msg };
+  }
 }
 
 export async function fetchAllCampaigns(
@@ -258,45 +388,21 @@ export async function fetchAllCampaigns(
       insightMap.set(row.campaign_id, row);
     }
 
-    const campaigns: MetaCampaignCard[] = filtered.map((c) => {
-      const insight = insightMap.get(c.id);
-      const spend = insight ? parseFloat(insight.spend) || 0 : 0;
-      const roasVal = insight?.purchase_roas?.find(
-        (r) => r.action_type === "omni_purchase",
-      )?.value;
-      const roas = roasVal ? parseFloat(roasVal) : null;
+    const campaigns: MetaCampaignCard[] = filtered.map((c) =>
+      toCampaignCard(
+        c,
+        insightMap.get(c.id),
+        campaignSlugs.get(c.id) ?? "unknown",
+        campaignTypes.get(c.id) ?? "sales",
+      ),
+    );
 
-      return {
-        campaignId: c.id,
-        name: c.name,
-        status: c.status,
-        objective: c.objective ?? "",
-        clientSlug: campaignSlugs.get(c.id) ?? "unknown",
-        campaignType: campaignTypes.get(c.id) ?? "sales",
-        spend,
-        roas,
-        revenue: roas != null ? spend * roas : null,
-        impressions: insight ? parseInt(insight.impressions) || 0 : 0,
-        clicks: insight ? parseInt(insight.clicks) || 0 : 0,
-        ctr: insight ? safeParseFloat(insight.ctr) : null,
-        cpc: insight ? safeParseFloat(insight.cpc) : null,
-        cpm: insight ? safeParseFloat(insight.cpm) : null,
-        dailyBudget: c.daily_budget ? centsToUsd(parseInt(c.daily_budget)) : null,
-        startTime: c.start_time ?? null,
-      };
-    });
-
-    const dailyInsights: DailyInsight[] = rawDaily.map((d) => {
-      const roasVal = d.purchase_roas?.find(
-        (r) => r.action_type === "omni_purchase",
-      )?.value;
-      return {
-        campaignId: d.campaign_id,
-        date: d.date_start,
-        spend: parseFloat(d.spend) || 0,
-        roas: roasVal ? parseFloat(roasVal) : null,
-      };
-    });
+    const dailyInsights: DailyInsight[] = rawDaily.map((d) => ({
+      campaignId: d.campaign_id,
+      date: d.date_start,
+      spend: parseFloat(d.spend) || 0,
+      roas: getPurchaseRoas(d),
+    }));
 
     return { campaigns, dailyInsights, clients, error: null };
   } catch (err) {

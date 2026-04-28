@@ -26,6 +26,7 @@ export default defineConfig({
       "agent/**",
       "agent/dist/**",
       "agent/node_modules/**",
+      "e2e/**",
       "tmp-playwright/**",
     ],
   },

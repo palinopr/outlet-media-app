@@ -32,5 +32,6 @@ agent/service-account.json
 **/*.key
 archive/
 test-results/
+playwright-report/
 tmp-playwright/
 audit/

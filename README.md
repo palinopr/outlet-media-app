@@ -49,6 +49,15 @@ npm run dev
 
 Copy `.env.example` to `.env.local` and fill in the required variables.
 
+## Quality Gates
+
+```bash
+npm run check
+npm run test:e2e
+```
+
+Authenticated Playwright smoke tests create a temporary Clerk admin with a sign-in token, then delete it after the run. Set `E2E_BASE_URL` to the real app domain for the Clerk environment being tested (production auth uses `https://outletmedia.net`, not the Railway preview URL) and provide `E2E_CLERK_SECRET_KEY`.
+
 ## Deploy
 
 ```bash

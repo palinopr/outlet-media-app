@@ -26,6 +26,10 @@ Client portal packaging is intentionally simple right now: Campaigns are the onl
 
 No dead nav items, placeholder routes, duplicate surfaces, or speculative UI breadth. If a workflow is not part of Campaigns or account/access management, keep it embedded or remove it until there is an explicit product decision.
 
+## Authenticated Browser Smoke Tests
+
+Use Playwright for repeatable authenticated app smoke tests. The production Clerk instance only accepts the real `outletmedia.net` origin, so production E2E must target `https://outletmedia.net` rather than the Railway preview URL. Prefer temporary Clerk users plus backend sign-in tokens, and always delete temporary users in teardown.
+
 ## Agent Runtime Status
 
 Agent runtime, agent task queues, agent outcomes, and client/admin agent chat surfaces are retired for now. Do not add agent-specific tables, endpoints, nav items, or background workers without a new product decision and a complete tested vertical slice.
