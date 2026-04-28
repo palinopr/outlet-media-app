@@ -37,9 +37,8 @@ Use the **Supabase Drift Check** workflow when you want CI infrastructure to ver
 Required GitHub secrets:
 
 - `SUPABASE_ACCESS_TOKEN`
-- `SUPABASE_DB_PASSWORD`
 
-The workflow links the project and runs `supabase db push --dry-run` without applying migrations.
+The workflow links the project with the Supabase CLI login role and runs `supabase db push --dry-run` without applying migrations. It does not require storing the database password in GitHub.
 
 ## Active table baseline
 
