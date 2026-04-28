@@ -21,16 +21,15 @@ All agent runtime and agent-facing product surfaces are retired for now. Do not 
 ## Product Principles
 
 - Build for shared visibility: clients should feel informed and guided.
-- Support both summary-first dashboards and deeper workflow/collaboration views.
-- Keep collaboration attached to the relevant campaign, client, asset, or action item.
-- Keep workflow concepts such as approvals, assets, activity, and follow-up embedded inside active campaign/admin surfaces before creating standalone apps.
+- Support summary-first campaign dashboards before adding deeper workflow views.
+- Keep the shipped product focused on campaign performance and account access.
+- Do not reintroduce approvals, assets, requests, conversations, action items, or follow-up surfaces without a new explicit product decision.
 - Build one complete vertical slice at a time; remove dead surfaces instead of preserving placeholders.
 
 ## Architecture Priorities
 
-- Prefer event-driven architecture. Meaningful mutations should be traceable through `system_events`, `approval_requests`, or the owning workflow table.
-- Treat `system_events` as the shared product timeline for admin/client-visible activity.
-- Treat `approval_requests` as the first-class yes/no/cancel approval object.
+- Prefer traceable mutations. Meaningful campaign/account changes should be traceable through `system_events` or `admin_activity`.
+- Treat `system_events` as the shared product timeline for app-visible campaign/account activity.
 - Treat `admin_activity` as internal operator audit only.
 - Keep routes thin and feature modules reusable. Do not duplicate route-local business logic.
 - The client account record and `client_members` are the authority for portal access. Do not use Clerk metadata or URL slugs as the business source of truth for memberships or enabled apps.

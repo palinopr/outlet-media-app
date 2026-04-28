@@ -1,7 +1,6 @@
 import type { ActionableInvitationStatus } from "@/features/invitations/types";
 
 export const CLIENT_SUMMARY_FIELDS = [
-  "assetsNeedingReview",
   "id",
   "name",
   "slug",
@@ -11,11 +10,7 @@ export const CLIENT_SUMMARY_FIELDS = [
   "connectedAccountCount",
   "connectionRiskAccounts",
   "activeCampaigns",
-  "openActionItems",
-  "openDiscussions",
-  "pendingApprovals",
   "totalCampaigns",
-  "activeShows",
   "totalSpend",
   "totalRevenue",
   "roas",
@@ -23,7 +18,6 @@ export const CLIENT_SUMMARY_FIELDS = [
 ] as const;
 
 export interface ClientSummaryLike {
-  assetsNeedingReview: number;
   id: string;
   name: string;
   slug: string;
@@ -33,11 +27,7 @@ export interface ClientSummaryLike {
   connectedAccountCount: number;
   connectionRiskAccounts: number;
   activeCampaigns: number;
-  openActionItems: number;
-  openDiscussions: number;
-  pendingApprovals: number;
   totalCampaigns: number;
-  activeShows: number;
   totalSpend: number;
   totalRevenue: number;
   roas: number;

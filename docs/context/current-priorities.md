@@ -9,7 +9,7 @@ The current shipped product is intentionally narrow:
 
 Events and Reports are retired as navigable product surfaces for now. Direct Events/Reports URLs should redirect back to the active Dashboard/Campaigns experience rather than exposing hidden product pages.
 
-Do not add standalone client apps for Events, Reports, CRM, assets, approvals, conversations, workspace, updates, or chat unless there is an explicit product decision and a maintainable end-to-end slice.
+Do not add standalone client apps for Events, Reports, CRM, assets, approvals, action items, conversations, workspace, updates, or chat unless there is an explicit product decision and a maintainable end-to-end slice.
 
 ## Agent Status
 

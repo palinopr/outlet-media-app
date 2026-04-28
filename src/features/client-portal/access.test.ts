@@ -61,7 +61,6 @@ describe("requireClientAccess", () => {
     } as unknown as Awaited<ReturnType<typeof currentUser>>);
     mockedGetMemberAccessForSlug.mockResolvedValue({
       allowedCampaignIds: ["cmp_1"],
-      allowedEventIds: ["evt_1"],
       clientId: "client_1",
       clientName: "Acme",
       clientSlug: "acme",
@@ -76,7 +75,6 @@ describe("requireClientAccess", () => {
       userId: "user_member",
       scope: {
         allowedCampaignIds: ["cmp_1"],
-        allowedEventIds: ["evt_1"],
       },
     });
   });

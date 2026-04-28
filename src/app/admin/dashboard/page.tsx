@@ -1,68 +1,59 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  CalendarDays,
   DollarSign,
   Megaphone,
-  Ticket,
   TrendingUp,
 } from "lucide-react";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
-import { TicketVelocityChart } from "@/components/charts/ticket-velocity-chart";
 import { centsToUsd, fmtUsd, fmtNum, computeBlendedRoas, fmtTodayLong } from "@/lib/formatters";
 import { StatCard } from "@/components/admin/stat-card";
 import { getData } from "./data";
-import { EventsPreviewTable } from "./events-preview-table";
-import { UpcomingShows } from "./upcoming-shows";
 import { CampaignCards } from "./campaign-cards";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
-// --- Helpers ---
-
-/** Filter events to those occurring in the next 30 days. */
-function getUpcomingShows(events: Parameters<typeof EventsPreviewTable>[0]["events"], limit: number) {
-  const nowMs = Date.now();
-  return events
-    .filter(e => {
-      if (!e.date) return false;
-      const d = new Date(e.date).getTime();
-      return d >= nowMs && d <= nowMs + 30 * 86_400_000;
-    })
-    .slice(0, limit);
-}
-
-// --- Page ---
-
 export default async function AdminDashboard() {
-  const { events, campaigns, allCampaigns, trendData, velocityData, marginalRoasByCampaign, fromDb } = await getData();
+  const { campaigns, trendData, marginalRoasByCampaign, fromDb } = await getData();
 
-  const upcomingShows = getUpcomingShows(events, 8);
-
-  const totalSold = events.reduce((s, e) => s + (e.tickets_sold ?? 0), 0);
-  const totalCap = events.reduce((s, e) => s + (e.tickets_sold ?? 0) + (e.tickets_available ?? 0), 0);
-  const totalGross = events.reduce((s, e) => s + (e.gross ?? 0), 0);
-  const totalSpend = campaigns.reduce((s, c) => s + (centsToUsd(c.spend) ?? 0), 0);
-  const avgRoas = computeBlendedRoas(campaigns.map(c => ({ spend: c.spend ?? 0, roas: c.roas }))) ?? 0;
+  const totalSpend = campaigns.reduce((sum, campaign) => sum + (centsToUsd(campaign.spend) ?? 0), 0);
+  const totalImpressions = campaigns.reduce((sum, campaign) => sum + (campaign.impressions ?? 0), 0);
+  const avgRoas = computeBlendedRoas(campaigns.map((campaign) => ({
+    spend: campaign.spend ?? 0,
+    roas: campaign.roas,
+  }))) ?? 0;
 
   const now = fmtTodayLong();
 
   const heroStats = [
-    { label: "Ad Spend", value: fmtUsd(totalSpend), icon: DollarSign, accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
-    { label: "Avg. ROAS", value: avgRoas > 0 ? avgRoas.toFixed(1) + "x" : "---", icon: TrendingUp, accent: "from-violet-500/20 to-purple-500/20", iconColor: "text-violet-400" },
-    { label: "Active Campaigns", value: String(campaigns.length), icon: Megaphone, accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
-  ];
-
-  const secondaryStats = [
-    { label: "Active Shows", value: String(events.length), sub: `${fmtNum(totalCap)} capacity`, icon: CalendarDays },
-    { label: "Tickets Sold", value: fmtNum(totalSold), sub: `of ${fmtNum(totalCap)}`, icon: Ticket },
-    { label: "Total Gross", value: fmtUsd(totalGross), sub: "box office revenue", icon: DollarSign },
+    {
+      label: "Ad Spend",
+      value: fmtUsd(totalSpend),
+      sub: "active campaigns",
+      icon: DollarSign,
+      accent: "from-cyan-500/20 to-blue-500/20",
+      iconColor: "text-cyan-400",
+    },
+    {
+      label: "Avg. ROAS",
+      value: avgRoas > 0 ? `${avgRoas.toFixed(1)}x` : "---",
+      sub: "blended by spend",
+      icon: TrendingUp,
+      accent: "from-violet-500/20 to-purple-500/20",
+      iconColor: "text-violet-400",
+    },
+    {
+      label: "Active Campaigns",
+      value: String(campaigns.length),
+      sub: `${fmtNum(totalImpressions)} impressions`,
+      icon: Megaphone,
+      accent: "from-emerald-500/20 to-teal-500/20",
+      iconColor: "text-emerald-400",
+    },
   ];
 
   return (
     <div className="space-y-4 sm:space-y-8">
-
-      {/* Header */}
       <AdminPageHeader title="Dashboard" description={now}>
         {fromDb ? (
           <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5 text-emerald-400 border-emerald-500/20 bg-emerald-500/10">
@@ -76,54 +67,24 @@ export default async function AdminDashboard() {
         )}
       </AdminPageHeader>
 
-
-      {/* Hero stat cards */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-        {heroStats.map((s) => (
-          <StatCard key={s.label} {...s} size="lg" />
+        {heroStats.map((stat) => (
+          <StatCard key={stat.label} {...stat} size="lg" />
         ))}
       </div>
 
-      {/* Secondary stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        {secondaryStats.map((s) => (
-          <StatCard key={s.label} {...s} />
-        ))}
-      </div>
-
-      {/* Trend charts */}
-      {(trendData.length > 0 || velocityData.length > 0) && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {trendData.length > 0 && (
-            <Card className="border-border/60">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Blended ROAS Trend
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RoasTrendChart data={trendData} />
-              </CardContent>
-            </Card>
-          )}
-          {velocityData.length > 0 && (
-            <Card className="border-border/60">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                  Daily Ticket Sales (All Shows)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <TicketVelocityChart data={velocityData} />
-              </CardContent>
-            </Card>
-          )}
-        </div>
+      {trendData.length > 0 && (
+        <Card className="border-border/60">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Blended ROAS Trend
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RoasTrendChart data={trendData} />
+          </CardContent>
+        </Card>
       )}
-
-      <EventsPreviewTable events={events} />
-
-      <UpcomingShows shows={upcomingShows} allCampaigns={allCampaigns} />
 
       <CampaignCards campaigns={campaigns} marginalRoasByCampaign={marginalRoasByCampaign} />
     </div>

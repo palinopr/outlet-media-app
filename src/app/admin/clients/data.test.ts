@@ -9,20 +9,11 @@ const {
   supabaseAdmin,
 } = vi.hoisted(() => {
   const state = {
-    ad_assets: [] as Record<string, unknown>[],
-    approval_requests: [] as Record<string, unknown>[],
-    asset_comments: [] as Record<string, unknown>[],
-    campaign_action_items: [] as Record<string, unknown>[],
     campaign_client_overrides: [] as Record<string, unknown>[],
-    campaign_comments: [] as Record<string, unknown>[],
     client_accounts: [] as Record<string, unknown>[],
     client_member_campaigns: [] as Record<string, unknown>[],
-    client_member_events: [] as Record<string, unknown>[],
     client_members: [] as Record<string, unknown>[],
     clients: [] as Record<string, unknown>[],
-    crm_comments: [] as Record<string, unknown>[],
-    event_comments: [] as Record<string, unknown>[],
-    tm_events: [] as Record<string, unknown>[],
   };
 
   function applyFilters(
@@ -164,7 +155,7 @@ describe("admin clients data", () => {
     vi.mocked(listEffectiveCampaignRowsForClientSlug).mockResolvedValue([]);
   });
 
-  it("does not count CRM comments in client summary open-discussion totals", async () => {
+  it("returns campaign-focused client summaries without discussion or show totals", async () => {
     state.clients = [
       {
         created_at: "2026-03-06T12:00:00.000Z",
@@ -174,26 +165,18 @@ describe("admin clients data", () => {
         status: "active",
       },
     ];
-    state.crm_comments = [
-      {
-        client_slug: "zamora",
-        id: "crm_comment_1",
-        parent_comment_id: null,
-        resolved: false,
-      },
-    ];
-
     const summaries = await getClientSummaries();
 
     expect(summaries).toEqual([
-      expect.objectContaining({
-        id: "client_1",
-        openDiscussions: 0,
+      expect.not.objectContaining({
+        activeShows: expect.anything(),
+        openDiscussions: expect.anything(),
       }),
     ]);
+    expect(summaries[0]).toEqual(expect.objectContaining({ id: "client_1" }));
   });
 
-  it("does not count CRM comments in client detail open-discussion totals", async () => {
+  it("returns campaign-focused client detail without discussion or show totals", async () => {
     state.clients = [
       {
         created_at: "2026-03-06T12:00:00.000Z",
@@ -220,21 +203,13 @@ describe("admin clients data", () => {
           },
         ] as never,
     );
-    state.crm_comments = [
-      {
-        client_slug: "zamora",
-        id: "crm_comment_1",
-        parent_comment_id: null,
-        resolved: false,
-      },
-    ];
-
     const detail = await getClientDetail("client_1");
 
+    expect(detail).toEqual(expect.objectContaining({ id: "client_1" }));
     expect(detail).toEqual(
-      expect.objectContaining({
-        id: "client_1",
-        openDiscussions: 0,
+      expect.not.objectContaining({
+        activeShows: expect.anything(),
+        openDiscussions: expect.anything(),
       }),
     );
   });

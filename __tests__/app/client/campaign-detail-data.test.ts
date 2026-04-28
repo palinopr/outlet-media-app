@@ -254,7 +254,6 @@ describe("client campaign detail reads", () => {
       "7",
       {
         allowedCampaignIds: ["cmp_assigned_new"],
-        allowedEventIds: null,
       },
     );
 

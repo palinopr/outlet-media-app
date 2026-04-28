@@ -77,25 +77,6 @@ describe("fetchSearchableRecords", () => {
         };
       }
 
-      if (table === "ad_assets") {
-        return {
-          select: () => ({
-            limit: vi.fn().mockResolvedValue({
-              data: [
-                {
-                  id: "asset-1",
-                  file_name: "Hero.mp4",
-                  client_slug: "acme",
-                  folder: "library",
-                  status: "ready",
-                },
-              ],
-              error: null,
-            }),
-          }),
-        };
-      }
-
       throw new Error(`Unexpected table: ${table}`);
     });
 
@@ -103,7 +84,6 @@ describe("fetchSearchableRecords", () => {
 
     expect(records).toHaveLength(2);
     expect(records.map((record) => record.type)).toEqual(["campaign", "client"]);
-    expect(records.some((record) => record.href.startsWith("/admin/assets/"))).toBe(false);
     expect(records.some((record) => record.href.startsWith("/admin/events"))).toBe(false);
   });
 });

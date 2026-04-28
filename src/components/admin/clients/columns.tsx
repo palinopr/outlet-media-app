@@ -86,17 +86,6 @@ export const clientColumns: ColumnDef<ClientSummary>[] = [
     ),
   },
   {
-    accessorKey: "activeShows",
-    header: ({ column }) => (
-      <ColumnHeader column={column} title="Shows" className="justify-end" />
-    ),
-    cell: ({ row }) => (
-      <div className="text-right text-sm tabular-nums">
-        {row.original.activeShows}
-      </div>
-    ),
-  },
-  {
     accessorKey: "activeCampaigns",
     header: ({ column }) => (
       <ColumnHeader column={column} title="Campaigns" className="justify-end" />
@@ -118,11 +107,9 @@ export const clientColumns: ColumnDef<ClientSummary>[] = [
       const detail =
         client.connectionRiskAccounts > 0
           ? `${client.connectionRiskAccounts} connections at risk`
-          : client.assetsNeedingReview > 0
-            ? `${client.assetsNeedingReview} assets to review`
-            : client.activeCampaigns > 0
-              ? `${client.activeCampaigns} active campaigns`
-              : "Clear";
+          : client.activeCampaigns > 0
+            ? `${client.activeCampaigns} active campaigns`
+            : "Clear";
 
       return (
         <div className="text-right">

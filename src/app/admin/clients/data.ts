@@ -1,11 +1,10 @@
+import { clerkClient } from "@clerk/nextjs/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import {
   applyEffectiveCampaignClientSlugs,
   listEffectiveCampaignRowsForClientSlug,
 } from "@/lib/campaign-client-assignment";
-import { clerkClient } from "@clerk/nextjs/server";
 import { centsToUsd, computeBlendedRoas } from "@/lib/formatters";
-import { buildClientWorkflowHealth } from "@/features/clients/summary";
 import { listActionableInvitations } from "@/features/invitations/server";
 import {
   buildConnectedAccountsSummary,
@@ -26,65 +25,20 @@ import type {
   ClientCampaign,
 } from "./types";
 
-// ─── Summaries ──────────────────────────────────────────────────────────────
-
 export async function getClientSummaries(): Promise<ClientSummary[]> {
   if (!supabaseAdmin) return [];
 
-  const [
-    clientsRes,
-    campaignsRes,
-    eventsRes,
-    membersRes,
-    approvalsRes,
-    actionItemsRes,
-    assetsRes,
-    connectedAccountsRes,
-    campaignDiscussionsRes,
-    assetDiscussionsRes,
-    eventDiscussionsRes,
-  ] = await Promise.all([
+  const [clientsRes, campaignsRes, membersRes, connectedAccountsRes] = await Promise.all([
     supabaseAdmin.from("clients").select("id, name, slug, status, created_at"),
     supabaseAdmin
       .from("meta_campaigns")
       .select("campaign_id, client_slug, name, status, spend, roas"),
-    supabaseAdmin
-      .from("tm_events")
-      .select("client_slug")
-      .not("client_slug", "is", null),
     supabaseAdmin.from("client_members").select("client_id"),
-    supabaseAdmin
-      .from("approval_requests")
-      .select("client_slug, entity_type, entity_id, metadata")
-      .eq("status", "pending"),
-    supabaseAdmin
-      .from("campaign_action_items")
-      .select("campaign_id, status")
-      .neq("status", "done"),
-    supabaseAdmin
-      .from("ad_assets")
-      .select("client_slug, status")
-      .in("status", ["new", "labeled"]),
     supabaseAdmin
       .from("client_accounts")
       .select(
         "id, client_slug, ad_account_id, ad_account_name, status, connected_at, token_expires_at, last_used_at",
       ),
-    supabaseAdmin
-      .from("campaign_comments")
-      .select("campaign_id")
-      .eq("resolved", false)
-      .is("parent_comment_id", null),
-    supabaseAdmin
-      .from("asset_comments" as never)
-      .select("client_slug")
-      .eq("resolved", false)
-      .is("parent_comment_id", null),
-    supabaseAdmin
-      .from("event_comments" as never)
-      .select("client_slug")
-      .eq("resolved", false)
-      .is("parent_comment_id", null),
   ]);
 
   if (!clientsRes.data?.length) return [];
@@ -104,100 +58,19 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
     string,
     { campaignId: string; status: string; spend: number | null; roas: number | null }[]
   > = {};
-  for (const c of effectiveCampaignRows) {
-    const slug = c.client_slug ?? "unknown";
+  for (const campaign of effectiveCampaignRows) {
+    const slug = campaign.client_slug ?? "unknown";
     (campaignsBySlug[slug] ??= []).push({
-      campaignId: c.campaign_id,
-      status: c.status ?? "unknown",
-      spend: c.spend ?? null,
-      roas: c.roas ?? null,
+      campaignId: campaign.campaign_id,
+      status: campaign.status ?? "unknown",
+      spend: campaign.spend ?? null,
+      roas: campaign.roas ?? null,
     });
   }
 
-  const campaignIdsBySlug = new Map<string, Set<string>>();
-  for (const [slug, campaigns] of Object.entries(campaignsBySlug)) {
-    campaignIdsBySlug.set(
-      slug,
-      new Set(campaigns.map((campaign) => campaign.campaignId)),
-    );
-  }
-
-  const showsBySlug: Record<string, number> = {};
-  for (const e of eventsRes.data ?? []) {
-    const slug = e.client_slug as string;
-    showsBySlug[slug] = (showsBySlug[slug] ?? 0) + 1;
-  }
-
   const membersByClientId: Record<string, number> = {};
-  for (const m of membersRes.data ?? []) {
-    membersByClientId[m.client_id] = (membersByClientId[m.client_id] ?? 0) + 1;
-  }
-
-  const pendingApprovalsBySlug: Record<string, number> = {};
-  for (const row of approvalsRes.data ?? []) {
-    const approvalClientSlug = (row.client_slug as string | null) ?? null;
-    const entityType = (row.entity_type as string | null) ?? null;
-    const entityId = (row.entity_id as string | null) ?? null;
-    const metadata =
-      typeof row.metadata === "object" && row.metadata !== null
-        ? (row.metadata as Record<string, unknown>)
-        : {};
-    const campaignId =
-      entityType === "campaign"
-        ? entityId
-        : typeof metadata.campaignId === "string"
-          ? metadata.campaignId
-          : null;
-
-    if (campaignId) {
-      for (const [slug, campaignIds] of campaignIdsBySlug) {
-        if (!campaignIds.has(campaignId)) continue;
-        pendingApprovalsBySlug[slug] = (pendingApprovalsBySlug[slug] ?? 0) + 1;
-      }
-      continue;
-    }
-
-    const slug = approvalClientSlug ?? "unknown";
-    pendingApprovalsBySlug[slug] = (pendingApprovalsBySlug[slug] ?? 0) + 1;
-  }
-
-  const openActionItemsBySlug: Record<string, number> = {};
-  for (const row of actionItemsRes.data ?? []) {
-    const campaignId = (row.campaign_id as string | null) ?? null;
-    if (!campaignId) continue;
-
-    for (const [slug, campaignIds] of campaignIdsBySlug) {
-      if (!campaignIds.has(campaignId)) continue;
-      openActionItemsBySlug[slug] = (openActionItemsBySlug[slug] ?? 0) + 1;
-    }
-  }
-
-  const assetsNeedingReviewBySlug: Record<string, number> = {};
-  for (const row of assetsRes.data ?? []) {
-    const slug = (row.client_slug as string | null) ?? "unknown";
-    assetsNeedingReviewBySlug[slug] = (assetsNeedingReviewBySlug[slug] ?? 0) + 1;
-  }
-
-  const openDiscussionsBySlug: Record<string, number> = {};
-  for (const row of campaignDiscussionsRes.data ?? []) {
-    const campaignId = (row as { campaign_id?: string | null }).campaign_id ?? null;
-    if (!campaignId) continue;
-
-    for (const [slug, campaignIds] of campaignIdsBySlug) {
-      if (!campaignIds.has(campaignId)) continue;
-      openDiscussionsBySlug[slug] = (openDiscussionsBySlug[slug] ?? 0) + 1;
-    }
-  }
-
-  for (const dataset of [
-    assetDiscussionsRes.data ?? [],
-    eventDiscussionsRes.data ?? [],
-  ]) {
-    for (const row of dataset) {
-      const record = row as { client_slug?: string | null };
-      const slug = record.client_slug ?? "unknown";
-      openDiscussionsBySlug[slug] = (openDiscussionsBySlug[slug] ?? 0) + 1;
-    }
+  for (const member of membersRes.data ?? []) {
+    membersByClientId[member.client_id] = (membersByClientId[member.client_id] ?? 0) + 1;
   }
 
   const connectedAccountsBySlug = new Map<string, ConnectedAccount[]>();
@@ -211,29 +84,23 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
   return clientsRes.data.map((client) => {
     const campaigns = campaignsBySlug[client.slug] ?? [];
     const totalSpend = campaigns.reduce(
-      (s, c) => s + (centsToUsd(c.spend ?? 0) as number),
+      (sum, campaign) => sum + (centsToUsd(campaign.spend ?? 0) as number),
       0,
     );
     const totalRevenue = campaigns.reduce(
-      (s, c) => s + (centsToUsd(c.spend ?? 0) as number) * (c.roas ?? 0),
+      (sum, campaign) => sum + (centsToUsd(campaign.spend ?? 0) as number) * (campaign.roas ?? 0),
       0,
     );
-    const activeCampaigns = campaigns.filter(
-      (c) => c.status === "ACTIVE",
-    ).length;
-    const roas = computeBlendedRoas(campaigns.map(c => ({ spend: c.spend ?? 0, roas: c.roas }))) ?? 0;
+    const activeCampaigns = campaigns.filter((campaign) => campaign.status === "ACTIVE").length;
+    const roas = computeBlendedRoas(campaigns.map((campaign) => ({
+      spend: campaign.spend ?? 0,
+      roas: campaign.roas,
+    }))) ?? 0;
     const connectionSummary = buildConnectedAccountsSummary(
       connectedAccountsBySlug.get(client.slug) ?? [],
     );
-    const attention = buildClientWorkflowHealth({
-      assetsNeedingReview: assetsNeedingReviewBySlug[client.slug] ?? 0,
-      openActionItems: openActionItemsBySlug[client.slug] ?? 0,
-      openDiscussions: openDiscussionsBySlug[client.slug] ?? 0,
-      pendingApprovals: pendingApprovalsBySlug[client.slug] ?? 0,
-    });
 
     return {
-      assetsNeedingReview: attention.assetsNeedingReview,
       connectedAccountCount: connectionSummary.totalCount,
       connectionRiskAccounts: connectionSummary.attentionCount,
       id: client.id,
@@ -241,13 +108,9 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
       slug: client.slug,
       status: client.status,
       memberCount: membersByClientId[client.id] ?? 0,
-      needsAttention: attention.needsAttention,
+      needsAttention: connectionSummary.attentionCount,
       activeCampaigns,
-      openActionItems: attention.openActionItems,
-      openDiscussions: attention.openDiscussions,
-      pendingApprovals: attention.pendingApprovals,
       totalCampaigns: campaigns.length,
-      activeShows: showsBySlug[client.slug] ?? 0,
       totalSpend,
       totalRevenue,
       roas,
@@ -256,23 +119,15 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
   });
 }
 
-// ─── Detail ─────────────────────────────────────────────────────────────────
-
 async function fetchMemberAssignments(memberIds: string[]) {
   if (memberIds.length === 0) {
-    return { campaignsByMember: new Map<string, string[]>(), eventsByMember: new Map<string, string[]>() };
+    return { campaignsByMember: new Map<string, string[]>() };
   }
 
-  const [assignedCampaignsRes, assignedEventsRes] = await Promise.all([
-    supabaseAdmin!
-      .from("client_member_campaigns")
-      .select("member_id, campaign_id")
-      .in("member_id", memberIds),
-    supabaseAdmin!
-      .from("client_member_events")
-      .select("member_id, event_id")
-      .in("member_id", memberIds),
-  ]);
+  const assignedCampaignsRes = await supabaseAdmin!
+    .from("client_member_campaigns")
+    .select("member_id, campaign_id")
+    .in("member_id", memberIds);
 
   const campaignsByMember = new Map<string, string[]>();
   for (const row of assignedCampaignsRes.data ?? []) {
@@ -281,78 +136,51 @@ async function fetchMemberAssignments(memberIds: string[]) {
     campaignsByMember.set(row.member_id, list);
   }
 
-  const eventsByMember = new Map<string, string[]>();
-  for (const row of assignedEventsRes.data ?? []) {
-    const list = eventsByMember.get(row.member_id) ?? [];
-    list.push(row.event_id);
-    eventsByMember.set(row.member_id, list);
-  }
-
-  return { campaignsByMember, eventsByMember };
+  return { campaignsByMember };
 }
 
 async function enrichMembersWithClerk(
   memberRows: { id: string; clerk_user_id: string; role: string; scope: string; created_at: string }[],
   campaignsByMember: Map<string, string[]>,
-  eventsByMember: Map<string, string[]>,
 ): Promise<ClientMember[]> {
   const clerk = await clerkClient();
   return Promise.all(
-    memberRows.map(async (m) => {
+    memberRows.map(async (member) => {
       let name = "Unknown user";
       let email = "";
       try {
-        const user = await clerk.users.getUser(m.clerk_user_id);
-        name =
-          [user.firstName, user.lastName].filter(Boolean).join(" ") ||
-          "Unknown user";
+        const user = await clerk.users.getUser(member.clerk_user_id);
+        name = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Unknown user";
         email = user.emailAddresses?.[0]?.emailAddress ?? "";
       } catch {
-        // Clerk user deleted or unreachable
+        // Clerk user deleted or unreachable.
       }
       return {
-        id: m.id,
-        clerkUserId: m.clerk_user_id,
-        role: m.role,
-        scope: m.scope,
+        id: member.id,
+        clerkUserId: member.clerk_user_id,
+        role: member.role,
+        scope: member.scope,
         name,
         email,
-        createdAt: m.created_at,
-        assignedCampaignIds: campaignsByMember.get(m.id) ?? [],
-        assignedEventIds: eventsByMember.get(m.id) ?? [],
+        createdAt: member.created_at,
+        assignedCampaignIds: campaignsByMember.get(member.id) ?? [],
       };
     }),
   );
 }
 
-export async function getClientDetail(
-  clientId: string,
-): Promise<ClientDetail | null> {
+export async function getClientDetail(clientId: string): Promise<ClientDetail | null> {
   if (!supabaseAdmin) return null;
 
   const { data: client } = await supabaseAdmin
     .from("clients")
-    .select(
-      "id, name, slug, status, created_at, portal_brand_name, portal_logo_url, portal_logo_alt",
-    )
+    .select("id, name, slug, status, created_at, portal_brand_name, portal_logo_url, portal_logo_alt")
     .eq("id", clientId)
     .single();
 
   if (!client) return null;
 
-  const [
-    membersRes,
-    campaignsRes,
-    eventsRes,
-    assetsRes,
-    connectedAccountsRes,
-    approvalsRes,
-    actionItemsRes,
-    campaignDiscussionsRes,
-    assetDiscussionsRes,
-    eventDiscussionsRes,
-    pendingInvites,
-  ] = await Promise.all([
+  const [membersRes, campaignsRes, connectedAccountsRes, pendingInvites] = await Promise.all([
     supabaseAdmin
       .from("client_members")
       .select("id, clerk_user_id, role, scope, created_at")
@@ -367,110 +195,35 @@ export async function getClientDetail(
       client_slug: string | null;
     }>("id, campaign_id, name, status, spend, roas, client_slug", client.slug),
     supabaseAdmin
-      .from("tm_events")
-      .select("id, name, venue, date, status")
-      .eq("client_slug", client.slug)
-      .order("date", { ascending: true }),
-    supabaseAdmin
-      .from("ad_assets")
-      .select("status")
-      .eq("client_slug", client.slug)
-      .in("status", ["new", "labeled"]),
-    supabaseAdmin
       .from("client_accounts")
       .select(
         "id, client_slug, ad_account_id, ad_account_name, status, connected_at, token_expires_at, last_used_at",
       )
       .eq("client_slug", client.slug)
       .order("connected_at", { ascending: false }),
-    supabaseAdmin
-      .from("approval_requests")
-      .select("id, client_slug, entity_type, entity_id, metadata")
-      .eq("status", "pending"),
-    supabaseAdmin
-      .from("campaign_action_items")
-      .select("id, campaign_id")
-      .neq("status", "done"),
-    supabaseAdmin
-      .from("campaign_comments")
-      .select("id, campaign_id")
-      .eq("resolved", false)
-      .is("parent_comment_id", null),
-    supabaseAdmin
-      .from("asset_comments" as never)
-      .select("id")
-      .eq("client_slug", client.slug)
-      .eq("resolved", false)
-      .is("parent_comment_id", null),
-    supabaseAdmin
-      .from("event_comments" as never)
-      .select("id")
-      .eq("client_slug", client.slug)
-      .eq("resolved", false)
-      .is("parent_comment_id", null),
     listActionableInvitations({ clientSlug: client.slug }),
   ]);
 
   const memberRows = membersRes.data ?? [];
-  const { campaignsByMember, eventsByMember } = await fetchMemberAssignments(memberRows.map((m) => m.id));
-  const members = await enrichMembersWithClerk(memberRows, campaignsByMember, eventsByMember);
+  const { campaignsByMember } = await fetchMemberAssignments(memberRows.map((member) => member.id));
+  const members = await enrichMembersWithClerk(memberRows, campaignsByMember);
 
-  const campaigns: ClientCampaign[] = campaignsRes.map((c) => ({
-    id: c.campaign_id ?? c.id,
-    name: c.name ?? c.campaign_id ?? c.id,
-    status: c.status ?? "unknown",
-    spend: centsToUsd(c.spend ?? 0) as number,
-    roas: c.roas ?? 0,
+  const campaigns: ClientCampaign[] = campaignsRes.map((campaign) => ({
+    id: campaign.campaign_id ?? campaign.id,
+    name: campaign.name ?? campaign.campaign_id ?? campaign.id,
+    status: campaign.status ?? "unknown",
+    spend: centsToUsd(campaign.spend ?? 0) as number,
+    roas: campaign.roas ?? 0,
   }));
-  const clientCampaignIds = new Set(campaigns.map((campaign) => campaign.id));
 
-  const connectedAccounts: ConnectedAccount[] = ((connectedAccountsRes.data ?? []) as ConnectedAccount[]);
+  const connectedAccounts = (connectedAccountsRes.data ?? []) as ConnectedAccount[];
   const connectionSummary = buildConnectedAccountsSummary(connectedAccounts);
-
-  const totalSpend = campaigns.reduce((s, c) => s + c.spend, 0);
-  const totalRevenue = campaigns.reduce((s, c) => s + c.spend * c.roas, 0);
-  const activeCampaigns = campaigns.filter(
-    (c) => c.status === "ACTIVE",
-  ).length;
+  const totalSpend = campaigns.reduce((sum, campaign) => sum + campaign.spend, 0);
+  const totalRevenue = campaigns.reduce((sum, campaign) => sum + campaign.spend * campaign.roas, 0);
+  const activeCampaigns = campaigns.filter((campaign) => campaign.status === "ACTIVE").length;
   const roas = computeBlendedRoas(campaigns) ?? 0;
-  const attention = buildClientWorkflowHealth({
-    assetsNeedingReview: (assetsRes.data ?? []).length,
-    openActionItems: ((actionItemsRes.data ?? []) as Array<{ campaign_id: string | null }>)
-      .filter((row) => row.campaign_id && clientCampaignIds.has(row.campaign_id))
-      .length,
-    openDiscussions:
-      ((campaignDiscussionsRes.data ?? []) as Array<{ campaign_id: string | null }>)
-        .filter((row) => row.campaign_id && clientCampaignIds.has(row.campaign_id))
-        .length +
-      ((assetDiscussionsRes.data ?? []) as unknown[]).length +
-      ((eventDiscussionsRes.data ?? []) as unknown[]).length,
-    pendingApprovals: ((approvalsRes.data ?? []) as Array<Record<string, unknown>>)
-      .filter((row) => {
-        const approvalClientSlug = (row.client_slug as string | null) ?? null;
-        const entityType = (row.entity_type as string | null) ?? null;
-        const entityId = (row.entity_id as string | null) ?? null;
-        const metadata =
-          typeof row.metadata === "object" && row.metadata !== null
-            ? (row.metadata as Record<string, unknown>)
-            : {};
-        const campaignId =
-          entityType === "campaign"
-            ? entityId
-            : typeof metadata.campaignId === "string"
-              ? metadata.campaignId
-              : null;
-
-        if (campaignId) {
-          return clientCampaignIds.has(campaignId);
-        }
-
-        return approvalClientSlug === client.slug;
-      })
-      .length,
-  });
 
   return {
-    assetsNeedingReview: attention.assetsNeedingReview,
     connectedAccountCount: connectionSummary.totalCount,
     connectionRiskAccounts: connectionSummary.attentionCount,
     id: client.id,
@@ -479,13 +232,9 @@ export async function getClientDetail(
     status: client.status,
     memberCount: members.length,
     pendingInvites,
-    needsAttention: attention.needsAttention,
+    needsAttention: connectionSummary.attentionCount,
     activeCampaigns,
-    openActionItems: attention.openActionItems,
-    openDiscussions: attention.openDiscussions,
-    pendingApprovals: attention.pendingApprovals,
     totalCampaigns: campaigns.length,
-    activeShows: (eventsRes.data ?? []).length,
     totalSpend,
     totalRevenue,
     roas,

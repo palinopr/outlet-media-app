@@ -21,9 +21,6 @@ vi.mock("@/components/admin/campaigns/campaign-detail-dashboard", () => ({
 }));
 
 const data = {
-  actionItems: [],
-  approvals: [],
-  assets: [],
   campaign: {
     campaignId: "cmp_1",
     name: "Barcelona Push",
@@ -42,8 +39,6 @@ const data = {
     dailyBudget: 400,
     startTime: "2026-04-01",
   },
-  linkedEvents: [],
-  systemEvents: [],
 } as CampaignOperatingData;
 
 describe("AdminCampaignDetailPage", () => {

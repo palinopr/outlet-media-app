@@ -1,48 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 
-export type SystemEventName =
-  | "approval_approved"
-  | "approval_cancelled"
-  | "approval_rejected"
-  | "approval_requested"
-  | "asset_comment_added"
-  | "asset_comment_deleted"
-  | "asset_comment_resolved"
-  | "asset_deleted"
-  | "asset_folder_imported"
-  | "asset_follow_up_item_created"
-  | "asset_follow_up_item_deleted"
-  | "asset_follow_up_item_updated"
-  | "asset_uploaded"
-  | "asset_updated"
-  | "campaign_comment_added"
-  | "campaign_comment_deleted"
-  | "campaign_comment_resolved"
-  | "campaign_action_item_created"
-  | "campaign_action_item_deleted"
-  | "campaign_action_item_updated"
-  | "campaign_updated"
-  | "event_comment_added"
-  | "event_comment_deleted"
-  | "event_comment_resolved"
-  | "event_follow_up_item_created"
-  | "event_follow_up_item_deleted"
-  | "event_follow_up_item_updated"
-  | "event_updated"
-  | "workspace_comment_added"
-  | "workspace_comment_deleted"
-  | "workspace_comment_resolved"
-  | "workspace_page_archived"
-  | "workspace_page_created"
-  | "workspace_page_deleted"
-  | "workspace_page_restored"
-  | "workspace_page_updated"
-  | "workspace_task_created"
-  | "workspace_task_deleted"
-  | "workspace_task_reordered"
-  | "workspace_task_updated";
-
+export type SystemEventName = "campaign_updated";
 export type SystemEventVisibility = "admin_only" | "shared";
 export type SystemEventActorType = "system" | "user";
 export type SystemEventSource = "app" | "backfill" | "webhook" | "worker" | (string & {});
@@ -104,68 +63,11 @@ interface ListSystemEventsOptions {
   limit?: number;
 }
 
-interface SystemEventScopeFilter {
-  allowedCampaignIds?: string[] | null;
-  allowedEventIds?: string[] | null;
-  allowedAssetIds?: Iterable<string> | null;
-}
-
-interface ListCampaignSystemEventsOptions {
-  audience?: "all" | SystemEventVisibility;
-  clientSlug: string;
-  campaignId: string;
-  limit?: number;
-}
-
-interface ListEventSystemEventsOptions {
-  audience?: "all" | SystemEventVisibility;
-  clientSlug: string;
-  eventId: string;
-  campaignIds?: string[] | null;
-  limit?: number;
-}
-
 const LEGACY_SYSTEM_EVENT_SELECT =
   "id, created_at, event_name, visibility, actor_type, actor_id, actor_name, client_slug, summary, detail, entity_type, entity_id, page_id, task_id, metadata";
 
 const SYSTEM_EVENT_SELECT =
   `${LEGACY_SYSTEM_EVENT_SELECT}, event_version, occurred_at, source, correlation_id, causation_id, idempotency_key`;
-
-function eventMatchesCampaign(event: SystemEvent, campaignId: string) {
-  if (event.entityType === "campaign" && event.entityId === campaignId) return true;
-  return event.metadata.campaignId === campaignId;
-}
-
-function eventMatchesEventContext(
-  event: SystemEvent,
-  eventId: string,
-  linkedCampaignIds: Set<string>,
-) {
-  if (systemEventEventId(event) === eventId) return true;
-
-  const campaignId = systemEventCampaignId(event);
-  return !!campaignId && linkedCampaignIds.has(campaignId);
-}
-
-function systemEventCampaignId(event: SystemEvent) {
-  if (event.entityType === "campaign" && event.entityId) return event.entityId;
-  return typeof event.metadata.campaignId === "string" ? event.metadata.campaignId : null;
-}
-
-function systemEventEventId(event: SystemEvent) {
-  if (event.entityType === "event" && event.entityId) return event.entityId;
-  return typeof event.metadata.eventId === "string" ? event.metadata.eventId : null;
-}
-
-function systemEventAssetId(event: SystemEvent) {
-  if (event.entityType === "asset" && event.entityId) return event.entityId;
-  return typeof event.metadata.assetId === "string" ? event.metadata.assetId : null;
-}
-
-function normalizeScopeSet(values?: Iterable<string> | null) {
-  if (values == null) return null;
-  return values instanceof Set ? values : new Set(values);
-}
 
 function metadataString(metadata: Record<string, unknown> | undefined, key: string) {
   const value = metadata?.[key];
@@ -195,10 +97,7 @@ function resolveIdempotencyKey(input: LogSystemEventInput, metadata: Record<stri
 
 function isEnvelopeSchemaError(error: { message?: string | null; details?: string | null } | null) {
   if (!error) return false;
-
   const text = `${error.message ?? ""} ${error.details ?? ""}`;
-  if (!text) return false;
-
   return [
     "event_version",
     "occurred_at",
@@ -210,10 +109,9 @@ function isEnvelopeSchemaError(error: { message?: string | null; details?: strin
 }
 
 function isSystemEventIdempotencyConflict(error: { code?: string | null; message?: string | null } | null) {
-  if (!error) return false;
-  return (
-    error.code === "23505" &&
-    (error.message?.includes("idx_system_events_source_idempotency_key") ?? false)
+  return Boolean(
+    error?.code === "23505" &&
+      (error.message?.includes("idx_system_events_source_idempotency_key") ?? false),
   );
 }
 
@@ -254,57 +152,19 @@ function buildSystemEventsQuery(
     .order("created_at", { ascending: false })
     .limit(options.limit ?? 12);
 
-  if (options.clientSlug) {
-    query = query.eq("client_slug", options.clientSlug);
-  }
-
-  if (options.entityType) {
-    query = query.eq("entity_type", options.entityType);
-  }
-
-  if (options.entityId) {
-    query = query.eq("entity_id", options.entityId);
-  }
-
-  if (options.audience && options.audience !== "all") {
-    query = query.eq("visibility", options.audience);
-  }
+  if (options.clientSlug) query = query.eq("client_slug", options.clientSlug);
+  if (options.entityType) query = query.eq("entity_type", options.entityType);
+  if (options.entityId) query = query.eq("entity_id", options.entityId);
+  if (options.audience && options.audience !== "all") query = query.eq("visibility", options.audience);
 
   return query;
-}
-
-
-export function filterSystemEventsByScope(
-  events: SystemEvent[],
-  scope: SystemEventScopeFilter | null | undefined,
-) {
-  const campaignIds = normalizeScopeSet(scope?.allowedCampaignIds ?? null);
-  const eventIds = normalizeScopeSet(scope?.allowedEventIds ?? null);
-  const assetIds = normalizeScopeSet(scope?.allowedAssetIds ?? null);
-
-  if (!campaignIds && !eventIds && !assetIds) return events;
-
-  return events.filter((event) => {
-    const campaignId = systemEventCampaignId(event);
-    const eventId = systemEventEventId(event);
-    const assetId = systemEventAssetId(event);
-
-    if (!campaignId && !eventId && !assetId) return true;
-    if (campaignId && campaignIds?.has(campaignId)) return true;
-    if (eventId && eventIds?.has(eventId)) return true;
-    if (assetId && assetIds?.has(assetId)) return true;
-    return false;
-  });
 }
 
 function toActorName(user: Awaited<ReturnType<typeof currentUser>>): string | null {
   if (!user) return null;
   if (user.fullName) return user.fullName;
-
   const name = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
-  if (name) return name;
-
-  return user.emailAddresses[0]?.emailAddress ?? user.username ?? null;
+  return name || user.emailAddresses[0]?.emailAddress || user.username || null;
 }
 
 async function resolveActor(input: ActorInput) {
@@ -358,12 +218,10 @@ export async function logSystemEvent(input: LogSystemEventInput): Promise<void> 
 
   let { error } = await supabaseAdmin.from("system_events").insert(row);
 
-  if (isSystemEventIdempotencyConflict(error)) {
-    return;
-  }
+  if (isSystemEventIdempotencyConflict(error)) return;
 
   if (isEnvelopeSchemaError(error)) {
-    const legacyRow = {
+    const legacyInsert = await supabaseAdmin.from("system_events").insert({
       event_name: row.event_name,
       visibility: row.visibility,
       actor_type: row.actor_type,
@@ -377,9 +235,7 @@ export async function logSystemEvent(input: LogSystemEventInput): Promise<void> 
       page_id: row.page_id,
       task_id: row.task_id,
       metadata: row.metadata,
-    };
-
-    const legacyInsert = await supabaseAdmin.from("system_events").insert(legacyRow);
+    });
     error = legacyInsert.error;
   }
 
@@ -408,39 +264,4 @@ export async function listSystemEvents(
   }
 
   return ((data ?? []) as unknown[]).map((row) => mapSystemEventRow(row as Record<string, unknown>));
-}
-
-export async function listCampaignSystemEvents(
-  options: ListCampaignSystemEventsOptions,
-): Promise<SystemEvent[]> {
-  const events = await listSystemEvents({
-    audience: options.audience,
-    clientSlug: options.clientSlug,
-    limit: Math.max((options.limit ?? 8) * 6, 24),
-  });
-
-  return events.filter((event) => eventMatchesCampaign(event, options.campaignId)).slice(0, options.limit ?? 8);
-}
-
-export async function listEventSystemEvents(
-  options: ListEventSystemEventsOptions,
-): Promise<SystemEvent[]> {
-  const linkedCampaignIds = new Set((options.campaignIds ?? []).filter(Boolean));
-  const events = await listSystemEvents({
-    audience: options.audience,
-    clientSlug: options.clientSlug,
-    limit: Math.max((options.limit ?? 8) * 8, 32),
-  });
-
-  return events
-    .filter((event) => eventMatchesEventContext(event, options.eventId, linkedCampaignIds))
-    .slice(0, options.limit ?? 8);
-}
-
-export function summarizeChangedFields(fields: string[]): string | null {
-  if (fields.length === 0) return null;
-  if (fields.length === 1) return `Changed ${fields[0]}.`;
-  if (fields.length === 2) return `Changed ${fields[0]} and ${fields[1]}.`;
-
-  return `Changed ${fields.slice(0, -1).join(", ")}, and ${fields.at(-1)}.`;
 }

@@ -18,7 +18,7 @@ The active product reset keeps only the maintainable web surfaces needed for Cam
 ## Retired / Do Not Rebuild By Default
 
 - broad workspace/client app surfaces
-- duplicate approvals, conversations, updates, CRM, reports, events, or asset centers outside the core pages
+- approvals, conversations, updates, CRM, reports, events, action items, follow-up, or asset centers outside the core pages
 - the old agent runtime, admin agent page, client agent tab, task queue, and outcome widgets
 - one-off scripts and local artifacts at the repo root
 

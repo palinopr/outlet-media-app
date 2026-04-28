@@ -26,8 +26,6 @@ afterEach(() => {
 
 const client = {
   activeCampaigns: 1,
-  activeShows: 1,
-  assetsNeedingReview: 1,
   campaigns: [
     {
       id: "campaign-1",
@@ -45,11 +43,9 @@ const client = {
   memberCount: 1,
   members: [],
   name: "Acme Live",
-  needsAttention: 3,
+  needsAttention: 1,
   logoAlt: "Acme Live",
   logoUrl: "https://cdn.example.com/acme.png",
-  openActionItems: 2,
-  openDiscussions: 1,
   pendingInvites: [
     {
       createdAt: "2026-03-03T00:00:00.000Z",
@@ -58,7 +54,6 @@ const client = {
       status: "pending" as const,
     },
   ],
-  pendingApprovals: 1,
   roas: 3.4,
   slug: "acme",
   status: "active",

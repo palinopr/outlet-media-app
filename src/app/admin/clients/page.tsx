@@ -8,7 +8,6 @@ import {
   Users,
   DollarSign,
   Megaphone,
-  Image as ImageIcon,
   Link2Off,
 } from "lucide-react";
 import {
@@ -28,7 +27,6 @@ export default async function ClientsPage() {
   const totalSpend = clients.reduce((s, c) => s + c.totalSpend, 0);
   const totalCampaigns = clients.reduce((s, c) => s + c.totalCampaigns, 0);
   const activeCampaigns = clients.reduce((s, c) => s + c.activeCampaigns, 0);
-  const assetsNeedingReview = clients.reduce((s, c) => s + c.assetsNeedingReview, 0);
   const connectionRiskAccounts = clients.reduce(
     (sum, client) => sum + client.connectionRiskAccounts,
     0,
@@ -50,7 +48,6 @@ export default async function ClientsPage() {
       sub: `${clients.filter((client) => client.connectionRiskAccounts > 0).length} client accounts affected`,
       icon: Link2Off,
     },
-    { label: "Assets Needing Review", value: String(assetsNeedingReview), sub: `${activeCampaigns} active campaigns`, icon: ImageIcon },
     { label: "Managed Spend", value: fmtUsd(totalSpend), sub: "across all client accounts", icon: DollarSign },
   ];
 
@@ -69,13 +66,12 @@ export default async function ClientsPage() {
       </AdminPageHeader>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         {[
           { ...stats[0], accent: "from-cyan-500/20 to-blue-500/20", iconColor: "text-cyan-400" },
           { ...stats[1], accent: "from-rose-500/20 to-orange-500/20", iconColor: "text-rose-400" },
           { ...stats[2], accent: "from-amber-500/20 to-orange-500/20", iconColor: "text-amber-400" },
-          { ...stats[3], accent: "from-emerald-500/20 to-teal-500/20", iconColor: "text-emerald-400" },
-          { ...stats[4], accent: "from-sky-500/20 to-cyan-500/20", iconColor: "text-sky-400" },
+          { ...stats[3], accent: "from-sky-500/20 to-cyan-500/20", iconColor: "text-sky-400" },
         ].map((s) => (
           <StatCard key={s.label} {...s} size="lg" />
         ))}
@@ -124,11 +120,9 @@ export default async function ClientsPage() {
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
                     {client.activeCampaigns > 0 ? <span>{client.activeCampaigns} active campaigns</span> : null}
-                    {client.activeShows > 0 ? <span>{client.activeShows} live shows</span> : null}
                     {client.connectionRiskAccounts > 0 ? (
                       <span>{client.connectionRiskAccounts} connections at risk</span>
                     ) : null}
-                    {client.assetsNeedingReview > 0 ? <span>{client.assetsNeedingReview} assets to review</span> : null}
                   </div>
                 </Link>
               ))}

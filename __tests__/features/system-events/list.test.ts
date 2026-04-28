@@ -95,10 +95,6 @@ vi.mock("@clerk/nextjs/server", () => ({
   currentUser,
 }));
 
-vi.mock("@/features/assets/server", () => ({
-  listVisibleAssetIdsForScope: vi.fn(),
-}));
-
 vi.mock("@/lib/supabase", () => ({
   createClerkSupabaseClient,
   getFeatureReadClient,

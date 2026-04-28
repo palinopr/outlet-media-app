@@ -130,8 +130,8 @@ export function LandingFeatures() {
             Lee que cambio, que esta ganando y que sigue.
           </h3>
           <p className="mt-4 max-w-[28rem] text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
-            El portal combina la misma data, requests, approvals y timeline que sostiene
-            la operacion. Por eso el equipo y el cliente trabajan con contexto, no con humo.
+            El portal muestra la misma data de campañas que sostiene la operacion,
+            sin pantallas innecesarias ni ruido para el cliente.
           </p>
           <p className="mt-3 max-w-[28rem] text-[12px] uppercase tracking-[0.14em] text-slate-400">
             Metricas ilustrativas. Vista real del sistema.

@@ -72,7 +72,6 @@ export async function resolveClientPortalAccess(slug: string): Promise<PortalAcc
     access.scope === "assigned"
       ? {
           allowedCampaignIds: access.allowedCampaignIds,
-          allowedEventIds: access.allowedEventIds,
         }
       : undefined;
 

@@ -42,8 +42,6 @@ describe("buildUsersAccessSummary", () => {
       [
         {
           activeCampaigns: 1,
-          activeShows: 0,
-          assetsNeedingReview: 0,
           createdAt: "2026-03-05T10:00:00.000Z",
           connectedAccountCount: 0,
           connectionRiskAccounts: 0,
@@ -51,9 +49,6 @@ describe("buildUsersAccessSummary", () => {
           memberCount: 0,
           name: "Zamora",
           needsAttention: 1,
-          openActionItems: 0,
-          openDiscussions: 0,
-          pendingApprovals: 0,
           roas: 0,
           slug: "zamora",
           status: "active",
@@ -63,8 +58,6 @@ describe("buildUsersAccessSummary", () => {
         },
         {
           activeCampaigns: 0,
-          activeShows: 0,
-          assetsNeedingReview: 0,
           createdAt: "2026-03-05T10:00:00.000Z",
           connectedAccountCount: 1,
           connectionRiskAccounts: 0,
@@ -72,9 +65,6 @@ describe("buildUsersAccessSummary", () => {
           memberCount: 2,
           name: "Happy Paws",
           needsAttention: 0,
-          openActionItems: 0,
-          openDiscussions: 0,
-          pendingApprovals: 0,
           roas: 0,
           slug: "happy_paws",
           status: "active",

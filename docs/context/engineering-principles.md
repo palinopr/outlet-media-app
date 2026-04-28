@@ -2,15 +2,13 @@
 
 ## Model Real Product Objects
 
-Prefer first-class objects for active product concepts: campaigns, approvals, action items, assets, clients, members, and invitations. Do not hide core business workflows inside generic documents or route-local JSON blobs.
+Prefer first-class objects for active product concepts: campaigns, clients, members, invitations, and connected accounts. Do not hide core business workflows inside generic documents or route-local JSON blobs.
 
 ## Event-Driven Backbone
 
-Every meaningful product mutation should be traceable through durable state, usually `system_events`, `approval_requests`, or the owning workflow table. Examples:
+Every meaningful product mutation should be traceable through durable state, usually `system_events`, `admin_activity`, or the owning product table. Examples:
 
 - `campaign_updated`
-- `approval_requested`
-- `campaign_action_item_created`
 
 Use `system_events` as the shared admin/client-visible timeline. Use `admin_activity` for internal operator audit only.
 

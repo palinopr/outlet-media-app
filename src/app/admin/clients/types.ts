@@ -1,5 +1,4 @@
 export interface ClientSummary {
-  assetsNeedingReview: number;
   id: string;
   name: string;
   slug: string;
@@ -9,11 +8,7 @@ export interface ClientSummary {
   connectedAccountCount: number;
   connectionRiskAccounts: number;
   activeCampaigns: number;
-  openActionItems: number;
-  openDiscussions: number;
-  pendingApprovals: number;
   totalCampaigns: number;
-  activeShows: number;
   totalSpend: number;
   totalRevenue: number;
   roas: number;
@@ -45,7 +40,6 @@ export interface ClientMember {
   email: string;
   createdAt: string;
   assignedCampaignIds: string[];
-  assignedEventIds: string[];
 }
 
 export interface ClientCampaign {

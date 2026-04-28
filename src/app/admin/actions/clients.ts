@@ -52,21 +52,11 @@ async function getClientAccessContextByMemberId(memberId: string) {
 }
 
 const ACTIVE_CLIENT_SLUG_REFERENCE_TABLES = [
-  "ad_assets",
-  "approval_requests",
-  "asset_comments",
-  "asset_follow_up_items",
-  "asset_sources",
-  "campaign_action_items",
   "campaign_client_overrides",
-  "campaign_comments",
   "client_accounts",
   "email_events",
   "email_reply_examples",
-  "event_comments",
-  "event_follow_up_items",
   "meta_campaigns",
-  "notifications",
   "system_events",
   "tm_events",
 ] as const;
@@ -455,34 +445,3 @@ export async function updateMemberCampaigns(formData: { memberId: string; campai
   revalidateAccessManagementPaths(accessContext ?? {});
 }
 
-// ─── Update member event assignments ────────────────────────────────────────
-
-export async function updateMemberEvents(formData: { memberId: string; eventIds: string[] }) {
-  const err = await adminGuard();
-  if (err) throw new Error("Forbidden");
-  if (!supabaseAdmin) throw new Error("DB not configured");
-  const accessContext = await getClientAccessContextByMemberId(formData.memberId);
-
-  // Delete existing assignments
-  await supabaseAdmin
-    .from("client_member_events")
-    .delete()
-    .eq("member_id", formData.memberId);
-
-  // Insert new assignments
-  if (formData.eventIds.length > 0) {
-    const rows = formData.eventIds.map((event_id) => ({
-      member_id: formData.memberId,
-      event_id,
-    }));
-    const { error } = await supabaseAdmin
-      .from("client_member_events")
-      .insert(rows);
-    if (error) throw new Error(error.message);
-  }
-
-  await logAudit("client_member", formData.memberId, "update_events", null, {
-    count: formData.eventIds.length,
-  });
-  revalidateAccessManagementPaths(accessContext ?? {});
-}

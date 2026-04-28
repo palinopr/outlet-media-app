@@ -1,8 +1,3 @@
-import { mapAssetRows } from "@/features/assets/lib";
-import { listCampaignAssets } from "@/features/assets/server";
-import { listCampaignActionItems } from "@/features/campaign-action-items/server";
-import { listCampaignApprovalRequests } from "@/features/approvals/server";
-import { listCampaignSystemEvents } from "@/features/system-events/server";
 import type { MetaCampaignCard } from "@/lib/meta-campaigns";
 import { getEffectiveCampaignRowById } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -34,53 +29,10 @@ interface CampaignOperatingRow {
   cpm: number | string | null;
   daily_budget: number | string | null;
   start_time: string | null;
-  tm_event_id: string | null;
-}
-
-export interface CampaignLinkedEventRecord {
-  city: string | null;
-  date: string | null;
-  id: string;
-  name: string;
-  status: string;
-  ticketsAvailable: number | null;
-  ticketsSold: number;
-  venue: string | null;
 }
 
 export interface CampaignOperatingData {
-  actionItems: Awaited<ReturnType<typeof listCampaignActionItems>>;
-  approvals: Awaited<ReturnType<typeof listCampaignApprovalRequests>>;
-  assets: ReturnType<typeof mapAssetRows>;
   campaign: MetaCampaignCard;
-  linkedEvents: CampaignLinkedEventRecord[];
-  systemEvents: Awaited<ReturnType<typeof listCampaignSystemEvents>>;
-}
-
-async function getLinkedEventRecordById(eventId: string): Promise<CampaignLinkedEventRecord | null> {
-  const { data, error } = await supabaseAdmin!
-    .from("tm_events")
-    .select("id, name, city, date, venue, status, tickets_sold, tickets_available")
-    .eq("id", eventId)
-    .maybeSingle();
-
-  if (error) {
-    console.error("[campaigns] linked event lookup failed:", error.message);
-    return null;
-  }
-
-  if (!data) return null;
-
-  return {
-    city: data.city ?? null,
-    date: data.date ?? null,
-    id: data.id,
-    name: data.name ?? "Unknown event",
-    status: data.status ?? "unknown",
-    ticketsAvailable: data.tickets_available ?? null,
-    ticketsSold: data.tickets_sold ?? 0,
-    venue: data.venue ?? null,
-  };
 }
 
 export async function getCampaignOperatingData(campaignId: string): Promise<CampaignOperatingData | null> {
@@ -88,74 +40,31 @@ export async function getCampaignOperatingData(campaignId: string): Promise<Camp
 
   const data = await getEffectiveCampaignRowById<CampaignOperatingRow>(
     campaignId,
-    "campaign_id, name, status, objective, client_slug, campaign_type, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time, tm_event_id",
+    "campaign_id, name, status, objective, client_slug, campaign_type, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time",
   );
   if (!data) return null;
 
-  const campaign: MetaCampaignCard = {
-    campaignId: data.campaign_id as string,
-    name: (data.name as string) ?? campaignId,
-    status: (data.status as string) ?? "unknown",
-    objective: (data.objective as string) ?? "",
-    clientSlug: (data.client_slug as string | null) ?? "unknown",
-    campaignType: (data.campaign_type as string) ?? "sales",
-    spend: centsToDollars(data.spend) ?? 0,
-    roas: toNumber(data.roas),
-    revenue:
-      toNumber(data.roas) != null && centsToDollars(data.spend) != null
-        ? (centsToDollars(data.spend) as number) * (toNumber(data.roas) as number)
-        : null,
-    impressions: toNumber(data.impressions) ?? 0,
-    clicks: toNumber(data.clicks) ?? 0,
-    ctr: toNumber(data.ctr),
-    cpc: toNumber(data.cpc),
-    cpm: toNumber(data.cpm),
-    dailyBudget: centsToDollars(data.daily_budget),
-    startTime: (data.start_time as string | null) ?? null,
-  };
-
-  if (!data.client_slug) {
-    return {
-      actionItems: [],
-      approvals: [],
-      assets: [],
-      campaign,
-      linkedEvents: [],
-      systemEvents: [],
-    };
-  }
-
-  const [systemEvents, approvals, assetRows, actionItems, linkedEvent] = await Promise.all([
-    listCampaignSystemEvents({
-      audience: "all",
-      clientSlug: data.client_slug,
-      campaignId,
-      limit: 8,
-    }),
-    listCampaignApprovalRequests({
-      audience: "all",
-      clientSlug: data.client_slug,
-      campaignId,
-      limit: 8,
-      status: "pending",
-    }),
-    listCampaignAssets(data.client_slug, campaign.name, 8),
-    listCampaignActionItems({
-      audience: "all",
-      campaignId,
-      clientSlug: data.client_slug,
-      limit: 16,
-    }),
-    data.tm_event_id ? getLinkedEventRecordById(data.tm_event_id) : Promise.resolve(null),
-  ]);
+  const spend = centsToDollars(data.spend) ?? 0;
+  const roas = toNumber(data.roas);
 
   return {
-    actionItems,
-    approvals,
-    assets: mapAssetRows(assetRows),
-    campaign,
-    linkedEvents: linkedEvent ? [linkedEvent] : [],
-    systemEvents,
+    campaign: {
+      campaignId: data.campaign_id,
+      name: data.name ?? campaignId,
+      status: data.status ?? "unknown",
+      objective: data.objective ?? "",
+      clientSlug: data.client_slug ?? "unknown",
+      campaignType: data.campaign_type ?? "sales",
+      spend,
+      roas,
+      revenue: roas != null ? spend * roas : null,
+      impressions: toNumber(data.impressions) ?? 0,
+      clicks: toNumber(data.clicks) ?? 0,
+      ctr: toNumber(data.ctr),
+      cpc: toNumber(data.cpc),
+      cpm: toNumber(data.cpm),
+      dailyBudget: centsToDollars(data.daily_budget),
+      startTime: data.start_time ?? null,
+    },
   };
 }
-

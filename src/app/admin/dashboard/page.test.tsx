@@ -3,12 +3,9 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("./data", () => ({
   getData: vi.fn().mockResolvedValue({
-    events: [],
     campaigns: [],
-    allCampaigns: [],
     trendData: [],
-    velocityData: [],
-    marginalRoasByCampaign: new Map(),
+    marginalRoasByCampaign: {},
     fromDb: false,
   }),
 }));

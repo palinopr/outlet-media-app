@@ -1,94 +1,45 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildClientWorkflowHealth,
   compareClientAccountHealth,
-  compareClientWorkflowHealth,
   getClientAttentionPressure,
+  hasClientAttention,
 } from "@/features/clients/summary";
 
-describe("client workflow summary helpers", () => {
-  it("weights approvals and discussions above passive review counts", () => {
+describe("client account summary helpers", () => {
+  it("treats connection risk as the only client attention signal", () => {
     expect(
-      buildClientWorkflowHealth({
-        assetsNeedingReview: 2,
-        openActionItems: 1,
-        openDiscussions: 2,
-        pendingApprovals: 1,
+      getClientAttentionPressure({
+        connectionRiskAccounts: 1,
+        needsAttention: 1,
       }),
-    ).toMatchObject({
-      needsAttention: 11,
-    });
+    ).toBe(4);
+
+    expect(
+      hasClientAttention({
+        connectionRiskAccounts: 0,
+        needsAttention: 0,
+      }),
+    ).toBe(false);
   });
 
-  it("ranks clients by workflow pressure before spend", () => {
-    const ranked = [
-      {
-        name: "Client A",
-        totalSpend: 1000,
-        ...buildClientWorkflowHealth({
-          assetsNeedingReview: 4,
-          openActionItems: 0,
-          openDiscussions: 0,
-          pendingApprovals: 0,
-        }),
-      },
-      {
-        name: "Client B",
-        totalSpend: 100,
-        ...buildClientWorkflowHealth({
-          assetsNeedingReview: 0,
-          openActionItems: 1,
-          openDiscussions: 1,
-          pendingApprovals: 1,
-        }),
-      },
-      {
-        name: "Client C",
-        totalSpend: 5000,
-        ...buildClientWorkflowHealth({
-          assetsNeedingReview: 0,
-          openActionItems: 0,
-          openDiscussions: 0,
-          pendingApprovals: 0,
-        }),
-      },
-    ].sort(compareClientWorkflowHealth);
-
-    expect(ranked.map((client) => client.name)).toEqual(["Client B", "Client A", "Client C"]);
-  });
-
-  it("lets connection risk outrank lighter workflow pressure", () => {
+  it("ranks clients by connection pressure before spend", () => {
     const ranked = [
       {
         connectedAccountCount: 2,
         connectionRiskAccounts: 0,
-        name: "Workflow-heavy",
+        name: "Higher spend",
+        needsAttention: 0,
         totalSpend: 1000,
-        ...buildClientWorkflowHealth({
-          assetsNeedingReview: 2,
-          openActionItems: 0,
-          openDiscussions: 0,
-          pendingApprovals: 0,
-        }),
       },
       {
         connectedAccountCount: 1,
         connectionRiskAccounts: 1,
-        name: "Connection-risk",
-        totalSpend: 500,
-        ...buildClientWorkflowHealth({
-          assetsNeedingReview: 0,
-          openActionItems: 0,
-          openDiscussions: 0,
-          pendingApprovals: 0,
-        }),
+        name: "Connection risk",
+        needsAttention: 1,
+        totalSpend: 100,
       },
     ].sort(compareClientAccountHealth);
 
-    expect(ranked.map((client) => client.name)).toEqual([
-      "Connection-risk",
-      "Workflow-heavy",
-    ]);
-    expect(getClientAttentionPressure(ranked[0])).toBe(3);
+    expect(ranked.map((client) => client.name)).toEqual(["Connection risk", "Higher spend"]);
   });
 });
