@@ -8,8 +8,4 @@ describe("getClientSlugRevalidationPaths", () => {
       "/admin/dashboard",
     ]);
   });
-
-  it("does not include the retired assets route", () => {
-    expect(getClientSlugRevalidationPaths()).not.toContain("/admin/assets");
-  });
 });

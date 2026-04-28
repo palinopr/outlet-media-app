@@ -9,7 +9,7 @@ function clientPaths(clientSlug: string | null | undefined, paths: string[]) {
   return paths.map((path) => path.replaceAll(":clientSlug", clientSlug));
 }
 
-export function getCampaignWorkflowPaths(
+export function getCampaignRevalidationPaths(
   clientSlug: string | null | undefined,
   campaignId: string,
 ) {
@@ -24,7 +24,7 @@ export function getCampaignWorkflowPaths(
   ]);
 }
 
-export function revalidateWorkflowPaths(paths: string[]) {
+export function revalidateCampaignPaths(paths: string[]) {
   for (const path of uniquePaths(paths)) {
     revalidatePath(path);
   }

@@ -1,32 +1,32 @@
 import campaignMobileCreatives from "../../../docs/screenshots/campaign-mobile-creatives.png";
 import Image from "next/image";
 import {
-  Bot,
   ChartColumnIncreasing,
+  Megaphone,
   MessageSquareText,
   ShieldCheck,
 } from "lucide-react";
 import { LandingSampleMetricCard } from "@/components/landing/sample-metric-card";
 
-const AGENT_FEATURES = [
+const PORTAL_FEATURES = [
   {
-    title: "Conversational reporting",
-    body: "Responde sobre campanas y eventos reales.",
-    icon: Bot,
+    title: "Campaign reporting",
+    body: "Muestra resultados reales de campanas activas.",
+    icon: Megaphone,
   },
   {
-    title: "Creative intelligence",
-    body: "Puede apoyarse en ROAS, creatives y breakdowns.",
+    title: "Performance clarity",
+    body: "ROAS, spend, clicks, markets y breakdowns en una vista limpia.",
     icon: ChartColumnIncreasing,
   },
   {
-    title: "Next-step visibility",
-    body: "Resume discussion, requests y follow-through.",
+    title: "Client visibility",
+    body: "El cliente ve lo que importa sin pantallas innecesarias ni ruido.",
     icon: MessageSquareText,
   },
   {
-    title: "Client-safe",
-    body: "Read-only y sin exponer setup interno ni estrategia oculta.",
+    title: "Read-only by design",
+    body: "Sin exponer setup interno ni controles de ejecucion.",
     icon: ShieldCheck,
   },
 ] as const;
@@ -153,7 +153,7 @@ export function LandingFeatures() {
           </div>
 
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            {AGENT_FEATURES.map((feature) => {
+            {PORTAL_FEATURES.map((feature) => {
               const Icon = feature.icon;
 
               return (

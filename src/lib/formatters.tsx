@@ -5,7 +5,7 @@
  */
 
 import type { ActionableInvitationStatus } from "@/features/invitations/types";
-import { getCampaignStatusCfg, getEventStatusCfg } from "./status";
+import { getCampaignStatusCfg, getGenericStatusCfg } from "./status";
 
 // ─── Number / Currency ─────────────────────────────────────────────────────
 
@@ -160,15 +160,12 @@ export function computeBlendedRoas(items: SpendRoasItem[]): number | null {
 
 const CAMPAIGN_STATUSES = new Set(["active", "paused", "deleted", "archived"]);
 
-/**
- * Render a coloured status badge for any entity (campaign, client, event).
- * Delegates to getCampaignStatusCfg / getEventStatusCfg from status.ts.
- */
+/** Render a coloured status badge for active admin entities. */
 export function statusBadge(s: string) {
   const normalised = (s ?? "").toLowerCase().replace(/_/g, "");
   const cfg = CAMPAIGN_STATUSES.has(normalised)
     ? getCampaignStatusCfg(s)
-    : getEventStatusCfg(s);
+    : getGenericStatusCfg(s);
   const border = cfg.bg.replace("/10", "/20").replace("bg-", "border-");
   return (
     <span

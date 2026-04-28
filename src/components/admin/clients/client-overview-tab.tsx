@@ -62,11 +62,11 @@ export function ClientOverviewTab({
       <section className="rounded-2xl border border-border/60 bg-card p-5">
         <div className="flex items-center gap-2">
           <Eye className="h-4 w-4 text-muted-foreground" />
-          <h2 className="text-sm font-semibold">Client Portal Shape</h2>
+          <h2 className="text-sm font-semibold">Portal Experience</h2>
         </div>
         <p className="mt-2 text-sm text-muted-foreground">
-          The client portal is intentionally narrow: campaign performance only. Clients do not create,
-          edit, approve, or manage work from the portal.
+          The client portal is intentionally narrow: campaign performance only. Clients can view
+          results without extra screens or controls.
         </p>
 
         <div className="mt-4 grid gap-3">

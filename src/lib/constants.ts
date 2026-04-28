@@ -93,21 +93,3 @@ export function getRangeQuery(range: CampaignRangeInput) {
   if (typeof range === "string") return `range=${encodeURIComponent(range)}`;
   return `range=custom&since=${encodeURIComponent(range.since)}&until=${encodeURIComponent(range.until)}`;
 }
-
-export const EVENT_STATUS_OPTIONS = [
-  { value: "onsale", label: "On Sale" },
-  { value: "offsale", label: "Off Sale" },
-  { value: "cancelled", label: "Cancelled" },
-  { value: "postponed", label: "Postponed" },
-  { value: "rescheduled", label: "Rescheduled" },
-];
-
-export const ASSET_STATUSES = ["new", "labeled", "approved", "archived"] as const;
-export type AssetStatus = (typeof ASSET_STATUSES)[number];
-
-export const ASSET_STATUS_COLORS: Record<AssetStatus, string> = {
-  new: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  labeled: "bg-purple-500/10 text-purple-400 border-purple-500/20",
-  approved: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  archived: "bg-zinc-500/10 text-zinc-400 border-zinc-500/20",
-};

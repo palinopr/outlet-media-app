@@ -31,7 +31,7 @@ Supporting infrastructure remains for auth, client accounts, memberships, invita
 Key deeper paths:
 - `src/app/admin/` -- admin product surfaces (dashboard, campaigns, clients, users, settings)
 - `src/app/client/[slug]/` -- client portal (campaigns)
-- `src/app/api/` -- API routes (ingest, meta, Ticketmaster, contact, workflow)
+- `src/app/api/` -- API routes (ingest, meta, Ticketmaster, contact, admin access)
 - `docs/context/` -- durable product and architecture context for future sessions
 
 ## Read First

@@ -85,13 +85,3 @@ export async function validateRequest<T>(
   return { data: parsed.data, error: null };
 }
 
-// ─── Shared helpers (extracted from comment + approval routes) ──────────
-
-/** Extract a display name from a Clerk user object. Returns "Unknown" if no name parts exist. */
-export function getAuthorName(user: {
-  firstName?: string | null;
-  lastName?: string | null;
-} | null): string {
-  return [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown";
-}
-

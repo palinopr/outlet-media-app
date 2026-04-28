@@ -43,7 +43,7 @@ Meta credentials should stay centralized in the parent app env rather than dupli
 - prefer `asset_feed_spec` with `asset_customization_rules`
 - keep campaign mutations bounded and auditable
 - use live Meta reads plus durable mirrored tables
-- keep review/summarize/blocker workflows in the web product's campaign, report, approval, and action-item surfaces rather than a shadow ops system
+- keep Meta campaign mutations bounded, logged, and separate from client-facing campaign reporting until execution surfaces are explicitly restored
 - for ticket / event campaigns, review purchase concentration by `platform_position`; if Stories / Reels are producing purchases while feed is weak, split or bias placements instead of treating all placements as equal
 - if a secondary video test is producing views or LPV but not purchases, cap it or pause it before scaling the campaign
 - if a third-party ticketing path like Eventbrite is already firing Meta purchase / LPV events, backend access is not required for first-pass warm retargeting; a website custom audience can still be built from the stable ticket URL token plus purchase exclusion

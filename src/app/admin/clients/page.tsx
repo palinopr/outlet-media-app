@@ -83,7 +83,7 @@ export default async function ClientsPage() {
             <div>
               <p className="text-sm font-semibold">Client health snapshot</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Accounts with the most operating pressure, connection issues, and creative review load.
+                Accounts with active campaigns, spend, and connection issues that need attention.
               </p>
             </div>
             <div className="text-right">
@@ -139,7 +139,7 @@ export default async function ClientsPage() {
         <CardContent className="py-6">
           <p className="text-sm text-muted-foreground">
             Clients get their own Clerk login at <code className="text-xs bg-muted px-1.5 py-0.5 rounded">/sign-up</code>.
-            Admins approve and assign them from the Users page.
+            Admins invite members from each client detail page and manage global access from Users.
           </p>
         </CardContent>
       </Card>

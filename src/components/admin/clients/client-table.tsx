@@ -71,7 +71,7 @@ function CreateClientForm({ onDone }: { onDone: () => void }) {
             required
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
-            placeholder="Acme Events"
+            placeholder="Acme Live"
             className="h-8 w-48 text-sm"
           />
         </div>
@@ -81,7 +81,7 @@ function CreateClientForm({ onDone }: { onDone: () => void }) {
             required
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
-            placeholder="acme_events"
+            placeholder="acme_live"
             className="h-8 w-40 text-sm"
           />
         </div>

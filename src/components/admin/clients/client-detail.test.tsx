@@ -66,7 +66,7 @@ describe("ClientDetailView", () => {
   it("defaults to the overview tab", () => {
     render(<ClientDetailView client={client} />);
 
-    expect(screen.getByText("Client Portal Shape")).toBeInTheDocument();
+    expect(screen.getByText("Portal Experience")).toBeInTheDocument();
     expect(
       screen.getByText(
         /The client portal is intentionally narrow: campaign performance only\./,

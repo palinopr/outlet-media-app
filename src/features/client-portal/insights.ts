@@ -13,7 +13,7 @@ import type {
 import { DAY_LABELS } from "@/features/client-portal/types";
 import { type DateRange } from "@/lib/constants";
 
-export { getCampaignStatusCfg, getEventStatusCfg } from "@/lib/status";
+export { getCampaignStatusCfg } from "@/lib/status";
 
 export interface TrendPoint {
   date: string;

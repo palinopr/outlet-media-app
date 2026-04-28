@@ -25,16 +25,13 @@ const data = {
 } satisfies CampaignOperatingData;
 
 describe("CampaignDetailDashboard", () => {
-  it("renders a simple campaign snapshot without workflow sections", () => {
+  it("renders a simple campaign snapshot", () => {
     render(<CampaignDetailDashboard data={data} />);
 
     expect(screen.getByText("Campaign snapshot")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Don Omar Barcelona" })).toBeInTheDocument();
     expect(screen.getByText("3.40x")).toBeInTheDocument();
 
-    expect(screen.queryByRole("heading", { name: "Pending approvals" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Action items" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Linked assets" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Recent activity" })).not.toBeInTheDocument();
+    expect(screen.getAllByText(/Spend|Revenue|ROAS|CTR/).length).toBeGreaterThan(0);
   });
 });

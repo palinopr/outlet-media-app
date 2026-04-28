@@ -42,7 +42,7 @@ const data = {
 } as CampaignOperatingData;
 
 describe("AdminCampaignDetailPage", () => {
-  it("renders the campaign detail dashboard without request tabs", async () => {
+  it("renders the campaign detail dashboard", async () => {
     getCampaignOperatingData.mockResolvedValue(data);
 
     const { default: AdminCampaignDetailPage } = await import("./page");
@@ -53,6 +53,5 @@ describe("AdminCampaignDetailPage", () => {
     render(<>{element}</>);
 
     expect(screen.getByTestId("campaign-detail-dashboard")).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: /Client requests/i })).not.toBeInTheDocument();
   });
 });

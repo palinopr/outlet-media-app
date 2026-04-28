@@ -1,16 +1,12 @@
-import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Key, UserPlus, ArrowRight, Users, Clock, X, Link2, TriangleAlert } from "lucide-react";
-import { ClientOnboardForm } from "@/components/admin/client-onboard-form";
-import { RevokeInvitationButton } from "@/components/admin/users/revoke-invitation-button";
-import { getClientSummaries } from "../clients/data";
-import { getUsers } from "../users/data";
+import { CheckCircle2, Key, Link2, Settings, TriangleAlert } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
-import { getInvitationStatusCfg, slugToLabel } from "@/lib/formatters";
-import { buildPlatformSettingsSummary, type PlatformSettingsMetricKey } from "@/features/settings/summary";
 import type { ConnectedAccount } from "@/features/settings/connected-accounts";
-import { Button } from "@/components/ui/button";
+import {
+  buildConnectedAccountsSummary,
+  getConnectedAccountHealth,
+} from "@/features/settings/connected-accounts";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // ─── API key display entries ───────────────────────────────────────────────
@@ -44,208 +40,82 @@ import { AdminPageHeader } from "@/components/admin/page-header";
 
 export default async function SettingsPage() {
   const apiKeys = getApiKeyStatus();
-  const [clients, users, connectedAccountsRes] = await Promise.all([
-    getClientSummaries(),
-    getUsers(),
-    supabaseAdmin
-      ?.from("client_accounts")
-      .select(
-        "id, client_slug, ad_account_id, ad_account_name, status, connected_at, token_expires_at, last_used_at",
-      )
-      .order("connected_at", { ascending: false }),
-  ]);
+  const connectedAccountsRes = await supabaseAdmin
+    ?.from("client_accounts")
+    .select(
+      "id, client_slug, ad_account_id, ad_account_name, status, connected_at, token_expires_at, last_used_at",
+    )
+    .order("connected_at", { ascending: false });
   const connectedAccounts = ((connectedAccountsRes?.data ?? []) as ConnectedAccount[]);
-  const summary = buildPlatformSettingsSummary({
-    apiKeys,
-    clients,
-    connectedAccounts,
-    users,
-  });
-  const metricIcons: Record<PlatformSettingsMetricKey, typeof Settings> = {
-    configured_integrations: Key,
-    missing_integrations: Key,
-    client_accounts: Users,
-    pending_access: Clock,
-    connections_needing_attention: Link2,
-  };
+  const connectionSummary = buildConnectedAccountsSummary(connectedAccounts);
+  const configuredIntegrationCount = apiKeys.filter((key) => key.configured).length;
+  const missingIntegrationCount = apiKeys.length - configuredIntegrationCount;
+  const connectionIssues = connectedAccounts
+    .map((account) => ({ account, health: getConnectedAccountHealth(account) }))
+    .filter(({ health }) => health.key !== "healthy");
+
+  const stats = [
+    {
+      accent: "from-cyan-500/20 to-blue-500/20",
+      icon: Key,
+      iconColor: "text-cyan-400",
+      label: "Configured integrations",
+      sub: "environment-backed keys ready",
+      value: String(configuredIntegrationCount),
+    },
+    {
+      accent: "from-amber-500/20 to-orange-500/20",
+      icon: TriangleAlert,
+      iconColor: missingIntegrationCount > 0 ? "text-amber-400" : "text-emerald-400",
+      label: "Missing integrations",
+      sub: "keys or host config not set",
+      value: String(missingIntegrationCount),
+    },
+    {
+      accent: "from-emerald-500/20 to-teal-500/20",
+      icon: CheckCircle2,
+      iconColor: "text-emerald-400",
+      label: "Healthy Meta links",
+      sub: "ad accounts ready for campaign reads",
+      value: String(connectionSummary.healthyCount),
+    },
+    {
+      accent: "from-rose-500/20 to-orange-500/20",
+      icon: Link2,
+      iconColor: connectionSummary.attentionCount > 0 ? "text-rose-400" : "text-emerald-400",
+      label: "Connection attention",
+      sub: "expired, stale, or expiring Meta links",
+      value: String(connectionSummary.attentionCount),
+    },
+  ];
 
   return (
     <div className="space-y-4 sm:space-y-8">
-
-      {/* Header */}
       <AdminPageHeader
         title="Settings"
-        description="API keys, client management, and platform health"
+        description="Environment configuration and integration health. Client creation lives in Clients; user access lives in Users."
       >
         <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5">
           <Settings className="h-3 w-3" />
-          Admin
+          System
         </Badge>
       </AdminPageHeader>
 
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        {summary.metrics.map((metric) => {
-          const Icon = metricIcons[metric.key];
-          return (
-            <StatCard
-              key={metric.key}
-              accent="from-cyan-500/20 to-blue-500/20"
-              icon={Icon}
-              iconColor="text-cyan-400"
-              label={metric.label}
-              sub={metric.detail}
-              value={String(metric.value)}
-            />
-          );
-        })}
+        {stats.map((stat) => (
+          <StatCard key={stat.label} {...stat} />
+        ))}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-3">
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <Card className="border-border/60">
           <CardHeader>
-            <CardTitle className="text-sm">Client setup pressure</CardTitle>
+            <div className="flex items-center gap-2">
+              <Key className="h-4 w-4 text-amber-400" />
+              <CardTitle className="text-sm">API keys</CardTitle>
+            </div>
             <CardDescription>
-              Client accounts that still need member coverage or broader operational setup.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {summary.clientsNeedingSetup.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No client accounts currently need setup attention.
-              </p>
-            ) : (
-              summary.clientsNeedingSetup.map((client) => (
-                <Link
-                  key={client.id}
-                  href={`/admin/clients/${client.id}`}
-                  className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/35"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{client.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {client.memberCount} member{client.memberCount === 1 ? "" : "s"} • {client.activeCampaigns} campaign{client.activeCampaigns === 1 ? "" : "s"} • {client.connectionRiskAccounts} connection{client.connectionRiskAccounts === 1 ? "" : "s"} at risk
-                    </p>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                </Link>
-              ))
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="text-sm">Access invites</CardTitle>
-            <CardDescription>
-              Pending and expired invitations that still need to turn into active users or be cleaned up.
-            </CardDescription>
-            {summary.accessInvites.length > 0 ? (
-              <p className="text-xs text-muted-foreground">
-                {summary.pendingInviteCount} pending • {summary.expiredInviteCount} expired
-              </p>
-            ) : null}
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {summary.accessInvites.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No access invites need attention right now.
-              </p>
-            ) : (
-              summary.accessInvites.map((invite) => {
-                const inviteStatus = getInvitationStatusCfg(invite.invite_status);
-
-                return (
-                  <div
-                    key={invite.id}
-                    className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3"
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{invite.email}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {invite.client_slug ? slugToLabel(invite.client_slug) : "Admin access"} • {inviteStatus.detail}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium ${inviteStatus.bg} ${inviteStatus.border} ${inviteStatus.text} border`}
-                      >
-                        {inviteStatus.label}
-                      </span>
-                      <RevokeInvitationButton
-                        email={invite.email}
-                        invitationId={invite.id}
-                        trigger={
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 text-muted-foreground hover:text-red-400"
-                          >
-                            <X className="mr-1.5 h-3.5 w-3.5" />
-                            Revoke
-                          </Button>
-                        }
-                      />
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60">
-          <CardHeader>
-            <CardTitle className="text-sm">Meta connection health</CardTitle>
-            <CardDescription>
-              Client ad account links that are expiring, stale, or disconnected before campaign work breaks.
-            </CardDescription>
-            {summary.connectionSummary.totalCount > 0 ? (
-              <p className="text-xs text-muted-foreground">
-                {summary.connectionSummary.healthyCount} healthy • {summary.connectionSummary.attentionCount} needing attention
-              </p>
-            ) : null}
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {summary.connectionRiskClients.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No client ad account links need connection attention right now.
-              </p>
-            ) : (
-              summary.connectionRiskClients.map((client) => (
-                <Link
-                  key={client.clientId}
-                  href={`/admin/clients/${client.clientId}`}
-                  className="flex items-start justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 transition-colors hover:bg-muted/35"
-                >
-                  <div>
-                    <p className="text-sm font-medium">{client.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {client.attentionAccounts} at-risk link{client.attentionAccounts === 1 ? "" : "s"} • {client.healthyAccounts} healthy • {client.totalAccounts} total
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2 text-amber-500">
-                    <TriangleAlert className="h-4 w-4" />
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </Link>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ─── Section 2: API Keys ─────────────────────────────────────────── */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Key className="h-4 w-4 text-amber-400" />
-          <h2 className="text-sm font-semibold">API Keys</h2>
-        </div>
-
-        <Card className="border-border/60">
-          <CardHeader className="pb-2">
-            <CardDescription>
-              Keys are configured via environment variables on the host machine.
-              They are not editable from this dashboard.
+              Keys are configured via environment variables on the host. They are not editable in the dashboard.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -261,9 +131,9 @@ export default async function SettingsPage() {
                       {masked}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex shrink-0 items-center gap-2">
                     <span className={`h-2 w-2 rounded-full ${configured ? "bg-emerald-400" : "bg-red-400"}`} />
-                    <span className="text-[10px] text-muted-foreground/60 bg-white/[0.04] px-2 py-0.5 rounded">
+                    <span className="rounded bg-white/[0.04] px-2 py-0.5 text-[10px] text-muted-foreground/60">
                       {source}
                     </span>
                   </div>
@@ -273,39 +143,66 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 border-dashed">
-          <CardContent className="py-4">
-            <p className="text-xs text-muted-foreground">
-              To rotate a key, update the corresponding environment variable in{" "}
-              <code className="text-xs bg-muted px-1.5 py-0.5 rounded">.env</code> or{" "}
-              <code className="text-xs bg-muted px-1.5 py-0.5 rounded">.env.local</code>{" "}
-              and redeploy the app. The Meta token refreshes via the System User flow.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* ─── Section 3: Client Management ────────────────────────────────── */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <UserPlus className="h-4 w-4 text-emerald-400" />
-          <h2 className="text-sm font-semibold">Client Management</h2>
-        </div>
-
         <Card className="border-border/60">
           <CardHeader>
-            <CardTitle className="text-sm">Onboard New Client</CardTitle>
+            <div className="flex items-center gap-2">
+              <Link2 className="h-4 w-4 text-cyan-400" />
+              <CardTitle className="text-sm">Meta account health</CardTitle>
+            </div>
             <CardDescription>
-              Add a new promoter client. This creates their slug, sets up a client portal
-              route, and sends an invite email.
+              Technical status for connected Meta ad accounts used by campaign reporting.
             </CardDescription>
+            {connectionSummary.totalCount > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {connectionSummary.healthyCount} healthy • {connectionSummary.attentionCount} needing attention
+              </p>
+            ) : null}
           </CardHeader>
-          <CardContent>
-            <ClientOnboardForm />
+          <CardContent className="space-y-3">
+            {connectedAccounts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No Meta ad accounts are connected yet.
+              </p>
+            ) : connectionIssues.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                All connected Meta ad accounts look healthy.
+              </p>
+            ) : (
+              connectionIssues.map(({ account, health }) => (
+                <div
+                  key={account.id}
+                  className="rounded-xl border border-border/60 bg-muted/20 p-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {account.ad_account_name || account.ad_account_id}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {account.client_slug ?? "unassigned"} • {health.detail}
+                      </p>
+                    </div>
+                    <span className="shrink-0 rounded border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[10px] font-medium text-amber-400">
+                      {health.label}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
 
+      <Card className="border-border/60 border-dashed">
+        <CardContent className="py-4">
+          <p className="text-xs text-muted-foreground">
+            To rotate a key, update the corresponding environment variable in{" "}
+            <code className="text-xs bg-muted px-1.5 py-0.5 rounded">.env</code> or{" "}
+            <code className="text-xs bg-muted px-1.5 py-0.5 rounded">.env.local</code>{" "}
+            and redeploy the app.
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

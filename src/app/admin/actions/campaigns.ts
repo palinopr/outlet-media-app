@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod/v4";
 import { currentUser } from "@clerk/nextjs/server";
 import {
-  getCampaignWorkflowPaths,
-  revalidateWorkflowPaths,
-} from "@/features/workflow/revalidation";
+  getCampaignRevalidationPaths,
+  revalidateCampaignPaths as revalidateCampaignRoutePaths,
+} from "@/features/campaigns/revalidation";
 import {
   applyEffectiveCampaignClientSlugs,
   getEffectiveCampaignRowById,
@@ -27,13 +27,13 @@ function centsLabel(value: number | null | undefined) {
   return `$${(centsToUsd(value) as number).toFixed(0)}/day`;
 }
 
-function revalidateCampaignPaths(
+function revalidateCampaignSurfaces(
   campaignId: string,
   clientSlugs: Array<string | null | undefined>,
 ) {
   const uniqueClientSlugs = [...new Set(clientSlugs)];
   for (const clientSlug of uniqueClientSlugs) {
-    revalidateWorkflowPaths(getCampaignWorkflowPaths(clientSlug, campaignId));
+    revalidateCampaignRoutePaths(getCampaignRevalidationPaths(clientSlug, campaignId));
   }
 }
 
@@ -190,7 +190,7 @@ export async function updateCampaignStatus(formData: { campaignId: string; statu
       to: parsed.status,
     },
   });
-  revalidateCampaignPaths(parsed.campaignId, [old?.client_slug]);
+  revalidateCampaignSurfaces(parsed.campaignId, [old?.client_slug]);
 }
 
 const UpdateTypeSchema = z.object({
@@ -236,7 +236,7 @@ export async function updateCampaignType(formData: { campaignId: string; campaig
       to: parsed.campaignType,
     },
   });
-  revalidateCampaignPaths(parsed.campaignId, [old?.client_slug]);
+  revalidateCampaignSurfaces(parsed.campaignId, [old?.client_slug]);
 }
 
 const UpdateBudgetSchema = z.object({
@@ -282,7 +282,7 @@ export async function updateCampaignBudget(formData: { campaignId: string; daily
       to: parsed.dailyBudgetCents,
     },
   });
-  revalidateCampaignPaths(parsed.campaignId, [old?.client_slug]);
+  revalidateCampaignSurfaces(parsed.campaignId, [old?.client_slug]);
 }
 
 const AssignClientSchema = z.object({
@@ -330,7 +330,7 @@ export async function assignCampaignClient(formData: { campaignId: string; clien
       to: parsed.clientSlug,
     },
   });
-  revalidateCampaignPaths(parsed.campaignId, [old?.client_slug, parsed.clientSlug]);
+  revalidateCampaignSurfaces(parsed.campaignId, [old?.client_slug, parsed.clientSlug]);
 }
 
 const BulkAssignSchema = z.object({
@@ -391,7 +391,7 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
   });
 
   for (const campaignId of parsed.campaignIds) {
-    revalidateCampaignPaths(campaignId, [...oldClientSlugs, parsed.clientSlug]);
+    revalidateCampaignSurfaces(campaignId, [...oldClientSlugs, parsed.clientSlug]);
   }
   revalidatePath("/admin/campaigns");
   revalidatePath("/admin/clients");
@@ -422,7 +422,7 @@ export async function syncCampaignToMeta(campaignId: string, changes: { status?:
   }
 
   await logAudit("campaign", campaignId, "sync_to_meta", null, { changes, results });
-  revalidateCampaignPaths(campaignId, [null]);
+  revalidateCampaignSurfaces(campaignId, [null]);
 
   return results;
 }
