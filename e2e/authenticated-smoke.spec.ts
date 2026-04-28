@@ -5,6 +5,7 @@ const baseURL = trimTrailingSlash(
   process.env.E2E_BASE_URL ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://127.0.0.1:3000",
 );
 const clientPortalSlug = process.env.E2E_CLIENT_SLUG ?? "sienna";
+const clientPortalSlugs = parseClientSlugs(process.env.E2E_CLIENT_SLUGS ?? clientPortalSlug);
 
 type ClerkUser = {
   id: string;
@@ -82,6 +83,17 @@ test.describe("authenticated smoke", () => {
 
     await assertMobileAdminNavigation(page);
     await assertMobileClientPortalNavigation(page, clientPortalSlug);
+  });
+
+  test("configured client portals pass campaigns-only acceptance", async ({ page }) => {
+    if (!adminUser) throw new Error("Temporary admin Clerk user was not created.");
+
+    await signInAsAdmin(page, adminUser.id);
+
+    for (const slug of clientPortalSlugs) {
+      await assertClientPortalIsCampaignsOnly(page, slug);
+      await assertClientPortalCampaignListUsable(page, slug);
+    }
   });
 
   test("active surfaces do not create page-level horizontal overflow", async ({ page }) => {
@@ -247,6 +259,20 @@ async function assertClientPortalIsCampaignsOnly(page: Page, slug: string) {
   await expect(clientNav).not.toContainText(/Events|Reports|Agent|Approvals|Requests|Conversations/i);
 }
 
+async function assertClientPortalCampaignListUsable(page: Page, slug: string) {
+  await page.goto(appUrl(`/client/${slug}/campaigns`), { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: new RegExp(`${slugToTitle(slug)} Campaigns`, "i") })).toBeVisible();
+  await expect(page.locator("body")).not.toContainText(/Campaign not found|Something went wrong|Access denied/i);
+
+  const firstCampaignRow = page.locator("table tbody tr").first();
+  if (await firstCampaignRow.isVisible().catch(() => false)) {
+    await firstCampaignRow.click();
+    await expect(page).toHaveURL(new RegExp(`/client/${slug}/campaign/[^/?#]+`));
+    await expect(page.locator("body")).not.toContainText(/Campaign not found|Something went wrong|Access denied/i);
+    await expect(page.getByText("Spend", { exact: true }).first()).toBeVisible();
+  }
+}
+
 async function assertRetiredRoutesRedirect(page: Page, slug: string) {
   await page.goto(appUrl("/admin/events"), { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/admin\/dashboard(?:[/?#]|$)/);
@@ -328,6 +354,15 @@ function rewriteUrlOrigin(url: string, origin: string) {
 
 function trimTrailingSlash(value: string) {
   return value.replace(/\/$/, "");
+}
+
+function parseClientSlugs(value: string) {
+  return [...new Set(
+    value
+      .split(",")
+      .map((slug) => slug.trim())
+      .filter(Boolean),
+  )];
 }
 
 function slugToTitle(slug: string) {

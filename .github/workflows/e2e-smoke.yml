@@ -8,9 +8,13 @@ on:
         required: true
         default: "https://outletmedia.net"
       client_slug:
-        description: "Client portal slug with campaign data"
+        description: "Primary client portal slug with campaign data"
         required: true
         default: "sienna"
+      client_slugs:
+        description: "Comma-separated client portal slugs for acceptance coverage"
+        required: false
+        default: "sienna,zamora,kybba,distill_pr,vaz_vil_enterprise,chris_r,proteccion_final,beamina,happy_paws,don_omar_bcn"
 
 jobs:
   authenticated-smoke:
@@ -20,6 +24,7 @@ jobs:
     env:
       E2E_BASE_URL: ${{ inputs.base_url }}
       E2E_CLIENT_SLUG: ${{ inputs.client_slug }}
+      E2E_CLIENT_SLUGS: ${{ inputs.client_slugs }}
       E2E_CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
