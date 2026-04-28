@@ -1,6 +1,6 @@
 # Auth and Access Map
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 This page focuses on files and database objects that participate in authentication, membership, scope, invite, or access-control behavior.
 

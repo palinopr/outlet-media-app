@@ -1,6 +1,6 @@
 # Approvals and shared timeline lifecycle
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 Files and DB objects involved in approvals, notifications, shared events, and summary/reporting surfaces that expose them.
 
@@ -11,7 +11,7 @@ Files and DB objects involved in approvals, notifications, shared events, and su
 - Mutation-oriented files: e2e/authenticated-smoke.spec.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/features/system-events/server.ts
 - Tests: __tests__/api/ingest.test.ts, __tests__/features/system-events/list.test.ts, src/app/admin/actions/clients.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/admin/reports/page.test.tsx, src/app/client/[slug]/components/campaign-detail-header.test.tsx, src/app/client/[slug]/reports/page.test.tsx, src/app/shell-import-smoke.test.ts, src/components/admin/activity-tracker.test.ts, … (+4 more)
 - Docs: AGENTS.md, README.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, … (+42 more)
-- Behavior signals: calls redirect() (12), client component/module (12), server action/module (8), calls revalidatePath() (7), calls notFound() (3), defines generateMetadata (3), sets dynamic rendering mode (2), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: calls redirect() (12), client component/module (12), server action/module (8), calls revalidatePath() (7), defines generateMetadata (3), calls notFound() (3), sets dynamic rendering mode (2), calls revalidateTag() (1), calls unstable_noStore() (1)
 - Auth signals: references membership/scope access concepts (17), imports Clerk server auth (13), calls currentUser() (10), calls auth() (7), contains explicit access/role guard helper usage (1)
 
 ## Database objects

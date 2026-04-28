@@ -1,6 +1,6 @@
 # Workflow and Event Map
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 This page focuses on workflow/event-bearing database objects and the code files that appear to orchestrate or consume them.
 

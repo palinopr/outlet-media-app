@@ -1,6 +1,6 @@
 # Start here: auth and access work
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 Recommended read order for someone changing sign-in/up flows, invites, memberships, portal-entry behavior, or scope enforcement.
 

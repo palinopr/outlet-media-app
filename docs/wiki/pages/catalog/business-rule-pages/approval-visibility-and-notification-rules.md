@@ -1,6 +1,6 @@
 # Approval visibility and notification rules
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 Files and DB objects that appear to control who sees approvals, notifications, and shared timeline events.
 
@@ -11,7 +11,7 @@ Files and DB objects that appear to control who sees approvals, notifications, a
 - Mutation-oriented files: e2e/authenticated-smoke.spec.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/clients/data.ts, src/app/api/admin/users/[id]/route.ts, src/features/system-events/server.ts
 - Tests: __tests__/api/ingest.test.ts, __tests__/features/client-portal/scope.test.ts, __tests__/features/system-events/list.test.ts, src/app/admin/actions/clients.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/clients/data.test.ts, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/admin/reports/page.test.tsx, src/app/api/admin/users/[id]/route.test.ts, src/app/client/[slug]/components/campaign-detail-header.test.tsx, … (+7 more)
 - Docs: AGENTS.md, README.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, … (+43 more)
-- Behavior signals: calls redirect() (11), client component/module (11), calls revalidatePath() (7), server action/module (7), calls notFound() (3), defines generateMetadata (3), sets dynamic rendering mode (1), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: calls redirect() (11), client component/module (11), calls revalidatePath() (7), server action/module (7), defines generateMetadata (3), calls notFound() (3), sets dynamic rendering mode (1), calls revalidateTag() (1), calls unstable_noStore() (1)
 - Auth signals: references membership/scope access concepts (27), imports Clerk server auth (14), calls currentUser() (8), calls auth() (6), contains explicit access/role guard helper usage (1)
 
 ## Database objects

@@ -1,6 +1,6 @@
 # Docs / Plans
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 - Files: 30
 - File kinds: Markdown doc (30)
@@ -111,7 +111,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: Markdown doc
 - Construction: markdown document, frontmatter-like markdown structure
 - Lines: 176
-- Bytes: 6479
+- Bytes: 6463
 - Headings: Project Restructure Design, Context, Approach: Bottom-Up Cleanup (5 Layers), Layer 1: Delete Dead Code, Files to delete, Dependencies to remove, Imports to clean, Layer 2: Extract Shared Utilities, Frontend: `src/lib/`, Client portal consolidation, … (+10 more)
 - Contents summary: headings: Project Restructure Design \| Context \| Approach: Bottom-Up Cleanup (5 Layers) \| Layer 1: Delete Dead Code \| Files to delete \| Dependencies to remove
 
@@ -123,7 +123,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: Markdown doc
 - Construction: markdown document, frontmatter-like markdown structure
 - Lines: 837
-- Bytes: 26519
+- Bytes: 26483
 - Headings: Project Restructure Implementation Plan, Task 1: Delete Dead Agent Files, Task 2: Extract Shared Frontend Formatters, Task 3: Extract Meta API Constants, Task 4: Consolidate Client Portal Helpers, Task 5: Extract Agent Shared Utilities, Task 6: Eliminate discord-routines.ts Duplication, Task 7: Split campaign-charts.tsx, Task 8: Extract Dashboard Data Layer, Task 9: Split Client Portal Types, … (+8 more)
 - Contents summary: headings: Project Restructure Implementation Plan \| Task 1: Delete Dead Agent Files \| Task 2: Extract Shared Frontend Formatters \| Task 3: Extract Meta API Constants \| Task 4: Consolidate Client Portal Helpers \| Task 5: Extract Agent Shared Utilities
 

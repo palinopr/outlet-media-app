@@ -1,6 +1,6 @@
 # /api/admin/users/[id]
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 - Route file: `src/app/api/admin/users/[id]/route.ts`
 - Type: Next.js route handler

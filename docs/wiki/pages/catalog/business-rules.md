@@ -1,6 +1,6 @@
 # Business Rule Pages
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 This index links to deeper rule-oriented pages that group files and DB objects around major business constraints or policy areas.
 

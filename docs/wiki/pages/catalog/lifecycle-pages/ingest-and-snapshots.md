@@ -1,6 +1,6 @@
 # Ingest and snapshot lifecycle
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 Files and DB objects involved in external data ingest, campaign/event snapshots, and summary/report surfaces built on them.
 
@@ -11,7 +11,7 @@ Files and DB objects involved in external data ingest, campaign/event snapshots,
 - Mutation-oriented files: src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/clients/data.ts
 - Tests: __tests__/api/ingest.test.ts, __tests__/app/client/campaign-detail-data.test.ts, src/app/admin/actions/search.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/reports/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, src/features/campaigns/revalidation.test.ts, src/features/campaigns/server.test.ts, src/lib/campaign-client-assignment.test.ts
 - Docs: docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-03-02-admin-crud-design.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-campaign-client-assignment-design.md, docs/plans/2026-03-03-client-accounts-design.md, docs/plans/2026-03-03-client-accounts-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-design.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, docs/plans/2026-03-04-admin-must-have-upgrades.md, … (+10 more)
-- Behavior signals: calls revalidatePath() (8), server action/module (7), calls redirect() (6), client component/module (6), calls notFound() (3), defines generateMetadata (2), sets dynamic rendering mode (1), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: calls revalidatePath() (8), server action/module (7), calls redirect() (6), client component/module (6), calls notFound() (3), defines generateMetadata (2), calls revalidateTag() (1), calls unstable_noStore() (1), sets dynamic rendering mode (1)
 - Auth signals: references membership/scope access concepts (13), imports Clerk server auth (9), calls currentUser() (4), calls auth() (3), contains explicit access/role guard helper usage (1)
 
 ## Database objects

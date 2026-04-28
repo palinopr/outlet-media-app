@@ -1,6 +1,6 @@
 # Campaign discussion and action-item lifecycle
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 Files and DB objects involved in campaign comments, campaign action items, notifications, and shared system events.
 
@@ -11,7 +11,7 @@ Files and DB objects involved in campaign comments, campaign action items, notif
 - Mutation-oriented files: src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/features/system-events/server.ts
 - Tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/client/[slug]/campaigns/campaigns-table.test.tsx, src/app/client/[slug]/campaigns/page.test.tsx
 - Docs: AGENTS.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, … (+25 more)
-- Behavior signals: client component/module (12), calls revalidatePath() (6), server action/module (6), calls redirect() (4), calls notFound() (3), defines generateMetadata (2), sets dynamic rendering mode (1), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Behavior signals: client component/module (12), calls revalidatePath() (6), server action/module (6), calls redirect() (4), calls notFound() (3), defines generateMetadata (2), calls revalidateTag() (1), calls unstable_noStore() (1), sets dynamic rendering mode (1)
 - Auth signals: references membership/scope access concepts (16), imports Clerk server auth (9), calls currentUser() (5), calls auth() (4), contains explicit access/role guard helper usage (1)
 
 ## Database objects

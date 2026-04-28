@@ -1,6 +1,6 @@
 # Access and invite lifecycle
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 Files and DB objects involved in client access, invites, membership resolution, and portal entry.
 

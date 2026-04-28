@@ -1,6 +1,6 @@
 # Impact Maps
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 This index links to pages meant to answer: if I touch this file, what else is likely to move?
 

@@ -1,6 +1,6 @@
 # Feature: client-portal
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 - Files: 13
 - Entry files: src/features/client-portal/access.ts, src/features/client-portal/campaign-detail.ts, src/features/client-portal/config.ts, src/features/client-portal/entry.ts, src/features/client-portal/insights.ts, src/features/client-portal/scope.ts, src/features/client-portal/theme.ts, src/features/client-portal/types.ts

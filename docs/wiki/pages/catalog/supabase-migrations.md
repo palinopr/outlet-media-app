@@ -1,6 +1,6 @@
 # supabase / migrations
 
-Generated from the current working tree on 2026-04-28 02:31:12.
+Generated from the current working tree on 2026-04-28 02:32:49.
 
 - Files: 75
 - File kinds: SQL migration/query (75)
@@ -147,7 +147,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
 - Lines: 135
-- Bytes: 5929
+- Bytes: 5936
 - SQL objects: create table: public.tm_events, create table: public.meta_campaigns, create table: public.agent_jobs, alter table: public.agent_jobs, alter table: public.tm_events, alter table: public.meta_campaigns, function: public.handle_updated_at, policy: "jobs_read" on public.agent_jobs, policy: "jobs_insert" on public.agent_jobs, policy: "jobs_update" on public.agent_jobs, policy: "events_read" on public.tm_events, policy: "events_insert" on public.tm_events, … (+8 more)
 - Contents summary: create table: public.tm_events; create table: public.meta_campaigns; create table: public.agent_jobs; alter table: public.agent_jobs; alter table: public.tm_events; alter table: public.meta_campaigns; function: public.handle_updated_at; policy: "jobs_read" on public.agent_jobs
 
