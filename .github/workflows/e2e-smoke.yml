@@ -26,6 +26,8 @@ jobs:
       E2E_CLIENT_SLUG: ${{ inputs.client_slug }}
       E2E_CLIENT_SLUGS: ${{ inputs.client_slugs }}
       E2E_CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}
+      E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
+      E2E_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}
     steps:
       - uses: actions/checkout@v4
 

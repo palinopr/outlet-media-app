@@ -1,5 +1,4 @@
-import { currentUser } from "@clerk/nextjs/server";
-import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase";
 import {
   getCampaignClientOverrideMap,
   getEffectiveCampaignRowById,
@@ -517,81 +516,29 @@ async function fetchAds(
 
 // --- Main data function ---
 
-async function getCampaignDetailReadContext() {
-  if (!supabaseAdmin) return null;
-
-  try {
-    const user = await currentUser();
-    const role = (user?.publicMetadata as { role?: string } | null)?.role;
-    if (role === "admin") {
-      return {
-        db: supabaseAdmin,
-        trustsCampaignRls: false,
-      };
-    }
-  } catch {
-    return null;
-  }
-
-  const userScopedClient = await createClerkSupabaseClient();
-  if (!userScopedClient) {
-    return null;
-  }
-
-  return {
-    db: userScopedClient,
-    trustsCampaignRls: true,
-  };
-}
-
 export async function getCampaignDetail(
   slug: string,
   campaignId: string,
   range: CampaignDetailRangeInput,
   scope?: ScopeFilter,
 ): Promise<CampaignDetailData | null> {
+  if (!supabaseAdmin) return null;
   if (!allowsCampaignInScope(scope, campaignId)) {
     return null;
   }
 
-  const readContext = await getCampaignDetailReadContext();
-  if (!readContext) return null;
   const creds = getMetaCreds();
 
-  let row: SupabaseCampaignDetailRow | null = null;
+  let row = await getEffectiveCampaignRowById<SupabaseCampaignDetailRow>(
+    campaignId,
+    "campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time, client_slug",
+  );
 
-  if (readContext.trustsCampaignRls) {
-    const { data, error } = await readContext.db
-      .from("meta_campaigns")
-      .select(
-        "campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time, client_slug",
-      )
-      .eq("campaign_id", campaignId)
-      .maybeSingle();
-
-    if (error) {
-      console.error("[client-campaign-detail] read failed:", error.message);
-      return null;
-    }
-
-    row = (data as SupabaseCampaignDetailRow | null) ?? null;
-    if (!row) {
-      row = await getMetaCampaignFallbackRow(slug, campaignId, creds, scope);
-    }
-  } else {
-    row = await getEffectiveCampaignRowById<SupabaseCampaignDetailRow>(
-      campaignId,
-      "campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time, client_slug",
-    );
-
-    if (!row) {
-      row = await getMetaCampaignFallbackRow(slug, campaignId, creds, scope);
-    }
-
-    if (!row || row.client_slug !== slug) return null;
+  if (!row) {
+    row = await getMetaCampaignFallbackRow(slug, campaignId, creds, scope);
   }
 
-  if (!row) return null;
+  if (!row || row.client_slug !== slug) return null;
 
   // Try Meta API first (parallel calls for speed)
   if (creds) {

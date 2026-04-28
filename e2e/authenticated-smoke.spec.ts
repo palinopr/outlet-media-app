@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/database.types";
 
 const clerkSecretKey = process.env.E2E_CLERK_SECRET_KEY ?? process.env.CLERK_SECRET_KEY;
 const baseURL = trimTrailingSlash(
@@ -6,6 +8,8 @@ const baseURL = trimTrailingSlash(
 );
 const clientPortalSlug = process.env.E2E_CLIENT_SLUG ?? "sienna";
 const clientPortalSlugs = parseClientSlugs(process.env.E2E_CLIENT_SLUGS ?? clientPortalSlug);
+const e2eSupabaseUrl = process.env.E2E_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+const e2eSupabaseServiceRoleKey = process.env.E2E_SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 type ClerkUser = {
   id: string;
@@ -18,6 +22,7 @@ type ClerkSignInToken = {
 let adminUser: ClerkUser | null = null;
 let nonAdminUser: ClerkUser | null = null;
 const temporaryUsers: ClerkUser[] = [];
+const temporaryClientMemberIds: string[] = [];
 
 test.describe("authenticated smoke", () => {
   test.skip(!clerkSecretKey, "Set E2E_CLERK_SECRET_KEY or CLERK_SECRET_KEY to run authenticated smoke tests.");
@@ -28,7 +33,17 @@ test.describe("authenticated smoke", () => {
   });
 
   test.afterAll(async () => {
-    const cleanupResults = await Promise.allSettled(
+    const db = getE2ESupabaseClient();
+    const membershipCleanupResults = db
+      ? await Promise.allSettled(
+          temporaryClientMemberIds.map(async (memberId) => {
+            await deleteTemporaryClientMembership(db, memberId);
+          }),
+        )
+      : [];
+    temporaryClientMemberIds.length = 0;
+
+    const userCleanupResults = await Promise.allSettled(
       temporaryUsers.map(async (user) => {
         await deleteClerkUser(user.id);
       }),
@@ -37,9 +52,12 @@ test.describe("authenticated smoke", () => {
     adminUser = null;
     nonAdminUser = null;
 
-    const cleanupFailures = cleanupResults.filter((result) => result.status === "rejected");
-    if (cleanupFailures.length > 0) {
-      throw new Error(`Failed to delete ${cleanupFailures.length} temporary Clerk E2E user(s).`);
+    const membershipCleanupFailures = membershipCleanupResults.filter((result) => result.status === "rejected");
+    const userCleanupFailures = userCleanupResults.filter((result) => result.status === "rejected");
+    if (membershipCleanupFailures.length > 0 || userCleanupFailures.length > 0) {
+      throw new Error(
+        `Failed to clean up ${membershipCleanupFailures.length} temporary client membership(s) and ${userCleanupFailures.length} Clerk E2E user(s).`,
+      );
     }
   });
 
@@ -93,6 +111,41 @@ test.describe("authenticated smoke", () => {
     for (const slug of clientPortalSlugs) {
       await assertClientPortalIsCampaignsOnly(page, slug);
       await assertClientPortalCampaignListUsable(page, slug);
+    }
+  });
+
+  test("temporary client members land in only their assigned portal", async ({ browser }) => {
+    const db = getE2ESupabaseClient();
+    test.skip(
+      !db,
+      "Set E2E_SUPABASE_URL and E2E_SUPABASE_SERVICE_ROLE_KEY to run temporary client-member acceptance.",
+    );
+    if (!db) return;
+
+    for (const slug of clientPortalSlugs) {
+      const clientUser = await createTemporaryUser({ label: `client-${slug}` });
+      const memberId = await createTemporaryClientMembership(db, {
+        clientSlug: slug,
+        clerkUserId: clientUser.id,
+      });
+      temporaryClientMemberIds.push(memberId);
+
+      const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+      const page = await context.newPage();
+      try {
+        await signInWithToken(page, clientUser.id);
+        await assertClientPortalIsCampaignsOnly(page, slug);
+        await assertClientPortalCampaignListUsable(page, slug);
+
+        const otherSlug = clientPortalSlugs.find((candidate) => candidate !== slug);
+        if (otherSlug) {
+          await page.goto(appUrl(`/client/${otherSlug}/campaigns`), { waitUntil: "domcontentloaded" });
+          await expect(page).toHaveURL(new RegExp(`/client/${slug}(?:/campaigns)?(?:[/?#]|$)`));
+          await expect(page.locator("body")).not.toContainText(/Access denied|Something went wrong/i);
+        }
+      } finally {
+        await context.close();
+      }
     }
   });
 
@@ -291,6 +344,52 @@ async function assertRetiredRoutesRedirect(page: Page, slug: string) {
 
   await page.goto(appUrl(`/client/${slug}/reports`), { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(new RegExp(`/client/${slug}/campaigns(?:[/?#]|$)`));
+}
+
+type E2ESupabaseClient = SupabaseClient<Database>;
+
+function getE2ESupabaseClient(): E2ESupabaseClient | null {
+  if (!e2eSupabaseUrl || !e2eSupabaseServiceRoleKey) return null;
+  return createClient(e2eSupabaseUrl, e2eSupabaseServiceRoleKey, {
+    auth: { persistSession: false },
+  });
+}
+
+async function createTemporaryClientMembership(
+  db: E2ESupabaseClient,
+  input: { clientSlug: string; clerkUserId: string },
+) {
+  const { data: client, error: clientError } = await db
+    .from("clients")
+    .select("id")
+    .eq("slug", input.clientSlug)
+    .maybeSingle();
+
+  if (clientError) throw new Error(`Failed to load client ${input.clientSlug}: ${clientError.message}`);
+  if (!client) throw new Error(`Client ${input.clientSlug} does not exist.`);
+
+  const { data: member, error: memberError } = await db
+    .from("client_members")
+    .insert({
+      client_id: client.id,
+      clerk_user_id: input.clerkUserId,
+      role: "member",
+      scope: "all",
+    })
+    .select("id")
+    .single();
+
+  if (memberError) throw new Error(`Failed to create temporary client membership: ${memberError.message}`);
+  return String(member.id);
+}
+
+async function deleteTemporaryClientMembership(db: E2ESupabaseClient, memberId: string) {
+  const { error } = await db
+    .from("client_members")
+    .delete()
+    .eq("id", memberId);
+
+  if (error) throw new Error(`Failed to delete temporary client membership ${memberId}: ${error.message}`);
 }
 
 async function createTemporaryUser({

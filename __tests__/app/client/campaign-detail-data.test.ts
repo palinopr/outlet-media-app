@@ -109,40 +109,37 @@ describe("client campaign detail reads", () => {
     resolveEffectiveCampaignClientSlug.mockReturnValue("unknown");
   });
 
-  it("prefers the Clerk-scoped client for client campaign detail reads", async () => {
-    userScopedState.meta_campaigns = [
-      {
-        campaign_id: "cmp_1",
-        client_slug: "legacy",
-        name: "RLS Campaign",
-        status: "ACTIVE",
-        spend: 12345,
-        roas: 3.5,
-        impressions: 1000,
-        clicks: 25,
-        ctr: 2.5,
-        cpc: 494,
-        cpm: 1234,
-        daily_budget: 5000,
-        start_time: "2026-03-01T00:00:00.000Z",
-      },
-    ];
+  it("uses effective campaign ownership for client campaign detail reads", async () => {
+    getEffectiveCampaignRowById.mockResolvedValue({
+      campaign_id: "cmp_1",
+      client_slug: "zamora",
+      name: "Effective Campaign",
+      status: "ACTIVE",
+      spend: 12345,
+      roas: 3.5,
+      impressions: 1000,
+      clicks: 25,
+      ctr: 2.5,
+      cpc: 494,
+      cpm: 1234,
+      daily_budget: 5000,
+      start_time: "2026-03-01T00:00:00.000Z",
+    });
     createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
 
     const detail = await getCampaignDetail("zamora", "cmp_1", "7");
 
-    expect(detail?.campaign.name).toBe("RLS Campaign");
+    expect(detail?.campaign.name).toBe("Effective Campaign");
     expect(detail?.dataSource).toBe("supabase");
-    expect(getEffectiveCampaignRowById).not.toHaveBeenCalled();
+    expect(getEffectiveCampaignRowById).toHaveBeenCalled();
+    expect(createClerkSupabaseClient).not.toHaveBeenCalled();
   });
 
-  it("keeps admin client-portal viewers on the service role fallback", async () => {
-    currentUser.mockResolvedValue({ publicMetadata: { role: "admin" } });
-    createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
+  it("rejects campaign detail rows owned by a different client", async () => {
     getEffectiveCampaignRowById.mockResolvedValue({
       campaign_id: "cmp_1",
-      client_slug: "zamora",
-      name: "Service Campaign",
+      client_slug: "kybba",
+      name: "Other Client Campaign",
       status: "ACTIVE",
       spend: 23456,
       roas: 2.1,
@@ -157,7 +154,7 @@ describe("client campaign detail reads", () => {
 
     const detail = await getCampaignDetail("zamora", "cmp_1", "7");
 
-    expect(detail?.campaign.name).toBe("Service Campaign");
+    expect(detail).toBeNull();
     expect(createClerkSupabaseClient).not.toHaveBeenCalled();
   });
 

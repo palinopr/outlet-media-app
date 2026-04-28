@@ -7,6 +7,7 @@ Use this after a production push/deploy or any auth, routing, campaign, client, 
 - Railway CLI logged in and linked to `outlet-media-app`.
 - Playwright Chromium installed locally once with `npm run playwright:install`.
 - Production Clerk secret available as `E2E_CLERK_SECRET_KEY`.
+- Optional temporary client-member acceptance uses `E2E_SUPABASE_URL` and `E2E_SUPABASE_SERVICE_ROLE_KEY` to create and delete ephemeral `client_members` rows without inviting real clients.
 - Production E2E target must be `https://outletmedia.net`; Clerk production keys do not allow the Railway preview origin for browser sign-in.
 
 ## Standard deploy smoke
@@ -33,20 +34,25 @@ Run authenticated smoke:
 ```bash
 E2E_BASE_URL=https://outletmedia.net \
 E2E_CLIENT_SLUG=sienna \
+E2E_CLIENT_SLUGS="sienna,zamora,kybba,distill_pr,vaz_vil_enterprise,chris_r,proteccion_final,beamina,happy_paws,don_omar_bcn" \
 E2E_CLERK_SECRET_KEY="$E2E_CLERK_SECRET_KEY" \
+E2E_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
+E2E_SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
   npm run test:e2e
 ```
 
-The smoke suite creates temporary Clerk users with `outlet-e2e-*` emails and deletes them in teardown.
+The smoke suite creates temporary Clerk users with `outlet-e2e-*` emails and deletes them in teardown. When Supabase E2E credentials are present, it also creates temporary non-admin client memberships and deletes those rows before deleting the users.
 
 ## Manual GitHub smoke
 
 Use the **E2E Smoke** GitHub Actions workflow when you want the same smoke from CI infrastructure:
 
 1. Confirm the repository secret `E2E_CLERK_SECRET_KEY` is set to the Clerk secret for the target environment.
-2. Run the workflow manually.
-3. Use `https://outletmedia.net` as `base_url` for production.
-4. Use `sienna` as the default `client_slug` unless that portal has no campaign data.
+2. Optional but recommended: set `E2E_SUPABASE_URL` and `E2E_SUPABASE_SERVICE_ROLE_KEY` so CI can test real non-admin client-member access without sending invites.
+3. Run the workflow manually.
+4. Use `https://outletmedia.net` as `base_url` for production.
+5. Use `sienna` as the default `client_slug` unless that portal has no campaign data.
+6. Use `client_slugs` to cover every client portal that should be accepted for launch.
 
 ## Expected coverage
 
@@ -57,6 +63,8 @@ Use the **E2E Smoke** GitHub Actions workflow when you want the same smoke from 
 - Clients owns client creation.
 - Campaign detail renders performance metrics and no retired workflow panels.
 - Client portal navigation is Campaigns-only.
+- Configured client portals load campaign lists/details without cross-client leakage.
+- Temporary non-admin client members can access only their assigned portal when Supabase E2E credentials are present.
 - Retired Events/Reports direct URLs redirect back to active surfaces.
 - Active desktop and mobile surfaces do not create page-level horizontal overflow.
 
