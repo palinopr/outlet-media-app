@@ -69,6 +69,8 @@ export function CampaignRangeFilter({
       >
         <input
           aria-label="Custom range start"
+          id="campaign-range-since"
+          name="since"
           className="h-7 w-[8.5rem] rounded-md border border-white/[0.1] bg-black/25 px-2 text-xs text-white/80 outline-none focus:border-blue-400/50"
           max={until}
           onChange={(event) => setSince(event.target.value)}
@@ -78,6 +80,8 @@ export function CampaignRangeFilter({
         <span className="text-xs text-white/35">to</span>
         <input
           aria-label="Custom range end"
+          id="campaign-range-until"
+          name="until"
           className="h-7 w-[8.5rem] rounded-md border border-white/[0.1] bg-black/25 px-2 text-xs text-white/80 outline-none focus:border-blue-400/50"
           min={since}
           onChange={(event) => setUntil(event.target.value)}

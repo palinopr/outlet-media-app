@@ -36,6 +36,8 @@ export function CampaignsTable({
         <Search className="h-4 w-4 text-blue-300/60 shrink-0" />
         <input
           type="text"
+          id="campaign-search"
+          name="campaign-search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search campaigns..."
