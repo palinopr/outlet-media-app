@@ -128,7 +128,7 @@ async function assertClientsOwnClientCreation(page: Page) {
   await page.goto(appUrl("/admin/clients"), { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: "Clients" })).toBeVisible();
   await expect(page.getByRole("button", { name: /create client/i })).toBeVisible();
-  await expect(page.getByPlaceholder("Search clients...")).toBeVisible();
+  await expect(page.getByPlaceholder("Search clients...").first()).toBeVisible();
 }
 
 async function assertCampaignDetailIsPerformanceOnly(page: Page) {
