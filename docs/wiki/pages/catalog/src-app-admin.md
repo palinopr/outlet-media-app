@@ -1,6 +1,6 @@
 # src/app / admin
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 - Files: 41
 - File kinds: TypeScript module (12), Next.js page (10), test file (9), React/TSX module (5), Next.js loading UI (4), Next.js layout (1)
@@ -700,15 +700,15 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: Next.js page for `/admin/reports`; exports: AdminReportsPage, default; package imports: 1
 
 ## `src/app/admin/settings/page.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/app / admin
 - Ownership: web admin route surface
 - Type: Next.js page
 - Construction: App Router page, component/UI-oriented module
 - Route: /admin/settings
-- Lines: 256
-- Bytes: 11351
+- Lines: 250
+- Bytes: 10757
 - Imports (internal): src/components/ui/card.tsx, src/components/ui/badge.tsx, src/components/admin/stat-card.tsx, src/features/settings/connected-accounts.ts, src/lib/supabase.ts, src/components/admin/page-header.tsx
 - Imports (packages): lucide-react
 - Imported by: src/app/shell-import-smoke.test.ts

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { ContactFormSchema } from "@/lib/api-schemas";
 import { apiError, validateRequest } from "@/lib/api-helpers";
+import { enforceContentLength, enforceRateLimit } from "@/lib/request-guards";
 
 const contactRecipient = process.env.CONTACT_FORM_TO_EMAIL ?? "info@outletmedia.net";
 
@@ -58,6 +59,16 @@ async function sendContactEmail(input: {
 }
 
 export async function POST(request: Request) {
+  const sizeError = enforceContentLength(request, 16 * 1024);
+  if (sizeError) return sizeError;
+
+  const rateLimitError = enforceRateLimit(request, {
+    limit: 8,
+    scope: "contact",
+    windowMs: 60_000,
+  });
+  if (rateLimitError) return rateLimitError;
+
   const { data, error: valErr } = await validateRequest(request, ContactFormSchema);
   if (valErr) return valErr;
 

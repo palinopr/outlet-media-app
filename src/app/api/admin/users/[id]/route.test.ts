@@ -80,6 +80,23 @@ describe("PATCH /api/admin/users/[id]", () => {
     state.existingMembership = null;
   });
 
+  it("requires admin access", async () => {
+    adminGuard.mockResolvedValue(Response.json({ error: "Forbidden" }, { status: 403 }));
+
+    const { PATCH } = await import("./route");
+    const response = await PATCH(
+      new Request("https://example.com/api/admin/users/user_1", {
+        body: JSON.stringify({ action: "add", clientId: "client_1" }),
+        headers: { "Content-Type": "application/json" },
+        method: "PATCH",
+      }),
+      { params: Promise.resolve({ id: "user_1" }) },
+    );
+
+    expect(response.status).toBe(403);
+    expect(state.insertMembership).not.toHaveBeenCalled();
+  });
+
   it("does not recreate an existing membership when adding client access", async () => {
     state.existingMembership = { id: "member_1" };
 

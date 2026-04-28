@@ -1,6 +1,6 @@
 # Workflow and Event Map
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This page focuses on workflow/event-bearing database objects and the code files that appear to orchestrate or consume them.
 
@@ -21,14 +21,14 @@ This page focuses on workflow/event-bearing database objects and the code files 
 - Migrations: supabase/migrations/20260218140000_agent_alerts.sql
 - Routes: none
 - Features/libs/agents: none
-- Tests/docs: docs/plans/2026-03-03-admin-activity-tracking-plan.md
+- Tests/docs: none
 
 ### `agent_jobs`
 - Kinds: table
 - Migrations: supabase/migrations/20260218000000_initial_schema.sql
 - Routes: none
 - Features/libs/agents: none
-- Tests/docs: docs/plans/2026-03-02-project-restructure-plan.md
+- Tests/docs: none
 
 ### `agent_jobs_updated_at`
 - Kinds: trigger
@@ -49,7 +49,7 @@ This page focuses on workflow/event-bearing database objects and the code files 
 - Migrations: supabase/migrations/20260302000000_agent_tasks.sql, supabase/migrations/20260306223000_agent_tasks_visibility_rls.sql
 - Routes: none
 - Features/libs/agents: none
-- Tests/docs: docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-07-discord-growth-team-plan.md
+- Tests/docs: none
 
 ### `release_runtime_lease`
 - Kinds: function
@@ -125,7 +125,7 @@ This page focuses on workflow/event-bearing database objects and the code files 
 - Migrations: supabase/migrations/20260306181500_internal_tables_rls.sql
 - Routes: src/app/api/admin/activity/route.ts
 - Features/libs/agents: src/lib/database.types.ts
-- Tests/docs: docs/context/engineering-principles.md, docs/plans/2026-03-03-admin-activity-tracking-design.md, docs/plans/2026-03-03-admin-activity-tracking-plan.md, docs/references/database-safety-runbook.md
+- Tests/docs: docs/context/engineering-principles.md, docs/references/database-safety-runbook.md, src/app/api/admin/activity/route.test.ts
 
 ### `approval_requests`
 - Kinds: table
@@ -139,14 +139,14 @@ This page focuses on workflow/event-bearing database objects and the code files 
 - Migrations: supabase/migrations/20260306111500_notification_entities.sql, supabase/migrations/20260306163500_client_surface_rls.sql
 - Routes: src/app/privacy/page.tsx
 - Features/libs/agents: none
-- Tests/docs: docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md
+- Tests/docs: none
 
 ### `system_events`
 - Kinds: table
 - Migrations: supabase/migrations/20260305000000_system_events.sql, supabase/migrations/20260305001000_system_events_private_read.sql, supabase/migrations/20260306143000_system_events_envelope.sql, supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql
 - Routes: none
 - Features/libs/agents: src/features/AGENTS.md, src/features/system-events/server.ts, src/lib/database.types.ts
-- Tests/docs: __tests__/features/system-events/list.test.ts, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/references/database-safety-runbook.md
+- Tests/docs: __tests__/features/system-events/list.test.ts, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/references/database-safety-runbook.md
 
 ## Workflow-related code files
 
@@ -182,7 +182,7 @@ This page focuses on workflow/event-bearing database objects and the code files 
 - Ownership: web API route surface
 - Related DB objects: admin_activity, if
 - Route owners: none
-- Related tests: none
+- Related tests: src/app/api/admin/activity/route.test.ts
 - Contents summary: Next.js route handler for `/api/admin/activity`; route handlers: POST; exports: POST; internal imports: 2; package imports: 3
 
 ### `src/app/privacy/page.tsx`

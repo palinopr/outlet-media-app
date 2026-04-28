@@ -1,6 +1,6 @@
 # Mutation Surface Map
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This page focuses on obvious state-changing surfaces: API mutation routes, admin actions, and exported mutation-oriented helpers/runtime files.
 
@@ -11,7 +11,7 @@ This page focuses on obvious state-changing surfaces: API mutation routes, admin
 - Methods: POST
 - Validation symbols: ActivitySchema
 - DB objects touched: admin_activity, if
-- Related tests: none
+- Related tests: src/app/api/admin/activity/route.test.ts
 - Summary: Next.js route handler for `/api/admin/activity`; route handlers: POST; exports: POST; internal imports: 2; package imports: 3
 
 ### `/api/admin/invite`
@@ -36,7 +36,7 @@ This page focuses on obvious state-changing surfaces: API mutation routes, admin
 - Validation symbols: none
 - DB objects touched: contact_submissions, if
 - Related tests: src/app/api/contact/route.test.ts
-- Summary: Next.js route handler for `/api/contact`; route handlers: POST; exports: POST; internal imports: 3; package imports: 1
+- Summary: Next.js route handler for `/api/contact`; route handlers: POST; exports: POST; internal imports: 4; package imports: 1
 
 ### `/api/ingest`
 - File: `src/app/api/ingest/route.ts`
@@ -44,7 +44,7 @@ This page focuses on obvious state-changing surfaces: API mutation routes, admin
 - Validation symbols: none
 - DB objects touched: if
 - Related tests: __tests__/api/ingest.test.ts
-- Summary: Next.js route handler for `/api/ingest`; route handlers: POST, GET; exports: POST, GET; internal imports: 4; package imports: 1
+- Summary: Next.js route handler for `/api/ingest`; route handlers: POST, GET; exports: POST, GET; internal imports: 5; package imports: 1
 
 ### `/api/meta/data-deletion`
 - File: `src/app/api/meta/data-deletion/route.ts`
@@ -52,7 +52,7 @@ This page focuses on obvious state-changing surfaces: API mutation routes, admin
 - Validation symbols: none
 - DB objects touched: client_accounts, if
 - Related tests: src/app/api/meta/data-deletion/route.test.ts
-- Summary: Next.js route handler for `/api/meta/data-deletion`; route handlers: POST; exports: POST; internal imports: 2; package imports: 2
+- Summary: Next.js route handler for `/api/meta/data-deletion`; route handlers: POST; exports: POST; internal imports: 3; package imports: 2
 
 ### `/api/observability/client-error`
 - File: `src/app/api/observability/client-error/route.ts`
@@ -67,7 +67,7 @@ This page focuses on obvious state-changing surfaces: API mutation routes, admin
 - Methods: POST
 - Validation symbols: ProfileSchema, parsed
 - DB objects touched: if
-- Related tests: none
+- Related tests: src/app/api/user/profile/route.test.ts
 - Summary: Next.js route handler for `/api/user/profile`; route handlers: POST; exports: POST; internal imports: 1; package imports: 3
 
 ## Admin actions
@@ -137,16 +137,9 @@ This page focuses on obvious state-changing surfaces: API mutation routes, admin
 - Related tests: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/app/client/campaign-detail-data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/campaigns/campaigns-table.test.tsx, src/app/client/[slug]/components/campaign-detail-header.test.tsx, src/lib/meta-api.test.ts, src/features/campaigns/server.test.ts, src/lib/meta-campaigns.test.ts, src/app/client/[slug]/lib.test.ts, … (+3 more)
 - Summary: exports: parseRange, parseCampaignRange, parseClientCampaignRange, getRangeLabel, getRangeQuery, META_API_VERSION, META_PRESETS, RANGE_LABELS
 
-### `src/lib/google-ads.ts`
-- Mutation symbols: loginCustomerId
-- DB objects touched: if
-- Route owners: none
-- Related tests: src/lib/google-ads.test.ts
-- Summary: exports: normalizeGoogleAdsCustomerId, googleAdsSearchStreamUrl, getGoogleAdsCredentials, refreshGoogleAdsAccessToken, flattenGoogleAdsSearchStream, googleAdsSearchStream, fetchGoogleAdsFirstReadSnapshot, GOOGLE_ADS_API_VERSION
-
 ### `src/lib/supabase.ts`
 - Mutation symbols: createClerkSupabaseClient
 - DB objects touched: if
 - Route owners: src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/health/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, src/app/api/observability/client-error/route.ts, src/app/admin/clients/[id]/page.tsx, … (+11 more)
-- Related tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, src/app/api/meta/data-deletion/route.test.ts, src/app/api/observability/client-error/route.test.ts, … (+20 more)
+- Related tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, src/app/api/meta/data-deletion/route.test.ts, … (+21 more)
 - Summary: exports: createClerkSupabaseClient, getFeatureReadClient, supabaseAdmin; package imports: 3

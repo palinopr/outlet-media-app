@@ -90,6 +90,23 @@ describe("POST /api/admin/invite", () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://example.com");
   });
 
+  it("requires admin access", async () => {
+    adminGuard.mockResolvedValue(Response.json({ error: "Forbidden" }, { status: 403 }));
+
+    const { POST } = await import("./route");
+    const response = await POST(
+      new Request("https://example.com/api/admin/invite", {
+        body: JSON.stringify({ email: "member@example.com", clientId: "client_1" }),
+        headers: { "Content-Type": "application/json" },
+        method: "POST",
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(inviteInsert).not.toHaveBeenCalled();
+    expect(createInvitation).not.toHaveBeenCalled();
+  });
+
   it("creates a DB invite row and passes only transition metadata into Clerk", async () => {
     const { POST } = await import("./route");
 

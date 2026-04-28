@@ -73,6 +73,16 @@ test.describe("authenticated smoke", () => {
     await assertClientPortalIsCampaignsOnly(page, clientPortalSlug);
     await assertRetiredRoutesRedirect(page, clientPortalSlug);
   });
+
+  test("mobile admin and client navigation stay narrow and usable", async ({ page }) => {
+    if (!adminUser) throw new Error("Temporary admin Clerk user was not created.");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await signInAsAdmin(page, adminUser.id);
+
+    await assertMobileAdminNavigation(page);
+    await assertMobileClientPortalNavigation(page, clientPortalSlug);
+  });
 });
 
 async function assertSignedOutRedirect(page: Page, path: string) {
@@ -112,6 +122,32 @@ async function assertAdminNavigation(page: Page) {
     "Settings",
   ]);
   await expect(desktopNav).not.toContainText(/Agents|Events|Reports|Approvals|Requests|Conversations/i);
+}
+
+async function assertMobileAdminNavigation(page: Page) {
+  await page.goto(appUrl("/admin/dashboard"), { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
+  await page.getByRole("button", { name: "Open navigation" }).click();
+
+  const mobileNav = page.getByRole("dialog").getByRole("navigation");
+  await expect(mobileNav.getByRole("link")).toHaveText([
+    "Dashboard",
+    "Campaigns",
+    "Clients",
+    "Users",
+    "Settings",
+  ]);
+  await expect(mobileNav).not.toContainText(/Agents|Events|Reports|Approvals|Requests|Conversations/i);
+}
+
+async function assertMobileClientPortalNavigation(page: Page, slug: string) {
+  await page.goto(appUrl(`/client/${slug}/campaigns`), { waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("heading", { name: new RegExp(`${slugToTitle(slug)} Campaigns`, "i") })).toBeVisible();
+  await page.getByRole("button", { name: "Toggle navigation menu" }).click();
+
+  const mobileNav = page.getByLabel("Mobile navigation");
+  await expect(mobileNav.getByRole("link")).toHaveText(["Campaigns"]);
+  await expect(mobileNav).not.toContainText(/Events|Reports|Agent|Approvals|Requests|Conversations/i);
 }
 
 async function assertSettingsIsTechnicalOnly(page: Page) {

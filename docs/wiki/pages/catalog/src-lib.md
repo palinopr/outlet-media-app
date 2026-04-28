@@ -1,9 +1,9 @@
 # src/lib
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
-- Files: 29
-- File kinds: TypeScript module (20), test file (8), React/TSX module (1)
+- Files: 27
+- File kinds: TypeScript module (19), test file (7), React/TSX module (1)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -34,12 +34,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 88
 - Bytes: 2900
 - Imports (packages): next/server, @clerk/nextjs/server, zod
-- Imported by: src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/admin/users/[id]/route.ts, … (+7 more)
+- Imported by: src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.test.ts, … (+10 more)
 - Used by groups: src/app / admin, src/app / api, src/lib
-- Route owners: src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts, src/app/admin/campaigns/[campaignId]/page.tsx, … (+5 more)
+- Route owners: src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts, src/app/api/meta/data-deletion/route.ts, … (+6 more)
 - Routes related (direct): src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts
-- Tests related: src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/lib/api-helpers.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/actions/search.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/api/contact/route.test.ts, … (+4 more)
-- Tests related (direct): src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/lib/api-helpers.test.ts
+- Tests related: src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/app/api/user/profile/route.test.ts, src/lib/api-helpers.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/actions/search.test.ts, … (+8 more)
+- Tests related (direct): src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/app/api/user/profile/route.test.ts, src/lib/api-helpers.test.ts
 - Exports: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest
 - Symbol details: function apiError (exported), function dbError (exported), function authGuard (exported), function secretGuard (exported), function adminGuard (exported), function parseJsonBody (exported), function validateRequest (exported)
 - Defines: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest, caller, meta, role, raw, parsed
@@ -172,14 +172,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: Constants, Json, Database, Tables, TablesInsert, TablesUpdate, Enums, CompositeTypes
 
 ## `src/lib/env.ts`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/lib
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 85
-- Bytes: 3644
+- Lines: 73
+- Bytes: 2930
 - Imports (packages): zod
 - Imported by: src/instrumentation.ts
 - Used by groups: src / Root
@@ -228,40 +228,6 @@ Each entry below documents the file path, system ownership, construction style, 
 - Defines: centsToUsd, fmtUsd, fmtNum, fmtDate, fmtTodayLong, slugToLabel, getInvitationStatusCfg, timeAgo, roasColor, fmtObjective, computeMarginalRoas, computeBlendedRoas, … (+13 more)
 - Tests / describe labels: _
 - Contents summary: exports: centsToUsd, fmtUsd, fmtNum, fmtDate, fmtTodayLong, slugToLabel, getInvitationStatusCfg, timeAgo; tests/describes: _; internal imports: 2
-
-## `src/lib/google-ads.test.ts`
-- Status: tracked-clean
-- System: web
-- Group: src/lib
-- Ownership: shared web library
-- Type: test file
-- Construction: test specification
-- Lines: 158
-- Bytes: 4976
-- Imports (internal): src/lib/google-ads.ts
-- Imports (packages): vitest
-- Depends on groups: src/lib
-- Defines: result, fetchMock
-- Tests / describe labels: normalizeGoogleAdsCustomerId, strips resource prefixes and dashes, googleAdsSearchStreamUrl, builds the searchStream endpoint for a customer, flattenGoogleAdsSearchStream, flattens chunked rows and preserves metadata, refreshGoogleAdsAccessToken, refreshes an access token from OAuth, … (+3 more)
-- Contents summary: tests/describes: normalizeGoogleAdsCustomerId; strips resource prefixes and dashes; googleAdsSearchStreamUrl; internal imports: 1; package imports: 1
-
-## `src/lib/google-ads.ts`
-- Status: tracked-clean
-- System: web
-- Group: src/lib
-- Ownership: shared web library
-- Type: TypeScript module
-- Construction: code module
-- Lines: 489
-- Bytes: 15372
-- Imported by: src/lib/google-ads.test.ts, src/scripts/google-ads-discover-accounts.ts
-- Used by groups: src/lib, src / scripts
-- Tests related: src/lib/google-ads.test.ts
-- Tests related (direct): src/lib/google-ads.test.ts
-- Exports: normalizeGoogleAdsCustomerId, googleAdsSearchStreamUrl, getGoogleAdsCredentials, refreshGoogleAdsAccessToken, flattenGoogleAdsSearchStream, googleAdsSearchStream, fetchGoogleAdsFirstReadSnapshot, GOOGLE_ADS_API_VERSION, GoogleAdsApiError, GoogleAdsCredentials, GoogleAdsAccessToken, GoogleAdsSearchStreamChunk, … (+6 more)
-- Symbol details: function normalizeGoogleAdsCustomerId (exported), function googleAdsSearchStreamUrl (exported), function getGoogleAdsCredentials (exported), function refreshGoogleAdsAccessToken (exported), function flattenGoogleAdsSearchStream (exported), function googleAdsSearchStream (exported), function fetchGoogleAdsFirstReadSnapshot (exported), function mapGoogleAdsCustomer, function mapGoogleAdsChildAccount, function mapGoogleAdsCampaign, function toNumber, function getGoogleAdsErrorMessage, function parseJsonResponse, const GOOGLE_ADS_API_VERSION (exported), class GoogleAdsApiError (exported), interface GoogleAdsCredentials (exported), … (+8 more)
-- Defines: normalizeGoogleAdsCustomerId, googleAdsSearchStreamUrl, getGoogleAdsCredentials, refreshGoogleAdsAccessToken, flattenGoogleAdsSearchStream, googleAdsSearchStream, fetchGoogleAdsFirstReadSnapshot, mapGoogleAdsCustomer, mapGoogleAdsChildAccount, mapGoogleAdsCampaign, toNumber, getGoogleAdsErrorMessage, … (+46 more)
-- Contents summary: exports: normalizeGoogleAdsCustomerId, googleAdsSearchStreamUrl, getGoogleAdsCredentials, refreshGoogleAdsAccessToken, flattenGoogleAdsSearchStream, googleAdsSearchStream, fetchGoogleAdsFirstReadSnapshot, GOOGLE_ADS_API_VERSION
 
 ## `src/lib/member-access.ts`
 - Status: tracked-clean
@@ -398,39 +364,44 @@ Each entry below documents the file path, system ownership, construction style, 
 - Tests / describe labels: .
 - Contents summary: exports: verifySignedRequest; tests/describes: .; package imports: 1
 
-## `src/lib/shopify-admin.test.ts`
-- Status: tracked-clean
+## `src/lib/request-guards.test.ts`
+- Status: untracked
 - System: web
 - Group: src/lib
 - Ownership: shared web library
 - Type: test file
 - Construction: test specification
-- Lines: 89
-- Bytes: 2333
-- Imports (internal): src/lib/shopify-admin.ts
+- Lines: 45
+- Bytes: 1383
+- Imports (internal): src/lib/request-guards.ts
 - Imports (packages): vitest
 - Depends on groups: src/lib
-- Defines: result
-- Tests / describe labels: getShopifyAdminCredentials, reads Shopify credentials from env, throws when required env is missing, shopifyAdminGraphql, posts a graphql query and returns the data payload, throws ShopifyAdminApiError when graphql returns top-level errors
-- Contents summary: tests/describes: getShopifyAdminCredentials; reads Shopify credentials from env; throws when required env is missing; internal imports: 1; package imports: 1
+- Defines: request, response, blocked
+- Tests / describe labels: request guards, extracts the first forwarded client IP, rejects requests larger than the configured content-length, limits requests per client IP and scope
+- Contents summary: tests/describes: request guards; extracts the first forwarded client IP; rejects requests larger than the configured content-length; internal imports: 1; package imports: 1
 
-## `src/lib/shopify-admin.ts`
-- Status: tracked-clean
+## `src/lib/request-guards.ts`
+- Status: untracked
 - System: web
 - Group: src/lib
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 268
-- Bytes: 7077
-- Imported by: src/lib/shopify-admin.test.ts
-- Used by groups: src/lib
-- Tests related: src/lib/shopify-admin.test.ts
-- Tests related (direct): src/lib/shopify-admin.test.ts
-- Exports: getShopifyAdminCredentials, shopifyAdminGraphql, fetchShopifyFirstReadSnapshot, SHOPIFY_ADMIN_DEFAULT_API_VERSION, ShopifyAdminApiError, ShopifyAdminCredentials, ShopifyFirstReadSnapshot
-- Symbol details: function getShopifyAdminCredentials (exported), function shopifyAdminGraphql (exported), function fetchShopifyFirstReadSnapshot (exported), const SHOPIFY_ADMIN_DEFAULT_API_VERSION (exported), class ShopifyAdminApiError (exported), interface ShopifyAdminCredentials (exported), interface ShopifyFirstReadSnapshot (exported), interface ShopifyGraphqlEnvelope, interface ShopifyFirstReadQueryResult
-- Defines: getShopifyAdminCredentials, shopifyAdminGraphql, fetchShopifyFirstReadSnapshot, SHOPIFY_ADMIN_DEFAULT_API_VERSION, storeDomain, accessToken, apiVersion, missing, credentials, response, body, data, … (+5 more)
-- Contents summary: exports: getShopifyAdminCredentials, shopifyAdminGraphql, fetchShopifyFirstReadSnapshot, SHOPIFY_ADMIN_DEFAULT_API_VERSION, ShopifyAdminApiError, ShopifyAdminCredentials, ShopifyFirstReadSnapshot
+- Lines: 72
+- Bytes: 1698
+- Imports (internal): src/lib/api-helpers.ts
+- Imported by: src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, src/lib/request-guards.test.ts
+- Depends on groups: src/lib
+- Used by groups: src/app / api, src/lib
+- Route owners: src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts
+- Routes related (direct): src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts
+- Tests related: src/lib/request-guards.test.ts, src/app/api/contact/route.test.ts, __tests__/api/ingest.test.ts, src/app/api/meta/data-deletion/route.test.ts
+- Tests related (direct): src/lib/request-guards.test.ts
+- Exports: getClientIp, enforceContentLength, enforceRateLimit, resetRateLimitsForTests
+- Symbol details: function getClientIp (exported), function enforceContentLength (exported), function enforceRateLimit (exported), function resetRateLimitsForTests (exported), function nowMs, const buckets, type RateLimitBucket
+- Defines: nowMs, getClientIp, enforceContentLength, enforceRateLimit, resetRateLimitsForTests, buckets, forwardedFor, realIp, cfIp, rawLength, parsed, now, … (+5 more)
+- Tests / describe labels: ,
+- Contents summary: exports: getClientIp, enforceContentLength, enforceRateLimit, resetRateLimitsForTests; tests/describes: ,; internal imports: 1
 
 ## `src/lib/status.ts`
 - Status: tracked-clean
@@ -461,12 +432,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 76
 - Bytes: 2467
 - Imports (packages): react, @clerk/nextjs/server, @supabase/supabase-js
-- Imported by: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.test.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/admin/clients/data.test.ts, … (+32 more)
+- Imported by: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.test.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/admin/clients/data.test.ts, … (+33 more)
 - Used by groups: Tests / App, Tests / Features, Tests / Root, src/app / admin, src/app / api, src/app / client, src/features / campaigns, src/features / client-portal, src/features / invitations, src/features / system-events, … (+1 more)
 - Route owners: src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/health/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, … (+13 more)
 - Routes related (direct): src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/health/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, … (+1 more)
-- Tests related: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, … (+22 more)
-- Tests related (direct): __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, … (+7 more)
+- Tests related: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, … (+23 more)
+- Tests related (direct): __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, … (+8 more)
 - Exports: createClerkSupabaseClient, getFeatureReadClient, supabaseAdmin
 - Symbol details: function createClerkSupabaseClient (exported), function getFeatureReadClient (exported), const supabaseAdmin (exported), const getCachedUser, const url, const anonKey, const serviceKey
 - Defines: createClerkSupabaseClient, getFeatureReadClient, getCachedUser, url, anonKey, serviceKey, supabaseAdmin, user, role

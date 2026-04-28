@@ -1,6 +1,6 @@
 # supabase / migrations
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 - Files: 75
 - File kinds: SQL migration/query (75)
@@ -140,14 +140,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: SQL migration or query file
 
 ## `supabase/migrations/20260218000000_initial_schema.sql`
-- Status: tracked-clean
+- Status: modified
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
 - Lines: 135
-- Bytes: 5936
+- Bytes: 5915
 - SQL objects: create table: public.tm_events, create table: public.meta_campaigns, create table: public.agent_jobs, alter table: public.agent_jobs, alter table: public.tm_events, alter table: public.meta_campaigns, function: public.handle_updated_at, policy: "jobs_read" on public.agent_jobs, policy: "jobs_insert" on public.agent_jobs, policy: "jobs_update" on public.agent_jobs, policy: "events_read" on public.tm_events, policy: "events_insert" on public.tm_events, … (+8 more)
 - Contents summary: create table: public.tm_events; create table: public.meta_campaigns; create table: public.agent_jobs; alter table: public.agent_jobs; alter table: public.tm_events; alter table: public.meta_campaigns; function: public.handle_updated_at; policy: "jobs_read" on public.agent_jobs
 
@@ -475,7 +475,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: alter table: public.notifications; index: notifications_user_read_created_idx; index: notifications_entity_idx
 
 ## `supabase/migrations/20260306130000_retired_messaging_prototype.sql`
-- Status: untracked
+- Status: tracked-clean
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
@@ -498,7 +498,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: alter table: public.system_events; index: idx_system_events_occurred_at; index: idx_system_events_correlation_id; index: idx_system_events_causation_id
 
 ## `supabase/migrations/20260306152000_client_membership_rls.sql`
-- Status: modified
+- Status: tracked-clean
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
@@ -726,14 +726,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: function: public.is_current_client_member; policy: "client_members_read_client_roster" on public.client_members
 
 ## `supabase/migrations/20260311120000_client_events_enabled.sql`
-- Status: tracked-clean
+- Status: modified
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
 - Lines: 18
-- Bytes: 451
+- Bytes: 456
 - SQL objects: alter table: public.clients
 - Contents summary: alter table: public.clients
 
@@ -774,7 +774,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: alter table: public.client_agent_messages
 
 ## `supabase/migrations/20260401190000_retired_ticketing_workflow.sql`
-- Status: untracked
+- Status: tracked-clean
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
@@ -797,7 +797,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: policy: "clients_read_member" on public.clients
 
 ## `supabase/migrations/20260427000000_remove_agent_artifacts.sql`
-- Status: modified
+- Status: tracked-clean
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
@@ -821,29 +821,29 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: alter table: public.clients
 
 ## `supabase/migrations/20260427002000_remove_retired_workflow_tables.sql`
-- Status: tracked-clean
+- Status: modified
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
 - Lines: 15
-- Bytes: 802
+- Bytes: 760
 - Contents summary: SQL migration or query file
 
 ## `supabase/migrations/20260427003000_remove_inactive_backbone_tables.sql`
-- Status: tracked-clean
+- Status: modified
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
 - Lines: 18
-- Bytes: 779
+- Bytes: 789
 - Contents summary: SQL migration or query file
 
 ## `supabase/migrations/20260428000000_remove_unused_remote_backbones.sql`
-- Status: modified
+- Status: tracked-clean
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
@@ -854,7 +854,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: SQL migration or query file
 
 ## `supabase/migrations/20260428001000_remove_unused_remote_functions.sql`
-- Status: modified
+- Status: tracked-clean
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history

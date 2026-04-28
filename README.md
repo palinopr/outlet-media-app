@@ -38,7 +38,6 @@ Key deeper paths:
 
 - `AGENTS.md` -- repo operating brief and durable project instructions
 - `docs/context/` -- current product direction, engineering rules, and priorities
-- `docs/plans/` -- historical plans only, not the current source of truth
 
 ## Development
 

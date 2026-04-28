@@ -1,6 +1,6 @@
 # API Contract Map
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This page documents each `src/app/api/**/route.ts` file with its methods, request/response signals, validation symbols, dependency stack, and related tests.
 
@@ -14,7 +14,7 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 - Direct internal imports: src/lib/api-helpers.ts, src/lib/supabase.ts
 - Feature modules touched: none
 - Shared libs touched: src/lib/api-helpers.ts, src/lib/supabase.ts
-- Related tests: none
+- Related tests: src/app/api/admin/activity/route.test.ts
 - Contents summary: Next.js route handler for `/api/admin/activity`; route handlers: POST; exports: POST; internal imports: 2; package imports: 3
 
 ## `/api/admin/invite`
@@ -50,11 +50,11 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 - Response signals: uses NextResponse.json, uses Response.json
 - Auth signals: none
 - Validation symbols: none
-- Direct internal imports: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
+- Direct internal imports: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/request-guards.ts
 - Feature modules touched: none
-- Shared libs touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
+- Shared libs touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/request-guards.ts
 - Related tests: src/app/api/contact/route.test.ts
-- Contents summary: Next.js route handler for `/api/contact`; route handlers: POST; exports: POST; internal imports: 3; package imports: 1
+- Contents summary: Next.js route handler for `/api/contact`; route handlers: POST; exports: POST; internal imports: 4; package imports: 1
 
 ## `/api/health`
 - Route file: `src/app/api/health/route.ts`
@@ -76,11 +76,11 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 - Response signals: uses NextResponse.json, uses Response.json
 - Auth signals: none
 - Validation symbols: none
-- Direct internal imports: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/app/api/ingest/ingest-meta-campaigns.ts
+- Direct internal imports: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/request-guards.ts, src/app/api/ingest/ingest-meta-campaigns.ts
 - Feature modules touched: none
-- Shared libs touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
+- Shared libs touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/request-guards.ts
 - Related tests: __tests__/api/ingest.test.ts
-- Contents summary: Next.js route handler for `/api/ingest`; route handlers: POST, GET; exports: POST, GET; internal imports: 4; package imports: 1
+- Contents summary: Next.js route handler for `/api/ingest`; route handlers: POST, GET; exports: POST, GET; internal imports: 5; package imports: 1
 
 ## `/api/meta/callback`
 - Route file: `src/app/api/meta/callback/route.ts`
@@ -102,11 +102,11 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 - Response signals: uses NextResponse.json, uses Response.json, explicit statuses: 400, 403, 503
 - Auth signals: none
 - Validation symbols: none
-- Direct internal imports: src/lib/supabase.ts, src/lib/meta-oauth.ts
+- Direct internal imports: src/lib/supabase.ts, src/lib/meta-oauth.ts, src/lib/request-guards.ts
 - Feature modules touched: none
-- Shared libs touched: src/lib/supabase.ts, src/lib/meta-oauth.ts
+- Shared libs touched: src/lib/supabase.ts, src/lib/meta-oauth.ts, src/lib/request-guards.ts, src/lib/api-helpers.ts
 - Related tests: src/app/api/meta/data-deletion/route.test.ts
-- Contents summary: Next.js route handler for `/api/meta/data-deletion`; route handlers: POST; exports: POST; internal imports: 2; package imports: 2
+- Contents summary: Next.js route handler for `/api/meta/data-deletion`; route handlers: POST; exports: POST; internal imports: 3; package imports: 2
 
 ## `/api/observability/client-error`
 - Route file: `src/app/api/observability/client-error/route.ts`
@@ -131,5 +131,5 @@ This page documents each `src/app/api/**/route.ts` file with its methods, reques
 - Direct internal imports: src/lib/api-helpers.ts
 - Feature modules touched: none
 - Shared libs touched: src/lib/api-helpers.ts
-- Related tests: none
+- Related tests: src/app/api/user/profile/route.test.ts
 - Contents summary: Next.js route handler for `/api/user/profile`; route handlers: POST; exports: POST; internal imports: 1; package imports: 3

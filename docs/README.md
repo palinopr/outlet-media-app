@@ -10,7 +10,6 @@ Use this folder intentionally. Not every document here should steer current prod
 
 ## Historical Reference
 
-- `docs/plans/` contains past plans and design notes. Keep them for reference, but do not treat them as current truth unless they are still reflected in `docs/context/`.
 - `docs/screenshots/` contains visual references and old implementation snapshots. Keep them as supporting material, not product direction.
 
 ## Rule

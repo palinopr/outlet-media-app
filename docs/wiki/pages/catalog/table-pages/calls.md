@@ -1,22 +1,22 @@
 # Table: calls
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 - Category: External ingest / reporting tables
 - Kinds: table
 - Migrations: supabase/migrations/20260306184000_backend_tables_rls.sql
-- Non-migration references: 13
-- Referenced by groups: Docs / Plans (6), Root Files (3), src/app / client (2), Docs / Context (1), src/lib (1)
+- Non-migration references: 5
+- Referenced by groups: Root Files (3), src/app / client (2)
 - Routes: none
 - Features: none
-- Shared libs: src/lib/google-ads.test.ts
+- Shared libs: none
 - Agent files: none
 - Mutation-oriented files: none
 - Tests: src/app/client/[slug]/components/campaign-detail-header.test.tsx
-- Docs: docs/context/google-ads-api.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-design.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md
+- Docs: none
 - Other mentions: audit/agent-dead-code.md, audit/architecture-smells.md, audit/dead-routes.md, src/app/client/[slug]/campaign/[campaignId]/data.ts
-- Behavior signals from references: client component/module (1)
-- Auth signals from references: references membership/scope access concepts (2), calls auth() (1), imports Clerk server auth (1), calls currentUser() (1)
+- Behavior signals from references: none
+- Auth signals from references: references membership/scope access concepts (2), imports Clerk server auth (1), calls currentUser() (1)
 
 ## Reference files
-- audit/agent-dead-code.md, audit/architecture-smells.md, audit/dead-routes.md, docs/context/google-ads-api.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-design.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/components/campaign-detail-header.test.tsx, src/lib/google-ads.test.ts
+- audit/agent-dead-code.md, audit/architecture-smells.md, audit/dead-routes.md, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/components/campaign-detail-header.test.tsx

@@ -1,10 +1,10 @@
 # Impact Maps
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This index links to pages meant to answer: if I touch this file, what else is likely to move?
 
-- Impact candidates tracked: 73
+- Impact candidates tracked: 72
 
 ## Admin actions
 
@@ -69,10 +69,10 @@ This index links to pages meant to answer: if I touch this file, what else is li
 
 ## Shared web libraries
 
-- [src/lib/supabase.ts](./impact-pages/src-lib-supabase.ts.md) — score: 184; routes: 21; tests: 30; db: 1
+- [src/lib/supabase.ts](./impact-pages/src-lib-supabase.ts.md) — score: 187; routes: 21; tests: 31; db: 1
 - [src/lib/formatters.tsx](./impact-pages/src-lib-formatters.tsx.md) — score: 117; routes: 10; tests: 17; db: 1
+- [src/lib/api-helpers.ts](./impact-pages/src-lib-api-helpers.ts.md) — score: 101; routes: 14; tests: 16; db: 1
 - [src/lib/utils.ts](./impact-pages/src-lib-utils.ts.md) — score: 93; routes: 18; tests: 7; db: 0
-- [src/lib/api-helpers.ts](./impact-pages/src-lib-api-helpers.ts.md) — score: 88; routes: 13; tests: 12; db: 1
 - [src/lib/campaign-client-assignment.ts](./impact-pages/src-lib-campaign-client-assignment.ts.md) — score: 72; routes: 9; tests: 13; db: 3
 - [src/lib/constants.ts](./impact-pages/src-lib-constants.ts.md) — score: 58; routes: 5; tests: 13; db: 1
 - [src/lib/status.ts](./impact-pages/src-lib-status.ts.md) — score: 55; routes: 10; tests: 17; db: 0
@@ -82,11 +82,10 @@ This index links to pages meant to answer: if I touch this file, what else is li
 - [src/lib/meta-campaigns.ts](./impact-pages/src-lib-meta-campaigns.ts.md) — score: 42; routes: 3; tests: 7; db: 3
 - [src/lib/meta-api.ts](./impact-pages/src-lib-meta-api.ts.md) — score: 31; routes: 4; tests: 9; db: 1
 - [src/lib/database.types.ts](./impact-pages/src-lib-database.types.ts.md) — score: 30; routes: 0; tests: 0; db: 15
-- [src/lib/env.ts](./impact-pages/src-lib-env.ts.md) — score: 23; routes: 0; tests: 0; db: 1
+- [src/lib/request-guards.ts](./impact-pages/src-lib-request-guards.ts.md) — score: 23; routes: 3; tests: 4; db: 1
 - [src/lib/export-csv.ts](./impact-pages/src-lib-export-csv.ts.md) — score: 19; routes: 3; tests: 2; db: 1
-- [src/lib/google-ads.ts](./impact-pages/src-lib-google-ads.ts.md) — score: 15; routes: 0; tests: 1; db: 1
+- [src/lib/env.ts](./impact-pages/src-lib-env.ts.md) — score: 17; routes: 0; tests: 0; db: 1
 - [src/lib/meta-oauth.ts](./impact-pages/src-lib-meta-oauth.ts.md) — score: 12; routes: 1; tests: 2; db: 1
 - [src/lib/to-slug.ts](./impact-pages/src-lib-to-slug.ts.md) — score: 9; routes: 1; tests: 2; db: 0
-- [src/lib/shopify-admin.ts](./impact-pages/src-lib-shopify-admin.ts.md) — score: 8; routes: 0; tests: 1; db: 1
 - [src/lib/client-error-reporting.ts](./impact-pages/src-lib-client-error-reporting.ts.md) — score: 4; routes: 0; tests: 0; db: 0
 - [src/lib/text-utils.ts](./impact-pages/src-lib-text-utils.ts.md) — score: 2; routes: 0; tests: 0; db: 1

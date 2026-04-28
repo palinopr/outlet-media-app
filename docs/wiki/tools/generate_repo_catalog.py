@@ -28,6 +28,7 @@ EXCLUDED_DIRS = {
 }
 
 EXCLUDED_PATH_PREFIXES = [
+    ".env.local",
     "agent/.next/",
     "agent/dist/",
     "agent/node_modules/",
@@ -128,7 +129,6 @@ GROUP_LABELS = {
     "src-features-root": "src/features / root files",
     "src-hooks": "src / hooks",
     "src-lib": "src/lib",
-    "src-lib-ticketmaster": "src/lib / ticketmaster",
     "src-scripts": "src / scripts",
     "agent-root": "agent / root",
     "agent-config": "agent / config",
@@ -262,8 +262,6 @@ def group_for(rel_path: str) -> str:
             return "src-features-root"
         second = parts[2]
         return f"src-features-{second}"
-    if rel_path.startswith("src/lib/ticketmaster/"):
-        return "src-lib-ticketmaster"
     if rel_path.startswith("src/lib/"):
         return "src-lib"
     if rel_path.startswith("src/hooks/"):
@@ -296,16 +294,10 @@ def group_for(rel_path: str) -> str:
 
     if rel_path.startswith("docs/context/"):
         return "docs-context"
-    if rel_path.startswith("docs/plans/"):
-        return "docs-plans"
     if rel_path.startswith("docs/references/"):
         return "docs-references"
     if rel_path.startswith("docs/screenshots/"):
         return "docs-screenshots"
-    if rel_path.startswith("docs/superpowers/plans/"):
-        return "docs-superpowers-plans"
-    if rel_path.startswith("docs/superpowers/specs/"):
-        return "docs-superpowers-specs"
     if rel_path.startswith("docs/wiki/"):
         return "docs-wiki"
     if rel_path.startswith("docs/"):
@@ -380,8 +372,6 @@ def ownership_for(rel_path: str) -> str:
         if len(parts) == 3:
             return "feature-layer root file"
         return f"feature module: {parts[2]}"
-    if rel_path.startswith("src/lib/ticketmaster/"):
-        return "shared Ticketmaster library"
     if rel_path.startswith("src/lib/"):
         return "shared web library"
     if rel_path.startswith("src/hooks/"):
@@ -414,16 +404,10 @@ def ownership_for(rel_path: str) -> str:
 
     if rel_path.startswith("docs/context/"):
         return "durable context documentation"
-    if rel_path.startswith("docs/plans/"):
-        return "historical planning documentation"
     if rel_path.startswith("docs/references/"):
         return "reference documentation"
     if rel_path.startswith("docs/screenshots/"):
         return "visual reference assets"
-    if rel_path.startswith("docs/superpowers/plans/"):
-        return "implementation plan documentation"
-    if rel_path.startswith("docs/superpowers/specs/"):
-        return "implementation spec documentation"
     if rel_path.startswith("docs/wiki/"):
         return "repo wiki source"
     if rel_path.startswith("docs/"):
@@ -2139,8 +2123,6 @@ def integration_service_name(key: str) -> str:
         return "Supabase"
     if upper.startswith(("META", "FB", "FACEBOOK")):
         return "Meta"
-    if "TICKETMASTER" in upper:
-        return "Ticketmaster"
     if any(token in upper for token in ["GMAIL", "GOOGLE", "GCAL", "CALENDAR"]):
         return "Google / Gmail / Calendar"
     if "DISCORD" in upper:
@@ -2332,7 +2314,7 @@ LIFECYCLE_PROFILES = [
         "title": "Event follow-up lifecycle",
         "description": "Files and DB objects involved in event follow-up work, event reporting, and ticket/event workflow surfaces.",
         "db_names": {"event_follow_up_items", "notifications", "system_events", "tm_events", "tm_event_snapshots", "tm_event_demographics"},
-        "path_tokens": ["event-follow-up-items", "features/events", "app/admin/events", "app/client/[slug]/event", "api/ticketmaster", "api/ingest"],
+        "path_tokens": ["event-follow-up-items", "features/events", "app/admin/events", "app/client/[slug]/event", "api/ingest"],
     },
     {
         "slug": "client-agent-conversations",
@@ -2468,7 +2450,7 @@ ONBOARDING_GUIDES = [
         "title": "Start here: reporting and ingest work",
         "description": "Recommended read order for someone changing ingest, snapshots, reports, dashboard summaries, or external analytics integrations.",
         "db_names": {"meta_campaigns", "meta_campaign_snapshots", "tm_events", "tm_event_snapshots", "tm_event_demographics", "system_events"},
-        "path_tokens": ["api/ingest", "features/reports", "features/dashboard", "features/events", "features/campaigns", "app/admin/reports", "app/client/[slug]/reports", "lib/ticketmaster", "lib/meta"],
+        "path_tokens": ["api/ingest", "features/reports", "features/dashboard", "features/events", "features/campaigns", "app/admin/reports", "app/client/[slug]/reports", "lib/meta"],
         "wiki_links": [
             "./workflow-lifecycles.md",
             "./api-contracts.md",
@@ -3006,7 +2988,7 @@ def write_service_boundaries_page(
     ])
     boundary_libs = sorted([
         path for path in metadata_by_path
-        if path.startswith("src/lib/") and any(token in path for token in ["agent", "supabase", "member-access", "ticketmaster", "meta", "google"])
+        if path.startswith("src/lib/") and any(token in path for token in ["agent", "supabase", "member-access", "meta", "google"])
     ])
 
     env_services = defaultdict(list)

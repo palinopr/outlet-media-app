@@ -1,9 +1,9 @@
 # Root Files
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
-- Files: 26
-- File kinds: Markdown doc (6), TypeScript module (6), JSON config/data (4), env/config text file (3), ignore file (2), file (no extension) (2), JavaScript module (2), TypeScript build info (1)
+- Files: 25
+- File kinds: Markdown doc (6), TypeScript module (6), JSON config/data (4), env/config text file (2), ignore file (2), file (no extension) (2), JavaScript module (2), TypeScript build info (1)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -17,25 +17,15 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 1241
 - Contents summary: env keys: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_SIGN_IN_URL, NEXT_PUBLIC_CLERK_SIGN_UP_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, INGEST_SECRET, META_ACCESS_TOKEN, ME…
 
-## `.env.local`
-- Status: tracked-clean
-- System: root
-- Group: Root Files
-- Ownership: repo root
-- Type: env/config text file
-- Lines: 51
-- Bytes: 3009
-- Contents summary: env keys: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_SIGN_IN_URL, NEXT_PUBLIC_CLERK_SIGN_UP_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL, SUPABASE_ACCESS_TOKEN, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, INGEST_SECRET…
-
 ## `.gitignore`
-- Status: tracked-clean
+- Status: modified
 - System: root
 - Group: Root Files
 - Ownership: repo root
 - Type: ignore file
-- Lines: 37
-- Bytes: 548
-- Contents summary: ignore patterns: .env.local, .next, agent/.next, .local, session, output, tmp, .opencode, .playwright-mcp, .superpowers, docs/superpowers/, docs/screenshots/prototypes/, root-next-artifact-2026-03-08, root-next-artifact-2026-03-08-2, root-next-artifact-2026-03-08-3
+- Lines: 36
+- Bytes: 530
+- Contents summary: ignore patterns: .env.local, .next, agent/.next, .local, session, output, tmp, .opencode, .playwright-mcp, .superpowers, docs/screenshots/prototypes/, root-next-artifact-2026-03-08, root-next-artifact-2026-03-08-2, root-next-artifact-2026-03-08-3, root-next-artifact-*
 
 ## `.railwayignore`
 - Status: tracked-clean
@@ -60,14 +50,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Outlet Media -- Project Instructions \| Stack \| Current Product Scope \| Product Principles \| Architecture Priorities \| Execution Expectations
 
 ## `README.md`
-- Status: tracked-clean
+- Status: modified
 - System: root
 - Group: Root Files
 - Ownership: repo root
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 70
-- Bytes: 2382
+- Lines: 69
+- Bytes: 2308
 - Headings: Outlet Media App, Stack, Product Shape, Structure, Read First, Development, Quality Gates, Deploy
 - Contents summary: headings: Outlet Media App \| Stack \| Product Shape \| Structure \| Read First \| Development
 
@@ -151,18 +141,18 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: JSON object; keys: $schema, style, rsc, tsx, tailwind, iconLibrary, rtl, aliases, registries
 
 ## `e2e/authenticated-smoke.spec.ts`
-- Status: tracked-clean
+- Status: modified
 - System: root
 - Group: Root Files
 - Ownership: repo root
 - Type: TypeScript module
 - Construction: code module
-- Lines: 253
-- Bytes: 9992
+- Lines: 289
+- Bytes: 11606
 - Imports (packages): @playwright/test
-- Symbol details: function assertSignedOutRedirect, function signInAsAdmin, function signInWithToken, function assertAdminNavigation, function assertSettingsIsTechnicalOnly, function assertClientsOwnClientCreation, function assertCampaignDetailIsPerformanceOnly, function assertClientPortalIsCampaignsOnly, function assertRetiredRoutesRedirect, function createTemporaryUser, function deleteClerkUser, function clerkRequest, function appUrl, function rewriteUrlOrigin, function trimTrailingSlash, function slugToTitle, … (+5 more)
-- Defines: assertSignedOutRedirect, signInAsAdmin, signInWithToken, assertAdminNavigation, assertSettingsIsTechnicalOnly, assertClientsOwnClientCreation, assertCampaignDetailIsPerformanceOnly, assertClientPortalIsCampaignsOnly, assertRetiredRoutesRedirect, createTemporaryUser, deleteClerkUser, clerkRequest, … (+25 more)
-- Tests / describe labels: authenticated smoke, signed-out users are sent to sign in for protected pages, non-admin users cannot access the admin shell, admin and client surfaces stay narrow and usable, _
+- Symbol details: function assertSignedOutRedirect, function signInAsAdmin, function signInWithToken, function assertAdminNavigation, function assertMobileAdminNavigation, function assertMobileClientPortalNavigation, function assertSettingsIsTechnicalOnly, function assertClientsOwnClientCreation, function assertCampaignDetailIsPerformanceOnly, function assertClientPortalIsCampaignsOnly, function assertRetiredRoutesRedirect, function createTemporaryUser, function deleteClerkUser, function clerkRequest, function appUrl, function rewriteUrlOrigin, … (+7 more)
+- Defines: assertSignedOutRedirect, signInAsAdmin, signInWithToken, assertAdminNavigation, assertMobileAdminNavigation, assertMobileClientPortalNavigation, assertSettingsIsTechnicalOnly, assertClientsOwnClientCreation, assertCampaignDetailIsPerformanceOnly, assertClientPortalIsCampaignsOnly, assertRetiredRoutesRedirect, createTemporaryUser, … (+28 more)
+- Tests / describe labels: authenticated smoke, signed-out users are sent to sign in for protected pages, non-admin users cannot access the admin shell, admin and client surfaces stay narrow and usable, mobile admin and client navigation stay narrow and usable, _
 - Contents summary: tests/describes: authenticated smoke; signed-out users are sent to sign in for protected pages; non-admin users cannot access the admin shell; package imports: 1
 
 ## `eslint.config.mjs`
@@ -229,14 +219,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: JSON object; keys: name, version, lockfileVersion, requires, packages
 
 ## `package.json`
-- Status: tracked-clean
+- Status: modified
 - System: root
 - Group: Root Files
 - Ownership: repo root
 - Type: JSON config/data
 - Construction: JSON configuration/data file
-- Lines: 70
-- Bytes: 2840
+- Lines: 66
+- Bytes: 1921
 - Imported by: src/app/api/health/route.ts
 - Used by groups: src/app / api
 - Route owners: src/app/api/health/route.ts
@@ -244,7 +234,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Tests related: src/app/api/health/route.test.ts
 - JSON shape: JSON object
 - JSON keys: name, version, private, scripts, dependencies, devDependencies, overrides
-- JSON scripts: dev, build, start, lint, lint:web, type-check, type-check:web, test, test:web, playwright:install, test:e2e, audit:deps, … (+8 more)
+- JSON scripts: dev, build, start, lint, lint:web, type-check, type-check:web, test, test:web, playwright:install, test:e2e, audit:deps, … (+4 more)
 - Contents summary: JSON object; keys: name, version, private, scripts, dependencies, devDependencies, overrides; scripts: dev, build, start, lint, lint:web, type-check, type-check:web, test, test:web, playwright:install
 
 ## `playwright.config.ts`
@@ -296,7 +286,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo root
 - Type: TypeScript build info
 - Lines: 1
-- Bytes: 285465
+- Bytes: 283580
 - Contents summary: text lines: {"fileNames":["./node_modules/typescript/lib/lib.es5.d.ts","./node_modules/typescript/lib/lib.es2015.d.ts","./node_modules/typescript/lib/lib.es2016.d.ts","./node_modules/typescript/lib/lib.es2017.d.ts","./node_modules/typescript/lib/lib.es2018.d.ts","./node_modules/typescript/lib/lib.es2019.d.ts","./node_…
 
 ## `vitest.config.ts`

@@ -4,11 +4,11 @@
 -- Run this in the Supabase SQL Editor: https://supabase.com/dashboard/project/_/sql
 
 -- ============================================================
--- Events from Ticketmaster (scraped by local agent)
+-- Retired external event prototype
 -- ============================================================
 create table if not exists public.tm_events (
   id            uuid primary key default gen_random_uuid(),
-  tm_id         text not null unique,       -- Ticketmaster event ID (used for upsert)
+  tm_id         text not null unique,       -- External event ID (used for upsert)
   ticketing_number text not null default '', -- Historical ticketing identifier
   name          text not null default '',
   artist        text not null default '',

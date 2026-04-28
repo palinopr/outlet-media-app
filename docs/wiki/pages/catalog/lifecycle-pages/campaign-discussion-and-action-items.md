@@ -1,6 +1,6 @@
 # Campaign discussion and action-item lifecycle
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 Files and DB objects involved in campaign comments, campaign action items, notifications, and shared system events.
 
@@ -10,9 +10,9 @@ Files and DB objects involved in campaign comments, campaign action items, notif
 - Libs / agents / actions: src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/lib/database.types.ts
 - Mutation-oriented files: src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/features/system-events/server.ts
 - Tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/client/[slug]/campaigns/campaigns-table.test.tsx, src/app/client/[slug]/campaigns/page.test.tsx
-- Docs: AGENTS.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, … (+14 more)
-- Behavior signals: client component/module (12), calls revalidatePath() (6), server action/module (6), calls redirect() (4), calls notFound() (3), defines generateMetadata (2), calls revalidateTag() (1), calls unstable_noStore() (1), sets dynamic rendering mode (1)
-- Auth signals: references membership/scope access concepts (14), imports Clerk server auth (9), calls currentUser() (5), calls auth() (4), contains explicit access/role guard helper usage (1)
+- Docs: AGENTS.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/references/database-safety-runbook.md, docs/wiki/log.md, docs/wiki/pages/audits/dead-ends-and-dead-code.md, docs/wiki/pages/inventory/feature-modules.md, docs/wiki/pages/inventory/source-map.md, … (+1 more)
+- Behavior signals: client component/module (6), calls revalidatePath() (3), server action/module (3), calls notFound() (2), defines generateMetadata (2), calls redirect() (1), calls revalidateTag() (1), calls unstable_noStore() (1)
+- Auth signals: references membership/scope access concepts (13), imports Clerk server auth (6), calls currentUser() (4), calls auth() (1), contains explicit access/role guard helper usage (1)
 
 ## Database objects
 
@@ -35,14 +35,14 @@ Files and DB objects involved in campaign comments, campaign action items, notif
 - Migrations: supabase/migrations/20260306111500_notification_entities.sql, supabase/migrations/20260306163500_client_surface_rls.sql
 - Related routes: src/app/privacy/page.tsx
 - Related features/libs/agents: none
-- Related tests/docs: docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md
+- Related tests/docs: none
 
 ### `system_events`
 - Kinds: table
 - Migrations: supabase/migrations/20260305000000_system_events.sql, supabase/migrations/20260305001000_system_events_private_read.sql, supabase/migrations/20260306143000_system_events_envelope.sql, supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql
 - Related routes: none
 - Related features/libs/agents: src/features/AGENTS.md, src/features/system-events/server.ts, src/lib/database.types.ts
-- Related tests/docs: __tests__/features/system-events/list.test.ts, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/references/database-safety-runbook.md
+- Related tests/docs: __tests__/features/system-events/list.test.ts, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/references/database-safety-runbook.md
 
 ## Route surfaces
 - src/app/admin/campaigns/loading.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/client/[slug]/campaign/[campaignId]/loading.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/loading.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/privacy/page.tsx
@@ -55,4 +55,4 @@ Files and DB objects involved in campaign comments, campaign action items, notif
 
 ## Tests and docs
 - Tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/client/[slug]/campaigns/campaigns-table.test.tsx, src/app/client/[slug]/campaigns/page.test.tsx
-- Docs: AGENTS.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-admin-data-table-upgrade.md, docs/plans/2026-03-03-campaign-mobile-polish-design.md, docs/plans/2026-03-03-client-accounts-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, … (+10 more)
+- Docs: AGENTS.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/references/database-safety-runbook.md, docs/wiki/log.md, docs/wiki/pages/audits/dead-ends-and-dead-code.md, docs/wiki/pages/inventory/feature-modules.md, docs/wiki/pages/inventory/source-map.md, docs/wiki/tools/generate_repo_catalog.py

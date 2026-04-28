@@ -1,6 +1,6 @@
 # Start here: admin web work
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 Recommended read order for someone changing admin surfaces, admin actions, admin workflow, or admin reporting views.
 
@@ -17,9 +17,9 @@ Recommended read order for someone changing admin surfaces, admin actions, admin
 - Feature files: src/features/AGENTS.md, src/features/access/revalidation.ts, src/features/campaigns/revalidation.test.ts, src/features/campaigns/revalidation.ts, src/features/campaigns/server.test.ts, src/features/campaigns/server.ts, src/features/client-portal/config.test.ts, src/features/client-portal/config.ts, src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/features/invitations/server.ts, src/features/system-events/server.ts, … (+1 more)
 - Libs / agents / admin actions: src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.revalidation.ts, src/app/admin/actions/clients.test.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/meta-sync.ts, src/app/admin/actions/search.test.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/lib/campaign-client-assignment.test.ts, src/lib/campaign-client-assignment.ts, src/lib/database.types.ts, … (+2 more)
 - DB objects: approval_requests, client_members, clients, meta_campaigns, notifications, system_events, tm_events
-- Tests: __tests__/api/ingest.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/access/revalidation.test.ts, __tests__/features/clients/summary.test.ts, __tests__/features/system-events/list.test.ts, src/app/admin/actions/clients.test.ts, src/app/admin/actions/search.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/admin/clients/data.test.ts, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, … (+15 more)
-- Docs: AGENTS.md, README.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-03-02-admin-crud-design.md, … (+26 more)
+- Tests: __tests__/api/ingest.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/access/revalidation.test.ts, __tests__/features/clients/summary.test.ts, __tests__/features/system-events/list.test.ts, src/app/admin/actions/clients.test.ts, src/app/admin/actions/search.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/admin/clients/data.test.ts, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, … (+16 more)
+- Docs: AGENTS.md, README.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/references/database-safety-runbook.md, docs/wiki/log.md, docs/wiki/pages/audits/dead-ends-and-dead-code.md, docs/wiki/pages/inventory/source-map.md, … (+1 more)
 
 ## Signals seen in this area
-- Auth signals: imports Clerk server auth (20), references membership/scope access concepts (20), calls currentUser() (9), calls auth() (5), contains explicit access/role guard helper usage (1)
-- Behavior signals: client component/module (49), server action/module (10), calls revalidatePath() (9), calls redirect() (8), calls notFound() (4), sets dynamic rendering mode (4), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1)
+- Auth signals: references membership/scope access concepts (18), imports Clerk server auth (17), calls currentUser() (7), calls auth() (2), contains explicit access/role guard helper usage (1)
+- Behavior signals: client component/module (41), server action/module (6), calls redirect() (5), calls revalidatePath() (5), sets dynamic rendering mode (3), calls notFound() (3), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1)

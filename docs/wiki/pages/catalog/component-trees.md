@@ -1,6 +1,6 @@
 # Component Tree Map
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This page focuses on admin and client UI surface files and summarizes the component-oriented tree they pull in through direct and transitive imports.
 

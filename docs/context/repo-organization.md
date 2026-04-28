@@ -6,7 +6,7 @@ Treat this repository as one active product system plus durable support material
 
 - `src/` — the active Next.js web app
 - `supabase/` — database migrations and Supabase assets
-- `docs/` — durable product, architecture, ops, and historical implementation docs
+- `docs/` — durable product, architecture, ops, and small reference docs
 - `public/` — static web assets
 - `__tests__/` / `__mocks__/` — automated test support
 
@@ -33,7 +33,6 @@ Do not leave one-off screenshots, generated assets, browser output, temp folders
 ### Docs and artifacts
 
 - product/architecture/ops knowledge -> `docs/context/`
-- implementation plans/specs -> `docs/plans/`
 - small durable reference inputs -> `docs/references/`
 - screenshots worth keeping -> `docs/screenshots/`
 - historical bulk material -> `archive/` or external storage

@@ -1,6 +1,6 @@
 # Key File Symbol Map
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This page highlights key code files and lists their exported symbols, top-level definitions, and route/test ownership links.
 
@@ -184,6 +184,8 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Exports: POST
 - Symbol details: function POST (exported), const ActivitySchema
 - Defines: POST, ActivitySchema, adminErr, caller
+- Imported by: src/app/api/admin/activity/route.test.ts
+- Tests related: src/app/api/admin/activity/route.test.ts
 - Contents summary: Next.js route handler for `/api/admin/activity`; route handlers: POST; exports: POST; internal imports: 2; package imports: 3
 
 ### `src/app/api/admin/invite/route.ts`
@@ -214,10 +216,10 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Route: /api/contact
 - Exports: POST
 - Symbol details: function POST (exported), function withLabel, function sendContactEmail, const contactRecipient
-- Defines: withLabel, sendContactEmail, POST, contactRecipient, trimmed, apiKey, response, body, fullMessage
+- Defines: withLabel, sendContactEmail, POST, contactRecipient, trimmed, apiKey, response, body, sizeError, rateLimitError, fullMessage
 - Imported by: src/app/api/contact/route.test.ts
 - Tests related: src/app/api/contact/route.test.ts
-- Contents summary: Next.js route handler for `/api/contact`; route handlers: POST; exports: POST; internal imports: 3; package imports: 1
+- Contents summary: Next.js route handler for `/api/contact`; route handlers: POST; exports: POST; internal imports: 4; package imports: 1
 
 ### `src/app/api/health/route.ts`
 - Type: Next.js route handler
@@ -236,10 +238,10 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Route: /api/ingest
 - Exports: POST, GET
 - Symbol details: function POST (exported), function GET (exported)
-- Defines: POST, GET, secretErr
+- Defines: POST, GET, sizeError, rateLimitError, secretErr
 - Imported by: __tests__/api/ingest.test.ts
 - Tests related: __tests__/api/ingest.test.ts
-- Contents summary: Next.js route handler for `/api/ingest`; route handlers: POST, GET; exports: POST, GET; internal imports: 4; package imports: 1
+- Contents summary: Next.js route handler for `/api/ingest`; route handlers: POST, GET; exports: POST, GET; internal imports: 5; package imports: 1
 
 ### `src/app/api/meta/callback/route.ts`
 - Type: Next.js route handler
@@ -258,10 +260,10 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Route: /api/meta/data-deletion
 - Exports: POST
 - Symbol details: function POST (exported)
-- Defines: POST, appUrl, formData, confirmationCode
+- Defines: POST, appUrl, sizeError, rateLimitError, formData, confirmationCode
 - Imported by: src/app/api/meta/data-deletion/route.test.ts
 - Tests related: src/app/api/meta/data-deletion/route.test.ts
-- Contents summary: Next.js route handler for `/api/meta/data-deletion`; route handlers: POST; exports: POST; internal imports: 2; package imports: 2
+- Contents summary: Next.js route handler for `/api/meta/data-deletion`; route handlers: POST; exports: POST; internal imports: 3; package imports: 2
 
 ### `src/app/api/observability/client-error/route.ts`
 - Type: Next.js route handler
@@ -281,6 +283,8 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Exports: POST
 - Symbol details: function POST (exported), const ProfileSchema
 - Defines: POST, ProfileSchema, raw, parsed, client
+- Imported by: src/app/api/user/profile/route.test.ts
+- Tests related: src/app/api/user/profile/route.test.ts
 - Contents summary: Next.js route handler for `/api/user/profile`; route handlers: POST; exports: POST; internal imports: 1; package imports: 3
 
 ### `src/app/client/page.tsx`
@@ -688,9 +692,9 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Exports: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest
 - Symbol details: function apiError (exported), function dbError (exported), function authGuard (exported), function secretGuard (exported), function adminGuard (exported), function parseJsonBody (exported), function validateRequest (exported)
 - Defines: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest, caller, meta, role, raw, parsed
-- Imported by: src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/admin/users/[id]/route.ts, … (+7 more)
-- Route owners: src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts, src/app/admin/campaigns/[campaignId]/page.tsx, … (+5 more)
-- Tests related: src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/lib/api-helpers.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/actions/search.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/api/contact/route.test.ts, … (+4 more)
+- Imported by: src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.test.ts, … (+10 more)
+- Route owners: src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts, src/app/api/meta/data-deletion/route.ts, … (+6 more)
+- Tests related: src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/app/api/user/profile/route.test.ts, src/lib/api-helpers.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/actions/search.test.ts, … (+8 more)
 - Contents summary: exports: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest; package imports: 3
 
 ### `src/lib/api-schemas.ts`
@@ -784,16 +788,6 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Tests related: __tests__/lib/formatters.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/clients/data.test.ts, src/app/admin/dashboard/page.test.tsx, __tests__/app/client/campaign-detail-data.test.ts, src/app/client/[slug]/campaigns/campaigns-table.test.tsx, … (+9 more)
 - Contents summary: exports: centsToUsd, fmtUsd, fmtNum, fmtDate, fmtTodayLong, slugToLabel, getInvitationStatusCfg, timeAgo; tests/describes: _; internal imports: 2
 
-### `src/lib/google-ads.ts`
-- Type: TypeScript module
-- Ownership: shared web library
-- Exports: normalizeGoogleAdsCustomerId, googleAdsSearchStreamUrl, getGoogleAdsCredentials, refreshGoogleAdsAccessToken, flattenGoogleAdsSearchStream, googleAdsSearchStream, fetchGoogleAdsFirstReadSnapshot, GOOGLE_ADS_API_VERSION, GoogleAdsApiError, GoogleAdsCredentials, GoogleAdsAccessToken, GoogleAdsSearchStreamChunk, GoogleAdsSearchStreamResult, GoogleAdsSearchOptions, GoogleAdsCustomerSnapshot, GoogleAdsChildAccountSnapshot, … (+2 more)
-- Symbol details: function normalizeGoogleAdsCustomerId (exported), function googleAdsSearchStreamUrl (exported), function getGoogleAdsCredentials (exported), function refreshGoogleAdsAccessToken (exported), function flattenGoogleAdsSearchStream (exported), function googleAdsSearchStream (exported), function fetchGoogleAdsFirstReadSnapshot (exported), function mapGoogleAdsCustomer, function mapGoogleAdsChildAccount, function mapGoogleAdsCampaign, function toNumber, function getGoogleAdsErrorMessage, function parseJsonResponse, const GOOGLE_ADS_API_VERSION (exported), class GoogleAdsApiError (exported), interface GoogleAdsCredentials (exported), interface GoogleAdsAccessToken (exported), interface GoogleAdsSearchStreamChunk (exported), interface GoogleAdsSearchStreamResult (exported), interface GoogleAdsSearchOptions (exported), … (+4 more)
-- Defines: normalizeGoogleAdsCustomerId, googleAdsSearchStreamUrl, getGoogleAdsCredentials, refreshGoogleAdsAccessToken, flattenGoogleAdsSearchStream, googleAdsSearchStream, fetchGoogleAdsFirstReadSnapshot, mapGoogleAdsCustomer, mapGoogleAdsChildAccount, mapGoogleAdsCampaign, toNumber, getGoogleAdsErrorMessage, parseJsonResponse, GOOGLE_ADS_API_VERSION, normalizedCustomerId, developerToken, … (+42 more)
-- Imported by: src/lib/google-ads.test.ts, src/scripts/google-ads-discover-accounts.ts
-- Tests related: src/lib/google-ads.test.ts
-- Contents summary: exports: normalizeGoogleAdsCustomerId, googleAdsSearchStreamUrl, getGoogleAdsCredentials, refreshGoogleAdsAccessToken, flattenGoogleAdsSearchStream, googleAdsSearchStream, fetchGoogleAdsFirstReadSnapshot, GOOGLE_ADS_API_VERSION
-
 ### `src/lib/member-access.ts`
 - Type: TypeScript module
 - Ownership: shared web library
@@ -838,15 +832,16 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Tests related: src/lib/meta-oauth.test.ts, src/app/api/meta/data-deletion/route.test.ts
 - Contents summary: exports: verifySignedRequest; tests/describes: .; package imports: 1
 
-### `src/lib/shopify-admin.ts`
+### `src/lib/request-guards.ts`
 - Type: TypeScript module
 - Ownership: shared web library
-- Exports: getShopifyAdminCredentials, shopifyAdminGraphql, fetchShopifyFirstReadSnapshot, SHOPIFY_ADMIN_DEFAULT_API_VERSION, ShopifyAdminApiError, ShopifyAdminCredentials, ShopifyFirstReadSnapshot
-- Symbol details: function getShopifyAdminCredentials (exported), function shopifyAdminGraphql (exported), function fetchShopifyFirstReadSnapshot (exported), const SHOPIFY_ADMIN_DEFAULT_API_VERSION (exported), class ShopifyAdminApiError (exported), interface ShopifyAdminCredentials (exported), interface ShopifyFirstReadSnapshot (exported), interface ShopifyGraphqlEnvelope, interface ShopifyFirstReadQueryResult
-- Defines: getShopifyAdminCredentials, shopifyAdminGraphql, fetchShopifyFirstReadSnapshot, SHOPIFY_ADMIN_DEFAULT_API_VERSION, storeDomain, accessToken, apiVersion, missing, credentials, response, body, data, ShopifyAdminApiError, ShopifyAdminCredentials, ShopifyFirstReadSnapshot, ShopifyGraphqlEnvelope, … (+1 more)
-- Imported by: src/lib/shopify-admin.test.ts
-- Tests related: src/lib/shopify-admin.test.ts
-- Contents summary: exports: getShopifyAdminCredentials, shopifyAdminGraphql, fetchShopifyFirstReadSnapshot, SHOPIFY_ADMIN_DEFAULT_API_VERSION, ShopifyAdminApiError, ShopifyAdminCredentials, ShopifyFirstReadSnapshot
+- Exports: getClientIp, enforceContentLength, enforceRateLimit, resetRateLimitsForTests
+- Symbol details: function getClientIp (exported), function enforceContentLength (exported), function enforceRateLimit (exported), function resetRateLimitsForTests (exported), function nowMs, const buckets, type RateLimitBucket
+- Defines: nowMs, getClientIp, enforceContentLength, enforceRateLimit, resetRateLimitsForTests, buckets, forwardedFor, realIp, cfIp, rawLength, parsed, now, key, existing, retryAfter, response, … (+1 more)
+- Imported by: src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, src/lib/request-guards.test.ts
+- Route owners: src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts
+- Tests related: src/lib/request-guards.test.ts, src/app/api/contact/route.test.ts, __tests__/api/ingest.test.ts, src/app/api/meta/data-deletion/route.test.ts
+- Contents summary: exports: getClientIp, enforceContentLength, enforceRateLimit, resetRateLimitsForTests; tests/describes: ,; internal imports: 1
 
 ### `src/lib/status.ts`
 - Type: TypeScript module
@@ -865,9 +860,9 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Exports: createClerkSupabaseClient, getFeatureReadClient, supabaseAdmin
 - Symbol details: function createClerkSupabaseClient (exported), function getFeatureReadClient (exported), const supabaseAdmin (exported), const getCachedUser, const url, const anonKey, const serviceKey
 - Defines: createClerkSupabaseClient, getFeatureReadClient, getCachedUser, url, anonKey, serviceKey, supabaseAdmin, user, role
-- Imported by: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.test.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/admin/clients/data.test.ts, … (+32 more)
+- Imported by: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.test.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/admin/clients/data.test.ts, … (+33 more)
 - Route owners: src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/health/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, … (+13 more)
-- Tests related: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, … (+22 more)
+- Tests related: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, … (+23 more)
 - Contents summary: exports: createClerkSupabaseClient, getFeatureReadClient, supabaseAdmin; package imports: 3
 
 ### `src/lib/text-utils.ts`

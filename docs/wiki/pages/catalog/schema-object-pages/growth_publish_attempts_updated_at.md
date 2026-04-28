@@ -1,6 +1,6 @@
 # Schema object: growth_publish_attempts_updated_at
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 - Kinds: trigger
 - Migrations: supabase/migrations/20260307133000_growth_publish_attempts.sql

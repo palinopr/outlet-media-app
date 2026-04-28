@@ -1,6 +1,6 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 - Files: 12
 - File kinds: React/TSX module (12)
@@ -8,14 +8,14 @@ Generated from the current working tree on 2026-04-28 02:57:59.
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
 ## `src/components/landing/contact-form.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
 - Lines: 213
-- Bytes: 8239
+- Bytes: 8240
 - Imports (packages): react, framer-motion
 - Imported by: __tests__/lib/contact-form.test.ts, src/app/landing/page.tsx
 - Used by groups: Tests / Lib, src/app / root routes
@@ -135,7 +135,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: contains `use client`; exports: LandingHowItWorks; package imports: 1
 
 ## `src/components/landing/lead-funnel.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components

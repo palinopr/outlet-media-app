@@ -2,9 +2,20 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase";
 import { verifySignedRequest } from "@/lib/meta-oauth";
+import { enforceContentLength, enforceRateLimit } from "@/lib/request-guards";
 
 export async function POST(request: Request) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+  const sizeError = enforceContentLength(request, 16 * 1024);
+  if (sizeError) return sizeError;
+
+  const rateLimitError = enforceRateLimit(request, {
+    limit: 60,
+    scope: "meta-data-deletion",
+    windowMs: 60_000,
+  });
+  if (rateLimitError) return rateLimitError;
 
   let signedRequest: string;
   try {

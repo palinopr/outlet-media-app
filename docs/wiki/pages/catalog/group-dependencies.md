@@ -1,16 +1,11 @@
 # Group Dependency Map
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This page summarizes internal file-to-file dependencies rolled up to the catalog group level.
 
 ## Docs / Context
-- Files in group: 12
-- Depends on groups: none
-- Used by groups: none
-
-## Docs / Plans
-- Files in group: 30
+- Files in group: 10
 - Depends on groups: none
 - Used by groups: none
 
@@ -50,7 +45,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 - Used by groups: none
 
 ## Root Files
-- Files in group: 26
+- Files in group: 25
 - Depends on groups: none
 - Used by groups: src/app / api (1)
 
@@ -60,8 +55,8 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 - Used by groups: src/components / admin (24), src/app / root routes (11)
 
 ## src/app / api
-- Files in group: 18
-- Depends on groups: src/lib (30), Root Files (1)
+- Files in group: 20
+- Depends on groups: src/lib (36), Root Files (1)
 - Used by groups: Tests / API (1)
 
 ## src/app / client
@@ -160,17 +155,12 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 - Used by groups: src/components / admin (1)
 
 ## src/lib
-- Files in group: 29
+- Files in group: 27
 - Depends on groups: src/features / invitations (1)
-- Used by groups: src/app / admin (39), src/app / api (30), src/app / client (22), src/components / admin (22), src/components / ui (12), src/features / client-portal (12), src/features / campaigns (6), Tests / Lib (4), Tests / App (3), src/components / client (2), Tests / Features (1), Tests / Root (1), … (+7 more)
+- Used by groups: src/app / admin (39), src/app / api (36), src/app / client (22), src/components / admin (22), src/components / ui (12), src/features / client-portal (12), src/features / campaigns (6), Tests / Lib (4), Tests / App (3), src/components / client (2), Tests / Features (1), Tests / Root (1), … (+6 more)
 
 ## src / Root
 - Files in group: 2
-- Depends on groups: src/lib (1)
-- Used by groups: none
-
-## src / scripts
-- Files in group: 4
 - Depends on groups: src/lib (1)
 - Used by groups: none
 

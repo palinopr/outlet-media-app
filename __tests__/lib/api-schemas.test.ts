@@ -40,7 +40,7 @@ describe("IngestPayloadSchema", () => {
   });
 
   it("rejects retired ticketing sources", () => {
-    const retiredTicketing = IngestPayloadSchema.safeParse({ ...validBase, source: "ticketmaster_one" });
+    const retiredTicketing = IngestPayloadSchema.safeParse({ ...validBase, source: "retired_ticketing" });
     const demographics = IngestPayloadSchema.safeParse({ ...validBase, source: "tm_demographics" });
 
     expect(retiredTicketing.success).toBe(false);

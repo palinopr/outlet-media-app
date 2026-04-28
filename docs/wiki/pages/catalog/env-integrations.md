@@ -1,11 +1,11 @@
 # Env and Integration Map
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This page maps environment variables to integration services and to the first-party files that reference them.
 
-- Environment keys tracked: 53
-- Integration service buckets: 8
+- Environment keys tracked: 27
+- Integration service buckets: 7
 
 ## Service overview
 
@@ -19,43 +19,35 @@ This page maps environment variables to integration services and to the first-pa
 
 ### App / Runtime
 - Env keys: E2E_BASE_URL, INGEST_SECRET, NEXT_PUBLIC_APP_URL
-- Declared in: .env.example, .env.local
+- Declared in: .env.example
 - Routes: src/app/admin/settings/page.tsx, src/app/api/admin/invite/route.ts, src/app/api/meta/callback/route.ts, src/app/api/meta/data-deletion/route.ts
 - Features/libs: src/lib/api-helpers.test.ts, src/lib/api-helpers.ts, src/lib/env.ts
 - Agent files: none
-- Tests/docs: __tests__/api/ingest.test.ts, docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/references/production-smoke-runbook.md, src/app/api/admin/invite/route.test.ts, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
+- Tests/docs: __tests__/api/ingest.test.ts, docs/context/meta-ads-playbook.md, docs/references/production-smoke-runbook.md, src/app/api/admin/invite/route.test.ts, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
 
 ### Clerk
 - Env keys: CLERK_SECRET_KEY, E2E_CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, NEXT_PUBLIC_CLERK_SIGN_IN_URL, NEXT_PUBLIC_CLERK_SIGN_UP_URL
-- Declared in: .env.example, .env.local
+- Declared in: .env.example
 - Routes: src/app/admin/layout.tsx, src/app/admin/settings/page.tsx, src/app/client/[slug]/layout.tsx, src/app/client/pending/layout.tsx, src/app/layout.tsx, src/app/page.tsx
 - Features/libs: src/lib/env.ts
 - Agent files: none
-- Tests/docs: docs/plans/2026-03-03-client-accounts-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md, docs/references/production-smoke-runbook.md, src/app/client/[slug]/layout.test.tsx
-
-### Google / Gmail / Calendar
-- Env keys: GMAIL_PUSH_WEBHOOK_SECRET, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_CUSTOMER_ID, GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_LOGIN_CUSTOMER_ID, GOOGLE_ADS_REFRESH_TOKEN, GOOGLE_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_DRIVE_REFRESH_TOKEN, GOOGLE_REFRESH_TOKEN
-- Declared in: .env.local
-- Routes: src/app/admin/settings/page.tsx
-- Features/libs: src/lib/env.ts, src/lib/google-ads.ts
-- Agent files: none
-- Tests/docs: docs/context/google-ads-api.md
+- Tests/docs: docs/references/production-smoke-runbook.md, src/app/client/[slug]/layout.test.tsx
 
 ### Meta
-- Env keys: META_ACCESS_TOKEN, META_AD_ACCOUNT_ID, META_APP_ID, META_APP_SECRET, META_PAGE_ID
-- Declared in: .env.example, .env.local
+- Env keys: META_ACCESS_TOKEN, META_AD_ACCOUNT_ID, META_APP_SECRET
+- Declared in: .env.example
 - Routes: src/app/admin/campaigns/page.tsx, src/app/admin/settings/page.tsx
 - Features/libs: src/lib/env.ts, src/lib/meta-campaigns.test.ts, src/lib/meta-campaigns.ts, src/lib/meta-oauth.test.ts, src/lib/meta-oauth.ts
 - Agent files: none
-- Tests/docs: __tests__/app/client/campaign-detail-data.test.ts, docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
+- Tests/docs: __tests__/app/client/campaign-detail-data.test.ts, docs/context/meta-ads-playbook.md, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
 
 ### Other / App
-- Env keys: CI, CODEX_FINAL_MESSAGE, CONTACT_FORM_TO_EMAIL, E2E_CLIENT_SLUG, EVOLUTION_API_KEY, EVOLUTION_API_URL, EVOLUTION_INSTANCE_NAME, EVOLUTION_WEBHOOK_SECRET, NEXT_PHASE, NEXT_PUBLIC_AUDIT_BOOKING_URL, PR_NUMBER, SHOPIFY_ADMIN_ACCESS_TOKEN, SHOPIFY_ADMIN_API_VERSION, SHOPIFY_STORE_DOMAIN, SHOPIFY_WEBHOOK_SECRET, TELEGRAM_WEBHOOK_SECRET, TOKEN_ENCRYPTION_KEY
-- Declared in: .env.example, .env.local
+- Env keys: CI, CODEX_FINAL_MESSAGE, CONTACT_FORM_TO_EMAIL, E2E_CLIENT_SLUG, NEXT_PHASE, NEXT_PUBLIC_AUDIT_BOOKING_URL, PR_NUMBER
+- Declared in: .env.example
 - Routes: src/app/api/contact/route.ts
-- Features/libs: src/lib/env.ts, src/lib/shopify-admin.test.ts, src/lib/shopify-admin.ts
+- Features/libs: src/lib/env.ts
 - Agent files: none
-- Tests/docs: docs/context/codex-workflow.md, docs/context/shopify-merch-sync.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/references/database-safety-runbook.md, docs/references/production-smoke-runbook.md, src/app/api/contact/route.test.ts
+- Tests/docs: docs/context/codex-workflow.md, docs/references/database-safety-runbook.md, docs/references/production-smoke-runbook.md, src/app/api/contact/route.test.ts
 
 ### Resend
 - Env keys: RESEND_API_KEY, RESEND_FROM_EMAIL
@@ -63,15 +55,15 @@ This page maps environment variables to integration services and to the first-pa
 - Routes: src/app/api/contact/route.ts
 - Features/libs: none
 - Agent files: none
-- Tests/docs: docs/plans/2026-03-03-landing-page-design.md, docs/plans/2026-03-03-landing-page-plan.md, src/app/api/contact/route.test.ts
+- Tests/docs: src/app/api/contact/route.test.ts
 
 ### Supabase
-- Env keys: NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_ACCESS_TOKEN, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL
-- Declared in: .env.example, .env.local
+- Env keys: NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+- Declared in: .env.example
 - Routes: src/app/admin/settings/page.tsx, src/app/api/ingest/route.ts
 - Features/libs: src/lib/env.ts, src/lib/supabase.ts
 - Agent files: none
-- Tests/docs: docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/references/database-safety-runbook.md
+- Tests/docs: none
 
 ## Env variable details
 
@@ -97,7 +89,7 @@ This page maps environment variables to integration services and to the first-pa
 
 ### `CLERK_SECRET_KEY`
 - Service: Clerk
-- Declared in: .env.example, .env.local
+- Declared in: .env.example
 - Mentioned by groups: Root Files (1), src/app / admin (1), src/lib (1)
 - Routes: src/app/admin/settings/page.tsx
 - Features: none
@@ -165,169 +157,9 @@ This page maps environment variables to integration services and to the first-pa
 - Agent files: none
 - Tests/docs/other: .github/workflows/e2e-smoke.yml, docs/references/production-smoke-runbook.md, e2e/authenticated-smoke.spec.ts
 
-### `EVOLUTION_API_KEY`
-- Service: Other / App
-- Declared in: .env.local
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: none
-
-### `EVOLUTION_API_URL`
-- Service: Other / App
-- Declared in: .env.local
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: none
-
-### `EVOLUTION_INSTANCE_NAME`
-- Service: Other / App
-- Declared in: .env.local
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: none
-
-### `EVOLUTION_WEBHOOK_SECRET`
-- Service: Other / App
-- Declared in: .env.local
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: none
-
-### `GMAIL_PUSH_WEBHOOK_SECRET`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: Root Files (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: audit/imports-deps.md
-
-### `GOOGLE_ADS_CLIENT_ID`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: src/lib (2), Docs / Context (1), src/app / admin (1)
-- Routes: src/app/admin/settings/page.tsx
-- Features: none
-- Shared libs: src/lib/env.ts, src/lib/google-ads.ts
-- Agent files: none
-- Tests/docs/other: docs/context/google-ads-api.md
-
-### `GOOGLE_ADS_CLIENT_SECRET`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: src/lib (2), Docs / Context (1), src/app / admin (1)
-- Routes: src/app/admin/settings/page.tsx
-- Features: none
-- Shared libs: src/lib/env.ts, src/lib/google-ads.ts
-- Agent files: none
-- Tests/docs/other: docs/context/google-ads-api.md
-
-### `GOOGLE_ADS_CUSTOMER_ID`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: src/lib (2), Docs / Context (1), src/app / admin (1)
-- Routes: src/app/admin/settings/page.tsx
-- Features: none
-- Shared libs: src/lib/env.ts, src/lib/google-ads.ts
-- Agent files: none
-- Tests/docs/other: docs/context/google-ads-api.md
-
-### `GOOGLE_ADS_DEVELOPER_TOKEN`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: src/lib (2), Docs / Context (1), src/app / admin (1)
-- Routes: src/app/admin/settings/page.tsx
-- Features: none
-- Shared libs: src/lib/env.ts, src/lib/google-ads.ts
-- Agent files: none
-- Tests/docs/other: docs/context/google-ads-api.md
-
-### `GOOGLE_ADS_LOGIN_CUSTOMER_ID`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: src/lib (2), Docs / Context (1), src/app / admin (1)
-- Routes: src/app/admin/settings/page.tsx
-- Features: none
-- Shared libs: src/lib/env.ts, src/lib/google-ads.ts
-- Agent files: none
-- Tests/docs/other: docs/context/google-ads-api.md
-
-### `GOOGLE_ADS_REFRESH_TOKEN`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: src/lib (2), Docs / Context (1), src/app / admin (1)
-- Routes: src/app/admin/settings/page.tsx
-- Features: none
-- Shared libs: src/lib/env.ts, src/lib/google-ads.ts
-- Agent files: none
-- Tests/docs/other: docs/context/google-ads-api.md
-
-### `GOOGLE_API_KEY`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: none
-
-### `GOOGLE_CLIENT_ID`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: none
-
-### `GOOGLE_CLIENT_SECRET`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: none
-
-### `GOOGLE_DRIVE_REFRESH_TOKEN`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: none
-
-### `GOOGLE_REFRESH_TOKEN`
-- Service: Google / Gmail / Calendar
-- Declared in: .env.local
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: none
-
 ### `INGEST_SECRET`
 - Service: App / Runtime
-- Declared in: .env.example, .env.local
+- Declared in: .env.example
 - Mentioned by groups: src/lib (3), Tests / API (1), src/app / admin (1)
 - Routes: src/app/admin/settings/page.tsx
 - Features: none
@@ -337,53 +169,33 @@ This page maps environment variables to integration services and to the first-pa
 
 ### `META_ACCESS_TOKEN`
 - Service: Meta
-- Declared in: .env.example, .env.local
-- Mentioned by groups: Docs / Plans (4), src/lib (3), src/app / admin (2), Tests / App (1), Docs / Context (1), src/app / client (1)
+- Declared in: .env.example
+- Mentioned by groups: src/lib (3), src/app / admin (2), Tests / App (1), Docs / Context (1), src/app / client (1)
 - Routes: src/app/admin/settings/page.tsx
 - Features: none
 - Shared libs: src/lib/env.ts, src/lib/meta-campaigns.test.ts, src/lib/meta-campaigns.ts
 - Agent files: none
-- Tests/docs/other: __tests__/app/client/campaign-detail-data.test.ts, docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, src/app/admin/actions/meta-sync.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts
+- Tests/docs/other: __tests__/app/client/campaign-detail-data.test.ts, docs/context/meta-ads-playbook.md, src/app/admin/actions/meta-sync.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts
 
 ### `META_AD_ACCOUNT_ID`
 - Service: Meta
-- Declared in: .env.example, .env.local
-- Mentioned by groups: Docs / Plans (3), src/lib (3), src/app / admin (2), Tests / App (1), Docs / Context (1), src/app / client (1)
+- Declared in: .env.example
+- Mentioned by groups: src/lib (3), src/app / admin (2), Tests / App (1), Docs / Context (1), src/app / client (1)
 - Routes: src/app/admin/campaigns/page.tsx
 - Features: none
 - Shared libs: src/lib/env.ts, src/lib/meta-campaigns.test.ts, src/lib/meta-campaigns.ts
 - Agent files: none
-- Tests/docs/other: __tests__/app/client/campaign-detail-data.test.ts, docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, src/app/admin/actions/meta-sync.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts
-
-### `META_APP_ID`
-- Service: Meta
-- Declared in: .env.local
-- Mentioned by groups: Docs / Plans (2), Docs / Context (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md
+- Tests/docs/other: __tests__/app/client/campaign-detail-data.test.ts, docs/context/meta-ads-playbook.md, src/app/admin/actions/meta-sync.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts
 
 ### `META_APP_SECRET`
 - Service: Meta
-- Declared in: .env.example, .env.local
-- Mentioned by groups: src/lib (3), Docs / Plans (2), src/app / api (2), Docs / Context (1)
+- Declared in: .env.example
+- Mentioned by groups: src/lib (3), src/app / api (2), Docs / Context (1)
 - Routes: none
 - Features: none
 - Shared libs: src/lib/env.ts, src/lib/meta-oauth.test.ts, src/lib/meta-oauth.ts
 - Agent files: none
-- Tests/docs/other: docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
-
-### `META_PAGE_ID`
-- Service: Meta
-- Declared in: none
-- Mentioned by groups: Docs / Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: docs/plans/2026-03-02-meta-oauth-integration-plan.md
+- Tests/docs/other: docs/context/meta-ads-playbook.md, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
 
 ### `NEXT_PHASE`
 - Service: Other / App
@@ -398,12 +210,12 @@ This page maps environment variables to integration services and to the first-pa
 ### `NEXT_PUBLIC_APP_URL`
 - Service: App / Runtime
 - Declared in: .env.example
-- Mentioned by groups: src/app / api (6), Root Files (2), Docs / Context (1), Docs / Plans (1), src/lib (1)
+- Mentioned by groups: src/app / api (6), Root Files (2), Docs / Context (1), src/lib (1)
 - Routes: src/app/api/admin/invite/route.ts, src/app/api/meta/callback/route.ts, src/app/api/meta/data-deletion/route.ts
 - Features: none
 - Shared libs: src/lib/env.ts
 - Agent files: none
-- Tests/docs/other: docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, e2e/authenticated-smoke.spec.ts, playwright.config.ts, src/app/api/admin/invite/route.test.ts, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
+- Tests/docs/other: docs/context/meta-ads-playbook.md, e2e/authenticated-smoke.spec.ts, playwright.config.ts, src/app/api/admin/invite/route.test.ts, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
 
 ### `NEXT_PUBLIC_AUDIT_BOOKING_URL`
 - Service: Other / App
@@ -417,7 +229,7 @@ This page maps environment variables to integration services and to the first-pa
 
 ### `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL`
 - Service: Clerk
-- Declared in: .env.example, .env.local
+- Declared in: .env.example
 - Mentioned by groups: Root Files (1)
 - Routes: none
 - Features: none
@@ -427,7 +239,7 @@ This page maps environment variables to integration services and to the first-pa
 
 ### `NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL`
 - Service: Clerk
-- Declared in: .env.example, .env.local
+- Declared in: .env.example
 - Mentioned by groups: Root Files (1)
 - Routes: none
 - Features: none
@@ -437,17 +249,17 @@ This page maps environment variables to integration services and to the first-pa
 
 ### `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`
 - Service: Clerk
-- Declared in: .env.example, .env.local
-- Mentioned by groups: src/app / client (3), Docs / Plans (2), src/app / admin (2), src/app / root routes (2), src/components / admin (1), src/lib (1)
+- Declared in: .env.example
+- Mentioned by groups: src/app / client (3), src/app / admin (2), src/app / root routes (2), src/components / admin (1), src/lib (1)
 - Routes: src/app/admin/layout.tsx, src/app/client/[slug]/layout.tsx, src/app/client/pending/layout.tsx, src/app/layout.tsx, src/app/page.tsx
 - Features: none
 - Shared libs: src/lib/env.ts
 - Agent files: none
-- Tests/docs/other: docs/plans/2026-03-03-client-accounts-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md, src/app/admin/users/data.ts, src/app/client/[slug]/layout.test.tsx, src/components/admin/user-avatar.tsx
+- Tests/docs/other: src/app/admin/users/data.ts, src/app/client/[slug]/layout.test.tsx, src/components/admin/user-avatar.tsx
 
 ### `NEXT_PUBLIC_CLERK_SIGN_IN_URL`
 - Service: Clerk
-- Declared in: .env.example, .env.local
+- Declared in: .env.example
 - Mentioned by groups: Root Files (1)
 - Routes: none
 - Features: none
@@ -457,7 +269,7 @@ This page maps environment variables to integration services and to the first-pa
 
 ### `NEXT_PUBLIC_CLERK_SIGN_UP_URL`
 - Service: Clerk
-- Declared in: .env.example, .env.local
+- Declared in: .env.example
 - Mentioned by groups: Root Files (1)
 - Routes: none
 - Features: none
@@ -467,7 +279,7 @@ This page maps environment variables to integration services and to the first-pa
 
 ### `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - Service: Supabase
-- Declared in: .env.example, .env.local
+- Declared in: .env.example
 - Mentioned by groups: src/lib (2)
 - Routes: none
 - Features: none
@@ -477,13 +289,13 @@ This page maps environment variables to integration services and to the first-pa
 
 ### `NEXT_PUBLIC_SUPABASE_URL`
 - Service: Supabase
-- Declared in: .env.example, .env.local
-- Mentioned by groups: src/lib (2), Docs / Plans (1), src/app / admin (1)
+- Declared in: .env.example
+- Mentioned by groups: src/lib (2), src/app / admin (1)
 - Routes: src/app/admin/settings/page.tsx
 - Features: none
 - Shared libs: src/lib/env.ts, src/lib/supabase.ts
 - Agent files: none
-- Tests/docs/other: docs/plans/2026-02-26-discord-agent-architecture-plan.md
+- Tests/docs/other: none
 
 ### `PR_NUMBER`
 - Service: Other / App
@@ -498,12 +310,12 @@ This page maps environment variables to integration services and to the first-pa
 ### `RESEND_API_KEY`
 - Service: Resend
 - Declared in: .env.example
-- Mentioned by groups: Docs / Plans (2), src/app / api (2), Root Files (1)
+- Mentioned by groups: src/app / api (2), Root Files (1)
 - Routes: src/app/api/contact/route.ts
 - Features: none
 - Shared libs: none
 - Agent files: none
-- Tests/docs/other: audit/imports-deps.md, docs/plans/2026-03-03-landing-page-design.md, docs/plans/2026-03-03-landing-page-plan.md, src/app/api/contact/route.test.ts
+- Tests/docs/other: audit/imports-deps.md, src/app/api/contact/route.test.ts
 
 ### `RESEND_FROM_EMAIL`
 - Service: Resend
@@ -515,92 +327,12 @@ This page maps environment variables to integration services and to the first-pa
 - Agent files: none
 - Tests/docs/other: audit/imports-deps.md, src/app/api/contact/route.test.ts
 
-### `SHOPIFY_ADMIN_ACCESS_TOKEN`
-- Service: Other / App
-- Declared in: .env.local
-- Mentioned by groups: src/lib (2), Docs / Context (1)
-- Routes: none
-- Features: none
-- Shared libs: src/lib/shopify-admin.test.ts, src/lib/shopify-admin.ts
-- Agent files: none
-- Tests/docs/other: docs/context/shopify-merch-sync.md
-
-### `SHOPIFY_ADMIN_API_VERSION`
-- Service: Other / App
-- Declared in: .env.local
-- Mentioned by groups: src/lib (2), Docs / Context (1)
-- Routes: none
-- Features: none
-- Shared libs: src/lib/shopify-admin.test.ts, src/lib/shopify-admin.ts
-- Agent files: none
-- Tests/docs/other: docs/context/shopify-merch-sync.md
-
-### `SHOPIFY_STORE_DOMAIN`
-- Service: Other / App
-- Declared in: .env.local
-- Mentioned by groups: src/lib (2), Docs / Context (1)
-- Routes: none
-- Features: none
-- Shared libs: src/lib/shopify-admin.test.ts, src/lib/shopify-admin.ts
-- Agent files: none
-- Tests/docs/other: docs/context/shopify-merch-sync.md
-
-### `SHOPIFY_WEBHOOK_SECRET`
-- Service: Other / App
-- Declared in: .env.local
-- Mentioned by groups: Docs / Context (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: docs/context/shopify-merch-sync.md
-
-### `SUPABASE_ACCESS_TOKEN`
-- Service: Supabase
-- Declared in: .env.local
-- Mentioned by groups: .github (1), Docs / References (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: .github/workflows/db-drift.yml, docs/references/database-safety-runbook.md
-
 ### `SUPABASE_SERVICE_ROLE_KEY`
 - Service: Supabase
-- Declared in: .env.example, .env.local
-- Mentioned by groups: src/lib (2), Docs / Plans (1), src/app / admin (1), src/app / api (1)
+- Declared in: .env.example
+- Mentioned by groups: src/lib (2), src/app / admin (1), src/app / api (1)
 - Routes: src/app/admin/settings/page.tsx, src/app/api/ingest/route.ts
 - Features: none
 - Shared libs: src/lib/env.ts, src/lib/supabase.ts
 - Agent files: none
-- Tests/docs/other: docs/plans/2026-02-26-discord-agent-architecture-plan.md
-
-### `SUPABASE_URL`
-- Service: Supabase
-- Declared in: none
-- Mentioned by groups: Docs / Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: docs/plans/2026-02-26-discord-agent-architecture-plan.md
-
-### `TELEGRAM_WEBHOOK_SECRET`
-- Service: Other / App
-- Declared in: .env.local
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
 - Tests/docs/other: none
-
-### `TOKEN_ENCRYPTION_KEY`
-- Service: Other / App
-- Declared in: none
-- Mentioned by groups: Docs / Plans (2)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md

@@ -1,6 +1,6 @@
 # Onboarding Guides
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This index links to human-oriented read-order guides for common areas of work in the repo.
 

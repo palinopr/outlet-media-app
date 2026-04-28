@@ -1,11 +1,29 @@
 # src/app / api
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
-- Files: 18
-- File kinds: Next.js route handler (10), test file (7), TypeScript module (1)
+- Files: 20
+- File kinds: Next.js route handler (10), test file (9), TypeScript module (1)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
+
+## `src/app/api/admin/activity/route.test.ts`
+- Status: untracked
+- System: web
+- Group: src/app / api
+- Ownership: web API route surface
+- Type: test file
+- Construction: test specification
+- Route context: /api/admin/activity
+- Lines: 90
+- Bytes: 2491
+- Imports (internal): src/lib/api-helpers.ts, src/app/api/admin/activity/route.ts, src/lib/supabase.ts
+- Imports (packages): vitest, @clerk/nextjs/server
+- Depends on groups: src/lib, src/app / api
+- Symbol details: function makeRequest
+- Defines: makeRequest, insert, from, actual, response
+- Tests / describe labels: POST /api/admin/activity, requires admin access, validates and records admin activity, rejects malformed activity payloads
+- Contents summary: tests/describes: POST /api/admin/activity; requires admin access; validates and records admin activity; internal imports: 3; package imports: 2
 
 ## `src/app/api/admin/activity/route.ts`
 - Status: tracked-clean
@@ -19,7 +37,11 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 1389
 - Imports (internal): src/lib/api-helpers.ts, src/lib/supabase.ts
 - Imports (packages): next/server, zod, @clerk/nextjs/server
+- Imported by: src/app/api/admin/activity/route.test.ts
 - Depends on groups: src/lib
+- Used by groups: src/app / api
+- Tests related: src/app/api/admin/activity/route.test.ts
+- Tests related (direct): src/app/api/admin/activity/route.test.ts
 - Exports: POST
 - Symbol details: function POST (exported), const ActivitySchema
 - Defines: POST, ActivitySchema, adminErr, caller
@@ -107,33 +129,33 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: Next.js route handler for `/api/admin/users/[id]`; route handlers: PATCH; exports: PATCH; internal imports: 2; package imports: 2
 
 ## `src/app/api/contact/route.test.ts`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/app / api
 - Ownership: web API route surface
 - Type: test file
 - Construction: test specification
 - Route context: /api/contact
-- Lines: 80
-- Bytes: 2500
+- Lines: 113
+- Bytes: 3712
 - Imports (internal): src/app/api/contact/route.ts, src/lib/supabase.ts
 - Imports (packages): vitest
 - Depends on groups: src/app / api, src/lib
-- Defines: insert, from, response
-- Tests / describe labels: POST /api/contact, stores the contact submission and sends email through Resend HTTP API, does not call Resend when the API key is not configured
-- Contents summary: tests/describes: POST /api/contact; stores the contact submission and sends email through Resend HTTP API; does not call Resend when the API key is not configured; internal imports: 2; package imports: 1
+- Defines: insert, from, response, body
+- Tests / describe labels: POST /api/contact, stores the contact submission and sends email through Resend HTTP API, rejects oversized submissions before parsing, rate limits repeated submissions from the same client IP, does not call Resend when the API key is not configured
+- Contents summary: tests/describes: POST /api/contact; stores the contact submission and sends email through Resend HTTP API; rejects oversized submissions before parsing; internal imports: 2; package imports: 1
 
 ## `src/app/api/contact/route.ts`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/app / api
 - Ownership: web API route surface
 - Type: Next.js route handler
 - Construction: App Router route handler, code module, handlers: POST
 - Route: /api/contact
-- Lines: 119
-- Bytes: 3257
-- Imports (internal): src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
+- Lines: 130
+- Bytes: 3597
+- Imports (internal): src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/request-guards.ts
 - Imports (packages): next/server
 - Imported by: src/app/api/contact/route.test.ts
 - Depends on groups: src/lib
@@ -142,9 +164,9 @@ Each entry below documents the file path, system ownership, construction style, 
 - Tests related (direct): src/app/api/contact/route.test.ts
 - Exports: POST
 - Symbol details: function POST (exported), function withLabel, function sendContactEmail, const contactRecipient
-- Defines: withLabel, sendContactEmail, POST, contactRecipient, trimmed, apiKey, response, body, fullMessage
+- Defines: withLabel, sendContactEmail, POST, contactRecipient, trimmed, apiKey, response, body, sizeError, rateLimitError, fullMessage
 - Route handlers: POST
-- Contents summary: Next.js route handler for `/api/contact`; route handlers: POST; exports: POST; internal imports: 3; package imports: 1
+- Contents summary: Next.js route handler for `/api/contact`; route handlers: POST; exports: POST; internal imports: 4; package imports: 1
 
 ## `src/app/api/health/route.test.ts`
 - Status: tracked-clean
@@ -210,16 +232,16 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: exports: ingestMetaCampaigns; internal imports: 3; package imports: 1
 
 ## `src/app/api/ingest/route.ts`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/app / api
 - Ownership: web API route surface
 - Type: Next.js route handler
 - Construction: App Router route handler, code module, handlers: POST, GET
 - Route: /api/ingest
-- Lines: 34
-- Bytes: 1134
-- Imports (internal): src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/app/api/ingest/ingest-meta-campaigns.ts
+- Lines: 52
+- Bytes: 1652
+- Imports (internal): src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/request-guards.ts, src/app/api/ingest/ingest-meta-campaigns.ts
 - Imports (packages): next/server
 - Imported by: __tests__/api/ingest.test.ts
 - Depends on groups: src/lib, src/app / api
@@ -228,9 +250,9 @@ Each entry below documents the file path, system ownership, construction style, 
 - Tests related (direct): __tests__/api/ingest.test.ts
 - Exports: POST, GET
 - Symbol details: function POST (exported), function GET (exported)
-- Defines: POST, GET, secretErr
+- Defines: POST, GET, sizeError, rateLimitError, secretErr
 - Route handlers: POST, GET
-- Contents summary: Next.js route handler for `/api/ingest`; route handlers: POST, GET; exports: POST, GET; internal imports: 4; package imports: 1
+- Contents summary: Next.js route handler for `/api/ingest`; route handlers: POST, GET; exports: POST, GET; internal imports: 5; package imports: 1
 
 ## `src/app/api/meta/callback/route.test.ts`
 - Status: tracked-clean
@@ -288,16 +310,16 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: tests/describes: POST /api/meta/data-deletion; returns confirmation code for valid signed_request; rejects invalid signature; internal imports: 2; package imports: 2
 
 ## `src/app/api/meta/data-deletion/route.ts`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/app / api
 - Ownership: web API route surface
 - Type: Next.js route handler
 - Construction: App Router route handler, code module, handlers: POST
 - Route: /api/meta/data-deletion
-- Lines: 44
-- Bytes: 1264
-- Imports (internal): src/lib/supabase.ts, src/lib/meta-oauth.ts
+- Lines: 55
+- Bytes: 1616
+- Imports (internal): src/lib/supabase.ts, src/lib/meta-oauth.ts, src/lib/request-guards.ts
 - Imports (packages): next/server, node:crypto
 - Imported by: src/app/api/meta/data-deletion/route.test.ts
 - Depends on groups: src/lib
@@ -306,9 +328,9 @@ Each entry below documents the file path, system ownership, construction style, 
 - Tests related (direct): src/app/api/meta/data-deletion/route.test.ts
 - Exports: POST
 - Symbol details: function POST (exported)
-- Defines: POST, appUrl, formData, confirmationCode
+- Defines: POST, appUrl, sizeError, rateLimitError, formData, confirmationCode
 - Route handlers: POST
-- Contents summary: Next.js route handler for `/api/meta/data-deletion`; route handlers: POST; exports: POST; internal imports: 2; package imports: 2
+- Contents summary: Next.js route handler for `/api/meta/data-deletion`; route handlers: POST; exports: POST; internal imports: 3; package imports: 2
 
 ## `src/app/api/observability/client-error/route.test.ts`
 - Status: tracked-clean
@@ -351,6 +373,24 @@ Each entry below documents the file path, system ownership, construction style, 
 - Route handlers: POST
 - Contents summary: Next.js route handler for `/api/observability/client-error`; route handlers: POST; exports: POST; internal imports: 2; package imports: 3
 
+## `src/app/api/user/profile/route.test.ts`
+- Status: untracked
+- System: web
+- Group: src/app / api
+- Ownership: web API route surface
+- Type: test file
+- Construction: test specification
+- Route context: /api/user/profile
+- Lines: 73
+- Bytes: 2020
+- Imports (internal): src/lib/api-helpers.ts, src/app/api/user/profile/route.ts
+- Imports (packages): vitest, @clerk/nextjs/server
+- Depends on groups: src/lib, src/app / api
+- Symbol details: function makeRequest
+- Defines: makeRequest, updateUser, actual, response
+- Tests / describe labels: POST /api/user/profile, requires authentication, updates the signed-in user, rejects invalid profile payloads
+- Contents summary: tests/describes: POST /api/user/profile; requires authentication; updates the signed-in user; internal imports: 2; package imports: 2
+
 ## `src/app/api/user/profile/route.ts`
 - Status: tracked-clean
 - System: web
@@ -363,7 +403,11 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 945
 - Imports (internal): src/lib/api-helpers.ts
 - Imports (packages): next/server, @clerk/nextjs/server, zod
+- Imported by: src/app/api/user/profile/route.test.ts
 - Depends on groups: src/lib
+- Used by groups: src/app / api
+- Tests related: src/app/api/user/profile/route.test.ts
+- Tests related (direct): src/app/api/user/profile/route.test.ts
 - Exports: POST
 - Symbol details: function POST (exported), const ProfileSchema
 - Defines: POST, ProfileSchema, raw, parsed, client

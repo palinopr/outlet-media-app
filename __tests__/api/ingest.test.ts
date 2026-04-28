@@ -20,6 +20,18 @@ describe("POST /api/ingest — auth", () => {
     process.env = { ...originalEnv };
   });
 
+  it("rejects oversized requests before parsing", async () => {
+    const { POST } = await import("@/app/api/ingest/route");
+    const res = await POST(
+      new Request("http://localhost/api/ingest", {
+        method: "POST",
+        headers: { "Content-Length": String(6 * 1024 * 1024), "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: "test-secret", source: "meta", data: { scraped_at: "" } }),
+      }),
+    );
+    expect(res.status).toBe(413);
+  });
+
   it("returns 401 when secret is wrong", async () => {
     const { POST } = await import("@/app/api/ingest/route");
     const res = await POST(makeRequest({ secret: "bad", source: "meta", data: { scraped_at: "" } }));
@@ -35,7 +47,7 @@ describe("POST /api/ingest — auth", () => {
   it("rejects retired ingest sources at validation", async () => {
     const { POST } = await import("@/app/api/ingest/route");
     const res = await POST(
-      makeRequest({ secret: "test-secret", source: "ticketmaster_one", data: { scraped_at: "" } }),
+      makeRequest({ secret: "test-secret", source: "retired_ticketing", data: { scraped_at: "" } }),
     );
     const body = await res.json();
 

@@ -59,6 +59,39 @@ describe("POST /api/contact", () => {
     );
   });
 
+  it("rejects oversized submissions before parsing", async () => {
+    const { POST } = await import("./route");
+    const response = await POST(
+      new Request("https://example.com/api/contact", {
+        method: "POST",
+        headers: { "Content-Length": String(17 * 1024), "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "buyer@example.com", message: "Need help.", name: "Buyer" }),
+      }),
+    );
+
+    expect(response.status).toBe(413);
+    expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("rate limits repeated submissions from the same client IP", async () => {
+    const { POST } = await import("./route");
+    const body = JSON.stringify({ email: "buyer@example.com", message: "Need help.", name: "Buyer" });
+
+    let response = new Response(null, { status: 500 });
+    for (let index = 0; index < 9; index += 1) {
+      response = await POST(
+        new Request("https://example.com/api/contact", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-real-ip": "203.0.113.20" },
+          body,
+        }),
+      );
+    }
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBeTruthy();
+  });
+
   it("does not call Resend when the API key is not configured", async () => {
     const { POST } = await import("./route");
     const response = await POST(

@@ -1,6 +1,6 @@
 # Auth and Access Map
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This page focuses on files and database objects that participate in authentication, membership, scope, invite, or access-control behavior.
 
@@ -31,7 +31,7 @@ This page focuses on files and database objects that participate in authenticati
 - Auth signals: imports Clerk server auth, calls currentUser()
 - Behavior signals: none
 - Related DB objects: admin_activity, if
-- Related tests: none
+- Related tests: src/app/api/admin/activity/route.test.ts
 - Direct imports: src/lib/api-helpers.ts, src/lib/supabase.ts
 
 ### `/api/admin/invite`
@@ -63,7 +63,7 @@ This page focuses on files and database objects that participate in authenticati
 - Auth signals: imports Clerk server auth
 - Behavior signals: none
 - Related DB objects: if
-- Related tests: none
+- Related tests: src/app/api/user/profile/route.test.ts
 - Direct imports: src/lib/api-helpers.ts
 
 ### `/client`
@@ -320,8 +320,8 @@ This page focuses on files and database objects that participate in authenticati
 - Ownership: shared web library
 - Auth signals: imports Clerk server auth, calls auth(), calls currentUser()
 - Related DB objects: if
-- Route owners: src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, … (+3 more)
-- Related tests: src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/lib/api-helpers.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/actions/search.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/api/contact/route.test.ts, __tests__/api/ingest.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, … (+2 more)
+- Route owners: src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts, src/app/api/meta/data-deletion/route.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, … (+4 more)
+- Related tests: src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/app/api/user/profile/route.test.ts, src/lib/api-helpers.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/actions/search.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/api/contact/route.test.ts, … (+6 more)
 - Contents summary: exports: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest; package imports: 3
 
 ### `src/lib/database.types.ts`
@@ -353,7 +353,7 @@ This page focuses on files and database objects that participate in authenticati
 - Auth signals: imports Clerk server auth, calls auth(), calls currentUser()
 - Related DB objects: if
 - Route owners: src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/health/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, src/app/api/observability/client-error/route.ts, src/app/admin/clients/[id]/page.tsx, … (+11 more)
-- Related tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, src/app/api/meta/data-deletion/route.test.ts, src/app/api/observability/client-error/route.test.ts, … (+20 more)
+- Related tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, src/app/api/meta/data-deletion/route.test.ts, … (+21 more)
 - Contents summary: exports: createClerkSupabaseClient, getFeatureReadClient, supabaseAdmin; package imports: 3
 
 ### `src/proxy.ts`
@@ -399,7 +399,7 @@ This page focuses on files and database objects that participate in authenticati
 - Migrations: supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260307143000_client_member_roster_rls.sql
 - Routes: src/app/api/admin/users/[id]/route.ts
 - Features/libs/agents: src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/lib/database.types.ts, src/lib/member-access.ts
-- Tests/docs: docs/context/engineering-principles.md, docs/plans/2026-03-03-client-accounts-design.md, docs/plans/2026-03-03-client-accounts-plan.md, docs/references/database-safety-runbook.md, src/app/admin/clients/data.test.ts, src/app/api/admin/users/[id]/route.test.ts
+- Tests/docs: docs/context/engineering-principles.md, docs/references/database-safety-runbook.md, src/app/admin/clients/data.test.ts, src/app/api/admin/users/[id]/route.test.ts
 
 ### `current_clerk_user_id`
 - Kinds: function

@@ -1,5 +1,5 @@
 -- Remove inactive backbones that no longer have product or runtime code paths.
--- Campaigns, client accounts, memberships, invitations, Meta campaign data, and Ticketmaster ingest remain.
+-- Campaigns, client accounts, memberships, invitations, Meta campaign data, system events, and admin activity remain.
 
 drop table if exists public.email_drafts cascade;
 drop table if exists public.email_reply_examples cascade;

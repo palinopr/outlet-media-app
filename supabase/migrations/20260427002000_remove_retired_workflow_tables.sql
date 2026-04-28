@@ -1,5 +1,5 @@
 -- Remove retired workflow/comment/asset surfaces from the Campaigns-only baseline.
--- Ticketmaster event ingest tables stay for backend campaign context; these UI/workflow ledgers are no longer active.
+-- Retired event ingest tables are removed from the active product baseline.
 
 drop table if exists public.notifications cascade;
 drop table if exists public.approval_requests cascade;

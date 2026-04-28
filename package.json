@@ -18,10 +18,6 @@
     "db:push:dry-run": "supabase db push --dry-run",
     "check:web": "npm run type-check:web && npm run lint:web && npm run test:web && npm run build && npm run audit:deps",
     "check": "npm run check:web",
-    "google:first-read": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --experimental-specifier-resolution=node src/scripts/google-ads-first-read.ts",
-    "google:discover": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --experimental-specifier-resolution=node src/scripts/google-ads-discover-accounts.ts",
-    "google:ataca-sergio:search": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --experimental-specifier-resolution=node src/scripts/google-ads-build-ataca-sergio-search.ts",
-    "shopify:first-read": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --experimental-specifier-resolution=node src/scripts/shopify-first-read.ts",
     "test:watch": "vitest"
   },
   "dependencies": {

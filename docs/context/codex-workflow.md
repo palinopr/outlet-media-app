@@ -56,7 +56,7 @@ Do not keep duplicate copies of the same operator skill under multiple local ski
 
 Repo-local Codex/operator skills belong in a dedicated repo skill directory only when that directory is actually checked in.
 Durable architecture rules belong in `docs/context/`.
-Execution sequencing belongs in `docs/plans/`.
+Execution sequencing should stay concise in the active issue, PR, or task thread; do not reintroduce broad historical plan folders by default.
 
 ## 5. Verify Before Handoff
 

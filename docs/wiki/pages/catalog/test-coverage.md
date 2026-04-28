@@ -1,6 +1,6 @@
 # Test Coverage Map
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This page maps code files to the exact direct and transitive tests currently linked through imports.
 
@@ -270,15 +270,15 @@ This page maps code files to the exact direct and transitive tests currently lin
 
 ## src/app / api
 - Code files: 11
-- With direct test links: 8
-- With transitive test links: 9
-- With no linked tests: 2
+- With direct test links: 10
+- With transitive test links: 11
+- With no linked tests: 0
 
 ### `src/app/api/admin/activity/route.ts`
-- Direct tests: none
-- All linked tests: none
+- Direct tests: src/app/api/admin/activity/route.test.ts
+- All linked tests: src/app/api/admin/activity/route.test.ts
 - Route owners: none
-- Imported by: none
+- Imported by: src/app/api/admin/activity/route.test.ts
 
 ### `src/app/api/admin/invite/route.ts`
 - Direct tests: src/app/api/admin/invite/route.test.ts
@@ -335,10 +335,10 @@ This page maps code files to the exact direct and transitive tests currently lin
 - Imported by: src/app/api/observability/client-error/route.test.ts
 
 ### `src/app/api/user/profile/route.ts`
-- Direct tests: none
-- All linked tests: none
+- Direct tests: src/app/api/user/profile/route.test.ts
+- All linked tests: src/app/api/user/profile/route.test.ts
 - Route owners: none
-- Imported by: none
+- Imported by: src/app/api/user/profile/route.test.ts
 
 ## src/app / client
 - Code files: 30
@@ -1307,16 +1307,16 @@ This page maps code files to the exact direct and transitive tests currently lin
 - Imported by: src/components/admin/collapsible-sidebar.tsx
 
 ## src/lib
-- Code files: 21
-- With direct test links: 13
-- With transitive test links: 17
+- Code files: 20
+- With direct test links: 12
+- With transitive test links: 16
 - With no linked tests: 4
 
 ### `src/lib/api-helpers.ts`
-- Direct tests: src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/lib/api-helpers.test.ts
-- All linked tests: src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/lib/api-helpers.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/actions/search.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/api/contact/route.test.ts, __tests__/api/ingest.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, … (+2 more)
-- Route owners: src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts, src/app/admin/campaigns/[campaignId]/page.tsx, … (+5 more)
-- Imported by: src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/invite/route.ts, … (+9 more)
+- Direct tests: src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/app/api/user/profile/route.test.ts, src/lib/api-helpers.test.ts
+- All linked tests: src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/app/api/user/profile/route.test.ts, src/lib/api-helpers.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/actions/search.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/api/contact/route.test.ts, … (+6 more)
+- Route owners: src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts, src/app/api/meta/data-deletion/route.ts, … (+6 more)
+- Imported by: src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.test.ts, … (+12 more)
 
 ### `src/lib/api-schemas.ts`
 - Direct tests: __tests__/lib/api-schemas.test.ts, __tests__/lib/contact-form.test.ts
@@ -1372,12 +1372,6 @@ This page maps code files to the exact direct and transitive tests currently lin
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/users/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/layout.tsx, … (+2 more)
 - Imported by: __tests__/lib/formatters.test.ts, src/app/admin/actions/campaigns.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/data.ts, src/app/admin/clients/page.tsx, src/app/admin/dashboard/campaign-cards.tsx, src/app/admin/dashboard/data.ts, … (+26 more)
 
-### `src/lib/google-ads.ts`
-- Direct tests: src/lib/google-ads.test.ts
-- All linked tests: src/lib/google-ads.test.ts
-- Route owners: none
-- Imported by: src/lib/google-ads.test.ts, src/scripts/google-ads-discover-accounts.ts
-
 ### `src/lib/member-access.ts`
 - Direct tests: src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts
 - All linked tests: src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts, __tests__/app/client/campaign-detail-data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/features/client-portal/entry-accept.test.ts, __tests__/features/client-portal/scope.test.ts, src/app/shell-import-smoke.test.ts, src/app/client/[slug]/layout.test.tsx
@@ -1402,11 +1396,11 @@ This page maps code files to the exact direct and transitive tests currently lin
 - Route owners: src/app/api/meta/data-deletion/route.ts
 - Imported by: src/app/api/meta/data-deletion/route.ts, src/lib/meta-oauth.test.ts
 
-### `src/lib/shopify-admin.ts`
-- Direct tests: src/lib/shopify-admin.test.ts
-- All linked tests: src/lib/shopify-admin.test.ts
-- Route owners: none
-- Imported by: src/lib/shopify-admin.test.ts
+### `src/lib/request-guards.ts`
+- Direct tests: src/lib/request-guards.test.ts
+- All linked tests: src/lib/request-guards.test.ts, src/app/api/contact/route.test.ts, __tests__/api/ingest.test.ts, src/app/api/meta/data-deletion/route.test.ts
+- Route owners: src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts
+- Imported by: src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, src/lib/request-guards.test.ts
 
 ### `src/lib/status.ts`
 - Direct tests: none
@@ -1415,10 +1409,10 @@ This page maps code files to the exact direct and transitive tests currently lin
 - Imported by: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/campaigns-table.tsx, src/features/client-portal/insights.ts, src/lib/formatters.tsx
 
 ### `src/lib/supabase.ts`
-- Direct tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, src/app/api/meta/data-deletion/route.test.ts, src/app/api/observability/client-error/route.test.ts, … (+5 more)
-- All linked tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, src/app/api/meta/data-deletion/route.test.ts, src/app/api/observability/client-error/route.test.ts, … (+20 more)
+- Direct tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, src/app/api/meta/data-deletion/route.test.ts, … (+6 more)
+- All linked tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, src/app/api/meta/data-deletion/route.test.ts, … (+21 more)
 - Route owners: src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/health/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, … (+13 more)
-- Imported by: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.test.ts, src/app/admin/actions/search.ts, … (+34 more)
+- Imported by: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.test.ts, src/app/admin/actions/search.ts, … (+35 more)
 
 ### `src/lib/text-utils.ts`
 - Direct tests: none
@@ -1451,36 +1445,6 @@ This page maps code files to the exact direct and transitive tests currently lin
 - Imported by: none
 
 ### `src/proxy.ts`
-- Direct tests: none
-- All linked tests: none
-- Route owners: none
-- Imported by: none
-
-## src / scripts
-- Code files: 4
-- With direct test links: 0
-- With transitive test links: 0
-- With no linked tests: 4
-
-### `src/scripts/google-ads-build-ataca-sergio-search.ts`
-- Direct tests: none
-- All linked tests: none
-- Route owners: none
-- Imported by: none
-
-### `src/scripts/google-ads-discover-accounts.ts`
-- Direct tests: none
-- All linked tests: none
-- Route owners: none
-- Imported by: none
-
-### `src/scripts/google-ads-first-read.ts`
-- Direct tests: none
-- All linked tests: none
-- Route owners: none
-- Imported by: none
-
-### `src/scripts/shopify-first-read.ts`
 - Direct tests: none
 - All linked tests: none
 - Route owners: none

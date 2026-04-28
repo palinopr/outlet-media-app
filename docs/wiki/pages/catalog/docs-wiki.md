@@ -1,6 +1,6 @@
 # Docs / Wiki (manual control pages)
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 - Files: 10
 - File kinds: Markdown doc (9), file (.py) (1)
@@ -116,12 +116,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Raw Sources
 
 ## `docs/wiki/tools/generate_repo_catalog.py`
-- Status: tracked-clean
+- Status: modified
 - System: docs
 - Group: Docs / Wiki (manual control pages)
 - Ownership: repo wiki source
 - Type: file (.py)
 - Construction: contains `use client`
-- Lines: 3399
-- Bytes: 152218
+- Lines: 3381
+- Bytes: 151308
 - Contents summary: text lines: from __future__ import annotations \| import json \| import os \| import re \| import shutil \| import subprocess

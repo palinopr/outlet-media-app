@@ -1,22 +1,22 @@
 # Repo File Catalog
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This catalog is documentation-first: it describes what files exist, what each file contains, how each file is constructed, and which system or folder ownership it belongs to.
 
 ## Scope
-- Cataloged files: 498
+- Cataloged files: 461
 - Catalog uses the current working tree, so modified and untracked source files are included if they live in the documented code/doc paths.
 - Excluded from the generated catalog to avoid noise or recursion: `.git/`, `node_modules/`, `.next/`, `agent/.next/`, `agent/dist/`, `test-results/`, `tmp-playwright/`, `session/`, `.opencode/`, `.claude/`, `.worktrees/`, and `docs/wiki/pages/catalog/`.
 
 ## System counts
 - database: 83
-- docs: 86
+- docs: 54
 - github: 4
 - public: 17
-- root: 27
+- root: 26
 - tests: 14
-- web: 267
+- web: 263
 
 ## Cross-link and dependency pages
 - [Group Dependency Map](./group-dependencies.md) — internal dependencies rolled up by catalog group
@@ -43,8 +43,7 @@ This catalog is documentation-first: it describes what files exist, what each fi
 - [Test Coverage Map](./test-coverage.md) — code files linked to exact direct and transitive tests
 
 ## Group pages
-- [Docs / Context](./docs-context.md) — 12 files
-- [Docs / Plans](./docs-plans.md) — 30 files
+- [Docs / Context](./docs-context.md) — 10 files
 - [Docs / References](./docs-references.md) — 3 files
 - [Docs / Root](./docs-root.md) — 1 files
 - [Docs / Screenshots](./docs-screenshots.md) — 30 files
@@ -52,9 +51,9 @@ This catalog is documentation-first: it describes what files exist, what each fi
 - [.github](./github.md) — 4 files
 - [Root Mocks](./mocks.md) — 1 files
 - [Public Assets](./public.md) — 17 files
-- [Root Files](./root.md) — 26 files
+- [Root Files](./root.md) — 25 files
 - [src/app / admin](./src-app-admin.md) — 41 files
-- [src/app / api](./src-app-api.md) — 18 files
+- [src/app / api](./src-app-api.md) — 20 files
 - [src/app / client](./src-app-client.md) — 39 files
 - [src/app / root routes](./src-app-root.md) — 18 files
 - [src/components / admin](./src-components-admin.md) — 46 files
@@ -74,9 +73,8 @@ This catalog is documentation-first: it describes what files exist, what each fi
 - [src/features / system-events](./src-features-system-events.md) — 1 files
 - [src/features / users](./src-features-users.md) — 1 files
 - [src / hooks](./src-hooks.md) — 1 files
-- [src/lib](./src-lib.md) — 29 files
+- [src/lib](./src-lib.md) — 27 files
 - [src / Root](./src-root.md) — 2 files
-- [src / scripts](./src-scripts.md) — 4 files
 - [supabase / migrations](./supabase-migrations.md) — 75 files
 - [supabase / root](./supabase-root.md) — 8 files
 - [Tests / API](./tests-api.md) — 1 files

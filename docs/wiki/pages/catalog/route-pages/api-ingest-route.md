@@ -1,6 +1,6 @@
 # /api/ingest
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 - Route file: `src/app/api/ingest/route.ts`
 - Type: Next.js route handler
@@ -8,17 +8,17 @@ Generated from the current working tree on 2026-04-28 02:57:59.
 - Methods: POST, GET
 - Auth signals: none
 - Behavior signals: none
-- Direct internal imports: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/app/api/ingest/ingest-meta-campaigns.ts
+- Direct internal imports: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/request-guards.ts, src/app/api/ingest/ingest-meta-campaigns.ts
 - Feature modules touched: none
-- Shared libs/runtime touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
+- Shared libs/runtime touched: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/request-guards.ts
 - Database objects touched: if, meta_campaigns, campaign_snapshots
 - Direct tests: __tests__/api/ingest.test.ts
 - All linked tests: __tests__/api/ingest.test.ts
-- Contents summary: Next.js route handler for `/api/ingest`; route handlers: POST, GET; exports: POST, GET; internal imports: 4; package imports: 1
+- Contents summary: Next.js route handler for `/api/ingest`; route handlers: POST, GET; exports: POST, GET; internal imports: 5; package imports: 1
 
 ## Stack by group
 - src/app / api: src/app/api/ingest/ingest-meta-campaigns.ts
-- src/lib: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts
+- src/lib: src/lib/supabase.ts, src/lib/api-schemas.ts, src/lib/api-helpers.ts, src/lib/request-guards.ts
 
 ## API behavior
 - Request signals: reads query/search params

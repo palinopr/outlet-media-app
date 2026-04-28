@@ -8,7 +8,7 @@ where exists (
   from public.client_services
   where client_services.client_id = clients.id
     and client_services.enabled = true
-    and client_services.service_key in ('ticketmaster', 'eata')
+    and client_services.service_key in ('retired_ticketing', 'eata')
 )
 or exists (
   select 1

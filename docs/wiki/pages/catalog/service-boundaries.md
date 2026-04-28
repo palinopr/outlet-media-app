@@ -1,6 +1,6 @@
 # Service Boundary Map
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This page summarizes the major system boundaries in the repo: web, agent runtime, database, and the bridge files that connect them.
 
@@ -9,7 +9,7 @@ This page summarizes the major system boundaries in the repo: web, agent runtime
 - Admin routes: 15
 - Client routes: 13
 - API routes: 10
-- Web files touching DB objects: 147
+- Web files touching DB objects: 142
 - Web↔agent touchpoints: none
 
 ## Agent system
@@ -23,33 +23,18 @@ This page summarizes the major system boundaries in the repo: web, agent runtime
 - Functions/views/triggers tracked: 22
 
 ## Shared boundary libraries
-- src/lib/google-ads.test.ts, src/lib/google-ads.ts, src/lib/member-access.ts, src/lib/meta-api.test.ts, src/lib/meta-api.ts, src/lib/meta-campaigns.test.ts, src/lib/meta-campaigns.ts, src/lib/meta-oauth.test.ts, src/lib/meta-oauth.ts, src/lib/supabase.ts
+- src/lib/member-access.ts, src/lib/meta-api.test.ts, src/lib/meta-api.ts, src/lib/meta-campaigns.test.ts, src/lib/meta-campaigns.ts, src/lib/meta-oauth.test.ts, src/lib/meta-oauth.ts, src/lib/supabase.ts
 
 ## Integration services seen in env registry
 - Anthropic / Claude: ANTHROPIC_API_KEY, CLIENT_AGENT_CLAUDE_MODEL
 - App / Runtime: E2E_BASE_URL, INGEST_SECRET, NEXT_PUBLIC_APP_URL
 - Clerk: CLERK_SECRET_KEY, E2E_CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, NEXT_PUBLIC_CLERK_SIGN_IN_URL, NEXT_PUBLIC_CLERK_SIGN_UP_URL
-- Google / Gmail / Calendar: GMAIL_PUSH_WEBHOOK_SECRET, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_CUSTOMER_ID, GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_LOGIN_CUSTOMER_ID, GOOGLE_ADS_REFRESH_TOKEN, GOOGLE_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_DRIVE_REFRESH_TOKEN, GOOGLE_REFRESH_TOKEN
-- Meta: META_ACCESS_TOKEN, META_AD_ACCOUNT_ID, META_APP_ID, META_APP_SECRET, META_PAGE_ID
-- Other / App: CI, CODEX_FINAL_MESSAGE, CONTACT_FORM_TO_EMAIL, E2E_CLIENT_SLUG, EVOLUTION_API_KEY, EVOLUTION_API_URL, EVOLUTION_INSTANCE_NAME, EVOLUTION_WEBHOOK_SECRET, NEXT_PHASE, NEXT_PUBLIC_AUDIT_BOOKING_URL, PR_NUMBER, SHOPIFY_ADMIN_ACCESS_TOKEN, SHOPIFY_ADMIN_API_VERSION, SHOPIFY_STORE_DOMAIN, SHOPIFY_WEBHOOK_SECRET, TELEGRAM_WEBHOOK_SECRET, … (+1 more)
+- Meta: META_ACCESS_TOKEN, META_AD_ACCOUNT_ID, META_APP_SECRET
+- Other / App: CI, CODEX_FINAL_MESSAGE, CONTACT_FORM_TO_EMAIL, E2E_CLIENT_SLUG, NEXT_PHASE, NEXT_PUBLIC_AUDIT_BOOKING_URL, PR_NUMBER
 - Resend: RESEND_API_KEY, RESEND_FROM_EMAIL
-- Supabase: NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_ACCESS_TOKEN, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL
+- Supabase: NEXT_PUBLIC_SUPABASE_ANON_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
 
 ## Boundary bridge files
-### `src/lib/google-ads.test.ts`
-- Ownership: shared web library
-- DB objects: calls
-- Route owners: none
-- Related tests: none
-- Summary: tests/describes: normalizeGoogleAdsCustomerId; strips resource prefixes and dashes; googleAdsSearchStreamUrl; internal imports: 1; package imports: 1
-
-### `src/lib/google-ads.ts`
-- Ownership: shared web library
-- DB objects: if
-- Route owners: none
-- Related tests: src/lib/google-ads.test.ts
-- Summary: exports: normalizeGoogleAdsCustomerId, googleAdsSearchStreamUrl, getGoogleAdsCredentials, refreshGoogleAdsAccessToken, flattenGoogleAdsSearchStream, googleAdsSearchStream, fetchGoogleAdsFirstReadSnapshot, GOOGLE_ADS_API_VERSION
-
 ### `src/lib/member-access.ts`
 - Ownership: shared web library
 - DB objects: clients, client_members, client_member_campaigns, if
@@ -103,5 +88,5 @@ This page summarizes the major system boundaries in the repo: web, agent runtime
 - Ownership: shared web library
 - DB objects: if
 - Route owners: src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/health/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, src/app/api/observability/client-error/route.ts, src/app/admin/clients/[id]/page.tsx, … (+11 more)
-- Related tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, src/app/api/meta/data-deletion/route.test.ts, src/app/api/observability/client-error/route.test.ts, … (+20 more)
+- Related tests: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/activity/route.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, src/app/api/meta/data-deletion/route.test.ts, … (+21 more)
 - Summary: exports: createClerkSupabaseClient, getFeatureReadClient, supabaseAdmin; package imports: 3

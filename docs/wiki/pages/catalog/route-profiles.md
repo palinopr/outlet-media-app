@@ -1,12 +1,12 @@
 # Route Profiles
 
-Generated from the current working tree on 2026-04-28 02:57:59.
+Generated from the current working tree on 2026-04-28 03:23:46.
 
 This index links to deep route pages with behavior/context summaries for each Next.js special route file.
 
 ## API routes
 
-- [/api/admin/activity](./route-pages/api-admin-activity-route.md) — `src/app/api/admin/activity/route.ts`; features: 0; db objects: 2; tests: 0
+- [/api/admin/activity](./route-pages/api-admin-activity-route.md) — `src/app/api/admin/activity/route.ts`; features: 0; db objects: 2; tests: 1
 - [/api/admin/invite](./route-pages/api-admin-invite-route.md) — `src/app/api/admin/invite/route.ts`; features: 0; db objects: 3; tests: 1
 - [/api/admin/users/[id]](./route-pages/api-admin-users-id-route.md) — `src/app/api/admin/users/[id]/route.ts`; features: 0; db objects: 3; tests: 1
 - [/api/contact](./route-pages/api-contact-route.md) — `src/app/api/contact/route.ts`; features: 0; db objects: 2; tests: 1
@@ -15,7 +15,7 @@ This index links to deep route pages with behavior/context summaries for each Ne
 - [/api/meta/callback](./route-pages/api-meta-callback-route.md) — `src/app/api/meta/callback/route.ts`; features: 0; db objects: 1; tests: 1
 - [/api/meta/data-deletion](./route-pages/api-meta-data-deletion-route.md) — `src/app/api/meta/data-deletion/route.ts`; features: 0; db objects: 2; tests: 1
 - [/api/observability/client-error](./route-pages/api-observability-client-error-route.md) — `src/app/api/observability/client-error/route.ts`; features: 0; db objects: 2; tests: 1
-- [/api/user/profile](./route-pages/api-user-profile-route.md) — `src/app/api/user/profile/route.ts`; features: 0; db objects: 1; tests: 0
+- [/api/user/profile](./route-pages/api-user-profile-route.md) — `src/app/api/user/profile/route.ts`; features: 0; db objects: 1; tests: 1
 
 ## Admin surfaces
 
