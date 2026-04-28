@@ -7,10 +7,20 @@ import { Search, Megaphone, ChevronRight } from "lucide-react";
 import { fmtUsd, fmtNum, roasColor } from "@/lib/formatters";
 import { getCampaignStatusCfg } from "@/lib/status";
 import type { CampaignCard } from "../types";
+import type { DateRange } from "@/lib/constants";
 
-export function CampaignsTable({ campaigns, slug }: { campaigns: CampaignCard[]; slug: string }) {
+export function CampaignsTable({
+  campaigns,
+  range,
+  slug,
+}: {
+  campaigns: CampaignCard[];
+  range: DateRange;
+  slug: string;
+}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const campaignDetailHref = (campaignId: string) => `/client/${slug}/campaign/${campaignId}?range=${range}`;
 
   const queryLower = query.toLowerCase();
   const filtered = campaigns.filter((c) =>
@@ -89,7 +99,7 @@ export function CampaignsTable({ campaigns, slug }: { campaigns: CampaignCard[];
                   return (
                     <tr
                       key={c.campaignId}
-                      onClick={() => router.push(`/client/${slug}/campaign/${c.campaignId}`)}
+                      onClick={() => router.push(campaignDetailHref(c.campaignId))}
                       className="border-b border-white/[0.06] last:border-0 hover:bg-white/[0.04] transition-colors cursor-pointer group"
                     >
                       <td className="px-4 py-3">
@@ -136,7 +146,7 @@ export function CampaignsTable({ campaigns, slug }: { campaigns: CampaignCard[];
             {filtered.map((c) => {
               const statusCfg = getCampaignStatusCfg(c.status);
               return (
-                <Link key={c.campaignId} href={`/client/${slug}/campaign/${c.campaignId}`} className="block px-4 py-3 hover:bg-white/[0.04] transition-colors">
+                <Link key={c.campaignId} href={campaignDetailHref(c.campaignId)} className="block px-4 py-3 hover:bg-white/[0.04] transition-colors">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${statusCfg.dot}`} />
                     <p className="text-sm text-white/90 font-medium truncate">{c.name}</p>

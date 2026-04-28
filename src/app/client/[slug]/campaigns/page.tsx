@@ -16,9 +16,11 @@ import { InsightsPanel } from "../components/insights-panel";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { CampaignsTable } from "./campaigns-table";
 import { requireClientAccess } from "@/features/client-portal/access";
+import { parseRange, RANGE_LABELS } from "@/lib/constants";
 
 interface Props {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ range?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -30,12 +32,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-export default async function ClientCampaigns({ params }: Props) {
+export default async function ClientCampaigns({ params, searchParams }: Props) {
   const { slug } = await params;
+  const { range: rawRange } = await searchParams;
+  const range = parseRange(rawRange, "30");
   const { scope } = await requireClientAccess(slug);
   const clientName = slugToLabel(slug);
 
-  const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug, scope);
+  const { campaigns, snapshots, dataSource } = await getCampaignsPageData(slug, range, scope);
   const trendData = buildTrendData(snapshots);
 
   const totalSpend       = campaigns.reduce((a, c) => a + c.spend, 0);
@@ -55,7 +59,7 @@ export default async function ClientCampaigns({ params }: Props) {
     {
       label: "Total Ad Spend",
       value: fmtUsd(totalSpend),
-      sub: "last 30 days",
+      sub: RANGE_LABELS[range].toLowerCase(),
       icon: DollarSign,
       iconBg: "bg-cyan-500/10",
       iconRing: "ring-cyan-500/20",
@@ -196,7 +200,7 @@ export default async function ClientCampaigns({ params }: Props) {
       )}
 
       {/* -- Campaigns Table -- */}
-      <CampaignsTable campaigns={campaigns} slug={slug} />
+      <CampaignsTable campaigns={campaigns} range={range} slug={slug} />
 
       {/* -- Footer -- */}
       <ClientPortalFooter dataSource={dataSource} />

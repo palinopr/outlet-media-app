@@ -64,27 +64,15 @@ export async function getEventDetail(
   const readContext = await getEventDetailReadContext();
   if (!readContext) return null;
 
-  // Campaigns query uses only eventId (a param), so launch in parallel with event fetch
-  const [eventRes, campaignsRes] = await Promise.all([
-    readContext.db
-      .from("tm_events")
-      .select("*")
-      .eq("id", eventId)
-      .eq("client_slug", slug)
-      .maybeSingle(),
-    readContext.db
-      .from("meta_campaigns")
-      .select("campaign_id, client_slug, name, status, spend, roas, impressions, clicks")
-      .eq("tm_event_id", eventId),
-  ]);
+  const eventRes = await readContext.db
+    .from("tm_events")
+    .select("*")
+    .eq("id", eventId)
+    .eq("client_slug", slug)
+    .maybeSingle();
 
   if (eventRes.error) {
     console.error("[client-event-detail] event read failed:", eventRes.error.message);
-    return null;
-  }
-
-  if (campaignsRes.error) {
-    console.error("[client-event-detail] linked campaign read failed:", campaignsRes.error.message);
     return null;
   }
 
@@ -93,8 +81,11 @@ export async function getEventDetail(
   const tmEvent = eventRes.data as TmEvent;
   const event = buildEventCard(tmEvent);
 
-  // Snapshots and demographics depend on tm_id from the event row
-  const [snapshotsRes, demosRes] = await Promise.all([
+  const [campaignsRes, snapshotsRes, demosRes] = await Promise.all([
+    readContext.db
+      .from("meta_campaigns")
+      .select("campaign_id, client_slug, name, status, spend, roas, impressions, clicks")
+      .eq("tm_event_id", eventId),
     readContext.db
       .from("event_snapshots")
       .select("snapshot_date, tickets_sold, tickets_available, gross")
@@ -108,15 +99,17 @@ export async function getEventDetail(
 
   if (snapshotsRes.error) {
     console.error("[client-event-detail] snapshot read failed:", snapshotsRes.error.message);
-    return null;
   }
 
   if (demosRes.error) {
     console.error("[client-event-detail] audience read failed:", demosRes.error.message);
-    return null;
   }
 
-  const snapshots: TicketSnapshot[] = (snapshotsRes.data ?? []).map((s) => ({
+  if (campaignsRes.error) {
+    console.error("[client-event-detail] linked campaign read failed:", campaignsRes.error.message);
+  }
+
+  const snapshots: TicketSnapshot[] = (snapshotsRes.error ? [] : (snapshotsRes.data ?? [])).map((s) => ({
     date: s.snapshot_date,
     ticketsSold: s.tickets_sold ?? 0,
     ticketsAvailable: s.tickets_available,
@@ -124,15 +117,17 @@ export async function getEventDetail(
   }));
 
   let audience: AudienceProfile | null = null;
-  if (demosRes.data && demosRes.data.length > 0) {
+  if (!demosRes.error && demosRes.data && demosRes.data.length > 0) {
     audience = buildAudienceProfile(demosRes.data as DemographicsRow[]);
   }
 
-  const linkedCampaignRows = readContext.trustsCampaignRls
-    ? ((campaignsRes.data ?? []) as LinkedCampaignRow[])
-    : await applyEffectiveCampaignClientSlugs(
-        ((campaignsRes.data ?? []) as LinkedCampaignRow[]),
-      );
+  const linkedCampaignRows = campaignsRes.error
+    ? []
+    : readContext.trustsCampaignRls
+      ? ((campaignsRes.data ?? []) as LinkedCampaignRow[])
+      : await applyEffectiveCampaignClientSlugs(
+          ((campaignsRes.data ?? []) as LinkedCampaignRow[]),
+        );
 
   const linkedCampaigns: LinkedCampaign[] = linkedCampaignRows
     .filter((campaign) => readContext.trustsCampaignRls || campaign.client_slug === slug)

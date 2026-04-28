@@ -122,6 +122,16 @@ async function loadAllClientSlugs(): Promise<string[]> {
   return data?.map((r) => r.slug).filter(Boolean) ?? [];
 }
 
+async function readOptionalSupabaseData<T>(label: string, read: () => Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await read();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`[meta-campaigns] optional Supabase ${label} unavailable: ${message}`);
+    return fallback;
+  }
+}
+
 function safeParseFloat(s: string | null | undefined): number | null {
   const n = parseFloat(s ?? "");
   return Number.isFinite(n) ? n : null;
@@ -186,9 +196,9 @@ export async function fetchAllCampaigns(
   try {
     const [rawCampaigns, overrides, dbClientSlugs, campaignTypes] = await Promise.all([
       fetchAllPages<RawCampaign>(campaignsUrl.toString(), "campaigns"),
-      getCampaignClientOverrideMap(),
-      loadAllClientSlugs(),
-      loadCampaignTypes(),
+      readOptionalSupabaseData("campaign overrides", () => getCampaignClientOverrideMap(), new Map<string, string>()),
+      readOptionalSupabaseData("client slugs", () => loadAllClientSlugs(), []),
+      readOptionalSupabaseData("campaign types", () => loadCampaignTypes(), new Map<string, string>()),
     ]);
 
     // Derive client slugs: Supabase override > stored slug > guessed fallback

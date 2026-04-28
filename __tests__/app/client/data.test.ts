@@ -101,7 +101,7 @@ vi.mock("@/lib/meta-campaigns", () => ({
   fetchAllCampaigns,
 }));
 
-import { getData, getEventsPageData } from "@/app/client/[slug]/data";
+import { getEventsPageData } from "@/app/client/[slug]/data";
 
 function makeCampaign(name: string) {
   return {
@@ -164,7 +164,7 @@ describe("client portal data reads", () => {
     });
   });
 
-  it("prefers the Clerk-scoped client for client event and audience reads", async () => {
+  it("prefers the Clerk-scoped client for client event reads", async () => {
     serviceState.tm_events = [makeEvent("evt_service", "Service Event", "svc_tm")];
     userScopedState.tm_events = [makeEvent("evt_rls", "RLS Event", "rls_tm")];
     serviceState.tm_event_demographics = [{ tm_id: "svc_tm", fans_total: 10, fans_female_pct: 40 }];
@@ -173,10 +173,9 @@ describe("client portal data reads", () => {
     ];
     createClerkSupabaseClient.mockResolvedValue(userScopedSupabase);
 
-    const data = await getData("zamora", "7");
+    const data = await getEventsPageData("zamora");
 
     expect(data.events.map((event) => event.id)).toEqual(["evt_rls"]);
-    expect(data.audience?.totalFans).toBe(120);
   });
 
   it("keeps admin portal viewers on the service role for event lists", async () => {

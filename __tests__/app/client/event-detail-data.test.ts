@@ -5,7 +5,9 @@ const {
   createClerkSupabaseClient,
   currentUser,
   serviceState,
+  serviceErrors,
   supabaseAdmin,
+  userScopedErrors,
   userScopedState,
   userScopedSupabase,
 } = vi.hoisted(() => {
@@ -23,6 +25,9 @@ const {
     tm_events: [] as Record<string, unknown>[],
   };
 
+  const serviceErrors = {} as Record<string, Error | null>;
+  const userScopedErrors = {} as Record<string, Error | null>;
+
   function applyFilters(
     rows: Record<string, unknown>[],
     filters: Array<{ field: string; type: "eq"; value: unknown }>,
@@ -32,7 +37,7 @@ const {
     );
   }
 
-  function buildClient(state: typeof serviceState) {
+  function buildClient(state: typeof serviceState, errors: Record<string, Error | null>) {
     return {
       from(table: string) {
         const filters: Array<{ field: string; type: "eq"; value: unknown }> = [];
@@ -49,6 +54,9 @@ const {
             return this;
           },
           async maybeSingle() {
+            if (errors[table]) {
+              return { data: null, error: { message: errors[table]?.message ?? "read failed" } };
+            }
             const rows = applyFilters(
               (state[table as keyof typeof state] ?? []) as Record<string, unknown>[],
               filters,
@@ -56,8 +64,17 @@ const {
             return { data: rows[0] ?? null, error: null };
           },
           then(
-            resolve: (value: { data: Record<string, unknown>[]; error: null }) => unknown,
+            resolve: (value: {
+              data: Record<string, unknown>[];
+              error: { message: string } | null;
+            }) => unknown,
           ) {
+            if (errors[table]) {
+              return Promise.resolve({
+                data: [] as Record<string, unknown>[],
+                error: { message: errors[table]?.message ?? "read failed" },
+              }).then(resolve);
+            }
             const rows = applyFilters(
               (state[table as keyof typeof state] ?? []) as Record<string, unknown>[],
               filters,
@@ -75,10 +92,12 @@ const {
     applyEffectiveCampaignClientSlugs: vi.fn(async (rows: unknown[]) => rows),
     createClerkSupabaseClient: vi.fn(),
     currentUser: vi.fn(),
+    serviceErrors,
     serviceState,
-    supabaseAdmin: buildClient(serviceState),
+    supabaseAdmin: buildClient(serviceState, serviceErrors),
+    userScopedErrors,
     userScopedState,
-    userScopedSupabase: buildClient(userScopedState),
+    userScopedSupabase: buildClient(userScopedState, userScopedErrors),
   };
 });
 
@@ -135,10 +154,18 @@ describe("client event detail reads", () => {
     serviceState.meta_campaigns = [];
     serviceState.tm_event_demographics = [];
     serviceState.tm_events = [];
+    serviceErrors.event_snapshots = null;
+    serviceErrors.meta_campaigns = null;
+    serviceErrors.tm_event_demographics = null;
+    serviceErrors.tm_events = null;
     userScopedState.event_snapshots = [];
     userScopedState.meta_campaigns = [];
     userScopedState.tm_event_demographics = [];
     userScopedState.tm_events = [];
+    userScopedErrors.event_snapshots = null;
+    userScopedErrors.meta_campaigns = null;
+    userScopedErrors.tm_event_demographics = null;
+    userScopedErrors.tm_events = null;
     currentUser.mockResolvedValue({ publicMetadata: { role: "member" } });
     createClerkSupabaseClient.mockResolvedValue(null);
     applyEffectiveCampaignClientSlugs.mockImplementation(async (rows: unknown[]) => rows);
@@ -201,5 +228,22 @@ describe("client event detail reads", () => {
     ]);
     expect(createClerkSupabaseClient).not.toHaveBeenCalled();
     expect(applyEffectiveCampaignClientSlugs).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the event detail available when optional supporting reads fail", async () => {
+    currentUser.mockResolvedValue({ publicMetadata: { role: "admin" } });
+    serviceState.tm_events = [makeEventRow()];
+    serviceErrors.meta_campaigns = new Error("campaign read failed");
+    serviceErrors.event_snapshots = new Error("snapshot read failed");
+    serviceErrors.tm_event_demographics = new Error("demographic read failed");
+    vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const detail = await getEventDetail("zamora", "evt_1");
+
+    expect(detail?.event.name).toBe("RLS Event");
+    expect(detail?.linkedCampaigns).toEqual([]);
+    expect(detail?.snapshots).toEqual([]);
+    expect(detail?.audience).toBeNull();
+    expect(applyEffectiveCampaignClientSlugs).not.toHaveBeenCalled();
   });
 });

@@ -10,7 +10,7 @@ vi.mock("../data", () => ({
   getCampaignsPageData: vi.fn().mockResolvedValue({
     campaigns: [],
     snapshots: [],
-    dataSource: "database",
+    dataSource: "supabase",
   }),
 }));
 
@@ -45,6 +45,7 @@ describe("ClientCampaigns", () => {
 
     const element = await ClientCampaigns({
       params: Promise.resolve({ slug: "acme" }),
+      searchParams: Promise.resolve({}),
     });
 
     render(<>{element}</>);

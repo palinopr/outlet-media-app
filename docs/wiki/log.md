@@ -1,5 +1,16 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-web | fix campaign range and event detail fallbacks
+- Preserved the client campaign index's 30-day reporting window when opening campaign detail rows/cards.
+- Changed client event detail loading so linked campaigns, snapshots, and demographics fail soft instead of making an existing event render as not found.
+- Added focused regression coverage for campaign detail links and optional event-supporting read failures.
+- Follow-up cleanup made the campaign range an explicit `campaigns?range=` route input, removed dead client overview/card/date/stat components, deleted the old aggregate portal loader, and disabled empty Events nav for `beamina` and `kybba`.
+
+## [2026-04-27] campaigns | tolerate unavailable Supabase enrichment
+- Diagnosed campaign list blanks caused by Supabase being unreachable while `fetchAllCampaigns` was reading optional enrichment data.
+- Wrapped campaign overrides, client slugs, and campaign type reads with fallbacks so Meta campaign rows can still render when Supabase is paused or DNS is unavailable.
+- Added `src/lib/meta-campaigns.test.ts` to verify Meta campaigns return even when optional Supabase queries reject.
+
 ## [2026-04-10] landing | add media-vs-ticketing comparison section and premium mobile sticky cta
 - Extended the illustrative landing proof system beyond standalone metric cards.
 - Updated `src/components/landing/sample-metric-card.tsx` so cards now carry a second visual axis for `media`, `ticketing`, or `system`, not just accent color. The card now renders track badges and subtle surface treatment so sample metrics feel like distinct operator modes instead of generic KPI tiles.
