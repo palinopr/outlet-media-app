@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { reportClientError } from "@/lib/client-error-reporting";
 
 export function ErrorBoundary({
   error,
@@ -14,6 +15,7 @@ export function ErrorBoundary({
 }) {
   useEffect(() => {
     console.error(error);
+    reportClientError(error, { boundary: "shared" });
   }, [error]);
 
   return (
@@ -22,9 +24,9 @@ export function ErrorBoundary({
       <p className="text-sm text-muted-foreground max-w-md text-center">
         An unexpected error occurred.{showMessage ? " The error has been logged." : ""} Please try again.
       </p>
-      {showMessage && error.message && (
-        <p className="text-xs text-red-400/70 font-mono max-w-lg text-center truncate">
-          {error.message}
+      {showMessage && error.digest && (
+        <p className="text-xs text-muted-foreground/70 font-mono max-w-lg text-center truncate">
+          Reference: {error.digest}
         </p>
       )}
       <Button variant="outline" onClick={reset}>

@@ -63,5 +63,6 @@ Use the **E2E Smoke** GitHub Actions workflow when you want the same smoke from 
 
 1. Open the Playwright trace or screenshots under `test-results/` / `playwright-report/`.
 2. Verify the latest Railway deployment is `SUCCESS` and `/api/health` returns `ok`.
-3. Confirm `E2E_BASE_URL` matches the Clerk environment domain.
-4. Confirm no `outlet-e2e-*` Clerk users were left behind; delete any stale temp users manually if teardown was interrupted.
+3. Check Admin → Settings → Recent app errors for authenticated client-side crashes before digging through host logs.
+4. Confirm `E2E_BASE_URL` matches the Clerk environment domain.
+5. Confirm no `outlet-e2e-*` Clerk users were left behind; delete any stale temp users manually if teardown was interrupted.

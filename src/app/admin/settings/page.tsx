@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Key, Link2, Settings, TriangleAlert } from "lucide-react";
+import { Bug, CheckCircle2, Key, Link2, Settings, TriangleAlert } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import type { ConnectedAccount } from "@/features/settings/connected-accounts";
 import {
@@ -37,6 +37,13 @@ function getApiKeyStatus() {
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
+function formatErrorDate(value: string) {
+  return new Date(value).toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 export default async function SettingsPage() {
   const apiKeys = getApiKeyStatus();
   const connectedAccountsRes = await supabaseAdmin
@@ -52,6 +59,12 @@ export default async function SettingsPage() {
   const connectionIssues = connectedAccounts
     .map((account) => ({ account, health: getConnectedAccountHealth(account) }))
     .filter(({ health }) => health.key !== "healthy");
+  const applicationErrorsRes = await supabaseAdmin
+    ?.from("application_errors")
+    .select("id, created_at, digest, message, route, user_email")
+    .order("created_at", { ascending: false })
+    .limit(6);
+  const applicationErrors = applicationErrorsRes?.data ?? [];
 
   const stats = [
     {
@@ -191,6 +204,44 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-border/60">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Bug className="h-4 w-4 text-rose-400" />
+            <CardTitle className="text-sm">Recent app errors</CardTitle>
+          </div>
+          <CardDescription>
+            Last recorded client-side errors from authenticated sessions. Use this before digging through host logs.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {applicationErrors.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No application errors have been recorded.</p>
+          ) : (
+            applicationErrors.map((error) => (
+              <div key={error.id} className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium">{error.message}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {error.route ?? "unknown route"} • {formatErrorDate(error.created_at)}
+                    </p>
+                  </div>
+                  {error.digest ? (
+                    <span className="shrink-0 rounded border border-rose-500/20 bg-rose-500/10 px-2 py-0.5 text-[10px] font-mono text-rose-300">
+                      {error.digest.slice(0, 10)}
+                    </span>
+                  ) : null}
+                </div>
+                {error.user_email ? (
+                  <p className="mt-2 truncate text-[11px] text-muted-foreground/70">{error.user_email}</p>
+                ) : null}
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="border-border/60 border-dashed">
         <CardContent className="py-4">

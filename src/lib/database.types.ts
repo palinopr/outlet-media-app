@@ -47,6 +47,48 @@ export type Database = {
         }
         Relationships: []
       }
+      application_errors: {
+        Row: {
+          created_at: string
+          digest: string | null
+          id: string
+          level: string
+          message: string
+          metadata: Json
+          route: string | null
+          source: string
+          stack: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          digest?: string | null
+          id?: string
+          level?: string
+          message: string
+          metadata?: Json
+          route?: string | null
+          source?: string
+          stack?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          digest?: string | null
+          id?: string
+          level?: string
+          message?: string
+          metadata?: Json
+          route?: string | null
+          source?: string
+          stack?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       campaign_client_overrides: {
         Row: {
           campaign_id: string

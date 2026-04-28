@@ -8,6 +8,7 @@ describe("GET /api/health", () => {
 
     const body = await response.json();
     expect(body.status).toBe("ok");
+    expect(body.checks).toEqual({ database: "not_configured" });
     expect(body.version).toBe("0.1.0");
     expect(typeof body.timestamp).toBe("string");
 
