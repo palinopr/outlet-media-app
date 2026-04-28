@@ -27,15 +27,15 @@ const campaign: CampaignCard = {
 };
 
 describe("CampaignsTable", () => {
-  it("keeps the 30-day list range when opening campaign detail", () => {
-    render(<CampaignsTable campaigns={[campaign]} range="30" slug="acme" />);
+  it("keeps the selected 7-day list range when opening campaign detail", () => {
+    render(<CampaignsTable campaigns={[campaign]} range="7" slug="acme" />);
 
     fireEvent.click(screen.getByRole("row", { name: /spring campaign/i }));
 
-    expect(push).toHaveBeenCalledWith("/client/acme/campaign/cmp_123?range=30");
+    expect(push).toHaveBeenCalledWith("/client/acme/campaign/cmp_123?range=7");
     expect(screen.getByRole("link", { name: /spring campaign/i })).toHaveAttribute(
       "href",
-      "/client/acme/campaign/cmp_123?range=30",
+      "/client/acme/campaign/cmp_123?range=7",
     );
   });
 

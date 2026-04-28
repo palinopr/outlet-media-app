@@ -100,12 +100,17 @@ async function getMetaCampaignFallbackRow(
   slug: string,
   campaignId: string,
   creds: { token: string; accountId: string } | null,
+  scope?: ScopeFilter,
 ): Promise<SupabaseCampaignDetailRow | null> {
   if (!creds) return null;
 
   const infoUrl = new URL(metaUrl(campaignId, creds.token, { fields: "id,name,status,daily_budget,start_time" }));
   const info = await metaGet<MetaCampaignInfo>(infoUrl, "campaignInfoFallback");
   if (!info) return null;
+
+  if (scope?.allowedCampaignIds?.includes(campaignId)) {
+    return campaignRowFromMetaInfo(info, slug);
+  }
 
   const overrides = await getCampaignClientOverrideMap([campaignId]);
   const effectiveSlug = resolveEffectiveCampaignClientSlug(
@@ -571,7 +576,7 @@ export async function getCampaignDetail(
 
     row = (data as SupabaseCampaignDetailRow | null) ?? null;
     if (!row) {
-      row = await getMetaCampaignFallbackRow(slug, campaignId, creds);
+      row = await getMetaCampaignFallbackRow(slug, campaignId, creds, scope);
     }
   } else {
     row = await getEffectiveCampaignRowById<SupabaseCampaignDetailRow>(
@@ -580,7 +585,7 @@ export async function getCampaignDetail(
     );
 
     if (!row) {
-      row = await getMetaCampaignFallbackRow(slug, campaignId, creds);
+      row = await getMetaCampaignFallbackRow(slug, campaignId, creds, scope);
     }
 
     if (!row || row.client_slug !== slug) return null;

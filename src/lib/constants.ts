@@ -39,6 +39,8 @@ export interface CampaignRangeSearchParams {
   until?: string;
 }
 
+const CLIENT_CAMPAIGN_RANGES = new Set<DateRange>(["today", "7", "lifetime"]);
+
 function isIsoDate(value: string | undefined): value is string {
   return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
@@ -64,6 +66,23 @@ export function parseCampaignRange(
   }
 
   return parseRange(params.range, fallback);
+}
+
+export function parseClientCampaignRange(
+  params: CampaignRangeSearchParams,
+  fallback: DateRange = "7",
+): CampaignRangeInput {
+  if (params.range === "custom" && isIsoDate(params.since) && isIsoDate(params.until)) {
+    return {
+      label: formatCustomRangeLabel(params.since, params.until),
+      since: params.since,
+      until: params.until,
+    };
+  }
+
+  return params.range && CLIENT_CAMPAIGN_RANGES.has(params.range as DateRange)
+    ? (params.range as DateRange)
+    : fallback;
 }
 
 export function getRangeLabel(range: CampaignRangeInput) {

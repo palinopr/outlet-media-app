@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { getRangeQuery, type CampaignRangeInput } from "@/lib/constants";
+import { getRangeQuery, type CampaignRangeInput, type DateRange } from "@/lib/constants";
 import { fmtUsd, fmtDate } from "@/lib/formatters";
-import { DATE_OPTIONS } from "../lib";
 import type { CampaignCard } from "../types";
 import { CampaignStatusBadge } from "./campaign-status-badge";
 import type { ClientPortalTheme } from "@/features/client-portal/theme";
+
+const CLIENT_CAMPAIGN_DATE_OPTIONS: { value: DateRange; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "7", label: "7d" },
+  { value: "lifetime", label: "Lifetime" },
+];
 
 interface Props {
   slug: string;
@@ -38,7 +43,7 @@ export function CampaignDetailHeader({ slug, range, rangeLabel, campaign: c }: P
 
             <div className="overflow-x-auto">
               <div className="flex items-center gap-0.5 rounded-xl border border-white/[0.08] bg-white/[0.04] p-1 w-max">
-                {DATE_OPTIONS.map((opt) => (
+                {CLIENT_CAMPAIGN_DATE_OPTIONS.map((opt) => (
                   <a
                     key={opt.value}
                     href={`?range=${opt.value}`}

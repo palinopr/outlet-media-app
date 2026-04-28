@@ -8,7 +8,7 @@ import {
   Globe2,
   Users,
 } from "lucide-react";
-import { parseCampaignRange } from "@/lib/constants";
+import { parseClientCampaignRange } from "@/lib/constants";
 import { fmtDate, fmtUsd, fmtNum } from "@/lib/formatters";
 import type {
   AdCard,
@@ -44,7 +44,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const { slug, campaignId } = await params;
   const { scope } = await requireClientAccess(slug);
   const rawSearchParams = await searchParams;
-  const range = parseCampaignRange(rawSearchParams, "7");
+  const range = parseClientCampaignRange(rawSearchParams, "today");
 
   const [data, operatingView] = await Promise.all([
     getCampaignDetail(slug, campaignId, range, scope),
@@ -565,7 +565,7 @@ function buildCampaignBrief({
       body:
         normalizedStatus === "Paused"
           ? `${campaign.name} is currently paused, so this window has no spend, impressions, or clicks to analyze with confidence. The client view should steer people toward a wider range before claiming a top audience, market, or hour.`
-          : `${campaign.name} does not have enough spend, impressions, or clicks in this range to support a confident performance story. Use 7d, 30d, or Lifetime for a stronger client-facing readout.`,
+          : `${campaign.name} does not have enough spend, impressions, or clicks in this range to support a confident performance story. Use 7d or Lifetime for a stronger client-facing readout.`,
       highlights: [
         {
           label: "Status",
@@ -579,7 +579,7 @@ function buildCampaignBrief({
         },
         {
           label: "Recommended Range",
-          value: trackedDays <= 1 ? "7d or 30d" : "Wider range",
+          value: trackedDays <= 1 ? "7d or Lifetime" : "Wider range",
           detail: "Use a fuller window before ranking signals",
         },
       ],

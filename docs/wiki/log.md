@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-web | default campaign portal to today
+- Changed client campaign list and detail pages so missing or retired `range=30` URLs resolve to Today by default.
+- Kept 7d, Lifetime, and Custom as explicit client range choices while removing 30d from client detail controls and guidance copy.
+- Added regression coverage for stale 30-day login redirects and assigned new-campaign detail access.
+
 ## [2026-04-27] client-web | campaign range picker and new-campaign detail fallback
 - Changed the client Campaigns page default reporting window to Last 7 Days and added Today, Last 7 Days, Lifetime, and Custom range controls.
 - Preserved selected standard/custom ranges when opening campaign detail and returning back to the campaign list.

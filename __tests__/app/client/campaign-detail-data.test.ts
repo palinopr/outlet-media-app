@@ -95,8 +95,10 @@ describe("client campaign detail reads", () => {
   beforeEach(() => {
     createClerkSupabaseClient.mockReset();
     currentUser.mockReset();
+    getCampaignClientOverrideMap.mockReset();
     getEffectiveCampaignRowById.mockReset();
     metaGet.mockReset();
+    resolveEffectiveCampaignClientSlug.mockReset();
     serviceState.meta_campaigns = [];
     userScopedState.meta_campaigns = [];
     currentUser.mockResolvedValue({ publicMetadata: { role: "member" } });
@@ -208,5 +210,57 @@ describe("client campaign detail reads", () => {
       }),
       expect.any(Map),
     );
+  });
+
+  it("allows assigned new campaigns even when client ownership is not inferable yet", async () => {
+    vi.stubEnv("META_ACCESS_TOKEN", "token");
+    vi.stubEnv("META_AD_ACCOUNT_ID", "act_123");
+    currentUser.mockResolvedValue({ publicMetadata: { role: "admin" } });
+    resolveEffectiveCampaignClientSlug.mockReturnValue("unknown");
+    metaGet.mockImplementation(async (_url: URL, label?: string) => {
+      if (label === "campaignInfoFallback" || label === "campaignInfo") {
+        return {
+          daily_budget: "2500",
+          id: "cmp_assigned_new",
+          name: "House78 - Luck at 9AM - Philadelphia",
+          start_time: "2026-04-27T00:00:00-0500",
+          status: "ACTIVE",
+        };
+      }
+
+      if (label === "campaignInsights") {
+        return {
+          data: [
+            {
+              campaign_id: "cmp_assigned_new",
+              campaign_name: "House78 - Luck at 9AM - Philadelphia",
+              clicks: "0",
+              cpc: "0",
+              cpm: "0",
+              ctr: "0",
+              impressions: "0",
+              spend: "0",
+            },
+          ],
+        };
+      }
+
+      return { data: [] };
+    });
+
+    const detail = await getCampaignDetail(
+      "9am",
+      "cmp_assigned_new",
+      "7",
+      {
+        allowedCampaignIds: ["cmp_assigned_new"],
+        allowedEventIds: null,
+      },
+    );
+
+    expect(detail?.campaign.name).toBe("House78 - Luck at 9AM - Philadelphia");
+    expect(detail?.dataSource).toBe("meta_api");
+    expect(getCampaignClientOverrideMap).not.toHaveBeenCalled();
+    expect(resolveEffectiveCampaignClientSlug).not.toHaveBeenCalled();
   });
 });

@@ -16,7 +16,7 @@ import { InsightsPanel } from "../components/insights-panel";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { CampaignsTable } from "./campaigns-table";
 import { requireClientAccess } from "@/features/client-portal/access";
-import { getRangeLabel, parseCampaignRange } from "@/lib/constants";
+import { getRangeLabel, parseClientCampaignRange } from "@/lib/constants";
 import { CampaignRangeFilter } from "./campaign-range-filter";
 
 interface Props {
@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ClientCampaigns({ params, searchParams }: Props) {
   const { slug } = await params;
   const rawSearchParams = await searchParams;
-  const range = parseCampaignRange(rawSearchParams, "7");
+  const range = parseClientCampaignRange(rawSearchParams, "today");
   const rangeLabel = getRangeLabel(range);
   const { scope } = await requireClientAccess(slug);
   const clientName = slugToLabel(slug);

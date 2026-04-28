@@ -67,7 +67,7 @@ describe("ClientCampaigns", () => {
     expect(screen.queryByRole("link", { name: "Back to overview" })).not.toBeInTheDocument();
   });
 
-  it("defaults the campaigns page to the last 7 days", async () => {
+  it("defaults the campaigns page to today", async () => {
     const { default: ClientCampaigns } = await import("./page");
 
     const element = await ClientCampaigns({
@@ -77,9 +77,26 @@ describe("ClientCampaigns", () => {
 
     render(<>{element}</>);
 
-    expect(getCampaignsPageData).toHaveBeenCalledWith("acme", "7", undefined);
+    expect(getCampaignsPageData).toHaveBeenCalledWith("acme", "today", undefined);
     expect(CampaignsTable).toHaveBeenCalledWith(
-      expect.objectContaining({ range: "7" }),
+      expect.objectContaining({ range: "today" }),
+      undefined,
+    );
+  });
+
+  it("treats retired 30-day client campaign URLs as today", async () => {
+    const { default: ClientCampaigns } = await import("./page");
+
+    const element = await ClientCampaigns({
+      params: Promise.resolve({ slug: "acme" }),
+      searchParams: Promise.resolve({ range: "30" }),
+    });
+
+    render(<>{element}</>);
+
+    expect(getCampaignsPageData).toHaveBeenCalledWith("acme", "today", undefined);
+    expect(CampaignsTable).toHaveBeenCalledWith(
+      expect.objectContaining({ range: "today" }),
       undefined,
     );
   });

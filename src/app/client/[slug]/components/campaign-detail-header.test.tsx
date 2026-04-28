@@ -8,8 +8,8 @@ describe("CampaignDetailHeader", () => {
     render(
       <CampaignDetailHeader
         slug="acme"
-        range="30"
-        rangeLabel="Last 30 days"
+        range="7"
+        rangeLabel="Last 7 days"
         campaign={{
           campaignId: "cmp_1",
           name: "Spring Push",
@@ -31,8 +31,9 @@ describe("CampaignDetailHeader", () => {
 
     expect(screen.getByRole("link", { name: "Back to campaigns" })).toHaveAttribute(
       "href",
-      "/client/acme/campaigns?range=30",
+      "/client/acme/campaigns?range=7",
     );
+    expect(screen.queryByRole("link", { name: "30d" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Back to dashboard" })).not.toBeInTheDocument();
   });
 
