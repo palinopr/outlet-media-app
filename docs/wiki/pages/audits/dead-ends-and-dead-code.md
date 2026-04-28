@@ -23,22 +23,26 @@ This page tracks likely cleanup targets and the evidence standard required befor
 - **Classification:** quarantined local-artifact issue
 - **Action:** `vitest.config.ts` now excludes `tmp-playwright/**`; keep treating the folder as local scratch and do not let it become part of shipped paths
 
-## Dead-code candidates that require proof
+## Audited support modules to keep
 
 ### `src/features/operations-center/`
-- **Reason for suspicion:** the reset docs do not emphasize a standalone operations-center surface
-- **What to check next:** imports, tests, and whether dashboard/admin pages still depend on it
-- **Current classification:** dead-candidate
+- **Audit result:** keep as a small support helper, not a standalone surface
+- **Evidence:** `src/features/agents/summary.ts` imports `countActionableAgentOutcomes`, and `__tests__/features/operations-center/summary.test.ts` covers the helper
+- **Current classification:** embedded support module
 
 ### `src/features/conversations/`
-- **Reason for suspicion:** current product rules prefer embedded discussion inside campaign/event/report surfaces over a broad standalone conversation product
-- **What to check next:** whether the code powers embedded views or only a retired standalone concept
-- **Current classification:** dead-candidate
+- **Audit result:** keep as embedded discussion aggregation for dashboard/admin context
+- **Evidence:** `src/features/dashboard/server.ts` imports `listConversationThreads`, and conversation tests cover scope filtering and summary behavior
+- **Current classification:** embedded support module
 
 ### `src/features/assets/` and `src/features/asset-follow-up-items/`
-- **Reason for suspicion:** assets are currently supposed to live inside campaign/event/admin flows before earning their own surface
-- **What to check next:** whether these modules are still active support layers for campaign/event pages
-- **Current classification:** dead-candidate
+- **Audit result:** keep as support code for campaign/admin workflow visibility and scoped reads
+- **Evidence:** active imports exist from campaigns, approvals, notifications, conversations, and agent-outcome readers
+- **Current classification:** embedded support module
+
+## Dead-code candidates that require proof
+
+No current candidates after the April 27 audit. Future candidates should only be added with route/import evidence.
 
 ## Important caution
 

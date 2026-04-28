@@ -28,6 +28,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
   const totalClicks = campaigns.reduce((s, c) => s + c.clicks, 0);
   const avgRoas = computeBlendedRoas(campaigns) ?? 0;
   const overallCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
+  const unassignedCampaignCount = campaigns.filter((campaign) => campaign.clientSlug === "unknown").length;
 
   const metaAdAccountId = process.env.META_AD_ACCOUNT_ID ?? null;
   const hasData = campaigns.length > 0;
@@ -64,6 +65,17 @@ export default async function CampaignsPage({ searchParams }: Props) {
       {error && (
         <div className="rounded border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
           {error}
+        </div>
+      )}
+
+      {unassignedCampaignCount > 0 && (
+        <div className="rounded border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          <p className="font-medium">
+            {unassignedCampaignCount} campaign{unassignedCampaignCount === 1 ? "" : "s"} {unassignedCampaignCount === 1 ? "needs" : "need"} client assignment
+          </p>
+          <p className="mt-1 text-xs text-amber-100/70">
+            Select those campaign rows and assign them to an existing client account before they are treated as client-facing portal data.
+          </p>
         </div>
       )}
 

@@ -1,5 +1,11 @@
 # Repo Wiki Log
 
+## [2026-04-27] admin-web | campaign assignment and support-module audit
+- Confirmed the latest Railway deployment succeeded and smoke-checked signed-out client route redirects plus `/api/health`.
+- Added an admin campaigns warning for rows still mapped to `unknown` so operators can assign them before client exposure.
+- Restricted bulk campaign assignment to existing client accounts instead of arbitrary typed slugs.
+- Audited assets, conversations, and operations-center feature modules as embedded support code rather than dead standalone surfaces.
+
 ## [2026-04-27] client-web | admin event warnings and reset-doc cleanup
 - Added admin-preview-only warnings when optional event detail reads fail, while keeping member-facing event pages available.
 - Updated the architecture reset context so it reflects the current Campaigns/Reports/optional Events/optional Agent client package instead of the retired broad portal.
