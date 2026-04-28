@@ -1,15 +1,15 @@
 # Impact: src/features/invitations/server.ts
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Feature files
-- Impact score: 28
+- Impact score: 27
 - Ownership: feature module: invitations
 - Feature module: invitations
-- Route owners: src/app/admin/clients/[id]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx
+- Route owners: src/app/admin/clients/[id]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx
 - Imported by: src/app/admin/clients/data.test.ts, src/app/admin/clients/data.ts, src/app/admin/users/data.ts, src/features/invitations/server.test.ts
 - Tests related: src/app/admin/clients/data.test.ts, src/features/invitations/server.test.ts, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx
-- DB objects: clients, client_access_invites
+- DB objects: clients, client_access_invites, if
 - Env vars: none
 - Mutation symbols: none
 - Auth signals: imports Clerk server auth

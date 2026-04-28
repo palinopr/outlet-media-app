@@ -1,6 +1,6 @@
 # Docs / Screenshots
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Files: 30
 - File kinds: binary asset (28), Markdown doc (1), file (.txt) (1)
@@ -29,7 +29,6 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 766791
 - Imported by: src/components/landing/credibility.tsx
 - Used by groups: src/components / landing
-- Route owners: src/app/landing/page.tsx
 - Contents summary: asset/binary file; size: 766791 bytes
 
 ## `docs/screenshots/campaign-mobile-audience.png`
@@ -52,7 +51,6 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 841861
 - Imported by: src/components/landing/features.tsx
 - Used by groups: src/components / landing
-- Route owners: src/app/landing/page.tsx
 - Contents summary: asset/binary file; size: 841861 bytes
 
 ## `docs/screenshots/campaign-mobile-demographics.png`
@@ -113,9 +111,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: binary asset
 - Construction: asset file
 - Bytes: 598951
-- Imported by: src/components/landing/credibility.tsx, src/components/landing/hero.tsx
+- Imported by: src/components/landing/credibility.tsx
 - Used by groups: src/components / landing
-- Route owners: src/app/landing/page.tsx
 - Contents summary: asset/binary file; size: 598951 bytes
 
 ## `docs/screenshots/clerk-invitation-preview.png`

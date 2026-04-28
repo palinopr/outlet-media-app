@@ -1,9 +1,9 @@
 # supabase / migrations
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
-- Files: 67
-- File kinds: SQL migration/query (67)
+- Files: 75
+- File kinds: SQL migration/query (75)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -211,7 +211,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - SQL objects: create table: public.agent_tasks, alter table: public.agent_tasks, policy: "agent_tasks_read" on public.agent_tasks, policy: "agent_tasks_insert" on public.agent_tasks, policy: "agent_tasks_update" on public.agent_tasks, index: idx_agent_tasks_to_agent_status, index: idx_agent_tasks_status, index: idx_agent_tasks_created
 - Contents summary: create table: public.agent_tasks; alter table: public.agent_tasks; policy: "agent_tasks_read" on public.agent_tasks; policy: "agent_tasks_insert" on public.agent_tasks; policy: "agent_tasks_update" on public.agent_tasks; index: idx_agent_tasks_to_agent_status; index: idx_agent_tasks_status; index: idx_agent_tasks_crea…
 
-## `supabase/migrations/20260302_create_client_accounts.sql`
+## `supabase/migrations/20260302000001_create_client_accounts.sql`
 - Status: tracked-clean
 - System: database
 - Group: supabase / migrations
@@ -354,7 +354,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - SQL objects: create table: public.campaign_comments, alter table: public.campaign_comments, policy: "campaign_comments_read" on public.campaign_comments, policy: "campaign_comments_insert" on public.campaign_comments, policy: "campaign_comments_update" on public.campaign_comments, policy: "campaign_comments_delete" on public.campaign_comments, index: idx_campaign_comments_campaign_visibility_created, index: idx_campaign_comments_parent
 - Contents summary: create table: public.campaign_comments; alter table: public.campaign_comments; policy: "campaign_comments_read" on public.campaign_comments; policy: "campaign_comments_insert" on public.campaign_comments; policy: "campaign_comments_update" on public.campaign_comments; policy: "campaign_comments_delete" on public.campa…
 
-## `supabase/migrations/20260306070000_email_agent_intelligence.sql`
+## `supabase/migrations/20260306070100_email_agent_intelligence.sql`
 - Status: tracked-clean
 - System: database
 - Group: supabase / migrations
@@ -414,7 +414,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - SQL objects: create table: public.asset_comments, alter table: public.asset_comments, policy: "asset_comments_read" on public.asset_comments, policy: "asset_comments_insert" on public.asset_comments, policy: "asset_comments_update" on public.asset_comments, policy: "asset_comments_delete" on public.asset_comments, index: idx_asset_comments_asset_visibility_created, index: idx_asset_comments_client_created, index: idx_asset_comments_parent
 - Contents summary: create table: public.asset_comments; alter table: public.asset_comments; policy: "asset_comments_read" on public.asset_comments; policy: "asset_comments_insert" on public.asset_comments; policy: "asset_comments_update" on public.asset_comments; policy: "asset_comments_delete" on public.asset_comments; index: idx_asset…
 
-## `supabase/migrations/20260306100000_crm_comments.sql`
+## `supabase/migrations/20260306100100_crm_comments.sql`
 - Status: tracked-clean
 - System: database
 - Group: supabase / migrations
@@ -797,3 +797,95 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 329
 - SQL objects: policy: "clients_read_member" on public.clients
 - Contents summary: policy: "clients_read_member" on public.clients
+
+## `supabase/migrations/20260427000000_remove_agent_artifacts.sql`
+- Status: tracked-clean
+- System: database
+- Group: supabase / migrations
+- Ownership: database migration history
+- Type: SQL migration/query
+- Construction: SQL migration/query file, ordered migration history file
+- Lines: 49
+- Bytes: 1628
+- SQL objects: alter table: public.system_events, alter table: public.clients, alter table: public.whatsapp_accounts, alter table: public.whatsapp_conversations, alter table: public.growth_publish_attempts
+- Contents summary: alter table: public.system_events; alter table: public.clients; alter table: public.whatsapp_accounts; alter table: public.whatsapp_conversations; alter table: public.growth_publish_attempts
+
+## `supabase/migrations/20260427001000_retire_events_reports_surfaces.sql`
+- Status: tracked-clean
+- System: database
+- Group: supabase / migrations
+- Ownership: database migration history
+- Type: SQL migration/query
+- Construction: SQL migration/query file, ordered migration history file
+- Lines: 7
+- Bytes: 323
+- SQL objects: alter table: public.clients
+- Contents summary: alter table: public.clients
+
+## `supabase/migrations/20260427002000_remove_retired_workflow_tables.sql`
+- Status: tracked-clean
+- System: database
+- Group: supabase / migrations
+- Ownership: database migration history
+- Type: SQL migration/query
+- Construction: SQL migration/query file, ordered migration history file
+- Lines: 15
+- Bytes: 802
+- Contents summary: SQL migration or query file
+
+## `supabase/migrations/20260427003000_remove_inactive_backbone_tables.sql`
+- Status: tracked-clean
+- System: database
+- Group: supabase / migrations
+- Ownership: database migration history
+- Type: SQL migration/query
+- Construction: SQL migration/query file, ordered migration history file
+- Lines: 18
+- Bytes: 779
+- Contents summary: SQL migration or query file
+
+## `supabase/migrations/20260428000000_remove_unused_remote_backbones.sql`
+- Status: tracked-clean
+- System: database
+- Group: supabase / migrations
+- Ownership: database migration history
+- Type: SQL migration/query
+- Construction: SQL migration/query file, ordered migration history file
+- Lines: 76
+- Bytes: 3998
+- Contents summary: SQL migration or query file
+
+## `supabase/migrations/20260428001000_remove_unused_remote_functions.sql`
+- Status: tracked-clean
+- System: database
+- Group: supabase / migrations
+- Ownership: database migration history
+- Type: SQL migration/query
+- Construction: SQL migration/query file, ordered migration history file
+- Lines: 4
+- Bytes: 176
+- Contents summary: SQL migration or query file
+
+## `supabase/migrations/20260428002000_remove_ticketing_artifacts.sql`
+- Status: untracked
+- System: database
+- Group: supabase / migrations
+- Ownership: database migration history
+- Type: SQL migration/query
+- Construction: SQL migration/query file, ordered migration history file
+- Lines: 14
+- Bytes: 560
+- SQL objects: alter table: if
+- Contents summary: alter table: if
+
+## `supabase/migrations/20260428003000_create_application_errors.sql`
+- Status: tracked-clean
+- System: database
+- Group: supabase / migrations
+- Ownership: database migration history
+- Type: SQL migration/query
+- Construction: SQL migration/query file, ordered migration history file
+- Lines: 25
+- Bytes: 853
+- SQL objects: create table: public.application_errors, alter table: public.application_errors, index: application_errors_created_at_idx, index: application_errors_digest_idx
+- Contents summary: create table: public.application_errors; alter table: public.application_errors; index: application_errors_created_at_idx; index: application_errors_digest_idx

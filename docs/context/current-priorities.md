@@ -7,7 +7,7 @@ The current shipped product is intentionally narrow:
 1. **Campaigns**
 2. Admin account/access management required to support campaign access
 
-Events, Reports, Ticketmaster/TM1 workflows, and ticketing ingest are retired for now. Direct Events/Reports URLs should redirect back to the active Dashboard/Campaigns experience rather than exposing hidden product pages.
+Events, Reports, ticketing workflows and ingest are retired for now. Direct Events/Reports URLs should redirect back to the active Dashboard/Campaigns experience rather than exposing hidden product pages.
 
 Do not add standalone client apps for Events, Reports, CRM, assets, approvals, action items, conversations, workspace, updates, or chat unless there is an explicit product decision and a maintainable end-to-end slice.
 

@@ -1,4 +1,4 @@
--- Remove retired Ticketmaster/TM1 tables and campaign links.
+-- Remove retired retired ticketing tables and campaign links.
 -- The active product is campaign performance and account/access management only.
 
 alter table if exists public.meta_campaigns

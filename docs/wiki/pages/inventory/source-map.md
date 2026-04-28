@@ -45,7 +45,6 @@ This page is the current structural map of the repo.
 - `src/app/api/health/route.ts`
 - `src/app/api/ingest/route.ts`
 - `src/app/api/meta/**`
-- `src/app/api/ticketmaster/tm1/**`
 - `src/app/api/user/profile/route.ts`
 
 ## Feature-module directories

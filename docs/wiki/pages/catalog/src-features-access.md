@@ -1,6 +1,6 @@
 # src/features / access
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Files: 1
 - File kinds: TypeScript module (1)
@@ -15,12 +15,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: TypeScript module
 - Construction: code module
 - Lines: 28
-- Bytes: 725
+- Bytes: 728
 - Imports (packages): next/cache
 - Imported by: __tests__/features/access/revalidation.test.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/users.ts
 - Used by groups: Tests / Features, src/app / admin
 - Feature module: access
-- Route owners: src/app/admin/settings/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/clients/[id]/page.tsx
+- Route owners: src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/clients/[id]/page.tsx
 - Tests related: __tests__/features/access/revalidation.test.ts, src/components/admin/clients/client-detail.test.tsx, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/shell-import-smoke.test.ts
 - Tests related (direct): __tests__/features/access/revalidation.test.ts
 - Exports: getAccessManagementPaths, revalidateAccessManagementPaths

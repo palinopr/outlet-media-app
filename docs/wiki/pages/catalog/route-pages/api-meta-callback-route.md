@@ -1,6 +1,6 @@
 # /api/meta/callback
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Route file: `src/app/api/meta/callback/route.ts`
 - Type: Next.js route handler
@@ -11,7 +11,7 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Direct internal imports: none
 - Feature modules touched: none
 - Shared libs/runtime touched: none
-- Database objects touched: none
+- Database objects touched: if
 - Direct tests: src/app/api/meta/callback/route.test.ts
 - All linked tests: src/app/api/meta/callback/route.test.ts
 - Contents summary: Next.js route handler for `/api/meta/callback`; route handlers: GET; exports: GET; package imports: 1

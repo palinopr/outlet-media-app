@@ -1,14 +1,14 @@
 # Impact: src/components/ui/dropdown-menu.tsx
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Shared components
-- Impact score: 21
+- Impact score: 17
 - Ownership: UI primitive / design-system components
 - Feature module: none
-- Route owners: src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/events/page.tsx
+- Route owners: src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/campaigns/page.tsx
 - Imported by: src/components/admin/clients/columns.tsx, src/components/admin/data-table/data-table-toolbar.tsx, src/components/admin/users/columns.tsx
-- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/admin/events/page.test.tsx
+- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx
 - DB objects: none
 - Env vars: none
 - Mutation symbols: none

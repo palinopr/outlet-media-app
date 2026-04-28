@@ -1,6 +1,6 @@
 # Impact: src/components/admin/campaigns/campaign-detail-dashboard.tsx
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Shared components
 - Impact score: 11
@@ -16,4 +16,4 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Behavior signals: none
 - Depends on groups: src/features / campaigns, src/lib
 - Used by groups: src/app / admin, src/components / admin
-- Summary: exports: CampaignDetailDashboard; internal imports: 4
+- Summary: exports: CampaignDetailDashboard; internal imports: 2

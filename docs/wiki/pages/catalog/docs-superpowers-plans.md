@@ -1,9 +1,9 @@
 # Docs / Superpowers Plans
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
-- Files: 11
-- File kinds: Markdown doc (11)
+- Files: 12
+- File kinds: Markdown doc (12)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -138,3 +138,15 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 8805
 - Headings: Enterprise Readiness Implementation Plan, Chunk 1: Verification Backbone, Task 1: Remove hidden migration drift and scope root verification intentionally, Chunk 2: Agent Runtime Correctness, Task 2: Make web-triggered agent tasks executable under the live runtime, Chunk 3: Dead-Surface Cleanup, Task 3: Remove retired route/config coupling from active code paths, Chunk 4: Campaign Detail Replacement, Task 4: Replace the prototype admin campaign detail with a real operating view, Chunk 5: Durable Context, … (+1 more)
 - Contents summary: headings: Enterprise Readiness Implementation Plan \| Chunk 1: Verification Backbone \| Task 1: Remove hidden migration drift and scope root verification intentionally \| Chunk 2: Agent Runtime Correctness \| Task 2: Make web-triggered agent tasks executable under the live runtime \| Chunk 3: Dead-Surface Cleanup
+
+## `docs/superpowers/plans/2026-04-20-mobile-funnel-landing.md`
+- Status: tracked-clean
+- System: docs
+- Group: Docs / Superpowers Plans
+- Ownership: implementation plan documentation
+- Type: Markdown doc
+- Construction: markdown document, contains `use client`, frontmatter-like markdown structure
+- Lines: 1521
+- Bytes: 55607
+- Headings: Mobile Funnel Landing Implementation Plan, File structure, Brand palette (tokens used across all sections), Task 1: Audit and stage deletions, Task 2: Rewrite hero.tsx, Task 3: Create proof-strip.tsx, Task 4: Create logos-strip.tsx, Task 5: Create signature-result.tsx, Task 6: Create why-outlet.tsx, Task 7: Create product-glimpse.tsx, … (+8 more)
+- Contents summary: headings: Mobile Funnel Landing Implementation Plan \| File structure \| Brand palette (tokens used across all sections) \| Task 1: Audit and stage deletions \| Task 2: Rewrite hero.tsx \| Task 3: Create proof-strip.tsx

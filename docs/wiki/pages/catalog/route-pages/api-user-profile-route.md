@@ -1,6 +1,6 @@
 # /api/user/profile
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Route file: `src/app/api/user/profile/route.ts`
 - Type: Next.js route handler
@@ -11,7 +11,7 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Direct internal imports: src/lib/api-helpers.ts
 - Feature modules touched: none
 - Shared libs/runtime touched: src/lib/api-helpers.ts
-- Database objects touched: none
+- Database objects touched: if
 - Direct tests: none
 - All linked tests: none
 - Contents summary: Next.js route handler for `/api/user/profile`; route handlers: POST; exports: POST; internal imports: 1; package imports: 3

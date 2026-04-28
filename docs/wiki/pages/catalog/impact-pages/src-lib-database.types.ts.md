@@ -1,19 +1,19 @@
 # Impact: src/lib/database.types.ts
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Shared web libraries
-- Impact score: 68
+- Impact score: 30
 - Ownership: shared web library
 - Feature module: none
 - Route owners: none
 - Imported by: none
 - Tests related: none
-- DB objects: tm_events, meta_campaigns, agent_jobs, campaign_snapshots, event_snapshots, agent_alerts, agent_tasks, client_accounts, agent_runtime_state, email_events, email_drafts, email_reply_examples, … (+22 more)
+- DB objects: meta_campaigns, campaign_snapshots, client_accounts, system_events, clients, client_members, client_member_campaigns, current_clerk_user_id, admin_activity, campaign_client_overrides, contact_submissions, effective_campaign_client_slug, … (+3 more)
 - Env vars: none
 - Mutation symbols: none
 - Auth signals: references membership/scope access concepts
 - Behavior signals: none
 - Depends on groups: none
 - Used by groups: none
-- Summary: exports: Constants, Json, Database, Tables, Enums, CompositeTypes
+- Summary: exports: Constants, Json, Database, Tables, TablesInsert, TablesUpdate, Enums, CompositeTypes

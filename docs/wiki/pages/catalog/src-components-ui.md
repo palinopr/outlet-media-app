@@ -1,9 +1,9 @@
 # src/components / ui
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
-- Files: 13
-- File kinds: React/TSX module (13)
+- Files: 12
+- File kinds: React/TSX module (12)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -18,12 +18,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 1776
 - Imports (internal): src/lib/utils.ts
 - Imports (packages): react, class-variance-authority, radix-ui
-- Imported by: src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx, src/components/admin/agents/command-summary.tsx
+- Imported by: src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx
 - Depends on groups: src/lib
-- Used by groups: src/app / admin, src/components / admin
-- Route owners: src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/agents/page.tsx
+- Used by groups: src/app / admin
+- Route owners: src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx
 - Routes related (direct): src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx
-- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/dashboard/page.test.tsx, src/components/admin/agents/command-summary.test.tsx
+- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/dashboard/page.test.tsx
 - Exports: Badge, badgeVariants
 - Symbol details: function Badge, const badgeVariants
 - Defines: Badge, badgeVariants, Comp
@@ -60,12 +60,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 2392
 - Imports (internal): src/lib/utils.ts
 - Imports (packages): react, class-variance-authority, radix-ui
-- Imported by: src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/[slug]/components/campaign-discussion-form.tsx, src/app/client/[slug]/components/complete-profile-modal.tsx, src/app/client/[slug]/components/event-discussion-form.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/components/admin/agents/chat-panel.tsx, … (+18 more)
+- Imported by: src/app/admin/users/page.tsx, src/app/client/[slug]/components/complete-profile-modal.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/components/admin/clients/assignment-manager.tsx, src/components/admin/clients/client-overview-tab.tsx, src/components/admin/clients/client-table.tsx, src/components/admin/clients/columns.tsx, src/components/admin/clients/invite-member-form.tsx, src/components/admin/clients/members-section.tsx, … (+7 more)
 - Depends on groups: src/lib
-- Used by groups: src/app / admin, src/app / client, src/components / admin, src/components / landing, src/components / shared, src/components / ui
-- Route owners: src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/app/client/[slug]/layout.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, … (+8 more)
-- Routes related (direct): src/app/admin/agents/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx
-- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/events/page.test.tsx, src/app/client/[slug]/components/campaign-discussion-form.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/event-discussion-form.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/components/admin/agents/job-history.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, … (+7 more)
+- Used by groups: src/app / admin, src/app / client, src/components / admin, src/components / shared, src/components / ui
+- Route owners: src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/app/client/[slug]/layout.tsx, src/app/admin/clients/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, … (+1 more)
+- Routes related (direct): src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx
+- Tests related: src/app/shell-import-smoke.test.ts, src/app/client/[slug]/layout.test.tsx, src/components/admin/clients/client-detail.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/admin/campaigns/page.test.tsx
 - Exports: Button, buttonVariants
 - Symbol details: function Button, const buttonVariants
 - Defines: Button, buttonVariants, Comp
@@ -82,12 +82,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 1987
 - Imports (internal): src/lib/utils.ts
 - Imports (packages): react
-- Imported by: src/app/admin/agents/loading.tsx, src/app/admin/campaigns/loading.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/loading.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/campaign-cards.tsx, src/app/admin/dashboard/events-preview-table.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/loading.tsx, … (+12 more)
+- Imported by: src/app/admin/campaigns/loading.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/loading.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/campaign-cards.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/loading.tsx, src/app/admin/users/page.tsx, … (+4 more)
 - Depends on groups: src/lib
 - Used by groups: src/app / admin, src/components / admin
-- Route owners: src/app/admin/agents/loading.tsx, src/app/admin/campaigns/loading.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/loading.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/loading.tsx, … (+7 more)
-- Routes related (direct): src/app/admin/agents/loading.tsx, src/app/admin/campaigns/loading.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/loading.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/loading.tsx, … (+4 more)
-- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/page.test.tsx, src/components/admin/agents/command-summary.test.tsx, src/components/admin/agents/job-history.test.tsx, src/components/admin/clients/client-detail.test.tsx, src/app/admin/events/[eventId]/page.test.tsx
+- Route owners: src/app/admin/campaigns/loading.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/loading.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/loading.tsx, … (+2 more)
+- Routes related (direct): src/app/admin/campaigns/loading.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/loading.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/loading.tsx, … (+1 more)
+- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/dashboard/page.test.tsx, src/components/admin/clients/client-detail.test.tsx
 - Exports: Card, CardHeader, CardFooter, CardTitle, CardAction, CardDescription, CardContent
 - Symbol details: function Card, function CardHeader, function CardTitle, function CardDescription, function CardAction, function CardContent, function CardFooter
 - Defines: Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter
@@ -148,8 +148,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Imported by: src/components/admin/clients/columns.tsx, src/components/admin/data-table/data-table-toolbar.tsx, src/components/admin/users/columns.tsx
 - Depends on groups: src/lib
 - Used by groups: src/components / admin
-- Route owners: src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/events/page.tsx
-- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/admin/events/page.test.tsx
+- Route owners: src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/campaigns/page.tsx
+- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx
 - Exports: DropdownMenu, DropdownMenuPortal, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuGroup, DropdownMenuLabel, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, … (+3 more)
 - Symbol details: function DropdownMenu, function DropdownMenuPortal, function DropdownMenuTrigger, function DropdownMenuContent, function DropdownMenuGroup, function DropdownMenuItem, function DropdownMenuCheckboxItem, function DropdownMenuRadioGroup, function DropdownMenuRadioItem, function DropdownMenuLabel, function DropdownMenuSeparator, function DropdownMenuShortcut, function DropdownMenuSub, function DropdownMenuSubTrigger, function DropdownMenuSubContent
 - Defines: DropdownMenu, DropdownMenuPortal, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuCheckboxItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuShortcut, … (+3 more)
@@ -166,11 +166,11 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 962
 - Imports (internal): src/lib/utils.ts
 - Imports (packages): react
-- Imported by: src/app/client/[slug]/components/complete-profile-modal.tsx, src/components/admin/agents/job-history.tsx, src/components/admin/client-onboard-form.tsx, src/components/admin/clients/client-overview-tab.tsx, src/components/admin/clients/client-table.tsx, src/components/admin/clients/invite-member-form.tsx, src/components/admin/data-table/data-table-toolbar.tsx, src/components/landing/contact-form.tsx
+- Imported by: src/app/client/[slug]/components/complete-profile-modal.tsx, src/components/admin/clients/client-overview-tab.tsx, src/components/admin/clients/client-table.tsx, src/components/admin/clients/invite-member-form.tsx, src/components/admin/data-table/data-table-toolbar.tsx
 - Depends on groups: src/lib
-- Used by groups: src/app / client, src/components / admin, src/components / landing
-- Route owners: src/app/client/[slug]/layout.tsx, src/app/admin/agents/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/clients/page.tsx, src/app/landing/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/events/page.tsx, … (+1 more)
-- Tests related: src/components/admin/agents/job-history.test.tsx, src/app/client/[slug]/layout.test.tsx, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/admin/events/page.test.tsx
+- Used by groups: src/app / client, src/components / admin
+- Route owners: src/app/client/[slug]/layout.tsx, src/app/admin/clients/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/users/page.tsx
+- Tests related: src/app/client/[slug]/layout.test.tsx, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/campaigns/page.test.tsx
 - Exports: Input
 - Symbol details: function Input
 - Defines: Input
@@ -187,12 +187,10 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 4188
 - Imports (internal): src/lib/utils.ts
 - Imports (packages): react, lucide-react, radix-ui
-- Imported by: src/app/admin/agents/page.tsx, src/components/admin/mobile-sidebar.tsx
+- Imported by: src/components/admin/mobile-sidebar.tsx
 - Depends on groups: src/lib
-- Used by groups: src/app / admin, src/components / admin
-- Route owners: src/app/admin/agents/page.tsx, src/app/admin/layout.tsx
-- Routes related (direct): src/app/admin/agents/page.tsx
-- Tests related: src/app/shell-import-smoke.test.ts
+- Used by groups: src/components / admin
+- Route owners: src/app/admin/layout.tsx
 - Exports: Sheet, SheetTrigger, SheetClose, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription
 - Symbol details: function Sheet, function SheetTrigger, function SheetClose, function SheetPortal, function SheetOverlay, function SheetContent, function SheetHeader, function SheetFooter, function SheetTitle, function SheetDescription
 - Defines: Sheet, SheetTrigger, SheetClose, SheetPortal, SheetOverlay, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription
@@ -208,36 +206,15 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 14
 - Bytes: 276
 - Imports (internal): src/lib/utils.ts
-- Imported by: src/app/admin/agents/loading.tsx, src/app/admin/campaigns/loading.tsx, src/app/admin/clients/loading.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/events/loading.tsx, src/app/admin/users/loading.tsx, src/components/client/loading-skeleton.tsx
+- Imported by: src/app/admin/campaigns/loading.tsx, src/app/admin/clients/loading.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/users/loading.tsx, src/components/client/loading-skeleton.tsx
 - Depends on groups: src/lib
 - Used by groups: src/app / admin, src/components / client
-- Route owners: src/app/admin/agents/loading.tsx, src/app/admin/campaigns/loading.tsx, src/app/admin/clients/loading.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/events/loading.tsx, src/app/admin/users/loading.tsx, src/app/client/[slug]/agent/loading.tsx, src/app/client/[slug]/campaign/[campaignId]/loading.tsx, … (+4 more)
-- Routes related (direct): src/app/admin/agents/loading.tsx, src/app/admin/campaigns/loading.tsx, src/app/admin/clients/loading.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/events/loading.tsx, src/app/admin/users/loading.tsx
+- Route owners: src/app/admin/campaigns/loading.tsx, src/app/admin/clients/loading.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/users/loading.tsx, src/app/client/[slug]/campaign/[campaignId]/loading.tsx, src/app/client/[slug]/campaigns/loading.tsx, src/app/client/[slug]/loading.tsx
+- Routes related (direct): src/app/admin/campaigns/loading.tsx, src/app/admin/clients/loading.tsx, src/app/admin/dashboard/loading.tsx, src/app/admin/users/loading.tsx
 - Exports: Skeleton
 - Symbol details: function Skeleton
 - Defines: Skeleton
 - Contents summary: exports: Skeleton; internal imports: 1
-
-## `src/components/ui/switch.tsx`
-- Status: tracked-clean
-- System: web
-- Group: src/components / ui
-- Ownership: UI primitive / design-system components
-- Type: React/TSX module
-- Construction: component/UI-oriented module, contains `use client`
-- Lines: 29
-- Bytes: 1172
-- Imports (internal): src/lib/utils.ts
-- Imports (packages): react, @radix-ui/react-switch
-- Imported by: src/components/admin/clients/client-overview-tab.tsx
-- Depends on groups: src/lib
-- Used by groups: src/components / admin
-- Route owners: src/app/admin/clients/[id]/page.tsx
-- Tests related: src/components/admin/clients/client-detail.test.tsx
-- Exports: Switch
-- Symbol details: const Switch
-- Defines: Switch
-- Contents summary: contains `use client`; exports: Switch; internal imports: 1; package imports: 2
 
 ## `src/components/ui/table.tsx`
 - Status: tracked-clean
@@ -250,11 +227,11 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 2448
 - Imports (internal): src/lib/utils.ts
 - Imports (packages): react
-- Imported by: src/app/admin/dashboard/events-preview-table.tsx, src/components/admin/agents/job-history.tsx, src/components/admin/clients/campaigns-section.tsx, src/components/admin/clients/events-section.tsx, src/components/admin/clients/members-section.tsx, src/components/admin/data-table/data-table.tsx
+- Imported by: src/components/admin/clients/campaigns-section.tsx, src/components/admin/clients/members-section.tsx, src/components/admin/data-table/data-table.tsx
 - Depends on groups: src/lib
-- Used by groups: src/app / admin, src/components / admin
-- Route owners: src/app/admin/dashboard/page.tsx, src/app/admin/agents/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/events/page.tsx, src/app/admin/users/page.tsx
-- Tests related: src/components/admin/agents/job-history.test.tsx, src/app/admin/dashboard/page.test.tsx, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/admin/events/page.test.tsx
+- Used by groups: src/components / admin
+- Route owners: src/app/admin/clients/[id]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx
+- Tests related: src/components/admin/clients/client-detail.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Exports: Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption
 - Symbol details: function Table, function TableHeader, function TableBody, function TableFooter, function TableRow, function TableHead, function TableCell, function TableCaption
 - Defines: Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption

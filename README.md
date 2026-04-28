@@ -16,7 +16,7 @@ Current active product reset target:
 - Campaigns
 - Admin client/account access
 
-Events, Reports, Ticketmaster/TM1 workflows, and ticketing ingest are retired for now; direct Events/Reports URLs redirect back to Dashboard/Campaigns.
+Events, Reports, ticketing workflows and ingest are retired for now; direct Events/Reports URLs redirect back to Dashboard/Campaigns.
 
 Supporting infrastructure remains for auth, client accounts, memberships, invitations, and access control. The prior agent runtime and agent-facing product surfaces are retired for now.
 

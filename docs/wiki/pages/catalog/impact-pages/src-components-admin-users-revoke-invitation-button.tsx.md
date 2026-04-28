@@ -1,13 +1,13 @@
 # Impact: src/components/admin/users/revoke-invitation-button.tsx
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Shared components
-- Impact score: 26
+- Impact score: 21
 - Ownership: shared admin UI components
 - Feature module: none
-- Route owners: src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/admin/clients/[id]/page.tsx
-- Imported by: src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/components/admin/clients/members-section.tsx, src/components/admin/users/columns.tsx, src/components/admin/users/revoke-invitation-button.test.tsx
+- Route owners: src/app/admin/users/page.tsx, src/app/admin/clients/[id]/page.tsx
+- Imported by: src/app/admin/users/page.tsx, src/components/admin/clients/members-section.tsx, src/components/admin/users/columns.tsx, src/components/admin/users/revoke-invitation-button.test.tsx
 - Tests related: src/components/admin/users/revoke-invitation-button.test.tsx, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx
 - DB objects: none
 - Env vars: none

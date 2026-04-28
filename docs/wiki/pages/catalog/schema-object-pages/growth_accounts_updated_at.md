@@ -1,6 +1,6 @@
 # Schema object: growth_accounts_updated_at
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Kinds: trigger
 - Migrations: supabase/migrations/20260307120000_growth_ledgers.sql

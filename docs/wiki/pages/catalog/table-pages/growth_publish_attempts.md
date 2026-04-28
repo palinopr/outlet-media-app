@@ -1,10 +1,10 @@
 # Table: growth_publish_attempts
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Other tables
 - Kinds: table
-- Migrations: supabase/migrations/20260307133000_growth_publish_attempts.sql
+- Migrations: supabase/migrations/20260307133000_growth_publish_attempts.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql
 - Non-migration references: 1
 - Referenced by groups: Root Files (1)
 - Routes: none

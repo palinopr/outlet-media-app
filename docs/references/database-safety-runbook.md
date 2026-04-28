@@ -58,4 +58,4 @@ The active app currently expects these public tables only:
 - `meta_campaigns`
 - `system_events`
 
-Ticketmaster/TM1 tables and event snapshot tables are retired and should not be recreated without a new explicit product decision.
+Ticketing tables and event snapshot tables are retired and should not be recreated without a new explicit product decision.

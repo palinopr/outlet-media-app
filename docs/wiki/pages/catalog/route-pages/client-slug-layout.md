@@ -1,6 +1,6 @@
 # /client/[slug]
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Route file: `src/app/client/[slug]/layout.tsx`
 - Type: Next.js layout
@@ -11,7 +11,7 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Direct internal imports: src/lib/formatters.tsx, src/app/client/[slug]/components/client-nav.tsx, src/app/client/[slug]/components/mobile-nav.tsx, src/app/client/[slug]/components/complete-profile-modal.tsx, src/features/client-portal/theme.ts, src/features/client-portal/config.ts, src/features/client-portal/entry.ts
 - Feature modules touched: client-portal, invitations
 - Shared libs/runtime touched: src/lib/formatters.tsx, src/lib/status.ts, src/lib/supabase.ts, src/lib/member-access.ts, src/lib/utils.ts
-- Database objects touched: clients, client_members, client_access_invites, client_member_campaigns, client_member_events
+- Database objects touched: if, clients, client_members, client_access_invites, client_member_campaigns
 - Direct tests: src/app/client/[slug]/layout.test.tsx, src/app/shell-import-smoke.test.ts
 - All linked tests: src/app/client/[slug]/layout.test.tsx, src/app/shell-import-smoke.test.ts
 - Contents summary: Next.js layout for `/client/[slug]`; exports: ClientLayout, generateMetadata, default; internal imports: 7; package imports: 5

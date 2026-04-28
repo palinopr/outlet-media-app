@@ -1,15 +1,15 @@
 # Impact: src/lib/google-ads.ts
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Shared web libraries
-- Impact score: 13
+- Impact score: 15
 - Ownership: shared web library
 - Feature module: none
 - Route owners: none
 - Imported by: src/lib/google-ads.test.ts, src/scripts/google-ads-discover-accounts.ts
 - Tests related: src/lib/google-ads.test.ts
-- DB objects: none
+- DB objects: if
 - Env vars: GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_REFRESH_TOKEN, GOOGLE_ADS_LOGIN_CUSTOMER_ID, GOOGLE_ADS_CUSTOMER_ID
 - Mutation symbols: loginCustomerId
 - Auth signals: none

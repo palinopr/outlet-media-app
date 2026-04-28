@@ -1,6 +1,6 @@
 # src / Root
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Files: 2
 - File kinds: TypeScript module (2)
@@ -30,10 +30,10 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: web source
 - Type: TypeScript module
 - Construction: code module
-- Lines: 43
-- Bytes: 1112
+- Lines: 32
+- Bytes: 783
 - Imports (packages): @clerk/nextjs/server
 - Exports: config, default
 - Symbol details: const config (exported), const isPublicRoute
-- Defines: isPublicRoute, pathname, config
+- Defines: isPublicRoute, config
 - Contents summary: exports: config, default; package imports: 1

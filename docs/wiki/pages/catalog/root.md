@@ -1,9 +1,9 @@
 # Root Files
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
-- Files: 24
-- File kinds: Markdown doc (6), JSON config/data (4), TypeScript module (4), env/config text file (3), ignore file (2), file (no extension) (2), JavaScript module (2), TypeScript build info (1)
+- Files: 26
+- File kinds: Markdown doc (6), TypeScript module (6), JSON config/data (4), env/config text file (3), ignore file (2), file (no extension) (2), JavaScript module (2), TypeScript build info (1)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -13,8 +13,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Group: Root Files
 - Ownership: repo root
 - Type: env/config text file
-- Lines: 53
-- Bytes: 1643
+- Lines: 35
+- Bytes: 1241
 - Contents summary: env keys: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_SIGN_IN_URL, NEXT_PUBLIC_CLERK_SIGN_UP_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL, NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, INGEST_SECRET, META_ACCESS_TOKEN, ME…
 
 ## `.env.local`
@@ -33,8 +33,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Group: Root Files
 - Ownership: repo root
 - Type: ignore file
-- Lines: 37
-- Bytes: 581
+- Lines: 38
+- Bytes: 600
 - Contents summary: ignore patterns: .env.local, .next, agent/.next, .local, session, output, tmp, .opencode, .playwright-mcp, .superpowers, docs/superpowers/, docs/screenshots/prototypes/, supabase/migrations/*_whatsapp_ticket_concierge.sql, root-next-artifact-2026-03-08, root-next-artifact-2026-03-08-2
 
 ## `.railwayignore`
@@ -48,27 +48,27 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: ignore patterns: .git, .next, node_modules, /agent/, .playwright-mcp, .worktrees, .claude, .local, .opencode, session, root-next-artifact-2026-03-08, root-next-artifact-2026-03-08-2, root-next-artifact-2026-03-08-3, archive, coverage
 
 ## `AGENTS.md`
-- Status: tracked-clean
+- Status: modified
 - System: root
 - Group: Root Files
 - Ownership: repo root
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 241
-- Bytes: 20907
-- Headings: Outlet Media -- Project Instructions, Stack, Product Direction, Product Principles, Current Packaging Rules, Surface Selection, Architecture Priorities, Execution Expectations, No Garbage Rules, Codex Workflow, … (+7 more)
-- Contents summary: headings: Outlet Media -- Project Instructions \| Stack \| Product Direction \| Product Principles \| Current Packaging Rules \| Surface Selection
+- Lines: 116
+- Bytes: 5737
+- Headings: Outlet Media -- Project Instructions, Stack, Current Product Scope, Product Principles, Architecture Priorities, Execution Expectations, No Garbage Rules, Persistent Context, Repo Organization Rules, Key Paths, … (+3 more)
+- Contents summary: headings: Outlet Media -- Project Instructions \| Stack \| Current Product Scope \| Product Principles \| Architecture Priorities \| Execution Expectations
 
 ## `README.md`
-- Status: tracked-clean
+- Status: modified
 - System: root
 - Group: Root Files
 - Ownership: repo root
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 62
-- Bytes: 2001
-- Headings: Outlet Media App, Stack, Product Shape, Structure, Read First, Development, Deploy
+- Lines: 70
+- Bytes: 2382
+- Headings: Outlet Media App, Stack, Product Shape, Structure, Read First, Development, Quality Gates, Deploy
 - Contents summary: headings: Outlet Media App \| Stack \| Product Shape \| Structure \| Read First \| Development
 
 ## `archive/website-legacy/Outlet Media - Resources/.DS_Store`
@@ -150,6 +150,21 @@ Each entry below documents the file path, system ownership, construction style, 
 - JSON keys: $schema, style, rsc, tsx, tailwind, iconLibrary, rtl, aliases, registries
 - Contents summary: JSON object; keys: $schema, style, rsc, tsx, tailwind, iconLibrary, rtl, aliases, registries
 
+## `e2e/authenticated-smoke.spec.ts`
+- Status: tracked-clean
+- System: root
+- Group: Root Files
+- Ownership: repo root
+- Type: TypeScript module
+- Construction: code module
+- Lines: 253
+- Bytes: 9984
+- Imports (packages): @playwright/test
+- Symbol details: function assertSignedOutRedirect, function signInAsAdmin, function signInWithToken, function assertAdminNavigation, function assertSettingsIsTechnicalOnly, function assertClientsOwnClientCreation, function assertCampaignDetailIsPerformanceOnly, function assertClientPortalIsCampaignsOnly, function assertRetiredRoutesRedirect, function createTemporaryUser, function deleteClerkUser, function clerkRequest, function appUrl, function rewriteUrlOrigin, function trimTrailingSlash, function slugToTitle, … (+5 more)
+- Defines: assertSignedOutRedirect, signInAsAdmin, signInWithToken, assertAdminNavigation, assertSettingsIsTechnicalOnly, assertClientsOwnClientCreation, assertCampaignDetailIsPerformanceOnly, assertClientPortalIsCampaignsOnly, assertRetiredRoutesRedirect, createTemporaryUser, deleteClerkUser, clerkRequest, … (+25 more)
+- Tests / describe labels: authenticated smoke, signed-out users are sent to sign in for protected pages, non-admin users cannot access the admin shell, admin and client surfaces stay narrow and usable, _
+- Contents summary: tests/describes: authenticated smoke; signed-out users are sent to sign in for protected pages; non-admin users cannot access the admin shell; package imports: 1
+
 ## `eslint.config.mjs`
 - Status: tracked-clean
 - System: root
@@ -207,8 +222,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo root
 - Type: JSON config/data
 - Construction: JSON configuration/data file
-- Lines: 14962
-- Bytes: 527835
+- Lines: 14971
+- Bytes: 526512
 - JSON shape: JSON object
 - JSON keys: name, version, lockfileVersion, requires, packages
 - Contents summary: JSON object; keys: name, version, lockfileVersion, requires, packages
@@ -220,17 +235,32 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo root
 - Type: JSON config/data
 - Construction: JSON configuration/data file
-- Lines: 66
-- Bytes: 2769
+- Lines: 70
+- Bytes: 2840
 - Imported by: src/app/api/health/route.ts
 - Used by groups: src/app / api
 - Route owners: src/app/api/health/route.ts
 - Routes related (direct): src/app/api/health/route.ts
 - Tests related: src/app/api/health/route.test.ts
 - JSON shape: JSON object
-- JSON keys: name, version, private, scripts, dependencies, devDependencies
-- JSON scripts: dev, build, start, lint, lint:web, type-check, type-check:web, test, test:web, check:web, check:agent, check, … (+7 more)
-- Contents summary: JSON object; keys: name, version, private, scripts, dependencies, devDependencies; scripts: dev, build, start, lint, lint:web, type-check, type-check:web, test, test:web, check:web
+- JSON keys: name, version, private, scripts, dependencies, devDependencies, overrides
+- JSON scripts: dev, build, start, lint, lint:web, type-check, type-check:web, test, test:web, playwright:install, test:e2e, audit:deps, … (+8 more)
+- Contents summary: JSON object; keys: name, version, private, scripts, dependencies, devDependencies, overrides; scripts: dev, build, start, lint, lint:web, type-check, type-check:web, test, test:web, playwright:install
+
+## `playwright.config.ts`
+- Status: tracked-clean
+- System: root
+- Group: Root Files
+- Ownership: repo root
+- Type: TypeScript module
+- Construction: code module
+- Lines: 37
+- Bytes: 845
+- Imports (packages): @playwright/test
+- Exports: default
+- Symbol details: const baseURL
+- Defines: baseURL
+- Contents summary: exports: default; package imports: 1
 
 ## `postcss.config.mjs`
 - Status: tracked-clean
@@ -253,8 +283,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo root
 - Type: JSON config/data
 - Construction: JSON configuration/data file
-- Lines: 44
-- Bytes: 833
+- Lines: 45
+- Bytes: 852
 - JSON shape: JSON object
 - JSON keys: compilerOptions, include, exclude
 - Contents summary: JSON object; keys: compilerOptions, include, exclude
@@ -266,7 +296,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo root
 - Type: TypeScript build info
 - Lines: 1
-- Bytes: 339422
+- Bytes: 285647
 - Contents summary: text lines: {"fileNames":["./node_modules/typescript/lib/lib.es5.d.ts","./node_modules/typescript/lib/lib.es2015.d.ts","./node_modules/typescript/lib/lib.es2016.d.ts","./node_modules/typescript/lib/lib.es2017.d.ts","./node_modules/typescript/lib/lib.es2018.d.ts","./node_modules/typescript/lib/lib.es2019.d.ts","./node_…
 
 ## `vitest.config.ts`
@@ -276,8 +306,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo root
 - Type: TypeScript module
 - Construction: code module
-- Lines: 33
-- Bytes: 890
+- Lines: 34
+- Bytes: 906
 - Imports (packages): vitest/config, @vitejs/plugin-react, path
 - Exports: default
 - Contents summary: exports: default; package imports: 3

@@ -1,15 +1,15 @@
 # Impact: src/lib/shopify-admin.ts
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Shared web libraries
-- Impact score: 6
+- Impact score: 8
 - Ownership: shared web library
 - Feature module: none
 - Route owners: none
 - Imported by: src/lib/shopify-admin.test.ts
 - Tests related: src/lib/shopify-admin.test.ts
-- DB objects: none
+- DB objects: if
 - Env vars: SHOPIFY_STORE_DOMAIN, SHOPIFY_ADMIN_ACCESS_TOKEN, SHOPIFY_ADMIN_API_VERSION
 - Mutation symbols: none
 - Auth signals: none

@@ -1,14 +1,14 @@
 # Feature: access
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Files: 1
 - Entry files: src/features/access/revalidation.ts
 - Component files: none
 - Client files: none
 - Server files: none
-- Route users: src/app/admin/settings/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/clients/[id]/page.tsx
-- Database objects touched: clients
+- Route users: src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/clients/[id]/page.tsx
+- Database objects touched: clients, if
 - Depends on feature modules: none
 - Used by feature modules: none
 - Auth/access signals: none

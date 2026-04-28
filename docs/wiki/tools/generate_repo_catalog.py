@@ -2139,7 +2139,7 @@ def integration_service_name(key: str) -> str:
         return "Supabase"
     if upper.startswith(("META", "FB", "FACEBOOK")):
         return "Meta"
-    if "TM1" in upper or "TICKETMASTER" in upper:
+    if "TICKETMASTER" in upper:
         return "Ticketmaster"
     if any(token in upper for token in ["GMAIL", "GOOGLE", "GCAL", "CALENDAR"]):
         return "Google / Gmail / Calendar"

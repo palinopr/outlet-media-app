@@ -1,6 +1,6 @@
 # /api/meta/data-deletion
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Route file: `src/app/api/meta/data-deletion/route.ts`
 - Type: Next.js route handler
@@ -11,7 +11,7 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Direct internal imports: src/lib/supabase.ts, src/lib/meta-oauth.ts
 - Feature modules touched: none
 - Shared libs/runtime touched: src/lib/supabase.ts, src/lib/meta-oauth.ts
-- Database objects touched: client_accounts
+- Database objects touched: client_accounts, if
 - Direct tests: src/app/api/meta/data-deletion/route.test.ts
 - All linked tests: src/app/api/meta/data-deletion/route.test.ts
 - Contents summary: Next.js route handler for `/api/meta/data-deletion`; route handlers: POST; exports: POST; internal imports: 2; package imports: 2

@@ -1,15 +1,15 @@
 # Impact: src/lib/meta-oauth.ts
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Shared web libraries
-- Impact score: 10
+- Impact score: 12
 - Ownership: shared web library
 - Feature module: none
 - Route owners: src/app/api/meta/data-deletion/route.ts
 - Imported by: src/app/api/meta/data-deletion/route.ts, src/lib/meta-oauth.test.ts
 - Tests related: src/lib/meta-oauth.test.ts, src/app/api/meta/data-deletion/route.test.ts
-- DB objects: none
+- DB objects: if
 - Env vars: META_APP_SECRET
 - Mutation symbols: none
 - Auth signals: none

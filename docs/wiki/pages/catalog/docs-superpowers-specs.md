@@ -1,9 +1,9 @@
 # Docs / Superpowers Specs
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
-- Files: 10
-- File kinds: Markdown doc (10)
+- Files: 11
+- File kinds: Markdown doc (11)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -126,3 +126,15 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 6125
 - Headings: Enterprise Readiness Design, Intent, Scope, Non-Goals, Requirements, 1. Verification must be trustworthy, 2. Agent runtime must match shipped behavior, 3. Retired surface residue must stop influencing current product behavior, 4. Campaign detail must be a real operating surface, Architecture, … (+7 more)
 - Contents summary: headings: Enterprise Readiness Design \| Intent \| Scope \| Non-Goals \| Requirements \| 1. Verification must be trustworthy
+
+## `docs/superpowers/specs/2026-04-20-mobile-funnel-landing-design.md`
+- Status: tracked-clean
+- System: docs
+- Group: Docs / Superpowers Specs
+- Ownership: implementation spec documentation
+- Type: Markdown doc
+- Construction: markdown document
+- Lines: 215
+- Bytes: 9431
+- Headings: Mobile Funnel Landing — Rebuild From Zero, Context, Non-goals, Architecture, Section specs, 1. Hero, 2. Proof strip, 3. Logos strip, 4. Signature result, 5. Why Outlet, … (+10 more)
+- Contents summary: headings: Mobile Funnel Landing — Rebuild From Zero \| Context \| Non-goals \| Architecture \| Section specs \| 1. Hero

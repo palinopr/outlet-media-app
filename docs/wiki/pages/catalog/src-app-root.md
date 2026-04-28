@@ -1,6 +1,6 @@
 # src/app / root routes
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Files: 18
 - File kinds: Next.js page (8), binary asset (3), React/TSX module (2), test file (2), Markdown doc (1), file (.css) (1), Next.js layout (1)
@@ -16,7 +16,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Construction: markdown document
 - Route context: /
 - Lines: 8
-- Bytes: 663
+- Bytes: 624
 - Headings: App Routes
 - Contents summary: headings: App Routes
 
@@ -79,16 +79,18 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
 - Route context: /
-- Lines: 40
-- Bytes: 1240
+- Lines: 42
+- Bytes: 1360
+- Imports (internal): src/lib/client-error-reporting.ts
 - Imports (packages): react
+- Depends on groups: src/lib
 - Exports: GlobalError, default
 - Symbol details: default function GlobalError (exported)
 - Defines: GlobalError
-- Contents summary: contains `use client`; exports: GlobalError, default; package imports: 1
+- Contents summary: contains `use client`; exports: GlobalError, default; internal imports: 1; package imports: 1
 
 ## `src/app/globals.css`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/app / root routes
 - Ownership: web root/shared route surface
@@ -113,21 +115,21 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: asset/binary file; size: 64202 bytes
 
 ## `src/app/landing/page.tsx`
-- Status: modified
+- Status: tracked-clean
 - System: web
 - Group: src/app / root routes
 - Ownership: web root/shared route surface
 - Type: Next.js page
 - Construction: App Router page, component/UI-oriented module
 - Route: /landing
-- Lines: 80
-- Bytes: 4859
-- Imports (internal): src/components/landing/hero.tsx, src/components/landing/credibility.tsx, src/components/landing/features.tsx, src/components/landing/how-it-works.tsx, src/components/landing/faq.tsx, src/components/landing/contact-form.tsx
-- Imports (packages): next, next/font/google, lucide-react
+- Lines: 114
+- Bytes: 4163
+- Imports (internal): src/components/landing/contact-form.tsx, src/components/landing/faq.tsx, src/components/landing/hero.tsx, src/components/landing/how-it-works.tsx, src/components/landing/lead-funnel.tsx, src/components/landing/sticky-cta.tsx
+- Imports (packages): next, next/font/google, next/image
 - Depends on groups: src/components / landing
 - Exports: LandingPage, metadata, default
-- Symbol details: default function LandingPage (exported), const landingFont
-- Defines: LandingPage, landingFont
+- Symbol details: default function LandingPage (exported), const headingFont, const bodyFont, const monoFont, const BRAND_TOKENS
+- Defines: LandingPage, headingFont, bodyFont, monoFont, BRAND_TOKENS
 - Contents summary: Next.js page for `/landing`; exports: LandingPage, metadata, default; internal imports: 6; package imports: 3
 
 ## `src/app/layout.tsx`
@@ -205,13 +207,13 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: test file
 - Construction: test specification
 - Route context: /
-- Lines: 26
-- Bytes: 1643
-- Imports (internal): src/app/admin/dashboard/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/reports/page.tsx, src/app/admin/events/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/agents/page.tsx, src/app/admin/dashboard/data.ts, src/app/admin/campaigns/data.ts, … (+9 more)
+- Lines: 24
+- Bytes: 1495
+- Imports (internal): src/app/admin/dashboard/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/reports/page.tsx, src/app/admin/events/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/dashboard/data.ts, src/app/admin/campaigns/data.ts, src/app/admin/clients/data.ts, … (+7 more)
 - Imports (packages): vitest
 - Depends on groups: src/app / admin, src/app / client
-- Tests / describe labels: shell import smoke, imports the active admin and client surfaces plus shared data modules
-- Contents summary: tests/describes: shell import smoke; imports the active admin and client surfaces plus shared data modules; internal imports: 19; package imports: 1
+- Tests / describe labels: shell import smoke, imports the active admin and client surfaces plus redirect guards
+- Contents summary: tests/describes: shell import smoke; imports the active admin and client surfaces plus redirect guards; internal imports: 17; package imports: 1
 
 ## `src/app/sign-in/[[...sign-in]]/page.tsx`
 - Status: tracked-clean

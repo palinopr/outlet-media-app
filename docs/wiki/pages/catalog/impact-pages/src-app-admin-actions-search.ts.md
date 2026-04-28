@@ -1,6 +1,6 @@
 # Impact: src/app/admin/actions/search.ts
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Admin actions
 - Impact score: 14
@@ -9,7 +9,7 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Route owners: src/app/admin/layout.tsx
 - Imported by: src/app/admin/actions/search.test.ts, src/components/admin/command-palette.tsx
 - Tests related: src/app/admin/actions/search.test.ts
-- DB objects: tm_events, meta_campaigns, clients
+- DB objects: meta_campaigns, clients, if
 - Env vars: none
 - Mutation symbols: none
 - Auth signals: none

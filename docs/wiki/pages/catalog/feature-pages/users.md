@@ -1,6 +1,6 @@
 # Feature: users
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Files: 1
 - Entry files: src/features/users/summary.ts
@@ -8,7 +8,7 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Client files: none
 - Server files: none
 - Route users: src/app/admin/users/page.tsx
-- Database objects touched: clients
+- Database objects touched: clients, if
 - Depends on feature modules: shared (1), invitations (1)
 - Used by feature modules: none
 - Auth/access signals: none

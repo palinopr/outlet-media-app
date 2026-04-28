@@ -1,15 +1,15 @@
 # Impact: src/components/admin/status-select.tsx
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Shared components
-- Impact score: 24
+- Impact score: 14
 - Ownership: shared admin UI components
 - Feature module: none
-- Route owners: src/app/admin/events/[eventId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/events/page.tsx, src/app/admin/users/page.tsx
-- Imported by: src/components/admin/campaigns/columns.tsx, src/components/admin/events/columns.tsx, src/components/admin/events/event-operating-panel.tsx, src/components/admin/users/columns.tsx
-- Tests related: src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
-- DB objects: none
+- Route owners: src/app/admin/campaigns/page.tsx, src/app/admin/users/page.tsx
+- Imported by: src/components/admin/campaigns/columns.tsx, src/components/admin/users/columns.tsx
+- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
+- DB objects: if
 - Env vars: none
 - Mutation symbols: none
 - Auth signals: none

@@ -1,6 +1,6 @@
 # Schema Object Profiles
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 This index links to deeper pages for migration-discovered functions, views, triggers, and other non-table schema objects.
 
@@ -9,10 +9,10 @@ This index links to deeper pages for migration-discovered functions, views, trig
 ## Functions
 
 - [acquire_runtime_lease](./schema-object-pages/acquire_runtime_lease.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [current_clerk_user_id](./schema-object-pages/current_clerk_user_id.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [effective_campaign_client_slug](./schema-object-pages/effective_campaign_client_slug.md) — refs: 0; routes: 0; features/libs/agents: 0
+- [current_clerk_user_id](./schema-object-pages/current_clerk_user_id.md) — refs: 1; routes: 0; features/libs/agents: 1
+- [effective_campaign_client_slug](./schema-object-pages/effective_campaign_client_slug.md) — refs: 1; routes: 0; features/libs/agents: 1
 - [handle_updated_at](./schema-object-pages/handle_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [is_current_client_member](./schema-object-pages/is_current_client_member.md) — refs: 0; routes: 0; features/libs/agents: 0
+- [is_current_client_member](./schema-object-pages/is_current_client_member.md) — refs: 1; routes: 0; features/libs/agents: 1
 - [pf_update_updated_at](./schema-object-pages/pf_update_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
 - [release_runtime_lease](./schema-object-pages/release_runtime_lease.md) — refs: 0; routes: 0; features/libs/agents: 0
 - [update_updated_at_column](./schema-object-pages/update_updated_at_column.md) — refs: 0; routes: 0; features/libs/agents: 0

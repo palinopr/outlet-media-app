@@ -1,6 +1,6 @@
 # /terms
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Route file: `src/app/terms/page.tsx`
 - Type: Next.js page
@@ -11,7 +11,7 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Direct internal imports: none
 - Feature modules touched: none
 - Shared libs/runtime touched: none
-- Database objects touched: none
+- Database objects touched: if
 - Direct tests: none
 - All linked tests: none
 - Contents summary: Next.js page for `/terms`; exports: TermsPage, metadata, default

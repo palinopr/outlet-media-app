@@ -14,7 +14,7 @@ Outlet Media is a client-facing autonomous-agency operating system, but the curr
 - Campaigns
 - Admin account/access management
 
-Events, Reports, Ticketmaster/TM1 workflows, and ticketing ingest are retired as product surfaces and backend integrations for now. Keep direct Events/Reports routes redirected back to the active Campaigns/Dashboard experience unless there is a new explicit product decision.
+Events, Reports, ticketing workflows and ingest are retired as product surfaces and backend integrations for now. Keep direct Events/Reports routes redirected back to the active Campaigns/Dashboard experience unless there is a new explicit product decision.
 
 All agent runtime and agent-facing product surfaces are retired for now. Do not add an admin Agents page, client Agent tab, agent task queue, agent outcome widgets, or background agent runtime unless there is a new explicit product decision.
 

@@ -1,77 +1,11 @@
 # src/lib
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
-- Files: 32
-- File kinds: TypeScript module (24), test file (7), React/TSX module (1)
+- Files: 29
+- File kinds: TypeScript module (20), test file (8), React/TSX module (1)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
-
-## `src/lib/action-item-labels.ts`
-- Status: tracked-clean
-- System: web
-- Group: src/lib
-- Ownership: shared web library
-- Type: TypeScript module
-- Construction: code module
-- Lines: 27
-- Bytes: 898
-- Imports (internal): src/lib/workspace-types.ts
-- Imported by: src/app/admin/actions/campaign-action-items.ts, src/app/client/[slug]/components/campaign-operating-panel.tsx, src/app/client/[slug]/components/event-operating-panel.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx, src/features/asset-follow-up-items/server.ts, src/features/campaign-action-items/server.ts, src/features/event-follow-up-items/server.ts
-- Depends on groups: src/lib
-- Used by groups: src/app / admin, src/app / client, src/components / admin, src/features / asset-follow-up-items, src/features / campaign-action-items, src/features / event-follow-up-items
-- Route owners: src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts
-- Tests related: src/app/admin/actions/campaign-action-items.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, __tests__/features/campaign-action-items/read-clients.test.ts, src/features/campaign-action-items/server.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, … (+2 more)
-- Exports: taskStatusLabel, FIELD_LABELS
-- Symbol details: function taskStatusLabel (exported)
-- Defines: taskStatusLabel
-- Contents summary: exports: taskStatusLabel, FIELD_LABELS; internal imports: 1
-
-## `src/lib/agent-dispatch.ts`
-- Status: tracked-clean
-- System: web
-- Group: src/lib
-- Ownership: shared web library
-- Type: TypeScript module
-- Construction: code module
-- Lines: 62
-- Bytes: 1565
-- Imports (internal): src/features/system-events/server.ts, src/lib/supabase.ts
-- Imports (packages): node:crypto
-- Imported by: __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.test.ts, src/app/api/event-comments/route.ts, src/features/asset-follow-up-items/server.ts, src/features/campaign-action-items/server.test.ts, src/features/campaign-action-items/server.ts, src/features/event-follow-up-items/server.ts
-- Depends on groups: src/features / system-events, src/lib
-- Used by groups: Tests / Features, src/app / api, src/features / asset-follow-up-items, src/features / campaign-action-items, src/features / event-follow-up-items
-- Route owners: src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx
-- Routes related (direct): src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts
-- Tests related: __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/features/campaign-action-items/server.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, … (+4 more)
-- Tests related (direct): __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/event-follow-up-items/read-clients.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/features/campaign-action-items/server.test.ts
-- Exports: enqueueExternalAgentTask
-- Symbol details: function enqueueExternalAgentTask (exported), interface EnqueueExternalAgentTaskInput
-- Defines: enqueueExternalAgentTask, taskId, EnqueueExternalAgentTaskInput
-- Contents summary: exports: enqueueExternalAgentTask; internal imports: 2; package imports: 1
-
-## `src/lib/agent-jobs.ts`
-- Status: tracked-clean
-- System: web
-- Group: src/lib
-- Ownership: shared web library
-- Type: TypeScript module
-- Construction: code module
-- Lines: 182
-- Bytes: 5021
-- Imports (internal): src/lib/supabase.ts
-- Imports (internal unresolved): src/lib/database.types
-- Imported by: __tests__/api/agents-jobs.test.ts, src/app/admin/agents/data.ts, src/app/admin/dashboard/data.ts, src/app/api/agents/job/[id]/route.ts, src/app/api/agents/jobs/route.ts, src/app/api/agents/route.ts, src/features/agents/summary.ts
-- Depends on groups: src/lib
-- Used by groups: Tests / API, src/app / admin, src/app / api, src/features / agents
-- Route owners: src/app/api/agents/job/[id]/route.ts, src/app/api/agents/jobs/route.ts, src/app/api/agents/route.ts, src/app/admin/agents/page.tsx, src/app/admin/dashboard/page.tsx
-- Routes related (direct): src/app/api/agents/job/[id]/route.ts, src/app/api/agents/jobs/route.ts, src/app/api/agents/route.ts
-- Tests related: __tests__/api/agents-jobs.test.ts, src/components/admin/agents/job-history.test.tsx, src/app/admin/dashboard/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/api/agents.test.ts, __tests__/features/agents/summary.test.ts, src/components/admin/agents/command-summary.test.tsx
-- Tests related (direct): __tests__/api/agents-jobs.test.ts
-- Exports: mapTaskToJob, listAgentJobs, getAgentJob, getLatestAgentStatuses, getHeartbeatStatus, AgentJobView
-- Symbol details: function mapTaskToJob (exported), function listAgentJobs (exported), function getAgentJob (exported), function getLatestAgentStatuses (exported), function getHeartbeatStatus (exported), function isRecord, function taskStatusToUiStatus, function jsonToText, function taskPrompt, function isDisplayableTask, const DISPLAYABLE_TO_AGENTS, const DISPLAYABLE_FROM_AGENTS, type AgentTaskRow, type RuntimeStateRow, type AgentTaskJobRow, interface AgentJobView (exported)
-- Defines: isRecord, taskStatusToUiStatus, jsonToText, taskPrompt, isDisplayableTask, mapTaskToJob, listAgentJobs, getAgentJob, getLatestAgentStatuses, getHeartbeatStatus, DISPLAYABLE_TO_AGENTS, DISPLAYABLE_FROM_AGENTS, … (+10 more)
-- Contents summary: exports: mapTaskToJob, listAgentJobs, getAgentJob, getLatestAgentStatuses, getHeartbeatStatus, AgentJobView; internal imports: 2
 
 ## `src/lib/api-helpers.test.ts`
 - Status: tracked-clean
@@ -97,19 +31,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 107
-- Bytes: 3606
+- Lines: 88
+- Bytes: 2900
 - Imports (packages): next/server, @clerk/nextjs/server, zod
-- Imported by: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/admin/actions/campaign-action-items.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/event-follow-up-items.ts, src/app/admin/actions/events.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, … (+29 more)
-- Used by groups: Tests / API, src/app / admin, src/app / api, src/lib
-- Route owners: src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/agents/heartbeat/route.ts, src/app/api/agents/job/[id]/route.ts, src/app/api/agents/jobs/route.ts, src/app/api/agents/route.ts, … (+20 more)
-- Routes related (direct): src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/agents/heartbeat/route.ts, src/app/api/agents/job/[id]/route.ts, src/app/api/agents/jobs/route.ts, src/app/api/agents/route.ts, … (+11 more)
-- Tests related: __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, … (+14 more)
-- Tests related (direct): __tests__/api/agents-jobs.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts, src/app/api/ticketmaster/tm1/move-selection/route.test.ts, src/app/api/ticketmaster/tm1/request-move-selection/route.test.ts, src/app/api/ticketmaster/tm1/snapshot/route.test.ts, … (+1 more)
-- Exports: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest, getAuthorName, shouldEnqueueCommentTriage
-- Symbol details: function apiError (exported), function dbError (exported), function authGuard (exported), function secretGuard (exported), function adminGuard (exported), function parseJsonBody (exported), function validateRequest (exported), function getAuthorName (exported), function shouldEnqueueCommentTriage (exported)
-- Defines: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest, getAuthorName, shouldEnqueueCommentTriage, caller, meta, role, … (+2 more)
-- Contents summary: exports: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest, getAuthorName; package imports: 3
+- Imported by: src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/admin/users/[id]/route.ts, … (+7 more)
+- Used by groups: src/app / admin, src/app / api, src/lib
+- Route owners: src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts, src/app/admin/campaigns/[campaignId]/page.tsx, … (+5 more)
+- Routes related (direct): src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/api/observability/client-error/route.ts, src/app/api/user/profile/route.ts
+- Tests related: src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/lib/api-helpers.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/admin/actions/search.test.ts, src/components/admin/users/revoke-invitation-button.test.tsx, src/app/api/contact/route.test.ts, … (+4 more)
+- Tests related (direct): src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts, src/lib/api-helpers.test.ts
+- Exports: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest
+- Symbol details: function apiError (exported), function dbError (exported), function authGuard (exported), function secretGuard (exported), function adminGuard (exported), function parseJsonBody (exported), function validateRequest (exported)
+- Defines: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest, caller, meta, role, raw, parsed
+- Contents summary: exports: apiError, dbError, authGuard, secretGuard, adminGuard, parseJsonBody, validateRequest; package imports: 3
 
 ## `src/lib/api-schemas.ts`
 - Status: tracked-clean
@@ -118,19 +52,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 223
-- Bytes: 8101
+- Lines: 101
+- Bytes: 3634
 - Imports (packages): zod
-- Imported by: __tests__/lib/api-schemas.test.ts, __tests__/lib/contact-form.test.ts, src/app/admin/actions/clients.ts, src/app/api/admin/invite/route.ts, src/app/api/agents/heartbeat/route.ts, src/app/api/agents/route.ts, src/app/api/alerts/route.ts, src/app/api/campaign-comments/route.ts, src/app/api/contact/route.ts, src/app/api/event-comments/route.ts, … (+4 more)
+- Imported by: __tests__/lib/api-schemas.test.ts, __tests__/lib/contact-form.test.ts, src/app/admin/actions/clients.ts, src/app/api/admin/invite/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/ingest-meta-campaigns.ts, src/app/api/ingest/route.ts
 - Used by groups: Tests / Lib, src/app / admin, src/app / api
-- Route owners: src/app/api/admin/invite/route.ts, src/app/api/agents/heartbeat/route.ts, src/app/api/agents/route.ts, src/app/api/alerts/route.ts, src/app/api/campaign-comments/route.ts, src/app/api/contact/route.ts, src/app/api/event-comments/route.ts, src/app/api/ingest/route.ts, … (+3 more)
-- Routes related (direct): src/app/api/admin/invite/route.ts, src/app/api/agents/heartbeat/route.ts, src/app/api/agents/route.ts, src/app/api/alerts/route.ts, src/app/api/campaign-comments/route.ts, src/app/api/contact/route.ts, src/app/api/event-comments/route.ts, src/app/api/ingest/route.ts
-- Tests related: __tests__/lib/api-schemas.test.ts, __tests__/lib/contact-form.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/api/admin/invite/route.test.ts, __tests__/api/agents-heartbeat.test.ts, __tests__/api/agents.test.ts, __tests__/api/alerts.test.ts, src/app/api/campaign-comments/route.test.ts, … (+3 more)
+- Route owners: src/app/api/admin/invite/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts, src/app/admin/clients/page.tsx, src/app/admin/clients/[id]/page.tsx
+- Routes related (direct): src/app/api/admin/invite/route.ts, src/app/api/contact/route.ts, src/app/api/ingest/route.ts
+- Tests related: __tests__/lib/api-schemas.test.ts, __tests__/lib/contact-form.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/api/admin/invite/route.test.ts, src/app/api/contact/route.test.ts, __tests__/api/ingest.test.ts, src/app/shell-import-smoke.test.ts
 - Tests related (direct): __tests__/lib/api-schemas.test.ts, __tests__/lib/contact-form.test.ts
-- Exports: IngestPayloadSchema, AlertPostSchema, AlertPatchSchema, VALID_AGENTS, AgentPostSchema, InviteSchema, CreateClientSchema, UpdateClientSchema, AddClientMemberSchema, RemoveClientMemberSchema, ChangeClientMemberRoleSchema, HeartbeatPayloadSchema, … (+6 more)
-- Symbol details: const IngestPayloadSchema (exported), const AlertPostSchema (exported), const AlertPatchSchema (exported), const VALID_AGENTS (exported), const AgentPostSchema (exported), const InviteSchema (exported), const CreateClientSchema (exported), const UpdateClientSchema (exported), const AddClientMemberSchema (exported), const RemoveClientMemberSchema (exported), const ChangeClientMemberRoleSchema (exported), const HeartbeatPayloadSchema (exported), const ContactFormSchema (exported), const CreateCampaignCommentSchema (exported), const CreateAssetCommentSchema (exported), const CreateEventCommentSchema (exported), … (+5 more)
-- Defines: TmEventSchema, MetaCampaignSchema, TmDemographicsSchema, IngestPayloadSchema, AlertPostSchema, AlertPatchSchema, VALID_AGENTS, AgentPostSchema, InviteSchema, CreateClientSchema, UpdateClientSchema, AddClientMemberSchema, … (+9 more)
-- Contents summary: exports: IngestPayloadSchema, AlertPostSchema, AlertPatchSchema, VALID_AGENTS, AgentPostSchema, InviteSchema, CreateClientSchema, UpdateClientSchema; package imports: 1
+- Exports: IngestPayloadSchema, InviteSchema, CreateClientSchema, UpdateClientSchema, AddClientMemberSchema, RemoveClientMemberSchema, ChangeClientMemberRoleSchema, ContactFormSchema, IngestPayload
+- Symbol details: const IngestPayloadSchema (exported), const InviteSchema (exported), const CreateClientSchema (exported), const UpdateClientSchema (exported), const AddClientMemberSchema (exported), const RemoveClientMemberSchema (exported), const ChangeClientMemberRoleSchema (exported), const ContactFormSchema (exported), const MetaCampaignSchema, type IngestPayload (exported)
+- Defines: MetaCampaignSchema, IngestPayloadSchema, InviteSchema, CreateClientSchema, UpdateClientSchema, AddClientMemberSchema, RemoveClientMemberSchema, ChangeClientMemberRoleSchema, ContactFormSchema, IngestPayload
+- Contents summary: exports: IngestPayloadSchema, InviteSchema, CreateClientSchema, UpdateClientSchema, AddClientMemberSchema, RemoveClientMemberSchema, ChangeClientMemberRoleSchema, ContactFormSchema; package imports: 1
 
 ## `src/lib/campaign-client-assignment.test.ts`
 - Status: tracked-clean
@@ -158,35 +92,32 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 156
 - Bytes: 4816
 - Imports (internal): src/lib/client-slug.ts, src/lib/supabase.ts
-- Imported by: __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/admin/actions/campaign-action-items.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, … (+21 more)
+- Imported by: __tests__/app/client/campaign-detail-data.test.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.test.ts, src/app/admin/actions/search.ts, src/app/admin/clients/data.test.ts, src/app/admin/clients/data.ts, src/app/admin/dashboard/data.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/features/campaigns/server.test.ts, … (+3 more)
 - Depends on groups: src/lib
-- Used by groups: Tests / App, Tests / Features, src/app / admin, src/app / api, src/app / client, src/features / approvals, src/features / assets, src/features / campaign-action-items, src/features / campaigns, src/features / conversations, … (+4 more)
-- Route owners: src/app/api/campaign-comments/action-item/route.ts, src/app/api/campaign-comments/route.ts, src/app/admin/clients/[id]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/page.tsx, … (+17 more)
-- Routes related (direct): src/app/api/campaign-comments/action-item/route.ts, src/app/api/campaign-comments/route.ts
-- Tests related: __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/admin/actions/search.test.ts, … (+54 more)
-- Tests related (direct): __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, src/app/admin/actions/search.test.ts, … (+3 more)
+- Used by groups: Tests / App, src/app / admin, src/app / client, src/features / campaigns, src/lib
+- Route owners: src/app/admin/clients/[id]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/dashboard/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/layout.tsx, … (+1 more)
+- Tests related: __tests__/app/client/campaign-detail-data.test.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/features/campaigns/server.test.ts, src/lib/campaign-client-assignment.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/dashboard/page.test.tsx, … (+5 more)
+- Tests related (direct): __tests__/app/client/campaign-detail-data.test.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/features/campaigns/server.test.ts, src/lib/campaign-client-assignment.test.ts
 - Exports: getCampaignClientOverrideMap, resolveEffectiveCampaignClientSlug, applyEffectiveCampaignClientSlugs, getEffectiveCampaignRowById, getEffectiveCampaignClientSlug, listEffectiveCampaignRowsForClientSlug, listEffectiveCampaignIdsForClientSlug, campaignBelongsToClientSlug, CampaignClientAssignmentRow
 - Symbol details: function getCampaignClientOverrideMap (exported), function resolveEffectiveCampaignClientSlug (exported), function applyEffectiveCampaignClientSlugs (exported), function getEffectiveCampaignRowById (exported), function getEffectiveCampaignClientSlug (exported), function listEffectiveCampaignRowsForClientSlug (exported), function listEffectiveCampaignIdsForClientSlug (exported), function campaignBelongsToClientSlug (exported), function normalizeGuessedClientSlug, interface CampaignClientAssignmentRow (exported)
 - Defines: normalizeGuessedClientSlug, getCampaignClientOverrideMap, resolveEffectiveCampaignClientSlug, applyEffectiveCampaignClientSlugs, getEffectiveCampaignRowById, getEffectiveCampaignClientSlug, listEffectiveCampaignRowsForClientSlug, listEffectiveCampaignIdsForClientSlug, campaignBelongsToClientSlug, overrides, uniqueCampaignIds, override, … (+8 more)
 - Contents summary: exports: getCampaignClientOverrideMap, resolveEffectiveCampaignClientSlug, applyEffectiveCampaignClientSlugs, getEffectiveCampaignRowById, getEffectiveCampaignClientSlug, listEffectiveCampaignRowsForClientSlug, listEffectiveCampaignIdsForClientSlug, campaignBelongsToClientSlug; internal imports: 2
 
-## `src/lib/campaign-event-match.ts`
+## `src/lib/client-error-reporting.ts`
 - Status: tracked-clean
 - System: web
 - Group: src/lib
 - Ownership: shared web library
 - Type: TypeScript module
-- Construction: code module
-- Lines: 51
-- Bytes: 1712
-- Imported by: src/app/admin/dashboard/upcoming-shows.tsx, src/components/admin/events/columns.tsx
-- Used by groups: src/app / admin, src/components / admin
-- Route owners: src/app/admin/dashboard/page.tsx, src/app/admin/events/page.tsx
-- Tests related: src/app/admin/dashboard/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/events/page.test.tsx
-- Exports: matchedCampaigns, MatchableCampaign, MatchableEvent
-- Symbol details: function matchedCampaigns (exported), function campaignCity, function campaignArtist, const CITY_KEYWORDS, type MatchableCampaign (exported), type MatchableEvent (exported)
-- Defines: campaignCity, campaignArtist, matchedCampaigns, CITY_KEYWORDS, lower, eventArtist, eventCity, cArtist, cCity, MatchableCampaign, MatchableEvent
-- Contents summary: exports: matchedCampaigns, MatchableCampaign, MatchableEvent
+- Construction: code module, contains `use client`
+- Lines: 22
+- Bytes: 661
+- Imported by: src/app/global-error.tsx, src/components/shared/error-boundary.tsx
+- Used by groups: src/app / root routes, src/components / shared
+- Exports: reportClientError
+- Symbol details: function reportClientError (exported)
+- Defines: reportClientError, payload
+- Contents summary: contains `use client`; exports: reportClientError
 
 ## `src/lib/client-slug.ts`
 - Status: tracked-clean
@@ -199,8 +130,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 689
 - Imported by: __tests__/lib/client-slug.test.ts, src/lib/campaign-client-assignment.ts
 - Used by groups: Tests / Lib, src/lib
-- Route owners: src/app/api/campaign-comments/action-item/route.ts, src/app/api/campaign-comments/route.ts, src/app/admin/clients/[id]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/page.tsx, … (+17 more)
-- Tests related: __tests__/lib/client-slug.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/read-clients.test.ts, src/app/admin/actions/campaign-action-items.test.ts, … (+55 more)
+- Route owners: src/app/admin/clients/[id]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/admin/dashboard/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/layout.tsx, … (+1 more)
+- Tests related: __tests__/lib/client-slug.test.ts, __tests__/app/client/campaign-detail-data.test.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/features/campaigns/server.test.ts, src/lib/campaign-client-assignment.test.ts, src/components/admin/clients/client-detail.test.tsx, src/app/shell-import-smoke.test.ts, … (+6 more)
 - Tests related (direct): __tests__/lib/client-slug.test.ts
 - Exports: guessClientSlug
 - Symbol details: function guessClientSlug (exported)
@@ -214,17 +145,17 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 45
-- Bytes: 1477
-- Imported by: src/app/admin/actions/meta-sync.ts, src/app/admin/campaigns/data.ts, src/app/admin/campaigns/page.tsx, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/components/campaign-section.tsx, src/app/client/[slug]/components/date-range-picker.tsx, src/app/client/[slug]/data.ts, src/components/admin/events/columns.tsx, src/components/admin/events/event-operating-panel.tsx, … (+6 more)
-- Used by groups: src/app / admin, src/app / client, src/components / admin, src/features / assets, src/features / client-portal, src/features / reports, src/lib
-- Route owners: src/app/admin/campaigns/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/events/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/reports/page.tsx, src/app/client/[slug]/reports/page.tsx, … (+7 more)
-- Routes related (direct): src/app/admin/campaigns/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx
-- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, … (+25 more)
-- Exports: parseRange, META_API_VERSION, META_PRESETS, RANGE_LABELS, EVENT_STATUS_OPTIONS, ASSET_STATUSES, ASSET_STATUS_COLORS, DateRange, AssetStatus
-- Symbol details: function parseRange (exported), const META_API_VERSION (exported), const EVENT_STATUS_OPTIONS (exported), const ASSET_STATUSES (exported), type DateRange (exported), type AssetStatus (exported)
-- Defines: parseRange, META_API_VERSION, EVENT_STATUS_OPTIONS, ASSET_STATUSES, DateRange, AssetStatus
-- Contents summary: exports: parseRange, META_API_VERSION, META_PRESETS, RANGE_LABELS, EVENT_STATUS_OPTIONS, ASSET_STATUSES, ASSET_STATUS_COLORS, DateRange
+- Lines: 96
+- Bytes: 2819
+- Imported by: src/app/admin/actions/meta-sync.ts, src/app/admin/campaigns/data.ts, src/app/admin/campaigns/page.tsx, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/campaign-range-filter.tsx, src/app/client/[slug]/campaigns/campaigns-table.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/components/campaign-detail-header.tsx, src/app/client/[slug]/data.ts, … (+3 more)
+- Used by groups: src/app / admin, src/app / client, src/features / client-portal, src/lib
+- Route owners: src/app/admin/campaigns/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/dashboard/page.tsx
+- Routes related (direct): src/app/admin/campaigns/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx
+- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, __tests__/app/client/campaign-detail-data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/campaigns/campaigns-table.test.tsx, src/app/client/[slug]/components/campaign-detail-header.test.tsx, src/lib/meta-api.test.ts, src/features/campaigns/server.test.ts, … (+5 more)
+- Exports: parseRange, parseCampaignRange, parseClientCampaignRange, getRangeLabel, getRangeQuery, META_API_VERSION, META_PRESETS, RANGE_LABELS, DateRange, CampaignRangeInput, CampaignRangeSearchParams
+- Symbol details: function parseRange (exported), function parseCampaignRange (exported), function parseClientCampaignRange (exported), function getRangeLabel (exported), function getRangeQuery (exported), function isIsoDate, function formatCustomRangeLabel, const META_API_VERSION (exported), const CLIENT_CAMPAIGN_RANGES, type DateRange (exported), type CampaignRangeInput (exported), interface CampaignRangeSearchParams (exported)
+- Defines: parseRange, isIsoDate, formatCustomRangeLabel, parseCampaignRange, parseClientCampaignRange, getRangeLabel, getRangeQuery, META_API_VERSION, CLIENT_CAMPAIGN_RANGES, start, end, formatter, … (+3 more)
+- Contents summary: exports: parseRange, parseCampaignRange, parseClientCampaignRange, getRangeLabel, getRangeQuery, META_API_VERSION, META_PRESETS, RANGE_LABELS
 
 ## `src/lib/database.types.ts`
 - Status: tracked-clean
@@ -233,12 +164,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 1952
-- Bytes: 57621
-- Exports: Constants, Json, Database, Tables, Enums, CompositeTypes
-- Symbol details: const Constants (exported), type Json (exported), type Database (exported), type Tables (exported), type Enums (exported), type CompositeTypes (exported), type DatabaseWithoutInternals, type DefaultSchema
-- Defines: Constants, Json, Database, DatabaseWithoutInternals, DefaultSchema, Tables, Enums, CompositeTypes
-- Contents summary: exports: Constants, Json, Database, Tables, Enums, CompositeTypes
+- Lines: 665
+- Bytes: 19137
+- Exports: Constants, Json, Database, Tables, TablesInsert, TablesUpdate, Enums, CompositeTypes
+- Symbol details: const Constants (exported), type Json (exported), type Database (exported), type Tables (exported), type TablesInsert (exported), type TablesUpdate (exported), type Enums (exported), type CompositeTypes (exported), type DatabaseWithoutInternals, type DefaultSchema
+- Defines: Constants, Json, Database, DatabaseWithoutInternals, DefaultSchema, Tables, TablesInsert, TablesUpdate, Enums, CompositeTypes
+- Contents summary: exports: Constants, Json, Database, Tables, TablesInsert, TablesUpdate, Enums, CompositeTypes
 
 ## `src/lib/env.ts`
 - Status: tracked-clean
@@ -247,8 +178,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 105
-- Bytes: 4616
+- Lines: 85
+- Bytes: 3644
 - Imports (packages): zod
 - Imported by: src/instrumentation.ts
 - Used by groups: src / Root
@@ -265,10 +196,10 @@ Each entry below documents the file path, system ownership, construction style, 
 - Construction: code module
 - Lines: 42
 - Bytes: 1100
-- Imported by: src/components/admin/campaigns/campaign-table.tsx, src/components/admin/clients/client-table.tsx, src/components/admin/events/event-table.tsx, src/components/admin/users/user-table.tsx
+- Imported by: src/components/admin/campaigns/campaign-table.tsx, src/components/admin/clients/client-table.tsx, src/components/admin/users/user-table.tsx
 - Used by groups: src/components / admin
-- Route owners: src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/events/page.tsx, src/app/admin/users/page.tsx
-- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/shell-import-smoke.test.ts
+- Route owners: src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx
+- Tests related: src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
 - Exports: exportToCsv, todayFilename
 - Symbol details: function exportToCsv (exported), function todayFilename (exported), function sanitize, type CsvColumn
 - Defines: sanitize, exportToCsv, todayFilename, headers, csvRows, csv, blob, url, a, d, CsvColumn
@@ -282,15 +213,15 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: shared web library
 - Type: React/TSX module
 - Construction: component/UI-oriented module
-- Lines: 192
-- Bytes: 7730
+- Lines: 189
+- Bytes: 7642
 - Imports (internal): src/features/invitations/types.ts, src/lib/status.ts
-- Imported by: __tests__/lib/formatters.test.ts, src/app/admin/actions/campaigns.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/data.ts, src/app/admin/clients/page.tsx, src/app/admin/dashboard/campaign-cards.tsx, src/app/admin/dashboard/data.ts, src/app/admin/dashboard/events-preview-table.tsx, src/app/admin/dashboard/page.tsx, … (+50 more)
+- Imported by: __tests__/lib/formatters.test.ts, src/app/admin/actions/campaigns.ts, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/data.ts, src/app/admin/clients/page.tsx, src/app/admin/dashboard/campaign-cards.tsx, src/app/admin/dashboard/data.ts, src/app/admin/dashboard/page.tsx, src/app/admin/users/page.tsx, … (+24 more)
 - Depends on groups: src/features / invitations, src/lib
-- Used by groups: Tests / Lib, src/app / admin, src/app / client, src/components / admin, src/components / client, src/features / client-portal, src/features / dashboard, src/features / events, src/features / reports, src/lib
-- Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, … (+14 more)
-- Routes related (direct): src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, … (+7 more)
-- Tests related: __tests__/lib/formatters.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/clients/data.test.ts, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, … (+41 more)
+- Used by groups: Tests / Lib, src/app / admin, src/app / client, src/components / admin, src/components / client, src/features / client-portal, src/lib
+- Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/users/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/layout.tsx, … (+2 more)
+- Routes related (direct): src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/users/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/layout.tsx, … (+1 more)
+- Tests related: __tests__/lib/formatters.test.ts, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/admin/clients/data.test.ts, src/app/admin/dashboard/page.test.tsx, __tests__/app/client/campaign-detail-data.test.ts, src/app/client/[slug]/campaigns/campaigns-table.test.tsx, … (+9 more)
 - Tests related (direct): __tests__/lib/formatters.test.ts
 - Exports: centsToUsd, fmtUsd, fmtNum, fmtDate, fmtTodayLong, slugToLabel, getInvitationStatusCfg, timeAgo, roasColor, fmtObjective, computeMarginalRoas, computeBlendedRoas, … (+3 more)
 - Symbol details: function centsToUsd (exported), function fmtUsd (exported), function fmtNum (exported), function fmtDate (exported), function fmtTodayLong (exported), function slugToLabel (exported), function getInvitationStatusCfg (exported), function timeAgo (exported), function roasColor (exported), function fmtObjective (exported), function computeMarginalRoas (exported), function computeBlendedRoas (exported), function statusBadge (exported), function describeCount (exported), const CAMPAIGN_STATUSES, interface MarginalRoasPoint (exported), … (+1 more)
@@ -339,19 +270,19 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 110
-- Bytes: 2884
+- Lines: 89
+- Bytes: 2233
 - Imports (internal): src/lib/supabase.ts
 - Imports (packages): react
-- Imported by: src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/data.ts, src/app/client/[slug]/event/[eventId]/data.ts, src/features/approvals/server.ts, src/features/approvals/summary.ts, src/features/assets/server.ts, src/features/campaign-comments/server.ts, src/features/campaigns/client-operating.ts, src/features/client-agent/readers.ts, src/features/client-agent/server.test.ts, … (+12 more)
+- Imported by: src/app/client/[slug]/campaign/[campaignId]/data.ts, src/app/client/[slug]/data.ts, src/features/client-portal/access.test.ts, src/features/client-portal/access.ts, src/features/client-portal/entry.test.ts, src/features/client-portal/entry.ts, src/features/client-portal/scope.ts
 - Depends on groups: src/lib
-- Used by groups: src/app / client, src/features / approvals, src/features / assets, src/features / campaign-comments, src/features / campaigns, src/features / client-agent, src/features / client-portal, src/features / conversations, src-features-event-comments, src/features / events, … (+2 more)
-- Route owners: src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/events/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx, src/app/api/campaign-comments/route.ts, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.ts, src/app/api/client/[slug]/agent/threads/[threadId]/route.ts, src/app/api/client/[slug]/agent/threads/route.ts, … (+12 more)
-- Tests related: src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, __tests__/app/client/event-detail-data.test.ts, … (+52 more)
-- Tests related (direct): src/features/client-agent/server.test.ts, src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts
+- Used by groups: src/app / client, src/features / client-portal
+- Route owners: src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/layout.tsx, src/app/client/page.tsx, src/app/page.tsx
+- Tests related: src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts, __tests__/app/client/campaign-detail-data.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/features/client-portal/entry-accept.test.ts, __tests__/features/client-portal/scope.test.ts, src/app/shell-import-smoke.test.ts, src/app/client/[slug]/layout.test.tsx
+- Tests related (direct): src/features/client-portal/access.test.ts, src/features/client-portal/entry.test.ts
 - Exports: getMemberships, getMemberAccessForSlug, ScopeFilter, MemberAccess, ScopedAccess
 - Symbol details: function getMemberships (exported), const getMemberAccessForSlug (exported), interface ScopeFilter (exported), interface MemberAccess (exported), interface ScopedAccess (exported)
-- Defines: getMemberships, client, getMemberAccessForSlug, ScopeFilter, MemberAccess, ScopedAccess
+- Defines: getMemberships, client, getMemberAccessForSlug, campaignsRes, ScopeFilter, MemberAccess, ScopedAccess
 - Contents summary: exports: getMemberships, getMemberAccessForSlug, ScopeFilter, MemberAccess, ScopedAccess; internal imports: 1; package imports: 1
 
 ## `src/lib/meta-api.test.ts`
@@ -380,16 +311,32 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 118
 - Bytes: 3608
 - Imports (internal): src/lib/constants.ts
-- Imported by: __tests__/app/client/campaign-detail-data.test.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/features/reports/server.ts, src/lib/meta-api.test.ts, src/lib/meta-campaigns.ts
+- Imported by: __tests__/app/client/campaign-detail-data.test.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts, src/lib/meta-api.test.ts, src/lib/meta-campaigns.ts
 - Depends on groups: src/lib
-- Used by groups: Tests / App, src/app / client, src/features / reports, src/lib
-- Route owners: src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/reports/page.tsx, src/app/client/[slug]/reports/page.tsx, src/app/admin/campaigns/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/events/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.ts, … (+3 more)
-- Tests related: __tests__/app/client/campaign-detail-data.test.ts, src/lib/meta-api.test.ts, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, __tests__/features/reports/server.test.ts, src/app/admin/reports/page.test.tsx, src/app/client/[slug]/reports/page.test.tsx, src/features/client-agent/tools/breakdowns.test.ts, … (+19 more)
+- Used by groups: Tests / App, src/app / client, src/lib
+- Route owners: src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx
+- Tests related: __tests__/app/client/campaign-detail-data.test.ts, src/lib/meta-api.test.ts, src/features/campaigns/server.test.ts, src/lib/meta-campaigns.test.ts, src/app/shell-import-smoke.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/client/[slug]/campaigns/page.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, … (+1 more)
 - Tests related (direct): __tests__/app/client/campaign-detail-data.test.ts, src/lib/meta-api.test.ts
 - Exports: fetchMetaApi, metaGet, metaInsightsUrl, metaUrl, MetaApiError, MetaInsightsTimeRange
 - Symbol details: function fetchMetaApi (exported), function metaGet (exported), function metaInsightsUrl (exported), function metaUrl (exported), class MetaApiError (exported), type MetaInsightsTimeRange (exported)
 - Defines: fetchMetaApi, metaGet, metaInsightsUrl, metaUrl, parsed, res, err, message, json, url, MetaApiError, MetaInsightsTimeRange
 - Contents summary: exports: fetchMetaApi, metaGet, metaInsightsUrl, metaUrl, MetaApiError, MetaInsightsTimeRange; internal imports: 1
+
+## `src/lib/meta-campaigns.test.ts`
+- Status: tracked-clean
+- System: web
+- Group: src/lib
+- Ownership: shared web library
+- Type: test file
+- Construction: test specification
+- Lines: 202
+- Bytes: 5454
+- Imports (internal): src/lib/meta-campaigns.ts, src/lib/supabase.ts
+- Imports (packages): vitest
+- Depends on groups: src/lib
+- Defines: originalEnv, fetchMock, url, result
+- Tests / describe labels: fetchAllCampaigns, fetches one live campaign for detail-page fallback, still returns Meta campaigns when optional Supabase enrichment is unavailable
+- Contents summary: tests/describes: fetchAllCampaigns; fetches one live campaign for detail-page fallback; still returns Meta campaigns when optional Supabase enrichment is unavailable; internal imports: 2; package imports: 1
 
 ## `src/lib/meta-campaigns.ts`
 - Status: tracked-clean
@@ -398,20 +345,20 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 297
-- Bytes: 9170
+- Lines: 413
+- Bytes: 13052
 - Imports (internal): src/lib/constants.ts, src/lib/campaign-client-assignment.ts, src/lib/formatters.tsx, src/lib/meta-api.ts, src/lib/supabase.ts
-- Imported by: __tests__/app/client/data.test.ts, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, src/app/admin/campaigns/data.ts, src/app/admin/campaigns/page.tsx, src/app/client/[slug]/data.ts, src/components/admin/campaigns/campaign-cells.tsx, src/components/admin/campaigns/campaign-table.tsx, src/components/admin/campaigns/columns.tsx, src/features/campaigns/server.ts, … (+1 more)
+- Imported by: src/app/admin/campaigns/data.ts, src/app/admin/campaigns/page.tsx, src/app/client/[slug]/data.ts, src/components/admin/campaigns/campaign-cells.tsx, src/components/admin/campaigns/campaign-table.tsx, src/components/admin/campaigns/columns.tsx, src/features/campaigns/server.test.ts, src/features/campaigns/server.ts, src/lib/meta-campaigns.test.ts
 - Depends on groups: src/lib
-- Used by groups: Tests / App, Tests / Features, src/app / admin, src/app / client, src/components / admin, src/features / campaigns, src/features / reports
-- Route owners: src/app/admin/campaigns/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/client/[slug]/events/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/reports/page.tsx, src/app/client/[slug]/reports/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/api/client/[slug]/agent/threads/[threadId]/messages/route.ts, … (+3 more)
+- Used by groups: src/app / admin, src/app / client, src/components / admin, src/features / campaigns, src/lib
+- Route owners: src/app/admin/campaigns/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx
 - Routes related (direct): src/app/admin/campaigns/page.tsx
-- Tests related: __tests__/app/client/data.test.ts, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/client/[slug]/events/page.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, … (+17 more)
-- Tests related (direct): __tests__/app/client/data.test.ts, __tests__/features/reports/integration.test.ts, __tests__/features/reports/read-clients.test.ts
-- Exports: fetchAllCampaigns, MetaCampaignCard, DailyInsight, MetaCampaignsResult
-- Symbol details: function fetchAllCampaigns (exported), function getCredentials, function fetchAllPages, function loadCampaignTypes, function loadAllClientSlugs, function safeParseFloat, function buildCampaignFilter, function buildInsightsUrl, interface MetaCampaignCard (exported), interface DailyInsight (exported), interface MetaCampaignsResult (exported), interface MetaPagedResponse, interface RawCampaign, interface RawInsight, interface RawDailyInsight
-- Defines: getCredentials, fetchAllPages, loadCampaignTypes, loadAllClientSlugs, safeParseFloat, buildCampaignFilter, buildInsightsUrl, fetchAllCampaigns, token, rawAccountId, accountId, res, … (+32 more)
-- Contents summary: exports: fetchAllCampaigns, MetaCampaignCard, DailyInsight, MetaCampaignsResult; internal imports: 5
+- Tests related: src/features/campaigns/server.test.ts, src/lib/meta-campaigns.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts, src/app/client/[slug]/campaigns/page.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx
+- Tests related (direct): src/features/campaigns/server.test.ts, src/lib/meta-campaigns.test.ts
+- Exports: fetchCampaignById, fetchAllCampaigns, MetaCampaignCard, DailyInsight, MetaCampaignsResult
+- Symbol details: function fetchCampaignById (exported), function fetchAllCampaigns (exported), function getCredentials, function fetchAllPages, function loadCampaignTypes, function loadAllClientSlugs, function readOptionalSupabaseData, function safeParseFloat, function getPurchaseRoas, function toCampaignCard, function fetchMetaJson, function buildCampaignFilter, function buildInsightsUrl, interface MetaCampaignCard (exported), interface DailyInsight (exported), interface MetaCampaignsResult (exported), … (+4 more)
+- Defines: getCredentials, fetchAllPages, loadCampaignTypes, loadAllClientSlugs, readOptionalSupabaseData, safeParseFloat, getPurchaseRoas, toCampaignCard, fetchMetaJson, buildCampaignFilter, buildInsightsUrl, fetchCampaignById, … (+40 more)
+- Contents summary: exports: fetchCampaignById, fetchAllCampaigns, MetaCampaignCard, DailyInsight, MetaCampaignsResult; internal imports: 5
 
 ## `src/lib/meta-oauth.test.ts`
 - Status: tracked-clean
@@ -492,17 +439,17 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 50
-- Bytes: 1960
+- Lines: 33
+- Bytes: 1025
 - Imported by: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/campaigns-table.tsx, src/features/client-portal/insights.ts, src/lib/formatters.tsx
 - Used by groups: src/app / admin, src/app / client, src/features / client-portal, src/lib
-- Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/events/[eventId]/page.tsx, src/app/admin/events/page.tsx, src/app/admin/settings/page.tsx, … (+14 more)
+- Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/client/[slug]/campaigns/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/users/page.tsx, src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/layout.tsx, … (+2 more)
 - Routes related (direct): src/app/admin/campaigns/[campaignId]/page.tsx
-- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/client/[slug]/campaigns/page.test.tsx, __tests__/features/reports/integration.test.ts, __tests__/lib/formatters.test.ts, src/app/shell-import-smoke.test.ts, src/app/client/[slug]/lib.test.ts, __tests__/features/reports/read-clients.test.ts, __tests__/features/reports/server.test.ts, … (+41 more)
-- Exports: getCampaignStatusCfg, getEventStatusCfg
-- Symbol details: function getCampaignStatusCfg (exported), function getEventStatusCfg (exported), type CampaignStatus, type EventStatus
-- Defines: getCampaignStatusCfg, getEventStatusCfg, key, CampaignStatus, EventStatus
-- Contents summary: exports: getCampaignStatusCfg, getEventStatusCfg
+- Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/client/[slug]/campaigns/campaigns-table.test.tsx, src/app/client/[slug]/campaigns/page.test.tsx, __tests__/lib/formatters.test.ts, src/app/shell-import-smoke.test.ts, src/app/client/[slug]/lib.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/admin/clients/data.test.ts, … (+9 more)
+- Exports: getCampaignStatusCfg, getGenericStatusCfg
+- Symbol details: function getCampaignStatusCfg (exported), function getGenericStatusCfg (exported), type CampaignStatus
+- Defines: getCampaignStatusCfg, getGenericStatusCfg, key, CampaignStatus
+- Contents summary: exports: getCampaignStatusCfg, getGenericStatusCfg
 
 ## `src/lib/supabase.ts`
 - Status: tracked-clean
@@ -511,15 +458,15 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: shared web library
 - Type: TypeScript module
 - Construction: code module
-- Lines: 79
-- Bytes: 2572
+- Lines: 76
+- Bytes: 2467
 - Imports (packages): react, @clerk/nextjs/server, @supabase/supabase-js
-- Imported by: __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, __tests__/features/conversations/read-clients.test.ts, __tests__/features/dashboard/integration.test.ts, … (+75 more)
-- Used by groups: Tests / App, Tests / Features, Tests / Root, src/app / admin, src/app / api, src/app / client, src/features / agent-outcomes, src/features / approvals, src/features / asset-follow-up-items, src/features / assets, … (+15 more)
-- Route owners: src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/agents/heartbeat/route.ts, src/app/api/agents/route.ts, src/app/api/alerts/route.ts, src/app/api/campaign-comments/action-item/route.ts, … (+31 more)
-- Routes related (direct): src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/agents/heartbeat/route.ts, src/app/api/agents/route.ts, src/app/api/alerts/route.ts, src/app/api/campaign-comments/action-item/route.ts, … (+5 more)
-- Tests related: __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, … (+73 more)
-- Tests related (direct): __tests__/app/client/campaign-detail-data.test.ts, __tests__/app/client/data.test.ts, __tests__/app/client/event-detail-data.test.ts, __tests__/features/agent-outcomes/read-clients.test.ts, __tests__/features/approvals/server.test.ts, __tests__/features/assets/read-clients.test.ts, __tests__/features/campaign-action-items/read-clients.test.ts, __tests__/features/campaign-comments/read-clients.test.ts, … (+23 more)
+- Imported by: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.test.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/admin/clients/data.test.ts, … (+32 more)
+- Used by groups: Tests / App, Tests / Features, Tests / Root, src/app / admin, src/app / api, src/app / client, src/features / campaigns, src/features / client-portal, src/features / invitations, src/features / system-events, … (+1 more)
+- Route owners: src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/health/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, … (+13 more)
+- Routes related (direct): src/app/admin/settings/page.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/health/route.ts, src/app/api/ingest/route.ts, src/app/api/meta/data-deletion/route.ts, … (+1 more)
+- Tests related: __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, … (+22 more)
+- Tests related (direct): __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, __tests__/setup.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/contact/route.test.ts, … (+7 more)
 - Exports: createClerkSupabaseClient, getFeatureReadClient, supabaseAdmin
 - Symbol details: function createClerkSupabaseClient (exported), function getFeatureReadClient (exported), const supabaseAdmin (exported), const getCachedUser, const url, const anonKey, const serviceKey
 - Defines: createClerkSupabaseClient, getFeatureReadClient, getCachedUser, url, anonKey, serviceKey, supabaseAdmin, user, role
@@ -534,11 +481,6 @@ Each entry below documents the file path, system ownership, construction style, 
 - Construction: code module
 - Lines: 11
 - Bytes: 396
-- Imported by: src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts
-- Used by groups: src/app / api
-- Route owners: src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts
-- Routes related (direct): src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/api/campaign-comments/route.ts, src/app/api/event-comments/route.ts
-- Tests related: src/app/api/campaign-comments/route.test.ts, src/app/api/event-comments/route.test.ts
 - Exports: excerpt
 - Symbol details: function excerpt (exported)
 - Defines: excerpt, normalized
@@ -568,9 +510,9 @@ Each entry below documents the file path, system ownership, construction style, 
 - Construction: code module
 - Lines: 9
 - Bytes: 228
-- Imported by: src/components/admin/client-onboard-form.tsx, src/components/admin/clients/client-table.tsx, src/lib/to-slug.test.ts
+- Imported by: src/components/admin/clients/client-table.tsx, src/lib/to-slug.test.ts
 - Used by groups: src/components / admin, src/lib
-- Route owners: src/app/admin/settings/page.tsx, src/app/admin/clients/page.tsx
+- Route owners: src/app/admin/clients/page.tsx
 - Tests related: src/lib/to-slug.test.ts, src/app/shell-import-smoke.test.ts
 - Tests related (direct): src/lib/to-slug.test.ts
 - Exports: toSlug
@@ -588,29 +530,11 @@ Each entry below documents the file path, system ownership, construction style, 
 - Lines: 7
 - Bytes: 166
 - Imports (packages): clsx, tailwind-merge
-- Imported by: src/components/admin/agents/command-summary.tsx, src/components/admin/collapsible-sidebar.tsx, src/components/admin/data-table/column-header.tsx, src/components/admin/nav-links.tsx, src/components/landing/sample-metric-card.tsx, src/components/ui/badge.tsx, src/components/ui/breadcrumb.tsx, src/components/ui/button.tsx, src/components/ui/card.tsx, src/components/ui/command.tsx, … (+8 more)
+- Imported by: src/components/admin/collapsible-sidebar.tsx, src/components/admin/data-table/column-header.tsx, src/components/admin/nav-links.tsx, src/components/landing/sample-metric-card.tsx, src/components/ui/badge.tsx, src/components/ui/breadcrumb.tsx, src/components/ui/button.tsx, src/components/ui/card.tsx, src/components/ui/command.tsx, src/components/ui/dialog.tsx, … (+6 more)
 - Used by groups: src/components / admin, src/components / landing, src/components / ui
-- Route owners: src/app/admin/agents/page.tsx, src/app/admin/layout.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/events/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, … (+21 more)
-- Tests related: src/components/admin/agents/command-summary.test.tsx, src/app/shell-import-smoke.test.ts, src/components/admin/agents/job-history.test.tsx, src/app/admin/dashboard/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/client/[slug]/components/campaign-discussion-form.test.tsx, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/event-discussion-form.test.tsx, … (+9 more)
+- Route owners: src/app/admin/layout.tsx, src/app/admin/clients/page.tsx, src/app/admin/dashboard/page.tsx, src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/client/page.tsx, src/app/client/pending/page.tsx, src/app/admin/campaigns/loading.tsx, … (+10 more)
+- Tests related: src/app/shell-import-smoke.test.ts, src/app/admin/dashboard/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/client/[slug]/layout.test.tsx, src/components/admin/clients/client-detail.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/users/revoke-invitation-button.test.tsx
 - Exports: cn
 - Symbol details: function cn (exported)
 - Defines: cn
 - Contents summary: exports: cn; package imports: 2
-
-## `src/lib/workspace-types.ts`
-- Status: tracked-clean
-- System: web
-- Group: src/lib
-- Ownership: shared web library
-- Type: TypeScript module
-- Construction: code module
-- Lines: 22
-- Bytes: 669
-- Imported by: src/app/admin/actions/campaign-action-items.ts, src/app/admin/actions/event-follow-up-items.ts, src/app/client/[slug]/components/campaign-operating-panel.tsx, src/app/client/[slug]/components/event-operating-panel.tsx, src/components/admin/campaigns/campaign-detail-dashboard.tsx, src/features/asset-follow-up-items/server.ts, src/features/campaign-action-items/server.ts, src/features/dashboard/summary.ts, src/features/event-follow-up-items/server.ts, src/features/events/summary.ts, … (+1 more)
-- Used by groups: src/app / admin, src/app / client, src/components / admin, src/features / asset-follow-up-items, src/features / campaign-action-items, src/features / dashboard, src/features / event-follow-up-items, src/features / events, src/lib
-- Route owners: src/app/client/[slug]/campaign/[campaignId]/page.tsx, src/app/client/[slug]/event/[eventId]/page.tsx, src/app/admin/campaigns/[campaignId]/page.tsx, src/app/api/agent-outcomes/action-item/route.ts, src/app/api/campaign-comments/action-item/route.ts, src/app/admin/reports/page.tsx, src/app/client/[slug]/reports/page.tsx, src/app/admin/events/[eventId]/page.tsx, … (+5 more)
-- Tests related: src/app/admin/actions/campaign-action-items.test.ts, src/app/client/[slug]/components/campaign-operating-panel.test.tsx, src/app/client/[slug]/components/event-operating-panel.test.tsx, src/app/admin/campaigns/[campaignId]/page.test.tsx, src/components/admin/campaigns/campaign-detail-dashboard.test.tsx, __tests__/features/campaign-action-items/read-clients.test.ts, src/features/campaign-action-items/server.test.ts, __tests__/features/dashboard/summary.test.ts, … (+28 more)
-- Exports: TASK_STATUSES, TASK_PRIORITIES, TASK_STATUS_LABELS, TASK_PRIORITY_LABELS, TaskStatus, TaskPriority
-- Symbol details: const TASK_STATUSES (exported), const TASK_PRIORITIES (exported), type TaskStatus (exported), type TaskPriority (exported)
-- Defines: TASK_STATUSES, TASK_PRIORITIES, TaskStatus, TaskPriority
-- Contents summary: exports: TASK_STATUSES, TASK_PRIORITIES, TASK_STATUS_LABELS, TASK_PRIORITY_LABELS, TaskStatus, TaskPriority

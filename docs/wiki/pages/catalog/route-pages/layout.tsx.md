@@ -1,6 +1,6 @@
 # /
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Route file: `src/app/layout.tsx`
 - Type: Next.js layout
@@ -11,7 +11,7 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Direct internal imports: src/app/globals.css
 - Feature modules touched: none
 - Shared libs/runtime touched: none
-- Database objects touched: none
+- Database objects touched: if
 - Direct tests: none
 - All linked tests: none
 - Contents summary: Next.js layout for `/`; exports: RootLayout, metadata, default; internal imports: 1; package imports: 4

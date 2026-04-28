@@ -1,6 +1,6 @@
 # /client
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Route file: `src/app/client/page.tsx`
 - Type: Next.js page
@@ -11,7 +11,7 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Direct internal imports: src/components/ui/button.tsx, src/features/client-portal/entry.ts
 - Feature modules touched: client-portal
 - Shared libs/runtime touched: src/lib/utils.ts, src/lib/supabase.ts, src/lib/member-access.ts
-- Database objects touched: clients, client_members, client_access_invites, client_member_campaigns, client_member_events
+- Database objects touched: if, clients, client_members, client_access_invites, client_member_campaigns
 - Direct tests: none
 - All linked tests: none
 - Contents summary: Next.js page for `/client`; exports: ClientPickerPage, default; internal imports: 2; package imports: 6

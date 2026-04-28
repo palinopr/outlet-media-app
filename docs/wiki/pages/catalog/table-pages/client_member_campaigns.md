@@ -1,22 +1,22 @@
 # Table: client_member_campaigns
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Access / auth tables
 - Kinds: table
 - Migrations: supabase/migrations/20260306152000_client_membership_rls.sql
-- Non-migration references: 8
-- Referenced by groups: src/app / admin (3), src/lib (2), Tests / Features (1), Docs / Context (1), src/features / notifications (1)
+- Non-migration references: 6
+- Referenced by groups: src/app / admin (3), src/lib (2), Docs / References (1)
 - Routes: none
-- Features: src/features/notifications/server.ts
+- Features: none
 - Shared libs: src/lib/database.types.ts, src/lib/member-access.ts
 - Agent files: none
-- Mutation-oriented files: src/app/admin/actions/clients.ts, src/features/notifications/server.ts
-- Tests: __tests__/features/notifications/server.test.ts, src/app/admin/clients/data.test.ts
-- Docs: docs/context/current-priorities.md
+- Mutation-oriented files: src/app/admin/actions/clients.ts, src/app/admin/clients/data.ts
+- Tests: src/app/admin/clients/data.test.ts
+- Docs: docs/references/database-safety-runbook.md
 - Other mentions: src/app/admin/actions/clients.ts, src/app/admin/clients/data.ts
 - Behavior signals from references: calls revalidatePath() (1), server action/module (1)
-- Auth signals from references: references membership/scope access concepts (8), imports Clerk server auth (4), calls currentUser() (1)
+- Auth signals from references: references membership/scope access concepts (6), imports Clerk server auth (2)
 
 ## Reference files
-- __tests__/features/notifications/server.test.ts, docs/context/current-priorities.md, src/app/admin/actions/clients.ts, src/app/admin/clients/data.test.ts, src/app/admin/clients/data.ts, src/features/notifications/server.ts, src/lib/database.types.ts, src/lib/member-access.ts
+- docs/references/database-safety-runbook.md, src/app/admin/actions/clients.ts, src/app/admin/clients/data.test.ts, src/app/admin/clients/data.ts, src/lib/database.types.ts, src/lib/member-access.ts

@@ -1,15 +1,15 @@
 # Impact: src/features/users/summary.ts
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Feature files
-- Impact score: 11
+- Impact score: 13
 - Ownership: feature module: users
 - Feature module: users
 - Route owners: src/app/admin/users/page.tsx
 - Imported by: __tests__/features/users/summary.test.ts, src/app/admin/users/page.tsx
 - Tests related: __tests__/features/users/summary.test.ts, src/app/shell-import-smoke.test.ts
-- DB objects: clients
+- DB objects: clients, if
 - Env vars: none
 - Mutation symbols: none
 - Auth signals: none

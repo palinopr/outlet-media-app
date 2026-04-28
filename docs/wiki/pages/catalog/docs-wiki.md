@@ -1,6 +1,6 @@
 # Docs / Wiki (manual control pages)
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Files: 10
 - File kinds: Markdown doc (9), file (.py) (1)
@@ -32,16 +32,16 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Outlet Repo Wiki Index \| Primary file-by-file catalog \| Overview \| Structural inventory \| Secondary audit pages \| Operations
 
 ## `docs/wiki/log.md`
-- Status: modified
+- Status: tracked-clean
 - System: docs
 - Group: Docs / Wiki (manual control pages)
 - Ownership: repo wiki source
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 268
-- Bytes: 24780
-- Headings: Repo Wiki Log, [2026-04-10] landing \| add media-vs-ticketing comparison section and premium mobile sticky cta, [2026-04-10] landing \| add designed sample metric cards and richer portal overlays, [2026-04-10] landing \| switch proof blocks to illustrative metrics instead of blank placeholders, [2026-04-10] landing \| remove public customer metrics from landing proof, [2026-04-10] landing \| add subtle motion and founder-led final polish, [2026-04-10] landing \| build standout hero composite and premium audit CTA, [2026-04-10] landing \| art direct proof visuals and add desktop portal collage, [2026-04-10] landing \| replace generic proof with sourced wins and real portal AI messaging, [2026-04-10] landing \| tighten typography scale and spacing rhythm, … (+10 more)
-- Contents summary: headings: Repo Wiki Log \| [2026-04-10] landing \| add media-vs-ticketing comparison section and premium mobile sticky cta \| [2026-04-10] landing \| add designed sample metric cards and richer portal overlays \| [2026-04-10] landing \| switch proof blocks to illustrative metrics instead of blank placeholders \| [2026-04-10]…
+- Lines: 336
+- Bytes: 31309
+- Headings: Repo Wiki Log, [2026-04-28] landing \| mobile-first lead funnel, [2026-04-27] client-web \| readable placement labels, [2026-04-27] client-web \| uncramp campaign markets section, [2026-04-27] client-web \| dark campaign list polish, [2026-04-27] client-web \| dark campaign detail redesign, [2026-04-27] client-web \| visual campaign detail graphs, [2026-04-27] client-web \| default campaign portal to today, [2026-04-27] client-web \| campaign range picker and new-campaign detail fallback, [2026-04-27] client-access \| preserve assignments on invite acceptance, … (+10 more)
+- Contents summary: headings: Repo Wiki Log \| [2026-04-28] landing \| mobile-first lead funnel \| [2026-04-27] client-web \| readable placement labels \| [2026-04-27] client-web \| uncramp campaign markets section \| [2026-04-27] client-web \| dark campaign list polish \| [2026-04-27] client-web \| dark campaign detail redesign
 
 ## `docs/wiki/pages/audits/dead-ends-and-dead-code.md`
 - Status: tracked-clean
@@ -50,10 +50,10 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo wiki source
 - Type: Markdown doc
 - Construction: markdown document, frontmatter-like markdown structure
-- Lines: 54
-- Bytes: 2230
-- Headings: Dead Ends and Dead Code, Confirmed dead-end / hygiene issue, `tmp-playwright/`, Dead-code candidates that require proof, `src/features/operations-center/`, `src/features/conversations/`, `src/features/assets/` and `src/features/asset-follow-up-items/`, Important caution, Output expectation for future passes
-- Contents summary: headings: Dead Ends and Dead Code \| Confirmed dead-end / hygiene issue \| `tmp-playwright/` \| Dead-code candidates that require proof \| `src/features/operations-center/` \| `src/features/conversations/`
+- Lines: 65
+- Bytes: 3085
+- Headings: Dead Ends and Dead Code, Confirmed dead-end / hygiene issue, Retired client overview support components, `tmp-playwright/`, Audited support modules to keep, `src/features/operations-center/`, `src/features/conversations/`, `src/features/assets/` and `src/features/asset-follow-up-items/`, Dead-code candidates that require proof, Important caution, … (+1 more)
+- Contents summary: headings: Dead Ends and Dead Code \| Confirmed dead-end / hygiene issue \| Retired client overview support components \| `tmp-playwright/` \| Audited support modules to keep \| `src/features/operations-center/`
 
 ## `docs/wiki/pages/audits/mismatch-register.md`
 - Status: tracked-clean
@@ -62,9 +62,9 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo wiki source
 - Type: Markdown doc
 - Construction: markdown document, frontmatter-like markdown structure
-- Lines: 47
-- Bytes: 2218
-- Headings: Mismatch Register, Confirmed mismatches, 1. README agent description is stale vs current architecture docs, Resolved mismatches, 1. Local scratch Playwright file leaked into the normal web test loop, Suspected mismatches that need deeper audit, 3. Agent memory may still carry scheduler-era operational guidance, 4. Feature-module breadth may exceed current packaged product shape, Verification snapshot
+- Lines: 53
+- Bytes: 2742
+- Headings: Mismatch Register, Confirmed mismatches, 1. README agent description is stale vs current architecture docs, Resolved mismatches, 1. Local scratch Playwright file leaked into the normal web test loop, Suspected mismatches that need deeper audit, 2. Some live campaigns still need explicit admin ownership mapping, 3. Agent memory may still carry scheduler-era operational guidance, 4. Feature-module breadth may exceed current packaged product shape, Verification snapshot
 - Contents summary: headings: Mismatch Register \| Confirmed mismatches \| 1. README agent description is stale vs current architecture docs \| Resolved mismatches \| 1. Local scratch Playwright file leaked into the normal web test loop \| Suspected mismatches that need deeper audit
 
 ## `docs/wiki/pages/inventory/feature-modules.md`
@@ -80,14 +80,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Feature Modules \| Primary product-facing areas \| Embedded workflow/support areas \| Additional feature areas present in the tree \| How to read this page
 
 ## `docs/wiki/pages/inventory/source-map.md`
-- Status: tracked-clean
+- Status: modified
 - System: docs
 - Group: Docs / Wiki (manual control pages)
 - Ownership: repo wiki source
 - Type: Markdown doc
 - Construction: markdown document, frontmatter-like markdown structure
-- Lines: 100
-- Bytes: 3352
+- Lines: 99
+- Bytes: 3316
 - Headings: Source Map, Admin web routes, Client web routes, API surfaces currently visible in build output, Feature-module directories, Agent runtime files, Notes
 - Contents summary: headings: Source Map \| Admin web routes \| Client web routes \| API surfaces currently visible in build output \| Feature-module directories \| Agent runtime files
 
@@ -116,12 +116,12 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Raw Sources
 
 ## `docs/wiki/tools/generate_repo_catalog.py`
-- Status: tracked-clean
+- Status: modified
 - System: docs
 - Group: Docs / Wiki (manual control pages)
 - Ownership: repo wiki source
 - Type: file (.py)
 - Construction: contains `use client`
 - Lines: 3399
-- Bytes: 152236
+- Bytes: 152218
 - Contents summary: text lines: from __future__ import annotations \| import json \| import os \| import re \| import shutil \| import subprocess

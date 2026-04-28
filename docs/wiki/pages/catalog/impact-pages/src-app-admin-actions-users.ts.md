@@ -1,15 +1,15 @@
 # Impact: src/app/admin/actions/users.ts
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Admin actions
-- Impact score: 42
+- Impact score: 41
 - Ownership: web admin route surface
 - Feature module: none
-- Route owners: src/app/admin/settings/page.tsx, src/app/admin/users/page.tsx, src/app/admin/clients/[id]/page.tsx
+- Route owners: src/app/admin/users/page.tsx, src/app/admin/clients/[id]/page.tsx
 - Imported by: src/components/admin/users/columns.tsx, src/components/admin/users/revoke-invitation-button.test.tsx, src/components/admin/users/revoke-invitation-button.tsx, src/components/admin/users/user-table.tsx
 - Tests related: src/components/admin/users/revoke-invitation-button.test.tsx, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx
-- DB objects: clients, client_access_invites
+- DB objects: clients, client_access_invites, if
 - Env vars: none
 - Mutation symbols: changeUserRole, bulkUpdateUserRole, deleteUser, revokeInvitation, ChangeRoleSchema, BulkUpdateRoleSchema, failed, DeleteUserSchema, RevokeInvitationSchema
 - Auth signals: imports Clerk server auth

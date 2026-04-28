@@ -1,6 +1,6 @@
 # /api/admin/users/[id]
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Route file: `src/app/api/admin/users/[id]/route.ts`
 - Type: Next.js route handler
@@ -11,9 +11,9 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Direct internal imports: src/lib/api-helpers.ts, src/lib/supabase.ts
 - Feature modules touched: none
 - Shared libs/runtime touched: src/lib/api-helpers.ts, src/lib/supabase.ts
-- Database objects touched: clients, client_members
-- Direct tests: none
-- All linked tests: none
+- Database objects touched: clients, client_members, if
+- Direct tests: src/app/api/admin/users/[id]/route.test.ts
+- All linked tests: src/app/api/admin/users/[id]/route.test.ts
 - Contents summary: Next.js route handler for `/api/admin/users/[id]`; route handlers: PATCH; exports: PATCH; internal imports: 2; package imports: 2
 
 ## Stack by group

@@ -1,6 +1,6 @@
 # Tests / Lib
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Files: 4
 - File kinds: test file (4)
@@ -14,14 +14,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: library test suite
 - Type: test file
 - Construction: test specification
-- Lines: 297
-- Bytes: 10275
+- Lines: 103
+- Bytes: 3675
 - Imports (internal): src/lib/api-schemas.ts
 - Imports (packages): vitest
 - Depends on groups: src/lib
-- Defines: validBase, result
-- Tests / describe labels: IngestPayloadSchema, accepts a valid meta payload, accepts a valid ticketmaster_one payload, rejects missing secret, rejects empty secret, rejects invalid source enum, rejects missing data.scraped_at, accepts tm_demographics source, … (+4 more)
-- Contents summary: tests/describes: IngestPayloadSchema; accepts a valid meta payload; accepts a valid ticketmaster_one payload; internal imports: 1; package imports: 1
+- Defines: validBase, result, ticketmaster, demographics
+- Tests / describe labels: IngestPayloadSchema, accepts a valid meta payload, rejects missing secret, rejects empty secret, rejects invalid source enum, rejects missing data.scraped_at, rejects retired ticketing sources, ContactFormSchema, … (+4 more)
+- Contents summary: tests/describes: IngestPayloadSchema; accepts a valid meta payload; rejects missing secret; internal imports: 1; package imports: 1
 
 ## `__tests__/lib/client-slug.test.ts`
 - Status: tracked-clean
@@ -44,14 +44,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: library test suite
 - Type: test file
 - Construction: test specification
-- Lines: 49
-- Bytes: 1207
-- Imports (internal): src/lib/api-schemas.ts
+- Lines: 74
+- Bytes: 2139
+- Imports (internal): src/components/landing/contact-form.tsx, src/lib/api-schemas.ts
 - Imports (packages): vitest
-- Depends on groups: src/lib
-- Defines: result
-- Tests / describe labels: ContactFormSchema, accepts valid submission, rejects missing email, rejects invalid email, rejects empty name, rejects empty message
-- Contents summary: tests/describes: ContactFormSchema; accepts valid submission; rejects missing email; internal imports: 1; package imports: 1
+- Depends on groups: src/components / landing, src/lib
+- Defines: result, formData, payload
+- Tests / describe labels: ContactFormSchema, accepts valid submission, rejects missing email, rejects invalid email, rejects empty name, rejects empty message, builds an API-compatible landing fallback payload
+- Contents summary: tests/describes: ContactFormSchema; accepts valid submission; rejects missing email; internal imports: 2; package imports: 1
 
 ## `__tests__/lib/formatters.test.ts`
 - Status: tracked-clean

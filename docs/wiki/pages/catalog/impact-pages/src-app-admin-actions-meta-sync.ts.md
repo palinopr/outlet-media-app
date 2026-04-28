@@ -1,15 +1,15 @@
 # Impact: src/app/admin/actions/meta-sync.ts
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Category: Admin actions
-- Impact score: 17
+- Impact score: 19
 - Ownership: web admin route surface
 - Feature module: none
 - Route owners: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx
 - Imported by: src/app/admin/actions/campaigns.ts
 - Tests related: src/app/admin/campaigns/[campaignId]/page.test.tsx, src/app/admin/campaigns/page.test.tsx, src/app/shell-import-smoke.test.ts
-- DB objects: none
+- DB objects: if
 - Env vars: META_ACCESS_TOKEN, META_AD_ACCOUNT_ID
 - Mutation symbols: syncCampaignStatus, syncCampaignBudget
 - Auth signals: none

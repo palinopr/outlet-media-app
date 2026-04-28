@@ -1,6 +1,6 @@
 # /admin/clients
 
-Generated from the current working tree on 2026-04-10 22:25:15.
+Generated from the current working tree on 2026-04-28 02:30:43.
 
 - Route file: `src/app/admin/clients/page.tsx`
 - Type: Next.js page
@@ -11,7 +11,7 @@ Generated from the current working tree on 2026-04-10 22:25:15.
 - Direct internal imports: src/components/ui/card.tsx, src/components/ui/badge.tsx, src/app/admin/clients/data.ts, src/lib/formatters.tsx, src/components/admin/stat-card.tsx, src/components/admin/clients/client-table.tsx, src/features/clients/summary.ts, src/components/admin/page-header.tsx
 - Feature modules touched: clients, invitations, settings, access
 - Shared libs/runtime touched: src/lib/formatters.tsx, src/lib/utils.ts, src/lib/supabase.ts, src/lib/campaign-client-assignment.ts, src/lib/status.ts, src/lib/to-slug.ts, src/lib/export-csv.ts, src/lib/client-slug.ts, src/lib/api-helpers.ts, src/lib/api-schemas.ts
-- Database objects touched: clients, tm_events, meta_campaigns, client_accounts, approval_requests, campaign_action_items, campaign_comments, asset_comments, event_comments, client_members, client_member_campaigns, client_member_events, ad_assets, campaign_client_overrides, … (+14 more)
+- Database objects touched: clients, meta_campaigns, client_accounts, client_members, client_member_campaigns, if, campaign_client_overrides, client_access_invites, system_events, admin_activity
 - Direct tests: src/app/shell-import-smoke.test.ts
 - All linked tests: src/app/shell-import-smoke.test.ts
 - Contents summary: Next.js page for `/admin/clients`; exports: ClientsPage, default; internal imports: 8; package imports: 2
