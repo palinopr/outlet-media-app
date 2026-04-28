@@ -27,6 +27,16 @@ let nonAdminUser: ClerkUser | null = null;
 const temporaryUsers: ClerkUser[] = [];
 const temporaryClientMemberIds: string[] = [];
 
+test("public client event funnel stays reachable without sign-in", async ({ request }) => {
+  const response = await request.get(appUrl("/9am/orlando"));
+  expect(response.status()).toBe(200);
+
+  const html = await response.text();
+  expect(html).toContain("Perreo at 9AM Orlando");
+  expect(html).toContain("465799745886450");
+  expect(html).not.toContain("Sign in to Outlet Media");
+});
+
 test.describe("authenticated smoke", () => {
   test.skip(!clerkSecretKey, "Set E2E_CLERK_SECRET_KEY or CLERK_SECRET_KEY to run authenticated smoke tests.");
 

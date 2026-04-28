@@ -9,6 +9,8 @@ The current shipped product is intentionally narrow:
 
 Events, Reports, ticketing workflows and ingest are retired for now. Direct Events/Reports URLs should redirect back to the active Dashboard/Campaigns experience rather than exposing hidden product pages.
 
+Exception: public client marketing funnels are allowed when they are explicitly live for a client. `/9am/orlando` is an active client event landing page under `src/app/9am` + `public/9am`; do not remove it during app-surface cleanup. This exception does not restore the retired Events product surface.
+
 Do not add standalone client apps for Events, Reports, CRM, assets, approvals, action items, conversations, workspace, updates, or chat unless there is an explicit product decision and a maintainable end-to-end slice.
 
 ## Agent Status

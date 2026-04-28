@@ -33,3 +33,6 @@ test-results/
 playwright-report/
 tmp-playwright/
 audit/
+
+# Local exported funnel source mirrors; active deployed funnels live under public/.
+docs/references/9am-funnel/

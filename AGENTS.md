@@ -16,6 +16,8 @@ Outlet Media is a client-facing autonomous-agency operating system, but the curr
 
 Events, Reports, ticketing workflows and ingest are retired as product surfaces and backend integrations for now. Keep direct Events/Reports routes redirected back to the active Campaigns/Dashboard experience unless there is a new explicit product decision.
 
+Exception: public client marketing funnels are allowed when explicitly live for a client. `/9am/orlando` is an active client event landing page under `src/app/9am` + `public/9am`; do not remove it during app-surface cleanup. This does not restore the retired Events product surface.
+
 All agent runtime and agent-facing product surfaces are retired for now. Do not add an admin Agents page, client Agent tab, agent task queue, agent outcome widgets, or background agent runtime unless there is a new explicit product decision.
 
 ## Product Principles

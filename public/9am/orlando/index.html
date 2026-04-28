@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Perreo at 9AM Orlando</title>
+    <meta
+      name="description"
+      content="Perreo at 9AM Orlando at The Beacham on Saturday May 2. Tequila Sunrise open bar 9AM-11AM."
+    />
+    <link rel="preload" as="image" href="./assets/orlando-flyer.jpg" />
+    <script>
+      !(function (f, b, e, v, n, t, s) {
+        if (f.fbq) return;
+        n = f.fbq = function () {
+          n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
+        };
+        if (!f._fbq) f._fbq = n;
+        n.push = n;
+        n.loaded = true;
+        n.version = "2.0";
+        n.queue = [];
+        t = b.createElement(e);
+        t.async = true;
+        t.src = v;
+        s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s);
+      })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+      fbq("init", "465799745886450");
+      fbq("track", "PageView");
+      fbq("track", "ViewContent", {
+        content_name: "Perreo at 9AM Orlando",
+        content_category: "event_ticket",
+        city: "Orlando",
+      });
+    </script>
+    <style>
+      :root {
+        color-scheme: dark;
+        --ink: #fff8ec;
+        --muted: rgba(255, 248, 236, 0.72);
+        --line: rgba(255, 248, 236, 0.16);
+        --black: #080604;
+        --sun: #ffb000;
+        --heat: #ff4b2f;
+        --aqua: #3ee7cf;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: #080604;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100svh;
+        overflow-x: hidden;
+        background: #080604;
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: 100%;
+        max-width: 430px;
+        min-height: 100svh;
+        margin: 0 auto;
+        padding-bottom: 112px;
+        background: var(--black);
+        box-shadow: 0 0 80px rgba(0, 0, 0, 0.58);
+        overflow: clip;
+      }
+
+      .hero {
+        padding: 0;
+        background: #080604;
+      }
+
+      .hero-visual {
+        background: #130d09;
+      }
+
+      .hero-flyer {
+        display: block;
+        width: 100%;
+        aspect-ratio: 3 / 4;
+        object-fit: cover;
+        object-position: center top;
+      }
+
+      .hero-panel {
+        padding: 18px 20px 28px;
+        background: linear-gradient(180deg, #080604 0%, #100b08 100%);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 14px;
+        color: var(--black);
+        background: var(--sun);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 8px 10px;
+        border-radius: 4px;
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        max-width: 12ch;
+        font-size: clamp(38px, 11.5vw, 54px);
+        line-height: 0.9;
+        letter-spacing: 0;
+        text-transform: uppercase;
+        text-shadow: 0 2px 28px rgba(0, 0, 0, 0.82);
+      }
+
+      .hero-copy {
+        max-width: 330px;
+        margin-top: 18px;
+        color: rgba(255, 248, 236, 0.88);
+        font-size: 17px;
+        line-height: 1.35;
+        text-shadow: 0 1px 20px rgba(0, 0, 0, 0.55);
+      }
+
+      .hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 22px;
+      }
+
+      .primary {
+        display: inline-flex;
+        min-height: 52px;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        border-radius: 4px;
+        background: var(--heat);
+        color: white;
+        padding: 0 18px;
+        font-size: 16px;
+        font-weight: 900;
+        text-decoration: none;
+        box-shadow: 0 18px 34px rgba(255, 75, 47, 0.28);
+      }
+
+      .from {
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.2;
+      }
+
+      .ticker {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        background: #0f0b08;
+      }
+
+      .tick {
+        min-width: 0;
+        padding: 14px 6px 13px;
+        text-align: center;
+        border-right: 1px solid var(--line);
+      }
+
+      .tick:last-child {
+        border-right: 0;
+      }
+
+      .tick strong {
+        display: block;
+        font-size: 24px;
+        line-height: 1;
+      }
+
+      .tick span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      section {
+        padding: 34px 20px;
+      }
+
+      .section-title {
+        font-size: 36px;
+        line-height: 0.95;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      .section-lede {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.45;
+      }
+
+      .first-proof {
+        padding-top: 26px;
+        background: linear-gradient(to bottom, #080604, #100b08);
+      }
+
+      .video-frame {
+        position: relative;
+        margin-top: 20px;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #1d1510;
+        aspect-ratio: 9 / 16;
+      }
+
+      .video-frame video,
+      .media video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #130d09;
+      }
+
+      .video-toggle {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 3;
+        border: 1px solid rgba(255, 248, 236, 0.24);
+        border-radius: 999px;
+        background: rgba(8, 6, 4, 0.62);
+        color: var(--ink);
+        min-height: 38px;
+        padding: 0 12px;
+        font: inherit;
+        font-size: 12px;
+        font-weight: 900;
+        backdrop-filter: blur(10px);
+      }
+
+      .proof {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px 16px;
+        background: #0c0907;
+      }
+
+      .proof strong {
+        display: block;
+        font-size: 27px;
+        line-height: 1;
+      }
+
+      .proof span {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.3;
+      }
+
+      .media-strip {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 72%;
+        gap: 12px;
+        margin: 22px -20px 0;
+        padding: 0 20px 6px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+      }
+
+      .media {
+        position: relative;
+        min-height: 390px;
+        border-radius: 6px;
+        overflow: hidden;
+        scroll-snap-align: start;
+        background: #1d1510;
+      }
+
+      .expect {
+        display: grid;
+        gap: 12px;
+      }
+
+      .expect-row {
+        display: grid;
+        grid-template-columns: 76px 1fr;
+        gap: 16px;
+        align-items: start;
+        padding: 16px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .expect-row b {
+        color: var(--aqua);
+        font-size: 13px;
+        text-transform: uppercase;
+      }
+
+      .expect-row p {
+        color: rgba(255, 248, 236, 0.9);
+        font-size: 18px;
+        line-height: 1.22;
+      }
+
+      .venue,
+      .final {
+        min-height: 390px;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        background:
+          linear-gradient(to top, rgba(8, 6, 4, 0.98), rgba(8, 6, 4, 0.2)),
+          url("./assets/orlando-hero.jpg") center / cover;
+      }
+
+      .venue dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 10px 18px;
+        margin: 22px 0 0;
+      }
+
+      .venue dt {
+        color: var(--sun);
+        font-size: 12px;
+        font-weight: 900;
+        text-transform: uppercase;
+      }
+
+      .venue dd {
+        margin: 0;
+        color: var(--ink);
+        font-size: 15px;
+        line-height: 1.35;
+      }
+
+      .faq {
+        background: #100c09;
+      }
+
+      details {
+        border-bottom: 1px solid var(--line);
+        padding: 17px 0;
+      }
+
+      summary {
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 850;
+        list-style: none;
+      }
+
+      summary::-webkit-details-marker {
+        display: none;
+      }
+
+      details p {
+        margin-top: 10px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+
+      .final {
+        justify-content: center;
+      }
+
+      .final .section-title {
+        font-size: 44px;
+      }
+
+      .sticky {
+        position: fixed;
+        left: 50%;
+        bottom: 0;
+        z-index: 10;
+        width: 100%;
+        max-width: 430px;
+        transform: translate(-50%, 110%);
+        padding: 9px 14px calc(10px + env(safe-area-inset-bottom));
+        background: linear-gradient(to top, rgba(8, 6, 4, 0.99), rgba(8, 6, 4, 0.9));
+        backdrop-filter: blur(16px);
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 180ms ease,
+          transform 180ms ease;
+      }
+
+      .sticky.is-visible {
+        transform: translate(-50%, 0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .sticky-note {
+        display: flex;
+        min-height: 22px;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        margin: 0 0 7px;
+        color: rgba(255, 248, 236, 0.82);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        line-height: 1.1;
+        text-align: center;
+        text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .sticky-note b {
+        color: var(--sun);
+      }
+
+      .sticky.is-compact {
+        padding-top: 10px;
+      }
+
+      .sticky.is-compact .sticky-note {
+        display: none;
+      }
+
+      .sticky a {
+        width: 100%;
+      }
+
+      @media (max-width: 374px) {
+        .primary {
+          padding: 0 14px;
+          font-size: 15px;
+        }
+
+        .shell {
+          padding-bottom: 108px;
+        }
+
+        .sticky-note {
+          gap: 5px;
+          font-size: 10px;
+        }
+
+        .sticky .primary {
+          padding: 0 10px;
+          font-size: 14px;
+        }
+
+        .tick strong {
+          font-size: 22px;
+        }
+
+        .tick span {
+          font-size: 9px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <img
+        height="1"
+        width="1"
+        style="display: none"
+        src="https://www.facebook.com/tr?id=465799745886450&ev=PageView&noscript=1"
+        alt=""
+      />
+    </noscript>
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-visual">
+          <img
+            class="hero-flyer"
+            src="./assets/orlando-flyer.jpg"
+            alt="Perreo at 9AM Orlando flyer with May 2 Beacham event details"
+            fetchpriority="high"
+          />
+        </div>
+        <div class="hero-panel">
+          <div class="eyebrow">Orlando - This Saturday</div>
+          <h1>Perreo at 9AM</h1>
+          <p class="hero-copy">
+            The Beacham wakes up early for reggaeton, flags, and Tequila Sunrises from 9-11AM.
+          </p>
+          <div class="hero-actions">
+            <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-orlando">Get tickets</a>
+            <p class="from">from<br />$24</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="ticker" aria-label="Countdown to Perreo at 9AM Orlando">
+        <div class="tick"><strong id="days">03</strong><span>days</span></div>
+        <div class="tick"><strong id="hours">20</strong><span>hours</span></div>
+        <div class="tick"><strong id="minutes">18</strong><span>mins</span></div>
+        <div class="tick"><strong id="seconds">09</strong><span>secs</span></div>
+      </div>
+
+      <section class="first-proof">
+        <h2 class="section-title">Yes, it really starts at 9AM.</h2>
+        <p class="section-lede">The first question is always the same. This is the fastest answer.</p>
+        <div class="video-frame">
+          <video
+            class="proof-video"
+            data-proof="boston-vlog-14s"
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            poster="./assets/videos/proof-boston-vlog.jpg"
+            src="./assets/videos/proof-boston-vlog.mp4"
+          ></video>
+          <button class="video-toggle" type="button">Tap for sound</button>
+        </div>
+      </section>
+
+      <section class="proof">
+        <p><strong>60K</strong><span>tickets sold across the 9AM world</span></p>
+        <p><strong>134K</strong><span>Instagram followers watching the tour</span></p>
+        <p><strong>47K</strong><span>TikTok followers and 1.2M likes</span></p>
+        <p><strong>38K+</strong><span>attendees verified on Posh</span></p>
+        <p><strong>77</strong><span>Posh events hosted by The 9AM Banger</span></p>
+        <p><strong>9-11</strong><span>Tequila Sunrise open bar window</span></p>
+      </section>
+
+      <section>
+        <h2 class="section-title">Watch the proof.</h2>
+        <p class="section-lede">Phone-camera clips show what the morning actually feels like.</p>
+        <div class="media-strip" aria-label="Social proof videos">
+          <article class="media">
+            <video
+              class="proof-video"
+              data-proof="inabelle"
+              muted
+              loop
+              playsinline
+              preload="metadata"
+              poster="./assets/videos/proof-inabelle.jpg"
+              src="./assets/videos/proof-inabelle.mp4"
+            ></video>
+            <button class="video-toggle" type="button">Tap for sound</button>
+          </article>
+          <article class="media">
+            <video
+              class="proof-video"
+              data-proof="jenzaruma"
+              muted
+              loop
+              playsinline
+              preload="metadata"
+              poster="./assets/videos/proof-jenzaruma.jpg"
+              src="./assets/videos/proof-jenzaruma.mp4"
+            ></video>
+            <button class="video-toggle" type="button">Tap for sound</button>
+          </article>
+          <article class="media">
+            <video
+              class="proof-video"
+              data-proof="hector"
+              muted
+              loop
+              playsinline
+              preload="metadata"
+              poster="./assets/videos/proof-hector.jpg"
+              src="./assets/videos/proof-hector.mp4"
+            ></video>
+            <button class="video-toggle" type="button">Tap for sound</button>
+          </article>
+        </div>
+      </section>
+
+      <section class="expect">
+        <h2 class="section-title">What you are walking into.</h2>
+        <div class="expect-row">
+          <b>Open bar</b>
+          <p>Tequila Sunrises for ticket holders from 9AM to 11AM.</p>
+        </div>
+        <div class="expect-row">
+          <b>Music</b>
+          <p>Classic reggaeton, new Latin bangers, bachata, merengue, salsa, and more.</p>
+        </div>
+        <div class="expect-row">
+          <b>Theme</b>
+          <p>Rep your flag. Dominican Republic, Puerto Rico, Colombia, Ecuador, Mexico, all of it.</p>
+        </div>
+        <div class="expect-row">
+          <b>Timing</b>
+          <p>Doors open at 9AM. Arrive early because the line gets long fast.</p>
+        </div>
+      </section>
+
+      <section class="venue">
+        <h2 class="section-title">The Beacham. Downtown Orlando.</h2>
+        <dl>
+          <dt>Date</dt>
+          <dd>Saturday, May 2 - 9AM-3PM</dd>
+          <dt>Address</dt>
+          <dd>46 N Orange Ave, Orlando, FL 32801</dd>
+          <dt>Entry</dt>
+          <dd>21+ with valid government-issued ID</dd>
+        </dl>
+      </section>
+
+      <section class="faq">
+        <h2 class="section-title">Quick answers.</h2>
+        <details open>
+          <summary>Is the party really at 9AM?</summary>
+          <p>Yes. Doors open at 9AM, and the early window is the point.</p>
+        </details>
+        <details>
+          <summary>What is included?</summary>
+          <p>Your ticket gets you into Perreo at 9AM. Tequila Sunrises run from 9AM to 11AM for ticket holders.</p>
+        </details>
+        <details>
+          <summary>What should I wear?</summary>
+          <p>Rep your flag or country. Keep it comfortable enough to dance.</p>
+        </details>
+        <details>
+          <summary>Can I get a refund?</summary>
+          <p>All ticket sales are final on the ticketing page.</p>
+        </details>
+      </section>
+
+      <section class="final">
+        <h2 class="section-title">Orlando goes early this Saturday.</h2>
+        <p class="section-lede">Lock the ticket before the price moves or the line decides your morning.</p>
+        <div class="hero-actions">
+          <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-orlando">Buy on Posh</a>
+          <p class="from">The Beacham<br />May 2</p>
+        </div>
+      </section>
+
+      <div class="sticky">
+        <div class="sticky-note"><b>Tier from $24</b><span>Prices can move</span></div>
+        <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-orlando">Get Orlando tickets from $24</a>
+      </div>
+    </main>
+
+    <script>
+      const eventTime = new Date("2026-05-02T09:00:00-04:00").getTime();
+      const ids = ["days", "hours", "minutes", "seconds"];
+
+      function pad(value) {
+        return String(Math.max(0, value)).padStart(2, "0");
+      }
+
+      function tick() {
+        const remaining = Math.max(0, eventTime - Date.now());
+        const seconds = Math.floor(remaining / 1000);
+        const values = [
+          Math.floor(seconds / 86400),
+          Math.floor((seconds % 86400) / 3600),
+          Math.floor((seconds % 3600) / 60),
+          seconds % 60,
+        ];
+        ids.forEach((id, index) => {
+          document.getElementById(id).textContent = pad(values[index]);
+        });
+      }
+
+      function ticketHref() {
+        const target = new URL("https://posh.vip/e/perreo-at-9am-orlando");
+        const incoming = new URLSearchParams(window.location.search);
+        for (const [key, value] of incoming.entries()) {
+          if (key.startsWith("utm_") || key === "fbclid" || key === "ttclid") {
+            target.searchParams.set(key, value);
+          }
+        }
+        target.searchParams.set("utm_source", incoming.get("utm_source") || "meta");
+        target.searchParams.set("utm_medium", incoming.get("utm_medium") || "paid_social");
+        target.searchParams.set("utm_campaign", incoming.get("utm_campaign") || "house78_luck_9am_orlando");
+        target.searchParams.set("utm_content", incoming.get("utm_content") || "fomo_bridge_orlando");
+        target.searchParams.set("utm_city", "orlando");
+        return target.toString();
+      }
+
+      function trackCustom(eventName, payload) {
+        if (typeof window.fbq === "function") window.fbq("trackCustom", eventName, payload);
+      }
+
+      document.querySelectorAll(".js-ticket").forEach((link) => {
+        link.href = ticketHref();
+        link.addEventListener("click", () => {
+          trackCustom("OutboundTicketClick", {
+            city: "Orlando",
+            event: "Perreo at 9AM",
+            destination: "posh",
+          });
+        });
+      });
+
+      const sticky = document.querySelector(".sticky");
+      function syncSticky() {
+        if (!sticky) return;
+        sticky.classList.toggle("is-visible", window.scrollY > 420);
+        sticky.classList.toggle("is-compact", window.scrollY > 760);
+      }
+      window.addEventListener("scroll", syncSticky, { passive: true });
+      syncSticky();
+
+      const videos = Array.from(document.querySelectorAll(".proof-video"));
+
+      function proofPayload(video) {
+        return { clip: video.dataset.proof || "unknown" };
+      }
+
+      function proofButton(video) {
+        return video.closest(".video-frame, .media").querySelector(".video-toggle");
+      }
+
+      function setMuted(video, muted) {
+        video.muted = muted;
+        proofButton(video).textContent = muted ? "Tap for sound" : "Sound on";
+      }
+
+      function playWithSound(video) {
+        videos.forEach((otherVideo) => {
+          if (otherVideo !== video) setMuted(otherVideo, true);
+        });
+        const wasMuted = video.muted;
+        setMuted(video, false);
+        video.play().catch(() => {});
+        trackCustom(wasMuted ? "ProofVideoSoundOn" : "ProofVideoPlay", proofPayload(video));
+      }
+
+      const videoObserver =
+        "IntersectionObserver" in window
+          ? new IntersectionObserver(
+              (entries) => {
+                entries.forEach((entry) => {
+                  const video = entry.target;
+                  if (entry.isIntersecting) {
+                    video.play().catch(() => {});
+                  } else {
+                    video.pause();
+                    setMuted(video, true);
+                  }
+                });
+              },
+              { threshold: 0.55 },
+            )
+          : null;
+
+      videos.forEach((video) => {
+        const frame = video.closest(".video-frame, .media");
+        const button = frame.querySelector(".video-toggle");
+        if (videoObserver) videoObserver.observe(video);
+
+        frame.addEventListener("click", (event) => {
+          if (event.target.closest(".video-toggle")) return;
+          playWithSound(video);
+        });
+
+        button.addEventListener("click", () => {
+          if (video.muted || video.paused) {
+            playWithSound(video);
+            return;
+          }
+          setMuted(video, true);
+          trackCustom("ProofVideoMuted", proofPayload(video));
+        });
+      });
+
+      tick();
+      setInterval(tick, 1000);
+    </script>
+  </body>
+</html>
