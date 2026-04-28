@@ -52,7 +52,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
         {hasData ? (
           <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 rounded">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            Live from Meta
+            {error ? "From database" : "Live from Meta"}
           </span>
         ) : (
           <span className="text-xs text-amber-400 border border-amber-500/20 bg-amber-500/10 px-2.5 py-1 rounded">

@@ -6,6 +6,7 @@ const {
   clientSelect,
   createInvitation,
   getUserList,
+  updateUserMetadata,
   inviteInsert,
   inviteInsertSingle,
   inviteUpdate,
@@ -42,12 +43,14 @@ const {
 
   const createInvitation = vi.fn();
   const getUserList = vi.fn();
+  const updateUserMetadata = vi.fn();
   const clerkClientMock = vi.fn(async () => ({
     invitations: {
       createInvitation,
     },
     users: {
       getUserList,
+      updateUserMetadata,
     },
   }));
 
@@ -57,6 +60,7 @@ const {
     clientSelect,
     createInvitation,
     getUserList,
+    updateUserMetadata,
     inviteInsert,
     inviteInsertSingle,
     inviteUpdate,
@@ -123,6 +127,7 @@ describe("POST /api/admin/invite", () => {
     createInvitation.mockResolvedValue({
       id: "clerk_invite_1",
     });
+    updateUserMetadata.mockResolvedValue({});
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://example.com");
   });
 
@@ -186,7 +191,34 @@ describe("POST /api/admin/invite", () => {
     });
   });
 
-  it("grants access immediately when the invited email already has a Clerk user", async () => {
+  it("grants admin access immediately when the invited admin email already has a Clerk user", async () => {
+    getUserList.mockResolvedValue({ data: [{ id: "user_existing", publicMetadata: { team: "ops" } }] });
+
+    const { POST } = await import("./route");
+    const response = await POST(
+      new Request("https://example.com/api/admin/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "admin@example.com",
+          role: "admin",
+        }),
+      }),
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      ok: true,
+      message: "Admin access granted to existing user.",
+    });
+    expect(updateUserMetadata).toHaveBeenCalledWith("user_existing", {
+      publicMetadata: { team: "ops", role: "admin" },
+    });
+    expect(inviteInsert).not.toHaveBeenCalled();
+    expect(memberInsert).not.toHaveBeenCalled();
+    expect(createInvitation).not.toHaveBeenCalled();
+  });
+
+  it("grants client access immediately when the invited email already has a Clerk user", async () => {
     getUserList.mockResolvedValue({ data: [{ id: "user_existing" }] });
 
     const { POST } = await import("./route");

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { currentUser } from "@clerk/nextjs/server";
 import { adminGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
+import { enforceContentLength } from "@/lib/request-guards";
 
 // "action" events go through logActivity() server action, not this API
 const ActivitySchema = z.object({
@@ -13,6 +14,9 @@ const ActivitySchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const sizeError = enforceContentLength(request, 16 * 1024);
+  if (sizeError) return sizeError;
+
   const adminErr = await adminGuard();
   if (adminErr) return adminErr;
 

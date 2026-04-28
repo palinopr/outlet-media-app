@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { authGuard, parseJsonBody } from "@/lib/api-helpers";
+import { enforceContentLength } from "@/lib/request-guards";
 
 const ProfileSchema = z.object({
   firstName: z.string().min(1).max(100),
@@ -9,6 +10,9 @@ const ProfileSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const sizeError = enforceContentLength(request, 4 * 1024);
+  if (sizeError) return sizeError;
+
   const { userId, error } = await authGuard();
   if (error) return error;
 

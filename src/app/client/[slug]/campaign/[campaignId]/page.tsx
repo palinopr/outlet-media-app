@@ -32,7 +32,7 @@ import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { CampaignDetailHeader } from "../../components/campaign-detail-header";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { getClientPortalTheme } from "@/features/client-portal/theme";
-import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket } from "../../lib";
+import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket } from "@/features/client-portal/insights";
 
 interface Props {
   params: Promise<{ slug: string; campaignId: string }>;

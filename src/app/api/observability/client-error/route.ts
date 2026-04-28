@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { authGuard, validateRequest } from "@/lib/api-helpers";
+import { enforceContentLength } from "@/lib/request-guards";
 import { supabaseAdmin } from "@/lib/supabase";
 
 const ClientErrorSchema = z.object({
@@ -22,6 +23,9 @@ function scrub(value: string | undefined) {
 }
 
 export async function POST(request: Request) {
+  const sizeError = enforceContentLength(request, 16 * 1024);
+  if (sizeError) return sizeError;
+
   const { userId, error: authError } = await authGuard();
   if (authError) return authError;
 

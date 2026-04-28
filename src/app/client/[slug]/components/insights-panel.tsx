@@ -1,5 +1,5 @@
 import { Lightbulb } from "lucide-react";
-import type { Insight } from "../types";
+import type { Insight } from "@/features/client-portal/types";
 
 const DOT_COLOR: Record<Insight["type"], string> = {
   positive: "bg-emerald-400",

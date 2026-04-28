@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { fetchMetaApi, metaGet, metaInsightsUrl, metaUrl, MetaApiError } from "./meta-api";
+import { metaGet, metaInsightsUrl, metaUrl } from "./meta-api";
 
 describe("metaInsightsUrl", () => {
   it("builds URL with fields and token", () => {
@@ -48,37 +48,10 @@ describe("metaUrl", () => {
   });
 });
 
-describe("fetchMetaApi", () => {
-  beforeEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it("returns parsed JSON on success", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: true,
-      json: () => Promise.resolve({ id: "456" }),
-    }));
-
-    const result = await fetchMetaApi("https://graph.facebook.com/v21.0/test", "tok");
-    expect(result).toEqual({ id: "456" });
-  });
-
-  it("throws MetaApiError on failure", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({
-      ok: false,
-      status: 400,
-      json: () => Promise.resolve({ error: { message: "Bad request" } }),
-    }));
-
-    await expect(
-      fetchMetaApi("https://graph.facebook.com/v21.0/test", "tok"),
-    ).rejects.toThrow(MetaApiError);
-  });
-});
-
 describe("metaGet", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
   it("returns parsed data on success", async () => {

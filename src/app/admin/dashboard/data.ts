@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { computeMarginalRoas } from "@/lib/formatters";
-import { buildTrendData } from "@/app/client/[slug]/lib";
+import { buildTrendData } from "@/features/client-portal/insights";
 import type { Database } from "@/lib/database.types";
 import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
 

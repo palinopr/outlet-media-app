@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket } from "./lib";
-import type { AdCard, DailyPoint, GeographyBreakdown, HourlyBreakdown } from "./types";
+import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket } from "@/features/client-portal/insights";
+import type { AdCard, DailyPoint, GeographyBreakdown, HourlyBreakdown } from "@/features/client-portal/types";
 
 describe("client campaign analytics helpers", () => {
   it("prefers the strongest CTR hour once delivery is meaningful", () => {

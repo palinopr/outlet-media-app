@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { InviteSchema } from "@/lib/api-schemas";
 import { adminGuard, validateRequest } from "@/lib/api-helpers";
+import { enforceContentLength } from "@/lib/request-guards";
 import { supabaseAdmin } from "@/lib/supabase";
 
 async function grantClientMembership(input: {
@@ -46,6 +47,9 @@ async function grantClientMembership(input: {
 // with only the transition metadata needed for signup completion.
 
 export async function POST(request: Request) {
+  const sizeError = enforceContentLength(request, 8 * 1024);
+  if (sizeError) return sizeError;
+
   const adminErr = await adminGuard();
   if (adminErr) return adminErr;
 
@@ -78,41 +82,48 @@ export async function POST(request: Request) {
 
   const client = await clerkClient();
   const clientRole = body.client_role ?? "member";
+  const existingUsers = await client.users.getUserList({
+    emailAddress: [normalizedEmail],
+    limit: 1,
+  });
+  const existingUser = existingUsers.data[0] ?? null;
 
-  if (clientRow) {
-    const existingUsers = await client.users.getUserList({
-      emailAddress: [normalizedEmail],
-      limit: 1,
+  if (existingUser && body.role === "admin") {
+    await client.users.updateUserMetadata(existingUser.id, {
+      publicMetadata: { ...existingUser.publicMetadata, role: "admin" },
     });
-    const existingUserId = existingUsers.data[0]?.id ?? null;
+    return NextResponse.json({
+      ok: true,
+      message: "Admin access granted to existing user.",
+    });
+  }
 
-    if (existingUserId) {
-      try {
-        await grantClientMembership({
-          clientId: clientRow.id,
-          clerkUserId: existingUserId,
-          role: clientRole,
-        });
-        await supabaseAdmin
-          .from("client_access_invites")
-          .update({
-            accepted_at: new Date().toISOString(),
-            accepted_by_clerk_user_id: existingUserId,
-            status: "accepted",
-          })
-          .eq("client_id", clientRow.id)
-          .eq("email", normalizedEmail)
-          .eq("status", "pending");
-      } catch (error) {
-        const detail = error instanceof Error ? error.message : "Failed to grant client access";
-        return NextResponse.json({ error: detail }, { status: 500 });
-      }
-
-      return NextResponse.json({
-        ok: true,
-        message: "Access granted to existing user.",
+  if (clientRow && existingUser) {
+    try {
+      await grantClientMembership({
+        clientId: clientRow.id,
+        clerkUserId: existingUser.id,
+        role: clientRole,
       });
+      await supabaseAdmin
+        .from("client_access_invites")
+        .update({
+          accepted_at: new Date().toISOString(),
+          accepted_by_clerk_user_id: existingUser.id,
+          status: "accepted",
+        })
+        .eq("client_id", clientRow.id)
+        .eq("email", normalizedEmail)
+        .eq("status", "pending");
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : "Failed to grant client access";
+      return NextResponse.json({ error: detail }, { status: 500 });
     }
+
+    return NextResponse.json({
+      ok: true,
+      message: "Access granted to existing user.",
+    });
   }
 
   let inviteId: string | null = null;

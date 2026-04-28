@@ -42,10 +42,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Service unavailable" }, { status: 503 });
   }
 
-  await supabaseAdmin
+  const { error: deleteError } = await supabaseAdmin
     .from("client_accounts")
     .delete()
     .eq("meta_user_id", payload.user_id);
+
+  if (deleteError) {
+    console.error("[meta/data-deletion] failed to delete Meta client account data:", deleteError.message);
+    return NextResponse.json({ error: "Deletion failed" }, { status: 500 });
+  }
 
   return NextResponse.json({
     url: `${appUrl}/deletion-status/${confirmationCode}`,

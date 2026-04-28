@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft, CalendarDays } from "lucide-react";
 import { getRangeQuery, type CampaignRangeInput, type DateRange } from "@/lib/constants";
 import { fmtDate } from "@/lib/formatters";
-import type { CampaignCard } from "../types";
+import type { CampaignCard } from "@/features/client-portal/types";
 import { CampaignStatusBadge } from "./campaign-status-badge";
 import type { ClientPortalTheme } from "@/features/client-portal/theme";
 

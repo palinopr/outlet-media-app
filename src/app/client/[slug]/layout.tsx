@@ -38,7 +38,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientLayout({ children, params }: Props) {
   const { slug } = await params;
-  const portalConfig = await getClientPortalConfig(slug);
   const clerkEnabled = !!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
   let needsName = false;
 
@@ -79,6 +78,7 @@ export default async function ClientLayout({ children, params }: Props) {
     needsName = !isAdmin && (!user?.firstName || !user?.lastName);
   }
 
+  const portalConfig = await getClientPortalConfig(slug);
   const clientName = portalConfig?.brandName ?? slugToLabel(slug);
   const theme = getClientPortalTheme(slug, {
     brandName: portalConfig?.brandName,

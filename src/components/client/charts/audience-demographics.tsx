@@ -12,7 +12,7 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts";
-import type { AgeGenderBreakdown } from "@/app/client/[slug]/types";
+import type { AgeGenderBreakdown } from "@/features/client-portal/types";
 import { tooltipStyle, kFormatter } from "./types";
 
 type Tab = "age" | "gender" | "heatmap";

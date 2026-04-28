@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Search, Megaphone, ChevronRight } from "lucide-react";
 import { fmtUsd, fmtNum, roasColor } from "@/lib/formatters";
 import { getCampaignStatusCfg } from "@/lib/status";
-import type { CampaignCard } from "../types";
+import type { CampaignCard } from "@/features/client-portal/types";
 import { getRangeQuery, type CampaignRangeInput } from "@/lib/constants";
 
 export function CampaignsTable({

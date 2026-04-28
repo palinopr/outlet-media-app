@@ -4,6 +4,7 @@ Use this directory for **small, durable reference material** that is helpful for
 
 Examples:
 
+- [active code audit](./active-code-audit.md)
 - [database safety runbook](./database-safety-runbook.md)
 - [Supabase backup and restore runbook](./supabase-backup-restore-runbook.md)
 - [production smoke runbook](./production-smoke-runbook.md)

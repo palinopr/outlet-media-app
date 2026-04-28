@@ -41,6 +41,19 @@ export async function getClientSummaries(): Promise<ClientSummary[]> {
       ),
   ]);
 
+  if (clientsRes.error) {
+    console.error("[clients/data] Failed to load clients:", clientsRes.error.message);
+    return [];
+  }
+  if (campaignsRes.error) {
+    console.error("[clients/data] Failed to load campaigns:", campaignsRes.error.message);
+  }
+  if (membersRes.error) {
+    console.error("[clients/data] Failed to load client members:", membersRes.error.message);
+  }
+  if (connectedAccountsRes.error) {
+    console.error("[clients/data] Failed to load connected accounts:", connectedAccountsRes.error.message);
+  }
   if (!clientsRes.data?.length) return [];
 
   const effectiveCampaignRows = await applyEffectiveCampaignClientSlugs(
@@ -129,6 +142,10 @@ async function fetchMemberAssignments(memberIds: string[]) {
     .select("member_id, campaign_id")
     .in("member_id", memberIds);
 
+  if (assignedCampaignsRes.error) {
+    console.error("[clients/data] Failed to load member campaign assignments:", assignedCampaignsRes.error.message);
+  }
+
   const campaignsByMember = new Map<string, string[]>();
   for (const row of assignedCampaignsRes.data ?? []) {
     const list = campaignsByMember.get(row.member_id) ?? [];
@@ -172,12 +189,16 @@ async function enrichMembersWithClerk(
 export async function getClientDetail(clientId: string): Promise<ClientDetail | null> {
   if (!supabaseAdmin) return null;
 
-  const { data: client } = await supabaseAdmin
+  const { data: client, error: clientError } = await supabaseAdmin
     .from("clients")
     .select("id, name, slug, status, created_at, portal_brand_name, portal_logo_url, portal_logo_alt")
     .eq("id", clientId)
     .single();
 
+  if (clientError) {
+    console.error("[clients/data] Failed to load client detail:", clientError.message);
+    return null;
+  }
   if (!client) return null;
 
   const [membersRes, campaignsRes, connectedAccountsRes, pendingInvites] = await Promise.all([
@@ -203,6 +224,13 @@ export async function getClientDetail(clientId: string): Promise<ClientDetail | 
       .order("connected_at", { ascending: false }),
     listActionableInvitations({ clientSlug: client.slug }),
   ]);
+
+  if (membersRes.error) {
+    console.error("[clients/data] Failed to load client members:", membersRes.error.message);
+  }
+  if (connectedAccountsRes.error) {
+    console.error("[clients/data] Failed to load connected accounts:", connectedAccountsRes.error.message);
+  }
 
   const memberRows = membersRes.data ?? [];
   const { campaignsByMember } = await fetchMemberAssignments(memberRows.map((member) => member.id));

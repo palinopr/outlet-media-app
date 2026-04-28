@@ -38,7 +38,7 @@ export const InviteSchema = z.object({
   email: z.string().email(),
   clientId: z.string().min(1).optional(),
   client_role: z.enum(["owner", "member"]).optional(),
-  role: z.string().optional(),
+  role: z.enum(["admin"]).optional(),
 }).superRefine((value, ctx) => {
   if (value.role === "admin") return;
   if (!value.clientId) {

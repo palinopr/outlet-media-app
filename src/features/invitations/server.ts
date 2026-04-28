@@ -96,7 +96,7 @@ export async function listActionableInvitations(
   const clerkStatuses = new Map<string, string>();
   if (clerkIds.length > 0) {
     const clerk = await clerkClient();
-    const invitations = await clerk.invitations.getInvitationList();
+    const invitations = await clerk.invitations.getInvitationList({ limit: 100 });
     for (const invitation of invitations.data as Array<{ id: string; status: string }>) {
       if (clerkIds.includes(invitation.id)) {
         clerkStatuses.set(invitation.id, invitation.status);

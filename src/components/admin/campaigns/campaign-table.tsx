@@ -85,7 +85,7 @@ const campaignCsvColumns = [
 ];
 
 export function CampaignTable({ campaigns, dailyInsightsByCampaign, clients, metaAdAccountId, hasData }: CampaignTableProps) {
-  const columns = getCampaignColumns({ dailyInsightsByCampaign, clients, metaAdAccountId });
+  const columns = getCampaignColumns({ dailyInsightsByCampaign, metaAdAccountId });
 
   return (
     <DataTable

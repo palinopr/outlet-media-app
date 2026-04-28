@@ -1,4 +1,4 @@
-import { getCampaignStatusCfg } from "../lib";
+import { getCampaignStatusCfg } from "@/features/client-portal/insights";
 
 export function CampaignStatusBadge({ status }: { status: string }) {
   const cfg = getCampaignStatusCfg(status);

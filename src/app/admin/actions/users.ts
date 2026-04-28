@@ -110,7 +110,12 @@ export async function revokeInvitation(formData: { invitationId: string }) {
     .maybeSingle();
 
   if (error) throw new Error(error.message);
-  if (!invite) throw new Error("Invitation not found");
+  if (!invite) {
+    await client.invitations.revokeInvitation(parsed.invitationId);
+    await logAudit("invitation", parsed.invitationId, "revoke", null, { status: "revoked" });
+    revalidateAccessManagementPaths();
+    return;
+  }
 
   if (invite.clerk_invitation_id) {
     await client.invitations.revokeInvitation(invite.clerk_invitation_id);

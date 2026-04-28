@@ -119,7 +119,7 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
         </div>
       )}
       {error && <p className="text-xs text-red-400 self-end pb-1">{error}</p>}
-      <Button type="submit" size="sm" disabled={loading} className="h-8">
+      <Button type="submit" size="sm" disabled={loading || (!asAdmin && !clientId)} className="h-8">
         {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Send Invite"}
       </Button>
       <Button type="button" size="sm" variant="ghost" className="h-8" onClick={onDone}>
@@ -143,11 +143,20 @@ function UserSelectionToolbar({ selectedRows }: { selectedRows: UserRow[] }) {
 
   function handleUpdateRole() {
     if (!selectedRole) return;
-    const ids = selectedRows.map((r) => r.id);
+    const editableRows = selectedRows.filter((row) => row.status === "active");
+    const ids = editableRows.map((r) => r.id);
+    if (ids.length === 0) {
+      toast.error("Select active users before changing roles.");
+      return;
+    }
     startTransition(async () => {
       try {
-        await bulkUpdateUserRole({ userIds: ids, role: selectedRole });
-        toast.success(`Updated ${ids.length} user(s) to ${selectedRole}`);
+        const result = await bulkUpdateUserRole({ userIds: ids, role: selectedRole });
+        if (!result.success) {
+          toast.error(result.message ?? "Some users could not be updated");
+          return;
+        }
+        toast.success(`Updated ${ids.length} active user(s) to ${selectedRole}`);
         router.refresh();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to update role");

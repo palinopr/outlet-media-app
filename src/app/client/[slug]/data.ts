@@ -1,7 +1,7 @@
 import { type CampaignRangeInput } from "@/lib/constants";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
 import type { ScopeFilter } from "@/lib/member-access";
-import type { CampaignCard } from "./types";
+import type { CampaignCard } from "@/features/client-portal/types";
 
 export type { CampaignRangeInput };
 

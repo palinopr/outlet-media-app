@@ -36,7 +36,6 @@ const TYPE_OPTIONS = [
 
 interface CampaignColumnsOptions {
   dailyInsightsByCampaign: Record<string, DailyInsight[]>;
-  clients: string[];
   metaAdAccountId: string | null;
 }
 

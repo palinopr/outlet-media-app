@@ -11,7 +11,7 @@ import {
 import { RoasTrendChart, SpendTrendChart } from "@/components/charts/roas-trend-chart";
 import { fmtUsd, fmtNum, roasColor, slugToLabel, fmtTodayLong } from "@/lib/formatters";
 import { getCampaignsPageData } from "../data";
-import { buildTrendData, roasLabel, generateCampaignInsights } from "../lib";
+import { buildTrendData, roasLabel, generateCampaignInsights } from "@/features/client-portal/insights";
 import { InsightsPanel } from "../components/insights-panel";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { CampaignsTable } from "./campaigns-table";

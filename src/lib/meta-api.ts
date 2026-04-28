@@ -6,43 +6,6 @@ export type MetaInsightsTimeRange = {
 };
 
 /**
- * Fetch from Meta Graph API for mutations (POST/DELETE) in API routes.
- * Sends URL-encoded form data. Throws a structured error on failure.
- */
-export async function fetchMetaApi<T = Record<string, unknown>>(
-  url: string,
-  token: string,
-  method: "POST" | "DELETE" = "POST",
-  body?: Record<string, string>,
-): Promise<T> {
-  let targetUrl = url;
-  const fetchInit: RequestInit = { method };
-  if (method === "DELETE") {
-    // DELETE: Meta expects token as query param, not in request body
-    const parsed = new URL(url);
-    parsed.searchParams.set("access_token", token);
-    targetUrl = parsed.toString();
-    if (body && Object.keys(body).length > 0) {
-      fetchInit.body = new URLSearchParams(body);
-    }
-  } else {
-    fetchInit.body = new URLSearchParams({ access_token: token, ...body });
-  }
-  if (fetchInit.body) {
-    fetchInit.headers = { "Content-Type": "application/x-www-form-urlencoded" };
-  }
-  const res = await fetch(targetUrl, fetchInit);
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    const message = (err as { error?: { message?: string } }).error?.message ?? "Unknown error";
-    throw new MetaApiError(message, res.status);
-  }
-
-  return res.json() as Promise<T>;
-}
-
-/**
  * GET from Meta Graph API with Next.js revalidation (server-side reads).
  * Returns null on any failure instead of throwing.
  */
@@ -104,14 +67,4 @@ export function metaUrl(path: string, token: string, params?: Record<string, str
     }
   }
   return url.toString();
-}
-
-export class MetaApiError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-  ) {
-    super(message);
-    this.name = "MetaApiError";
-  }
 }

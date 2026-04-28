@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { adminGuard, apiError, validateRequest } from "@/lib/api-helpers";
+import { enforceContentLength } from "@/lib/request-guards";
 import { supabaseAdmin } from "@/lib/supabase";
 
 // PATCH /api/admin/users/[id]
@@ -16,6 +17,9 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const sizeError = enforceContentLength(request, 8 * 1024);
+  if (sizeError) return sizeError;
+
   const adminErr = await adminGuard();
   if (adminErr) return adminErr;
 
@@ -34,11 +38,15 @@ export async function PATCH(
     return apiError("Database not configured", 500);
   }
 
-  const { data: clientRow } = await supabaseAdmin
+  const { data: clientRow, error: clientError } = await supabaseAdmin
     .from("clients")
     .select("id, slug")
     .eq("id", clientId)
     .maybeSingle();
+
+  if (clientError) {
+    return apiError("Failed to load client", 500);
+  }
 
   if (!clientRow) {
     return apiError("Client not found", 404);
@@ -66,17 +74,25 @@ export async function PATCH(
       }
     }
   } else {
-    await supabaseAdmin
+    const { error: deleteError } = await supabaseAdmin
       .from("client_members")
       .delete()
       .eq("clerk_user_id", id)
       .eq("client_id", clientRow.id);
+
+    if (deleteError) {
+      return apiError("Failed to remove client membership", 500);
+    }
   }
 
-  const { data: remaining } = await supabaseAdmin
+  const { data: remaining, error: remainingError } = await supabaseAdmin
     .from("client_members")
     .select("clients(slug)")
     .eq("clerk_user_id", id);
+
+  if (remainingError) {
+    return apiError("Failed to load remaining client memberships", 500);
+  }
 
   const remainingSlugs = (remaining ?? [])
     .map((r) => (r.clients as unknown as { slug: string })?.slug)

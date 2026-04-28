@@ -18,9 +18,9 @@ import type {
   AdCard,
   HourlyBreakdown,
   DailyPoint,
-} from "../../types";
-import { DAY_LABELS } from "../../types";
-import { generateRecommendations } from "../../lib";
+} from "@/features/client-portal/types";
+import { DAY_LABELS } from "@/features/client-portal/types";
+import { generateRecommendations } from "@/features/client-portal/insights";
 
 // --- Meta API helpers ---
 

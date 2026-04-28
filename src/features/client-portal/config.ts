@@ -1,6 +1,5 @@
 import { cache } from "react";
-import { supabaseAdmin, createClerkSupabaseClient } from "@/lib/supabase";
-import { currentUser } from "@clerk/nextjs/server";
+import { supabaseAdmin } from "@/lib/supabase";
 
 export interface ClientPortalConfig {
   clientId: string;
@@ -10,26 +9,12 @@ export interface ClientPortalConfig {
   logoAlt: string | null;
 }
 
+// Server-only read. Call after the client layout/access resolver has already authorized the viewer.
 export const getClientPortalConfig = cache(
   async (slug: string): Promise<ClientPortalConfig | null> => {
-    let db: Awaited<ReturnType<typeof createClerkSupabaseClient>> | typeof supabaseAdmin;
+    if (!supabaseAdmin) return null;
 
-    try {
-      const user = await currentUser();
-      const role = (user?.publicMetadata as { role?: string } | null)?.role;
-      if (role === "admin") {
-        if (!supabaseAdmin) return null;
-        db = supabaseAdmin;
-      } else {
-        const clerkDb = await createClerkSupabaseClient();
-        if (!clerkDb) return null;
-        db = clerkDb;
-      }
-    } catch {
-      return null;
-    }
-
-    const { data, error } = await db
+    const { data, error } = await supabaseAdmin
       .from("clients")
       .select("id, slug, portal_brand_name, portal_logo_url, portal_logo_alt")
       .eq("slug", slug)

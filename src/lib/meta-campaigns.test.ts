@@ -1,20 +1,45 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const { supabaseState } = vi.hoisted(() => ({
+  supabaseState: {
+    reject: true,
+    tableData: {} as Record<string, unknown[]>,
+  },
+}));
+
 vi.mock("@/lib/supabase", () => ({
   supabaseAdmin: {
-    from() {
+    from(table: string) {
       return {
-        select() {
+        eq() {
+          return this;
+        },
+        gte() {
+          return this;
+        },
+        in() {
           return this;
         },
         limit() {
+          return this;
+        },
+        lte() {
+          return this;
+        },
+        order() {
+          return this;
+        },
+        select() {
           return this;
         },
         then(
           resolve: (value: unknown) => unknown,
           reject: (reason: Error) => unknown,
         ) {
-          return Promise.reject(new Error("fetch failed")).then(resolve, reject);
+          if (supabaseState.reject) {
+            return Promise.reject(new Error("fetch failed")).then(resolve, reject);
+          }
+          return Promise.resolve({ data: supabaseState.tableData[table] ?? [], error: null }).then(resolve, reject);
         },
       };
     },
@@ -26,7 +51,10 @@ describe("fetchAllCampaigns", () => {
 
   beforeEach(() => {
     vi.resetModules();
+    supabaseState.reject = true;
+    supabaseState.tableData = {};
     vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
     process.env = {
       ...originalEnv,
       META_ACCESS_TOKEN: "token",
@@ -109,6 +137,126 @@ describe("fetchAllCampaigns", () => {
         date: "2026-04-01",
         spend: 12.5,
         roas: 3.2,
+      }),
+    ]);
+  });
+
+  it("reports Meta fetch failures instead of silently returning an empty successful result", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("bad token", { status: 401 })));
+
+    const { fetchAllCampaigns } = await import("@/lib/meta-campaigns");
+    const result = await fetchAllCampaigns("30");
+
+    expect(result.error).toContain("campaigns failed (401)");
+    expect(result.campaigns).toEqual([]);
+    expect(result.dailyInsights).toEqual([]);
+  });
+
+  it("falls back to stored Supabase campaign data when Meta is unavailable", async () => {
+    supabaseState.reject = false;
+    supabaseState.tableData = {
+      clients: [{ slug: "zamora" }],
+      campaign_client_overrides: [],
+      campaign_snapshots: [
+        {
+          campaign_id: "cmp_1",
+          snapshot_date: new Date().toISOString().slice(0, 10),
+          spend: 1250,
+          roas: 3.2,
+        },
+      ],
+      meta_campaigns: [
+        {
+          campaign_id: "cmp_1",
+          campaign_type: "music",
+          client_slug: "zamora",
+          clicks: 50,
+          cpc: 25,
+          cpm: 1250,
+          ctr: 5,
+          daily_budget: 5000,
+          impressions: 1000,
+          name: "Stored Arjona Chicago",
+          objective: "OUTCOME_SALES",
+          roas: 3.2,
+          spend: 1250,
+          start_time: "2026-04-01T00:00:00-0500",
+          status: "ACTIVE",
+        },
+      ],
+    };
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("bad token", { status: 401 })));
+
+    const { fetchAllCampaigns } = await import("@/lib/meta-campaigns");
+    const result = await fetchAllCampaigns("today", "zamora");
+
+    expect(result.error).toContain("campaigns failed (401)");
+    expect(result.campaigns).toEqual([
+      expect.objectContaining({
+        campaignId: "cmp_1",
+        campaignType: "music",
+        clientSlug: "zamora",
+        dailyBudget: 50,
+        name: "Stored Arjona Chicago",
+        spend: 12.5,
+      }),
+    ]);
+    expect(result.dailyInsights).toEqual([
+      expect.objectContaining({
+        campaignId: "cmp_1",
+        spend: 12.5,
+        roas: 3.2,
+      }),
+    ]);
+    expect(result.clients).toContain("zamora");
+  });
+
+  it("honors stored campaign client assignment metadata for live Meta results", async () => {
+    supabaseState.reject = false;
+    supabaseState.tableData = {
+      clients: [{ slug: "sienna" }],
+      campaign_client_overrides: [],
+      meta_campaigns: [
+        {
+          campaign_id: "cmp_2",
+          campaign_type: "music",
+          client_slug: "sienna",
+        },
+      ],
+    };
+    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+
+      if (url.pathname.endsWith("/campaigns")) {
+        return Response.json({
+          data: [
+            {
+              id: "cmp_2",
+              name: "Unbranded Campaign",
+              status: "ACTIVE",
+              objective: "OUTCOME_SALES",
+            },
+          ],
+        });
+      }
+
+      if (url.pathname.endsWith("/insights")) {
+        return Response.json({ data: [] });
+      }
+
+      return Response.json({ data: [] });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { fetchAllCampaigns } = await import("@/lib/meta-campaigns");
+    const result = await fetchAllCampaigns("30", "sienna");
+
+    expect(result.error).toBeNull();
+    expect(result.campaigns).toEqual([
+      expect.objectContaining({
+        campaignId: "cmp_2",
+        campaignType: "music",
+        clientSlug: "sienna",
       }),
     ]);
   });
