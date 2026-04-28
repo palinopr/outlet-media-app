@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-28] landing | mobile-first lead funnel
+- Reworked `/landing` around a mobile-first audit-call funnel: hero, stats, problem, deliverables, proof carousel, booking, fallback form, and FAQ.
+- Made booking the primary CTA with an on-page Cal embed and kept the contact form as a structured fallback lead path.
+- Aligned the fallback form payload with `/api/contact` schema keys so submissions validate before reaching Supabase/Resend.
+
 ## [2026-04-27] client-web | readable placement labels
 - Replaced the campaign detail placement axis chart with a compact ranked bar list so platform and placement names are readable.
 - Added platform badges such as `IG` and `FB`, while preserving percent-of-impressions, hover detail, clicks, impressions, and CTR context.

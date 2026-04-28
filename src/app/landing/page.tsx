@@ -1,78 +1,112 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
-import { ArrowRight } from "lucide-react";
-import { LandingHero } from "@/components/landing/hero";
-import { LandingCredibility } from "@/components/landing/credibility";
-import { LandingFeatures } from "@/components/landing/features";
-import { LandingHowItWorks } from "@/components/landing/how-it-works";
-import { LandingFAQ } from "@/components/landing/faq";
+import { Bricolage_Grotesque, JetBrains_Mono, Outfit } from "next/font/google";
+import Image from "next/image";
 import { ContactForm } from "@/components/landing/contact-form";
+import { LandingFAQ } from "@/components/landing/faq";
+import { LandingHero } from "@/components/landing/hero";
+import { LandingHowItWorks } from "@/components/landing/how-it-works";
+import {
+  LandingAuditDeliverables,
+  LandingBookingSection,
+  LandingFounderTrust,
+  LandingMidPageCTA,
+  LandingProblemSection,
+  LandingProofCarousel,
+  LandingProofStats,
+  LandingScarcitySection,
+} from "@/components/landing/lead-funnel";
+import { LandingStickyCTA } from "@/components/landing/sticky-cta";
 
-const landingFont = Space_Grotesk({
+const headingFont = Bricolage_Grotesque({
   subsets: ["latin"],
   display: "swap",
+  variable: "--font-landing-heading",
+});
+
+const bodyFont = Outfit({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-landing-body",
+});
+
+const monoFont = JetBrains_Mono({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-landing-mono",
 });
 
 export const metadata: Metadata = {
-  title: "Agenda tu auditoría | Outlet Media",
+  title: "Outlet Media · Agenda tu auditoría gratis",
   description:
-    "Paid media, reporting live y portal con agente para operadores que necesitan ver que mueve revenue. Sin agency blackout.",
+    "Auditoría gratis en 24h para saber qué anuncios pausar, escalar y mover mañana. Paid media para eventos, ecommerce, leads y negocios locales.",
   openGraph: {
-    title: "Agenda tu auditoría | Outlet Media",
+    title: "Outlet Media · Agenda tu auditoría gratis",
     description:
-      "Paid media, reporting live y portal con agente para operadores que necesitan ver que mueve revenue.",
+      "Pagas por anuncios. En 24h te decimos cuáles venden y qué mover mañana.",
     images: [{ url: "/icon.png", width: 512, height: 512 }],
   },
   robots: { index: true, follow: true },
 };
 
+const BRAND_TOKENS = {
+  "--landing-bg": "#0d0d0d",
+  "--landing-bg-elev": "#141414",
+  "--landing-muted": "#a3a3a3",
+  "--landing-muted-2": "#686868",
+  "--landing-border": "rgba(255,255,255,0.09)",
+  "--landing-brand": "#1e1fb8",
+  "--landing-brand-soft": "#5661ff",
+} as React.CSSProperties;
+
 export default function LandingPage() {
   return (
     <div
-      className={`${landingFont.className} relative min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(31,94,255,0.18),transparent_26%),linear-gradient(180deg,#081320_0%,#060d18_48%,#040913_100%)] text-white lg:bg-[linear-gradient(180deg,#f7fbff_0%,#ecf4fb_46%,#eef5fb_100%)]`}
+      className={`${headingFont.variable} ${bodyFont.variable} ${monoFont.variable} font-[family-name:var(--font-landing-body)]`}
+      style={BRAND_TOKENS}
     >
-      <div className="pointer-events-none absolute inset-0 hidden bg-[radial-gradient(circle_at_top_left,rgba(31,94,255,0.16),transparent_28%),radial-gradient(circle_at_top_right,rgba(255,255,255,0.95),transparent_24%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.12),transparent_26%)] lg:block" />
-      <div className="pointer-events-none absolute inset-0 hidden opacity-30 [background-image:linear-gradient(rgba(15,23,42,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.04)_1px,transparent_1px)] [background-size:140px_140px] lg:block" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 hidden h-[28rem] bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.14),transparent_56%)] lg:block" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-[20rem] bg-[radial-gradient(circle_at_bottom,rgba(2,6,23,0.16),transparent_70%)] lg:block" />
+      <div className="relative min-h-screen bg-[#0d0d0d] text-white [overflow-x:clip]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_46%_at_50%_-10%,rgba(30,31,184,0.18),transparent)]" />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle,white_1px,transparent_1px)] [background-size:28px_28px]" />
 
-      <main className="relative mx-auto max-w-[1280px] px-0 pb-28 pt-0 lg:px-8 lg:pb-20 lg:pt-14">
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1.15fr)_minmax(360px,0.76fr)] lg:items-start lg:justify-center lg:gap-14 xl:gap-20">
-          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-8 lg:rounded-[2.5rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)] xl:-translate-y-2">
-            <LandingHero />
-            <LandingCredibility />
-          </section>
-
-          <section className="overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,148,255,0.16),transparent_28%),linear-gradient(180deg,#081320_0%,#060d18_45%,#040913_100%)] lg:mt-22 lg:rounded-[2.5rem] lg:border lg:border-[#10233f] lg:shadow-[0_55px_120px_-48px_rgba(4,10,18,0.74)] xl:mt-26 xl:translate-y-2">
-            <LandingFeatures />
-            <LandingHowItWorks />
-            <LandingFAQ />
-            <ContactForm />
-          </section>
-        </div>
-      </main>
-
-      <div className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 pt-2 lg:hidden">
-        <div className="mx-auto max-w-md rounded-[26px] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(31,94,255,0.18),transparent_32%),radial-gradient(circle_at_bottom_right,rgba(245,158,11,0.14),transparent_36%),rgba(8,18,32,0.88)] p-3 shadow-[0_-18px_50px_-24px_rgba(15,23,42,0.45),0_18px_44px_-28px_rgba(2,6,23,0.8)] backdrop-blur-xl">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#8fd4ff]">
-                Auditoria con operador
-              </p>
-              <p className="mt-1 max-w-[11rem] text-[13px] leading-5 text-slate-200">
-                Ve fugas, creativos y siguiente movimiento.
-              </p>
-            </div>
-
+        <main className="relative z-[1] mx-auto max-w-[460px] px-5 pb-32 pt-6 lg:max-w-[1120px] lg:px-10 lg:pb-20 lg:pt-14">
+          <nav className="flex items-center justify-between gap-3 pb-4">
+            <Image
+              src="/images/brand/logotype-horizontal-white.png"
+              alt="Outlet Media"
+              width={192}
+              height={54}
+              priority
+              className="opacity-90"
+              style={{ width: 140, height: "auto" }}
+            />
             <a
-              href="#audit-form"
-              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full bg-[#1f5eff] px-4 text-sm font-semibold tracking-wide text-white shadow-[0_14px_34px_-16px_rgba(31,94,255,0.8)] transition-transform active:scale-[0.99]"
+              href="#booking"
+              className="font-[family-name:var(--font-landing-mono)] text-[11px] uppercase tracking-[0.14em] text-[color:var(--landing-muted)] transition-colors hover:text-white"
             >
-              Agenda
-              <ArrowRight className="size-4" />
+              Agenda gratis →
             </a>
-          </div>
-        </div>
+          </nav>
+
+          <LandingHero />
+          <LandingProofStats />
+          <LandingProblemSection />
+          <LandingAuditDeliverables />
+          <LandingProofCarousel />
+          <LandingMidPageCTA />
+          <LandingHowItWorks />
+          <LandingFounderTrust />
+          <LandingScarcitySection />
+          <LandingBookingSection />
+          <ContactForm />
+          <LandingFAQ />
+
+          <footer className="mt-16 flex items-center justify-between border-t border-[color:var(--landing-border)] pb-6 pt-6 font-[family-name:var(--font-landing-mono)] text-[11px] uppercase tracking-[0.08em] text-[color:var(--landing-muted-2)]">
+            <span>Outlet Media · 2026</span>
+            <span>Hecho en Puerto Rico</span>
+          </footer>
+        </main>
+
+        <LandingStickyCTA />
       </div>
     </div>
   );
