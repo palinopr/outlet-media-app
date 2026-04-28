@@ -45,12 +45,26 @@ export async function PATCH(
   }
 
   if (action === "add") {
-    await supabaseAdmin
+    const { data: existingMembership, error: existingMembershipError } = await supabaseAdmin
       .from("client_members")
-      .upsert(
-        { client_id: clientRow.id, clerk_user_id: id, role: "member" },
-        { onConflict: "client_id,clerk_user_id" }
-      );
+      .select("id")
+      .eq("client_id", clientRow.id)
+      .eq("clerk_user_id", id)
+      .maybeSingle();
+
+    if (existingMembershipError) {
+      return apiError("Failed to load existing client membership", 500);
+    }
+
+    if (!existingMembership) {
+      const { error: insertError } = await supabaseAdmin
+        .from("client_members")
+        .insert({ client_id: clientRow.id, clerk_user_id: id, role: "member" });
+
+      if (insertError) {
+        return apiError("Failed to add client membership", 500);
+      }
+    }
   } else {
     await supabaseAdmin
       .from("client_members")

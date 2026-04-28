@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-access | preserve assignments on invite acceptance
+- Changed invite acceptance to reuse an existing `client_members` row instead of upserting over it, preserving assigned campaign/event rows tied to the member id.
+- Changed the admin Users client-access add path to no-op when membership already exists, instead of recreating or overwriting membership data.
+- Added regression tests for invite acceptance and admin user client assignment.
+
 ## [2026-04-27] admin-web | campaign assignment and support-module audit
 - Confirmed the latest Railway deployment succeeded and smoke-checked signed-out client route redirects plus `/api/health`.
 - Added an admin campaigns warning for rows still mapped to `unknown` so operators can assign them before client exposure.

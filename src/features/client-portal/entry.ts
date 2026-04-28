@@ -193,19 +193,39 @@ export async function acceptClientAccessInvite(input: {
     return null;
   }
 
-  const { error: membershipError } = await supabaseAdmin
+  const inviteRole = data.client_role === "owner" ? "owner" : "member";
+  const { data: existingMembership, error: existingMembershipError } = await supabaseAdmin
     .from("client_members")
-    .upsert(
-      {
-        client_id: data.client_id,
-        clerk_user_id: input.userId,
-        role: data.client_role === "owner" ? "owner" : "member",
-      },
-      { onConflict: "client_id,clerk_user_id" },
+    .select("id, role")
+    .eq("client_id", data.client_id)
+    .eq("clerk_user_id", input.userId)
+    .maybeSingle();
+
+  if (existingMembershipError) {
+    console.error(
+      "[client-portal/entry] failed to load existing client membership:",
+      existingMembershipError.message,
     );
+    return null;
+  }
+
+  const membershipWrite = existingMembership
+    ? supabaseAdmin
+        .from("client_members")
+        .update({ role: inviteRole })
+        .eq("id", existingMembership.id)
+    : supabaseAdmin
+        .from("client_members")
+        .insert({
+          client_id: data.client_id,
+          clerk_user_id: input.userId,
+          role: inviteRole,
+        });
+
+  const { error: membershipError } = await membershipWrite;
 
   if (membershipError) {
-    console.error("[client-portal/entry] failed to upsert client membership:", membershipError.message);
+    console.error("[client-portal/entry] failed to save client membership:", membershipError.message);
     return null;
   }
 
