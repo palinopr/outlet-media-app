@@ -7,7 +7,7 @@ Use this after a production push/deploy or any auth, routing, campaign, client, 
 - Railway CLI logged in and linked to `outlet-media-app`.
 - Playwright Chromium installed locally once with `npm run playwright:install`.
 - Production Clerk secret available as `E2E_CLERK_SECRET_KEY`.
-- Optional temporary client-member acceptance uses `E2E_SUPABASE_URL` and `E2E_SUPABASE_SERVICE_ROLE_KEY` to create and delete ephemeral `client_members` rows without inviting real clients.
+- Optional temporary client-member acceptance uses `E2E_SUPABASE_URL` and `E2E_SUPABASE_SERVICE_ROLE_KEY` to create and delete ephemeral `client_members` rows without inviting real clients. In GitHub Actions, `SUPABASE_ACCESS_TOKEN` is enough because the workflow resolves the service-role key at runtime and masks it.
 - Production E2E target must be `https://outletmedia.net`; Clerk production keys do not allow the Railway preview origin for browser sign-in.
 
 ## Standard deploy smoke
@@ -35,6 +35,7 @@ Run authenticated smoke:
 E2E_BASE_URL=https://outletmedia.net \
 E2E_CLIENT_SLUG=sienna \
 E2E_CLIENT_SLUGS="sienna,zamora,kybba,distill_pr,vaz_vil_enterprise,chris_r,proteccion_final,beamina,happy_paws,don_omar_bcn" \
+E2E_CLIENT_MEMBER_SLUGS="sienna,zamora" \
 E2E_CLERK_SECRET_KEY="$E2E_CLERK_SECRET_KEY" \
 E2E_SUPABASE_URL="$NEXT_PUBLIC_SUPABASE_URL" \
 E2E_SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
@@ -48,11 +49,12 @@ The smoke suite creates temporary Clerk users with `outlet-e2e-*` emails and del
 Use the **E2E Smoke** GitHub Actions workflow when you want the same smoke from CI infrastructure:
 
 1. Confirm the repository secret `E2E_CLERK_SECRET_KEY` is set to the Clerk secret for the target environment.
-2. Optional but recommended: set `E2E_SUPABASE_URL` and `E2E_SUPABASE_SERVICE_ROLE_KEY` so CI can test real non-admin client-member access without sending invites.
+2. Confirm `SUPABASE_ACCESS_TOKEN` is set so CI can resolve temporary non-admin client-member credentials at runtime without storing the service-role key as a GitHub secret.
 3. Run the workflow manually.
 4. Use `https://outletmedia.net` as `base_url` for production.
 5. Use `sienna` as the default `client_slug` unless that portal has no campaign data.
 6. Use `client_slugs` to cover every client portal that should be accepted for launch.
+7. Keep `client_member_slugs` focused on a small representative set unless explicitly doing a heavier access audit.
 
 ## Expected coverage
 

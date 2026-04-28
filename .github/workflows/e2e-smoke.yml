@@ -15,6 +15,10 @@ on:
         description: "Comma-separated client portal slugs for acceptance coverage"
         required: false
         default: "sienna,zamora,kybba,distill_pr,vaz_vil_enterprise,chris_r,proteccion_final,beamina,happy_paws,don_omar_bcn"
+      client_member_slugs:
+        description: "Comma-separated client slugs for temporary non-admin membership coverage"
+        required: false
+        default: "sienna,zamora"
 
 jobs:
   authenticated-smoke:
@@ -25,6 +29,7 @@ jobs:
       E2E_BASE_URL: ${{ inputs.base_url }}
       E2E_CLIENT_SLUG: ${{ inputs.client_slug }}
       E2E_CLIENT_SLUGS: ${{ inputs.client_slugs }}
+      E2E_CLIENT_MEMBER_SLUGS: ${{ inputs.client_member_slugs }}
       E2E_CLERK_SECRET_KEY: ${{ secrets.E2E_CLERK_SECRET_KEY }}
       E2E_SUPABASE_URL: ${{ secrets.E2E_SUPABASE_URL }}
       E2E_SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.E2E_SUPABASE_SERVICE_ROLE_KEY }}

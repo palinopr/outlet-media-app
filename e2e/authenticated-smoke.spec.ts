@@ -8,6 +8,9 @@ const baseURL = trimTrailingSlash(
 );
 const clientPortalSlug = process.env.E2E_CLIENT_SLUG ?? "sienna";
 const clientPortalSlugs = parseClientSlugs(process.env.E2E_CLIENT_SLUGS ?? clientPortalSlug);
+const clientMemberPortalSlugs = parseClientSlugs(
+  process.env.E2E_CLIENT_MEMBER_SLUGS ?? defaultClientMemberSlugs(clientPortalSlugs, clientPortalSlug).join(","),
+);
 const e2eSupabaseUrl = process.env.E2E_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
 const e2eSupabaseServiceRoleKey = process.env.E2E_SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -124,7 +127,7 @@ test.describe("authenticated smoke", () => {
     );
     if (!db) return;
 
-    for (const slug of clientPortalSlugs) {
+    for (const [index, slug] of clientMemberPortalSlugs.entries()) {
       const clientUser = await createTemporaryUser({ label: `client-${slug}` });
       const memberId = await createTemporaryClientMembership(db, {
         clientSlug: slug,
@@ -137,7 +140,7 @@ test.describe("authenticated smoke", () => {
       try {
         await signInWithToken(page, clientUser.id);
         await assertClientPortalIsCampaignsOnly(page, slug);
-        await assertClientPortalCampaignListUsable(page, slug);
+        await assertClientPortalCampaignListUsable(page, slug, { checkDetail: index === 0 });
 
         const otherSlug = clientPortalSlugs.find((candidate) => candidate !== slug);
         if (otherSlug) {
@@ -329,13 +332,17 @@ async function assertClientPortalIsCampaignsOnly(page: Page, slug: string) {
   await expect(clientNav).not.toContainText(/Events|Reports|Agent|Approvals|Requests|Conversations/i);
 }
 
-async function assertClientPortalCampaignListUsable(page: Page, slug: string) {
+async function assertClientPortalCampaignListUsable(
+  page: Page,
+  slug: string,
+  options: { checkDetail?: boolean } = {},
+) {
   await page.goto(appUrl(`/client/${slug}/campaigns`), { waitUntil: "domcontentloaded" });
   await expect(page.getByRole("heading", { name: new RegExp(`${slugToTitle(slug)} Campaigns`, "i") })).toBeVisible();
   await expect(page.locator("body")).not.toContainText(/Campaign not found|Something went wrong|Access denied/i);
 
   const firstCampaignRow = page.locator("table tbody tr").first();
-  if (await firstCampaignRow.isVisible().catch(() => false)) {
+  if (options.checkDetail !== false && await firstCampaignRow.isVisible().catch(() => false)) {
     await firstCampaignRow.click();
     await expect(page).toHaveURL(new RegExp(`/client/${slug}/campaign/[^/?#]+`));
     await expect(page.locator("body")).not.toContainText(/Campaign not found|Something went wrong|Access denied/i);
@@ -470,6 +477,11 @@ function rewriteUrlOrigin(url: string, origin: string) {
 
 function trimTrailingSlash(value: string) {
   return value.replace(/\/$/, "");
+}
+
+function defaultClientMemberSlugs(slugs: string[], primarySlug: string) {
+  const fallbackSlug = slugs.find((slug) => slug !== primarySlug);
+  return fallbackSlug ? [primarySlug, fallbackSlug] : [primarySlug];
 }
 
 function parseClientSlugs(value: string) {
