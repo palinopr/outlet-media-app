@@ -2,10 +2,6 @@
 
 import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod/v4";
-import {
-  getCampaignActionItemById,
-  maybeEnqueueCampaignActionItemTriage,
-} from "@/features/campaign-action-items/server";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
   getCampaignWorkflowPaths,
@@ -132,11 +128,6 @@ export async function createCampaignActionItem(formData: {
     title: "Campaign action assigned to you",
     visibility: parsed.visibility,
   });
-
-  const createdItem = await getCampaignActionItemById(data.id);
-  if (createdItem) {
-    await maybeEnqueueCampaignActionItemTriage(createdItem);
-  }
 
   revalidateWorkflowPaths(getCampaignWorkflowPaths(effectiveClientSlug, parsed.campaignId));
   return data;
@@ -287,14 +278,6 @@ export async function updateCampaignActionItem(formData: {
       message: nextValues.title,
       title: "Campaign action assigned to you",
       visibility: nextValues.visibility as "shared" | "admin_only",
-    });
-  }
-
-  const updatedItem = await getCampaignActionItemById(itemId);
-  if (updatedItem) {
-    await maybeEnqueueCampaignActionItemTriage(updatedItem, {
-      priority: existing.priority,
-      status: existing.status,
     });
   }
 

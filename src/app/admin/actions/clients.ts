@@ -271,7 +271,6 @@ export async function createClient(formData: { name: string; slug: string }) {
 
 export async function updateClient(formData: {
   clientId: string;
-  agentEnabled?: boolean;
   eventsEnabled?: boolean;
   reportsEnabled?: boolean;
   brandName?: string | null;
@@ -288,7 +287,6 @@ export async function updateClient(formData: {
   const parsed = UpdateClientSchema.parse(formData);
   const {
     clientId,
-    agentEnabled,
     eventsEnabled,
     reportsEnabled,
     brandName,
@@ -298,7 +296,6 @@ export async function updateClient(formData: {
   } = parsed;
   const dbUpdates = {
     ...updates,
-    ...(agentEnabled === undefined ? {} : { agent_enabled: agentEnabled }),
     ...(eventsEnabled === undefined ? {} : { events_enabled: eventsEnabled }),
     ...(reportsEnabled === undefined ? {} : { reports_enabled: reportsEnabled }),
     ...(brandName === undefined ? {} : { portal_brand_name: brandName }),

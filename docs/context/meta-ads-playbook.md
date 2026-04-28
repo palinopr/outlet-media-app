@@ -35,7 +35,7 @@ Common Meta variables referenced across the repo:
 - `META_APP_SECRET`
 - `NEXT_PUBLIC_APP_URL`
 
-The agent runtime also reads Meta credentials from the parent app env rather than maintaining a separate duplicate secret source.
+Meta credentials should stay centralized in the parent app env rather than duplicated across local tools.
 
 ## Repeated operating rules
 
@@ -43,7 +43,7 @@ The agent runtime also reads Meta credentials from the parent app env rather tha
 - prefer `asset_feed_spec` with `asset_customization_rules`
 - keep campaign mutations bounded and auditable
 - use live Meta reads plus durable mirrored tables
-- use the single-agent runtime for review/summarize/blocker workflows, not a second shadow ops system
+- keep review/summarize/blocker workflows in the web product's campaign, report, approval, and action-item surfaces rather than a shadow ops system
 - for ticket / event campaigns, review purchase concentration by `platform_position`; if Stories / Reels are producing purchases while feed is weak, split or bias placements instead of treating all placements as equal
 - if a secondary video test is producing views or LPV but not purchases, cap it or pause it before scaling the campaign
 - if a third-party ticketing path like Eventbrite is already firing Meta purchase / LPV events, backend access is not required for first-pass warm retargeting; a website custom audience can still be built from the stable ticket URL token plus purchase exclusion

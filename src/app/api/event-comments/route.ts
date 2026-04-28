@@ -6,7 +6,6 @@ import {
   authGuard,
   dbError,
   getAuthorName,
-  shouldEnqueueCommentTriage,
   validateRequest,
 } from "@/lib/api-helpers";
 import {
@@ -14,7 +13,6 @@ import {
   ResolveCommentSchema,
 } from "@/lib/api-schemas";
 import { excerpt } from "@/lib/text-utils";
-import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
 import {
   canAccessEventComments,
@@ -32,36 +30,6 @@ import {
 const CreateScopedEventCommentSchema = CreateEventCommentSchema.extend({
   client_slug: z.string().min(1),
 });
-
-function eventCommentTriagePrompt(input: {
-  authorName: string;
-  clientSlug: string;
-  comment: string;
-  commentId: string;
-  eventDate: string | null;
-  eventId: string;
-  eventName: string | null;
-  eventVenue: string | null;
-}) {
-  return [
-    "A client started a new event discussion thread.",
-    `Client: ${input.clientSlug}`,
-    input.eventName ? `Event: ${input.eventName}` : null,
-    `Event ID: ${input.eventId}`,
-    input.eventVenue ? `Venue: ${input.eventVenue}` : null,
-    input.eventDate ? `Date: ${input.eventDate}` : null,
-    `Comment ID: ${input.commentId}`,
-    `Author: ${input.authorName}`,
-    `Comment: ${input.comment}`,
-    "Prepare a concise event operations triage note with:",
-    "1. what the client is asking or flagging",
-    "2. the next best ticketing or promotion response",
-    "3. any missing information or blockers",
-    "Keep it short and practical.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
 
 export async function GET(request: NextRequest) {
   const { userId, error } = await authGuard();
@@ -195,49 +163,6 @@ export async function POST(request: NextRequest) {
     title: body.parent_comment_id ? "New reply in event discussion" : "New event comment",
     visibility,
   });
-
-  if (
-    shouldEnqueueCommentTriage({
-      isAdmin: access.isAdmin,
-      parentCommentId: body.parent_comment_id,
-      visibility,
-    })
-  ) {
-    const taskId = await enqueueExternalAgentTask({
-      action: "triage-event-comment",
-      prompt: eventCommentTriagePrompt({
-        authorName,
-        clientSlug: body.client_slug,
-        comment: body.content,
-        commentId: data.id as string,
-        eventDate: event.date,
-        eventId: body.event_id,
-        eventName,
-        eventVenue: event.venue,
-      }),
-      toAgent: "assistant",
-    });
-
-    if (taskId) {
-      await logSystemEvent({
-        eventName: "agent_action_requested",
-        actorType: "system",
-        clientSlug: body.client_slug,
-        visibility: "admin_only",
-        entityType: "agent_task",
-        entityId: taskId,
-        summary: `Queued agent triage for event comment in ${eventName}`,
-        detail: "Assistant will prepare a concise event response and next-step brief for the team.",
-        metadata: {
-          commentId: data.id,
-          eventId: body.event_id,
-          eventName,
-          taskId,
-          toAgent: "assistant",
-        },
-      });
-    }
-  }
 
   revalidateWorkflowPaths(getEventWorkflowPaths(body.client_slug, body.event_id));
 

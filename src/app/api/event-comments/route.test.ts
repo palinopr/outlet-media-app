@@ -34,7 +34,6 @@ vi.mock("@/lib/api-helpers", () => ({
   authGuard,
   dbError: () => Response.json({ error: "Database error" }, { status: 500 }),
   getAuthorName: () => "Outlet Admin",
-  shouldEnqueueCommentTriage: () => false,
   validateRequest,
 }));
 
@@ -71,10 +70,6 @@ vi.mock("@/features/notifications/discussions", () => ({
 
 vi.mock("@/features/system-events/server", () => ({
   logSystemEvent,
-}));
-
-vi.mock("@/lib/agent-dispatch", () => ({
-  enqueueExternalAgentTask: vi.fn(),
 }));
 
 vi.mock("@/features/workflow/revalidation", () => ({

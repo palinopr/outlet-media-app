@@ -136,7 +136,7 @@ export function EventTable({ events, clients, demoMap, campaigns, fromDb }: Even
       emptyMessage={
         fromDb
           ? "No events match this filter"
-          : "No event data -- start the agent to pull events from the Ticketmaster promoter portal"
+          : "No event data -- sync Ticketmaster promoter portal data to populate events"
       }
       mobileCard={(e) => {
         const soldPct =

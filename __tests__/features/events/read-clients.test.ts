@@ -143,10 +143,6 @@ vi.mock("@/features/dashboard/server", () => ({
   getDashboardActionCenter: vi.fn(),
 }));
 
-vi.mock("@/features/agent-outcomes/server", () => ({
-  listAgentOutcomes: vi.fn(),
-}));
-
 import { getEventOperationsSummary } from "@/features/events/server";
 
 function makeEvent(id: string, name: string) {

@@ -71,8 +71,8 @@ describe("campaign ownership sync helpers", () => {
     expect(
       systemEventMatchesCampaignOwnership(
         {
-          entity_type: "agent_task",
-          entity_id: "task_1",
+          entity_type: "campaign",
+          entity_id: "cmp_1",
           metadata: { campaignId: "cmp_1" },
         },
         entities,

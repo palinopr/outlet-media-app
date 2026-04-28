@@ -6,15 +6,14 @@ import { Mail } from "lucide-react";
 import { getClientNavLinks, isNavActive } from "./nav-config";
 
 interface Props {
-  agentEnabled: boolean;
   slug: string;
   eventsEnabled: boolean;
   reportsEnabled: boolean;
 }
 
-export function ClientNav({ agentEnabled, slug, eventsEnabled, reportsEnabled }: Props) {
+export function ClientNav({ slug, eventsEnabled, reportsEnabled }: Props) {
   const pathname = usePathname();
-  const links = getClientNavLinks(slug, { agentEnabled, eventsEnabled, reportsEnabled });
+  const links = getClientNavLinks(slug, { eventsEnabled, reportsEnabled });
 
   return (
     <nav aria-label="Client navigation" className="flex-1 px-3 py-1">

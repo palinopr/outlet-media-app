@@ -54,7 +54,6 @@ describe("ClientReportsPage", () => {
     });
     mockedGetReportsWorkflowData.mockResolvedValueOnce({
       actionCenter: { approvals: [], discussions: [] },
-      agentOutcomes: [],
       eventOperations: { attentionEvents: [], eventsNeedingAttention: 0, metrics: [] },
       opsSummary: { attentionCampaigns: [], campaignsNeedingAttention: 0, metrics: [], mode: "client" },
     });

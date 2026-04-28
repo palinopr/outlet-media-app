@@ -2,7 +2,6 @@ import { currentUser } from "@clerk/nextjs/server";
 import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 
 export type SystemEventName =
-  | "agent_action_requested"
   | "approval_approved"
   | "approval_cancelled"
   | "approval_rejected"
@@ -24,11 +23,6 @@ export type SystemEventName =
   | "campaign_action_item_deleted"
   | "campaign_action_item_updated"
   | "campaign_updated"
-  | "client_agent_answer_generated"
-  | "client_agent_failure_returned"
-  | "client_agent_refusal_generated"
-  | "client_agent_thread_created"
-  | "client_agent_user_message_submitted"
   | "event_comment_added"
   | "event_comment_deleted"
   | "event_comment_resolved"
@@ -50,7 +44,7 @@ export type SystemEventName =
   | "workspace_task_updated";
 
 export type SystemEventVisibility = "admin_only" | "shared";
-export type SystemEventActorType = "agent" | "system" | "user";
+export type SystemEventActorType = "system" | "user";
 export type SystemEventSource = "app" | "backfill" | "webhook" | "worker" | (string & {});
 
 export interface SystemEvent {
@@ -183,18 +177,12 @@ function normalizeOccurredAt(value?: Date | string | null) {
   return value instanceof Date ? value.toISOString() : value;
 }
 
-function agentTaskEventId(input: LogSystemEventInput, metadata: Record<string, unknown>) {
-  if (input.eventName !== "agent_action_requested") return null;
-  if (input.entityType === "agent_task" && input.entityId) return input.entityId;
-  return input.taskId ?? metadataString(metadata, "taskId");
-}
-
 function resolveEventSource(input: LogSystemEventInput, metadata: Record<string, unknown>): SystemEventSource {
   return (input.source ?? metadataString(metadata, "source") ?? "app") as SystemEventSource;
 }
 
 function resolveCorrelationId(input: LogSystemEventInput, metadata: Record<string, unknown>) {
-  return input.correlationId ?? metadataString(metadata, "correlationId") ?? agentTaskEventId(input, metadata);
+  return input.correlationId ?? metadataString(metadata, "correlationId");
 }
 
 function resolveCausationId(input: LogSystemEventInput, metadata: Record<string, unknown>) {
@@ -202,11 +190,7 @@ function resolveCausationId(input: LogSystemEventInput, metadata: Record<string,
 }
 
 function resolveIdempotencyKey(input: LogSystemEventInput, metadata: Record<string, unknown>) {
-  const explicit = input.idempotencyKey ?? metadataString(metadata, "idempotencyKey");
-  if (explicit) return explicit;
-
-  const agentTaskId = agentTaskEventId(input, metadata);
-  return agentTaskId ? `${input.eventName}:${agentTaskId}` : null;
+  return input.idempotencyKey ?? metadataString(metadata, "idempotencyKey");
 }
 
 function isEnvelopeSchemaError(error: { message?: string | null; details?: string | null } | null) {

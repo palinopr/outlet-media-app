@@ -99,7 +99,7 @@ function requireResolvedClientAccess(
 
 async function resolveClientPortalFeatureAccess(
   slug: string,
-  feature: "agent" | "events" | "reports",
+  feature: "events" | "reports",
 ): Promise<PortalAccessResolution> {
   const [access, portalConfig] = await Promise.all([
     resolveClientPortalAccess(slug),
@@ -111,12 +111,7 @@ async function resolveClientPortalFeatureAccess(
   }
 
   const destination = feature === "reports" ? `/client/${slug}` : `/client/${slug}/campaigns`;
-  const featureEnabled =
-    feature === "agent"
-      ? portalConfig?.agentEnabled
-      : feature === "events"
-        ? portalConfig?.eventsEnabled
-        : portalConfig?.reportsEnabled;
+  const featureEnabled = feature === "events" ? portalConfig?.eventsEnabled : portalConfig?.reportsEnabled;
 
   if (!featureEnabled || !portalConfig) {
     return { destination, kind: "redirect", viewer: access.viewer };
@@ -139,25 +134,6 @@ export async function requireClientAccess(
   return { userId: access.userId, scope: access.scope };
 }
 
-export async function requireClientAgentAccess(
-  slug: string,
-): Promise<{
-  clientId: string;
-  clientSlug: string;
-  scope: ScopeFilter | undefined;
-  userId: string;
-  viewer: Viewer;
-}> {
-  const access = requireResolvedClientAccess(await resolveClientPortalFeatureAccess(slug, "agent"));
-  return {
-    clientId: access.clientId ?? slug,
-    clientSlug: access.clientSlug,
-    scope: access.scope,
-    userId: access.userId,
-    viewer: access.viewer,
-  };
-}
-
 export async function requireClientEventsAccess(
   slug: string,
 ): Promise<{
@@ -177,17 +153,4 @@ export async function requireClientReportsAccess(
 }> {
   const access = requireResolvedClientAccess(await resolveClientPortalFeatureAccess(slug, "reports"));
   return { userId: access.userId, scope: access.scope };
-}
-
-export async function resolveClientAgentAccessForApi(
-  slug: string,
-): Promise<
-  | ({
-      viewer: Viewer;
-    } & PortalAccessAllowed)
-  | ({
-      viewer: Viewer;
-    } & PortalAccessRedirect)
-> {
-  return resolveClientPortalFeatureAccess(slug, "agent");
 }

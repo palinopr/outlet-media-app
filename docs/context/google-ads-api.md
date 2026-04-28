@@ -249,9 +249,7 @@ The live TM1 save actually succeeded and created:
 - vendor/type: `Google AdWords` + `Event Snippet`
 - end date used in the live save: `06/01/2026`
 
-Operator note:
-- before browser-driving TM1 UI tasks, the repo's intended login path is `node agent/session/tm1-cookie-refresh.mjs`
-- that script can refresh the saved TM1 session and handle Ticketmaster MFA via Gmail automatically
+Operator note: the old repo-local TM1 browser automation scripts were retired with the agent runtime. If TM1 browser automation returns, reintroduce it deliberately with current docs, secrets handling, and verification.
 
 So do not assume Ticketmaster is untaggable. First confirm whether the ticketing page type available to you supports the current Google Ads tag placement.
 

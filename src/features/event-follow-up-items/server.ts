@@ -4,7 +4,6 @@ import {
   type TaskStatus,
 } from "@/lib/workspace-types";
 import { FIELD_LABELS, taskStatusLabel } from "@/lib/action-item-labels";
-import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import {
@@ -42,11 +41,6 @@ interface EventFollowUpItemActor {
   actorId?: string | null;
   actorName?: string | null;
   actorType?: SystemEventActorType;
-}
-
-interface EventFollowUpItemTriagePreviousState {
-  priority: TaskPriority;
-  status: TaskStatus;
 }
 
 interface ListEventFollowUpItemsOptions {
@@ -87,78 +81,6 @@ interface UpdateSystemEventFollowUpItemInput extends EventFollowUpItemActor {
 const EVENT_FOLLOW_UP_ITEM_SELECT =
   "id, event_id, client_slug, title, description, status, priority, visibility, assignee_id, assignee_name, due_date, created_by, position, source_entity_type, source_entity_id, created_at, updated_at";
 
-function shouldEnqueueEventFollowUpItemTriage(
-  item: EventFollowUpItem,
-  previous?: EventFollowUpItemTriagePreviousState,
-) {
-  if (item.sourceEntityType === "agent_task") return false;
-  if (!previous) return item.status === "review" || item.priority === "urgent";
-
-  return (
-    (item.status === "review" && previous.status !== "review") ||
-    (item.priority === "urgent" && previous.priority !== "urgent")
-  );
-}
-
-function eventFollowUpItemTriagePrompt(item: EventFollowUpItem) {
-  return [
-    "An event follow-up item needs triage.",
-    item.clientSlug ? `Client: ${item.clientSlug}` : "Client: unassigned",
-    item.eventName ? `Event: ${item.eventName}` : null,
-    `Event ID: ${item.eventId}`,
-    item.eventVenue ? `Venue: ${item.eventVenue}` : null,
-    item.eventDate ? `Date: ${item.eventDate}` : null,
-    `Follow-up item: ${item.title}`,
-    item.description ? `Description: ${item.description}` : null,
-    `Status: ${taskStatusLabel(item.status)}`,
-    `Priority: ${TASK_PRIORITY_LABELS[item.priority]}`,
-    item.assigneeName ? `Assignee: ${item.assigneeName}` : null,
-    item.dueDate ? `Due date: ${item.dueDate}` : null,
-    `Follow-up item ID: ${item.id}`,
-    "Give a concise event operations brief with:",
-    "1. what this follow-up is about",
-    "2. the next best ticketing or promotion step",
-    "3. any blockers or missing information",
-    "Keep it short and operational.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
-
-async function listEventInfo(
-  db: NonNullable<typeof supabaseAdmin>,
-  eventIds: string[],
-) {
-  if (eventIds.length === 0) {
-    return new Map<string, { date: string | null; name: string | null; venue: string | null }>();
-  }
-
-  const { data, error } = await db
-    .from("tm_events")
-    .select("id, name, artist, date, venue")
-    .in("id", eventIds);
-
-  if (error) {
-    console.error("[event-follow-up-items] event lookup failed:", error.message);
-    return new Map<string, { date: string | null; name: string | null; venue: string | null }>();
-  }
-
-  return new Map(
-    (data ?? []).map((row) => {
-      const record = row as Record<string, unknown>;
-      return [
-        String(record.id),
-        {
-          date: (record.date as string | null) ?? null,
-          name: ((record.artist as string | null) ?? (record.name as string | null)) ?? null,
-          venue: (record.venue as string | null) ?? null,
-        },
-      ];
-    }),
-  );
-}
-
-
 function mapEventFollowUpItem(
   row: Record<string, unknown>,
   eventInfo: Map<string, { date: string | null; name: string | null; venue: string | null }>,
@@ -188,6 +110,39 @@ function mapEventFollowUpItem(
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
+}
+
+type EventInfoClient = NonNullable<Awaited<ReturnType<typeof getFeatureReadClient>>>;
+
+async function listEventInfo(
+  db: EventInfoClient,
+  eventIds: string[],
+): Promise<Map<string, { date: string | null; name: string | null; venue: string | null }>> {
+  if (eventIds.length === 0) return new Map();
+
+  const { data, error } = await db
+    .from("tm_events")
+    .select("id, name, date, venue")
+    .in("id", eventIds);
+
+  if (error) {
+    console.error("[event-follow-up-items] event lookup failed:", error.message);
+    return new Map();
+  }
+
+  return new Map(
+    (data ?? []).map((row) => {
+      const event = row as Record<string, unknown>;
+      return [
+        String(event.id),
+        {
+          date: (event.date as string | null) ?? null,
+          name: (event.name as string | null) ?? null,
+          venue: (event.venue as string | null) ?? null,
+        },
+      ];
+    }),
+  );
 }
 
 export async function listEventFollowUpItems(
@@ -288,42 +243,6 @@ export async function getEventFollowUpItemById(itemId: string): Promise<EventFol
   return mapEventFollowUpItem(data as Record<string, unknown>, eventInfo);
 }
 
-export async function maybeEnqueueEventFollowUpItemTriage(
-  item: EventFollowUpItem,
-  previous?: EventFollowUpItemTriagePreviousState,
-) {
-  if (!shouldEnqueueEventFollowUpItemTriage(item, previous)) return null;
-
-  const taskId = await enqueueExternalAgentTask({
-    action: "triage-event-follow-up-item",
-    prompt: eventFollowUpItemTriagePrompt(item),
-    toAgent: "assistant",
-  });
-
-  if (!taskId) return null;
-
-  await logSystemEvent({
-    eventName: "agent_action_requested",
-    actorType: "system",
-    actorName: "Outlet Events",
-    clientSlug: item.clientSlug ?? null,
-    visibility: "admin_only",
-    entityType: "agent_task",
-    entityId: taskId,
-    taskId,
-    summary: `Queued agent triage for event follow-up "${item.title}"`,
-    detail: "Assistant will prepare a concise event operations brief for the team.",
-    metadata: {
-      eventId: item.eventId,
-      eventName: item.eventName,
-      eventFollowUpItemId: item.id,
-      toAgent: "assistant",
-    },
-  });
-
-  return taskId;
-}
-
 export async function createSystemEventFollowUpItem(
   input: CreateSystemEventFollowUpItemInput,
 ): Promise<EventFollowUpItem | null> {
@@ -407,7 +326,6 @@ export async function createSystemEventFollowUpItem(
     visibility: item.visibility,
   });
 
-  await maybeEnqueueEventFollowUpItemTriage(item);
   return item;
 }
 
@@ -544,11 +462,6 @@ export async function updateSystemEventFollowUpItem(
       visibility: item.visibility,
     });
   }
-
-  await maybeEnqueueEventFollowUpItemTriage(item, {
-    priority: existingRow.priority as TaskPriority,
-    status: existingRow.status as TaskStatus,
-  });
 
   return item;
 }

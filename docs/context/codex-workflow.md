@@ -37,41 +37,23 @@ If a conversation changes direction, start a new thread instead of carrying old 
 
 ## 3a. Choose The Surface Explicitly
 
-When starting a new thread, say which surface you want:
-- `web`
-- `Discord`
-- `both`
+The active product surface is the web app. If the user does not specify a surface, default to `web` and work in `src/app/`, `src/features/`, `src/components/`, `src/lib/`, and any required Supabase migrations.
 
-Examples:
-- "Work on web: improve the client approvals center."
-- "Work on Discord: build the growth-team supervisor and task flow."
-- "Work on both: add a shared approval object plus Discord executor flow."
-
-Default interpretation if the user does not specify:
-- customer-facing or admin-facing app surfaces -> `web`
-- internal autonomous teams and control-plane flows -> `Discord`
-- shared visibility plus autonomous execution -> `both`
-
-Preferred path mapping:
-- `web` -> `src/app/`, `src/features/`, `src/components/`
-- `Discord` -> `agent/src/`, `agent/prompts/`, `agent/memory/`, `agent/skills/`
-- `both` -> the paths above plus `supabase/migrations/`, `src/lib/database.types.ts`, and shared revalidation/event code
+The old Discord/autonomous runtime has been retired. Do not recreate it by default.
 
 ## 4. Keep Repo Guidance Layered
 
 Root `AGENTS.md` carries repo-wide rules.
 
-Deeper `AGENTS.md` files narrow behavior for:
+Deeper `AGENTS.md` files narrow behavior for active areas such as:
 - `src/app/`
 - `src/features/`
-- `agent/`
 - `supabase/`
 
 If repo-local Codex/operator skills are introduced later, keep them in one dedicated repo skill directory so Codex can load specialized guidance only when it is needed.
 
 Do not keep duplicate copies of the same operator skill under multiple local skill roots.
 
-Runtime agent skills belong in `agent/skills/`.
 Repo-local Codex/operator skills belong in a dedicated repo skill directory only when that directory is actually checked in.
 Durable architecture rules belong in `docs/context/`.
 Execution sequencing belongs in `docs/plans/`.
@@ -129,7 +111,6 @@ Current working defaults for `~/.codex/config.toml`:
 - default reasoning: `medium`
 - use `high` for tricky refactors, incident debugging, or architecture-heavy work
 - use `xhigh` only for unusually hard long-horizon tasks
-- leave `features.multi_agent` off unless you are explicitly testing it
 
 Example baseline:
 
@@ -137,9 +118,6 @@ Example baseline:
 model = "gpt-5.3-codex"
 model_reasoning_effort = "medium"
 personality = "pragmatic"
-
-[features]
-multi_agent = false
 
 [profiles.deep]
 model = "gpt-5.4"
@@ -177,7 +155,7 @@ When using Codex Desktop against a real Chrome session:
 Use this cleanup when the desktop app gets into a bad browser MCP state:
 
 ```bash
-pkill -f 'chrome-devtools-mcp|@playwright/mcp|playwright-chrome-clone|mcp-discord|context7-mcp|mcp-server-supabase|agent-toolkit|mcpdoc'
+pkill -f 'chrome-devtools-mcp|@playwright/mcp|playwright-chrome-clone|mcp-discord|context7-mcp|mcp-server-supabase|mcpdoc'
 ```
 
 For browser debugging, stabilize one MCP path first:

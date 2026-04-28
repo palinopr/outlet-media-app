@@ -95,7 +95,3 @@ export function revalidateWorkflowPaths(paths: string[]) {
     revalidatePath(path);
   }
 }
-
-export function revalidateClientAgentPath(clientSlug: string) {
-  revalidatePath(`/client/${clientSlug}/agent`);
-}

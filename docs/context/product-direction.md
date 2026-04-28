@@ -1,125 +1,29 @@
 # Product Direction
 
-## What Outlet Is
+Outlet Media is a client-facing autonomous-agency operating system, but the current shipped product is intentionally narrower than the long-term vision.
 
-Outlet is a client-facing autonomous agency operating system.
+## Current Core
 
-It is not just:
-- a Notion clone
-- a reporting dashboard
-- a CRM
-- an ads manager
+The active web product should focus on:
 
-It is the shared environment where:
-- Outlet team members do the work
-- clients can see what is happening and stay involved
-- contractors and specialists collaborate in context
-- agents help move work forward
+- **Campaigns**
+- **Events** (enabled per client)
+- **Reports**
+- Admin-managed clients, users, memberships, branding, and portal packaging
 
-The interface can borrow strong Notion-like patterns, but the product model should be centered on agency operations.
+Approvals, discussions, assets, activity, and follow-up work should live inside campaign, event, report, and admin account surfaces before earning standalone routes.
 
-## Core Problem
+## What To Avoid Right Now
 
-Media buying and campaign operations are fragmented.
+- No placeholder product pages or parked tabs.
+- No duplicate client surfaces for the same workflow.
+- No standalone CRM/workspace/updates/conversations/approvals apps unless explicitly restored.
+- No agent/chat product surface or background agent runtime for now.
 
-Typical failure modes:
-- clients feel blind and disconnected
-- specialists work in silos
-- context gets lost between chat, docs, assets, approvals, and campaign tools
-- results are visible too late or without explanation
-- too much depends on humans relaying information manually
+## Product Principles
 
-Outlet should reduce those failures by making work visible, collaborative, and agent-aware.
-
-## Two Modes Of Visibility
-
-Outlet should support both:
-- a traditional dashboard experience with charts, KPIs, trends, status cards, and familiar summaries
-- a deeper operating-system experience with activity, approvals, comments, tasks, assets, and agent-driven workflows
-
-Some users want to live in workflows. Others want to see graphs, results, and a clear summary. The product should serve both without forcing every user into the same depth of interaction.
-
-## Product Outcome
-
-Customers should feel:
-- they can see everything that matters
-- they are part of the process without needing to manage every detail
-- Outlet is guiding the work, not just reporting on it
-- they can choose between a simple dashboard view and a deeper collaborative operating view
-
-Internal team should feel:
-- work is organized around the real client/campaign context
-- important actions trigger the next step automatically
-- they do not need to re-explain the same context across tools
-
-## Product Model
-
-The workspace/editor layer is the shell. The actual product is a set of connected operating surfaces on one shared backbone.
-
-Current active product core:
-- Clients / account access backbone
-- Campaigns
-- Reports / results
-- Events / ticketing workflows
-- optional client Agent reporting surface
-
-Supporting workflow concepts such as approvals, discussions, activity, assets, and agent follow-through should usually stay embedded inside those campaign, report, event, and admin account surfaces during the current reset instead of immediately becoming separate top-level apps.
-
-Longer term, Outlet may still expand into more first-class operating areas, but current packaging and cleanup work should treat that broader model as future potential rather than shipped product truth.
-
-## Current Customer Packaging
-
-The long-term product can expose more first-class apps, but the current customer-facing packaging should stay narrow and excellent.
-
-For now, the client-facing web surface should center on:
-- campaigns
-- reports
-- events
-- optional agent
-
-That means:
-- campaign and event pages should stay the primary place clients read analytics, status, blockers, approvals, activity, and next steps
-- reports is the explicit summary-first surface over that same campaign and event backbone rather than a separate product domain
-- agent is the approved optional conversational reporting surface, not a broad client workspace
-- supporting concepts such as assets, discussions, approvals, and agent follow-through should usually appear as embedded panels inside campaign, report, and event views before they earn their own client navigation item
-- CRM, approvals, assets, workspace-style tooling, and other deeper operating tools can remain admin-first or historical until customers clearly need them as standalone client surfaces
-
-Admin users should still operate on the broader system. The customer-facing simplification is about packaging and trust, not about throwing away the shared backbone.
-
-## Design Principle
-
-Everything should stay attached to the right context.
-
-Examples:
-- a creative upload belongs to a campaign, client, and asset thread
-- a campaign change belongs to a campaign timeline and activity feed
-- a client comment belongs to the exact work item or page it references
-- an agent action belongs to the event that triggered it and the outcome it produced
-
-Avoid generic "notes everywhere" designs that hide business state inside unstructured pages.
-
-## Long-Term Direction
-
-Outlet may expand beyond ads and ticket sales into a broader AI-enabled client environment.
-
-That means:
-- assume more apps will be added over time
-- build multi-tenant foundations early
-- prefer reusable operating-system patterns over one-off dashboards
-
-## Product Priorities
-
-1. Shared visibility
-2. Clear guided execution
-3. Context-rich collaboration
-4. Event-driven automation
-5. Safe agent actions
-6. Client-ready app surfaces
-
-## What To Preserve
-
-- Notion-like speed and flexibility in the UI
-- client-friendly visibility
-- familiar dashboard readability for traditional users
-- strong campaign and results orientation
-- agent orchestration as a real differentiator
+- Build for shared visibility between Outlet operators and clients.
+- Support both summary-first dashboards and deeper workflow views.
+- Keep collaboration attached to the relevant campaign, event, report, client, asset, or action item.
+- Prefer guided execution: show what happened, what matters, what is blocked, and what needs a human decision next.
+- Use structured domain objects and `system_events` rather than route-local status blobs.

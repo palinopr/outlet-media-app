@@ -103,10 +103,6 @@ vi.mock("@/lib/supabase", () => ({
   supabaseAdmin,
 }));
 
-vi.mock("@/lib/agent-dispatch", () => ({
-  enqueueExternalAgentTask: vi.fn(),
-}));
-
 vi.mock("@/features/notifications/workflow", () => ({
   notifyWorkflowAssignee: vi.fn(),
 }));

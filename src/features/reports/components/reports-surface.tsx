@@ -122,7 +122,7 @@ export function ReportsSurface({ data, mode, workflow }: ReportsSurfaceProps) {
             <h2 className="text-sm font-semibold">Operational Readout</h2>
           </div>
           <p className="mt-1 text-sm text-muted-foreground">
-            Shared next-step signals derived from approvals, discussion, events, and agent outcomes.
+            Shared next-step signals derived from approvals, discussion, and events.
           </p>
 
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -144,15 +144,6 @@ export function ReportsSurface({ data, mode, workflow }: ReportsSurfaceProps) {
               </p>
               <p className="mt-2 text-sm text-foreground">
                 {workflow.actionCenter.approvals[0]?.title ?? "No approvals waiting right now."}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-border/60 bg-muted/20 p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Latest agent outcome
-              </p>
-              <p className="mt-2 text-sm text-foreground">
-                {workflow.agentOutcomes[0]?.requestSummary ?? "No agent work surfaced into reports yet."}
               </p>
             </div>
           </div>

@@ -5,7 +5,6 @@ import {
   authGuard,
   dbError,
   getAuthorName,
-  shouldEnqueueCommentTriage,
   validateRequest,
 } from "@/lib/api-helpers";
 import { excerpt } from "@/lib/text-utils";
@@ -13,7 +12,6 @@ import {
   CreateCampaignCommentSchema,
   ResolveCommentSchema,
 } from "@/lib/api-schemas";
-import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import {
   campaignBelongsToClientSlug,
   getEffectiveCampaignRowById,
@@ -48,32 +46,6 @@ async function getCampaignContext(campaignId: string) {
     client_slug: string | null;
     name: string | null;
   }>(campaignId, "campaign_id, client_slug, name");
-}
-
-function campaignCommentTriagePrompt(input: {
-  campaignId: string;
-  campaignName: string | null;
-  clientSlug: string;
-  commentId: string;
-  comment: string;
-  authorName: string;
-}) {
-  return [
-    `A client started a new campaign discussion thread.`,
-    `Client: ${input.clientSlug}`,
-    input.campaignName ? `Campaign: ${input.campaignName}` : null,
-    `Campaign ID: ${input.campaignId}`,
-    `Comment ID: ${input.commentId}`,
-    `Author: ${input.authorName}`,
-    `Comment: ${input.comment}`,
-    `Prepare a concise operations triage note with:`,
-    `1. what the client is asking or flagging`,
-    `2. the next best response or action`,
-    `3. any missing information or blockers`,
-    `Keep it short and practical.`,
-  ]
-    .filter(Boolean)
-    .join("\n");
 }
 
 export async function GET(request: NextRequest) {
@@ -204,47 +176,6 @@ export async function POST(request: NextRequest) {
     title: body.parent_comment_id ? "New reply in campaign discussion" : "New campaign comment",
     visibility,
   });
-
-  if (
-    shouldEnqueueCommentTriage({
-      isAdmin: access.isAdmin,
-      parentCommentId: body.parent_comment_id,
-      visibility,
-    })
-  ) {
-    const taskId = await enqueueExternalAgentTask({
-      action: "triage-campaign-comment",
-      prompt: campaignCommentTriagePrompt({
-        campaignId: body.campaign_id,
-        campaignName,
-        clientSlug: body.client_slug,
-        commentId: data.id as string,
-        comment: body.content,
-        authorName,
-      }),
-      toAgent: "assistant",
-    });
-
-    if (taskId) {
-      await logSystemEvent({
-        eventName: "agent_action_requested",
-        actorType: "system",
-        clientSlug: body.client_slug,
-        visibility: "admin_only",
-        entityType: "agent_task",
-        entityId: taskId,
-        summary: `Queued agent triage for campaign comment in ${campaignName ?? "campaign"}`,
-        detail: "Assistant will prepare a concise response and next-step brief for the team.",
-        metadata: {
-          campaignId: body.campaign_id,
-          campaignName,
-          commentId: data.id,
-          taskId,
-          toAgent: "assistant",
-        },
-      });
-    }
-  }
 
   revalidateWorkflowPaths(
     getCampaignWorkflowPaths(body.client_slug, body.campaign_id),

@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Settings, Bot, Key, UserPlus, ArrowRight, Users, Clock, X, Link2, TriangleAlert } from "lucide-react";
+import { Settings, Key, UserPlus, ArrowRight, Users, Clock, X, Link2, TriangleAlert } from "lucide-react";
 import { ClientOnboardForm } from "@/components/admin/client-onboard-form";
-import { AGENT_CONFIG, AGENT_TYPE_KEYS } from "@/components/admin/agents/constants";
 import { RevokeInvitationButton } from "@/components/admin/users/revoke-invitation-button";
 import { getClientSummaries } from "../clients/data";
 import { getUsers } from "../users/data";
@@ -76,7 +75,7 @@ export default async function SettingsPage() {
       {/* Header */}
       <AdminPageHeader
         title="Settings"
-        description="Agent configuration, API keys, and client management"
+        description="API keys, client management, and platform health"
       >
         <Badge variant="outline" className="text-xs gap-1.5 py-1 px-2.5">
           <Settings className="h-3 w-3" />
@@ -235,50 +234,6 @@ export default async function SettingsPage() {
         </Card>
       </div>
 
-      {/* ─── Section 1: Agent Configuration ──────────────────────────────── */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Bot className="h-4 w-4 text-cyan-400" />
-          <h2 className="text-sm font-semibold">Agent Configuration</h2>
-        </div>
-
-        {/* Scheduler toggle card */}
-        <Card className="border-border/60">
-          <CardContent className="py-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Scheduler</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  All cron jobs are currently disabled. Jobs run via manual triggers only.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Agent types grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {AGENT_TYPE_KEYS.map((key) => {
-            const { name, description, icon: Icon, accent } = AGENT_CONFIG[key];
-            return (
-              <div
-                key={key}
-                className="flex items-start gap-3 rounded-lg border border-border/60 bg-card p-4 transition-all duration-150 hover:border-border/80"
-              >
-                <div className={`h-8 w-8 rounded-lg bg-white/[0.06] flex items-center justify-center shrink-0 ${accent}`}>
-                  <Icon className="h-4 w-4" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-medium">{name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{description}</p>
-                  <code className="text-[10px] text-muted-foreground/60 mt-1 block">{key}</code>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* ─── Section 2: API Keys ─────────────────────────────────────────── */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
@@ -324,7 +279,7 @@ export default async function SettingsPage() {
               To rotate a key, update the corresponding environment variable in{" "}
               <code className="text-xs bg-muted px-1.5 py-0.5 rounded">.env</code> or{" "}
               <code className="text-xs bg-muted px-1.5 py-0.5 rounded">.env.local</code>{" "}
-              and restart the agent process. The Meta token refreshes via the System User flow.
+              and redeploy the app. The Meta token refreshes via the System User flow.
             </p>
           </CardContent>
         </Card>

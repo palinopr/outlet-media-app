@@ -62,7 +62,7 @@ export async function ingestMetaCampaigns(body: IngestPayload) {
   }
 
   // Mark any campaigns currently ACTIVE in DB but absent from this payload as PAUSED.
-  // The agent sends all ACTIVE campaigns each sync -- if one is missing, it was paused.
+  // The sync payload sends all ACTIVE campaigns each run -- if one is missing, it was paused.
   const incomingIds = campaigns.map((c) => c.campaign_id);
   if (incomingIds.length > 0) {
     const { data: active } = await supabaseAdmin!

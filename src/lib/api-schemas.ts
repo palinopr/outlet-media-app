@@ -89,32 +89,6 @@ export const IngestPayloadSchema = z.object({
 
 export type IngestPayload = z.infer<typeof IngestPayloadSchema>;
 
-// ─── Alerts schemas ─────────────────────────────────────────────────────────
-
-export const AlertPostSchema = z.object({
-  secret: z.string().min(1),
-  message: z.string().trim().min(1).max(5000),
-  level: z.enum(["info", "warning", "critical"]).optional(),
-});
-
-export const AlertPatchSchema = z.object({
-  secret: z.string().min(1),
-});
-
-// ─── Agents schemas ─────────────────────────────────────────────────────────
-
-export const VALID_AGENTS = [
-  "tm-monitor",
-  "meta-ads",
-  "campaign-monitor",
-  "assistant",
-] as const;
-
-export const AgentPostSchema = z.object({
-  agent: z.enum(VALID_AGENTS),
-  prompt: z.string().max(10000).optional(),
-});
-
 // ─── Admin schemas ──────────────────────────────────────────────────────────
 
 export const InviteSchema = z.object({
@@ -142,7 +116,6 @@ export const CreateClientSchema = z.object({
 
 export const UpdateClientSchema = z.object({
   clientId: z.string().min(1),
-  agentEnabled: z.boolean().optional(),
   eventsEnabled: z.boolean().optional(),
   reportsEnabled: z.boolean().optional(),
   brandName: z.string().min(1).max(200).nullable().optional(),
@@ -167,12 +140,6 @@ export const RemoveClientMemberSchema = z.object({
 export const ChangeClientMemberRoleSchema = z.object({
   memberId: z.string().uuid(),
   role: z.enum(["owner", "member"]),
-});
-
-// ─── Heartbeat schema ───────────────────────────────────────────────────────
-
-export const HeartbeatPayloadSchema = z.object({
-  secret: z.string().min(1),
 });
 
 // ─── Contact form ────────────────────────────────────────────────────────────

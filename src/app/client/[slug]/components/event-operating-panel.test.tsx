@@ -10,34 +10,6 @@ vi.mock("./event-discussion-form", () => ({
 }));
 
 const data = {
-  agentOutcomes: [
-    {
-      action: "triage-event-comment",
-      agentId: "assistant",
-      assetId: null,
-      assetFollowUpItemId: null,
-      assetName: null,
-      campaignId: "cmp_1",
-      campaignName: "Miami Push",
-      clientSlug: "zamora",
-      completedAt: "2026-04-10T13:00:00.000Z",
-      createdAt: "2026-04-10T12:30:00.000Z",
-      errorText: null,
-      eventFollowUpItemId: "follow_1",
-      eventId: "evt_1",
-      eventName: "Miami Show",
-      linkedActionItemId: null,
-      linkedAssetFollowUpItemId: null,
-      linkedEventFollowUpItemId: "follow_1",
-      requestDetail: "Review the updated event blocker and propose the next step.",
-      requestSummary: "Queued agent triage for show blocker",
-      resultText: "Recommended confirming the latest hold count before increasing spend.",
-      startedAt: "2026-04-10T12:31:00.000Z",
-      status: "done",
-      taskId: "task_1",
-      visibility: "shared",
-    },
-  ],
   approvals: [
     {
       id: "approval_1",
@@ -54,7 +26,7 @@ const data = {
       pageId: null,
       taskId: null,
       requestedById: null,
-      requestedByName: "Outlet Agent",
+      requestedByName: "Outlet Team",
       decidedById: null,
       decidedByName: null,
       decidedAt: null,
@@ -152,8 +124,6 @@ describe("EventOperatingPanel", () => {
     expect(screen.getByText("Approve updated weekend event copy")).toBeInTheDocument();
     expect(screen.getByText("Open next steps")).toBeInTheDocument();
     expect(screen.getByText("Confirm updated hold count")).toBeInTheDocument();
-    expect(screen.getByText("Agent follow-through")).toBeInTheDocument();
-    expect(screen.getByText("Queued agent triage for show blocker")).toBeInTheDocument();
     expect(screen.getByText("Recent changes")).toBeInTheDocument();
     expect(screen.getByText("Commented on Miami Show discussion")).toBeInTheDocument();
     expect(screen.getAllByText("Please confirm the latest hold count before we ramp spend.").length).toBeGreaterThan(0);
@@ -166,7 +136,6 @@ describe("EventOperatingPanel", () => {
     render(
       <EventOperatingPanel
         data={{
-          agentOutcomes: [],
           approvals: [],
           comments: [],
           followUpItems: [],
@@ -181,7 +150,6 @@ describe("EventOperatingPanel", () => {
     expect(screen.getByText("No requests yet.")).toBeInTheDocument();
     expect(screen.queryByText("Already in motion")).not.toBeInTheDocument();
     expect(screen.queryByText("Pending approvals")).not.toBeInTheDocument();
-    expect(screen.queryByText("Agent follow-through")).not.toBeInTheDocument();
     expect(screen.queryByText("Recent changes")).not.toBeInTheDocument();
   });
 });

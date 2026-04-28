@@ -5,8 +5,6 @@ import type { ScopeFilter } from "@/lib/member-access";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
 import type { MetaInsightsTimeRange } from "@/lib/meta-api";
 import { getFeatureReadClient } from "@/lib/supabase";
-import { listAgentOutcomes } from "@/features/agent-outcomes/server";
-import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import {
   getDashboardActionCenter,
   getDashboardOpsSummary,
@@ -108,7 +106,6 @@ interface GetReportsWorkflowDataOptions {
 
 export interface ReportsWorkflowData {
   actionCenter: DashboardActionCenter;
-  agentOutcomes: AgentOutcomeView[];
   eventOperations: EventOperationsSummary;
   opsSummary: DashboardOpsSummary;
 }
@@ -169,10 +166,9 @@ export async function getReportsWorkflowData(
 ): Promise<ReportsWorkflowData> {
   const scopeCampaignIds = options.scope?.allowedCampaignIds ?? null;
   const scopeEventIds = options.scope?.allowedEventIds ?? null;
-  const audience = options.mode === "client" ? "shared" : "all";
   const limit = options.limit ?? 4;
 
-  const [opsSummary, actionCenter, agentOutcomes, eventOperations] = await Promise.all([
+  const [opsSummary, actionCenter, eventOperations] = await Promise.all([
     getDashboardOpsSummary({
       clientSlug: options.clientSlug ?? undefined,
       limit: Math.max(limit, 5),
@@ -186,13 +182,6 @@ export async function getReportsWorkflowData(
       scopeCampaignIds,
       scopeEventIds,
     }),
-    listAgentOutcomes({
-      audience,
-      clientSlug: options.clientSlug ?? undefined,
-      limit,
-      scopeCampaignIds,
-      scopeEventIds,
-    }),
     getEventOperationsSummary({
       clientSlug: options.clientSlug ?? undefined,
       limit: Math.max(limit, 5),
@@ -203,7 +192,6 @@ export async function getReportsWorkflowData(
 
   return {
     actionCenter,
-    agentOutcomes,
     eventOperations,
     opsSummary,
   };

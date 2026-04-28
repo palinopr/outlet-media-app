@@ -93,7 +93,7 @@ export function CampaignTable({ campaigns, dailyInsightsByCampaign, clients, met
       data={campaigns}
       searchColumn="name"
       searchPlaceholder="Search campaigns..."
-      emptyMessage={hasData ? "No campaigns match this filter" : "No campaign data -- run the Meta sync agent to pull live data"}
+      emptyMessage={hasData ? "No campaigns match this filter" : "No campaign data -- sync Meta data to pull live campaigns"}
       enableRowSelection
       getRowId={(row) => row.campaignId}
       onExport={() => exportToCsv(campaigns as unknown as Record<string, unknown>[], campaignCsvColumns, todayFilename("campaigns"))}

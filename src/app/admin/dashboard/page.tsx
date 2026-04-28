@@ -6,14 +6,11 @@ import {
   Megaphone,
   Ticket,
   TrendingUp,
-  Clock,
-  ArrowRight,
 } from "lucide-react";
 import { RoasTrendChart } from "@/components/charts/roas-trend-chart";
 import { TicketVelocityChart } from "@/components/charts/ticket-velocity-chart";
 import { centsToUsd, fmtUsd, fmtNum, computeBlendedRoas, fmtTodayLong } from "@/lib/formatters";
 import { StatCard } from "@/components/admin/stat-card";
-import { AGENT_CONFIG, DASHBOARD_AGENTS } from "@/components/admin/agents/constants";
 import { getData } from "./data";
 import { EventsPreviewTable } from "./events-preview-table";
 import { UpcomingShows } from "./upcoming-shows";
@@ -38,7 +35,7 @@ function getUpcomingShows(events: Parameters<typeof EventsPreviewTable>[0]["even
 // --- Page ---
 
 export default async function AdminDashboard() {
-  const { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb } = await getData();
+  const { events, campaigns, allCampaigns, trendData, velocityData, marginalRoasByCampaign, fromDb } = await getData();
 
   const upcomingShows = getUpcomingShows(events, 8);
 
@@ -128,59 +125,7 @@ export default async function AdminDashboard() {
 
       <UpcomingShows shows={upcomingShows} allCampaigns={allCampaigns} />
 
-      {/* Campaigns + Agent status row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <CampaignCards campaigns={campaigns} marginalRoasByCampaign={marginalRoasByCampaign} />
-
-        {/* Agent status */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold">Agents</h2>
-            <a href="/admin/agents" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-              Open chat <ArrowRight className="h-3 w-3" />
-            </a>
-          </div>
-          <div className="space-y-3">
-            {DASHBOARD_AGENTS.map((agentId) => {
-              const agent = AGENT_CONFIG[agentId];
-              const Icon = agent.icon;
-              const label = agent.name;
-              const run = agentRuns.find((r) => r.agentId === agentId);
-              const lastRun = run?.finishedAt
-                ? new Date(run.finishedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
-                : "Not yet run";
-              const statusColor = run?.status === "done" ? "text-emerald-400" : run?.status === "error" ? "text-red-400" : "text-muted-foreground";
-              const statusLabel = run?.status === "done" ? "Done" : run?.status === "error" ? "Error" : "Idle";
-              return (
-                <Card key={agentId} className="border-border/60">
-                  <CardContent className="py-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm font-medium">{label}</span>
-                      </div>
-                      <span className={`inline-flex items-center gap-1.5 text-xs ${statusColor}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${run?.status === "done" ? "bg-emerald-400 animate-pulse"
-                            : run?.status === "error" ? "bg-red-400"
-                              : run?.status === "running" ? "bg-blue-400 animate-pulse"
-                                : "bg-zinc-600"
-                          }`} />
-                        {statusLabel}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Clock className="h-3 w-3" />
-                      Last run: {lastRun}
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-
-      </div>
+      <CampaignCards campaigns={campaigns} marginalRoasByCampaign={marginalRoasByCampaign} />
     </div>
   );
 }

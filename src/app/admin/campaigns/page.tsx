@@ -119,24 +119,16 @@ export default async function CampaignsPage({ searchParams }: Props) {
       {!hasData && !error && (
         <Card className="border-border/60 border-dashed">
           <CardContent className="py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
-                  <Megaphone className="h-4 w-4 text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">No campaign data</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Use the main agent chat to kick off a Meta sync
-                  </p>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                <Megaphone className="h-4 w-4 text-blue-400" />
               </div>
-              <a
-                href="/admin/agents"
-                className="text-xs border border-border/60 px-3 py-1.5 rounded hover:bg-muted transition-colors shrink-0"
-              >
-                Open chat
-              </a>
+              <div>
+                <p className="text-sm font-medium">No campaign data</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Connect or sync Meta data to populate campaigns.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

@@ -9,13 +9,8 @@ vi.mock("@/features/events/server", () => ({
   getEventOperationsSummary: vi.fn(),
 }));
 
-vi.mock("@/features/agent-outcomes/server", () => ({
-  listAgentOutcomes: vi.fn(),
-}));
-
 import { getDashboardActionCenter, getDashboardOpsSummary } from "@/features/dashboard/server";
 import { getEventOperationsSummary } from "@/features/events/server";
-import { listAgentOutcomes } from "@/features/agent-outcomes/server";
 import { getReportsWorkflowData } from "@/features/reports/server";
 
 describe("getReportsWorkflowData", () => {
@@ -36,7 +31,6 @@ describe("getReportsWorkflowData", () => {
       eventsNeedingAttention: 0,
       metrics: [],
     });
-    vi.mocked(listAgentOutcomes).mockResolvedValue([]);
   });
 
   it("passes client scope through to workflow loaders", async () => {
@@ -63,13 +57,6 @@ describe("getReportsWorkflowData", () => {
       scopeCampaignIds: ["cmp_1"],
       scopeEventIds: ["evt_1"],
     });
-    expect(listAgentOutcomes).toHaveBeenCalledWith({
-      audience: "shared",
-      clientSlug: "zamora",
-      limit: 4,
-      scopeCampaignIds: ["cmp_1"],
-      scopeEventIds: ["evt_1"],
-    });
     expect(getEventOperationsSummary).toHaveBeenCalledWith({
       clientSlug: "zamora",
       limit: 5,
@@ -81,20 +68,13 @@ describe("getReportsWorkflowData", () => {
     });
   });
 
-  it("uses admin audience for admin report surfaces", async () => {
+  it("uses admin mode for admin report surfaces", async () => {
     await getReportsWorkflowData({
       clientSlug: "zamora",
       limit: 3,
       mode: "admin",
     });
 
-    expect(listAgentOutcomes).toHaveBeenCalledWith({
-      audience: "all",
-      clientSlug: "zamora",
-      limit: 3,
-      scopeCampaignIds: null,
-      scopeEventIds: null,
-    });
     expect(getEventOperationsSummary).toHaveBeenCalledWith({
       clientSlug: "zamora",
       limit: 5,

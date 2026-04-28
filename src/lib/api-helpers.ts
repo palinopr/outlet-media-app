@@ -95,12 +95,3 @@ export function getAuthorName(user: {
   return [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Unknown";
 }
 
-/** Determine whether a new comment thread needs agent triage/review. */
-export function shouldEnqueueCommentTriage(options: {
-  isAdmin: boolean;
-  parentCommentId?: string;
-  visibility: string;
-}): boolean {
-  return !options.isAdmin && !options.parentCommentId && options.visibility === "shared";
-}
-

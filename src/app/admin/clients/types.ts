@@ -21,7 +21,6 @@ export interface ClientSummary {
 }
 
 export interface ClientDetail extends ClientSummary {
-  agentEnabled: boolean;
   brandName: string | null;
   logoAlt: string | null;
   logoUrl: string | null;

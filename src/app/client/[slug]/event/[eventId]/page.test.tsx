@@ -31,7 +31,6 @@ vi.mock("@/components/client/charts", () => ({
 describe("EventDetailPage", () => {
   beforeEach(() => {
     getClientEventOperatingView.mockResolvedValue({
-      agentOutcomes: [],
       approvals: [],
       comments: [],
       followUpItems: [],

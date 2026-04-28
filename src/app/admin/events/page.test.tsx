@@ -20,10 +20,11 @@ vi.mock("@/components/admin/campaigns/client-filter", () => ({
 }));
 
 describe("EventsPage", () => {
-  it("uses thin agent-entry copy in the header", async () => {
+  it("renders the events table", async () => {
     const { default: EventsPage } = await import("./page");
     render(await EventsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getByRole("link", { name: "Open chat" })).toHaveAttribute("href", "/admin/agents");
+    expect(screen.getByTestId("event-table")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open chat" })).not.toBeInTheDocument();
   });
 });

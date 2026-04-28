@@ -26,7 +26,7 @@ export function CampaignCards({ campaigns, marginalRoasByCampaign }: Props) {
           <CardContent className="py-12 text-center">
             <Megaphone className="h-8 w-8 text-muted-foreground/60 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No active campaigns</p>
-            <p className="text-xs text-muted-foreground mt-1">Run the Meta sync agent to pull live data</p>
+            <p className="text-xs text-muted-foreground mt-1">Connect or sync Meta data to pull live campaigns</p>
           </CardContent>
         </Card>
       ) : (

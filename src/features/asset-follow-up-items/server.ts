@@ -4,7 +4,6 @@ import {
   type TaskStatus,
 } from "@/lib/workspace-types";
 import { taskStatusLabel } from "@/lib/action-item-labels";
-import { enqueueExternalAgentTask } from "@/lib/agent-dispatch";
 import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
 import { notifyWorkflowAssignee } from "@/features/notifications/workflow";
 import {
@@ -41,11 +40,6 @@ interface AssetFollowUpItemActor {
   actorType?: SystemEventActorType;
 }
 
-interface AssetFollowUpItemTriagePreviousState {
-  priority: TaskPriority;
-  status: TaskStatus;
-}
-
 interface ListAssetFollowUpItemsOptions {
   assetId?: string | null;
   audience?: "all" | AssetFollowUpItemVisibility;
@@ -71,64 +65,6 @@ interface CreateSystemAssetFollowUpItemInput extends AssetFollowUpItemActor {
 
 const ASSET_FOLLOW_UP_ITEM_SELECT =
   "id, asset_id, client_slug, title, description, status, priority, visibility, assignee_id, assignee_name, due_date, created_by, position, source_entity_type, source_entity_id, created_at, updated_at";
-
-function shouldEnqueueAssetFollowUpItemTriage(
-  item: AssetFollowUpItem,
-  previous?: AssetFollowUpItemTriagePreviousState,
-) {
-  if (item.sourceEntityType === "agent_task") return false;
-  if (!previous) return item.status === "review" || item.priority === "urgent";
-
-  return (
-    (item.status === "review" && previous.status !== "review") ||
-    (item.priority === "urgent" && previous.priority !== "urgent")
-  );
-}
-
-function assetFollowUpItemTriagePrompt(item: AssetFollowUpItem) {
-  return [
-    "A creative follow-up item needs triage.",
-    `Client: ${item.clientSlug}`,
-    item.assetName ? `Asset: ${item.assetName}` : null,
-    `Asset ID: ${item.assetId}`,
-    `Follow-up item: ${item.title}`,
-    item.description ? `Description: ${item.description}` : null,
-    `Status: ${taskStatusLabel(item.status)}`,
-    `Priority: ${TASK_PRIORITY_LABELS[item.priority]}`,
-    item.assigneeName ? `Assignee: ${item.assigneeName}` : null,
-    item.dueDate ? `Due date: ${item.dueDate}` : null,
-    `Follow-up item ID: ${item.id}`,
-    "Give a concise creative operations brief with:",
-    "1. what this follow-up is about",
-    "2. the next best review or production step",
-    "3. any blockers or missing information",
-    "Keep it short and operational.",
-  ]
-    .filter(Boolean)
-    .join("\n");
-}
-
-async function listAssetNames(assetIds: string[]) {
-  if (!supabaseAdmin || assetIds.length === 0) return new Map<string, string>();
-
-  const { data, error } = await supabaseAdmin
-    .from("ad_assets")
-    .select("id, file_name")
-    .in("id", assetIds);
-
-  if (error) {
-    console.error("[asset-follow-up-items] asset lookup failed:", error.message);
-    return new Map<string, string>();
-  }
-
-  return new Map(
-    (data ?? []).map((row) => [
-      String((row as Record<string, unknown>).id),
-      String((row as Record<string, unknown>).file_name ?? ""),
-    ]),
-  );
-}
-
 
 function mapAssetFollowUpItem(
   row: Record<string, unknown>,
@@ -156,6 +92,27 @@ function mapAssetFollowUpItem(
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };
+}
+
+async function listAssetNames(assetIds: string[]): Promise<Map<string, string>> {
+  if (!supabaseAdmin || assetIds.length === 0) return new Map();
+
+  const { data, error } = await supabaseAdmin
+    .from("ad_assets")
+    .select("id, file_name")
+    .in("id", assetIds);
+
+  if (error) {
+    console.error("[asset-follow-up-items] asset lookup failed:", error.message);
+    return new Map();
+  }
+
+  return new Map(
+    (data ?? []).map((row) => [
+      String((row as Record<string, unknown>).id),
+      String((row as Record<string, unknown>).file_name ?? ""),
+    ]),
+  );
 }
 
 export async function listAssetFollowUpItems(
@@ -263,44 +220,6 @@ export async function getAssetFollowUpItemById(itemId: string): Promise<AssetFol
   return mapAssetFollowUpItem(data as Record<string, unknown>, assetNames);
 }
 
-export async function maybeEnqueueAssetFollowUpItemTriage(
-  item: AssetFollowUpItem,
-  previous?: AssetFollowUpItemTriagePreviousState,
-) {
-  if (!shouldEnqueueAssetFollowUpItemTriage(item, previous)) return null;
-
-  const taskId = await enqueueExternalAgentTask({
-    action: "triage-asset-follow-up-item",
-    prompt: assetFollowUpItemTriagePrompt(item),
-    toAgent: "assistant",
-  });
-
-  if (!taskId) return null;
-
-  await logSystemEvent({
-    eventName: "agent_action_requested",
-    actorType: "system",
-    actorName: "Outlet Assets",
-    clientSlug: item.clientSlug,
-    visibility: item.visibility,
-    entityType: "agent_task",
-    entityId: taskId,
-    summary: `Queued asset agent triage for follow-up "${item.title}"`,
-    detail: "Assistant will prepare a concise creative next-step brief.",
-    metadata: {
-      assetId: item.assetId,
-      assetName: item.assetName,
-      assetFollowUpItemId: item.id,
-      sourceEntityId: item.sourceEntityId,
-      sourceEntityType: item.sourceEntityType,
-      taskId,
-      toAgent: "assistant",
-    },
-  });
-
-  return taskId;
-}
-
 export async function createSystemAssetFollowUpItem(
   input: CreateSystemAssetFollowUpItemInput,
 ): Promise<AssetFollowUpItem | null> {
@@ -392,7 +311,6 @@ export async function createSystemAssetFollowUpItem(
     visibility,
   });
 
-  await maybeEnqueueAssetFollowUpItemTriage(item);
   return item;
 }
 

@@ -1,5 +1,3 @@
-import { listAgentOutcomes } from "@/features/agent-outcomes/server";
-import type { AgentOutcomeView } from "@/features/agent-outcomes/summary";
 import { listEventApprovalRequests } from "@/features/approvals/server";
 import { allowsEventInScope } from "@/features/client-portal/scope";
 import {
@@ -17,7 +15,6 @@ import {
 import type { ScopeFilter } from "@/lib/member-access";
 
 export interface ClientEventOperatingView {
-  agentOutcomes: AgentOutcomeView[];
   approvals: Awaited<ReturnType<typeof listEventApprovalRequests>>;
   comments: EventComment[];
   followUpItems: EventFollowUpItem[];
@@ -32,7 +29,6 @@ export async function getClientEventOperatingView(input: {
 }): Promise<ClientEventOperatingView> {
   if (!allowsEventInScope(input.scope, input.eventId)) {
     return {
-      agentOutcomes: [],
       approvals: [],
       comments: [],
       followUpItems: [],
@@ -42,7 +38,7 @@ export async function getClientEventOperatingView(input: {
 
   const linkedCampaignIds = [...new Set((input.linkedCampaignIds ?? []).filter(Boolean))];
 
-  const [approvals, followUpItems, comments, systemEvents, agentOutcomes] = await Promise.all([
+  const [approvals, followUpItems, comments, systemEvents] = await Promise.all([
     listEventApprovalRequests({
       audience: "shared",
       campaignIds: linkedCampaignIds,
@@ -69,18 +65,9 @@ export async function getClientEventOperatingView(input: {
       eventId: input.eventId,
       limit: 10,
     }),
-    listAgentOutcomes({
-      audience: "shared",
-      clientSlug: input.clientSlug,
-      eventId: input.eventId,
-      limit: 6,
-      scopeCampaignIds: linkedCampaignIds,
-      scopeEventIds: [input.eventId],
-    }),
   ]);
 
   return {
-    agentOutcomes,
     approvals,
     comments,
     followUpItems: followUpItems.filter((item) => item.status !== "done"),

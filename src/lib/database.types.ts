@@ -47,138 +47,6 @@ export type Database = {
         }
         Relationships: []
       }
-      agent_alerts: {
-        Row: {
-          created_at: string
-          id: string
-          level: string
-          message: string
-          read_at: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          level?: string
-          message: string
-          read_at?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          level?: string
-          message?: string
-          read_at?: string | null
-        }
-        Relationships: []
-      }
-      agent_jobs: {
-        Row: {
-          agent_id: string
-          created_at: string
-          error: string | null
-          finished_at: string | null
-          id: string
-          prompt: string | null
-          result: string | null
-          started_at: string | null
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          agent_id: string
-          created_at?: string
-          error?: string | null
-          finished_at?: string | null
-          id?: string
-          prompt?: string | null
-          result?: string | null
-          started_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          agent_id?: string
-          created_at?: string
-          error?: string | null
-          finished_at?: string | null
-          id?: string
-          prompt?: string | null
-          result?: string | null
-          started_at?: string | null
-          status?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      agent_tasks: {
-        Row: {
-          action: string
-          approved_by: string | null
-          completed_at: string | null
-          created_at: string | null
-          discord_message_id: string | null
-          error: string | null
-          from_agent: string
-          id: string
-          params: Json | null
-          result: Json | null
-          started_at: string | null
-          status: string
-          tier: string
-          to_agent: string
-        }
-        Insert: {
-          action: string
-          approved_by?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          discord_message_id?: string | null
-          error?: string | null
-          from_agent: string
-          id?: string
-          params?: Json | null
-          result?: Json | null
-          started_at?: string | null
-          status?: string
-          tier?: string
-          to_agent: string
-        }
-        Update: {
-          action?: string
-          approved_by?: string | null
-          completed_at?: string | null
-          created_at?: string | null
-          discord_message_id?: string | null
-          error?: string | null
-          from_agent?: string
-          id?: string
-          params?: Json | null
-          result?: Json | null
-          started_at?: string | null
-          status?: string
-          tier?: string
-          to_agent?: string
-        }
-        Relationships: []
-      }
-      agent_runtime_state: {
-        Row: {
-          key: string
-          updated_at: string
-          value: Json
-        }
-        Insert: {
-          key: string
-          updated_at?: string
-          value?: Json
-        }
-        Update: {
-          key?: string
-          updated_at?: string
-          value?: Json
-        }
-        Relationships: []
-      }
       email_drafts: {
         Row: {
           body_text: string
@@ -703,113 +571,6 @@ export type Database = {
           },
         ]
       }
-      client_agent_messages: {
-        Row: {
-          blocks: Json | null
-          client_generated_id: string | null
-          context_payload: Json | null
-          created_at: string
-          id: string
-          provider_response_id: string | null
-          referenced_entities: Json
-          resolved_range: Json | null
-          response_status: string | null
-          role: string
-          text: string
-          thread_id: string
-        }
-        Insert: {
-          blocks?: Json | null
-          client_generated_id?: string | null
-          context_payload?: Json | null
-          created_at?: string
-          id?: string
-          provider_response_id?: string | null
-          referenced_entities?: Json
-          resolved_range?: Json | null
-          response_status?: string | null
-          role: string
-          text: string
-          thread_id: string
-        }
-        Update: {
-          blocks?: Json | null
-          client_generated_id?: string | null
-          context_payload?: Json | null
-          created_at?: string
-          id?: string
-          provider_response_id?: string | null
-          referenced_entities?: Json
-          resolved_range?: Json | null
-          response_status?: string | null
-          role?: string
-          text?: string
-          thread_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_agent_messages_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "client_agent_threads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      client_agent_threads: {
-        Row: {
-          client_id: string
-          client_member_id: string | null
-          created_at: string
-          id: string
-          last_message_at: string
-          last_response_status: string | null
-          preview_text: string | null
-          referenced_entities: Json
-          title: string | null
-          updated_at: string
-        }
-        Insert: {
-          client_id: string
-          client_member_id?: string | null
-          created_at?: string
-          id?: string
-          last_message_at?: string
-          last_response_status?: string | null
-          preview_text?: string | null
-          referenced_entities?: Json
-          title?: string | null
-          updated_at?: string
-        }
-        Update: {
-          client_id?: string
-          client_member_id?: string | null
-          created_at?: string
-          id?: string
-          last_message_at?: string
-          last_response_status?: string | null
-          preview_text?: string | null
-          referenced_entities?: Json
-          title?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_agent_threads_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "client_agent_threads_client_member_match_fkey"
-            columns: ["client_id", "client_member_id"]
-            isOneToOne: false
-            referencedRelation: "client_members"
-            referencedColumns: ["client_id", "id"]
-          },
-        ]
-      }
       client_members: {
         Row: {
           id: string
@@ -885,7 +646,6 @@ export type Database = {
       }
       clients: {
         Row: {
-          agent_enabled: boolean
           created_at: string
           events_enabled: boolean
           id: string
@@ -898,7 +658,6 @@ export type Database = {
           status: string
         }
         Insert: {
-          agent_enabled?: boolean
           created_at?: string
           events_enabled?: boolean
           id?: string
@@ -911,7 +670,6 @@ export type Database = {
           status?: string
         }
         Update: {
-          agent_enabled?: boolean
           created_at?: string
           events_enabled?: boolean
           id?: string

@@ -11,7 +11,6 @@ describe("adminNavItems", () => {
       ["Clients", "/admin/clients"],
       ["Users", "/admin/users"],
       ["Settings", "/admin/settings"],
-      ["Agents", "/admin/agents"],
     ]);
   });
 });

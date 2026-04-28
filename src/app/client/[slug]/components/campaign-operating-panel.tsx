@@ -1,6 +1,5 @@
 import {
   Activity,
-  Bot,
   ListTodo,
   MessageSquareMore,
   ShieldCheck,
@@ -33,26 +32,6 @@ function actionItemPriorityTone(priority: keyof typeof TASK_PRIORITY_LABELS) {
   if (priority === "urgent") return "border-rose-400/20 bg-rose-400/10 text-rose-200";
   if (priority === "high") return "border-amber-400/20 bg-amber-400/10 text-amber-200";
   return "border-white/[0.08] bg-white/[0.04] text-white/55";
-}
-
-function outcomeTone(status: "done" | "error" | "pending" | "running") {
-  if (status === "error") return "warning" as const;
-  if (status === "done") return "success" as const;
-  return "neutral" as const;
-}
-
-function outcomeLabel(status: "done" | "error" | "pending" | "running") {
-  if (status === "done") return "Completed";
-  if (status === "error") return "Needs attention";
-  if (status === "running") return "Running";
-  return "Queued";
-}
-
-function compactText(value: string | null, max = 220) {
-  if (!value) return null;
-  const text = value.replace(/\s+/g, " ").trim();
-  if (text.length <= max) return text;
-  return `${text.slice(0, max - 1)}…`;
 }
 
 function groupDiscussionThreads(comments: CampaignComment[]) {
@@ -142,7 +121,6 @@ export function CampaignOperatingPanel({
   const hasSupportColumn =
     data.approvals.length > 0 ||
     data.actionItems.length > 0 ||
-    data.agentOutcomes.length > 0 ||
     data.systemEvents.length > 0;
 
   return (
@@ -176,8 +154,7 @@ export function CampaignOperatingPanel({
         {hasSupportColumn ? (
           <div className="space-y-4">
             {(data.approvals.length > 0 ||
-              data.actionItems.length > 0 ||
-              data.agentOutcomes.length > 0) ? (
+              data.actionItems.length > 0) ? (
               <SectionCard
                 title="Already in motion"
                 subtitle="Only the campaign items that already exist are shown here."
@@ -250,46 +227,6 @@ export function CampaignOperatingPanel({
                               <span>Assignee: {item.assigneeName ?? "Unassigned"}</span>
                               {item.dueDate ? <span>Due: {fmtDate(item.dueDate)}</span> : null}
                               <span>Updated: {fmtDate(item.updatedAt)}</span>
-                            </div>
-                          </article>
-                        ))}
-                      </div>
-                    </div>
-                  ) : null}
-
-                  {data.agentOutcomes.length > 0 ? (
-                    <div>
-                      <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
-                        <Bot className="h-3.5 w-3.5" />
-                        Agent follow-through
-                      </div>
-                      <div className="space-y-3">
-                        {data.agentOutcomes.map((outcome) => (
-                          <article
-                            key={outcome.taskId}
-                            className="rounded-2xl border border-white/[0.08] bg-black/15 p-4"
-                          >
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="text-sm font-medium text-white">{outcome.requestSummary}</h3>
-                              <span
-                                className={`rounded-full border px-2 py-0.5 text-[11px] ${toneBadge(
-                                  outcomeTone(outcome.status),
-                                )}`}
-                              >
-                                {outcomeLabel(outcome.status)}
-                              </span>
-                            </div>
-                            <p className="mt-2 text-sm leading-6 text-white/50">
-                              {compactText(outcome.resultText, 200) ??
-                                compactText(outcome.requestDetail, 200) ??
-                                "Waiting for a result or linked next step."}
-                            </p>
-                            <div className="mt-3 flex flex-wrap gap-3 text-xs text-white/35">
-                              <span>{outcome.agentId}</span>
-                              <span>{fmtDate(outcome.createdAt)}</span>
-                              {outcome.linkedActionItemId ? (
-                                <span>Linked to a campaign next step</span>
-                              ) : null}
                             </div>
                           </article>
                         ))}

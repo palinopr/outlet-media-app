@@ -196,7 +196,6 @@ describe("admin clients data", () => {
   it("does not count CRM comments in client detail open-discussion totals", async () => {
     state.clients = [
       {
-        agent_enabled: false,
         created_at: "2026-03-06T12:00:00.000Z",
         events_enabled: true,
         id: "client_1",

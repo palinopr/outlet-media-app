@@ -5,7 +5,6 @@ import { currentUser } from "@clerk/nextjs/server";
 export interface ClientPortalConfig {
   clientId: string;
   slug: string;
-  agentEnabled: boolean;
   eventsEnabled: boolean;
   reportsEnabled: boolean;
   brandName: string | null;
@@ -35,7 +34,7 @@ export const getClientPortalConfig = cache(
     const { data, error } = await db
       .from("clients")
       .select(
-        "id, slug, agent_enabled, events_enabled, reports_enabled, portal_brand_name, portal_logo_url, portal_logo_alt",
+        "id, slug, events_enabled, reports_enabled, portal_brand_name, portal_logo_url, portal_logo_alt",
       )
       .eq("slug", slug)
       .maybeSingle();
@@ -50,7 +49,6 @@ export const getClientPortalConfig = cache(
     return {
       clientId: data.id,
       slug: data.slug,
-      agentEnabled: data.agent_enabled ?? false,
       eventsEnabled: data.events_enabled ?? false,
       reportsEnabled: data.reports_enabled ?? true,
       brandName: data.portal_brand_name,

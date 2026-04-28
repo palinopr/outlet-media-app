@@ -2,17 +2,10 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { computeMarginalRoas } from "@/lib/formatters";
 import { buildTrendData } from "@/app/client/[slug]/lib";
 import type { Database } from "@/lib/database.types";
-import { mapTaskToJob } from "@/lib/agent-jobs";
 import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
 
 export type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
 export type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
-
-export interface AgentLastRun {
-  agentId: string;
-  status: string;
-  finishedAt: string | null;
-}
 
 interface SnapshotRow {
   snapshot_date: string;
@@ -30,7 +23,6 @@ export interface DashboardData {
   events: TmEvent[];
   campaigns: MetaCampaign[];
   allCampaigns: Pick<MetaCampaign, "name" | "status" | "spend" | "roas" | "client_slug">[];
-  agentRuns: AgentLastRun[];
   trendData: Array<{ date: string; roas: number; spend: number }>;
   velocityData: Array<{ date: string; sold: number }>;
   marginalRoasByCampaign: Record<string, number | null>;
@@ -41,7 +33,6 @@ const EMPTY: DashboardData = {
   events: [],
   campaigns: [],
   allCampaigns: [],
-  agentRuns: [],
   trendData: [],
   velocityData: [],
   marginalRoasByCampaign: {},
@@ -55,18 +46,11 @@ export async function getData(): Promise<DashboardData> {
     .toISOString()
     .slice(0, 10);
 
-  const [eventsRes, campaignsRes, allCampaignsRes, agentRunsRes, snapshotsRes, dailyRes] =
+  const [eventsRes, campaignsRes, allCampaignsRes, snapshotsRes, dailyRes] =
     await Promise.all([
       supabaseAdmin.from("tm_events").select("*").order("date", { ascending: true }).limit(200),
       supabaseAdmin.from("meta_campaigns").select("*").eq("status", "ACTIVE").order("spend", { ascending: false }).limit(5),
       supabaseAdmin.from("meta_campaigns").select("campaign_id, name, status, spend, roas, client_slug").order("spend", { ascending: false }).limit(100),
-      supabaseAdmin
-        .from("agent_tasks")
-        .select("id, from_agent, to_agent, action, params, status, result, error, created_at, started_at, completed_at")
-        .in("to_agent", ["meta-ads", "tm-monitor", "campaign-monitor"])
-        .in("status", ["completed", "failed", "running", "pending"])
-        .order("completed_at", { ascending: false })
-        .limit(20),
       supabaseAdmin
         .from("campaign_snapshots")
         .select("campaign_id, snapshot_date, roas, spend")
@@ -90,16 +74,6 @@ export async function getData(): Promise<DashboardData> {
   ) as Pick<MetaCampaign, "name" | "status" | "spend" | "roas" | "client_slug">[];
   const snapshots = (snapshotsRes.data ?? []) as SnapshotRow[];
   const dailyRows = (dailyRes.data ?? []) as DailyRow[];
-
-  const seen = new Set<string>();
-  const agentRuns: AgentLastRun[] = [];
-  for (const row of agentRunsRes.data ?? []) {
-    const job = mapTaskToJob(row);
-    if (!seen.has(job.agent_id)) {
-      seen.add(job.agent_id);
-      agentRuns.push({ agentId: job.agent_id, status: job.status, finishedAt: job.finished_at });
-    }
-  }
 
   const snapshotsByCampaign: Record<string, SnapshotRow[]> = {};
   for (const s of snapshots) {
@@ -126,5 +100,5 @@ export async function getData(): Promise<DashboardData> {
     marginalRoasByCampaign[c.campaign_id] = computeMarginalRoas(pts);
   }
 
-  return { events, campaigns, allCampaigns, agentRuns, trendData, velocityData, marginalRoasByCampaign, fromDb: Boolean(campaigns.length) };
+  return { events, campaigns, allCampaigns, trendData, velocityData, marginalRoasByCampaign, fromDb: Boolean(campaigns.length) };
 }

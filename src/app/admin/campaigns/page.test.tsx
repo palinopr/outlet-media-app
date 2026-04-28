@@ -31,12 +31,12 @@ describe("CampaignsPage", () => {
     });
   });
 
-  it("uses thin agent-entry copy in the empty state", async () => {
+  it("uses direct sync copy in the empty state", async () => {
     const { default: CampaignsPage } = await import("./page");
     render(await CampaignsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getByText("Use the main agent chat to kick off a Meta sync")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Open chat" })).toHaveAttribute("href", "/admin/agents");
+    expect(screen.getByText("Connect or sync Meta data to populate campaigns.")).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Open chat" })).not.toBeInTheDocument();
   });
 
   it("flags campaigns that still need explicit client assignment", async () => {

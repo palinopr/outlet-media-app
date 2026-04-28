@@ -1,6 +1,5 @@
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { CalendarDays, Bot, Ticket, DollarSign, TrendingUp, Users } from "lucide-react";
+import { CalendarDays, Ticket, DollarSign, TrendingUp, Users } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { getEvents } from "./data";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
@@ -49,12 +48,6 @@ export default async function EventsPage({ searchParams }: Props) {
             Live from Supabase
           </span>
         )}
-        <Button size="sm" variant="outline" className="gap-2 h-8 text-xs" asChild>
-          <a href="/admin/agents">
-            <Bot className="h-3.5 w-3.5" />
-            Open chat
-          </a>
-        </Button>
       </AdminPageHeader>
 
       {/* Summary stats */}

@@ -15,7 +15,7 @@ const serverSchema = z.object({
   // Required for database writes
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, "SUPABASE_SERVICE_ROLE_KEY is required"),
 
-  // Required for agent ingest auth -- without this, ingest/alerts auth is bypassed
+  // Required for ingest auth -- without this, ingest auth is bypassed
   INGEST_SECRET: z.string().min(8, "INGEST_SECRET must be at least 8 characters"),
 
   // Optional integrations

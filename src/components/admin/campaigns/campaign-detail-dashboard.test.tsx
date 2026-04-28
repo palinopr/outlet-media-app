@@ -41,7 +41,7 @@ const data = {
       pageId: null,
       taskId: null,
       requestedById: null,
-      requestedByName: "Outlet Agent",
+      requestedByName: "Outlet Team",
       decidedById: null,
       decidedByName: null,
       decidedAt: null,
@@ -127,11 +127,11 @@ const data = {
       visibility: "shared",
       actorType: "system",
       actorId: null,
-      actorName: "Outlet Agent",
+      actorName: "Outlet Team",
       clientSlug: "zamora",
       source: "app",
-      summary: "Queued agent triage for action item",
-      detail: "Assistant prepared a concise next-step brief.",
+      summary: "Created campaign action item",
+      detail: "Added a concise next step for the team.",
       entityType: "campaign",
       entityId: "campaign_1",
       pageId: null,
@@ -157,7 +157,7 @@ describe("CampaignDetailDashboard", () => {
     expect(screen.getByRole("heading", { name: "Linked events" })).toBeInTheDocument();
     expect(screen.getByText("Barcelona Arena Night")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Recent activity" })).toBeInTheDocument();
-    expect(screen.getByText("Queued agent triage for action item")).toBeInTheDocument();
+    expect(screen.getByText("Created campaign action item")).toBeInTheDocument();
 
     expect(screen.queryByText("Campaign Intelligence Brief")).not.toBeInTheDocument();
     expect(screen.queryByText("Performance Timeline")).not.toBeInTheDocument();

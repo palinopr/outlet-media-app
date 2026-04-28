@@ -80,7 +80,6 @@ export default async function ClientLayout({ children, params }: Props) {
   }
 
   const clientName = portalConfig?.brandName ?? slugToLabel(slug);
-  const agentEnabled = portalConfig?.agentEnabled ?? false;
   const eventsEnabled = portalConfig?.eventsEnabled ?? false;
   const reportsEnabled = portalConfig?.reportsEnabled ?? true;
   const theme = getClientPortalTheme(slug, {
@@ -132,7 +131,6 @@ export default async function ClientLayout({ children, params }: Props) {
         <div className="flex-1 min-h-0 overflow-y-auto">
           <ClientNav
             slug={slug}
-            agentEnabled={agentEnabled}
             eventsEnabled={eventsEnabled}
             reportsEnabled={reportsEnabled}
           />
@@ -149,7 +147,6 @@ export default async function ClientLayout({ children, params }: Props) {
       <MobileNav
         slug={slug}
         clientName={clientName}
-        agentEnabled={agentEnabled}
         eventsEnabled={eventsEnabled}
         reportsEnabled={reportsEnabled}
       />

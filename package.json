@@ -13,10 +13,7 @@
     "test": "npm run test:web",
     "test:web": "vitest run",
     "check:web": "npm run type-check:web && npm run lint:web && npm run test:web",
-    "check:agent": "npm --prefix agent run check",
-    "check": "npm run check:web && npm run check:agent",
-    "agent:type-check": "npm --prefix agent run type-check",
-    "agent:test": "npm --prefix agent run test",
+    "check": "npm run check:web",
     "google:first-read": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --experimental-specifier-resolution=node src/scripts/google-ads-first-read.ts",
     "google:discover": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --experimental-specifier-resolution=node src/scripts/google-ads-discover-accounts.ts",
     "google:ataca-sergio:search": "node --disable-warning=ExperimentalWarning --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --experimental-strip-types --experimental-specifier-resolution=node src/scripts/google-ads-build-ataca-sergio-search.ts",
@@ -24,7 +21,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@anthropic-ai/claude-agent-sdk": "^0.2.89",
     "@clerk/nextjs": "^6.37.5",
     "@radix-ui/react-switch": "^1.2.6",
     "@supabase/supabase-js": "^2.96.0",

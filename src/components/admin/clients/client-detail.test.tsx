@@ -44,7 +44,6 @@ const client = {
   connectedAccountCount: 1,
   connectionRiskAccounts: 1,
   brandName: "Acme Live",
-  agentEnabled: true,
   eventsEnabled: true,
   events: [
     {
@@ -87,23 +86,15 @@ describe("ClientDetailView", () => {
     render(<ClientDetailView client={client} />);
 
     expect(screen.getByText("Client Portal Shape")).toBeInTheDocument();
-    expect(screen.getByText("Portal Agent")).toBeInTheDocument();
     expect(screen.getByText("Portal Reports")).toBeInTheDocument();
     expect(screen.getByText("Portal Events")).toBeInTheDocument();
-    expect(screen.getByText("Portal Agent Access")).toBeInTheDocument();
     expect(screen.getByText("Portal Reports Access")).toBeInTheDocument();
     expect(screen.getByText("Portal Events Access")).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Toggle client agent access" })).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Toggle client reports access" })).toBeInTheDocument();
     expect(screen.getByRole("switch", { name: "Toggle client events access" })).toBeInTheDocument();
     expect(
       screen.getByText(
-        /The client portal is intentionally narrow: Campaigns, optional Reports, optional Agent, and optional Events\./,
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /When disabled, the Agent nav item is removed and direct agent URLs redirect back to campaigns\./,
+        /The client portal is intentionally narrow: Campaigns, optional Reports, and optional Events\./,
       ),
     ).toBeInTheDocument();
     expect(
@@ -112,21 +103,6 @@ describe("ClientDetailView", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /CRM/i })).not.toBeInTheDocument();
-  });
-
-  it("persists the agent toggle from the overview tab", async () => {
-    mockedUpdateClient.mockResolvedValue(undefined);
-
-    render(<ClientDetailView client={client} />);
-
-    fireEvent.click(screen.getByRole("switch", { name: "Toggle client agent access" }));
-
-    await waitFor(() => {
-      expect(mockedUpdateClient).toHaveBeenCalledWith({
-        agentEnabled: false,
-        clientId: "client-1",
-      });
-    });
   });
 
   it("persists the reports toggle from the overview tab", async () => {

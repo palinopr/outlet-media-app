@@ -62,10 +62,6 @@ vi.mock("@/features/system-events/server", () => ({
   logSystemEvent: vi.fn(),
 }));
 
-vi.mock("@/lib/agent-dispatch", () => ({
-  enqueueExternalAgentTask: vi.fn(),
-}));
-
 vi.mock("@/features/workflow/revalidation", () => ({
   getCampaignWorkflowPaths: vi.fn(),
   revalidateWorkflowPaths: vi.fn(),

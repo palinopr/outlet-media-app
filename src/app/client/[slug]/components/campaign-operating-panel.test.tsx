@@ -31,34 +31,6 @@ const data = {
       updatedAt: "2026-04-10T12:00:00.000Z",
     },
   ],
-  agentOutcomes: [
-    {
-      action: "triage-campaign-comment",
-      agentId: "assistant",
-      assetId: null,
-      assetFollowUpItemId: null,
-      assetName: null,
-      campaignId: "cmp_1",
-      campaignName: "Barcelona Push",
-      clientSlug: "zamora",
-      completedAt: "2026-04-10T13:00:00.000Z",
-      createdAt: "2026-04-10T12:30:00.000Z",
-      errorText: null,
-      eventFollowUpItemId: null,
-      eventId: null,
-      eventName: null,
-      linkedActionItemId: "item_1",
-      linkedAssetFollowUpItemId: null,
-      linkedEventFollowUpItemId: null,
-      requestDetail: "Review the client blocker and propose the next step.",
-      requestSummary: "Queued agent triage for new campaign blocker",
-      resultText: "Recommended confirming the final venue copy before approving the creative.",
-      startedAt: "2026-04-10T12:31:00.000Z",
-      status: "done",
-      taskId: "task_1",
-      visibility: "shared",
-    },
-  ],
   approvals: [
     {
       id: "approval_1",
@@ -75,7 +47,7 @@ const data = {
       pageId: null,
       taskId: null,
       requestedById: null,
-      requestedByName: "Outlet Agent",
+      requestedByName: "Outlet Team",
       decidedById: null,
       decidedByName: null,
       decidedAt: null,
@@ -149,8 +121,6 @@ describe("CampaignOperatingPanel", () => {
     expect(screen.getByText("Approve Barcelona launch creative")).toBeInTheDocument();
     expect(screen.getByText("Open next steps")).toBeInTheDocument();
     expect(screen.getByText("Confirm refreshed venue copy")).toBeInTheDocument();
-    expect(screen.getByText("Agent follow-through")).toBeInTheDocument();
-    expect(screen.getByText("Queued agent triage for new campaign blocker")).toBeInTheDocument();
     expect(screen.getByText("Recent changes")).toBeInTheDocument();
     expect(screen.getByText("Commented on Barcelona Push discussion")).toBeInTheDocument();
     expect(screen.getAllByText("We need confirmation on the updated venue line before launch.").length).toBeGreaterThan(0);
@@ -165,7 +135,6 @@ describe("CampaignOperatingPanel", () => {
         campaignId="cmp_1"
         data={{
           actionItems: [],
-          agentOutcomes: [],
           approvals: [],
           comments: [],
           systemEvents: [],
@@ -178,7 +147,6 @@ describe("CampaignOperatingPanel", () => {
     expect(screen.getByText("No requests yet.")).toBeInTheDocument();
     expect(screen.queryByText("Already in motion")).not.toBeInTheDocument();
     expect(screen.queryByText("Pending approvals")).not.toBeInTheDocument();
-    expect(screen.queryByText("Agent follow-through")).not.toBeInTheDocument();
     expect(screen.queryByText("Recent changes")).not.toBeInTheDocument();
   });
 });

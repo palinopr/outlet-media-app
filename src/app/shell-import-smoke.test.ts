@@ -9,7 +9,6 @@ describe("shell import smoke", () => {
     await expect(import("./admin/clients/page")).resolves.toBeDefined();
     await expect(import("./admin/users/page")).resolves.toBeDefined();
     await expect(import("./admin/settings/page")).resolves.toBeDefined();
-    await expect(import("./admin/agents/page")).resolves.toBeDefined();
     await expect(import("./admin/dashboard/data")).resolves.toBeDefined();
     await expect(import("./admin/campaigns/data")).resolves.toBeDefined();
     await expect(import("./admin/events/data")).resolves.toBeDefined();

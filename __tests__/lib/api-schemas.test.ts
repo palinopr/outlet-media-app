@@ -1,14 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
   IngestPayloadSchema,
-  AlertPostSchema,
-  AlertPatchSchema,
-  AgentPostSchema,
+  ContactFormSchema,
   CreateAssetCommentSchema,
   CreateCampaignCommentSchema,
   CreateEventCommentSchema,
   InviteSchema,
-  VALID_AGENTS,
 } from "@/lib/api-schemas";
 
 // ─── IngestPayloadSchema ────────────────────────────────────────────────────
@@ -70,83 +67,23 @@ describe("IngestPayloadSchema", () => {
   });
 });
 
-// ─── AlertPostSchema ────────────────────────────────────────────────────────
+// ─── ContactFormSchema ─────────────────────────────────────────────────────
 
-describe("AlertPostSchema", () => {
-  it("accepts a valid alert", () => {
-    const result = AlertPostSchema.safeParse({ secret: "s", message: "alert!" });
+describe("ContactFormSchema", () => {
+  it("accepts the mobile fallback audit form payload", () => {
+    const result = ContactFormSchema.safeParse({
+      name: "Jaime Ortiz",
+      phone: "+1 305 322 5709",
+      email: "jaime@example.com",
+      company: "Outlet Live",
+      monthlyBudget: "$5K — $20K",
+      goal: "Sell more tickets next week",
+      preferredContact: "WhatsApp",
+      pageContext: "landing-audit-funnel",
+      message: "Fallback audit request from the Outlet Media landing funnel.",
+    });
+
     expect(result.success).toBe(true);
-  });
-
-  it("accepts with level", () => {
-    const result = AlertPostSchema.safeParse({ secret: "s", message: "x", level: "critical" });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects invalid level", () => {
-    const result = AlertPostSchema.safeParse({ secret: "s", message: "x", level: "error" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects empty message", () => {
-    const result = AlertPostSchema.safeParse({ secret: "s", message: "" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects whitespace-only message (trimmed)", () => {
-    const result = AlertPostSchema.safeParse({ secret: "s", message: "   " });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects missing secret", () => {
-    const result = AlertPostSchema.safeParse({ message: "hi" });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects message over 5000 chars", () => {
-    const result = AlertPostSchema.safeParse({ secret: "s", message: "x".repeat(5001) });
-    expect(result.success).toBe(false);
-  });
-});
-
-// ─── AlertPatchSchema ───────────────────────────────────────────────────────
-
-describe("AlertPatchSchema", () => {
-  it("accepts valid patch", () => {
-    expect(AlertPatchSchema.safeParse({ secret: "s" }).success).toBe(true);
-  });
-
-  it("rejects missing secret", () => {
-    expect(AlertPatchSchema.safeParse({}).success).toBe(false);
-  });
-});
-
-// ─── AgentPostSchema ────────────────────────────────────────────────────────
-
-describe("AgentPostSchema", () => {
-  it("accepts all valid agent types", () => {
-    for (const agent of VALID_AGENTS) {
-      const result = AgentPostSchema.safeParse({ agent });
-      expect(result.success).toBe(true);
-    }
-  });
-
-  it("rejects unknown agent", () => {
-    const result = AgentPostSchema.safeParse({ agent: "unknown" });
-    expect(result.success).toBe(false);
-  });
-
-  it("accepts optional prompt", () => {
-    const result = AgentPostSchema.safeParse({ agent: "tm-monitor", prompt: "check sales" });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.prompt).toBe("check sales");
-    }
-  });
-
-  it("rejects prompt over 10000 chars", () => {
-    const result = AgentPostSchema.safeParse({ agent: "tm-monitor", prompt: "x".repeat(10001) });
-    expect(result.success).toBe(false);
   });
 });
 

@@ -6,7 +6,6 @@ vi.mock("./data", () => ({
     events: [],
     campaigns: [],
     allCampaigns: [],
-    agentRuns: [],
     trendData: [],
     velocityData: [],
     marginalRoasByCampaign: new Map(),

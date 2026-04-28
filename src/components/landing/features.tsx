@@ -95,7 +95,7 @@ export function LandingFeatures() {
           />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,9,21,0.18)_0%,rgba(3,9,21,0.3)_36%,rgba(8,20,33,0.98)_100%)]" />
           <div className="absolute left-4 top-4 rounded-full border border-white/10 bg-[#07111d]/82 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200 backdrop-blur-md">
-            Portal + agent
+            Client portal
           </div>
 
           <div className="absolute bottom-3 left-3 w-[9rem]">
@@ -127,11 +127,11 @@ export function LandingFeatures() {
 
         <div className="p-5 sm:p-6">
           <h3 className="max-w-[14ch] text-[1.9rem] font-semibold leading-[1.02] tracking-tight text-white sm:text-[2.05rem]">
-            Preguntale al portal que cambio, que esta ganando y que sigue.
+            Lee que cambio, que esta ganando y que sigue.
           </h3>
           <p className="mt-4 max-w-[28rem] text-[15px] leading-6 text-slate-300 sm:text-base sm:leading-7">
-            El agente no improvisa. Lee la misma data, requests, approvals y timeline que sostiene
-            la operacion. Por eso responde con contexto, no con humo.
+            El portal combina la misma data, requests, approvals y timeline que sostiene
+            la operacion. Por eso el equipo y el cliente trabajan con contexto, no con humo.
           </p>
           <p className="mt-3 max-w-[28rem] text-[12px] uppercase tracking-[0.14em] text-slate-400">
             Metricas ilustrativas. Vista real del sistema.

@@ -22,7 +22,6 @@ describe("getClientPortalConfig", () => {
       data: {
         id: "client_1",
         slug: "acme",
-        agent_enabled: true,
         events_enabled: true,
         reports_enabled: true,
         portal_brand_name: "Acme Live",
@@ -36,7 +35,6 @@ describe("getClientPortalConfig", () => {
 
     expect(config).toEqual({
       clientId: "client_1",
-      agentEnabled: true,
       slug: "acme",
       eventsEnabled: true,
       reportsEnabled: true,

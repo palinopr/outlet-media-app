@@ -6,7 +6,6 @@ import {
   Users,
   UserCog,
   Settings,
-  Bot,
   type LucideIcon,
 } from "lucide-react";
 
@@ -24,5 +23,4 @@ export const adminNavItems: NavItem[] = [
   { href: "/admin/clients", label: "Clients", icon: Users },
   { href: "/admin/users", label: "Users", icon: UserCog },
   { href: "/admin/settings", label: "Settings", icon: Settings },
-  { href: "/admin/agents", label: "Agents", icon: Bot },
 ];
