@@ -1,3 +1,5 @@
+import { PlatformIcon } from "../platform-icons";
+
 interface PlacementBarData {
   platform: string;
   position: string;
@@ -10,15 +12,15 @@ interface PlacementBarData {
 interface ChartRow {
   label: string;
   fullName: string;
-  badge: string;
   badgeClassName: string;
+  platformName: string;
   pct: number;
   impressions: number;
   clicks: number;
   ctr: number | null;
 }
 
-function normalizePlacement(platform: string, position: string): Pick<ChartRow, "label" | "fullName" | "badge" | "badgeClassName"> {
+function normalizePlacement(platform: string, position: string): Pick<ChartRow, "label" | "fullName" | "badgeClassName" | "platformName"> {
   const platformLower = platform.toLowerCase();
   const positionLower = position.toLowerCase();
   const platformName = platformLower.includes("instagram")
@@ -27,7 +29,6 @@ function normalizePlacement(platform: string, position: string): Pick<ChartRow, 
       ? "Facebook"
       : titleCase(platform || "Meta");
   const placementName = titleCase(position.replace(/_/g, " ").replace(/\s+/g, " ").trim() || "Placement");
-  const badge = platformName === "Instagram" ? "IG" : platformName === "Facebook" ? "FB" : "AD";
   const badgeClassName =
     platformName === "Instagram"
       ? "border-fuchsia-300/20 bg-fuchsia-500/15 text-fuchsia-200"
@@ -36,12 +37,12 @@ function normalizePlacement(platform: string, position: string): Pick<ChartRow, 
         : "border-violet-300/20 bg-violet-500/15 text-violet-200";
 
   return {
-    badge,
     badgeClassName,
     fullName: `${platformName} ${placementName}`,
     label: positionLower.includes(platformName.toLowerCase())
       ? placementName
       : `${platformName} ${placementName}`,
+    platformName,
   };
 }
 
@@ -90,7 +91,7 @@ export function PlacementBarChart({
           >
             <div className="flex min-w-0 items-center gap-2">
               <span className={`inline-flex h-6 w-7 shrink-0 items-center justify-center rounded-lg border text-[10px] font-bold ${row.badgeClassName}`}>
-                {row.badge}
+                <PlatformIcon platform={row.platformName} size={14} />
               </span>
               <span className="truncate text-xs font-medium text-white/72">{row.label}</span>
             </div>

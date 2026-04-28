@@ -1,5 +1,9 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-web | actual placement platform icons
+- Replaced text-only placement badges in campaign detail with the shared Facebook and Instagram platform icons.
+- Kept full readable placement names in the Markets & Placements panel so clients can still scan Feed, Stories, and Reels clearly.
+
 ## [2026-04-27] client-web | readable placement labels
 - Replaced the campaign detail placement axis chart with a compact ranked bar list so platform and placement names are readable.
 - Added platform badges such as `IG` and `FB`, while preserving percent-of-impressions, hover detail, clicks, impressions, and CTR context.
