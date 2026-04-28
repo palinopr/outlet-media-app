@@ -73,7 +73,7 @@ export default async function AdminDashboard() {
         ))}
       </div>
 
-      {trendData.length > 0 && (
+      {trendData.length > 0 ? (
         <Card className="border-border/60">
           <CardHeader className="pb-2">
             <CardTitle className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
@@ -84,7 +84,21 @@ export default async function AdminDashboard() {
             <RoasTrendChart data={trendData} />
           </CardContent>
         </Card>
-      )}
+      ) : campaigns.length > 0 ? (
+        <Card className="border-border/60 border-dashed">
+          <CardContent className="flex items-center gap-3 py-5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-violet-500/20 bg-violet-500/10">
+              <TrendingUp className="h-4 w-4 text-violet-400" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">Trend data is still building</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Campaign totals are available; historical ROAS snapshots will appear here after syncs run.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <CampaignCards campaigns={campaigns} marginalRoasByCampaign={marginalRoasByCampaign} />
     </div>

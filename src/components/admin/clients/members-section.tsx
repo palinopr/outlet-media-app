@@ -83,7 +83,7 @@ export function MembersSection({ client }: { client: ClientDetail }) {
               return (
                 <div
                   key={invite.id}
-                  className="flex items-center justify-between gap-3 px-4 py-3"
+                  className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{invite.email}</p>
@@ -91,7 +91,7 @@ export function MembersSection({ client }: { client: ClientDetail }) {
                       {inviteStatus.detail} • sent {fmtDate(invite.createdAt)}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span
                       className={`inline-flex items-center rounded px-2 py-0.5 text-[10px] font-medium ${inviteStatus.bg} ${inviteStatus.border} ${inviteStatus.text} border`}
                     >
@@ -119,31 +119,32 @@ export function MembersSection({ client }: { client: ClientDetail }) {
         )}
       </Card>
 
-      <Card className="border-border/60">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-border/60 hover:bg-transparent">
-              <TableHead className="text-xs font-medium text-muted-foreground">
-                Name
-              </TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">
-                Email
-              </TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">
-                Role
-              </TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">
-                Visibility
-              </TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">
-                Joined
-              </TableHead>
-              <TableHead className="text-xs font-medium text-muted-foreground">
-                Actions
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <Card className="overflow-hidden border-border/60">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="border-border/60 hover:bg-transparent">
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  Name
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  Email
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  Role
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  Visibility
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  Joined
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  Actions
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
             {client.members.length === 0 ? (
               <TableRow>
                 <TableCell
@@ -219,8 +220,9 @@ export function MembersSection({ client }: { client: ClientDetail }) {
                 </TableRow>
               ))
             )}
-          </TableBody>
-        </Table>
+            </TableBody>
+          </Table>
+        </div>
       </Card>
     </div>
   );

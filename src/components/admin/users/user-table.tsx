@@ -69,8 +69,8 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-wrap items-end gap-3 pt-1">
-      <div className="flex flex-col gap-1">
+    <form onSubmit={submit} className="flex w-full flex-wrap items-end gap-3 pt-1">
+      <div className="flex w-full flex-col gap-1 sm:w-auto">
         <label className="text-xs text-muted-foreground">Email</label>
         <input
           type="email"
@@ -78,10 +78,10 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="client@example.com"
-          className="h-8 rounded-md border border-border bg-background px-3 text-sm w-52 focus:outline-none focus:ring-1 focus:ring-ring"
+          className="h-8 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring sm:w-52"
         />
       </div>
-      <div className="flex flex-col gap-1">
+      <div className="flex w-full flex-col gap-1 sm:w-auto">
         <label className="text-xs text-muted-foreground">Access</label>
         <select
           value={asAdmin ? "__admin__" : clientId}
@@ -94,7 +94,7 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
               setClientId(e.target.value);
             }
           }}
-          className="h-8 rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+          className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring sm:w-auto"
         >
           <option value="">-- Select client --</option>
           {clients.map((c) => (
@@ -106,12 +106,12 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
         </select>
       </div>
       {!asAdmin && clientId && (
-        <div className="flex flex-col gap-1">
+        <div className="flex w-full flex-col gap-1 sm:w-auto">
           <label className="text-xs text-muted-foreground">Role</label>
           <select
             value={clientRole}
             onChange={(e) => setClientRole(e.target.value as "owner" | "member")}
-            className="h-8 rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            className="h-8 w-full rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring sm:w-auto"
           >
             <option value="owner">Owner</option>
             <option value="member">Member</option>
@@ -156,11 +156,11 @@ function UserSelectionToolbar({ selectedRows }: { selectedRows: UserRow[] }) {
   }
 
   return (
-    <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded px-3 py-1.5">
-      <span className="text-xs font-medium whitespace-nowrap">
+    <div className="flex flex-wrap items-center gap-2 rounded border border-primary/20 bg-primary/10 px-3 py-1.5">
+      <span className="whitespace-nowrap text-xs font-medium">
         {selectedRows.length} selected
       </span>
-      <span className="text-xs text-muted-foreground">|</span>
+      <span className="hidden text-xs text-muted-foreground sm:inline">|</span>
       <select
         value={selectedRole}
         onChange={(e) => setSelectedRole(e.target.value)}
@@ -174,7 +174,7 @@ function UserSelectionToolbar({ selectedRows }: { selectedRows: UserRow[] }) {
       <button
         onClick={handleUpdateRole}
         disabled={!selectedRole || isPending}
-        className="h-7 rounded bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+        className="h-7 rounded bg-primary px-3 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
       >
         {isPending ? "Saving..." : "Update Role"}
       </button>

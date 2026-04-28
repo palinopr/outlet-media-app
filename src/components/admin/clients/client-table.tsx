@@ -65,29 +65,29 @@ function CreateClientForm({ onDone }: { onDone: () => void }) {
   return (
     <form onSubmit={submit} className="space-y-3 pt-1">
       <div className="flex flex-wrap items-end gap-3">
-        <div className="flex flex-col gap-1">
+        <div className="flex w-full flex-col gap-1 sm:w-auto">
           <label className="text-xs text-muted-foreground">Name</label>
           <Input
             required
             value={name}
             onChange={(e) => handleNameChange(e.target.value)}
             placeholder="Acme Live"
-            className="h-8 w-48 text-sm"
+            className="h-8 w-full text-sm sm:w-48"
           />
         </div>
-        <div className="flex flex-col gap-1">
+        <div className="flex w-full flex-col gap-1 sm:w-auto">
           <label className="text-xs text-muted-foreground">Slug</label>
           <Input
             required
             value={slug}
             onChange={(e) => setSlug(e.target.value)}
             placeholder="acme_live"
-            className="h-8 w-40 text-sm"
+            className="h-8 w-full text-sm sm:w-40"
           />
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button type="submit" size="sm" disabled={loading} className="h-8">
           {loading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -133,15 +133,15 @@ function ClientSelectionToolbar({ selectedRows }: { selectedRows: ClientSummary[
   }
 
   return (
-    <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded px-3 py-1.5">
-      <span className="text-xs font-medium whitespace-nowrap">
+    <div className="flex flex-wrap items-center gap-2 rounded border border-primary/20 bg-primary/10 px-3 py-1.5">
+      <span className="whitespace-nowrap text-xs font-medium">
         {selectedRows.length} selected
       </span>
-      <span className="text-xs text-muted-foreground">|</span>
+      <span className="hidden text-xs text-muted-foreground sm:inline">|</span>
       <button
         onClick={handleDeactivate}
         disabled={isPending}
-        className="h-7 rounded bg-red-600 px-3 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50 transition-colors"
+        className="h-7 rounded bg-red-600 px-3 text-xs font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
       >
         {isPending ? "Deactivating..." : "Deactivate"}
       </button>

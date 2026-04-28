@@ -167,6 +167,16 @@ export default async function ClientCampaigns({ params, searchParams }: Props) {
         ))}
       </div>
 
+      {!hasData && (
+        <div className="rounded-2xl border border-dashed border-white/[0.10] bg-[#07111f]/72 p-6 text-center shadow-[0_16px_60px_rgba(0,0,0,0.18)]">
+          <Megaphone className="mx-auto mb-3 h-8 w-8 text-blue-300/55" />
+          <p className="text-sm font-semibold text-white">No campaign data for this view yet</p>
+          <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-white/48">
+            If campaigns are active, Meta data may still be syncing or this selected date range may not have delivery yet.
+          </p>
+        </div>
+      )}
+
       {/* -- Reach & Efficiency -- */}
       {hasData && (
         <div className="grid grid-cols-3 gap-3">

@@ -79,14 +79,14 @@ export default async function ClientsPage() {
 
       <Card className="border-border/60">
         <CardContent className="space-y-4 p-6">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-sm font-semibold">Client account snapshot</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Active campaigns, managed spend, and connected-account issues in one place.
               </p>
             </div>
-            <div className="text-right">
+            <div className="sm:text-right">
               <p className="text-xs text-muted-foreground">Blended ROAS</p>
               <p className="text-lg font-semibold">
                 {blendedRoas > 0 ? `${blendedRoas.toFixed(1)}x` : "—"}

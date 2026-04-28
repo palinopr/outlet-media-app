@@ -45,11 +45,11 @@ function AssignToolbar({
   }
 
   return (
-    <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded px-3 py-1.5">
-      <span className="text-xs font-medium whitespace-nowrap">
+    <div className="flex flex-wrap items-center gap-2 rounded border border-primary/20 bg-primary/10 px-3 py-1.5">
+      <span className="whitespace-nowrap text-xs font-medium">
         {selectedRows.length} selected
       </span>
-      <span className="text-xs text-muted-foreground">|</span>
+      <span className="hidden text-xs text-muted-foreground sm:inline">|</span>
       <select
         value={selectedClient}
         onChange={(e) => {
@@ -65,7 +65,7 @@ function AssignToolbar({
       <button
         onClick={handleAssign}
         disabled={!selectedClient.trim() || isPending}
-        className="h-7 rounded bg-primary px-3 text-xs font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-colors"
+        className="h-7 rounded bg-primary px-3 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
       >
         {isPending ? "Saving..." : "Assign"}
       </button>

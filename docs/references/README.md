@@ -4,6 +4,9 @@ Use this directory for **small, durable reference material** that is helpful for
 
 Examples:
 
+- [database safety runbook](./database-safety-runbook.md)
+- [Supabase backup and restore runbook](./supabase-backup-restore-runbook.md)
+- [production smoke runbook](./production-smoke-runbook.md)
 - screenshots tied to docs
 - small product reference assets
 - short exported inputs that are still useful to keep in git

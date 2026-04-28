@@ -9,12 +9,14 @@ interface PaginationProps<TData> {
 }
 
 export function DataTablePagination<TData>({ table }: PaginationProps<TData>) {
+  const pageCount = Math.max(1, table.getPageCount());
+
   return (
-    <div className="flex items-center justify-between px-2 py-3">
+    <div className="flex flex-wrap items-center justify-between gap-2 px-2 py-3">
       <p className="text-xs text-muted-foreground">
         {table.getFilteredRowModel().rows.length} row(s)
       </p>
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <select
           value={table.getState().pagination.pageSize}
           onChange={(e) => table.setPageSize(Number(e.target.value))}
@@ -27,8 +29,7 @@ export function DataTablePagination<TData>({ table }: PaginationProps<TData>) {
           ))}
         </select>
         <p className="text-xs text-muted-foreground tabular-nums">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+          Page {Math.min(table.getState().pagination.pageIndex + 1, pageCount)} of {pageCount}
         </p>
         <Button
           variant="outline"

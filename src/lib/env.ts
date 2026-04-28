@@ -21,8 +21,9 @@ const serverSchema = z.object({
   // Optional integrations
   META_ACCESS_TOKEN: z.string().optional(),
   META_AD_ACCOUNT_ID: z.string().optional(),
-  ANTHROPIC_API_KEY: z.string().optional(),
-  CLIENT_AGENT_CLAUDE_MODEL: z.string().optional(),
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().optional(),
+  CONTACT_FORM_TO_EMAIL: z.string().optional(),
 
   // Meta signed-request verification / legacy callback support
   META_APP_SECRET: z.string().optional(),
@@ -58,8 +59,9 @@ function validateEnv() {
     INGEST_SECRET: process.env.INGEST_SECRET,
     META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN,
     META_AD_ACCOUNT_ID: process.env.META_AD_ACCOUNT_ID,
-    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
-    CLIENT_AGENT_CLAUDE_MODEL: process.env.CLIENT_AGENT_CLAUDE_MODEL,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+    CONTACT_FORM_TO_EMAIL: process.env.CONTACT_FORM_TO_EMAIL,
     META_APP_SECRET: process.env.META_APP_SECRET,
   });
 

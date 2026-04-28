@@ -31,52 +31,54 @@ export function DataTableToolbar<TData>({
   const column = searchColumn ? table.getColumn(searchColumn) : null;
 
   return (
-    <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border/60">
-      <div className="flex items-center gap-2 flex-1">
+    <div className="flex flex-col gap-2 border-b border-border/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:items-center">
         {column && (
-          <div className="relative max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={(column.getFilterValue() as string) ?? ""}
               onChange={(e) => column.setFilterValue(e.target.value)}
               placeholder={searchPlaceholder}
-              className="h-8 pl-8 text-xs w-64"
+              className="h-8 w-full pl-8 text-xs sm:w-64"
             />
           </div>
         )}
         {children}
       </div>
-      {onExport && (
-        <Button variant="outline" size="sm" className="h-8 gap-1" onClick={onExport}>
-          <Download className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline text-xs">Export</span>
-        </Button>
-      )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Columns
+      <div className="flex shrink-0 items-center gap-2 self-start sm:self-auto">
+        {onExport && (
+          <Button variant="outline" size="sm" className="h-8 gap-1" onClick={onExport}>
+            <Download className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline text-xs">Export</span>
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuLabel className="text-xs">Toggle columns</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {table
-            .getAllColumns()
-            .filter((col) => col.getCanHide())
-            .map((col) => (
-              <DropdownMenuCheckboxItem
-                key={col.id}
-                checked={col.getIsVisible()}
-                onCheckedChange={(val) => col.toggleVisibility(!!val)}
-                className="text-xs capitalize"
-              >
-                {col.id.replace(/_/g, " ")}
-              </DropdownMenuCheckboxItem>
-            ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
+        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Columns
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuLabel className="text-xs">Toggle columns</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {table
+              .getAllColumns()
+              .filter((col) => col.getCanHide())
+              .map((col) => (
+                <DropdownMenuCheckboxItem
+                  key={col.id}
+                  checked={col.getIsVisible()}
+                  onCheckedChange={(val) => col.toggleVisibility(!!val)}
+                  className="text-xs capitalize"
+                >
+                  {col.id.replace(/_/g, " ")}
+                </DropdownMenuCheckboxItem>
+              ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

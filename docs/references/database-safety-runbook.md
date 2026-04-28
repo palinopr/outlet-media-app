@@ -2,6 +2,8 @@
 
 Production Supabase project: `dbznwsnteogovicllean`.
 
+For backups and restore decisions, use [Supabase Backup and Restore Runbook](./supabase-backup-restore-runbook.md).
+
 ## Before schema changes
 
 1. Create a migration under `supabase/migrations/`.

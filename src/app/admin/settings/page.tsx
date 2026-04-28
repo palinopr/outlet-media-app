@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Bug, CheckCircle2, Key, Link2, Settings, TriangleAlert } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
+import { AdminPageHeader } from "@/components/admin/page-header";
 import type { ConnectedAccount } from "@/features/settings/connected-accounts";
 import {
   buildConnectedAccountsSummary,
@@ -13,23 +14,29 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 function getApiKeyStatus() {
   const keys = [
-    { label: "META_ACCESS_TOKEN", envVar: "META_ACCESS_TOKEN", source: "host env" },
-    { label: "CLERK_SECRET_KEY", envVar: "CLERK_SECRET_KEY", source: "host env" },
-    { label: "NEXT_PUBLIC_SUPABASE_URL", envVar: "NEXT_PUBLIC_SUPABASE_URL", source: "host env" },
-    { label: "SUPABASE_SERVICE_ROLE_KEY", envVar: "SUPABASE_SERVICE_ROLE_KEY", source: "host env" },
-    { label: "INGEST_SECRET", envVar: "INGEST_SECRET", source: "host env" },
+    { label: "CLERK_SECRET_KEY", envVar: "CLERK_SECRET_KEY", group: "Core auth", required: true },
+    { label: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", envVar: "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", group: "Core auth", required: true },
+    { label: "NEXT_PUBLIC_SUPABASE_URL", envVar: "NEXT_PUBLIC_SUPABASE_URL", group: "Core database", required: true },
+    { label: "NEXT_PUBLIC_SUPABASE_ANON_KEY", envVar: "NEXT_PUBLIC_SUPABASE_ANON_KEY", group: "Core database", required: true },
+    { label: "SUPABASE_SERVICE_ROLE_KEY", envVar: "SUPABASE_SERVICE_ROLE_KEY", group: "Core database", required: true },
+    { label: "INGEST_SECRET", envVar: "INGEST_SECRET", group: "Core ingest", required: true },
+    { label: "NEXT_PUBLIC_APP_URL", envVar: "NEXT_PUBLIC_APP_URL", group: "Runtime", required: false },
+    { label: "META_ACCESS_TOKEN", envVar: "META_ACCESS_TOKEN", group: "Meta", required: false },
+    { label: "META_AD_ACCOUNT_ID", envVar: "META_AD_ACCOUNT_ID", group: "Meta", required: false },
+    { label: "META_APP_SECRET", envVar: "META_APP_SECRET", group: "Meta", required: false },
+    { label: "RESEND_API_KEY", envVar: "RESEND_API_KEY", group: "Email", required: false },
+    { label: "RESEND_FROM_EMAIL", envVar: "RESEND_FROM_EMAIL", group: "Email", required: false },
+    { label: "CONTACT_FORM_TO_EMAIL", envVar: "CONTACT_FORM_TO_EMAIL", group: "Email", required: false },
   ];
   return keys.map((k) => {
     const value = process.env[k.envVar];
     const configured = !!value && value.length > 0;
-    const masked = configured ? "configured" : "not set";
-    return { ...k, masked, configured };
+    const masked = configured ? "configured" : k.required ? "missing" : "not configured";
+    return { ...k, masked, configured, source: "host env" };
   });
 }
 
 // ─── Page ──────────────────────────────────────────────────────────────────
-
-import { AdminPageHeader } from "@/components/admin/page-header";
 
 function formatErrorDate(value: string) {
   return new Date(value).toLocaleString("en-US", {
@@ -48,8 +55,11 @@ export default async function SettingsPage() {
     .order("connected_at", { ascending: false });
   const connectedAccounts = ((connectedAccountsRes?.data ?? []) as ConnectedAccount[]);
   const connectionSummary = buildConnectedAccountsSummary(connectedAccounts);
-  const configuredIntegrationCount = apiKeys.filter((key) => key.configured).length;
-  const missingIntegrationCount = apiKeys.length - configuredIntegrationCount;
+  const requiredKeys = apiKeys.filter((key) => key.required);
+  const optionalKeys = apiKeys.filter((key) => !key.required);
+  const configuredRequiredCount = requiredKeys.filter((key) => key.configured).length;
+  const missingRequiredCount = requiredKeys.length - configuredRequiredCount;
+  const configuredOptionalCount = optionalKeys.filter((key) => key.configured).length;
   const connectionIssues = connectedAccounts
     .map((account) => ({ account, health: getConnectedAccountHealth(account) }))
     .filter(({ health }) => health.key !== "healthy");
@@ -65,33 +75,33 @@ export default async function SettingsPage() {
       accent: "from-cyan-500/20 to-blue-500/20",
       icon: Key,
       iconColor: "text-cyan-400",
-      label: "Configured integrations",
-      sub: "environment-backed keys ready",
-      value: String(configuredIntegrationCount),
+      label: "Required config",
+      sub: "auth, database, and ingest env ready",
+      value: `${configuredRequiredCount}/${requiredKeys.length}`,
     },
     {
       accent: "from-amber-500/20 to-orange-500/20",
       icon: TriangleAlert,
-      iconColor: missingIntegrationCount > 0 ? "text-amber-400" : "text-emerald-400",
-      label: "Missing integrations",
-      sub: "keys or host config not set",
-      value: String(missingIntegrationCount),
+      iconColor: missingRequiredCount > 0 ? "text-amber-400" : "text-emerald-400",
+      label: "Missing required",
+      sub: "must be fixed before production work",
+      value: String(missingRequiredCount),
     },
     {
       accent: "from-emerald-500/20 to-teal-500/20",
       icon: CheckCircle2,
       iconColor: "text-emerald-400",
       label: "Healthy Meta links",
-      sub: "ad accounts ready for campaign reads",
+      sub: `${connectionSummary.attentionCount} needing attention`,
       value: String(connectionSummary.healthyCount),
     },
     {
       accent: "from-rose-500/20 to-orange-500/20",
-      icon: Link2,
-      iconColor: connectionSummary.attentionCount > 0 ? "text-rose-400" : "text-emerald-400",
-      label: "Connection attention",
-      sub: "expired, stale, or expiring Meta links",
-      value: String(connectionSummary.attentionCount),
+      icon: Bug,
+      iconColor: applicationErrors.length > 0 ? "text-rose-400" : "text-emerald-400",
+      label: "Recent app errors",
+      sub: "latest recorded client errors",
+      value: String(applicationErrors.length),
     },
   ];
 
@@ -121,24 +131,41 @@ export default async function SettingsPage() {
               <CardTitle className="text-sm">API keys</CardTitle>
             </div>
             <CardDescription>
-              Keys are configured via environment variables on the host. They are not editable in the dashboard.
+              Keys are configured via environment variables on the host. Required keys must be present; optional keys are shown for active integrations only.
             </CardDescription>
+            <p className="text-xs text-muted-foreground">
+              {configuredRequiredCount}/{requiredKeys.length} required ready • {configuredOptionalCount}/{optionalKeys.length} optional configured
+            </p>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {apiKeys.map(({ label, masked, source, configured }) => (
+              {apiKeys.map(({ label, masked, source, configured, group, required }) => (
                 <div
                   key={label}
-                  className="flex items-center justify-between rounded-md border border-border/40 bg-white/[0.02] px-4 py-3"
+                  className="flex flex-col gap-3 rounded-md border border-border/40 bg-white/[0.02] px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="min-w-0">
-                    <p className="text-xs font-medium font-mono">{label}</p>
-                    <p className={`text-[11px] mt-0.5 font-mono ${configured ? "text-muted-foreground" : "text-red-400"}`}>
+                    <p className="font-mono text-xs font-medium">{label}</p>
+                    <p
+                      className={`mt-0.5 font-mono text-[11px] ${
+                        configured
+                          ? "text-muted-foreground"
+                          : required
+                            ? "text-red-400"
+                            : "text-muted-foreground/70"
+                      }`}
+                    >
                       {masked}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${configured ? "bg-emerald-400" : "bg-red-400"}`} />
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <span className={`h-2 w-2 rounded-full ${configured ? "bg-emerald-400" : required ? "bg-red-400" : "bg-muted-foreground/40"}`} />
+                    <span className="rounded bg-white/[0.04] px-2 py-0.5 text-[10px] text-muted-foreground/60">
+                      {group}
+                    </span>
+                    <span className="rounded bg-white/[0.04] px-2 py-0.5 text-[10px] text-muted-foreground/60">
+                      {required ? "required" : "optional"}
+                    </span>
                     <span className="rounded bg-white/[0.04] px-2 py-0.5 text-[10px] text-muted-foreground/60">
                       {source}
                     </span>

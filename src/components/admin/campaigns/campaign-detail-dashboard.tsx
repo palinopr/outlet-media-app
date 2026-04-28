@@ -27,6 +27,8 @@ function KpiCard({
 
 export function CampaignDetailDashboard({ data }: Props) {
   const { campaign } = data;
+  const needsClientAssignment = campaign.clientSlug === "unknown";
+  const hasPerformanceData = campaign.spend > 0 || campaign.impressions > 0 || campaign.clicks > 0 || campaign.roas != null;
 
   return (
     <div className="space-y-6">
@@ -64,6 +66,27 @@ export function CampaignDetailDashboard({ data }: Props) {
           </div>
         </div>
       </section>
+
+      {(needsClientAssignment || !hasPerformanceData) && (
+        <div className={`grid gap-3 ${needsClientAssignment && !hasPerformanceData ? "md:grid-cols-2" : ""}`}>
+          {needsClientAssignment && (
+            <div className="rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4">
+              <p className="text-sm font-medium text-amber-200">Client assignment missing</p>
+              <p className="mt-1 text-xs leading-5 text-amber-100/70">
+                Assign this campaign from the Campaigns table before it is relied on for client portal access.
+              </p>
+            </div>
+          )}
+          {!hasPerformanceData && (
+            <div className="rounded-2xl border border-border/60 bg-card p-4">
+              <p className="text-sm font-medium">No delivery data yet</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                The campaign exists, but spend, impressions, and clicks have not been reported for the selected source yet.
+              </p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

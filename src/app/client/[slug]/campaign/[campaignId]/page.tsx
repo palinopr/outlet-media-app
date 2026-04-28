@@ -288,10 +288,31 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         title="Markets & Placements"
         detail={rangeLabel}
       >
-        <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-          {marketData.length > 0 ? <MarketPerformanceTable data={marketData} /> : null}
-          {placementData.length > 0 ? <PlacementBarChart data={placementData} /> : null}
-        </div>
+        {marketData.length > 0 || placementData.length > 0 ? (
+          <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+            {marketData.length > 0 ? (
+              <MarketPerformanceTable data={marketData} />
+            ) : (
+              <FallbackCard
+                title="Market Performance"
+                detail="Market-level performance is not available for this selected range yet."
+              />
+            )}
+            {placementData.length > 0 ? (
+              <PlacementBarChart data={placementData} />
+            ) : (
+              <FallbackCard
+                title="Placement Performance"
+                detail="Placement-level delivery is not available for this selected range yet."
+              />
+            )}
+          </div>
+        ) : (
+          <FallbackCard
+            title="Markets & Placements"
+            detail="Market and placement breakdowns are not available from the current data source yet."
+          />
+        )}
       </DashboardSection>
 
       <div className="grid gap-3 xl:grid-cols-[1.12fr_0.88fr]">
