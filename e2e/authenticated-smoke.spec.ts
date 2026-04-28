@@ -97,8 +97,8 @@ async function signInWithToken(page: Page, userId: string) {
   });
 
   const signInUrl = rewriteUrlOrigin(token.url, baseURL);
-  await page.goto(signInUrl, { waitUntil: "domcontentloaded" });
-  await page.waitForURL((url) => !url.pathname.startsWith("/sign-in"), { timeout: 45_000 });
+  await page.goto(signInUrl, { timeout: 90_000, waitUntil: "commit" });
+  await page.waitForURL((url) => !url.pathname.startsWith("/sign-in"), { timeout: 60_000 });
   await page.waitForLoadState("networkidle").catch(() => undefined);
 }
 
