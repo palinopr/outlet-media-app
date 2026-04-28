@@ -159,24 +159,9 @@ export const ContactFormSchema = z.object({
 
 // ─── Shared comment schemas ─────────────────────────────────────────────────
 
-export const CreateCampaignCommentSchema = z.object({
-  campaign_id: z.string().min(1),
-  client_slug: z.string().min(1),
-  content: z.string().min(1).max(10000),
-  parent_comment_id: z.string().uuid().optional(),
-  visibility: z.enum(["shared", "admin_only"]).default("shared"),
-});
-
 export const CreateAssetCommentSchema = z.object({
   client_slug: z.string().min(1),
   asset_id: z.string().uuid(),
-  content: z.string().min(1).max(10000),
-  parent_comment_id: z.string().uuid().optional(),
-  visibility: z.enum(["shared", "admin_only"]).default("shared"),
-});
-
-export const CreateEventCommentSchema = z.object({
-  event_id: z.string().uuid(),
   content: z.string().min(1).max(10000),
   parent_comment_id: z.string().uuid().optional(),
   visibility: z.enum(["shared", "admin_only"]).default("shared"),

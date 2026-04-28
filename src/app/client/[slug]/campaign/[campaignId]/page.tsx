@@ -32,8 +32,6 @@ import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { CampaignDetailHeader } from "../../components/campaign-detail-header";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { getClientPortalTheme } from "@/features/client-portal/theme";
-import { getClientCampaignOperatingView } from "@/features/campaigns/client-operating";
-import { CampaignOperatingPanel } from "../../components/campaign-operating-panel";
 import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket } from "../../lib";
 
 interface Props {
@@ -47,14 +45,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
   const rawSearchParams = await searchParams;
   const range = parseClientCampaignRange(rawSearchParams, "today");
 
-  const [data, operatingView] = await Promise.all([
-    getCampaignDetail(slug, campaignId, range, scope),
-    getClientCampaignOperatingView({
-      campaignId,
-      clientSlug: slug,
-      scope,
-    }),
-  ]);
+  const data = await getCampaignDetail(slug, campaignId, range, scope);
   const theme = getClientPortalTheme(slug);
 
   if (!data) {
@@ -330,8 +321,6 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           )}
         </DashboardSection>
       </div>
-
-      <CampaignOperatingPanel campaignId={campaignId} data={operatingView} slug={slug} />
 
       {/* -- Empty state -- */}
       {dataSource === "supabase" && ageGender.length === 0 && ads.length === 0 && (

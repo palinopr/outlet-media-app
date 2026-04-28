@@ -1,7 +1,6 @@
 import { mapAssetRows } from "@/features/assets/lib";
 import { listCampaignAssets } from "@/features/assets/server";
 import { listCampaignActionItems } from "@/features/campaign-action-items/server";
-import { listCampaignComments } from "@/features/campaign-comments/server";
 import { listCampaignApprovalRequests } from "@/features/approvals/server";
 import { listCampaignSystemEvents } from "@/features/system-events/server";
 import { getEventRecordById, type EventOperatingRecord } from "@/features/events/server";
@@ -44,7 +43,6 @@ export interface CampaignOperatingData {
   approvals: Awaited<ReturnType<typeof listCampaignApprovalRequests>>;
   assets: ReturnType<typeof mapAssetRows>;
   campaign: MetaCampaignCard;
-  comments: Awaited<ReturnType<typeof listCampaignComments>>;
   linkedEvents: EventOperatingRecord[];
   systemEvents: Awaited<ReturnType<typeof listCampaignSystemEvents>>;
 }
@@ -87,13 +85,12 @@ export async function getCampaignOperatingData(campaignId: string): Promise<Camp
       approvals: [],
       assets: [],
       campaign,
-      comments: [],
       linkedEvents: [],
       systemEvents: [],
     };
   }
 
-  const [systemEvents, approvals, assetRows, actionItems, comments, linkedEvent] = await Promise.all([
+  const [systemEvents, approvals, assetRows, actionItems, linkedEvent] = await Promise.all([
     listCampaignSystemEvents({
       audience: "all",
       clientSlug: data.client_slug,
@@ -114,11 +111,6 @@ export async function getCampaignOperatingData(campaignId: string): Promise<Camp
       clientSlug: data.client_slug,
       limit: 16,
     }),
-    listCampaignComments({
-      audience: "all",
-      campaignId,
-      clientSlug: data.client_slug,
-    }),
     data.tm_event_id ? getEventRecordById(data.tm_event_id) : Promise.resolve(null),
   ]);
 
@@ -127,7 +119,6 @@ export async function getCampaignOperatingData(campaignId: string): Promise<Camp
     approvals,
     assets: mapAssetRows(assetRows),
     campaign,
-    comments,
     linkedEvents: linkedEvent ? [linkedEvent] : [],
     systemEvents,
   };

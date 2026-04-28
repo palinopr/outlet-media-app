@@ -1,7 +1,6 @@
 import type { ScopeFilter } from "@/lib/member-access";
 import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
 import { getFeatureReadClient, supabaseAdmin } from "@/lib/supabase";
-import { listEventComments } from "@/features/event-comments/server";
 import { listSystemEvents } from "@/features/system-events/server";
 import {
   buildEventOperationsSummary,
@@ -45,7 +44,6 @@ export interface EventClientOption {
 
 export interface EventOperatingData {
   clients: EventClientOption[];
-  comments: Awaited<ReturnType<typeof listEventComments>>;
   event: EventOperatingRecord;
   linkedCampaigns: EventLinkedCampaign[];
 }
@@ -160,17 +158,8 @@ export async function getEventOperatingData(
     .filter((slug): slug is string => typeof slug === "string" && slug.length > 0)
     .map((slug) => ({ slug }));
 
-  const comments = event.clientSlug
-    ? await listEventComments({
-        audience: "all",
-        clientSlug: event.clientSlug,
-        eventId,
-      })
-    : [];
-
   return {
     clients,
-    comments,
     event,
     linkedCampaigns,
   };

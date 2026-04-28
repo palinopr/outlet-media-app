@@ -7,7 +7,6 @@ import {
   Ticket,
   TrendingUp,
 } from "lucide-react";
-import { ClientRequestsPanel } from "@/components/admin/client-requests-panel";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { StatCard } from "@/components/admin/stat-card";
 import { EventOperatingPanel } from "@/components/admin/events/event-operating-panel";
@@ -16,7 +15,6 @@ import { centsToUsd, computeBlendedRoas, fmtDate, fmtNum, fmtUsd, slugToLabel } 
 
 interface Props {
   params: Promise<{ eventId: string }>;
-  searchParams?: Promise<{ tab?: string }>;
 }
 
 function eventSellThrough(sold: number, available: number | null) {
@@ -26,10 +24,8 @@ function eventSellThrough(sold: number, available: number | null) {
   return Math.round((sold / capacity) * 100);
 }
 
-export default async function AdminEventDetailPage({ params, searchParams }: Props) {
+export default async function AdminEventDetailPage({ params }: Props) {
   const { eventId } = await params;
-  const { tab } = (await searchParams) ?? {};
-  const activeTab = tab === "requests" ? "requests" : "overview";
   const data = await getEventOperatingData(eventId);
   if (!data) notFound();
 
@@ -43,10 +39,6 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pro
     linkedCampaigns.map((c) => ({ spend: c.spend ?? 0, roas: c.roas })),
   );
   const sellThrough = eventSellThrough(event.ticketsSold, event.ticketsAvailable);
-  const openRequestCount = data.comments.filter(
-    (comment) => comment.visibility === "shared" && !comment.parentCommentId && !comment.resolved,
-  ).length;
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -113,39 +105,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pro
         />
       </div>
 
-      <div className="flex gap-1 border-b border-border/60">
-        <Link
-          href={`/admin/events/${eventId}`}
-          className={`relative px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "overview"
-              ? "text-foreground"
-              : "text-muted-foreground hover:text-foreground/80"
-          }`}
-        >
-          Overview
-          {activeTab === "overview" ? (
-            <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-t bg-foreground" />
-          ) : null}
-        </Link>
-        <Link
-          href={`/admin/events/${eventId}?tab=requests`}
-          className={`relative px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "requests"
-              ? "text-foreground"
-              : "text-muted-foreground hover:text-foreground/80"
-          }`}
-        >
-          Client requests
-          {openRequestCount > 0 ? <span className="ml-1.5 text-[10px] text-muted-foreground">{openRequestCount}</span> : null}
-          {activeTab === "requests" ? (
-            <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-t bg-foreground" />
-          ) : null}
-        </Link>
-      </div>
-
-      {activeTab === "overview" ? (
-        <>
-          <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.95fr)]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.95fr)]">
             <div className="space-y-6">
               <EventOperatingPanel event={event} clients={clients} />
 
@@ -196,9 +156,9 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pro
                 )}
               </section>
             </div>
-          </div>
+      </div>
 
-          <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
+      <section className="rounded-[28px] border border-[#ece8df] bg-white/95 p-5 shadow-[0_24px_60px_-48px_rgba(15,23,42,0.5)]">
             <p className="text-sm font-medium text-[#787774]">Event snapshot</p>
             <h2 className="mt-1 text-xl font-semibold tracking-tight text-[#2f2f2f]">
               Quick context
@@ -217,17 +177,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pro
                 </p>
               </div>
             </div>
-          </section>
-        </>
-      ) : (
-        <ClientRequestsPanel
-          clientSlug={event.clientSlug}
-          comments={data.comments}
-          entityId={event.id}
-          entityLabel={event.artist || event.name}
-          entityType="event"
-        />
-      )}
+      </section>
     </div>
   );
 }

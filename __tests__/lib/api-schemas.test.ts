@@ -3,8 +3,6 @@ import {
   IngestPayloadSchema,
   ContactFormSchema,
   CreateAssetCommentSchema,
-  CreateCampaignCommentSchema,
-  CreateEventCommentSchema,
   InviteSchema,
 } from "@/lib/api-schemas";
 
@@ -120,51 +118,6 @@ describe("InviteSchema", () => {
   });
 });
 
-// ─── CreateCampaignCommentSchema ────────────────────────────────────────────
-
-describe("CreateCampaignCommentSchema", () => {
-  it("accepts a valid shared campaign comment", () => {
-    const result = CreateCampaignCommentSchema.safeParse({
-      campaign_id: "123456789",
-      client_slug: "zamora",
-      content: "New creative is ready for review.",
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.visibility).toBe("shared");
-    }
-  });
-
-  it("accepts admin-only visibility", () => {
-    const result = CreateCampaignCommentSchema.safeParse({
-      campaign_id: "123456789",
-      client_slug: "zamora",
-      content: "Keep this internal for the team.",
-      visibility: "admin_only",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects empty content", () => {
-    const result = CreateCampaignCommentSchema.safeParse({
-      campaign_id: "123456789",
-      client_slug: "zamora",
-      content: "",
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it("rejects invalid visibility", () => {
-    const result = CreateCampaignCommentSchema.safeParse({
-      campaign_id: "123456789",
-      client_slug: "zamora",
-      content: "hello",
-      visibility: "client_only",
-    });
-    expect(result.success).toBe(false);
-  });
-});
-
 // ─── CreateAssetCommentSchema ───────────────────────────────────────────────
 
 describe("CreateAssetCommentSchema", () => {
@@ -195,38 +148,6 @@ describe("CreateAssetCommentSchema", () => {
       asset_id: "not-a-uuid",
       client_slug: "zamora",
       content: "Need a new version",
-    });
-    expect(result.success).toBe(false);
-  });
-});
-
-// ─── CreateEventCommentSchema ───────────────────────────────────────────────
-
-describe("CreateEventCommentSchema", () => {
-  it("accepts a valid shared event comment", () => {
-    const result = CreateEventCommentSchema.safeParse({
-      event_id: "34d8c8f2-78ff-4aca-96ac-15591fa7ec7d",
-      content: "Can we confirm whether this on-sale push should stay live through the weekend?",
-    });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.visibility).toBe("shared");
-    }
-  });
-
-  it("accepts admin-only event notes", () => {
-    const result = CreateEventCommentSchema.safeParse({
-      event_id: "34d8c8f2-78ff-4aca-96ac-15591fa7ec7d",
-      content: "Internal note: hold this until ticket holdback is confirmed.",
-      visibility: "admin_only",
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects invalid event ids", () => {
-    const result = CreateEventCommentSchema.safeParse({
-      event_id: "not-a-uuid",
-      content: "Need a pricing review",
     });
     expect(result.success).toBe(false);
   });

@@ -58,9 +58,8 @@ function badgeClass(kind: "neutral" | "priority" | "warning") {
 }
 
 export function CampaignDetailDashboard({ data }: Props) {
-  const { actionItems, approvals, assets, campaign, comments, linkedEvents, systemEvents } = data;
+  const { actionItems, approvals, assets, campaign, linkedEvents, systemEvents } = data;
 
-  const unresolvedComments = comments.filter((comment) => !comment.resolved && !comment.parentCommentId);
   const openActionItems = actionItems.filter((item) => item.status !== "done");
 
   return (
@@ -71,8 +70,8 @@ export function CampaignDetailDashboard({ data }: Props) {
             <p className="text-xs uppercase tracking-[0.24em] text-teal-200/70">Campaign operating view</p>
             <h2 className="text-3xl font-semibold tracking-tight">{campaign.name}</h2>
             <p className="text-sm leading-6 text-slate-200/80">
-              This view shows the live workflow pressure around the campaign: approvals awaiting review,
-              open follow-through, unresolved discussion, linked event context, and the latest shared system activity.
+              This view shows the live campaign context: approvals awaiting review,
+              open follow-through, linked event context, and the latest shared system activity.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -95,7 +94,7 @@ export function CampaignDetailDashboard({ data }: Props) {
             <KpiCard
               label="Open follow-through"
               value={String(openActionItems.length)}
-              detail={unresolvedComments.length === 1 ? "Discussion thread open" : `${unresolvedComments.length} discussion threads open`}
+              detail={openActionItems.length === 1 ? "Open item" : "Open items"}
             />
           </div>
         </div>
@@ -218,23 +217,6 @@ export function CampaignDetailDashboard({ data }: Props) {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <SectionCard title="Unresolved discussion">
-          {unresolvedComments.length === 0 ? (
-            <EmptyState message="No unresolved campaign discussion is open right now." />
-          ) : (
-            <div className="space-y-3">
-              {unresolvedComments.map((comment) => (
-                <article key={comment.id} className="rounded-2xl border border-border/60 bg-background/60 p-4">
-                  <p className="text-sm leading-6 text-foreground">{comment.content}</p>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    {comment.authorName ?? "Unknown author"} · {fmtDate(comment.createdAt)}
-                  </p>
-                </article>
-              ))}
-            </div>
-          )}
-        </SectionCard>
-
         <SectionCard title="Recent activity">
           {systemEvents.length === 0 ? (
             <EmptyState message="No recent system activity is attached to this campaign." />

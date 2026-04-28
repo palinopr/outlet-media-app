@@ -21,6 +21,6 @@ All agent runtime and agent-facing product surfaces are retired for now. Do not 
 - Preserve one canonical client/account/membership access backbone.
 - Keep client portal packaging admin-managed from client account data.
 - Treat `system_events` as the shared product timeline for app-visible activity.
-- Keep dashboards summary-first while surfacing pending approvals, unresolved discussion, and open action items.
+- Keep dashboards summary-first while surfacing only useful active signals; do not reintroduce client request/comment panels by default.
 - Delete dead routes and nav items instead of hiding unfinished surfaces.
 - Prefer one complete vertical slice over many placeholder tabs.

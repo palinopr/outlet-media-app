@@ -83,21 +83,6 @@ const data = {
     dailyBudget: 500,
     startTime: "2026-03-25",
   },
-  comments: [
-    {
-      id: "comment_1",
-      campaignId: "campaign_1",
-      clientSlug: "zamora",
-      content: "Need confirmation on the updated venue copy before Friday.",
-      visibility: "shared",
-      authorId: null,
-      authorName: "Client Team",
-      parentCommentId: null,
-      resolved: false,
-      createdAt: "2026-04-03T11:00:00.000Z",
-      updatedAt: "2026-04-03T11:00:00.000Z",
-    },
-  ],
   linkedEvents: [
     {
       id: "event_1",
@@ -152,8 +137,6 @@ describe("CampaignDetailDashboard", () => {
     expect(screen.getByText("Approve Barcelona launch creative")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Action items" })).toBeInTheDocument();
     expect(screen.getByText("Refresh weekend creative rotation")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Unresolved discussion" })).toBeInTheDocument();
-    expect(screen.getByText("Need confirmation on the updated venue copy before Friday.")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Linked events" })).toBeInTheDocument();
     expect(screen.getByText("Barcelona Arena Night")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Recent activity" })).toBeInTheDocument();
@@ -162,5 +145,6 @@ describe("CampaignDetailDashboard", () => {
     expect(screen.queryByText("Campaign Intelligence Brief")).not.toBeInTheDocument();
     expect(screen.queryByText("Performance Timeline")).not.toBeInTheDocument();
     expect(screen.queryByText("AI Helper / Ask Outlet")).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Unresolved discussion" })).not.toBeInTheDocument();
   });
 });

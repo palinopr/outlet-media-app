@@ -24,7 +24,6 @@ import { ProgressBar } from "../../components/progress-bar";
 import { EventStatusBadge } from "../../components/event-status-badge";
 import { AudienceSection } from "../../components/audience-section";
 import { ClientPortalFooter } from "../../components/client-portal-footer";
-import { EventOperatingPanel } from "../../components/event-operating-panel";
 import {
   TicketSalesChart,
   type TicketChartRow,
@@ -33,7 +32,6 @@ import {
 import type { SalesVelocity, TicketPlatform } from "../../types";
 import { getDaysUntilEvent } from "../../lib";
 import { requireClientEventsAccess } from "@/features/client-portal/access";
-import { getClientEventOperatingView } from "@/features/events/client-operating";
 
 interface Props {
   params: Promise<{ slug: string; eventId: string }>;
@@ -74,13 +72,6 @@ export default async function EventDetailPage({ params }: Props) {
     supportingDataWarnings = [],
     channelBreakdown,
   } = data;
-  const operatingView = await getClientEventOperatingView({
-    clientSlug: slug,
-    eventId,
-    linkedCampaignIds: linkedCampaigns.map((campaign) => campaign.campaignId),
-    scope,
-  });
-
   const chartData: TicketChartRow[] = snapshots.map((s) => {
     const dt = new Date(s.date + "T12:00:00");
     return {
@@ -494,8 +485,6 @@ export default async function EventDetailPage({ params }: Props) {
           </section>
         )}
       </div>
-
-      <EventOperatingPanel data={operatingView} eventId={eventId} slug={slug} />
 
       {/* -- Footer -- */}
       {e.updatedAt && (

@@ -11,7 +11,7 @@ The active web product should focus on:
 - **Reports**
 - Admin-managed clients, users, memberships, branding, and portal packaging
 
-Approvals, discussions, assets, activity, and follow-up work should live inside campaign, event, report, and admin account surfaces before earning standalone routes.
+Client-facing campaign pages should stay read-only and analytics-first for now. Do not add request/comment boxes or workflow panels back onto those pages unless there is a clear customer need.
 
 ## What To Avoid Right Now
 
@@ -23,7 +23,7 @@ Approvals, discussions, assets, activity, and follow-up work should live inside 
 ## Product Principles
 
 - Build for shared visibility between Outlet operators and clients.
-- Support both summary-first dashboards and deeper workflow views.
-- Keep collaboration attached to the relevant campaign, event, report, client, asset, or action item.
+- Support summary-first dashboards before deeper workflow views.
+- Keep collaboration and workflow internal until it is clearly useful enough to expose.
 - Prefer guided execution: show what happened, what matters, what is blocked, and what needs a human decision next.
 - Use structured domain objects and `system_events` rather than route-local status blobs.

@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-const { getClientEventOperatingView, getEventDetail, requireClientEventsAccess } = vi.hoisted(() => ({
-  getClientEventOperatingView: vi.fn(),
+const { getEventDetail, requireClientEventsAccess } = vi.hoisted(() => ({
   getEventDetail: vi.fn(),
   requireClientEventsAccess: vi.fn(),
 }));
@@ -15,14 +14,6 @@ vi.mock("@/features/client-portal/access", () => ({
   requireClientEventsAccess,
 }));
 
-vi.mock("@/features/events/client-operating", () => ({
-  getClientEventOperatingView,
-}));
-
-vi.mock("../../components/event-operating-panel", () => ({
-  EventOperatingPanel: () => <div data-testid="event-operating-panel" />,
-}));
-
 vi.mock("@/components/client/charts", () => ({
   DailySalesChart: () => <div data-testid="daily-sales-chart" />,
   TicketSalesChart: () => <div data-testid="ticket-sales-chart" />,
@@ -30,12 +21,6 @@ vi.mock("@/components/client/charts", () => ({
 
 describe("EventDetailPage", () => {
   beforeEach(() => {
-    getClientEventOperatingView.mockResolvedValue({
-      approvals: [],
-      comments: [],
-      followUpItems: [],
-      systemEvents: [],
-    });
     getEventDetail.mockResolvedValue(null);
     requireClientEventsAccess.mockResolvedValue({
       scope: undefined,

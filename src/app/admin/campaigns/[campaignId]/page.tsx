@@ -3,31 +3,22 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { SyncButton } from "@/components/admin/campaigns/campaign-cells";
 import { CampaignDetailDashboard } from "@/components/admin/campaigns/campaign-detail-dashboard";
-import { ClientRequestsPanel } from "@/components/admin/client-requests-panel";
 import { getCampaignOperatingData } from "@/features/campaigns/server";
 import { fmtDate, fmtUsd } from "@/lib/formatters";
 import { getCampaignStatusCfg } from "@/lib/status";
 
 interface Props {
   params: Promise<{ campaignId: string }>;
-  searchParams?: Promise<{ tab?: string }>;
 }
 
-export default async function AdminCampaignDetailPage({ params, searchParams }: Props) {
+export default async function AdminCampaignDetailPage({ params }: Props) {
   const { campaignId } = await params;
-  const { tab } = (await searchParams) ?? {};
-  const activeTab = tab === "requests" ? "requests" : "overview";
   const data = await getCampaignOperatingData(campaignId);
 
   if (!data) notFound();
 
   const { campaign } = data;
   const statusCfg = getCampaignStatusCfg(campaign.status);
-  const requestClientSlug = data.comments[0]?.clientSlug ?? (campaign.clientSlug !== "unknown" ? campaign.clientSlug : null);
-  const openRequestCount = data.comments.filter(
-    (comment) => comment.visibility === "shared" && !comment.parentCommentId && !comment.resolved,
-  ).length;
-
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-12">
       <div className="flex items-center">
@@ -73,47 +64,7 @@ export default async function AdminCampaignDetailPage({ params, searchParams }: 
         </div>
       </div>
 
-      <div className="flex gap-1 border-b border-border/60">
-        <Link
-          href={`/admin/campaigns/${campaignId}`}
-          className={`relative px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "overview"
-              ? "text-foreground"
-              : "text-muted-foreground hover:text-foreground/80"
-          }`}
-        >
-          Overview
-          {activeTab === "overview" ? (
-            <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-t bg-foreground" />
-          ) : null}
-        </Link>
-        <Link
-          href={`/admin/campaigns/${campaignId}?tab=requests`}
-          className={`relative px-4 py-2 text-sm font-medium transition-colors ${
-            activeTab === "requests"
-              ? "text-foreground"
-              : "text-muted-foreground hover:text-foreground/80"
-          }`}
-        >
-          Client requests
-          {openRequestCount > 0 ? <span className="ml-1.5 text-[10px] text-muted-foreground">{openRequestCount}</span> : null}
-          {activeTab === "requests" ? (
-            <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-t bg-foreground" />
-          ) : null}
-        </Link>
-      </div>
-
-      {activeTab === "overview" ? (
-        <CampaignDetailDashboard data={data} />
-      ) : (
-        <ClientRequestsPanel
-          clientSlug={requestClientSlug}
-          comments={data.comments}
-          entityId={campaign.campaignId}
-          entityLabel={campaign.name}
-          entityType="campaign"
-        />
-      )}
+      <CampaignDetailDashboard data={data} />
     </div>
   );
 }
