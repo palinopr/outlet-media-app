@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import type { DateRange } from "../data";
+import { getRangeQuery, type CampaignRangeInput } from "@/lib/constants";
 import { fmtUsd, fmtDate } from "@/lib/formatters";
 import { DATE_OPTIONS } from "../lib";
 import type { CampaignCard } from "../types";
@@ -9,17 +9,19 @@ import type { ClientPortalTheme } from "@/features/client-portal/theme";
 
 interface Props {
   slug: string;
-  range: DateRange;
+  range: CampaignRangeInput;
   rangeLabel: string;
   campaign: CampaignCard;
   theme: ClientPortalTheme;
 }
 
-export function CampaignDetailHeader({ slug, range, campaign: c }: Props) {
+export function CampaignDetailHeader({ slug, range, rangeLabel, campaign: c }: Props) {
+  const activeRange = typeof range === "string" ? range : "custom";
+
   return (
     <div className="space-y-4">
       <Link
-        href={`/client/${slug}/campaigns?range=${range}`}
+        href={`/client/${slug}/campaigns?${getRangeQuery(range)}`}
         className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs text-white/60 transition hover:border-white/[0.16] hover:text-white"
       >
         <ArrowLeft className="h-3 w-3" />
@@ -41,7 +43,7 @@ export function CampaignDetailHeader({ slug, range, campaign: c }: Props) {
                     key={opt.value}
                     href={`?range=${opt.value}`}
                     className={`px-2 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all duration-300 ${
-                      range === opt.value
+                      activeRange === opt.value
                         ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
                         : "text-white/60 hover:text-white/80 hover:bg-white/[0.06]"
                     }`}
@@ -49,6 +51,15 @@ export function CampaignDetailHeader({ slug, range, campaign: c }: Props) {
                     {opt.label}
                   </a>
                 ))}
+                <span
+                  className={`px-2 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap ${
+                    activeRange === "custom"
+                      ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
+                      : "text-white/35"
+                  }`}
+                >
+                  {activeRange === "custom" ? rangeLabel : "Custom"}
+                </span>
               </div>
             </div>
           </div>

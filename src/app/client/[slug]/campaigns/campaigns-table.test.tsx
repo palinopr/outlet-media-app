@@ -38,4 +38,24 @@ describe("CampaignsTable", () => {
       "/client/acme/campaign/cmp_123?range=30",
     );
   });
+
+  it("keeps a custom list range when opening campaign detail", () => {
+    render(
+      <CampaignsTable
+        campaigns={[campaign]}
+        range={{ label: "Apr 1 - Apr 9", since: "2026-04-01", until: "2026-04-09" }}
+        slug="acme"
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("row", { name: /spring campaign/i }));
+
+    expect(push).toHaveBeenCalledWith(
+      "/client/acme/campaign/cmp_123?range=custom&since=2026-04-01&until=2026-04-09",
+    );
+    expect(screen.getByRole("link", { name: /spring campaign/i })).toHaveAttribute(
+      "href",
+      "/client/acme/campaign/cmp_123?range=custom&since=2026-04-01&until=2026-04-09",
+    );
+  });
 });

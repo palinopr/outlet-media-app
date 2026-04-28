@@ -7,7 +7,7 @@ import { Search, Megaphone, ChevronRight } from "lucide-react";
 import { fmtUsd, fmtNum, roasColor } from "@/lib/formatters";
 import { getCampaignStatusCfg } from "@/lib/status";
 import type { CampaignCard } from "../types";
-import type { DateRange } from "@/lib/constants";
+import { getRangeQuery, type CampaignRangeInput } from "@/lib/constants";
 
 export function CampaignsTable({
   campaigns,
@@ -15,12 +15,12 @@ export function CampaignsTable({
   slug,
 }: {
   campaigns: CampaignCard[];
-  range: DateRange;
+  range: CampaignRangeInput;
   slug: string;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const campaignDetailHref = (campaignId: string) => `/client/${slug}/campaign/${campaignId}?range=${range}`;
+  const campaignDetailHref = (campaignId: string) => `/client/${slug}/campaign/${campaignId}?${getRangeQuery(range)}`;
 
   const queryLower = query.toLowerCase();
   const filtered = campaigns.filter((c) =>

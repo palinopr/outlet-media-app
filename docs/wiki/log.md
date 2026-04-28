@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-web | campaign range picker and new-campaign detail fallback
+- Changed the client Campaigns page default reporting window to Last 7 Days and added Today, Last 7 Days, Lifetime, and Custom range controls.
+- Preserved selected standard/custom ranges when opening campaign detail and returning back to the campaign list.
+- Allowed campaign detail to fall back to live Meta campaign info when a new campaign is visible from Meta but not yet synced into `meta_campaigns`.
+
 ## [2026-04-27] client-access | preserve assignments on invite acceptance
 - Changed invite acceptance to reuse an existing `client_members` row instead of upserting over it, preserving assigned campaign/event rows tied to the member id.
 - Changed the admin Users client-access add path to no-op when membership already exists, instead of recreating or overwriting membership data.

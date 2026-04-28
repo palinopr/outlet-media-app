@@ -1,8 +1,12 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
-import { getEffectiveCampaignRowById } from "@/lib/campaign-client-assignment";
+import {
+  getCampaignClientOverrideMap,
+  getEffectiveCampaignRowById,
+  resolveEffectiveCampaignClientSlug,
+} from "@/lib/campaign-client-assignment";
 import type { ScopeFilter } from "@/lib/member-access";
-import { type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
+import { type CampaignRangeInput, type DateRange, META_PRESETS, RANGE_LABELS } from "@/lib/constants";
 import { centsToUsd } from "@/lib/formatters";
 import { metaGet, metaInsightsUrl, metaUrl, type MetaInsightsTimeRange } from "@/lib/meta-api";
 import { allowsCampaignInScope } from "@/features/client-portal/scope";
@@ -28,13 +32,7 @@ function getMetaCreds(): { token: string; accountId: string } | null {
   return { token, accountId: rawId.replace(/^act_/, "") };
 }
 
-export type CampaignDetailRangeInput =
-  | DateRange
-  | {
-      since: string;
-      until: string;
-      label: string;
-    };
+export type CampaignDetailRangeInput = CampaignRangeInput;
 
 function isExplicitRange(range: CampaignDetailRangeInput): range is Exclude<CampaignDetailRangeInput, DateRange> {
   return typeof range !== "string";
@@ -78,6 +76,49 @@ interface MetaCampaignInfo {
   status: string;
   daily_budget?: string;
   start_time?: string;
+}
+
+function campaignRowFromMetaInfo(info: MetaCampaignInfo, clientSlug: string): SupabaseCampaignDetailRow {
+  return {
+    campaign_id: info.id,
+    client_slug: clientSlug,
+    name: info.name,
+    status: info.status,
+    spend: null,
+    roas: null,
+    impressions: null,
+    clicks: null,
+    ctr: null,
+    cpc: null,
+    cpm: null,
+    daily_budget: info.daily_budget ? Number(info.daily_budget) : null,
+    start_time: info.start_time ?? null,
+  };
+}
+
+async function getMetaCampaignFallbackRow(
+  slug: string,
+  campaignId: string,
+  creds: { token: string; accountId: string } | null,
+): Promise<SupabaseCampaignDetailRow | null> {
+  if (!creds) return null;
+
+  const infoUrl = new URL(metaUrl(campaignId, creds.token, { fields: "id,name,status,daily_budget,start_time" }));
+  const info = await metaGet<MetaCampaignInfo>(infoUrl, "campaignInfoFallback");
+  if (!info) return null;
+
+  const overrides = await getCampaignClientOverrideMap([campaignId]);
+  const effectiveSlug = resolveEffectiveCampaignClientSlug(
+    {
+      campaign_id: campaignId,
+      client_slug: null,
+      name: info.name,
+    },
+    overrides,
+  );
+
+  if (effectiveSlug !== slug) return null;
+  return campaignRowFromMetaInfo(info, effectiveSlug);
 }
 
 interface SupabaseCampaignDetailRow {
@@ -510,6 +551,7 @@ export async function getCampaignDetail(
 
   const readContext = await getCampaignDetailReadContext();
   if (!readContext) return null;
+  const creds = getMetaCreds();
 
   let row: SupabaseCampaignDetailRow | null = null;
 
@@ -528,18 +570,23 @@ export async function getCampaignDetail(
     }
 
     row = (data as SupabaseCampaignDetailRow | null) ?? null;
+    if (!row) {
+      row = await getMetaCampaignFallbackRow(slug, campaignId, creds);
+    }
   } else {
     row = await getEffectiveCampaignRowById<SupabaseCampaignDetailRow>(
       campaignId,
       "campaign_id, name, status, spend, roas, impressions, clicks, ctr, cpc, cpm, daily_budget, start_time, client_slug",
     );
 
+    if (!row) {
+      row = await getMetaCampaignFallbackRow(slug, campaignId, creds);
+    }
+
     if (!row || row.client_slug !== slug) return null;
   }
 
   if (!row) return null;
-
-  const creds = getMetaCreds();
 
   // Try Meta API first (parallel calls for speed)
   if (creds) {

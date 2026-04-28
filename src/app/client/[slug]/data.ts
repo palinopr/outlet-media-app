@@ -1,12 +1,12 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { createClerkSupabaseClient, supabaseAdmin } from "@/lib/supabase";
-import { type DateRange } from "@/lib/constants";
+import { type CampaignRangeInput } from "@/lib/constants";
 import { fetchAllCampaigns, type MetaCampaignCard } from "@/lib/meta-campaigns";
 import type { ScopeFilter } from "@/lib/member-access";
 import type { TmEvent, CampaignCard, EventCard } from "./types";
 import { buildEventCard } from "./lib";
 
-export type { DateRange };
+export type { CampaignRangeInput };
 
 
 async function getClientPortalReadClient() {
@@ -55,7 +55,7 @@ function buildEventCards(events: TmEvent[]): EventCard[] {
 
 export async function getCampaignsPageData(
   slug: string,
-  range: DateRange,
+  range: CampaignRangeInput,
   scope?: ScopeFilter,
 ): Promise<{
   campaigns: CampaignCard[];

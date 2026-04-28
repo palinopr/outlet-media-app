@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const {
   createClerkSupabaseClient,
   currentUser,
+  getCampaignClientOverrideMap,
   getEffectiveCampaignRowById,
   metaGet,
+  resolveEffectiveCampaignClientSlug,
   serviceState,
   supabaseAdmin,
   userScopedState,
@@ -55,8 +57,10 @@ const {
   return {
     createClerkSupabaseClient: vi.fn(),
     currentUser: vi.fn(),
+    getCampaignClientOverrideMap: vi.fn(),
     getEffectiveCampaignRowById: vi.fn(),
     metaGet: vi.fn(),
+    resolveEffectiveCampaignClientSlug: vi.fn(),
     serviceState,
     supabaseAdmin: buildClient(serviceState),
     userScopedState,
@@ -74,7 +78,9 @@ vi.mock("@/lib/supabase", () => ({
 }));
 
 vi.mock("@/lib/campaign-client-assignment", () => ({
+  getCampaignClientOverrideMap,
   getEffectiveCampaignRowById,
+  resolveEffectiveCampaignClientSlug,
 }));
 
 vi.mock("@/lib/meta-api", () => ({
@@ -95,8 +101,10 @@ describe("client campaign detail reads", () => {
     userScopedState.meta_campaigns = [];
     currentUser.mockResolvedValue({ publicMetadata: { role: "member" } });
     createClerkSupabaseClient.mockResolvedValue(null);
+    getCampaignClientOverrideMap.mockResolvedValue(new Map());
     getEffectiveCampaignRowById.mockResolvedValue(null);
     metaGet.mockResolvedValue(null);
+    resolveEffectiveCampaignClientSlug.mockReturnValue("unknown");
   });
 
   it("prefers the Clerk-scoped client for client campaign detail reads", async () => {
@@ -149,5 +157,56 @@ describe("client campaign detail reads", () => {
 
     expect(detail?.campaign.name).toBe("Service Campaign");
     expect(createClerkSupabaseClient).not.toHaveBeenCalled();
+  });
+
+  it("falls back to Meta campaign info for new campaigns before the DB sync row exists", async () => {
+    vi.stubEnv("META_ACCESS_TOKEN", "token");
+    vi.stubEnv("META_AD_ACCOUNT_ID", "act_123");
+    currentUser.mockResolvedValue({ publicMetadata: { role: "admin" } });
+    resolveEffectiveCampaignClientSlug.mockReturnValue("zamora");
+    metaGet.mockImplementation(async (_url: URL, label?: string) => {
+      if (label === "campaignInfoFallback" || label === "campaignInfo") {
+        return {
+          daily_budget: "2500",
+          id: "cmp_new",
+          name: "Arjona New Campaign",
+          start_time: "2026-04-27T00:00:00-0500",
+          status: "ACTIVE",
+        };
+      }
+
+      if (label === "campaignInsights") {
+        return {
+          data: [
+            {
+              campaign_id: "cmp_new",
+              campaign_name: "Arjona New Campaign",
+              clicks: "10",
+              cpc: "1.20",
+              cpm: "12",
+              ctr: "1.5",
+              impressions: "1000",
+              spend: "12",
+            },
+          ],
+        };
+      }
+
+      return { data: [] };
+    });
+
+    const detail = await getCampaignDetail("zamora", "cmp_new", "7");
+
+    expect(detail?.campaign.name).toBe("Arjona New Campaign");
+    expect(detail?.dataSource).toBe("meta_api");
+    expect(getEffectiveCampaignRowById).toHaveBeenCalled();
+    expect(resolveEffectiveCampaignClientSlug).toHaveBeenCalledWith(
+      expect.objectContaining({
+        campaign_id: "cmp_new",
+        client_slug: null,
+        name: "Arjona New Campaign",
+      }),
+      expect.any(Map),
+    );
   });
 });

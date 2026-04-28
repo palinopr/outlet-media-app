@@ -1,4 +1,4 @@
-import { META_API_VERSION, type DateRange, META_PRESETS } from "./constants";
+import { META_API_VERSION, type CampaignRangeInput, META_PRESETS } from "./constants";
 import {
   getCampaignClientOverrideMap,
   resolveEffectiveCampaignClientSlug,
@@ -146,7 +146,7 @@ function buildCampaignFilter(ids: string[]): string {
 function buildInsightsUrl(
   base: string,
   token: string,
-  range: DateRange | MetaInsightsTimeRange,
+  range: CampaignRangeInput | MetaInsightsTimeRange,
   filter: string,
   fields: string,
   limit: string,
@@ -159,7 +159,7 @@ function buildInsightsUrl(
   if (typeof range === "string") {
     url.searchParams.set("date_preset", META_PRESETS[range]);
   } else {
-    url.searchParams.set("time_range", JSON.stringify(range));
+    url.searchParams.set("time_range", JSON.stringify({ since: range.since, until: range.until }));
   }
   url.searchParams.set("filtering", filter);
   url.searchParams.set("limit", limit);
@@ -168,7 +168,7 @@ function buildInsightsUrl(
 }
 
 export async function fetchAllCampaigns(
-  range: DateRange | MetaInsightsTimeRange,
+  range: CampaignRangeInput | MetaInsightsTimeRange,
   clientSlug?: string | null,
 ): Promise<MetaCampaignsResult> {
   const creds = getCredentials();

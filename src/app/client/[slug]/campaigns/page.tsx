@@ -16,11 +16,12 @@ import { InsightsPanel } from "../components/insights-panel";
 import { ClientPortalFooter } from "../components/client-portal-footer";
 import { CampaignsTable } from "./campaigns-table";
 import { requireClientAccess } from "@/features/client-portal/access";
-import { parseRange, RANGE_LABELS } from "@/lib/constants";
+import { getRangeLabel, parseCampaignRange } from "@/lib/constants";
+import { CampaignRangeFilter } from "./campaign-range-filter";
 
 interface Props {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{ range?: string; since?: string; until?: string }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -34,8 +35,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClientCampaigns({ params, searchParams }: Props) {
   const { slug } = await params;
-  const { range: rawRange } = await searchParams;
-  const range = parseRange(rawRange, "30");
+  const rawSearchParams = await searchParams;
+  const range = parseCampaignRange(rawSearchParams, "7");
+  const rangeLabel = getRangeLabel(range);
   const { scope } = await requireClientAccess(slug);
   const clientName = slugToLabel(slug);
 
@@ -59,7 +61,7 @@ export default async function ClientCampaigns({ params, searchParams }: Props) {
     {
       label: "Total Ad Spend",
       value: fmtUsd(totalSpend),
-      sub: RANGE_LABELS[range].toLowerCase(),
+      sub: rangeLabel.toLowerCase(),
       icon: DollarSign,
       iconBg: "bg-cyan-500/10",
       iconRing: "ring-cyan-500/20",
@@ -119,6 +121,10 @@ export default async function ClientCampaigns({ params, searchParams }: Props) {
           </div>
 
           <div className="flex items-center gap-3 self-start flex-wrap">
+            <CampaignRangeFilter
+              basePath={`/client/${slug}/campaigns`}
+              range={range}
+            />
             <div className="flex items-center gap-2">
               {hasData ? (
                 <>

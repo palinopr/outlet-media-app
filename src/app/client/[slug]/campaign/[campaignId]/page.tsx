@@ -8,7 +8,7 @@ import {
   Globe2,
   Users,
 } from "lucide-react";
-import { parseRange } from "@/lib/constants";
+import { parseCampaignRange } from "@/lib/constants";
 import { fmtDate, fmtUsd, fmtNum } from "@/lib/formatters";
 import type {
   AdCard,
@@ -37,14 +37,14 @@ import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket, roasLa
 
 interface Props {
   params: Promise<{ slug: string; campaignId: string }>;
-  searchParams: Promise<{ range?: string }>;
+  searchParams: Promise<{ range?: string; since?: string; until?: string }>;
 }
 
 export default async function CampaignDetailPage({ params, searchParams }: Props) {
   const { slug, campaignId } = await params;
   const { scope } = await requireClientAccess(slug);
-  const { range: rangeParam } = await searchParams;
-  const range = parseRange(rangeParam, "7");
+  const rawSearchParams = await searchParams;
+  const range = parseCampaignRange(rawSearchParams, "7");
 
   const [data, operatingView] = await Promise.all([
     getCampaignDetail(slug, campaignId, range, scope),

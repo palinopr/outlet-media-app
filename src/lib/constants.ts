@@ -25,6 +25,56 @@ export function parseRange(raw: string | undefined, fallback: DateRange = "today
   return raw && raw in RANGE_LABELS ? (raw as DateRange) : fallback;
 }
 
+export type CampaignRangeInput =
+  | DateRange
+  | {
+      label: string;
+      since: string;
+      until: string;
+    };
+
+export interface CampaignRangeSearchParams {
+  range?: string;
+  since?: string;
+  until?: string;
+}
+
+function isIsoDate(value: string | undefined): value is string {
+  return !!value && /^\d{4}-\d{2}-\d{2}$/.test(value);
+}
+
+function formatCustomRangeLabel(since: string, until: string) {
+  const start = new Date(`${since}T12:00:00`);
+  const end = new Date(`${until}T12:00:00`);
+  const formatter = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" });
+  if (since === until) return formatter.format(start);
+  return `${formatter.format(start)} - ${formatter.format(end)}`;
+}
+
+export function parseCampaignRange(
+  params: CampaignRangeSearchParams,
+  fallback: DateRange = "7",
+): CampaignRangeInput {
+  if (params.range === "custom" && isIsoDate(params.since) && isIsoDate(params.until)) {
+    return {
+      label: formatCustomRangeLabel(params.since, params.until),
+      since: params.since,
+      until: params.until,
+    };
+  }
+
+  return parseRange(params.range, fallback);
+}
+
+export function getRangeLabel(range: CampaignRangeInput) {
+  return typeof range === "string" ? RANGE_LABELS[range] : range.label;
+}
+
+export function getRangeQuery(range: CampaignRangeInput) {
+  if (typeof range === "string") return `range=${encodeURIComponent(range)}`;
+  return `range=custom&since=${encodeURIComponent(range.since)}&until=${encodeURIComponent(range.until)}`;
+}
+
 export const EVENT_STATUS_OPTIONS = [
   { value: "onsale", label: "On Sale" },
   { value: "offsale", label: "Off Sale" },
