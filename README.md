@@ -16,7 +16,7 @@ Current active product reset target:
 - Campaigns
 - Admin client/account access
 
-Events and Reports are retired as navigable product surfaces for now; direct URLs redirect back to Dashboard/Campaigns.
+Events, Reports, Ticketmaster/TM1 workflows, and ticketing ingest are retired for now; direct Events/Reports URLs redirect back to Dashboard/Campaigns.
 
 Supporting infrastructure remains for auth, client accounts, memberships, invitations, and access control. The prior agent runtime and agent-facing product surfaces are retired for now.
 
@@ -31,7 +31,7 @@ Supporting infrastructure remains for auth, client accounts, memberships, invita
 Key deeper paths:
 - `src/app/admin/` -- admin product surfaces (dashboard, campaigns, clients, users, settings)
 - `src/app/client/[slug]/` -- client portal (campaigns)
-- `src/app/api/` -- API routes (ingest, meta, Ticketmaster, contact, admin access)
+- `src/app/api/` -- API routes (ingest, meta, contact, admin access)
 - `docs/context/` -- durable product and architecture context for future sessions
 
 ## Read First

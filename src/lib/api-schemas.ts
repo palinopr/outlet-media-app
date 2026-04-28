@@ -2,34 +2,6 @@ import { z } from "zod";
 
 // ─── Ingest schemas ─────────────────────────────────────────────────────────
 
-const TmEventSchema = z.object({
-  tm_id: z.string().min(1),
-  tm1_number: z.string(),
-  name: z.string(),
-  artist: z.string(),
-  venue: z.string(),
-  city: z.string(),
-  date: z.string(),
-  status: z.string(),
-  tickets_sold: z.number().optional(),
-  tickets_available: z.number().optional(),
-  gross: z.number().optional(),
-  avg_ticket_price: z.number().optional(),
-  tickets_sold_today: z.number().optional(),
-  revenue_today: z.number().optional(),
-  surrogate_id: z.string().optional(),
-  channel_mobile_pct: z.number().optional(),
-  channel_internet_pct: z.number().optional(),
-  channel_box_pct: z.number().optional(),
-  channel_phone_pct: z.number().optional(),
-  edp_total_views: z.number().optional(),
-  edp_avg_daily_views: z.number().optional(),
-  conversion_rate: z.number().optional(),
-  url: z.string(),
-  scraped_at: z.string(),
-  client_slug: z.string().optional(),
-});
-
 const MetaCampaignSchema = z.object({
   campaign_id: z.string().min(1),
   name: z.string(),
@@ -49,40 +21,11 @@ const MetaCampaignSchema = z.object({
   start_time: z.string().optional(),
 });
 
-const TmDemographicsSchema = z.object({
-  tm_id: z.string().min(1),
-  fans_total: z.number().optional(),
-  fans_female_pct: z.number().optional(),
-  fans_male_pct: z.number().optional(),
-  fans_married_pct: z.number().optional(),
-  fans_with_children_pct: z.number().optional(),
-  age_18_24_pct: z.number().optional(),
-  age_25_34_pct: z.number().optional(),
-  age_35_44_pct: z.number().optional(),
-  age_45_54_pct: z.number().optional(),
-  age_over_54_pct: z.number().optional(),
-  income_0_30k_pct: z.number().optional(),
-  income_30_60k_pct: z.number().optional(),
-  income_60_90k_pct: z.number().optional(),
-  income_90_125k_pct: z.number().optional(),
-  income_over_125k_pct: z.number().optional(),
-  education_high_school_pct: z.number().optional(),
-  education_college_pct: z.number().optional(),
-  education_grad_school_pct: z.number().optional(),
-  payment_visa_pct: z.number().optional(),
-  payment_mc_pct: z.number().optional(),
-  payment_amex_pct: z.number().optional(),
-  payment_discover_pct: z.number().optional(),
-  fetched_at: z.string(),
-});
-
 export const IngestPayloadSchema = z.object({
   secret: z.string().min(1),
-  source: z.enum(["ticketmaster_one", "meta", "tm_demographics"]),
+  source: z.enum(["meta"]),
   data: z.object({
-    events: z.array(TmEventSchema).optional(),
     campaigns: z.array(MetaCampaignSchema).optional(),
-    demographics: z.array(TmDemographicsSchema).optional(),
     scraped_at: z.string(),
   }),
 });

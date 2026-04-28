@@ -24,7 +24,7 @@ Client portal packaging is intentionally simple right now: Campaigns are the onl
 
 ## Keep The Surface Small
 
-No dead nav items, placeholder routes, duplicate surfaces, or speculative UI breadth. If a workflow is not part of Campaigns or account/access management, keep it embedded or remove it until there is an explicit product decision.
+No dead nav items, placeholder routes, duplicate surfaces, or speculative UI breadth. If a workflow is not part of Campaigns or account/access management, keep it embedded or remove it until there is an explicit product decision. Ticketmaster/TM1 workflows and ticketing ingest are retired for now and should not be reintroduced without a new explicit product decision.
 
 ## Authenticated Browser Smoke Tests
 

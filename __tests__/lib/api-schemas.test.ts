@@ -19,18 +19,6 @@ describe("IngestPayloadSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts a valid ticketmaster_one payload", () => {
-    const result = IngestPayloadSchema.safeParse({
-      ...validBase,
-      source: "ticketmaster_one",
-      data: {
-        scraped_at: "2026-01-01",
-        events: [{ tm_id: "ev1", tm1_number: "TM1", name: "Show", artist: "Artist", venue: "V", city: "C", date: "2026-06-01", status: "onsale", url: "https://tm.com/ev1", scraped_at: "2026-01-01" }],
-      },
-    });
-    expect(result.success).toBe(true);
-  });
-
   it("rejects missing secret", () => {
     const result = IngestPayloadSchema.safeParse({ source: "meta", data: { scraped_at: "" } });
     expect(result.success).toBe(false);
@@ -51,16 +39,12 @@ describe("IngestPayloadSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("accepts tm_demographics source", () => {
-    const result = IngestPayloadSchema.safeParse({
-      ...validBase,
-      source: "tm_demographics",
-      data: {
-        scraped_at: "2026-01-01",
-        demographics: [{ tm_id: "ev1", fetched_at: "2026-01-01" }],
-      },
-    });
-    expect(result.success).toBe(true);
+  it("rejects retired ticketing sources", () => {
+    const ticketmaster = IngestPayloadSchema.safeParse({ ...validBase, source: "ticketmaster_one" });
+    const demographics = IngestPayloadSchema.safeParse({ ...validBase, source: "tm_demographics" });
+
+    expect(ticketmaster.success).toBe(false);
+    expect(demographics.success).toBe(false);
   });
 });
 

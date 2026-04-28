@@ -56,7 +56,6 @@ const CLIENT_SLUG_REFERENCE_TABLES = [
   "client_accounts",
   "meta_campaigns",
   "system_events",
-  "tm_events",
 ] as const;
 
 async function revalidateClientSlugSurfaces(

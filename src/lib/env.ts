@@ -29,16 +29,6 @@ const serverSchema = z.object({
   GOOGLE_ADS_CUSTOMER_ID: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   CLIENT_AGENT_CLAUDE_MODEL: z.string().optional(),
-  TICKETMASTER_API_KEY: z.string().optional(),
-  TM1_API_PREFIX: z.string().optional(),
-  TM1_BASE_URL: z.string().url().optional(),
-  TM1_COOKIE: z.string().optional(),
-  TM1_DEFAULT_EVENT_END: z.string().optional(),
-  TM1_DEFAULT_EVENT_START: z.string().optional(),
-  TM1_EVENTBASE_API_PREFIX: z.string().optional(),
-  TM1_TIMEOUT_MS: z.string().optional(),
-  TM1_TCODE: z.string().optional(),
-  TM1_XSRF_TOKEN: z.string().optional(),
 
   // Meta signed-request verification / legacy callback support
   META_APP_SECRET: z.string().optional(),
@@ -82,16 +72,6 @@ function validateEnv() {
     GOOGLE_ADS_CUSTOMER_ID: process.env.GOOGLE_ADS_CUSTOMER_ID,
     ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
     CLIENT_AGENT_CLAUDE_MODEL: process.env.CLIENT_AGENT_CLAUDE_MODEL,
-    TICKETMASTER_API_KEY: process.env.TICKETMASTER_API_KEY,
-    TM1_API_PREFIX: process.env.TM1_API_PREFIX,
-    TM1_BASE_URL: process.env.TM1_BASE_URL,
-    TM1_COOKIE: process.env.TM1_COOKIE,
-    TM1_DEFAULT_EVENT_END: process.env.TM1_DEFAULT_EVENT_END,
-    TM1_DEFAULT_EVENT_START: process.env.TM1_DEFAULT_EVENT_START,
-    TM1_EVENTBASE_API_PREFIX: process.env.TM1_EVENTBASE_API_PREFIX,
-    TM1_TIMEOUT_MS: process.env.TM1_TIMEOUT_MS,
-    TM1_TCODE: process.env.TM1_TCODE,
-    TM1_XSRF_TOKEN: process.env.TM1_XSRF_TOKEN,
     META_APP_SECRET: process.env.META_APP_SECRET,
   });
 

@@ -4,8 +4,6 @@ Use this page when work touches Google Ads API auth, manager-account access, or 
 
 ## Local env naming rule
 
-Do not reuse the Gmail / TM1 OAuth variables for Google Ads API auth.
-
 Keep Google Ads API credentials in their own env namespace:
 
 - `GOOGLE_ADS_DEVELOPER_TOKEN`
@@ -14,14 +12,6 @@ Keep Google Ads API credentials in their own env namespace:
 - `GOOGLE_ADS_REFRESH_TOKEN`
 - `GOOGLE_ADS_LOGIN_CUSTOMER_ID`
 - `GOOGLE_ADS_CUSTOMER_ID`
-
-The older generic Google vars are already used elsewhere in the repo for Gmail-backed Ticketmaster flows:
-
-- `GOOGLE_CLIENT_ID`
-- `GOOGLE_CLIENT_SECRET`
-- `GOOGLE_REFRESH_TOKEN`
-
-Do not silently overwrite those with Google Ads credentials.
 
 ## OAuth setup rules
 
@@ -176,82 +166,6 @@ So the important practical boundary from this live setup is:
 - creating brand-new child accounts via API is still blocked until the token has a higher access tier
 
 If the manager tree does not already contain a usable client account, the fallback path remains manual account creation / linking in the Google Ads UI.
-
-## Ticketmaster conversion-tracking note
-
-Google Ads does not use a Meta-style "pixel" term here.
-
-For Google Ads, the comparable paths are:
-
-- a Google tag / Google Ads conversion tag on a page you control, or
-- offline conversion import using click ids like `gclid`, `gbraid`, or `wbraid`
-
-So if final checkout happens on Ticketmaster and you cannot place a Google tag directly on that destination, the practical fallback is:
-
-- capture the Google click id before handing the user off to Ticketmaster, and
-- import conversions back into Google Ads later when order data is available
-
-A later live ticketing-side check showed a pixel-vendor UI that explicitly offered `Google AdWords` with these tag types:
-
-- `Global Site Tag`
-- `Event Snippet`
-- `Conversion (Previous)`
-- `Remarketing (Previous)`
-
-Practical reading:
-
-- prefer the current `gtag.js` Google Ads path with `AW-...` ids
-- use `Global Site Tag` as the base tag
-- use `Event Snippet` for purchase / conversion pages when supported
-- avoid the `Previous` legacy options unless the ticketing UI or account setup forces them
-
-Live Ataca Sergio setup on `2026-04-08`:
-
-- customer id: `5918084582`
-- conversion action id: `7567090523`
-- conversion action name: `Ataca Sergio - Ticketmaster Purchase`
-- Google tag id: `AW-18074288244`
-- event `send_to`: `AW-18074288244/aH3KCNvGopgcEPSAv6pD`
-
-Important implementation note:
-
-- Google returned multiple snippet variants, including `WEBPAGE` and `WEBPAGE_ONCLICK`
-- TM1 Marketing help later clarified that Ticketmaster already has Google Tag Manager with the Conversion Linker in place
-- so for TM1 Marketing, do **not** paste the full Google `Global Site Tag`
-- for the Google AdWords `Event Snippet` vendor flow, TM1 expects only the `send_to` value from the Google snippet
-- for the live Ataca Sergio purchase conversion, that exact value is:
-  - `AW-18074288244/aH3KCNvGopgcEPSAv6pD`
-- use it on the `Order Confirmation` page type for purchase tracking
-- TM1 will auto-send:
-  - `value` = face value total without fees
-  - `currency` = order currency
-  - `transaction_id` = confirmation code
-- only use `WEBPAGE_ONCLICK` if the host platform specifically expects click-triggered conversion code
-
-Saved artifact:
-- `/Users/jaimeortiz/projects/meta ads manager wiki/outputs/ataca-sergio-google-ads-purchase-tag-2026-04-08.json`
-
-TM1 Marketing install rule from the live Ataca Sergio setup:
-
-1. choose vendor `Google AdWords`
-2. choose pixel type `Event Snippet`
-3. choose page type `Order Confirmation`
-4. paste only the `send_to` value:
-   - `AW-18074288244/aH3KCNvGopgcEPSAv6pD`
-5. do not paste the full script block
-6. do not paste the Global Site Tag into TM1 Marketing
-
-The live TM1 save actually succeeded and created:
-- TM1 marketing id: `158861`
-- status: `Active`
-- badge: `Verified`
-- page type: `Confirmation Page - Primary`
-- vendor/type: `Google AdWords` + `Event Snippet`
-- end date used in the live save: `06/01/2026`
-
-Operator note: the old repo-local TM1 browser automation scripts were retired with the agent runtime. If TM1 browser automation returns, reintroduce it deliberately with current docs, secrets handling, and verification.
-
-So do not assume Ticketmaster is untaggable. First confirm whether the ticketing page type available to you supports the current Google Ads tag placement.
 
 ## Testing-mode warning
 

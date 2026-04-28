@@ -81,29 +81,3 @@ Operator clarity rule:
 
 If a task needs closed-loop attribution or call-first funnel behavior, use Omaha as the reference implementation.
 If a task needs campaign ops, snapshots, reporting, or bounded Meta mutations, use Outlet as the reference implementation.
-
-## When TM1 or ticketing systems are down
-
-Do not treat a TM1 outage as a reason to stop all ads work.
-
-In that condition:
-
-- keep campaign reads and analysis moving through the Meta API
-- keep using bounded Meta mutation paths for status and budget where appropriate
-- keep writing durable performance notes from live Meta reads
-- defer only the decisions that truly need fresh ticketing confirmation
-
-Examples of work that can continue:
-
-- campaign / ad set / ad insights
-- spend, LPV, purchases, revenue, and ROAS reads
-- geo and delivery breakdown review
-- creative winner / loser review
-- bounded status or budget changes
-
-Examples of work that should pause until TM1 returns:
-
-- seat moves
-- hold rewrites
-- fresh sales-side pace confirmation
-- final inventory-tightening decisions tied to live ticketing state

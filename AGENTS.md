@@ -5,7 +5,7 @@
 - Frontend/API: Next.js 16 App Router, React 19, TypeScript strict, Tailwind v4, shadcn/ui
 - Auth: Clerk (middleware is `src/proxy.ts`, not `middleware.ts`)
 - DB: Supabase (`https://dbznwsnteogovicllean.supabase.co`)
-- External APIs: Ticketmaster, Meta Marketing API
+- External APIs: Meta Marketing API
 
 ## Current Product Scope
 
@@ -14,7 +14,7 @@ Outlet Media is a client-facing autonomous-agency operating system, but the curr
 - Campaigns
 - Admin account/access management
 
-Events and Reports are retired as navigable product surfaces for now. Keep direct Events/Reports routes redirected back to the active Campaigns/Dashboard experience unless there is a new explicit product decision.
+Events, Reports, Ticketmaster/TM1 workflows, and ticketing ingest are retired as product surfaces and backend integrations for now. Keep direct Events/Reports routes redirected back to the active Campaigns/Dashboard experience unless there is a new explicit product decision.
 
 All agent runtime and agent-facing product surfaces are retired for now. Do not add an admin Agents page, client Agent tab, agent task queue, agent outcome widgets, or background agent runtime unless there is a new explicit product decision.
 

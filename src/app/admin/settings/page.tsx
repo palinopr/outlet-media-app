@@ -20,7 +20,6 @@ function getApiKeyStatus() {
     { label: "GOOGLE_ADS_REFRESH_TOKEN", envVar: "GOOGLE_ADS_REFRESH_TOKEN", source: "host env" },
     { label: "GOOGLE_ADS_LOGIN_CUSTOMER_ID", envVar: "GOOGLE_ADS_LOGIN_CUSTOMER_ID", source: "host env" },
     { label: "GOOGLE_ADS_CUSTOMER_ID", envVar: "GOOGLE_ADS_CUSTOMER_ID", source: "host env" },
-    { label: "TICKETMASTER_KEY", envVar: "TICKETMASTER_API_KEY", source: "host env" },
     { label: "CLERK_SECRET_KEY", envVar: "CLERK_SECRET_KEY", source: "host env" },
     { label: "NEXT_PUBLIC_SUPABASE_URL", envVar: "NEXT_PUBLIC_SUPABASE_URL", source: "host env" },
     { label: "SUPABASE_SERVICE_ROLE_KEY", envVar: "SUPABASE_SERVICE_ROLE_KEY", source: "host env" },

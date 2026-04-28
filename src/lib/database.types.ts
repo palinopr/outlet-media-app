@@ -329,36 +329,6 @@ export type Database = {
         }
         Relationships: []
       }
-      event_snapshots: {
-        Row: {
-          created_at: string
-          gross: number | null
-          id: string
-          snapshot_date: string
-          tickets_available: number | null
-          tickets_sold: number | null
-          tm_id: string
-        }
-        Insert: {
-          created_at?: string
-          gross?: number | null
-          id?: string
-          snapshot_date?: string
-          tickets_available?: number | null
-          tickets_sold?: number | null
-          tm_id: string
-        }
-        Update: {
-          created_at?: string
-          gross?: number | null
-          id?: string
-          snapshot_date?: string
-          tickets_available?: number | null
-          tickets_sold?: number | null
-          tm_id?: string
-        }
-        Relationships: []
-      }
       meta_campaigns: {
         Row: {
           campaign_id: string
@@ -381,7 +351,6 @@ export type Database = {
           start_time: string | null
           status: string
           synced_at: string
-          tm_event_id: string | null
           updated_at: string
         }
         Insert: {
@@ -405,7 +374,6 @@ export type Database = {
           start_time?: string | null
           status?: string
           synced_at?: string
-          tm_event_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -429,18 +397,9 @@ export type Database = {
           start_time?: string | null
           status?: string
           synced_at?: string
-          tm_event_id?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "meta_campaigns_tm_event_id_fkey"
-            columns: ["tm_event_id"]
-            isOneToOne: false
-            referencedRelation: "tm_events"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       system_events: {
         Row: {
@@ -511,212 +470,6 @@ export type Database = {
           summary?: string
           task_id?: string | null
           visibility?: string
-        }
-        Relationships: []
-      }
-      tm_event_demographics: {
-        Row: {
-          age_18_24_pct: number | null
-          age_25_34_pct: number | null
-          age_35_44_pct: number | null
-          age_45_54_pct: number | null
-          age_over_54_pct: number | null
-          created_at: string
-          education_college_pct: number | null
-          education_grad_school_pct: number | null
-          education_high_school_pct: number | null
-          fans_female_pct: number | null
-          fans_male_pct: number | null
-          fans_married_pct: number | null
-          fans_total: number | null
-          fans_with_children_pct: number | null
-          fetched_at: string
-          id: string
-          income_0_30k_pct: number | null
-          income_30_60k_pct: number | null
-          income_60_90k_pct: number | null
-          income_90_125k_pct: number | null
-          income_over_125k_pct: number | null
-          payment_amex_pct: number | null
-          payment_discover_pct: number | null
-          payment_mc_pct: number | null
-          payment_visa_pct: number | null
-          tm_id: string
-          updated_at: string
-        }
-        Insert: {
-          age_18_24_pct?: number | null
-          age_25_34_pct?: number | null
-          age_35_44_pct?: number | null
-          age_45_54_pct?: number | null
-          age_over_54_pct?: number | null
-          created_at?: string
-          education_college_pct?: number | null
-          education_grad_school_pct?: number | null
-          education_high_school_pct?: number | null
-          fans_female_pct?: number | null
-          fans_male_pct?: number | null
-          fans_married_pct?: number | null
-          fans_total?: number | null
-          fans_with_children_pct?: number | null
-          fetched_at?: string
-          id?: string
-          income_0_30k_pct?: number | null
-          income_30_60k_pct?: number | null
-          income_60_90k_pct?: number | null
-          income_90_125k_pct?: number | null
-          income_over_125k_pct?: number | null
-          payment_amex_pct?: number | null
-          payment_discover_pct?: number | null
-          payment_mc_pct?: number | null
-          payment_visa_pct?: number | null
-          tm_id: string
-          updated_at?: string
-        }
-        Update: {
-          age_18_24_pct?: number | null
-          age_25_34_pct?: number | null
-          age_35_44_pct?: number | null
-          age_45_54_pct?: number | null
-          age_over_54_pct?: number | null
-          created_at?: string
-          education_college_pct?: number | null
-          education_grad_school_pct?: number | null
-          education_high_school_pct?: number | null
-          fans_female_pct?: number | null
-          fans_male_pct?: number | null
-          fans_married_pct?: number | null
-          fans_total?: number | null
-          fans_with_children_pct?: number | null
-          fetched_at?: string
-          id?: string
-          income_0_30k_pct?: number | null
-          income_30_60k_pct?: number | null
-          income_60_90k_pct?: number | null
-          income_90_125k_pct?: number | null
-          income_over_125k_pct?: number | null
-          payment_amex_pct?: number | null
-          payment_discover_pct?: number | null
-          payment_mc_pct?: number | null
-          payment_visa_pct?: number | null
-          tm_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "tm_event_demographics_tm_id_fkey"
-            columns: ["tm_id"]
-            isOneToOne: true
-            referencedRelation: "tm_events"
-            referencedColumns: ["tm_id"]
-          },
-        ]
-      }
-      tm_events: {
-        Row: {
-          artist: string
-          avg_ticket_price: number | null
-          channel_box_pct: number | null
-          channel_internet_pct: number | null
-          channel_mobile_pct: number | null
-          channel_phone_pct: number | null
-          city: string
-          client_slug: string | null
-          conversion_rate: number | null
-          created_at: string
-          date: string | null
-          edp_avg_daily_views: number | null
-          edp_total_views: number | null
-          fans_female_pct: number | null
-          fans_male_pct: number | null
-          fans_total: number | null
-          gross: number | null
-          id: string
-          name: string
-          potential_revenue: number | null
-          revenue_today: number | null
-          scraped_at: string
-          status: string
-          surrogate_id: string | null
-          ticket_revenue: number | null
-          tickets_available: number | null
-          tickets_sold: number | null
-          tickets_sold_today: number | null
-          tm_id: string
-          tm1_number: string
-          updated_at: string
-          url: string
-          venue: string
-        }
-        Insert: {
-          artist?: string
-          avg_ticket_price?: number | null
-          channel_box_pct?: number | null
-          channel_internet_pct?: number | null
-          channel_mobile_pct?: number | null
-          channel_phone_pct?: number | null
-          city?: string
-          client_slug?: string | null
-          conversion_rate?: number | null
-          created_at?: string
-          date?: string | null
-          edp_avg_daily_views?: number | null
-          edp_total_views?: number | null
-          fans_female_pct?: number | null
-          fans_male_pct?: number | null
-          fans_total?: number | null
-          gross?: number | null
-          id?: string
-          name?: string
-          potential_revenue?: number | null
-          revenue_today?: number | null
-          scraped_at: string
-          status?: string
-          surrogate_id?: string | null
-          ticket_revenue?: number | null
-          tickets_available?: number | null
-          tickets_sold?: number | null
-          tickets_sold_today?: number | null
-          tm_id: string
-          tm1_number?: string
-          updated_at?: string
-          url?: string
-          venue?: string
-        }
-        Update: {
-          artist?: string
-          avg_ticket_price?: number | null
-          channel_box_pct?: number | null
-          channel_internet_pct?: number | null
-          channel_mobile_pct?: number | null
-          channel_phone_pct?: number | null
-          city?: string
-          client_slug?: string | null
-          conversion_rate?: number | null
-          created_at?: string
-          date?: string | null
-          edp_avg_daily_views?: number | null
-          edp_total_views?: number | null
-          fans_female_pct?: number | null
-          fans_male_pct?: number | null
-          fans_total?: number | null
-          gross?: number | null
-          id?: string
-          name?: string
-          potential_revenue?: number | null
-          revenue_today?: number | null
-          scraped_at?: string
-          status?: string
-          surrogate_id?: string | null
-          ticket_revenue?: number | null
-          tickets_available?: number | null
-          tickets_sold?: number | null
-          tickets_sold_today?: number | null
-          tm_id?: string
-          tm1_number?: string
-          updated_at?: string
-          url?: string
-          venue?: string
         }
         Relationships: []
       }
