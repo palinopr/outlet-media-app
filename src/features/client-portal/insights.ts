@@ -1,10 +1,6 @@
 import { centsToUsd } from "@/lib/formatters";
 import type {
-  TmEvent,
-  DemographicsRow,
-  AudienceProfile,
   CampaignCard,
-  EventCard,
   Insight,
   AgeGenderBreakdown,
   PlacementBreakdown,
@@ -13,10 +9,6 @@ import type {
   HourlyBreakdown,
   DailyPoint,
   Recommendation,
-  TicketPlatform,
-  TicketSnapshot,
-  DailyDelta,
-  SalesVelocity,
 } from "@/features/client-portal/types";
 import { DAY_LABELS } from "@/features/client-portal/types";
 import { type DateRange } from "@/lib/constants";
@@ -52,115 +44,6 @@ export function buildTrendData(
     }));
 }
 
-function detectPlatform(tmId: string): TicketPlatform {
-  if (tmId.startsWith("eata_")) return "vivaticket";
-  if (tmId.length > 0) return "ticketmaster";
-  return "unknown";
-}
-
-export function buildEventCard(event: TmEvent): EventCard {
-  const sold = event.tickets_sold ?? 0;
-  const available = event.tickets_available;
-  const capacity = available != null ? sold + available : null;
-  const sellThrough = capacity != null && capacity > 0 ? Math.round((sold / capacity) * 100) : null;
-
-  return {
-    id: event.id,
-    name: event.name,
-    venue: event.venue,
-    city: event.city ?? "",
-    date: event.date,
-    status: event.status,
-    ticketsSold: sold,
-    ticketsAvailable: available,
-    sellThrough,
-    avgTicketPrice: event.avg_ticket_price != null ? Number(event.avg_ticket_price) : null,
-    potentialRevenue: event.potential_revenue,
-    gross: event.gross,
-    updatedAt: event.updated_at ?? null,
-    ticketPlatform: detectPlatform(event.tm_id),
-    artist: event.artist ?? "",
-    ticketsSoldToday: event.tickets_sold_today ?? null,
-    revenueToday: event.revenue_today ?? null,
-    conversionRate: event.conversion_rate != null ? Number(event.conversion_rate) : null,
-    edpTotalViews: event.edp_total_views != null ? Number(event.edp_total_views) : null,
-    edpAvgDailyViews: event.edp_avg_daily_views != null ? Number(event.edp_avg_daily_views) : null,
-  };
-}
-
-export function computeDailyDeltas(snapshots: TicketSnapshot[]): DailyDelta[] {
-  if (snapshots.length < 2) return [];
-  const deltas: DailyDelta[] = [];
-  for (let index = 1; index < snapshots.length; index++) {
-    const previous = snapshots[index - 1];
-    const current = snapshots[index];
-    const date = new Date(`${current.date}T12:00:00`);
-    deltas.push({
-      date: current.date,
-      label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      ticketsDelta: current.ticketsSold - previous.ticketsSold,
-      revenueDelta: (current.gross ?? 0) - (previous.gross ?? 0),
-    });
-  }
-  return deltas;
-}
-
-function sliceRate(snapshots: TicketSnapshot[]): number {
-  const days = Math.max(
-    1,
-    (new Date(snapshots[snapshots.length - 1].date).getTime() -
-      new Date(snapshots[0].date).getTime()) / 86400000,
-  );
-  return (snapshots[snapshots.length - 1].ticketsSold - snapshots[0].ticketsSold) / days;
-}
-
-function computeTrendRate(snapshots: TicketSnapshot[]): {
-  recentDailySales: number | null;
-  trend: SalesVelocity["trend"];
-  trendPct: number | null;
-} {
-  if (snapshots.length < 4) return { recentDailySales: null, trend: null, trendPct: null };
-
-  const midpoint = Math.floor(snapshots.length / 2);
-  const firstRate = sliceRate(snapshots.slice(0, midpoint));
-  const secondRate = sliceRate(snapshots.slice(midpoint));
-  const recentDailySales = Math.round(secondRate);
-
-  if (firstRate <= 0) return { recentDailySales, trend: null, trendPct: null };
-
-  const change = ((secondRate - firstRate) / firstRate) * 100;
-  const trendPct = Math.round(change);
-  let trend: SalesVelocity["trend"] = "steady";
-  if (change > 10) trend = "accelerating";
-  else if (change < -10) trend = "decelerating";
-
-  return { recentDailySales, trend, trendPct };
-}
-
-export function getDaysUntilEvent(eventDate: string | null): number | null {
-  if (!eventDate) return null;
-  return Math.max(0, Math.round((new Date(eventDate).getTime() - Date.now()) / 86400000));
-}
-
-export function computeVelocity(
-  snapshots: TicketSnapshot[],
-  eventDate: string | null,
-  currentSold: number,
-): SalesVelocity | null {
-  if (snapshots.length < 2) return null;
-
-  const avgDailySales = Math.round(sliceRate(snapshots));
-  const { recentDailySales, trend, trendPct } = computeTrendRate(snapshots);
-
-  const daysUntilEvent = getDaysUntilEvent(eventDate);
-  let projectedTotalSold: number | null = null;
-  if (daysUntilEvent != null && daysUntilEvent > 0) {
-    const dailyRate = recentDailySales ?? avgDailySales;
-    if (dailyRate > 0) projectedTotalSold = currentSold + dailyRate * daysUntilEvent;
-  }
-
-  return { avgDailySales, recentDailySales, trend, trendPct, daysUntilEvent, projectedTotalSold };
-}
 
 export const DATE_OPTIONS: { value: DateRange; label: string }[] = [
   { value: "today", label: "Today" },
@@ -180,46 +63,6 @@ export function roasLabel(roas: number | null): string {
   return "Underperforming";
 }
 
-function weightedAvg(rows: DemographicsRow[], key: keyof DemographicsRow): number | null {
-  const valid = rows.filter((row) => row[key] != null && (row.fans_total ?? 0) > 0);
-  if (!valid.length) return null;
-  const totalWeight = valid.reduce((sum, row) => sum + (row.fans_total ?? 0), 0);
-  const sum = valid.reduce((accumulator, row) => accumulator + Number(row[key]) * (row.fans_total ?? 0), 0);
-  return totalWeight > 0 ? sum / totalWeight : null;
-}
-
-const DEMO_FIELD_MAP: [keyof AudienceProfile, keyof DemographicsRow][] = [
-  ["femalePct", "fans_female_pct"],
-  ["malePct", "fans_male_pct"],
-  ["marriedPct", "fans_married_pct"],
-  ["childrenPct", "fans_with_children_pct"],
-  ["age1824", "age_18_24_pct"],
-  ["age2534", "age_25_34_pct"],
-  ["age3544", "age_35_44_pct"],
-  ["age4554", "age_45_54_pct"],
-  ["ageOver54", "age_over_54_pct"],
-  ["income0_30", "income_0_30k_pct"],
-  ["income30_60", "income_30_60k_pct"],
-  ["income60_90", "income_60_90k_pct"],
-  ["income90_125", "income_90_125k_pct"],
-  ["incomeOver125", "income_over_125k_pct"],
-  ["educationHighSchool", "education_high_school_pct"],
-  ["educationCollege", "education_college_pct"],
-  ["educationGradSchool", "education_grad_school_pct"],
-  ["paymentVisa", "payment_visa_pct"],
-  ["paymentMC", "payment_mc_pct"],
-  ["paymentAmex", "payment_amex_pct"],
-  ["paymentDiscover", "payment_discover_pct"],
-];
-
-export function buildAudienceProfile(demos: DemographicsRow[]): AudienceProfile {
-  const totalFans = demos.reduce((sum, row) => sum + (row.fans_total ?? 0), 0);
-  const fields: Record<string, number | null> = {};
-  for (const [profileKey, demoKey] of DEMO_FIELD_MAP) {
-    fields[profileKey] = weightedAvg(demos, demoKey);
-  }
-  return { totalFans, ...fields } as AudienceProfile;
-}
 
 export function generateCampaignInsights(campaigns: CampaignCard[]): Insight[] {
   const out: Insight[] = [];

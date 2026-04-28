@@ -178,7 +178,6 @@ export function MembersSection({ client }: { client: ClientDetail }) {
                       <AssignmentManager
                         member={m}
                         campaigns={client.campaigns}
-                        events={client.events}
                       />
                     </div>
                   </TableCell>

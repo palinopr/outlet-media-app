@@ -6,7 +6,6 @@ describe("getClientSlugRevalidationPaths", () => {
     expect(getClientSlugRevalidationPaths()).toEqual([
       "/admin/campaigns",
       "/admin/dashboard",
-      "/admin/events",
     ]);
   });
 

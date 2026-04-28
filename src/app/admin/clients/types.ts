@@ -27,9 +27,6 @@ export interface ClientDetail extends ClientSummary {
   members: ClientMember[];
   pendingInvites: ClientPendingInvite[];
   campaigns: ClientCampaign[];
-  eventsEnabled: boolean;
-  events: ClientEvent[];
-  reportsEnabled: boolean;
 }
 
 export interface ClientPendingInvite {
@@ -49,14 +46,6 @@ export interface ClientMember {
   createdAt: string;
   assignedCampaignIds: string[];
   assignedEventIds: string[];
-}
-
-export interface ClientEvent {
-  id: string;
-  name: string;
-  venue: string;
-  date: string;
-  status: string;
 }
 
 export interface ClientCampaign {

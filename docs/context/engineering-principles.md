@@ -2,19 +2,15 @@
 
 ## Model Real Product Objects
 
-Prefer first-class objects for campaigns, events, reports, approvals, comments, action items, assets, clients, members, and invitations. Do not hide core business workflows inside generic documents or route-local JSON blobs.
+Prefer first-class objects for active product concepts: campaigns, approvals, action items, assets, clients, members, and invitations. Do not hide core business workflows inside generic documents or route-local JSON blobs.
 
 ## Event-Driven Backbone
 
 Every meaningful product mutation should be traceable through durable state, usually `system_events`, `approval_requests`, or the owning workflow table. Examples:
 
 - `campaign_updated`
-- `event_updated`
 - `approval_requested`
-- `client_comment_added`
 - `campaign_action_item_created`
-- `event_follow_up_item_updated`
-- `report_generated`
 
 Use `system_events` as the shared admin/client-visible timeline. Use `admin_activity` for internal operator audit only.
 
@@ -24,13 +20,13 @@ Routes should authenticate, validate input, call feature-owned logic, and return
 
 ## Access And Packaging
 
-The client account record and `client_members` are the authority for portal access. Do not use Clerk metadata or URL slugs as the business source of truth for memberships, enabled apps, or landing behavior.
+The client account record and `client_members` are the authority for portal access. Do not use Clerk metadata or URL slugs as the business source of truth for memberships or landing behavior.
 
-Client portal packaging is admin-managed. Campaigns are universal; reports are first-class when enabled; events are optional per client.
+Client portal packaging is intentionally simple right now: Campaigns are the only active client-facing app surface.
 
 ## Keep The Surface Small
 
-No dead nav items, placeholder routes, duplicate surfaces, or speculative UI breadth. If a workflow is not part of Campaigns, Events, Reports, or account/access management, keep it embedded or remove it until there is an explicit product decision.
+No dead nav items, placeholder routes, duplicate surfaces, or speculative UI breadth. If a workflow is not part of Campaigns or account/access management, keep it embedded or remove it until there is an explicit product decision.
 
 ## Agent Runtime Status
 

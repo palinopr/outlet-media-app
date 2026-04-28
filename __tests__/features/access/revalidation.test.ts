@@ -22,7 +22,7 @@ describe("access management revalidation paths", () => {
       "/admin/users",
       "/admin/clients/client_1",
       "/client/zamora",
-      "/client/zamora/events",
+      "/client/zamora/campaigns",
     ]);
   });
 });

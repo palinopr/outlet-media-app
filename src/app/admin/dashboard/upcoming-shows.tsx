@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { AlertTriangle, ArrowRight } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import { matchedCampaigns } from "@/lib/campaign-event-match";
 import { fmtDate } from "@/lib/formatters";
 import type { TmEvent, MetaCampaign } from "./data";
@@ -20,11 +19,8 @@ export function UpcomingShows({ shows, allCampaigns }: Props) {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3">
         <h2 className="text-sm font-semibold">Upcoming Shows</h2>
-        <Link href="/admin/events" className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
-          View all <ArrowRight className="h-3 w-3" />
-        </Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {shows.map((e) => {

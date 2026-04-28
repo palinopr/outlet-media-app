@@ -18,5 +18,3 @@ export { PerformanceTrendTabs } from "./performance-trend-tabs";
 export { MarketPerformanceTable } from "./market-charts";
 export { AudienceDemographics } from "./audience-demographics";
 export { PlacementBarChart } from "./placement-bar-chart";
-export { TicketSalesChart, type TicketChartRow } from "./ticket-sales-chart";
-export { DailySalesChart } from "./daily-sales-chart";

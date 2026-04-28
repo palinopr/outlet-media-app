@@ -12,9 +12,9 @@
 Outlet Media is a client-facing autonomous-agency operating system, but the current shipped web product is intentionally narrow:
 
 - Campaigns
-- Events (optional per client)
-- Reports
 - Admin account/access management
+
+Events and Reports are retired as navigable product surfaces for now. Keep direct Events/Reports routes redirected back to the active Campaigns/Dashboard experience unless there is a new explicit product decision.
 
 All agent runtime and agent-facing product surfaces are retired for now. Do not add an admin Agents page, client Agent tab, agent task queue, agent outcome widgets, or background agent runtime unless there is a new explicit product decision.
 
@@ -22,8 +22,8 @@ All agent runtime and agent-facing product surfaces are retired for now. Do not 
 
 - Build for shared visibility: clients should feel informed and guided.
 - Support both summary-first dashboards and deeper workflow/collaboration views.
-- Keep collaboration attached to the relevant campaign, event, report, client, asset, or action item.
-- Keep workflow concepts such as approvals, discussions, assets, activity, and follow-up embedded inside the active campaign/event/report/admin surfaces before creating standalone apps.
+- Keep collaboration attached to the relevant campaign, client, asset, or action item.
+- Keep workflow concepts such as approvals, assets, activity, and follow-up embedded inside active campaign/admin surfaces before creating standalone apps.
 - Build one complete vertical slice at a time; remove dead surfaces instead of preserving placeholders.
 
 ## Architecture Priorities
@@ -34,7 +34,7 @@ All agent runtime and agent-facing product surfaces are retired for now. Do not 
 - Treat `admin_activity` as internal operator audit only.
 - Keep routes thin and feature modules reusable. Do not duplicate route-local business logic.
 - The client account record and `client_members` are the authority for portal access. Do not use Clerk metadata or URL slugs as the business source of truth for memberships or enabled apps.
-- Client portal packaging is admin-managed from the client account: Campaigns are universal; Reports and Events are enabled per client.
+- Client portal packaging is intentionally simple: Campaigns are the only client-facing app surface right now.
 
 ## Execution Expectations
 

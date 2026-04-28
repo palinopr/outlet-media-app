@@ -16,10 +16,6 @@ vi.mock("@/lib/member-access", () => ({
   getMemberships: vi.fn(),
 }));
 
-vi.mock("./config", () => ({
-  getClientPortalConfig: vi.fn(),
-}));
-
 vi.mock("./entry", () => ({
   getUserEmailAddresses: vi.fn(() => ["member@example.com"]),
   resolveClientPortalEntry: vi.fn(),
@@ -27,32 +23,13 @@ vi.mock("./entry", () => ({
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { getMemberAccessForSlug } from "@/lib/member-access";
-import { getClientPortalConfig } from "./config";
 import { resolveClientPortalEntry } from "./entry";
-import {
-  requireClientAccess,
-  requireClientEventsAccess,
-  requireClientReportsAccess,
-} from "./access";
+import { requireClientAccess } from "./access";
 
 const mockedAuth = vi.mocked(auth);
 const mockedCurrentUser = vi.mocked(currentUser);
 const mockedGetMemberAccessForSlug = vi.mocked(getMemberAccessForSlug);
-const mockedGetClientPortalConfig = vi.mocked(getClientPortalConfig);
 const mockedResolveClientPortalEntry = vi.mocked(resolveClientPortalEntry);
-
-function portalConfig(overrides: Partial<Awaited<ReturnType<typeof getClientPortalConfig>>> = {}) {
-  return {
-    brandName: null,
-    clientId: "client_1",
-    eventsEnabled: true,
-    logoAlt: null,
-    logoUrl: null,
-    reportsEnabled: true,
-    slug: "acme",
-    ...overrides,
-  };
-}
 
 describe("requireClientAccess", () => {
   afterEach(() => {
@@ -116,74 +93,5 @@ describe("requireClientAccess", () => {
     });
 
     await expect(requireClientAccess("acme")).rejects.toThrow("redirect:/client/pending");
-  });
-
-  it("allows event routes when the client has events enabled", async () => {
-    mockedAuth.mockResolvedValue({ userId: "user_member" } as Awaited<ReturnType<typeof auth>>);
-    mockedCurrentUser.mockResolvedValue({
-      publicMetadata: { role: "client" },
-    } as unknown as Awaited<ReturnType<typeof currentUser>>);
-    mockedGetMemberAccessForSlug.mockResolvedValue({
-      allowedCampaignIds: ["cmp_1"],
-      allowedEventIds: ["evt_1"],
-      clientId: "client_1",
-      clientName: "Acme",
-      clientSlug: "acme",
-      memberId: "member_1",
-      role: "member",
-      scope: "assigned",
-    });
-    mockedGetClientPortalConfig.mockResolvedValue(portalConfig());
-
-    const result = await requireClientEventsAccess("acme");
-
-    expect(result.scope).toEqual({
-      allowedCampaignIds: ["cmp_1"],
-      allowedEventIds: ["evt_1"],
-    });
-  });
-
-  it("redirects event routes when events are disabled for the client", async () => {
-    mockedAuth.mockResolvedValue({ userId: "user_member" } as Awaited<ReturnType<typeof auth>>);
-    mockedCurrentUser.mockResolvedValue({
-      publicMetadata: { role: "client" },
-    } as unknown as Awaited<ReturnType<typeof currentUser>>);
-    mockedGetMemberAccessForSlug.mockResolvedValue({
-      allowedCampaignIds: null,
-      allowedEventIds: null,
-      clientId: "client_1",
-      clientName: "Acme",
-      clientSlug: "acme",
-      memberId: "member_1",
-      role: "member",
-      scope: "all",
-    });
-    mockedGetClientPortalConfig.mockResolvedValue(portalConfig({ eventsEnabled: false }));
-
-    await expect(requireClientEventsAccess("acme")).rejects.toThrow(
-      "redirect:/client/acme/campaigns",
-    );
-  });
-
-  it("redirects reports routes when reports are disabled for the client", async () => {
-    mockedAuth.mockResolvedValue({ userId: "user_member" } as Awaited<ReturnType<typeof auth>>);
-    mockedCurrentUser.mockResolvedValue({
-      publicMetadata: { role: "client" },
-    } as unknown as Awaited<ReturnType<typeof currentUser>>);
-    mockedGetMemberAccessForSlug.mockResolvedValue({
-      allowedCampaignIds: null,
-      allowedEventIds: null,
-      clientId: "client_1",
-      clientName: "Acme",
-      clientSlug: "acme",
-      memberId: "member_1",
-      role: "member",
-      scope: "all",
-    });
-    mockedGetClientPortalConfig.mockResolvedValue(portalConfig({ reportsEnabled: false }));
-
-    await expect(requireClientReportsAccess("acme")).rejects.toThrow(
-      "redirect:/client/acme",
-    );
   });
 });

@@ -44,15 +44,9 @@ export function getAssetWorkflowPaths(clientSlug: string | null | undefined, ass
 }
 
 export function getEventWorkflowPaths(clientSlug: string | null | undefined, eventId: string) {
-  return uniquePaths([
-    "/admin/dashboard",
-    "/admin/events",
-    `/admin/events/${eventId}`,
-    ...clientPaths(clientSlug, [
-      `/client/:clientSlug/event/${eventId}`,
-      "/client/:clientSlug/events",
-    ]),
-  ]);
+  void clientSlug;
+  void eventId;
+  return uniquePaths(["/admin/dashboard"]);
 }
 
 interface ApprovalWorkflowPathsInput {

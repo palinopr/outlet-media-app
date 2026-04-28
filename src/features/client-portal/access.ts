@@ -1,7 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getMemberAccessForSlug, type ScopeFilter } from "@/lib/member-access";
-import { getClientPortalConfig } from "./config";
 import { getUserEmailAddresses, resolveClientPortalEntry } from "./entry";
 
 type Viewer = "member" | "admin_preview";
@@ -97,33 +96,6 @@ function requireResolvedClientAccess(
   return resolution;
 }
 
-async function resolveClientPortalFeatureAccess(
-  slug: string,
-  feature: "events" | "reports",
-): Promise<PortalAccessResolution> {
-  const [access, portalConfig] = await Promise.all([
-    resolveClientPortalAccess(slug),
-    getClientPortalConfig(slug),
-  ]);
-
-  if (access.kind === "redirect") {
-    return access;
-  }
-
-  const destination = feature === "reports" ? `/client/${slug}` : `/client/${slug}/campaigns`;
-  const featureEnabled = feature === "events" ? portalConfig?.eventsEnabled : portalConfig?.reportsEnabled;
-
-  if (!featureEnabled || !portalConfig) {
-    return { destination, kind: "redirect", viewer: access.viewer };
-  }
-
-  return {
-    ...access,
-    clientId: access.clientId ?? portalConfig.clientId,
-    clientSlug: portalConfig.slug,
-  };
-}
-
 export async function requireClientAccess(
   slug: string,
 ): Promise<{
@@ -134,23 +106,3 @@ export async function requireClientAccess(
   return { userId: access.userId, scope: access.scope };
 }
 
-export async function requireClientEventsAccess(
-  slug: string,
-): Promise<{
-  userId: string;
-  scope: ScopeFilter | undefined;
-  viewer: Viewer;
-}> {
-  const access = requireResolvedClientAccess(await resolveClientPortalFeatureAccess(slug, "events"));
-  return { userId: access.userId, scope: access.scope, viewer: access.viewer };
-}
-
-export async function requireClientReportsAccess(
-  slug: string,
-): Promise<{
-  userId: string;
-  scope: ScopeFilter | undefined;
-}> {
-  const access = requireResolvedClientAccess(await resolveClientPortalFeatureAccess(slug, "reports"));
-  return { userId: access.userId, scope: access.scope };
-}

@@ -1,6 +1,6 @@
 # Outlet Media App
 
-Client-facing agency operating system for campaign operations, event visibility, reports, collaboration, and client access.
+Client-facing agency operating system focused on campaign performance, client access, and admin operations.
 
 ## Stack
 
@@ -14,8 +14,9 @@ Client-facing agency operating system for campaign operations, event visibility,
 Current active product reset target:
 
 - Campaigns
-- Reports
-- Events
+- Admin client/account access
+
+Events and Reports are retired as navigable product surfaces for now; direct URLs redirect back to Dashboard/Campaigns.
 
 Supporting infrastructure remains for auth, client accounts, memberships, invitations, and access control. The prior agent runtime and agent-facing product surfaces are retired for now.
 
@@ -28,8 +29,8 @@ Supporting infrastructure remains for auth, client accounts, memberships, invita
 - `archive/` -- legacy/reference material kept out of the active root surface
 
 Key deeper paths:
-- `src/app/admin/` -- admin product surfaces (campaigns, reports, events, clients, users, settings)
-- `src/app/client/[slug]/` -- client portal (campaigns, reports, optional events)
+- `src/app/admin/` -- admin product surfaces (dashboard, campaigns, clients, users, settings)
+- `src/app/client/[slug]/` -- client portal (campaigns)
 - `src/app/api/` -- API routes (ingest, meta, Ticketmaster, contact, workflow)
 - `docs/context/` -- durable product and architecture context for future sessions
 

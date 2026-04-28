@@ -1,8 +1,3 @@
-import type { Database } from "@/lib/database.types";
-
-export type TmEvent = Database["public"]["Tables"]["tm_events"]["Row"];
-export type DemographicsRow = Database["public"]["Tables"]["tm_event_demographics"]["Row"];
-
 export interface CampaignCard {
   campaignId: string;
   name: string;
@@ -29,55 +24,6 @@ export interface HeroStats {
   totalCampaigns: number;
 }
 
-export type TicketPlatform = "ticketmaster" | "vivaticket" | "unknown";
-
-export interface EventCard {
-  id: string;
-  name: string;
-  venue: string;
-  city: string;
-  date: string | null;
-  status: string;
-  ticketsSold: number;
-  ticketsAvailable: number | null;
-  sellThrough: number | null;
-  avgTicketPrice: number | null;
-  potentialRevenue: number | null;
-  gross: number | null;
-  updatedAt: string | null;
-  ticketPlatform: TicketPlatform;
-  artist: string;
-  ticketsSoldToday: number | null;
-  revenueToday: number | null;
-  conversionRate: number | null;
-  edpTotalViews: number | null;
-  edpAvgDailyViews: number | null;
-}
-
-export interface AudienceProfile {
-  totalFans: number;
-  femalePct: number | null;
-  malePct: number | null;
-  marriedPct: number | null;
-  childrenPct: number | null;
-  age1824: number | null;
-  age2534: number | null;
-  age3544: number | null;
-  age4554: number | null;
-  ageOver54: number | null;
-  income0_30: number | null;
-  income30_60: number | null;
-  income60_90: number | null;
-  income90_125: number | null;
-  incomeOver125: number | null;
-  educationHighSchool: number | null;
-  educationCollege: number | null;
-  educationGradSchool: number | null;
-  paymentVisa: number | null;
-  paymentMC: number | null;
-  paymentAmex: number | null;
-  paymentDiscover: number | null;
-}
 
 export interface Insight {
   text: string;
@@ -167,55 +113,6 @@ export interface CampaignDetailData {
   recommendations: Recommendation[];
   dataSource: "meta_api" | "supabase";
   rangeLabel: string;
-}
-
-export interface TicketSnapshot {
-  date: string;
-  ticketsSold: number;
-  ticketsAvailable: number | null;
-  gross: number | null;
-}
-
-export interface LinkedCampaign {
-  campaignId: string;
-  name: string;
-  status: string;
-  spend: number;
-  roas: number | null;
-  impressions: number | null;
-  clicks: number | null;
-}
-
-export interface DailyDelta {
-  date: string;
-  label: string;
-  ticketsDelta: number;
-  revenueDelta: number;
-}
-
-export interface SalesVelocity {
-  avgDailySales: number;
-  recentDailySales: number | null;
-  trend: "accelerating" | "steady" | "decelerating" | null;
-  trendPct: number | null;
-  daysUntilEvent: number | null;
-  projectedTotalSold: number | null;
-}
-
-export interface EventDetailData {
-  event: EventCard;
-  snapshots: TicketSnapshot[];
-  dailyDeltas: DailyDelta[];
-  velocity: SalesVelocity | null;
-  audience: AudienceProfile | null;
-  linkedCampaigns: LinkedCampaign[];
-  supportingDataWarnings?: string[];
-  channelBreakdown: {
-    internet: number | null;
-    mobile: number | null;
-    box: number | null;
-    phone: number | null;
-  } | null;
 }
 
 export const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;

@@ -14,7 +14,7 @@ export function getAccessManagementPaths(input: AccessManagementPathsInput = {})
 
   if (input.clientSlug) {
     paths.push(`/client/${input.clientSlug}`);
-    paths.push(`/client/${input.clientSlug}/events`);
+    paths.push(`/client/${input.clientSlug}/campaigns`);
   }
 
   return [...new Set(paths)];

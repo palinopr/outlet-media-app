@@ -26,13 +26,7 @@ describe("workflow revalidation paths", () => {
   });
 
   it("keeps event workflow revalidation on surviving routes only", () => {
-    expect(getEventWorkflowPaths("acme", "evt_1")).toEqual([
-      "/admin/dashboard",
-      "/admin/events",
-      "/admin/events/evt_1",
-      "/client/acme/event/evt_1",
-      "/client/acme/events",
-    ]);
+    expect(getEventWorkflowPaths("acme", "evt_1")).toEqual(["/admin/dashboard"]);
   });
 
   it("drops approvals, reports, notifications, updates, and workspace paths from approval revalidation", () => {

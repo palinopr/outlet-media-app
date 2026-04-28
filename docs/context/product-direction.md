@@ -7,11 +7,11 @@ Outlet Media is a client-facing autonomous-agency operating system, but the curr
 The active web product should focus on:
 
 - **Campaigns**
-- **Events** (enabled per client)
-- **Reports**
 - Admin-managed clients, users, memberships, branding, and portal packaging
 
-Client-facing campaign pages should stay read-only and analytics-first for now. Do not add request/comment boxes or workflow panels back onto those pages unless there is a clear customer need.
+Events and Reports are not active navigable surfaces right now. Keep those direct routes redirected back to the active Dashboard/Campaigns experience until a later product decision restores them.
+
+Client-facing campaign pages should stay read-only and analytics-first for now. Do not add request/comment boxes, reports tabs, events tabs, or workflow panels back onto those pages unless there is a clear customer need.
 
 ## What To Avoid Right Now
 

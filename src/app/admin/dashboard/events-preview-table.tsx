@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -8,7 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CalendarDays, ArrowRight } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { fmtUsd, fmtDate, fmtNum, statusBadge } from "@/lib/formatters";
 import type { TmEvent } from "./data";
 
@@ -19,14 +18,8 @@ interface Props {
 export function EventsPreviewTable({ events }: Props) {
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
+      <div className="mb-3">
         <h2 className="text-sm font-semibold">Active Shows</h2>
-        <Link
-          href="/admin/events"
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-        >
-          View all <ArrowRight className="h-3 w-3" />
-        </Link>
       </div>
       <Card className="border-border/60">
         {events.length === 0 ? (

@@ -17,7 +17,6 @@ export type {
   ClientDetail,
   ClientMember,
   ClientCampaign,
-  ClientEvent,
 } from "./types";
 
 import type {
@@ -25,7 +24,6 @@ import type {
   ClientDetail,
   ClientMember,
   ClientCampaign,
-  ClientEvent,
 } from "./types";
 
 // ─── Summaries ──────────────────────────────────────────────────────────────
@@ -335,7 +333,7 @@ export async function getClientDetail(
   const { data: client } = await supabaseAdmin
     .from("clients")
     .select(
-      "id, name, slug, status, created_at, events_enabled, reports_enabled, portal_brand_name, portal_logo_url, portal_logo_alt",
+      "id, name, slug, status, created_at, portal_brand_name, portal_logo_url, portal_logo_alt",
     )
     .eq("id", clientId)
     .single();
@@ -426,13 +424,6 @@ export async function getClientDetail(
   }));
   const clientCampaignIds = new Set(campaigns.map((campaign) => campaign.id));
 
-  const events: ClientEvent[] = (eventsRes.data ?? []).map((e) => ({
-    id: e.id,
-    name: e.name,
-    venue: e.venue,
-    date: e.date,
-    status: e.status,
-  }));
   const connectedAccounts: ConnectedAccount[] = ((connectedAccountsRes.data ?? []) as ConnectedAccount[]);
   const connectionSummary = buildConnectedAccountsSummary(connectedAccounts);
 
@@ -494,7 +485,7 @@ export async function getClientDetail(
     openDiscussions: attention.openDiscussions,
     pendingApprovals: attention.pendingApprovals,
     totalCampaigns: campaigns.length,
-    activeShows: events.length,
+    activeShows: (eventsRes.data ?? []).length,
     totalSpend,
     totalRevenue,
     roas,
@@ -504,8 +495,5 @@ export async function getClientDetail(
     logoUrl: client.portal_logo_url ?? null,
     members,
     campaigns,
-    eventsEnabled: client.events_enabled ?? false,
-    events,
-    reportsEnabled: client.reports_enabled ?? true,
   };
 }

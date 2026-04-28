@@ -17,13 +17,11 @@ describe("getClientPortalConfig", () => {
     vi.clearAllMocks();
   });
 
-  it("returns the expanded portal config shape from the clients table", async () => {
+  it("returns the portal branding config from the clients table", async () => {
     maybeSingle.mockResolvedValue({
       data: {
         id: "client_1",
         slug: "acme",
-        events_enabled: true,
-        reports_enabled: true,
         portal_brand_name: "Acme Live",
         portal_logo_url: "https://cdn.example.com/acme.png",
         portal_logo_alt: "Acme Live",
@@ -36,8 +34,6 @@ describe("getClientPortalConfig", () => {
     expect(config).toEqual({
       clientId: "client_1",
       slug: "acme",
-      eventsEnabled: true,
-      reportsEnabled: true,
       brandName: "Acme Live",
       logoUrl: "https://cdn.example.com/acme.png",
       logoAlt: "Acme Live",

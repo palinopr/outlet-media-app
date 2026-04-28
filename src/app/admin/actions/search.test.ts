@@ -29,7 +29,7 @@ vi.mock("@/lib/supabase", () => ({
 }));
 
 describe("fetchSearchableRecords", () => {
-  it("does not surface asset results", async () => {
+  it("surfaces only campaigns and clients", async () => {
     applyEffectiveCampaignClientSlugs.mockResolvedValue([
       {
         campaign_id: "campaign-1",
@@ -52,24 +52,6 @@ describe("fetchSearchableRecords", () => {
                   client_slug: "acme",
                   name: "Spring Launch",
                   status: "active",
-                },
-              ],
-              error: null,
-            }),
-          }),
-        };
-      }
-
-      if (table === "tm_events") {
-        return {
-          select: () => ({
-            limit: vi.fn().mockResolvedValue({
-              data: [
-                {
-                  id: "event-1",
-                  name: "Arena Night",
-                  venue: "United Center",
-                  city: "Chicago",
                 },
               ],
               error: null,
@@ -119,8 +101,9 @@ describe("fetchSearchableRecords", () => {
 
     const records = await fetchSearchableRecords();
 
-    expect(records).toHaveLength(3);
-    expect(records.map((record) => record.type)).toEqual(["campaign", "event", "client"]);
+    expect(records).toHaveLength(2);
+    expect(records.map((record) => record.type)).toEqual(["campaign", "client"]);
     expect(records.some((record) => record.href.startsWith("/admin/assets/"))).toBe(false);
+    expect(records.some((record) => record.href.startsWith("/admin/events"))).toBe(false);
   });
 });

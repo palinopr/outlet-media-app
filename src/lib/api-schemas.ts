@@ -116,8 +116,6 @@ export const CreateClientSchema = z.object({
 
 export const UpdateClientSchema = z.object({
   clientId: z.string().min(1),
-  eventsEnabled: z.boolean().optional(),
-  reportsEnabled: z.boolean().optional(),
   brandName: z.string().min(1).max(200).nullable().optional(),
   logoAlt: z.string().min(1).max(200).nullable().optional(),
   logoUrl: z.string().url().nullable().optional(),

@@ -3,7 +3,6 @@ import { listCampaignAssets } from "@/features/assets/server";
 import { listCampaignActionItems } from "@/features/campaign-action-items/server";
 import { listCampaignApprovalRequests } from "@/features/approvals/server";
 import { listCampaignSystemEvents } from "@/features/system-events/server";
-import { getEventRecordById, type EventOperatingRecord } from "@/features/events/server";
 import type { MetaCampaignCard } from "@/lib/meta-campaigns";
 import { getEffectiveCampaignRowById } from "@/lib/campaign-client-assignment";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -38,15 +37,51 @@ interface CampaignOperatingRow {
   tm_event_id: string | null;
 }
 
+export interface CampaignLinkedEventRecord {
+  city: string | null;
+  date: string | null;
+  id: string;
+  name: string;
+  status: string;
+  ticketsAvailable: number | null;
+  ticketsSold: number;
+  venue: string | null;
+}
+
 export interface CampaignOperatingData {
   actionItems: Awaited<ReturnType<typeof listCampaignActionItems>>;
   approvals: Awaited<ReturnType<typeof listCampaignApprovalRequests>>;
   assets: ReturnType<typeof mapAssetRows>;
   campaign: MetaCampaignCard;
-  linkedEvents: EventOperatingRecord[];
+  linkedEvents: CampaignLinkedEventRecord[];
   systemEvents: Awaited<ReturnType<typeof listCampaignSystemEvents>>;
 }
 
+async function getLinkedEventRecordById(eventId: string): Promise<CampaignLinkedEventRecord | null> {
+  const { data, error } = await supabaseAdmin!
+    .from("tm_events")
+    .select("id, name, city, date, venue, status, tickets_sold, tickets_available")
+    .eq("id", eventId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("[campaigns] linked event lookup failed:", error.message);
+    return null;
+  }
+
+  if (!data) return null;
+
+  return {
+    city: data.city ?? null,
+    date: data.date ?? null,
+    id: data.id,
+    name: data.name ?? "Unknown event",
+    status: data.status ?? "unknown",
+    ticketsAvailable: data.tickets_available ?? null,
+    ticketsSold: data.tickets_sold ?? 0,
+    venue: data.venue ?? null,
+  };
+}
 
 export async function getCampaignOperatingData(campaignId: string): Promise<CampaignOperatingData | null> {
   if (!supabaseAdmin) throw new Error("DB not configured");
@@ -111,7 +146,7 @@ export async function getCampaignOperatingData(campaignId: string): Promise<Camp
       clientSlug: data.client_slug,
       limit: 16,
     }),
-    data.tm_event_id ? getEventRecordById(data.tm_event_id) : Promise.resolve(null),
+    data.tm_event_id ? getLinkedEventRecordById(data.tm_event_id) : Promise.resolve(null),
   ]);
 
   return {

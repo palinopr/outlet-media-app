@@ -5,15 +5,15 @@
 The current shipped product is intentionally narrow:
 
 1. **Campaigns**
-2. **Events** (optional per client)
-3. **Reports**
-4. Admin account/access management required to support those surfaces
+2. Admin account/access management required to support campaign access
 
-Do not add standalone client apps for CRM, assets, approvals, conversations, workspace, updates, or chat unless there is an explicit product decision and a maintainable end-to-end slice.
+Events and Reports are retired as navigable product surfaces for now. Direct Events/Reports URLs should redirect back to the active Dashboard/Campaigns experience rather than exposing hidden product pages.
+
+Do not add standalone client apps for Events, Reports, CRM, assets, approvals, conversations, workspace, updates, or chat unless there is an explicit product decision and a maintainable end-to-end slice.
 
 ## Agent Status
 
-All agent runtime and agent-facing product surfaces are retired for now. Do not expose an admin Agents page, client Agent tab, agent task queue, agent outcome widgets, or agent-triggered background work. If a workflow needs follow-through, model it directly as approvals, action items, comments, reports, and `system_events` inside the active product surfaces.
+All agent runtime and agent-facing product surfaces are retired for now. Do not expose an admin Agents page, client Agent tab, agent task queue, agent outcome widgets, or agent-triggered background work. If a workflow needs follow-through, model it directly inside campaign/admin surfaces with the smallest durable object needed.
 
 ## Engineering Priorities
 

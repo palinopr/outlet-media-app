@@ -197,13 +197,11 @@ describe("admin clients data", () => {
     state.clients = [
       {
         created_at: "2026-03-06T12:00:00.000Z",
-        events_enabled: true,
         id: "client_1",
         name: "Zamora",
         portal_brand_name: null,
         portal_logo_alt: null,
         portal_logo_url: null,
-        reports_enabled: true,
         slug: "zamora",
         status: "active",
       },

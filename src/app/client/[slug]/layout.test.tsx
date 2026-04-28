@@ -20,9 +20,7 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/features/client-portal/config", () => ({
   getClientPortalConfig: vi.fn().mockResolvedValue({
     clientId: "client_1",
-    eventsEnabled: false,
     slug: "acme",
-    reportsEnabled: true,
     brandName: null,
     logoUrl: null,
     logoAlt: null,
@@ -38,10 +36,8 @@ function config(overrides = {}) {
   return {
     brandName: null,
     clientId: "client_1",
-    eventsEnabled: false,
     logoAlt: null,
     logoUrl: null,
-    reportsEnabled: true,
     slug: "acme",
     ...overrides,
   };
@@ -115,8 +111,6 @@ describe("ClientLayout navigation links", () => {
 
   it("never renders Events or Reports links", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
-    mockedGetClientPortalConfig.mockResolvedValue(config({ eventsEnabled: true, reportsEnabled: true }));
-
     await renderLayout("acme");
     openMobileNav();
 

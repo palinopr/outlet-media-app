@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Megaphone,
-  CalendarDays,
   Users,
 } from "lucide-react";
 import { adminNavItems } from "./nav-config";
@@ -24,7 +23,6 @@ import {
 
 const typeIcon: Record<SearchableRecord["type"], typeof Megaphone> = {
   campaign: Megaphone,
-  event: CalendarDays,
   client: Users,
 };
 
@@ -68,7 +66,6 @@ export function CommandPalette() {
   );
 
   const campaigns = records.filter((r) => r.type === "campaign");
-  const events = records.filter((r) => r.type === "event");
   const clients = records.filter((r) => r.type === "client");
 
   return (
@@ -76,7 +73,7 @@ export function CommandPalette() {
       open={open}
       onOpenChange={setOpen}
       title="Command Palette"
-      description="Search pages, campaigns, events, and clients"
+      description="Search pages, campaigns, and clients"
       showCloseButton={false}
     >
       <CommandInput placeholder="Type to search..." />
@@ -101,30 +98,6 @@ export function CommandPalette() {
             <CommandSeparator />
             <CommandGroup heading="Campaigns">
               {campaigns.map((r) => {
-                const Icon = typeIcon[r.type];
-                return (
-                  <CommandItem
-                    key={r.id}
-                    value={`${r.name} ${r.subtitle}`}
-                    onSelect={() => navigate(r.href)}
-                  >
-                    <Icon className="size-4" />
-                    <span>{r.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {r.subtitle}
-                    </span>
-                  </CommandItem>
-                );
-              })}
-            </CommandGroup>
-          </>
-        )}
-
-        {loaded && events.length > 0 && (
-          <>
-            <CommandSeparator />
-            <CommandGroup heading="Events">
-              {events.map((r) => {
                 const Icon = typeIcon[r.type];
                 return (
                   <CommandItem

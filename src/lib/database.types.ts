@@ -647,37 +647,31 @@ export type Database = {
       clients: {
         Row: {
           created_at: string
-          events_enabled: boolean
           id: string
           name: string
           portal_brand_name: string | null
           portal_logo_alt: string | null
           portal_logo_url: string | null
-          reports_enabled: boolean
           slug: string
           status: string
         }
         Insert: {
           created_at?: string
-          events_enabled?: boolean
           id?: string
           name: string
           portal_brand_name?: string | null
           portal_logo_alt?: string | null
           portal_logo_url?: string | null
-          reports_enabled?: boolean
           slug: string
           status?: string
         }
         Update: {
           created_at?: string
-          events_enabled?: boolean
           id?: string
           name?: string
           portal_brand_name?: string | null
           portal_logo_alt?: string | null
           portal_logo_url?: string | null
-          reports_enabled?: boolean
           slug?: string
           status?: string
         }

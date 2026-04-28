@@ -12,15 +12,7 @@ const BASE_NAV_LINKS: Omit<NavLink, "href">[] = [
   { label: "Campaigns", icon: Megaphone },
 ];
 
-export type ClientNavOptions = {
-  eventsEnabled?: boolean;
-  reportsEnabled?: boolean;
-};
-
-export function getClientNavLinks(
-  slug: string,
-  _options: ClientNavOptions = {},
-): NavLink[] {
+export function getClientNavLinks(slug: string): NavLink[] {
   return BASE_NAV_LINKS.map((link) => ({
     ...link,
     href: `/client/${slug}/${link.label.toLowerCase()}`,

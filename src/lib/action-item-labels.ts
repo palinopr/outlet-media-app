@@ -1,8 +1,8 @@
 /**
  * Shared labels for action-item / follow-up-item fields and task statuses.
  *
- * Used by campaign-action-items, asset-follow-up-items, event-follow-up-items,
- * and crm-follow-up-items server actions to produce human-readable audit and
+ * Used by campaign-action-items, asset-follow-up-items, and crm-follow-up-items
+ * server actions to produce human-readable audit and
  * system-event text.
  */
 
