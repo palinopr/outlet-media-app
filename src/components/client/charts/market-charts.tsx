@@ -1,4 +1,5 @@
 import { type MarketRow } from "./types";
+import { fmtUsd } from "@/lib/formatters";
 
 export function MarketPerformanceTable({
   data,
@@ -47,7 +48,7 @@ export function MarketPerformanceTable({
                   {row.ctr != null ? `${row.ctr.toFixed(2)}%` : "--"}
                 </td>
                 <td className="py-3 pl-3 text-right font-medium text-white/75">
-                  ${row.spend.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                  {fmtUsd(row.spend)}
                 </td>
               </tr>
             ))}
@@ -79,7 +80,7 @@ export function MarketPerformanceTable({
               <div>
                 <p className="text-[9px] uppercase text-white/25">Spend</p>
                 <p className="text-xs font-medium text-white/65">
-                  ${row.spend.toLocaleString("en-US", { maximumFractionDigits: 0 })}
+                  {fmtUsd(row.spend)}
                 </p>
               </div>
             </div>

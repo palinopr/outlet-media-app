@@ -271,24 +271,13 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         </div>
       )}
 
-      <div className="grid gap-3 xl:grid-cols-[0.95fr_1.15fr_0.95fr]">
+      <div className="grid gap-3 xl:grid-cols-[1.05fr_0.95fr]">
         <DashboardSection
           icon={Calendar}
           title="Performance Timeline"
           detail={rangeLabel}
         >
           <PerformanceTrendTabs data={trendData} compact />
-        </DashboardSection>
-
-        <DashboardSection
-          icon={Globe2}
-          title="Markets & Placements"
-          detail={rangeLabel}
-        >
-          <div className="grid gap-4 lg:grid-cols-[0.95fr_1fr] xl:grid-cols-2">
-            {marketData.length > 0 ? <MarketPerformanceTable data={marketData} compact /> : null}
-            {placementData.length > 0 ? <PlacementBarChart data={placementData} compact /> : null}
-          </div>
         </DashboardSection>
 
         <DashboardSection icon={BarChart3} title="Hourly Delivery">
@@ -302,6 +291,17 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           )}
         </DashboardSection>
       </div>
+
+      <DashboardSection
+        icon={Globe2}
+        title="Markets & Placements"
+        detail={rangeLabel}
+      >
+        <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+          {marketData.length > 0 ? <MarketPerformanceTable data={marketData} /> : null}
+          {placementData.length > 0 ? <PlacementBarChart data={placementData} /> : null}
+        </div>
+      </DashboardSection>
 
       <div className="grid gap-3 xl:grid-cols-[1.12fr_0.88fr]">
         <DashboardSection

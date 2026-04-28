@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-web | uncramp campaign markets section
+- Moved campaign detail Markets & Placements out of the three-column row into a full-width section below timeline and hourly delivery.
+- Kept top-level reporting as a two-panel row, then gave top markets and placements a wider side-by-side layout.
+- Switched market spend cells to the shared USD formatter so values render as one coherent value.
+
 ## [2026-04-27] client-web | dark campaign list polish
 - Restyled the client campaign list page to match the dark campaign detail direction with charcoal/navy cards, blue-violet controls, and compact reporting tables.
 - Kept revenue/ROAS off the campaign list when no revenue attribution exists, replacing those fields with click and CPC reporting.
