@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-web | readable placement labels
+- Replaced the campaign detail placement axis chart with a compact ranked bar list so platform and placement names are readable.
+- Added platform badges such as `IG` and `FB`, while preserving percent-of-impressions, hover detail, clicks, impressions, and CTR context.
+- Kept placement reporting client-facing and avoided adding targeting or strategy details.
+
 ## [2026-04-27] client-web | uncramp campaign markets section
 - Moved campaign detail Markets & Placements out of the three-column row into a full-width section below timeline and hourly delivery.
 - Kept top-level reporting as a two-panel row, then gave top markets and placements a wider side-by-side layout.
