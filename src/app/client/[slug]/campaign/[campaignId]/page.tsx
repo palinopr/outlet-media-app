@@ -1,14 +1,19 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   ArrowLeft,
   BarChart3,
   Calendar,
+  Clock3,
   DollarSign,
   Eye,
   Gauge,
   Image as ImageIcon,
   MousePointerClick,
   Globe2,
+  MapPin,
+  Percent,
+  Trophy,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -135,6 +140,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
             topMarket.ctr != null
               ? `${topMarket.ctr.toFixed(2)}% CTR`
               : `${fmtNum(topMarket.impressions)} impressions`,
+          icon: MapPin,
         }
       : null,
     bestDay
@@ -145,6 +151,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
             bestDay.roas != null
               ? `${bestDay.roas.toFixed(2)}x ROAS`
               : `${fmtNum(bestDay.clicks)} clicks`,
+          icon: Calendar,
         }
       : null,
     bestHour
@@ -155,6 +162,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
             bestHour.ctr != null
               ? `${bestHour.ctr.toFixed(2)}% CTR`
               : `${fmtNum(bestHour.impressions)} impressions`,
+          icon: Clock3,
         }
       : null,
     topCreative
@@ -165,6 +173,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
             topCreative.roas != null
               ? `${topCreative.roas.toFixed(1)}x ROAS`
               : `${fmtNum(topCreative.clicks)} clicks`,
+          icon: Trophy,
         }
       : null,
     avgDailySpend != null
@@ -172,12 +181,14 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
           label: "Daily Avg",
           value: fmtUsd(avgDailySpend),
           detail: trackedDays > 1 ? `${trackedDays} tracked days` : "Today",
+          icon: Percent,
         }
       : daysLive != null
         ? {
             label: "Days Live",
             value: daysLive.toLocaleString(),
             detail: c.startTime ? `Since ${fmtDate(c.startTime)}` : "Campaign lifetime so far",
+            icon: Calendar,
           }
         : null,
   ].filter(
@@ -187,6 +198,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       label: string;
       value: string;
       detail: string;
+      icon: LucideIcon;
     } => card != null,
   );
 
@@ -252,62 +264,51 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       </div>
 
       {breakdownCards.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="grid overflow-hidden rounded-2xl border border-white/[0.09] bg-[#07111f]/72 shadow-[0_16px_60px_rgba(0,0,0,0.28)] sm:grid-cols-2 lg:grid-cols-5">
           {breakdownCards.map((card) => (
             <SnapshotCard key={card.label} {...card} />
           ))}
         </div>
       )}
 
-      <section className="min-w-0">
-        <div className="mb-2 flex items-center gap-2">
-          <Calendar className="h-3.5 w-3.5 text-white/50" />
-          <span className="section-label">Performance timeline</span>
-          <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
-        </div>
-        <PerformanceTrendTabs data={trendData} />
-      </section>
+      <div className="grid gap-3 xl:grid-cols-[0.95fr_1.15fr_0.95fr]">
+        <DashboardSection
+          icon={Calendar}
+          title="Performance Timeline"
+          detail={rangeLabel}
+        >
+          <PerformanceTrendTabs data={trendData} compact />
+        </DashboardSection>
 
-      <div className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
-        {(marketData.length > 0 || placementData.length > 0) && (
-          <section className="min-w-0">
-            <div className="mb-2 flex items-center gap-2">
-              <Globe2 className="h-3.5 w-3.5 text-white/50" />
-              <span className="section-label">Markets & placements</span>
-              <span className="ml-auto text-xs text-white/45">{rangeLabel}</span>
-            </div>
-            <div className="space-y-3">
-              {marketData.length > 0 ? <MarketPerformanceTable data={marketData} /> : null}
-              {placementData.length > 0 ? <PlacementBarChart data={placementData} /> : null}
-            </div>
-          </section>
-        )}
-
-        <section className="min-w-0">
-          <div className="mb-2 flex items-center gap-2">
-            <BarChart3 className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Hourly delivery</span>
+        <DashboardSection
+          icon={Globe2}
+          title="Markets & Placements"
+          detail={rangeLabel}
+        >
+          <div className="grid gap-4 lg:grid-cols-[0.95fr_1fr] xl:grid-cols-2">
+            {marketData.length > 0 ? <MarketPerformanceTable data={marketData} compact /> : null}
+            {placementData.length > 0 ? <PlacementBarChart data={placementData} compact /> : null}
           </div>
+        </DashboardSection>
+
+        <DashboardSection icon={BarChart3} title="Hourly Delivery">
           {hourlyData.length > 0 ? (
-            <HourlyHeatmap data={hourlyData} />
+            <HourlyHeatmap data={hourlyData} compact />
           ) : (
             <FallbackCard
               title="Hourly Delivery"
               detail="Hourly delivery data is not available for this selected range yet."
             />
           )}
-        </section>
+        </DashboardSection>
       </div>
 
-      <div className="grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
-        <section className="min-w-0">
-          <div className="mb-2 flex items-center gap-2">
-            <ImageIcon className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Creative performance</span>
-            <span className="ml-auto text-xs text-white/45">
-              {ads.length > 0 ? `${ads.length} ads` : "No ad previews"}
-            </span>
-          </div>
+      <div className="grid gap-3 xl:grid-cols-[1.12fr_0.88fr]">
+        <DashboardSection
+          icon={ImageIcon}
+          title="Creative Performance"
+          detail={ads.length > 0 ? `${ads.length} ads` : "No ad previews"}
+        >
           {ads.length > 0 ? (
             <AdsPreview ads={ads} />
           ) : (
@@ -316,13 +317,9 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
               detail="Creative-level previews are not available from the current data source."
             />
           )}
-        </section>
+        </DashboardSection>
 
-        <section className="min-w-0">
-          <div className="mb-2 flex items-center gap-2">
-            <Users className="h-3.5 w-3.5 text-white/50" />
-            <span className="section-label">Audience breakdown</span>
-          </div>
+        <DashboardSection icon={Users} title="Audience Breakdown">
           {ageGender.length > 0 ? (
             <AudienceDemographics data={ageGender} />
           ) : (
@@ -331,14 +328,14 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
               detail="Audience breakdowns are not available from the current data source."
             />
           )}
-        </section>
+        </DashboardSection>
       </div>
 
       <CampaignOperatingPanel campaignId={campaignId} data={operatingView} slug={slug} />
 
       {/* -- Empty state -- */}
       {dataSource === "supabase" && ageGender.length === 0 && ads.length === 0 && (
-        <div className="glass-card p-8 text-center">
+        <div className="rounded-2xl border border-white/[0.08] bg-[#07111f]/72 p-8 text-center">
           <p className="text-sm text-white/50 mb-1">Demographics and ad breakdowns unavailable</p>
           <p className="text-xs text-white/40">
             Live data from Meta is required for detailed breakdowns. Showing cached totals.
@@ -363,13 +360,13 @@ function MetricCard({
   icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
-      <div className="mb-3 flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-white/[0.05] text-white/62">
+    <div className="rounded-2xl border border-white/[0.09] bg-[#07111f]/72 p-4 shadow-[0_14px_48px_rgba(0,0,0,0.22)]">
+      <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-full border border-blue-400/15 bg-blue-500/12 text-blue-300 shadow-[0_0_28px_rgba(37,99,235,0.16)]">
         <Icon className="h-4 w-4" />
       </div>
-      <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
-      <p className="mt-1.5 text-2xl font-bold tracking-tight text-white leading-none">{value}</p>
-      <p className="mt-2 text-[11px] leading-4 text-white/38">{detail}</p>
+      <p className="text-xs font-medium text-white/72">{label}</p>
+      <p className="mt-1.5 text-2xl font-semibold tracking-tight text-white leading-none">{value}</p>
+      <p className="mt-2 text-[11px] leading-4 text-white/42">{detail}</p>
     </div>
   );
 }
@@ -378,26 +375,56 @@ function SnapshotCard({
   label,
   value,
   detail,
+  icon: Icon,
 }: {
   label: string;
   value: string;
   detail: string;
+  icon: LucideIcon;
 }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3">
-      <p className="text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
-      <p className="mt-1.5 truncate text-lg font-bold leading-tight tracking-tight text-white">{value}</p>
-      <p className="mt-1 text-[11px] leading-4 text-white/38">{detail}</p>
+    <div className="flex min-h-20 gap-3 border-b border-r border-white/[0.08] px-4 py-3 last:border-r-0 sm:border-b-0">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-emerald-300/15 bg-emerald-400/10 text-emerald-300 shadow-[0_0_24px_rgba(16,185,129,0.12)]">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium text-white/62">{label}</p>
+        <p className="mt-1 truncate text-sm font-semibold leading-tight tracking-tight text-white">{value}</p>
+        <p className="mt-1 text-[11px] leading-4 text-white/42">{detail}</p>
+      </div>
     </div>
   );
 }
 
 function FallbackCard({ title, detail }: { title: string; detail: string }) {
   return (
-    <div className="glass-card p-5">
+    <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-5">
       <p className="text-xs font-semibold text-white/65">{title}</p>
       <p className="mt-2 text-xs leading-6 text-white/42">{detail}</p>
     </div>
+  );
+}
+
+function DashboardSection({
+  icon: Icon,
+  title,
+  detail,
+  children,
+}: {
+  icon: LucideIcon;
+  title: string;
+  detail?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="min-w-0 rounded-2xl border border-white/[0.09] bg-[#07111f]/72 p-4 shadow-[0_16px_60px_rgba(0,0,0,0.24)]">
+      <div className="mb-3 flex items-center gap-2">
+        <Icon className="h-3.5 w-3.5 text-blue-300/70" />
+        <h2 className="text-sm font-semibold text-white">{title}</h2>
+        {detail ? <span className="ml-auto text-xs text-white/42">{detail}</span> : null}
+      </div>
+      {children}
+    </section>
   );
 }
 

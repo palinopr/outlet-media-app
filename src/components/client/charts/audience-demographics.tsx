@@ -21,7 +21,7 @@ const AGE_ORDER = ["18-24", "25-34", "35-44", "45-54", "55-64", "65+"];
 
 const GENDER_COLORS: Record<string, string> = {
   Female: "#a78bfa",
-  Male: "#22d3ee",
+  Male: "#2563eb",
   Unknown: "rgba(255,255,255,0.15)",
 };
 
@@ -106,19 +106,19 @@ export function AudienceDemographics({ data }: { data: AgeGenderBreakdown[] }) {
 
   if (data.length === 0) {
     return (
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
+      <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
         <p className="text-xs text-white/35">No audience data available.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
+    <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-xs font-semibold text-white/60">
+        <p className="text-xs font-medium text-white/62">
           Audience Demographics
         </p>
-        <div className="flex gap-0.5 rounded-full bg-white/[0.05] p-0.5">
+        <div className="flex gap-0.5 rounded-full border border-white/[0.06] bg-white/[0.035] p-0.5">
           {(
             [
               ["age", "Age"],
@@ -131,7 +131,7 @@ export function AudienceDemographics({ data }: { data: AgeGenderBreakdown[] }) {
               onClick={() => setTab(key)}
               className={`rounded-full px-2.5 py-0.5 text-[10px] font-medium transition-colors ${
                 tab === key
-                  ? "bg-white text-zinc-900"
+                  ? "bg-blue-600/20 text-blue-200 ring-1 ring-inset ring-blue-500/60"
                   : "text-white/50 hover:text-white/70"
               }`}
             >
@@ -189,7 +189,7 @@ function AgeTab({ data }: { data: AgeRow[] }) {
           />
           <Bar
             dataKey="impressions"
-            fill="#22d3ee"
+            fill="#2563eb"
             radius={[0, 6, 6, 0]}
             barSize={24}
             label={{
@@ -281,7 +281,7 @@ function HeatmapTab({
     if (impressions === 0) return "rgba(255,255,255,0.03)";
     const intensity = 0.15 + (impressions / maxImp) * 0.85;
     if (gender === "Female") return `rgba(167, 139, 250, ${intensity})`;
-    if (gender === "Male") return `rgba(34, 211, 238, ${intensity})`;
+    if (gender === "Male") return `rgba(37, 99, 235, ${intensity})`;
     return `rgba(255, 255, 255, ${intensity * 0.3})`;
   }
 

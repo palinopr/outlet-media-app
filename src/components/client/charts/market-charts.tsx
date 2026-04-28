@@ -1,22 +1,28 @@
 import { type MarketRow } from "./types";
 
-export function MarketPerformanceTable({ data }: { data: MarketRow[] }) {
+export function MarketPerformanceTable({
+  data,
+  compact = false,
+}: {
+  data: MarketRow[];
+  compact?: boolean;
+}) {
   if (data.length === 0) return null;
 
   const sorted = [...data].sort((a, b) => b.impressions - a.impressions).slice(0, 8);
   const maxPct = sorted[0]?.pct ?? 1;
 
   return (
-    <div className="glass-card p-4 sm:p-5">
-      <p className="text-xs font-semibold text-white/60 mb-4">Top Markets</p>
+    <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
+      <p className="mb-4 text-xs font-medium text-white/62">Top Markets</p>
 
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/[0.06] text-left text-white/30">
+            <tr className="border-b border-white/[0.06] text-left text-white/34">
               <th className="pb-2 pr-3 font-medium">Market</th>
-              <th className="pb-2 pl-3 font-medium text-right">Impressions</th>
-              <th className="pb-2 pl-3 font-medium text-right">Clicks</th>
+              <th className={`pb-2 pl-3 font-medium text-right ${compact ? "hidden 2xl:table-cell" : ""}`}>Impressions</th>
+              <th className={`pb-2 pl-3 font-medium text-right ${compact ? "hidden 2xl:table-cell" : ""}`}>Clicks</th>
               <th className="pb-2 pl-3 font-medium text-right">CTR</th>
               <th className="pb-2 pl-3 font-medium text-right">Spend</th>
             </tr>
@@ -29,14 +35,14 @@ export function MarketPerformanceTable({ data }: { data: MarketRow[] }) {
                     <p className="font-medium text-white/75">{row.market}</p>
                     <div className="h-1.5 w-full rounded-full bg-white/[0.05]">
                       <div
-                        className="h-full rounded-full bg-gradient-to-r from-cyan-400 to-violet-400"
+                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500"
                         style={{ width: `${(row.pct / maxPct) * 100}%` }}
                       />
                     </div>
                   </div>
                 </td>
-                <td className="py-3 pl-3 text-right text-white/60">{row.impressions.toLocaleString()}</td>
-                <td className="py-3 pl-3 text-right text-white/60">{row.clicks.toLocaleString()}</td>
+                <td className={`py-3 pl-3 text-right text-white/60 ${compact ? "hidden 2xl:table-cell" : ""}`}>{row.impressions.toLocaleString()}</td>
+                <td className={`py-3 pl-3 text-right text-white/60 ${compact ? "hidden 2xl:table-cell" : ""}`}>{row.clicks.toLocaleString()}</td>
                 <td className="py-3 pl-3 text-right text-white/60">
                   {row.ctr != null ? `${row.ctr.toFixed(2)}%` : "--"}
                 </td>

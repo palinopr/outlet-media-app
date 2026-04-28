@@ -20,6 +20,7 @@ import {
 
 interface Props {
   data: PerformanceTrendRow[];
+  compact?: boolean;
 }
 
 type MetricKey = "spend" | "clicks" | "impressions" | "ctr" | "cpc" | "revenue";
@@ -35,7 +36,7 @@ const METRICS: Array<{
   {
     key: "spend",
     label: "Spend",
-    color: "#22d3ee",
+    color: "#2f6bff",
     fillId: "spendTrendFill",
     defaultVisible: true,
     formatter: moneyFormatter,
@@ -43,7 +44,7 @@ const METRICS: Array<{
   {
     key: "clicks",
     label: "Clicks",
-    color: "#f472b6",
+    color: "#8b5cf6",
     fillId: "clickTrendFill",
     defaultVisible: true,
     formatter: (value) => value.toLocaleString(),
@@ -51,7 +52,7 @@ const METRICS: Array<{
   {
     key: "impressions",
     label: "Impressions",
-    color: "#a78bfa",
+    color: "#4f46e5",
     fillId: "impressionTrendFill",
     defaultVisible: true,
     formatter: kFormatter,
@@ -59,7 +60,7 @@ const METRICS: Array<{
   {
     key: "ctr",
     label: "CTR",
-    color: "#34d399",
+    color: "#22c55e",
     fillId: "ctrTrendFill",
     defaultVisible: true,
     formatter: (value) => `${value.toFixed(2)}%`,
@@ -67,7 +68,7 @@ const METRICS: Array<{
   {
     key: "cpc",
     label: "CPC",
-    color: "#fbbf24",
+    color: "#60a5fa",
     fillId: "cpcTrendFill",
     defaultVisible: true,
     formatter: moneyFormatter,
@@ -75,7 +76,7 @@ const METRICS: Array<{
   {
     key: "revenue",
     label: "Revenue",
-    color: "#fb7185",
+    color: "#a78bfa",
     fillId: "revenueTrendFill",
     formatter: moneyFormatter,
   },
@@ -90,7 +91,7 @@ function moneyFormatter(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
-export function PerformanceTrendTabs({ data }: Props) {
+export function PerformanceTrendTabs({ data, compact = false }: Props) {
   const chartData = useMemo(() => {
     return data.map((row) => ({
       ...row,
@@ -114,15 +115,15 @@ export function PerformanceTrendTabs({ data }: Props) {
   if (data.length < 2) {
     const row = chartData[0] ?? null;
     return (
-      <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
-        <p className="mb-4 text-xs font-semibold text-white/60">Today at a glance</p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+      <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
+        <p className="mb-4 text-xs font-medium text-white/62">Today at a glance</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 xl:grid-cols-2 2xl:grid-cols-5">
           {METRICS.filter((option) => option.defaultVisible).map((option) => {
             const value = row?.[option.key];
             const numericValue = typeof value === "number" ? value : null;
             return (
-              <div key={option.key} className="rounded-xl border border-white/[0.06] bg-black/10 p-3">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-white/32">{option.label}</p>
+              <div key={option.key} className="rounded-xl border border-white/[0.07] bg-white/[0.025] p-3">
+                <p className="text-[10px] uppercase tracking-[0.14em] text-white/36">{option.label}</p>
                 <p className="mt-1.5 text-sm font-semibold text-white">
                   {numericValue != null ? option.formatter(numericValue) : "--"}
                 </p>
@@ -135,7 +136,7 @@ export function PerformanceTrendTabs({ data }: Props) {
   }
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
+    <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
       <div className="mb-4 flex flex-wrap items-center gap-1.5">
         {availableMetrics.map((option) => (
           <button
@@ -144,8 +145,8 @@ export function PerformanceTrendTabs({ data }: Props) {
             onClick={() => setActiveMetric(option.key)}
             className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold transition ${
               metric.key === option.key
-                ? "bg-white text-zinc-950"
-                : "border border-white/[0.07] bg-white/[0.03] text-white/55 hover:bg-white/[0.07] hover:text-white"
+                ? "bg-blue-600/20 text-blue-200 ring-1 ring-inset ring-blue-500/70"
+                : "border border-white/[0.07] bg-white/[0.025] text-white/55 hover:bg-white/[0.06] hover:text-white"
             }`}
           >
             {option.label}
@@ -153,7 +154,7 @@ export function PerformanceTrendTabs({ data }: Props) {
         ))}
       </div>
 
-      <div className="h-80">
+      <div className={compact ? "h-64" : "h-80"}>
         <ResponsiveContainer
           width="100%"
           height="100%"
@@ -168,7 +169,7 @@ export function PerformanceTrendTabs({ data }: Props) {
             <defs>
               {availableMetrics.map((option) => (
                 <linearGradient key={option.fillId} id={option.fillId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={option.color} stopOpacity={0.35} />
+                  <stop offset="0%" stopColor={option.color} stopOpacity={0.42} />
                   <stop offset="100%" stopColor={option.color} stopOpacity={0.02} />
                 </linearGradient>
               ))}

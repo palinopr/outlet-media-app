@@ -56,7 +56,13 @@ function CustomTooltip({
   );
 }
 
-export function PlacementBarChart({ data }: { data: PlacementBarData[] }) {
+export function PlacementBarChart({
+  data,
+  compact = false,
+}: {
+  data: PlacementBarData[];
+  compact?: boolean;
+}) {
   if (data.length === 0) return null;
 
   const chartData: ChartRow[] = [...data]
@@ -71,11 +77,9 @@ export function PlacementBarChart({ data }: { data: PlacementBarData[] }) {
     }));
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
-      <p className="text-xs font-semibold text-white/60 mb-4">
-        Impressions by Placement
-      </p>
-      <div className="h-[240px]">
+    <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
+      <p className="mb-4 text-xs font-medium text-white/62">Placements</p>
+      <div className={compact ? "h-[210px]" : "h-[240px]"}>
         <ResponsiveContainer
           width="100%"
           height="100%"
@@ -103,7 +107,7 @@ export function PlacementBarChart({ data }: { data: PlacementBarData[] }) {
             />
             <Bar
               dataKey="impressions"
-              fill="#22d3ee"
+              fill="#4f46e5"
               radius={[6, 6, 0, 0]}
               barSize={32}
             />

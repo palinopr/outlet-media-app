@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-web | dark campaign detail redesign
+- Restyled client campaign detail toward the accepted dark Outlet Media mockup: charcoal/navy surfaces, blue-violet chart accents, and green reserved for active/positive signals.
+- Reorganized the campaign detail reporting grid into metric cards, top insight strip, timeline, markets/placements, hourly delivery, creative performance, audience breakdown, and campaign requests.
+- Kept the surface client-safe by avoiding strategy, targeting, interests, internal notes, and invented revenue/ROAS when unavailable.
+
 ## [2026-04-27] client-web | visual campaign detail graphs
 - Reworked client campaign detail pages away from strategy/recommendation copy and toward metric-first visual reporting.
 - Added top metric cards, clearer performance snapshot cards, larger timeline placement, and renamed sections for markets, hourly delivery, creative performance, and audience breakdown.

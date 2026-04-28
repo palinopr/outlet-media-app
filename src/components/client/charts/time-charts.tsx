@@ -21,7 +21,13 @@ function formatHourLabel(h: number): string {
   return h < 12 ? `${h}a` : `${h - 12}p`;
 }
 
-export function HourlyHeatmap({ data }: { data: HourlyRow[] }) {
+export function HourlyHeatmap({
+  data,
+  compact = false,
+}: {
+  data: HourlyRow[];
+  compact?: boolean;
+}) {
   if (data.length === 0) return null;
 
   const maxImp = Math.max(...data.map((d) => d.impressions), 1);
@@ -34,13 +40,13 @@ export function HourlyHeatmap({ data }: { data: HourlyRow[] }) {
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
   return (
-    <div className="glass-card p-5">
-      <p className="text-xs font-semibold text-white/60 mb-1">Activity by Hour</p>
-      <p className="text-[10px] text-white/20 mb-4">
+    <div className="rounded-2xl border border-white/[0.08] bg-black/15 p-4">
+      <p className="mb-1 text-xs font-medium text-white/62">Activity by Hour</p>
+      <p className="mb-4 text-[10px] text-white/26">
         Brighter cells indicate higher impression volume
       </p>
       <div>
-        <div className="grid grid-cols-6 gap-1">
+        <div className={`grid gap-1 ${compact ? "grid-cols-8 sm:grid-cols-12 xl:grid-cols-8 2xl:grid-cols-12" : "grid-cols-6"}`}>
           {hours.map((h) => {
             const row = byHour.get(h);
             const imp = row?.impressions ?? 0;
@@ -48,8 +54,8 @@ export function HourlyHeatmap({ data }: { data: HourlyRow[] }) {
             return (
               <div
                 key={h}
-                className="group relative aspect-square rounded-md flex items-center justify-center cursor-default transition-all hover:scale-105 hover:z-10"
-                style={{ background: `rgba(34, 211, 238, ${opacity})` }}
+                className="group relative flex aspect-square cursor-default items-center justify-center rounded-md border border-white/[0.04] transition-all hover:z-10 hover:scale-105"
+                style={{ background: `rgba(79, 70, 229, ${opacity})` }}
               >
                 <span className="text-[8px] sm:text-[9px] font-medium text-white/50">
                   {formatHourLabel(h)}
@@ -65,14 +71,14 @@ export function HourlyHeatmap({ data }: { data: HourlyRow[] }) {
             );
           })}
         </div>
-        <div className="flex items-center gap-2 mt-3">
+        <div className="mt-3 flex items-center gap-2">
           <span className="text-[9px] text-white/20">Low</span>
           <div className="flex gap-0.5">
             {[0.08, 0.25, 0.45, 0.65, 0.85].map((op) => (
               <div
                 key={op}
                 className="h-2 w-4 rounded-sm"
-                style={{ background: `rgba(34, 211, 238, ${op})` }}
+                style={{ background: `rgba(37, 99, 235, ${op})` }}
               />
             ))}
           </div>

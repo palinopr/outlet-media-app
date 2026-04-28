@@ -33,16 +33,26 @@ export function AdsPreview({ ads }: { ads: AdPreview[] }) {
       return (b.revenue ?? -1) - (a.revenue ?? -1);
     return b.impressions - a.impressions;
   });
+  const showRevenue = sorted.some((ad) => ad.revenue != null || ad.roas != null);
 
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] overflow-hidden">
+    <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-black/15">
       <table className="w-full">
         <thead>
           <tr className="border-b border-white/[0.06]">
             <th className={TH}>Creative</th>
             <th className={`${TH} text-right`}>Spend</th>
-            <th className={`${TH} text-right`}>Revenue</th>
-            <th className={`${TH} text-right`}>ROAS</th>
+            {showRevenue ? (
+              <>
+                <th className={`${TH} text-right`}>Revenue</th>
+                <th className={`${TH} text-right`}>ROAS</th>
+              </>
+            ) : (
+              <>
+                <th className={`${TH} text-right`}>CTR</th>
+                <th className={`${TH} text-right`}>CPC</th>
+              </>
+            )}
             <th className={`${TH} text-right`}>Impress.</th>
             <th className={`${TH} text-right`}>Clicks</th>
           </tr>
@@ -79,13 +89,26 @@ export function AdsPreview({ ads }: { ads: AdPreview[] }) {
 
               <td className={`${TD} text-right`}>{fmtUsd(ad.spend)}</td>
 
-              <td className={`${TD} text-right`}>
-                {ad.revenue != null ? fmtUsd(ad.revenue) : "--"}
-              </td>
+              {showRevenue ? (
+                <>
+                  <td className={`${TD} text-right`}>
+                    {ad.revenue != null ? fmtUsd(ad.revenue) : "--"}
+                  </td>
 
-              <td className={`${TD} text-right`}>
-                {ad.roas != null ? ad.roas.toFixed(2) : "--"}
-              </td>
+                  <td className={`${TD} text-right`}>
+                    {ad.roas != null ? ad.roas.toFixed(2) : "--"}
+                  </td>
+                </>
+              ) : (
+                <>
+                  <td className={`${TD} text-right`}>
+                    {ad.ctr != null ? `${ad.ctr.toFixed(2)}%` : "--"}
+                  </td>
+                  <td className={`${TD} text-right`}>
+                    {ad.cpc != null ? fmtUsd(ad.cpc) : "--"}
+                  </td>
+                </>
+              )}
 
               <td className={`${TD} text-right`}>{fmtNum(ad.impressions)}</td>
 

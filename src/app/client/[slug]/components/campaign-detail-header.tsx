@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarDays } from "lucide-react";
 import { getRangeQuery, type CampaignRangeInput, type DateRange } from "@/lib/constants";
-import { fmtUsd, fmtDate } from "@/lib/formatters";
+import { fmtDate } from "@/lib/formatters";
 import type { CampaignCard } from "../types";
 import { CampaignStatusBadge } from "./campaign-status-badge";
 import type { ClientPortalTheme } from "@/features/client-portal/theme";
@@ -24,67 +24,57 @@ export function CampaignDetailHeader({ slug, range, rangeLabel, campaign: c }: P
   const activeRange = typeof range === "string" ? range : "custom";
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <Link
         href={`/client/${slug}/campaigns?${getRangeQuery(range)}`}
-        className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs text-white/60 transition hover:border-white/[0.16] hover:text-white"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-blue-300 transition hover:text-blue-200"
       >
         <ArrowLeft className="h-3 w-3" />
         Back to campaigns
       </Link>
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
+      <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-              Campaign Detail
+            <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-[2rem] sm:leading-10">
+              {c.name}
             </h1>
             <CampaignStatusBadge status={c.status} />
-
-            <div className="overflow-x-auto">
-              <div className="flex items-center gap-0.5 rounded-xl border border-white/[0.08] bg-white/[0.04] p-1 w-max">
-                {CLIENT_CAMPAIGN_DATE_OPTIONS.map((opt) => (
-                  <a
-                    key={opt.value}
-                    href={`?range=${opt.value}`}
-                    className={`px-2 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all duration-300 ${
-                      activeRange === opt.value
-                        ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
-                        : "text-white/60 hover:text-white/80 hover:bg-white/[0.06]"
-                    }`}
-                  >
-                    {opt.label}
-                  </a>
-                ))}
-                <span
-                  className={`px-2 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap ${
-                    activeRange === "custom"
-                      ? "bg-white text-zinc-900 shadow-lg shadow-white/10"
-                      : "text-white/35"
-                  }`}
-                >
-                  {activeRange === "custom" ? rangeLabel : "Custom"}
-                </span>
-              </div>
-            </div>
           </div>
 
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-white/58">
-            <span className="font-medium text-white/92">{c.name}</span>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-white/52">
             {c.startTime ? (
-              <>
-                <span className="text-white/24">&bull;</span>
-                <span>since {fmtDate(c.startTime)}</span>
-              </>
+              <span>Since {fmtDate(c.startTime)}</span>
             ) : null}
           </div>
         </div>
 
-        <div className="shrink-0 text-right">
-          <p className="text-[10px] uppercase tracking-[0.22em] text-white/30">Daily budget</p>
-          <p className="mt-1 text-xl font-bold tracking-tight text-white">
-            {c.dailyBudget != null ? `${fmtUsd(c.dailyBudget)} USD` : "--"}
-          </p>
+        <div className="overflow-x-auto xl:pt-1">
+          <div className="flex w-max overflow-hidden rounded-xl border border-white/[0.12] bg-black/25 shadow-[0_0_0_1px_rgba(37,99,235,0.08),0_14px_44px_rgba(0,0,0,0.22)]">
+            {CLIENT_CAMPAIGN_DATE_OPTIONS.map((opt) => (
+              <a
+                key={opt.value}
+                href={`?range=${opt.value}`}
+                className={`min-w-24 border-r border-white/[0.1] px-5 py-2.5 text-center text-xs font-semibold transition ${
+                  activeRange === opt.value
+                    ? "bg-blue-600/14 text-blue-200 ring-1 ring-inset ring-blue-500/70 shadow-[0_0_24px_rgba(37,99,235,0.18)]"
+                    : "text-white/62 hover:bg-white/[0.04] hover:text-white"
+                }`}
+              >
+                {opt.label}
+              </a>
+            ))}
+            <span
+              className={`flex min-w-28 items-center justify-center gap-2 px-5 py-2.5 text-xs font-semibold ${
+                activeRange === "custom"
+                  ? "bg-blue-600/14 text-blue-200 ring-1 ring-inset ring-blue-500/70"
+                  : "text-white/62"
+              }`}
+            >
+              <CalendarDays className="h-3.5 w-3.5" />
+              {activeRange === "custom" ? rangeLabel : "Custom"}
+            </span>
+          </div>
         </div>
       </div>
     </div>
