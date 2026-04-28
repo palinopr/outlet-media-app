@@ -51,11 +51,8 @@ export async function createClerkSupabaseClient() {
  * policies are enforced for the current user. Admins and server-side
  * callers bypass scoping and get the service-role client.
  *
- * This is the shared version of the per-feature `get*ReadClient` helpers
- * (e.g. `getCrmReadClient`, `getEventReadClient`, etc.).
- *
- * Caller audit (2026-04-03): All callers verified to handle null
- * return gracefully after security fix in commit 292a866.
+ * Keep feature reads on this shared helper so admin and client access behavior
+ * stays consistent across the narrowed Campaigns/account-access baseline.
  */
 export async function getFeatureReadClient(useClientScope: boolean) {
   if (!supabaseAdmin) return null;

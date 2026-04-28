@@ -16,152 +16,54 @@ export type Database = {
     Tables: {
       admin_activity: {
         Row: {
-          id: number
           created_at: string
-          user_id: string
-          user_email: string
-          event_type: string
-          page: string | null
           detail: string | null
-          metadata: Json | null
-        }
-        Insert: {
-          id?: number
-          created_at?: string
-          user_id: string
-          user_email: string
           event_type: string
-          page?: string | null
-          detail?: string | null
-          metadata?: Json | null
+          id: number
+          metadata: Json | null
+          page: string | null
+          user_email: string
+          user_id: string
         }
-        Update: {
-          id?: number
+        Insert: {
           created_at?: string
-          user_id?: string
-          user_email?: string
-          event_type?: string
-          page?: string | null
           detail?: string | null
+          event_type: string
+          id?: never
           metadata?: Json | null
+          page?: string | null
+          user_email: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          event_type?: string
+          id?: never
+          metadata?: Json | null
+          page?: string | null
+          user_email?: string
+          user_id?: string
         }
         Relationships: []
       }
-      call_transcript_turns: {
+      campaign_client_overrides: {
         Row: {
-          call_id: string
-          created_at: string | null
-          id: string
-          is_final: boolean | null
-          source: string
-          speaker: string
-          text: string
-          turn_index: number
+          campaign_id: string
+          client_slug: string
+          updated_at: string
         }
         Insert: {
-          call_id: string
-          created_at?: string | null
-          id?: string
-          is_final?: boolean | null
-          source: string
-          speaker: string
-          text: string
-          turn_index: number
+          campaign_id: string
+          client_slug: string
+          updated_at?: string
         }
         Update: {
-          call_id?: string
-          created_at?: string | null
-          id?: string
-          is_final?: boolean | null
-          source?: string
-          speaker?: string
-          text?: string
-          turn_index?: number
+          campaign_id?: string
+          client_slug?: string
+          updated_at?: string
         }
         Relationships: []
-      }
-      calls: {
-        Row: {
-          ai_disclosure_given: boolean | null
-          call_id: string
-          created_at: string | null
-          dnc_checked: boolean | null
-          dnc_clear: boolean | null
-          duration_seconds: number | null
-          end_time: string | null
-          id: string
-          lead_id: string | null
-          lead_score: number | null
-          outcome: string | null
-          phone_number: string
-          recording_consent_given: boolean | null
-          recording_duration_seconds: number | null
-          recording_url: string | null
-          start_time: string
-          summary: string | null
-          transcript: string | null
-          transcript_status: string | null
-          transfer_completed: boolean | null
-          transfer_context: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          ai_disclosure_given?: boolean | null
-          call_id: string
-          created_at?: string | null
-          dnc_checked?: boolean | null
-          dnc_clear?: boolean | null
-          duration_seconds?: number | null
-          end_time?: string | null
-          id?: string
-          lead_id?: string | null
-          lead_score?: number | null
-          outcome?: string | null
-          phone_number: string
-          recording_consent_given?: boolean | null
-          recording_duration_seconds?: number | null
-          recording_url?: string | null
-          start_time: string
-          summary?: string | null
-          transcript?: string | null
-          transcript_status?: string | null
-          transfer_completed?: boolean | null
-          transfer_context?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          ai_disclosure_given?: boolean | null
-          call_id?: string
-          created_at?: string | null
-          dnc_checked?: boolean | null
-          dnc_clear?: boolean | null
-          duration_seconds?: number | null
-          end_time?: string | null
-          id?: string
-          lead_id?: string | null
-          lead_score?: number | null
-          outcome?: string | null
-          phone_number?: string
-          recording_consent_given?: boolean | null
-          recording_duration_seconds?: number | null
-          recording_url?: string | null
-          start_time?: string
-          summary?: string | null
-          transcript?: string | null
-          transcript_status?: string | null
-          transfer_completed?: boolean | null
-          transfer_context?: string | null
-          updated_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "calls_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       campaign_snapshots: {
         Row: {
@@ -202,57 +104,6 @@ export type Database = {
           roas?: number | null
           snapshot_date?: string
           spend?: number | null
-        }
-        Relationships: []
-      }
-      client_accounts: {
-        Row: {
-          id: string
-          clerk_user_id: string
-          client_slug: string
-          meta_user_id: string
-          ad_account_id: string
-          ad_account_name: string | null
-          access_token_encrypted: string
-          token_expires_at: string
-          scopes: string[]
-          status: string
-          connected_at: string
-          last_used_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          clerk_user_id: string
-          client_slug: string
-          meta_user_id: string
-          ad_account_id: string
-          ad_account_name?: string | null
-          access_token_encrypted: string
-          token_expires_at: string
-          scopes?: string[]
-          status?: string
-          connected_at?: string
-          last_used_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          clerk_user_id?: string
-          client_slug?: string
-          meta_user_id?: string
-          ad_account_id?: string
-          ad_account_name?: string | null
-          access_token_encrypted?: string
-          token_expires_at?: string
-          scopes?: string[]
-          status?: string
-          connected_at?: string
-          last_used_at?: string | null
-          created_at?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -306,24 +157,75 @@ export type Database = {
           },
         ]
       }
-      client_member_campaigns: {
+      client_accounts: {
         Row: {
-          id: string
-          member_id: string
-          campaign_id: string
+          access_token_encrypted: string
+          ad_account_id: string
+          ad_account_name: string | null
+          clerk_user_id: string
+          client_slug: string
+          connected_at: string
           created_at: string
+          id: string
+          last_used_at: string | null
+          meta_user_id: string
+          scopes: string[]
+          status: string
+          token_expires_at: string
+          updated_at: string
         }
         Insert: {
-          id?: string
-          member_id: string
-          campaign_id: string
+          access_token_encrypted: string
+          ad_account_id: string
+          ad_account_name?: string | null
+          clerk_user_id: string
+          client_slug: string
+          connected_at?: string
           created_at?: string
+          id?: string
+          last_used_at?: string | null
+          meta_user_id: string
+          scopes?: string[]
+          status?: string
+          token_expires_at: string
+          updated_at?: string
         }
         Update: {
+          access_token_encrypted?: string
+          ad_account_id?: string
+          ad_account_name?: string | null
+          clerk_user_id?: string
+          client_slug?: string
+          connected_at?: string
+          created_at?: string
+          id?: string
+          last_used_at?: string | null
+          meta_user_id?: string
+          scopes?: string[]
+          status?: string
+          token_expires_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      client_member_campaigns: {
+        Row: {
+          campaign_id: string
+          created_at: string | null
+          id: string
+          member_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string | null
+          id?: string
+          member_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string | null
           id?: string
           member_id?: string
-          campaign_id?: string
-          created_at?: string
         }
         Relationships: [
           {
@@ -337,70 +239,32 @@ export type Database = {
       }
       client_members: {
         Row: {
-          id: string
-          client_id: string
           clerk_user_id: string
+          client_id: string
+          created_at: string
+          id: string
           role: string
           scope: string
-          created_at: string
         }
         Insert: {
-          id?: string
-          client_id: string
           clerk_user_id: string
+          client_id: string
+          created_at?: string
+          id?: string
           role?: string
           scope?: string
-          created_at?: string
         }
         Update: {
-          id?: string
-          client_id?: string
           clerk_user_id?: string
+          client_id?: string
+          created_at?: string
+          id?: string
           role?: string
           scope?: string
-          created_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "client_members_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      client_services: {
-        Row: {
-          client_id: string
-          config: Json
-          created_at: string
-          enabled: boolean
-          id: string
-          service_key: string
-          updated_at: string
-        }
-        Insert: {
-          client_id: string
-          config?: Json
-          created_at?: string
-          enabled?: boolean
-          id?: string
-          service_key: string
-          updated_at?: string
-        }
-        Update: {
-          client_id?: string
-          config?: Json
-          created_at?: string
-          enabled?: boolean
-          id?: string
-          service_key?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "client_services_client_id_fkey"
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "clients"
@@ -441,51 +305,27 @@ export type Database = {
         }
         Relationships: []
       }
-      compliance_logs: {
+      contact_submissions: {
         Row: {
-          call_id: string
-          event_data: Json | null
-          event_type: string
+          created_at: string
+          email: string
           id: string
-          timestamp: string | null
+          message: string
+          name: string
         }
         Insert: {
-          call_id: string
-          event_data?: Json | null
-          event_type: string
+          created_at?: string
+          email: string
           id?: string
-          timestamp?: string | null
+          message: string
+          name: string
         }
         Update: {
-          call_id?: string
-          event_data?: Json | null
-          event_type?: string
+          created_at?: string
+          email?: string
           id?: string
-          timestamp?: string | null
-        }
-        Relationships: []
-      }
-      conversation_checkpoints: {
-        Row: {
-          checkpoint: Json
-          created_at: string | null
-          metadata: Json | null
-          thread_id: string
-          updated_at: string | null
-        }
-        Insert: {
-          checkpoint: Json
-          created_at?: string | null
-          metadata?: Json | null
-          thread_id: string
-          updated_at?: string | null
-        }
-        Update: {
-          checkpoint?: Json
-          created_at?: string | null
-          metadata?: Json | null
-          thread_id?: string
-          updated_at?: string | null
+          message?: string
+          name?: string
         }
         Relationships: []
       }
@@ -519,118 +359,10 @@ export type Database = {
         }
         Relationships: []
       }
-      internal_dnc: {
-        Row: {
-          added_at: string | null
-          id: string
-          phone_number: string
-          reason: string | null
-        }
-        Insert: {
-          added_at?: string | null
-          id?: string
-          phone_number: string
-          reason?: string | null
-        }
-        Update: {
-          added_at?: string | null
-          id?: string
-          phone_number?: string
-          reason?: string | null
-        }
-        Relationships: []
-      }
-      leads: {
-        Row: {
-          ad_campaign: string | null
-          age: number | null
-          beneficiary_relationship: string | null
-          budget_range: string | null
-          city: string | null
-          coverage_amount_interest: number | null
-          created_at: string | null
-          crm_lead_id: string | null
-          crm_synced: boolean | null
-          email: string | null
-          first_name: string | null
-          general_health: string | null
-          has_existing_coverage: boolean | null
-          has_recent_hospitalization: boolean | null
-          id: string
-          interest_level: string | null
-          last_name: string | null
-          lead_score: number | null
-          lead_status: string | null
-          phone_number: string
-          reason_for_interest: string | null
-          smoker: boolean | null
-          source: string | null
-          state: string | null
-          updated_at: string | null
-          zip_code: string | null
-        }
-        Insert: {
-          ad_campaign?: string | null
-          age?: number | null
-          beneficiary_relationship?: string | null
-          budget_range?: string | null
-          city?: string | null
-          coverage_amount_interest?: number | null
-          created_at?: string | null
-          crm_lead_id?: string | null
-          crm_synced?: boolean | null
-          email?: string | null
-          first_name?: string | null
-          general_health?: string | null
-          has_existing_coverage?: boolean | null
-          has_recent_hospitalization?: boolean | null
-          id?: string
-          interest_level?: string | null
-          last_name?: string | null
-          lead_score?: number | null
-          lead_status?: string | null
-          phone_number: string
-          reason_for_interest?: string | null
-          smoker?: boolean | null
-          source?: string | null
-          state?: string | null
-          updated_at?: string | null
-          zip_code?: string | null
-        }
-        Update: {
-          ad_campaign?: string | null
-          age?: number | null
-          beneficiary_relationship?: string | null
-          budget_range?: string | null
-          city?: string | null
-          coverage_amount_interest?: number | null
-          created_at?: string | null
-          crm_lead_id?: string | null
-          crm_synced?: boolean | null
-          email?: string | null
-          first_name?: string | null
-          general_health?: string | null
-          has_existing_coverage?: boolean | null
-          has_recent_hospitalization?: boolean | null
-          id?: string
-          interest_level?: string | null
-          last_name?: string | null
-          lead_score?: number | null
-          lead_status?: string | null
-          phone_number?: string
-          reason_for_interest?: string | null
-          smoker?: boolean | null
-          source?: string | null
-          state?: string | null
-          updated_at?: string | null
-          zip_code?: string | null
-        }
-        Relationships: []
-      }
       meta_campaigns: {
         Row: {
           campaign_id: string
-          campaign_type: string
+          campaign_type: string | null
           clicks: number | null
           client_slug: string | null
           cpc: number | null
@@ -654,7 +386,7 @@ export type Database = {
         }
         Insert: {
           campaign_id: string
-          campaign_type?: string
+          campaign_type?: string | null
           clicks?: number | null
           client_slug?: string | null
           cpc?: number | null
@@ -678,7 +410,7 @@ export type Database = {
         }
         Update: {
           campaign_id?: string
-          campaign_type?: string
+          campaign_type?: string | null
           clicks?: number | null
           client_slug?: string | null
           cpc?: number | null
@@ -710,246 +442,77 @@ export type Database = {
           },
         ]
       }
-      pf_leads: {
+      system_events: {
         Row: {
-          age: number | null
-          best_call_time: string | null
-          coverage_amount: number | null
-          created_at: string | null
-          email: string | null
-          funeral_cost_estimate: number | null
-          gender: string | null
-          health_answers: Json | null
-          id: string
-          name: string
-          notes: string | null
-          phone: string
-          preferred_carrier: string | null
-          source: string | null
-          state: string | null
-          status: string | null
-          tobacco_use: boolean | null
-          trustedform_cert_url: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          age?: number | null
-          best_call_time?: string | null
-          coverage_amount?: number | null
-          created_at?: string | null
-          email?: string | null
-          funeral_cost_estimate?: number | null
-          gender?: string | null
-          health_answers?: Json | null
-          id?: string
-          name: string
-          notes?: string | null
-          phone: string
-          preferred_carrier?: string | null
-          source?: string | null
-          state?: string | null
-          status?: string | null
-          tobacco_use?: boolean | null
-          trustedform_cert_url?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          age?: number | null
-          best_call_time?: string | null
-          coverage_amount?: number | null
-          created_at?: string | null
-          email?: string | null
-          funeral_cost_estimate?: number | null
-          gender?: string | null
-          health_answers?: Json | null
-          id?: string
-          name?: string
-          notes?: string | null
-          phone?: string
-          preferred_carrier?: string | null
-          source?: string | null
-          state?: string | null
-          status?: string | null
-          tobacco_use?: boolean | null
-          trustedform_cert_url?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      quiz_progress: {
-        Row: {
-          answers: Json
-          current_index: number
-          exam_id: string
-          id: string
-          question_order: Json | null
-          updated_at: string
-          user_name: string
-        }
-        Insert: {
-          answers?: Json
-          current_index?: number
-          exam_id: string
-          id?: string
-          question_order?: Json | null
-          updated_at?: string
-          user_name: string
-        }
-        Update: {
-          answers?: Json
-          current_index?: number
-          exam_id?: string
-          id?: string
-          question_order?: Json | null
-          updated_at?: string
-          user_name?: string
-        }
-        Relationships: []
-      }
-      quiz_results: {
-        Row: {
-          completed_at: string
-          exam_id: string
-          id: string
-          percentage: number
-          score: number
-          total: number
-          user_name: string
-          wrong_answers: Json | null
-        }
-        Insert: {
-          completed_at?: string
-          exam_id: string
-          id?: string
-          percentage: number
-          score: number
-          total: number
-          user_name: string
-          wrong_answers?: Json | null
-        }
-        Update: {
-          completed_at?: string
-          exam_id?: string
-          id?: string
-          percentage?: number
-          score?: number
-          total?: number
-          user_name?: string
-          wrong_answers?: Json | null
-        }
-        Relationships: []
-      }
-      recordings: {
-        Row: {
-          call_id: string
-          duration_seconds: number | null
-          file_size_bytes: number | null
-          filename: string
-          id: string
-          mime_type: string | null
-          public_url: string | null
-          storage_path: string
-          uploaded_at: string | null
-        }
-        Insert: {
-          call_id: string
-          duration_seconds?: number | null
-          file_size_bytes?: number | null
-          filename: string
-          id?: string
-          mime_type?: string | null
-          public_url?: string | null
-          storage_path: string
-          uploaded_at?: string | null
-        }
-        Update: {
-          call_id?: string
-          duration_seconds?: number | null
-          file_size_bytes?: number | null
-          filename?: string
-          id?: string
-          mime_type?: string | null
-          public_url?: string | null
-          storage_path?: string
-          uploaded_at?: string | null
-        }
-        Relationships: []
-      }
-      scheduled_callbacks: {
-        Row: {
-          completed_at: string | null
-          created_at: string | null
-          id: string
-          lead_id: string | null
-          notes: string | null
-          phone_number: string
-          scheduled_time: string
-          status: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string | null
-          id?: string
-          lead_id?: string | null
-          notes?: string | null
-          phone_number: string
-          scheduled_time: string
-          status?: string | null
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string | null
-          id?: string
-          lead_id?: string | null
-          notes?: string | null
-          phone_number?: string
-          scheduled_time?: string
-          status?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "scheduled_callbacks_lead_id_fkey"
-            columns: ["lead_id"]
-            isOneToOne: false
-            referencedRelation: "leads"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tm_event_daily: {
-        Row: {
+          actor_id: string | null
+          actor_name: string | null
+          actor_type: string
+          causation_id: string | null
+          client_slug: string | null
+          correlation_id: string | null
           created_at: string
-          date: string
+          detail: string | null
+          entity_id: string | null
+          entity_type: string | null
+          event_name: string
+          event_version: number
           id: string
-          revenue: number
-          tickets_sold: number
-          tm_id: string
+          idempotency_key: string | null
+          metadata: Json
+          occurred_at: string
+          page_id: string | null
+          source: string
+          summary: string
+          task_id: string | null
+          visibility: string
         }
         Insert: {
+          actor_id?: string | null
+          actor_name?: string | null
+          actor_type?: string
+          causation_id?: string | null
+          client_slug?: string | null
+          correlation_id?: string | null
           created_at?: string
-          date: string
+          detail?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_name: string
+          event_version?: number
           id?: string
-          revenue?: number
-          tickets_sold?: number
-          tm_id: string
+          idempotency_key?: string | null
+          metadata?: Json
+          occurred_at?: string
+          page_id?: string | null
+          source?: string
+          summary: string
+          task_id?: string | null
+          visibility?: string
         }
         Update: {
+          actor_id?: string | null
+          actor_name?: string | null
+          actor_type?: string
+          causation_id?: string | null
+          client_slug?: string | null
+          correlation_id?: string | null
           created_at?: string
-          date?: string
+          detail?: string | null
+          entity_id?: string | null
+          entity_type?: string | null
+          event_name?: string
+          event_version?: number
           id?: string
-          revenue?: number
-          tickets_sold?: number
-          tm_id?: string
+          idempotency_key?: string | null
+          metadata?: Json
+          occurred_at?: string
+          page_id?: string | null
+          source?: string
+          summary?: string
+          task_id?: string | null
+          visibility?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "tm_event_daily_tm_id_fkey"
-            columns: ["tm_id"]
-            isOneToOne: false
-            referencedRelation: "tm_events"
-            referencedColumns: ["tm_id"]
-          },
-        ]
+        Relationships: []
       }
       tm_event_demographics: {
         Row: {
@@ -1162,7 +725,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_clerk_user_id: { Args: never; Returns: string }
+      effective_campaign_client_slug: {
+        Args: { input_campaign_id: string }
+        Returns: string
+      }
       is_admin: { Args: never; Returns: boolean }
+      is_current_client_member: {
+        Args: { target_client_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
@@ -1203,6 +775,56 @@ export type Tables<
         Row: infer R
       }
       ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
       : never
     : never
 
