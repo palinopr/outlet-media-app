@@ -31,6 +31,14 @@ export function AssignmentManager({
     });
   }
 
+  function selectAllCampaigns() {
+    setSelCampaigns(new Set(campaigns.map((campaign) => campaign.id)));
+  }
+
+  function clearCampaigns() {
+    setSelCampaigns(new Set());
+  }
+
   async function handleSave() {
     setSaving(true);
     try {
@@ -66,11 +74,37 @@ export function AssignmentManager({
 
       {open && (
         <div className="mt-3 rounded-lg border border-border/60 bg-card p-4 space-y-4">
+          <div>
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+              Campaign visibility
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              This member will see {totalAssigned} of {campaigns.length} assigned campaign{campaigns.length === 1 ? "" : "s"}.
+            </p>
+          </div>
+
           {campaigns.length > 0 && (
             <div>
-              <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-                Campaigns
-              </p>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={selectAllCampaigns}
+                >
+                  Select all
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={clearCampaigns}
+                >
+                  Clear
+                </Button>
+              </div>
               <div className="space-y-1 max-h-48 overflow-y-auto">
                 {campaigns.map((c) => (
                   <label

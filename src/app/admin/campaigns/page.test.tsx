@@ -70,6 +70,10 @@ describe("CampaignsPage", () => {
     render(await CampaignsPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByText("1 campaign needs client assignment")).toBeInTheDocument();
-    expect(screen.getByText(/assign them to an existing client account/i)).toBeInTheDocument();
+    expect(screen.getByText(/Use the inline Client selector/i)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /view campaigns needing assignment/i })).toHaveAttribute(
+      "href",
+      "/admin/campaigns?client=unknown",
+    );
   });
 });

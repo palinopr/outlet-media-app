@@ -103,7 +103,7 @@ export function ClientDetailView({ client }: Props) {
         />
       )}
       {activeTab === "members" && <MembersSection client={client} />}
-      {activeTab === "campaigns" && <CampaignsSection campaigns={client.campaigns} />}
+      {activeTab === "campaigns" && <CampaignsSection campaigns={client.campaigns} clientSlug={client.slug} />}
     </div>
   );
 }

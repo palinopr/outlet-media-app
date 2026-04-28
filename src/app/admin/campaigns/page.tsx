@@ -6,6 +6,7 @@ import { parseRange } from "@/lib/constants";
 import { ClientFilter } from "@/components/admin/campaigns/client-filter";
 import { DateRangeFilter } from "@/components/admin/campaigns/date-range-filter";
 import { CampaignTable } from "@/components/admin/campaigns/campaign-table";
+import Link from "next/link";
 import { Suspense } from "react";
 import { fmtUsd, fmtNum, slugToLabel, computeBlendedRoas } from "@/lib/formatters";
 import type { DailyInsight } from "@/lib/meta-campaigns";
@@ -74,8 +75,16 @@ export default async function CampaignsPage({ searchParams }: Props) {
             {unassignedCampaignCount} campaign{unassignedCampaignCount === 1 ? "" : "s"} {unassignedCampaignCount === 1 ? "needs" : "need"} client assignment
           </p>
           <p className="mt-1 text-xs text-amber-100/70">
-            Select those campaign rows and assign them to an existing client account before they are treated as client-facing portal data.
+            Use the inline Client selector or select rows in bulk before they are treated as client-facing portal data.
           </p>
+          {clientSlug !== "unknown" ? (
+            <Link
+              href="/admin/campaigns?client=unknown"
+              className="mt-2 inline-flex rounded border border-amber-500/30 px-2.5 py-1 text-xs font-medium text-amber-100 transition hover:bg-amber-500/10"
+            >
+              View campaigns needing assignment
+            </Link>
+          ) : null}
         </div>
       )}
 
@@ -95,7 +104,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
       <Card className="border-border/60">
         <div className="flex flex-wrap items-center justify-between gap-2 px-4 pt-4 pb-2">
           <p className="text-sm font-semibold">
-            {clientSlug ? slugToLabel(clientSlug) : "All clients"}
+            {clientSlug === "unknown" ? "Needs assignment" : clientSlug ? slugToLabel(clientSlug) : "All clients"}
             <span className="text-muted-foreground font-normal ml-1.5">({campaigns.length})</span>
           </p>
           <div className="flex items-center gap-2">

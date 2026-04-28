@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { createSelectColumn } from "@/components/admin/data-table/select-column";
 import { Trash2, Loader2, X, ChevronDown } from "lucide-react";
@@ -33,6 +34,7 @@ interface UserColumnsOptions {
 }
 
 function AssignCell({ user, clients }: { user: UserRow; clients: ClientOption[] }) {
+  const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set(user.client_slugs));
   const [busyClientId, setBusyClientId] = useState<string | null>(null);
 
@@ -59,6 +61,7 @@ function AssignCell({ user, clients }: { user: UserRow; clients: ClientOption[] 
       toast.success(
         isAdding ? `Added ${slugToLabel(client.slug)}` : `Removed ${slugToLabel(client.slug)}`,
       );
+      router.refresh();
     } catch {
       toast.error("Failed to update client access");
     } finally {

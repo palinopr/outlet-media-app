@@ -55,26 +55,20 @@ async function revalidateClientAccountPaths(clientSlugs: Array<string | null | u
   }
 }
 
-async function ensureClientExists(clientSlug: string) {
+async function getAssignableClientBySlug(clientSlug: string) {
   if (!supabaseAdmin) throw new Error("DB not configured");
 
-  const { data: existing } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("clients")
-    .select("id")
+    .select("id, slug, status")
     .eq("slug", clientSlug)
     .maybeSingle();
 
-  if (existing) return;
-
-  const name = clientSlug
-    .split("_")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
-  const { error } = await supabaseAdmin
-    .from("clients")
-    .insert({ name, slug: clientSlug, status: "active" });
-
   if (error) throw new Error(error.message);
+  if (!data) throw new Error("Client not found. Create the client before assigning campaigns.");
+  if (data.status !== "active") throw new Error("Client is inactive. Reactivate it before assigning campaigns.");
+
+  return data;
 }
 
 async function upsertCampaignClientOverrides(campaignIds: string[], clientSlug: string) {
@@ -285,9 +279,15 @@ export async function updateCampaignBudget(formData: { campaignId: string; daily
   revalidateCampaignSurfaces(parsed.campaignId, [old?.client_slug]);
 }
 
+const ClientSlugAssignmentSchema = z
+  .string()
+  .min(1)
+  .regex(/^[a-z0-9_]+$/)
+  .refine((slug) => slug !== "unknown", "Select an active client account");
+
 const AssignClientSchema = z.object({
   campaignId: z.string().min(1),
-  clientSlug: z.string(),
+  clientSlug: ClientSlugAssignmentSchema,
 });
 
 export async function assignCampaignClient(formData: { campaignId: string; clientSlug: string }) {
@@ -299,7 +299,7 @@ export async function assignCampaignClient(formData: { campaignId: string; clien
   const user = await currentUser();
   if (!user) throw new Error("Unauthenticated");
 
-  await ensureClientExists(parsed.clientSlug);
+  const targetClient = await getAssignableClientBySlug(parsed.clientSlug);
 
   const old = await getEffectiveCampaignRowById<{
     campaign_id: string;
@@ -331,11 +331,15 @@ export async function assignCampaignClient(formData: { campaignId: string; clien
     },
   });
   revalidateCampaignSurfaces(parsed.campaignId, [old?.client_slug, parsed.clientSlug]);
+  revalidatePath("/admin/campaigns");
+  revalidatePath("/admin/clients");
+  revalidatePath(`/admin/clients/${targetClient.id}`);
+  await revalidateClientAccountPaths([old?.client_slug, parsed.clientSlug]);
 }
 
 const BulkAssignSchema = z.object({
   campaignIds: z.array(z.string().min(1)).min(1),
-  clientSlug: z.string().min(1),
+  clientSlug: ClientSlugAssignmentSchema,
 });
 
 export async function bulkAssignClient(formData: { campaignIds: string[]; clientSlug: string }) {
@@ -347,7 +351,7 @@ export async function bulkAssignClient(formData: { campaignIds: string[]; client
   const user = await currentUser();
   if (!user) throw new Error("Unauthenticated");
 
-  await ensureClientExists(parsed.clientSlug);
+  await getAssignableClientBySlug(parsed.clientSlug);
 
   const { data: existingCampaignRows, error: existingCampaignRowsError } = await supabaseAdmin
     .from("meta_campaigns")

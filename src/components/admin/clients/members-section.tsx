@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Clock3, UserPlus, Trash2, X } from "lucide-react";
+import { AlertTriangle, Clock3, Eye, UserPlus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { fmtDate, getInvitationStatusCfg } from "@/lib/formatters";
@@ -28,6 +28,11 @@ export function MembersSection({ client }: { client: ClientDetail }) {
   const [showInvite, setShowInvite] = useState(false);
   const inviteCounts = countActionableInvitationStatuses(
     client.pendingInvites.map((invite) => invite.status),
+  );
+  const allAccessMembers = client.members.filter((member) => member.scope !== "assigned");
+  const assignedAccessMembers = client.members.filter((member) => member.scope === "assigned");
+  const noVisibleCampaignMembers = assignedAccessMembers.filter(
+    (member) => member.assignedCampaignIds.length === 0,
   );
 
   return (
@@ -55,6 +60,40 @@ export function MembersSection({ client }: { client: ClientDetail }) {
           />
         </div>
       )}
+
+      <Card className="mb-4 border-border/60">
+        <div className="flex items-start justify-between gap-3 border-b border-border/60 px-4 py-3">
+          <div>
+            <h3 className="text-sm font-medium">Access coverage</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Campaign visibility is controlled here. Members with assigned visibility only see the campaigns selected for them.
+            </p>
+          </div>
+          <Eye className="mt-0.5 h-4 w-4 text-muted-foreground" />
+        </div>
+        <div className="grid gap-3 px-4 py-4 sm:grid-cols-3">
+          <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+            <p className="text-xs text-muted-foreground">All campaigns</p>
+            <p className="mt-1 text-lg font-semibold">{allAccessMembers.length}</p>
+          </div>
+          <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+            <p className="text-xs text-muted-foreground">Assigned only</p>
+            <p className="mt-1 text-lg font-semibold">{assignedAccessMembers.length}</p>
+          </div>
+          <div className={`rounded-lg border p-3 ${noVisibleCampaignMembers.length > 0 ? "border-amber-500/30 bg-amber-500/10" : "border-border/60 bg-muted/20"}`}>
+            <p className="text-xs text-muted-foreground">No visible campaigns</p>
+            <p className="mt-1 text-lg font-semibold">{noVisibleCampaignMembers.length}</p>
+          </div>
+        </div>
+        {noVisibleCampaignMembers.length > 0 ? (
+          <div className="mx-4 mb-4 flex gap-2 rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-100">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <p>
+              {noVisibleCampaignMembers.length} assigned-only member{noVisibleCampaignMembers.length === 1 ? "" : "s"} currently cannot see any campaigns. Assign at least one campaign or switch visibility to all campaigns.
+            </p>
+          </div>
+        ) : null}
+      </Card>
 
       <Card className="mb-4 border-border/60">
         <div className="flex items-start justify-between gap-3 border-b border-border/60 px-4 py-3">
@@ -180,6 +219,12 @@ export function MembersSection({ client }: { client: ClientDetail }) {
                         member={m}
                         campaigns={client.campaigns}
                       />
+                      {m.scope === "assigned" && m.assignedCampaignIds.length === 0 ? (
+                        <p className="flex items-center gap-1.5 text-xs text-amber-400">
+                          <AlertTriangle className="h-3 w-3" />
+                          No campaigns visible
+                        </p>
+                      ) : null}
                     </div>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">

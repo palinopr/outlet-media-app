@@ -1,9 +1,11 @@
 "use client";
 
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ColumnDef } from "@tanstack/react-table";
 import { createSelectColumn } from "@/components/admin/data-table/select-column";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { ColumnHeader } from "@/components/admin/data-table/column-header";
 import { StatusSelect } from "@/components/admin/status-select";
 import {
@@ -13,7 +15,7 @@ import {
   roasColor,
   computeMarginalRoas,
 } from "@/lib/formatters";
-import { updateCampaignStatus, updateCampaignType } from "@/app/admin/actions/campaigns";
+import { assignCampaignClient, updateCampaignStatus, updateCampaignType } from "@/app/admin/actions/campaigns";
 import { toast } from "sonner";
 import type { MetaCampaignCard, DailyInsight } from "@/lib/meta-campaigns";
 import {
@@ -35,13 +37,70 @@ const TYPE_OPTIONS = [
 ];
 
 interface CampaignColumnsOptions {
+  clients: string[];
   dailyInsightsByCampaign: Record<string, DailyInsight[]>;
   metaAdAccountId: string | null;
 }
 
+function CampaignClientSelect({
+  campaignId,
+  clients,
+  currentClientSlug,
+}: {
+  campaignId: string;
+  clients: string[];
+  currentClientSlug: string;
+}) {
+  const router = useRouter();
+  const [value, setValue] = useState(currentClientSlug === "unknown" ? "" : currentClientSlug);
+  const [isPending, startTransition] = useTransition();
+
+  function handleChange(nextClientSlug: string) {
+    if (!nextClientSlug || nextClientSlug === value) return;
+
+    const previous = value;
+    setValue(nextClientSlug);
+    startTransition(async () => {
+      try {
+        await assignCampaignClient({
+          campaignId,
+          clientSlug: nextClientSlug,
+        });
+        toast.success(`Assigned to ${slugToLabel(nextClientSlug)}`);
+        router.refresh();
+      } catch (err) {
+        setValue(previous);
+        toast.error(err instanceof Error ? err.message : "Failed to assign client");
+      }
+    });
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <select
+        value={value}
+        onChange={(event) => handleChange(event.target.value)}
+        disabled={isPending || clients.length === 0}
+        className={`h-7 min-w-36 rounded border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring disabled:opacity-50 ${
+          value ? "border-border" : "border-amber-500/30 text-amber-300"
+        }`}
+      >
+        <option value="" disabled>
+          {clients.length === 0 ? "No active clients" : "Assign client..."}
+        </option>
+        {clients.map((slug) => (
+          <option key={slug} value={slug}>
+            {slugToLabel(slug)}
+          </option>
+        ))}
+      </select>
+      {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" /> : null}
+    </div>
+  );
+}
 
 export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<MetaCampaignCard>[] {
-  const { dailyInsightsByCampaign, metaAdAccountId } = opts;
+  const { clients, dailyInsightsByCampaign, metaAdAccountId } = opts;
 
   return [
     createSelectColumn<MetaCampaignCard>(),
@@ -102,9 +161,11 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
       accessorKey: "clientSlug",
       header: ({ column }) => <ColumnHeader column={column} title="Client" />,
       cell: ({ row }) => (
-        <span className="text-sm text-muted-foreground">
-          {slugToLabel(row.original.clientSlug)}
-        </span>
+        <CampaignClientSelect
+          campaignId={row.original.campaignId}
+          clients={clients}
+          currentClientSlug={row.original.clientSlug}
+        />
       ),
     },
     {

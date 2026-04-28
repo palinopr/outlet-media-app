@@ -20,6 +20,8 @@ Routes should authenticate, validate input, call feature-owned logic, and return
 
 The client account record and `client_members` are the authority for portal access. Do not use Clerk metadata or URL slugs as the business source of truth for memberships or landing behavior. Clerk invitation metadata may be used only as transition metadata to accept a DB-backed `client_access_invites` row and create the real `client_members` record.
 
+Campaign ownership assignment must target an existing active client account. Do not auto-create clients from a typed campaign slug; create/activate the client in Clients first, then assign campaigns to that canonical account.
+
 Client portal packaging is intentionally simple right now: Campaigns are the only active client-facing app surface.
 
 ## Keep The Surface Small

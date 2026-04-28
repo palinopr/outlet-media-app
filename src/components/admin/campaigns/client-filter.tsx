@@ -25,6 +25,7 @@ export function ClientFilter({ clients }: Props) {
       className="text-xs bg-background border border-border/60 rounded px-2.5 py-1.5 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
     >
       <option value="all">All clients</option>
+      <option value="unknown">Needs assignment</option>
       {clients.map((slug) => (
         <option key={slug} value={slug}>
           {slugToLabel(slug)}

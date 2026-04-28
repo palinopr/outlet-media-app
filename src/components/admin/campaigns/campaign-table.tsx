@@ -36,7 +36,7 @@ function AssignToolbar({
     startTransition(async () => {
       try {
         const count = await bulkAssignClient({ campaignIds: ids, clientSlug: target });
-        toast.success(`Assigned ${count} campaign(s) to ${target}`);
+        toast.success(`Assigned ${count} campaign(s) to ${slugToLabel(target)}`);
         router.refresh();
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Failed to assign");
@@ -59,7 +59,7 @@ function AssignToolbar({
       >
         <option value="">Assign to...</option>
         {clients.map((c) => (
-          <option key={c} value={c}>{c}</option>
+          <option key={c} value={c}>{slugToLabel(c)}</option>
         ))}
       </select>
       <button
@@ -85,7 +85,7 @@ const campaignCsvColumns = [
 ];
 
 export function CampaignTable({ campaigns, dailyInsightsByCampaign, clients, metaAdAccountId, hasData }: CampaignTableProps) {
-  const columns = getCampaignColumns({ dailyInsightsByCampaign, metaAdAccountId });
+  const columns = getCampaignColumns({ clients, dailyInsightsByCampaign, metaAdAccountId });
 
   return (
     <DataTable
