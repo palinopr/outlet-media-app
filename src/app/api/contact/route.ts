@@ -1,17 +1,60 @@
 import { NextResponse } from "next/server";
-import { Resend } from "resend";
 import { supabaseAdmin } from "@/lib/supabase";
 import { ContactFormSchema } from "@/lib/api-schemas";
 import { apiError, validateRequest } from "@/lib/api-helpers";
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
 const contactRecipient = process.env.CONTACT_FORM_TO_EMAIL ?? "info@outletmedia.net";
 
 function withLabel(label: string, value: string | null | undefined) {
   const trimmed = value?.trim();
   return `${label}: ${trimmed && trimmed.length > 0 ? trimmed : "n/a"}`;
+}
+
+async function sendContactEmail(input: {
+  company?: string | null;
+  email: string;
+  goal?: string | null;
+  message: string;
+  monthlyBudget?: string | null;
+  name: string;
+  pageContext?: string | null;
+  phone?: string | null;
+  preferredContact?: string | null;
+  website?: string | null;
+}) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from: process.env.RESEND_FROM_EMAIL ?? "Outlet Media <noreply@outletmedia.co>",
+      to: [contactRecipient],
+      subject: `New audit request: ${input.name}${input.company?.trim() ? ` (${input.company.trim()})` : ""}`,
+      text: [
+        `Name: ${input.name}`,
+        `Email: ${input.email}`,
+        withLabel("Phone", input.phone),
+        withLabel("Business", input.company),
+        withLabel("Website", input.website),
+        withLabel("Goal", input.goal),
+        withLabel("Monthly budget", input.monthlyBudget),
+        withLabel("Preferred contact", input.preferredContact),
+        withLabel("Page context", input.pageContext),
+        "Message:",
+        input.message.trim(),
+      ].join("\n"),
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(`Resend API returned ${response.status}${body ? `: ${body}` : ""}`);
+  }
 }
 
 export async function POST(request: Request) {
@@ -54,29 +97,21 @@ export async function POST(request: Request) {
     }
   }
 
-  if (resend) {
-    try {
-      await resend.emails.send({
-        from: process.env.RESEND_FROM_EMAIL ?? "Outlet Media <noreply@outletmedia.co>",
-        to: contactRecipient,
-        subject: `New audit request: ${name}${company?.trim() ? ` (${company.trim()})` : ""}`,
-        text: [
-          `Name: ${name}`,
-          `Email: ${email}`,
-          withLabel("Phone", phone),
-          withLabel("Business", company),
-          withLabel("Website", website),
-          withLabel("Goal", goal),
-          withLabel("Monthly budget", monthlyBudget),
-          withLabel("Preferred contact", preferredContact),
-          withLabel("Page context", pageContext),
-          "Message:",
-          message.trim(),
-        ].join("\n"),
-      });
-    } catch (err) {
-      console.error("resend email error:", err);
-    }
+  try {
+    await sendContactEmail({
+      company,
+      email,
+      goal,
+      message,
+      monthlyBudget,
+      name,
+      pageContext,
+      phone,
+      preferredContact,
+      website,
+    });
+  } catch (err) {
+    console.error("resend email error:", err);
   }
 
   return NextResponse.json({ ok: true });
