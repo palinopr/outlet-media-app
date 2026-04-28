@@ -15,7 +15,6 @@ import {
   type PerformanceTrendRow,
   gridProps,
   sharedAxisProps,
-  usdKFormatter,
   kFormatter,
 } from "./types";
 
@@ -39,7 +38,7 @@ const METRICS: Array<{
     color: "#22d3ee",
     fillId: "spendTrendFill",
     defaultVisible: true,
-    formatter: usdKFormatter,
+    formatter: moneyFormatter,
   },
   {
     key: "clicks",
@@ -71,16 +70,25 @@ const METRICS: Array<{
     color: "#fbbf24",
     fillId: "cpcTrendFill",
     defaultVisible: true,
-    formatter: usdKFormatter,
+    formatter: moneyFormatter,
   },
   {
     key: "revenue",
     label: "Revenue",
     color: "#fb7185",
     fillId: "revenueTrendFill",
-    formatter: usdKFormatter,
+    formatter: moneyFormatter,
   },
 ];
+
+function moneyFormatter(value: number): string {
+  if (Math.abs(value) >= 1000) {
+    const formatted = value / 1000;
+    return `$${formatted >= 10 ? formatted.toFixed(0) : formatted.toFixed(1)}K`;
+  }
+  if (Math.abs(value) >= 100) return `$${value.toFixed(0)}`;
+  return `$${value.toFixed(2)}`;
+}
 
 export function PerformanceTrendTabs({ data }: Props) {
   const chartData = useMemo(() => {
@@ -146,7 +154,7 @@ export function PerformanceTrendTabs({ data }: Props) {
       </div>
 
       <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
           <ComposedChart
             data={chartData}
             margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
