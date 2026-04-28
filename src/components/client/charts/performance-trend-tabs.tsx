@@ -154,7 +154,13 @@ export function PerformanceTrendTabs({ data }: Props) {
       </div>
 
       <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          minWidth={0}
+          minHeight={0}
+          initialDimension={{ width: 640, height: 320 }}
+        >
           <ComposedChart
             data={chartData}
             margin={{ top: 8, right: 8, left: 0, bottom: 0 }}

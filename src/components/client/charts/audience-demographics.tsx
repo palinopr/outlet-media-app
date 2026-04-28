@@ -159,7 +159,13 @@ function AgeTab({ data }: { data: AgeRow[] }) {
 
   return (
     <div className="h-[260px]">
-      <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+      <ResponsiveContainer
+        width="100%"
+        height="100%"
+        minWidth={0}
+        minHeight={0}
+        initialDimension={{ width: 320, height: 260 }}
+      >
         <BarChart
           data={data}
           layout="vertical"
@@ -203,7 +209,13 @@ function GenderTab({ data }: { data: GenderRow[] }) {
   return (
     <div className="flex flex-col items-center gap-4 h-[260px]">
       <div className="h-44 w-44 shrink-0">
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          minWidth={0}
+          minHeight={0}
+          initialDimension={{ width: 176, height: 176 }}
+        >
           <PieChart>
             <Pie
               data={data}

@@ -76,7 +76,13 @@ export function PlacementBarChart({ data }: { data: PlacementBarData[] }) {
         Impressions by Placement
       </p>
       <div className="h-[240px]">
-        <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          minWidth={0}
+          minHeight={0}
+          initialDimension={{ width: 520, height: 240 }}
+        >
           <BarChart
             data={chartData}
             margin={{ top: 4, right: 8, bottom: 0, left: 0 }}
