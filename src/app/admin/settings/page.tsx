@@ -21,6 +21,7 @@ function getApiKeyStatus() {
     { label: "SUPABASE_SERVICE_ROLE_KEY", envVar: "SUPABASE_SERVICE_ROLE_KEY", group: "Core database", required: true },
     { label: "INGEST_SECRET", envVar: "INGEST_SECRET", group: "Core ingest", required: true },
     { label: "NEXT_PUBLIC_APP_URL", envVar: "NEXT_PUBLIC_APP_URL", group: "Runtime", required: false },
+    { label: "APPLICATION_ERROR_ALERT_WINDOW_MINUTES", envVar: "APPLICATION_ERROR_ALERT_WINDOW_MINUTES", group: "Observability", required: false },
     { label: "META_ACCESS_TOKEN", envVar: "META_ACCESS_TOKEN", group: "Meta", required: false },
     { label: "META_AD_ACCOUNT_ID", envVar: "META_AD_ACCOUNT_ID", group: "Meta", required: false },
     { label: "META_APP_SECRET", envVar: "META_APP_SECRET", group: "Meta", required: false },

@@ -22,6 +22,14 @@ describe("guessClientSlug", () => {
   it("maps happy_paws with underscore", () => {
     expect(guessClientSlug("happy_paws campaign")).toBe("happy_paws");
   });
+  it("maps active production client naming variants", () => {
+    expect(guessClientSlug("Vaz Vil - Kiko Blade")).toBe("vaz_vil_enterprise");
+    expect(guessClientSlug("Sienna - Peace In Mind")).toBe("sienna");
+    expect(guessClientSlug("House78 - Luck at 9AM - Philadelphia")).toBe("9am");
+    expect(guessClientSlug("Outlet Media - Lead generation w/ form")).toBe("outlet_media");
+    expect(guessClientSlug("Chris R - 05/22")).toBe("chris_r");
+    expect(guessClientSlug("Proteccion final - Leads - 6")).toBe("proteccion_final");
+  });
   it("returns unknown for unrecognized", () => {
     expect(guessClientSlug("Some Random Campaign")).toBe("unknown");
   });

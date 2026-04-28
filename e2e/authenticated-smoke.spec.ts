@@ -83,12 +83,63 @@ test.describe("authenticated smoke", () => {
     await assertMobileAdminNavigation(page);
     await assertMobileClientPortalNavigation(page, clientPortalSlug);
   });
+
+  test("active surfaces do not create page-level horizontal overflow", async ({ page }) => {
+    if (!adminUser) throw new Error("Temporary admin Clerk user was not created.");
+
+    await signInAsAdmin(page, adminUser.id);
+
+    const adminPaths = [
+      "/admin/dashboard",
+      "/admin/campaigns",
+      "/admin/clients",
+      "/admin/users",
+      "/admin/settings",
+    ];
+    for (const path of adminPaths) {
+      await page.goto(appUrl(path), { waitUntil: "domcontentloaded" });
+      await assertNoPageOverflow(page, path);
+    }
+
+    await page.goto(appUrl("/admin/campaigns"), { waitUntil: "domcontentloaded" });
+    const firstAdminCampaign = page.locator('table a[href^="/admin/campaigns/"]').first();
+    await expect(firstAdminCampaign).toBeVisible();
+    await firstAdminCampaign.click();
+    await assertNoPageOverflow(page, "admin campaign detail");
+
+    await page.goto(appUrl(`/client/${clientPortalSlug}/campaigns`), { waitUntil: "domcontentloaded" });
+    await assertNoPageOverflow(page, "client campaigns");
+    const firstClientCampaignRow = page.locator("table tbody tr").first();
+    await expect(firstClientCampaignRow).toBeVisible();
+    await firstClientCampaignRow.click();
+    await expect(page).toHaveURL(new RegExp(`/client/${clientPortalSlug}/campaign/[^/?#]+`));
+    await assertNoPageOverflow(page, "client campaign detail");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    for (const path of [...adminPaths, `/client/${clientPortalSlug}/campaigns`]) {
+      await page.goto(appUrl(path), { waitUntil: "domcontentloaded" });
+      await assertNoPageOverflow(page, `${path} mobile`);
+    }
+  });
 });
 
 async function assertSignedOutRedirect(page: Page, path: string) {
   await page.goto(appUrl(path), { waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/sign-in(?:[/?#]|$)/);
   await expect(page.locator("body")).toContainText(/Sign in to Outlet Media|Email address/);
+}
+
+async function assertNoPageOverflow(page: Page, label: string) {
+  await page.waitForLoadState("networkidle").catch(() => undefined);
+  const metrics = await page.evaluate(() => ({
+    bodyScrollWidth: document.body.scrollWidth,
+    clientWidth: document.documentElement.clientWidth,
+    documentScrollWidth: document.documentElement.scrollWidth,
+  }));
+  const maxScrollWidth = Math.max(metrics.bodyScrollWidth, metrics.documentScrollWidth);
+  expect(maxScrollWidth, `${label} should not create horizontal page overflow`).toBeLessThanOrEqual(
+    metrics.clientWidth + 2,
+  );
 }
 
 async function signInAsAdmin(page: Page, userId: string) {

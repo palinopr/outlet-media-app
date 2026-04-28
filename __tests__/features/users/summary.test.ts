@@ -72,6 +72,22 @@ describe("buildUsersAccessSummary", () => {
           totalRevenue: 0,
           totalSpend: 0,
         },
+        {
+          activeCampaigns: 0,
+          createdAt: "2026-03-05T10:00:00.000Z",
+          connectedAccountCount: 0,
+          connectionRiskAccounts: 0,
+          id: "client_3",
+          memberCount: 0,
+          name: "Inactive Client",
+          needsAttention: 0,
+          roas: 0,
+          slug: "inactive_client",
+          status: "inactive",
+          totalCampaigns: 0,
+          totalRevenue: 0,
+          totalSpend: 0,
+        },
       ],
     );
 

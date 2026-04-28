@@ -58,6 +58,11 @@ Use the **E2E Smoke** GitHub Actions workflow when you want the same smoke from 
 - Campaign detail renders performance metrics and no retired workflow panels.
 - Client portal navigation is Campaigns-only.
 - Retired Events/Reports direct URLs redirect back to active surfaces.
+- Active desktop and mobile surfaces do not create page-level horizontal overflow.
+
+## Scheduled production monitor
+
+The **Production Monitor** GitHub Actions workflow runs every 30 minutes and can be run manually. It fails when `/api/health` is degraded, the database check is not `ok`, or authenticated client errors were recorded in the recent alert window.
 
 ## If smoke fails
 

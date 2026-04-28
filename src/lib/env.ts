@@ -24,6 +24,7 @@ const serverSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().optional(),
   CONTACT_FORM_TO_EMAIL: z.string().optional(),
+  APPLICATION_ERROR_ALERT_WINDOW_MINUTES: z.string().optional(),
 
   // Meta signed-request verification / legacy callback support
   META_APP_SECRET: z.string().optional(),
@@ -62,6 +63,7 @@ function validateEnv() {
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
     CONTACT_FORM_TO_EMAIL: process.env.CONTACT_FORM_TO_EMAIL,
+    APPLICATION_ERROR_ALERT_WINDOW_MINUTES: process.env.APPLICATION_ERROR_ALERT_WINDOW_MINUTES,
     META_APP_SECRET: process.env.META_APP_SECRET,
   });
 

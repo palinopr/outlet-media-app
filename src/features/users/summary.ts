@@ -54,7 +54,7 @@ export function buildUsersAccessSummary(
     .slice(0, 5);
 
   const clientsNeedingCoverage = [...clients]
-    .filter((client) => client.memberCount <= 1)
+    .filter((client) => client.status === "active" && client.memberCount <= 1)
     .sort(compareClientCoverage)
     .slice(0, 5);
 

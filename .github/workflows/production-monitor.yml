@@ -1,0 +1,54 @@
+name: Production Monitor
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Production URL to check"
+        required: true
+        default: "https://outletmedia.net"
+
+jobs:
+  health:
+    name: Health and error alert
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BASE_URL: ${{ github.event.inputs.base_url || 'https://outletmedia.net' }}
+    steps:
+      - name: Fetch health payload
+        run: |
+          set -euo pipefail
+          curl --fail --show-error --silent --max-time 20 "$BASE_URL/api/health" > health.json
+          cat health.json
+
+      - name: Alert on degraded health or recent app errors
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const payload = JSON.parse(fs.readFileSync('health.json', 'utf8'));
+          const failures = [];
+
+          if (payload.status !== 'ok') {
+            failures.push(`status=${payload.status}`);
+          }
+          if (payload.checks?.database !== 'ok') {
+            failures.push(`database=${payload.checks?.database ?? 'missing'}`);
+          }
+          if (payload.checks?.application_errors === 'warning') {
+            const recent = payload.observability?.recentApplicationErrors;
+            failures.push(`${recent?.count ?? 'unknown'} application error(s) in the last ${recent?.windowMinutes ?? 'unknown'} minutes`);
+          }
+          if (payload.checks?.application_errors === 'error') {
+            failures.push('application error check failed');
+          }
+
+          if (failures.length > 0) {
+            console.error(`Production monitor failed: ${failures.join('; ')}`);
+            process.exit(1);
+          }
+
+          console.log('Production health is ok.');
+          NODE

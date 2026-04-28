@@ -5,6 +5,7 @@ Production Supabase project: `dbznwsnteogovicllean`.
 ## Backup policy
 
 - Use Supabase managed daily backups as the primary production safety net.
+- The **Supabase Backup Readiness** GitHub Actions workflow runs weekly and can be run manually to verify the project backups are listable with `SUPABASE_ACCESS_TOKEN`.
 - Before any destructive migration or cleanup, create a manual backup from the Supabase dashboard.
 - Keep local exports for emergency inspection only; do not commit dumps or secrets to git.
 

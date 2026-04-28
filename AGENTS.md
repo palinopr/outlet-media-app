@@ -94,7 +94,8 @@ For repository organization decisions, read `docs/context/repo-organization.md` 
 - Monetary values in Supabase: cents. Display with `centsToUsd(n)`.
 - Meta API `spend` is a dollar string -- multiply by 100 for Supabase. `daily_budget` is already cents.
 - ROAS: stored as float (e.g. 8.4), not cents or percentage.
-- Client slugs: `zamora`, `kybba`, `beamina`, `happy_paws`, `unknown`.
+- Current production client slugs include: `9am`, `beamina`, `chris_r`, `distill_pr`, `don_omar`, `don_omar_bcn`, `happy_paws`, `kybba`, `outlet_media`, `proteccion_final`, `project_solaris_bcn`, `sienna`, `vaz_vil_enterprise`, and `zamora`.
+- Avoid leaving campaign ownership as `unknown` for active campaigns. Add a client account and/or `campaign_client_overrides` row when campaign naming cannot be inferred safely.
 - Zamora sub-brands: campaigns containing "arjona", "alofoke", "camila" map to slug `zamora`.
 
 ## Meta Ad Creative Rules
