@@ -1,6 +1,6 @@
 # Docs / Wiki (manual control pages)
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 - Files: 10
 - File kinds: Markdown doc (9), file (.py) (1)
@@ -80,7 +80,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Feature Modules \| Primary product-facing areas \| Embedded workflow/support areas \| Additional feature areas present in the tree \| How to read this page
 
 ## `docs/wiki/pages/inventory/source-map.md`
-- Status: modified
+- Status: tracked-clean
 - System: docs
 - Group: Docs / Wiki (manual control pages)
 - Ownership: repo wiki source
@@ -116,7 +116,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Raw Sources
 
 ## `docs/wiki/tools/generate_repo_catalog.py`
-- Status: modified
+- Status: tracked-clean
 - System: docs
 - Group: Docs / Wiki (manual control pages)
 - Ownership: repo wiki source

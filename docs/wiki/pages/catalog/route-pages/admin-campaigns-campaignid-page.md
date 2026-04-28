@@ -1,6 +1,6 @@
 # /admin/campaigns/[campaignId]
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 - Route file: `src/app/admin/campaigns/[campaignId]/page.tsx`
 - Type: Next.js page

@@ -1,6 +1,6 @@
 # Approval visibility and notification rules
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 Files and DB objects that appear to control who sees approvals, notifications, and shared timeline events.
 

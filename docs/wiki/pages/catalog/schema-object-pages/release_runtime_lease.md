@@ -1,6 +1,6 @@
 # Schema object: release_runtime_lease
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 - Kinds: function
 - Migrations: supabase/migrations/20260306034500_runtime_leases.sql

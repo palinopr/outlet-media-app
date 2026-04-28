@@ -1,6 +1,6 @@
 # Docs / Context
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 - Files: 12
 - File kinds: Markdown doc (12)
@@ -56,7 +56,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Codex Workflow \| 1. Scope Threads To A Single Deliverable \| 2. Stay In One Checkout \| 3. Keep Prompts Narrow \| 3a. Choose The Surface Explicitly \| 4. Keep Repo Guidance Layered
 
 ## `docs/context/current-priorities.md`
-- Status: modified
+- Status: tracked-clean
 - System: docs
 - Group: Docs / Context
 - Ownership: durable context documentation
@@ -68,7 +68,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Current Priorities \| Active Product Scope \| Agent Status \| Engineering Priorities
 
 ## `docs/context/engineering-principles.md`
-- Status: modified
+- Status: tracked-clean
 - System: docs
 - Group: Docs / Context
 - Ownership: durable context documentation

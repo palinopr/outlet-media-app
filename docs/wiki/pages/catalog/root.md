@@ -1,6 +1,6 @@
 # Root Files
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 - Files: 26
 - File kinds: Markdown doc (6), TypeScript module (6), JSON config/data (4), env/config text file (3), ignore file (2), file (no extension) (2), JavaScript module (2), TypeScript build info (1)
@@ -48,7 +48,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: ignore patterns: .git, .next, node_modules, /agent/, .playwright-mcp, .worktrees, .claude, .local, .opencode, session, root-next-artifact-2026-03-08, root-next-artifact-2026-03-08-2, root-next-artifact-2026-03-08-3, archive, coverage
 
 ## `AGENTS.md`
-- Status: modified
+- Status: tracked-clean
 - System: root
 - Group: Root Files
 - Ownership: repo root
@@ -60,7 +60,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: Outlet Media -- Project Instructions \| Stack \| Current Product Scope \| Product Principles \| Architecture Priorities \| Execution Expectations
 
 ## `README.md`
-- Status: modified
+- Status: tracked-clean
 - System: root
 - Group: Root Files
 - Ownership: repo root

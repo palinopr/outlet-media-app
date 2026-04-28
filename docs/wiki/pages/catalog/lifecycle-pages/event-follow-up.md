@@ -1,6 +1,6 @@
 # Event follow-up lifecycle
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 Files and DB objects involved in event follow-up work, event reporting, and ticket/event workflow surfaces.
 
@@ -12,7 +12,7 @@ Files and DB objects involved in event follow-up work, event reporting, and tick
 - Tests: __tests__/api/ingest.test.ts, __tests__/features/system-events/list.test.ts, src/app/admin/events/[eventId]/page.test.tsx, src/app/admin/events/page.test.tsx, src/app/client/[slug]/event/[eventId]/page.test.tsx, src/app/client/[slug]/events/page.test.tsx
 - Docs: AGENTS.md, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-03-02-admin-crud-design.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, … (+18 more)
 - Behavior signals: calls redirect() (8), calls revalidatePath() (7), server action/module (6), client component/module (5), calls notFound() (2), sets dynamic rendering mode (1), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1)
-- Auth signals: references membership/scope access concepts (11), imports Clerk server auth (8), calls currentUser() (4), calls auth() (4), contains explicit access/role guard helper usage (1)
+- Auth signals: references membership/scope access concepts (11), imports Clerk server auth (8), calls auth() (4), calls currentUser() (4), contains explicit access/role guard helper usage (1)
 
 ## Database objects
 

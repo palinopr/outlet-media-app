@@ -1,6 +1,6 @@
 # Route Stack Map
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 This page documents each Next.js special route file and the internal stack it pulls in through direct and transitive imports.
 

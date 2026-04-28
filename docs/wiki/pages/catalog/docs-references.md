@@ -1,6 +1,6 @@
 # Docs / References
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 - Files: 3
 - File kinds: Markdown doc (3)
@@ -20,7 +20,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: headings: References
 
 ## `docs/references/database-safety-runbook.md`
-- Status: modified
+- Status: tracked-clean
 - System: docs
 - Group: Docs / References
 - Ownership: reference documentation

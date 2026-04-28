@@ -1,6 +1,6 @@
 # supabase / migrations
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 - Files: 75
 - File kinds: SQL migration/query (75)
@@ -867,7 +867,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: SQL migration or query file
 
 ## `supabase/migrations/20260428002000_remove_ticketing_artifacts.sql`
-- Status: untracked
+- Status: tracked-clean
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history

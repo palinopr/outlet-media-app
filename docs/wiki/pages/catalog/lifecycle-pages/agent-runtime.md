@@ -1,6 +1,6 @@
 # Agent runtime lifecycle
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 Files and DB objects involved in queued agent work, runtime heartbeat, alerts, and runtime state.
 
@@ -12,7 +12,7 @@ Files and DB objects involved in queued agent work, runtime heartbeat, alerts, a
 - Tests: none
 - Docs: docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-admin-activity-tracking-plan.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/superpowers/plans/2026-03-10-agent-code-quality-10-10.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md, docs/superpowers/plans/2026-04-02-whatsapp-removal.md, docs/superpowers/plans/2026-04-03-agent-simplification.md, docs/superpowers/plans/2026-04-03-enterprise-readiness.md, docs/superpowers/specs/2026-04-03-enterprise-readiness-design.md, docs/wiki/pages/inventory/source-map.md, … (+1 more)
 - Behavior signals: client component/module (2), server action/module (2), calls redirect() (1), calls notFound() (1), calls revalidatePath() (1), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1)
-- Auth signals: imports Clerk server auth (2), calls currentUser() (2), calls auth() (2), references membership/scope access concepts (2), contains explicit access/role guard helper usage (1)
+- Auth signals: calls auth() (2), imports Clerk server auth (2), calls currentUser() (2), references membership/scope access concepts (2), contains explicit access/role guard helper usage (1)
 
 ## Database objects
 

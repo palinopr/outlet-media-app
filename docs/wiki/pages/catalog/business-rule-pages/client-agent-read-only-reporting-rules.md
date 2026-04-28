@@ -1,6 +1,6 @@
 # Client-agent read-only reporting rules
 
-Generated from the current working tree on 2026-04-28 02:30:43.
+Generated from the current working tree on 2026-04-28 02:31:12.
 
 Files and DB objects that appear to keep the client agent constrained to read-only reporting and scoped conversational context.
 
@@ -11,7 +11,7 @@ Files and DB objects that appear to keep the client agent constrained to read-on
 - Mutation-oriented files: e2e/authenticated-smoke.spec.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/users.ts, src/app/admin/clients/data.ts, src/app/api/admin/users/[id]/route.ts, src/components/admin/campaigns/campaign-table.tsx, src/components/admin/clients/assignment-manager.tsx, src/components/admin/clients/client-table.tsx, src/components/admin/users/columns.tsx, src/components/admin/users/user-table.tsx
 - Tests: __tests__/features/access/revalidation.test.ts, __tests__/features/clients/summary.test.ts, src/app/admin/actions/clients.test.ts, src/app/admin/actions/search.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/client/[slug]/components/campaign-detail-header.test.tsx, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx, src/components/admin/nav-config.test.ts, … (+3 more)
 - Docs: AGENTS.md, README.md, docs/context/engineering-principles.md, docs/context/google-ads-api.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-admin-crud-design.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, … (+35 more)
-- Behavior signals: client component/module (25), server action/module (9), calls revalidatePath() (8), calls redirect() (4), sets dynamic rendering mode (3), calls notFound() (3), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1)
+- Behavior signals: client component/module (25), server action/module (9), calls revalidatePath() (8), calls redirect() (4), calls notFound() (3), sets dynamic rendering mode (3), calls revalidateTag() (1), calls unstable_noStore() (1), defines generateMetadata (1)
 - Auth signals: references membership/scope access concepts (21), imports Clerk server auth (15), calls currentUser() (6), calls auth() (4), contains explicit access/role guard helper usage (1)
 
 ## Database objects
