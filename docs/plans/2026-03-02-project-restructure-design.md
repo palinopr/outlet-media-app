@@ -26,7 +26,7 @@ Each layer builds on the previous. Each layer is an independently testable commi
 - `agent/src/retry.ts` -- zero imports across codebase
 - `agent/dist/discord-delegate.js` -- stale, source file removed (moved to agents/delegate.ts)
 - `agent/prompts/discord-agent.txt` -- never referenced in discord-router.ts or any code
-- `agent/session/tm1-storage-state.json` -- 75KB Playwright state, no code references it
+- obsolete Playwright state in `agent/session/` -- no code references it
 
 ### Dependencies to remove
 - `playwright` from `agent/package.json` -- never imported in any agent source file

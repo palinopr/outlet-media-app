@@ -9,7 +9,7 @@
 create table if not exists public.tm_events (
   id            uuid primary key default gen_random_uuid(),
   tm_id         text not null unique,       -- Ticketmaster event ID (used for upsert)
-  tm1_number    text not null default '',   -- Human-readable TM1 number
+  ticketing_number text not null default '', -- Historical ticketing identifier
   name          text not null default '',
   artist        text not null default '',
   venue         text not null default '',

@@ -17,7 +17,7 @@
 - Delete: `agent/src/retry.ts`
 - Delete: `agent/dist/discord-delegate.js`
 - Delete: `agent/prompts/discord-agent.txt`
-- Delete: `agent/session/tm1-storage-state.json`
+- Delete obsolete Playwright storage state under `agent/session/`
 - Verify: `agent/src/index.ts` (confirm jobs.ts reference is already commented out at line 86-89)
 
 **Step 1: Verify jobs.ts is not imported**
@@ -38,7 +38,7 @@ rm agent/src/jobs.ts
 rm agent/src/retry.ts
 rm agent/dist/discord-delegate.js
 rm agent/prompts/discord-agent.txt
-rm agent/session/tm1-storage-state.json
+rm agent/session/*.json
 ```
 
 **Step 3: Remove playwright from agent/package.json**
@@ -55,7 +55,7 @@ Expected: No errors (deleted files had zero imports).
 **Step 5: Commit**
 
 ```bash
-git add -A agent/src/jobs.ts agent/src/retry.ts agent/dist/discord-delegate.js agent/prompts/discord-agent.txt agent/session/tm1-storage-state.json agent/package.json agent/src/index.ts
+git add -A agent/src/jobs.ts agent/src/retry.ts agent/dist/discord-delegate.js agent/prompts/discord-agent.txt agent/package.json agent/src/index.ts
 git commit -m "chore: delete dead code -- jobs.ts, retry.ts, stale dist, unused prompt and session files, playwright dep"
 ```
 
