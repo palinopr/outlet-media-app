@@ -2,42 +2,67 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   adminGuard,
+  clientMaybeSingle,
+  clientSelect,
   createInvitation,
+  getUserList,
   inviteInsert,
   inviteInsertSingle,
   inviteUpdate,
-  inviteUpdateEq,
-  maybeSingle,
-  select,
+  memberInsert,
+  memberMaybeSingle,
+  memberUpdate,
   clerkClientMock,
 } = vi.hoisted(() => {
-  const maybeSingle = vi.fn();
-  const eq = vi.fn(() => ({ maybeSingle }));
-  const select = vi.fn(() => ({ eq }));
+  const clientMaybeSingle = vi.fn();
+  const clientQuery = {
+    eq: vi.fn(() => ({ maybeSingle: clientMaybeSingle })),
+  };
+  const clientSelect = vi.fn(() => clientQuery);
 
   const inviteInsertSingle = vi.fn();
   const inviteInsertSelect = vi.fn(() => ({ single: inviteInsertSingle }));
   const inviteInsert = vi.fn(() => ({ select: inviteInsertSelect }));
+  const inviteUpdateQuery = {
+    eq: vi.fn(() => inviteUpdateQuery),
+  };
+  const inviteUpdate = vi.fn(() => inviteUpdateQuery);
 
-  const inviteUpdateEq = vi.fn();
-  const inviteUpdate = vi.fn(() => ({ eq: inviteUpdateEq }));
+  const memberMaybeSingle = vi.fn();
+  const memberQuery = {
+    eq: vi.fn(() => memberQuery),
+    insert: vi.fn(),
+    maybeSingle: memberMaybeSingle,
+    select: vi.fn(() => memberQuery),
+    update: vi.fn(() => ({ eq: vi.fn(async () => ({ error: null })) })),
+  };
+  memberQuery.insert.mockResolvedValue({ error: null });
+  const memberInsert = memberQuery.insert;
+  const memberUpdate = memberQuery.update;
 
   const createInvitation = vi.fn();
+  const getUserList = vi.fn();
   const clerkClientMock = vi.fn(async () => ({
     invitations: {
       createInvitation,
+    },
+    users: {
+      getUserList,
     },
   }));
 
   return {
     adminGuard: vi.fn(),
+    clientMaybeSingle,
+    clientSelect,
     createInvitation,
+    getUserList,
     inviteInsert,
     inviteInsertSingle,
     inviteUpdate,
-    inviteUpdateEq,
-    maybeSingle,
-    select,
+    memberInsert,
+    memberMaybeSingle,
+    memberUpdate,
     clerkClientMock,
   };
 });
@@ -57,11 +82,22 @@ vi.mock("@clerk/nextjs/server", () => ({
 vi.mock("@/lib/supabase", () => ({
   supabaseAdmin: {
     from: vi.fn((table: string) => {
-      if (table === "clients") return { select };
+      if (table === "clients") return { select: clientSelect };
       if (table === "client_access_invites") {
         return {
           insert: inviteInsert,
           update: inviteUpdate,
+        };
+      }
+      if (table === "client_members") {
+        return {
+          insert: memberInsert,
+          select: vi.fn(() => ({
+            eq: vi.fn(() => ({
+              eq: vi.fn(() => ({ maybeSingle: memberMaybeSingle })),
+            })),
+          })),
+          update: memberUpdate,
         };
       }
       throw new Error(`Unexpected table ${table}`);
@@ -73,15 +109,15 @@ describe("POST /api/admin/invite", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     adminGuard.mockResolvedValue(null);
-    maybeSingle.mockResolvedValue({
+    clientMaybeSingle.mockResolvedValue({
       data: { id: "client_1", slug: "acme" },
       error: null,
     });
+    getUserList.mockResolvedValue({ data: [] });
+    memberMaybeSingle.mockResolvedValue({ data: null, error: null });
+    memberInsert.mockResolvedValue({ error: null });
     inviteInsertSingle.mockResolvedValue({
       data: { id: "invite_1" },
-      error: null,
-    });
-    inviteUpdateEq.mockResolvedValue({
       error: null,
     });
     createInvitation.mockResolvedValue({
@@ -123,7 +159,11 @@ describe("POST /api/admin/invite", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(select).toHaveBeenCalledWith("id, slug");
+    expect(clientSelect).toHaveBeenCalledWith("id, slug");
+    expect(getUserList).toHaveBeenCalledWith({
+      emailAddress: ["member@example.com"],
+      limit: 1,
+    });
     expect(inviteInsert).toHaveBeenCalledWith({
       client_id: "client_1",
       client_role: "member",
@@ -144,5 +184,38 @@ describe("POST /api/admin/invite", () => {
     expect(inviteUpdate).toHaveBeenCalledWith({
       clerk_invitation_id: "clerk_invite_1",
     });
+  });
+
+  it("grants access immediately when the invited email already has a Clerk user", async () => {
+    getUserList.mockResolvedValue({ data: [{ id: "user_existing" }] });
+
+    const { POST } = await import("./route");
+    const response = await POST(
+      new Request("https://example.com/api/admin/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "member@example.com",
+          clientId: "client_1",
+          client_role: "owner",
+        }),
+      }),
+    );
+
+    await expect(response.json()).resolves.toEqual({
+      ok: true,
+      message: "Access granted to existing user.",
+    });
+    expect(memberInsert).toHaveBeenCalledWith({
+      client_id: "client_1",
+      clerk_user_id: "user_existing",
+      role: "owner",
+    });
+    expect(inviteUpdate).toHaveBeenCalledWith(expect.objectContaining({
+      accepted_by_clerk_user_id: "user_existing",
+      status: "accepted",
+    }));
+    expect(inviteInsert).not.toHaveBeenCalled();
+    expect(createInvitation).not.toHaveBeenCalled();
   });
 });

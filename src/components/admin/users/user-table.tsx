@@ -43,14 +43,14 @@ function InviteForm({ onDone, clients }: { onDone: () => void; clients: ClientOp
           role: asAdmin ? "admin" : undefined,
         }),
       });
+      const text = await res.text();
+      let payload: { error?: string; message?: string } = {};
+      try { payload = text ? JSON.parse(text) as { error?: string; message?: string } : {}; } catch { /* non-JSON */ }
       if (!res.ok) {
-        const text = await res.text();
-        let msg = "Failed to send invite";
-        try { msg = (JSON.parse(text) as { error?: string }).error ?? msg; } catch { /* non-JSON */ }
-        throw new Error(msg);
+        throw new Error(payload.error ?? "Failed to send invite");
       }
       setSent(true);
-      toast.success("Invite sent to " + email);
+      toast.success(payload.message ?? "Invite sent to " + email);
       setTimeout(() => { onDone(); }, 1500);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unknown error");

@@ -29,12 +29,12 @@ export function InviteMemberForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, clientId, client_role: clientRole }),
       });
+      const d = (await res.json()) as { error?: string; message?: string };
       if (!res.ok) {
-        const d = (await res.json()) as { error?: string };
         throw new Error(d.error ?? "Failed to send invite");
       }
       setSent(true);
-      toast.success("Invite sent to " + email);
+      toast.success(d.message ?? "Invite sent to " + email);
       setTimeout(() => {
         router.refresh();
         onDone();

@@ -4,6 +4,42 @@ import { InviteSchema } from "@/lib/api-schemas";
 import { adminGuard, validateRequest } from "@/lib/api-helpers";
 import { supabaseAdmin } from "@/lib/supabase";
 
+async function grantClientMembership(input: {
+  clientId: string;
+  clerkUserId: string;
+  role: "owner" | "member";
+}) {
+  if (!supabaseAdmin) throw new Error("Database not configured");
+
+  const { data: existingMembership, error: existingMembershipError } = await supabaseAdmin
+    .from("client_members")
+    .select("id")
+    .eq("client_id", input.clientId)
+    .eq("clerk_user_id", input.clerkUserId)
+    .maybeSingle();
+
+  if (existingMembershipError) throw new Error(existingMembershipError.message);
+
+  if (existingMembership) {
+    const { error } = await supabaseAdmin
+      .from("client_members")
+      .update({ role: input.role })
+      .eq("id", existingMembership.id);
+    if (error) throw new Error(error.message);
+    return;
+  }
+
+  const { error } = await supabaseAdmin
+    .from("client_members")
+    .insert({
+      client_id: input.clientId,
+      clerk_user_id: input.clerkUserId,
+      role: input.role,
+    });
+
+  if (error) throw new Error(error.message);
+}
+
 // POST /api/admin/invite
 // Body: { email: string, clientId?: string, client_role?: "owner" | "member", role?: "admin" }
 // Creates a DB-backed invite ledger row for client invites and sends the Clerk invitation
@@ -40,13 +76,52 @@ export async function POST(request: Request) {
     clientRow = data;
   }
 
+  const client = await clerkClient();
+  const clientRole = body.client_role ?? "member";
+
+  if (clientRow) {
+    const existingUsers = await client.users.getUserList({
+      emailAddress: [normalizedEmail],
+      limit: 1,
+    });
+    const existingUserId = existingUsers.data[0]?.id ?? null;
+
+    if (existingUserId) {
+      try {
+        await grantClientMembership({
+          clientId: clientRow.id,
+          clerkUserId: existingUserId,
+          role: clientRole,
+        });
+        await supabaseAdmin
+          .from("client_access_invites")
+          .update({
+            accepted_at: new Date().toISOString(),
+            accepted_by_clerk_user_id: existingUserId,
+            status: "accepted",
+          })
+          .eq("client_id", clientRow.id)
+          .eq("email", normalizedEmail)
+          .eq("status", "pending");
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : "Failed to grant client access";
+        return NextResponse.json({ error: detail }, { status: 500 });
+      }
+
+      return NextResponse.json({
+        ok: true,
+        message: "Access granted to existing user.",
+      });
+    }
+  }
+
   let inviteId: string | null = null;
   if (clientRow) {
     const { data, error } = await supabaseAdmin
       .from("client_access_invites")
       .insert({
         client_id: clientRow.id,
-        client_role: body.client_role ?? "member",
+        client_role: clientRole,
         email: normalizedEmail,
       })
       .select("id")
@@ -63,7 +138,7 @@ export async function POST(request: Request) {
   if (body.role) publicMetadata.role = body.role;
   if (clientRow && inviteId) {
     publicMetadata.client_id = clientRow.id;
-    publicMetadata.client_role = body.client_role ?? "member";
+    publicMetadata.client_role = clientRole;
     publicMetadata.invite_id = inviteId;
   }
 
@@ -74,7 +149,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const client = await clerkClient();
     const invitation = await client.invitations.createInvitation({
       emailAddress: normalizedEmail,
       publicMetadata,

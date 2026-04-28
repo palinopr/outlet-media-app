@@ -21,11 +21,16 @@ export default async function ClientPickerPage({ searchParams }: ClientPickerPag
   if (!userId) redirect("/sign-in");
 
   const user = await currentUser();
-  const meta = (user?.publicMetadata ?? {}) as { role?: string | null };
+  const meta = (user?.publicMetadata ?? {}) as {
+    invite_id?: string | null;
+    role?: string | null;
+  };
   const params = await searchParams;
+  const queryInviteId = typeof params?.invite_id === "string" ? params.invite_id : null;
+  const metadataInviteId = typeof meta.invite_id === "string" ? meta.invite_id : null;
   const entry = await resolveClientPortalEntry({
     emailAddresses: getUserEmailAddresses(user),
-    inviteId: typeof params?.invite_id === "string" ? params.invite_id : null,
+    inviteId: queryInviteId ?? metadataInviteId,
     role: meta.role ?? null,
     userId,
   });

@@ -74,6 +74,13 @@ Use the **E2E Smoke** GitHub Actions workflow when you want the same smoke from 
 
 The **Production Monitor** GitHub Actions workflow runs every 30 minutes and can be run manually. It fails when `/api/health` is degraded, the database check is not `ok`, or authenticated client errors were recorded in the recent alert window.
 
+Production monitor failures send Telegram alerts when these GitHub repository secrets are configured:
+
+- `TELEGRAM_BOT_TOKEN`
+- `TELEGRAM_CHAT_ID`
+
+Use the **Telegram Alert Test** GitHub Actions workflow after setting those secrets. It sends a harmless test message and fails if the bot token or chat id is wrong.
+
 ## If smoke fails
 
 1. Open the Playwright trace or screenshots under `test-results/` / `playwright-report/`.

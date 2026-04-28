@@ -43,12 +43,14 @@ export interface ResolveClientPortalEntryInput {
 
 interface ResolveClientPortalEntryDeps {
   acceptClientAccessInvite: typeof acceptClientAccessInvite;
+  acceptPendingClientAccessInvites: typeof acceptPendingClientAccessInvites;
   getMemberships: typeof getMemberships;
   listPendingClientAccessInvites: typeof listPendingClientAccessInvites;
 }
 
 const defaultDeps: ResolveClientPortalEntryDeps = {
   acceptClientAccessInvite,
+  acceptPendingClientAccessInvites,
   getMemberships,
   listPendingClientAccessInvites,
 };
@@ -71,6 +73,11 @@ export async function resolveClientPortalEntry(
       userId: input.userId,
     });
   }
+
+  await deps.acceptPendingClientAccessInvites({
+    emailAddresses: input.emailAddresses,
+    userId: input.userId,
+  });
 
   const memberships = await deps.getMemberships(input.userId);
 
@@ -177,7 +184,7 @@ export async function acceptClientAccessInvite(input: {
 
   if (!data) return null;
   if (!normalizedEmails.has(data.email.toLowerCase())) return null;
-  if (data.status === "revoked") return null;
+  if (data.status === "revoked" || data.status === "expired") return null;
 
   const client = normalizeClient(data.clients);
   if (!client?.slug) return null;
@@ -248,6 +255,40 @@ export async function acceptClientAccessInvite(input: {
     clientName: client.name,
     clientSlug: client.slug,
   };
+}
+
+export async function acceptPendingClientAccessInvites(input: {
+  emailAddresses: string[];
+  userId: string;
+}) {
+  if (!supabaseAdmin) return [];
+
+  const normalizedEmails = normalizeEmails(input.emailAddresses);
+  if (normalizedEmails.length === 0) return [];
+
+  const { data, error } = await supabaseAdmin
+    .from("client_access_invites")
+    .select("id")
+    .in("email", normalizedEmails)
+    .eq("status", "pending")
+    .is("revoked_at", null);
+
+  if (error) {
+    console.error("[client-portal/entry] failed to load pending invites for auto-accept:", error.message);
+    return [];
+  }
+
+  const accepted = await Promise.all(
+    (data ?? []).map((invite) =>
+      acceptClientAccessInvite({
+        emailAddresses: normalizedEmails,
+        inviteId: invite.id,
+        userId: input.userId,
+      }),
+    ),
+  );
+
+  return accepted.filter((invite): invite is NonNullable<typeof invite> => invite !== null);
 }
 
 export function getUserEmailAddresses(user: {

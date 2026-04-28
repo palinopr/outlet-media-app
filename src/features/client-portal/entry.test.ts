@@ -22,6 +22,7 @@ describe("resolveClientPortalEntry", () => {
       },
       {
         acceptClientAccessInvite: vi.fn(),
+        acceptPendingClientAccessInvites: vi.fn(),
         getMemberships: vi.fn(),
         listPendingClientAccessInvites: vi.fn(),
       },
@@ -37,6 +38,7 @@ describe("resolveClientPortalEntry", () => {
     const acceptClientAccessInvite = vi.fn().mockResolvedValue({
       clientSlug: "acme",
     });
+    const acceptPendingClientAccessInvites = vi.fn().mockResolvedValue([]);
     const getMemberships = vi.fn().mockResolvedValue([member()]);
 
     const result = await resolveClientPortalEntry(
@@ -48,6 +50,7 @@ describe("resolveClientPortalEntry", () => {
       },
       {
         acceptClientAccessInvite,
+        acceptPendingClientAccessInvites,
         getMemberships,
         listPendingClientAccessInvites: vi.fn(),
       },
@@ -58,6 +61,10 @@ describe("resolveClientPortalEntry", () => {
       inviteId: "invite_1",
       userId: "user_1",
     });
+    expect(acceptPendingClientAccessInvites).toHaveBeenCalledWith({
+      emailAddresses: ["member@example.com"],
+      userId: "user_1",
+    });
     expect(result).toEqual({
       clientSlug: "acme",
       destination: "/client/acme",
@@ -66,7 +73,37 @@ describe("resolveClientPortalEntry", () => {
     });
   });
 
-  it("falls back to the pending state when the user has no memberships but still has an invite", async () => {
+  it("accepts pending invites by email before falling back to pending state", async () => {
+    const acceptPendingClientAccessInvites = vi.fn().mockResolvedValue([{ clientSlug: "acme" }]);
+    const getMemberships = vi.fn().mockResolvedValue([member()]);
+
+    const result = await resolveClientPortalEntry(
+      {
+        emailAddresses: ["member@example.com"],
+        role: "client",
+        userId: "user_1",
+      },
+      {
+        acceptClientAccessInvite: vi.fn().mockResolvedValue(null),
+        acceptPendingClientAccessInvites,
+        getMemberships,
+        listPendingClientAccessInvites: vi.fn(),
+      },
+    );
+
+    expect(acceptPendingClientAccessInvites).toHaveBeenCalledWith({
+      emailAddresses: ["member@example.com"],
+      userId: "user_1",
+    });
+    expect(result).toEqual({
+      clientSlug: "acme",
+      destination: "/client/acme",
+      kind: "portal",
+      memberships: [member()],
+    });
+  });
+
+  it("falls back to the pending state when auto-accept does not create a membership", async () => {
     const pendingInvites = [
       {
         clientId: "client_1",
@@ -87,6 +124,7 @@ describe("resolveClientPortalEntry", () => {
       },
       {
         acceptClientAccessInvite: vi.fn().mockResolvedValue(null),
+        acceptPendingClientAccessInvites: vi.fn().mockResolvedValue([]),
         getMemberships: vi.fn().mockResolvedValue([]),
         listPendingClientAccessInvites: vi.fn().mockResolvedValue(pendingInvites),
       },

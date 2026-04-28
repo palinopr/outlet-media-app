@@ -18,7 +18,7 @@ Routes should authenticate, validate input, call feature-owned logic, and return
 
 ## Access And Packaging
 
-The client account record and `client_members` are the authority for portal access. Do not use Clerk metadata or URL slugs as the business source of truth for memberships or landing behavior.
+The client account record and `client_members` are the authority for portal access. Do not use Clerk metadata or URL slugs as the business source of truth for memberships or landing behavior. Clerk invitation metadata may be used only as transition metadata to accept a DB-backed `client_access_invites` row and create the real `client_members` record.
 
 Client portal packaging is intentionally simple right now: Campaigns are the only active client-facing app surface.
 

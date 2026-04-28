@@ -17,6 +17,7 @@ jobs:
     timeout-minutes: 5
     env:
       BASE_URL: ${{ github.event.inputs.base_url || 'https://outletmedia.net' }}
+      RUN_URL: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
       - name: Fetch health payload
         run: |
@@ -46,9 +47,56 @@ jobs:
           }
 
           if (failures.length > 0) {
+            fs.writeFileSync('monitor-failures.txt', failures.join('; '));
             console.error(`Production monitor failed: ${failures.join('; ')}`);
             process.exit(1);
           }
 
           console.log('Production health is ok.');
+          NODE
+
+      - name: Send Telegram alert on failure
+        if: failure()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+
+          const token = process.env.TELEGRAM_BOT_TOKEN;
+          const chatId = process.env.TELEGRAM_CHAT_ID;
+          if (!token || !chatId) {
+            console.warn('::warning::Telegram alert secrets are missing. Set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID.');
+            process.exit(0);
+          }
+
+          const failures = fs.existsSync('monitor-failures.txt')
+            ? fs.readFileSync('monitor-failures.txt', 'utf8')
+            : 'health endpoint fetch failed or monitor step did not complete';
+          const health = fs.existsSync('health.json')
+            ? `\n\nHealth payload:\n${fs.readFileSync('health.json', 'utf8').slice(0, 1200)}`
+            : '';
+          const message = [
+            '🚨 Outlet production monitor failed',
+            `URL: ${process.env.BASE_URL}/api/health`,
+            `Reason: ${failures}`,
+            `Run: ${process.env.RUN_URL}`,
+            health,
+          ].filter(Boolean).join('\n');
+
+          const params = new URLSearchParams({
+            chat_id: chatId,
+            disable_web_page_preview: 'true',
+            text: message.slice(0, 3900),
+          });
+
+          const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: 'POST',
+            body: params,
+          });
+          if (!response.ok) {
+            const text = await response.text();
+            throw new Error(`Telegram alert failed (${response.status}): ${text}`);
+          }
           NODE
