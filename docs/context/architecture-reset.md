@@ -36,28 +36,20 @@ That mixed state creates confusion and makes the system feel less reliable than 
 
 ## Main Structural Failures
 
-### 1. Product packaging is broader than the intended client surface
+### 1. Product packaging must stay narrower than the old broad portal
 
-The intended client package is narrow: campaigns and events first.
+The intended client package is narrow: campaigns are universal, reports are first-class when enabled, events are optional per client, and Agent is optional/read-only.
 
-But the shipped client route tree currently exposes many more top-level surfaces:
-- approvals
-- assets
-- conversations
-- CRM
-- notifications
-- reports
-- settings
-- updates
-- workspace
+> **Update (April 2026):** The shipped client route tree has been narrowed to Campaigns, Reports, Events, and optional Agent. The older standalone client apps for approvals, assets, conversations, CRM, notifications, updates, workspace, and settings are no longer exposed as top-level client destinations.
 
 Evidence:
 - `src/app/client/[slug]/**`
 - `src/app/client/[slug]/components/nav-config.ts`
 
-This creates two problems:
-- customers have too many entry points before the campaign/event core is fully stable
-- the team has to keep many client-facing surfaces coherent at once
+The remaining risk is regression:
+- do not re-add broad top-level client apps unless they solve a current customer problem
+- keep approvals, comments, assets, activity, and follow-through embedded inside campaign/event/report/admin surfaces until they earn a separate maintained product surface
+- keep direct routes gated or redirected when a client account does not have the corresponding feature enabled
 
 ### 2. Prompt memory still carries too much operational truth
 
@@ -195,14 +187,15 @@ For comments, follow-ups, approvals, notifications, and activity:
 - share the mutation, audience, revalidation, and event-emission patterns
 - stop cloning route handlers with only light field changes
 
-### 5. Client packaging must shrink before it grows
+### 5. Client packaging must stay narrow before it grows
 
-The client portal should temporarily get simpler, not broader.
+The client portal should stay simpler, not broader.
 
-The target package is:
-- Overview
+The active target package is:
 - Campaigns
-- Events
+- Reports when enabled
+- Events when enabled
+- Agent when explicitly enabled, read-only, and client-safe
 
 Everything else should either:
 - be embedded inside those pages
@@ -239,22 +232,22 @@ Required outcomes:
 ### Phase 2. Collapse the client surface
 
 Keep or strengthen:
-- overview
 - campaigns
-- events
+- reports when enabled
+- events when enabled
+- optional read-only agent
 
 Collapse or gate:
 - updates
 - conversations
 - approvals
-- reports as a standalone top-level client destination if it duplicates overview/campaign/event value
 - CRM
 - assets
 - workspace
 - notifications as a standalone destination unless it is truly required
 - settings/connect sprawl beyond minimal safety and account health
 
-The information should not disappear. It should move into campaign and event detail surfaces.
+The information should not disappear. It should move into campaign, event, report, or admin detail surfaces.
 
 ### Phase 3. Clean the Discord control plane
 

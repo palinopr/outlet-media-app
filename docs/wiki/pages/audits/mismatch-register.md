@@ -1,7 +1,7 @@
 ---
 title: Mismatch Register
 status: active
-updated: 2026-04-10
+updated: 2026-04-27
 ---
 
 # Mismatch Register
@@ -24,6 +24,12 @@ This page records confirmed and suspected mismatches between docs, code, runtime
 - **Why it mattered:** local scratch output should not break the normal repo verification loop
 
 ## Suspected mismatches that need deeper audit
+
+### 2. Some live campaigns still need explicit admin ownership mapping
+- **Status:** needs admin data cleanup
+- **Evidence:** live campaign grouping still has campaigns under internal/unmapped slugs such as `outlet_media`, `unknown`, and `chris_r`
+- **Why it matters:** client portal access should be driven by client account records and memberships, not by guessing ownership from campaign names
+- **Next step:** have Outlet admin assign or intentionally quarantine these campaigns before exposing them in a client portal
 
 ### 3. Agent memory may still carry scheduler-era operational guidance
 - **Status:** needs audit

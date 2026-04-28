@@ -1,7 +1,7 @@
 ---
 title: Dead Ends and Dead Code
 status: active
-updated: 2026-04-10
+updated: 2026-04-27
 ---
 
 # Dead Ends and Dead Code
@@ -9,6 +9,13 @@ updated: 2026-04-10
 This page tracks likely cleanup targets and the evidence standard required before deletion.
 
 ## Confirmed dead-end / hygiene issue
+
+### Retired client overview support components
+- **Removed:** `src/app/client/[slug]/components/campaign-card.tsx`, `campaign-section.tsx`, `date-range-picker.tsx`, and `stat-card.tsx`
+- **Removed:** the old aggregate portal loader from `src/app/client/[slug]/data.ts`
+- **Why it was a problem:** the active client surface now routes directly through Campaigns, Reports, optional Events, and optional Agent instead of keeping a parallel overview/card data path alive
+- **Classification:** deleted dead client code
+- **Action:** keep future client analytics work in the surviving route-specific loaders/components unless a shared feature module removes real duplication
 
 ### `tmp-playwright/`
 - **Current state:** untracked local folder at repo root

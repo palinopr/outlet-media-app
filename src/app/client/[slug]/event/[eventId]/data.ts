@@ -80,6 +80,7 @@ export async function getEventDetail(
 
   const tmEvent = eventRes.data as TmEvent;
   const event = buildEventCard(tmEvent);
+  const supportingDataWarnings: string[] = [];
 
   const [campaignsRes, snapshotsRes, demosRes] = await Promise.all([
     readContext.db
@@ -99,14 +100,17 @@ export async function getEventDetail(
 
   if (snapshotsRes.error) {
     console.error("[client-event-detail] snapshot read failed:", snapshotsRes.error.message);
+    supportingDataWarnings.push("Ticket sales snapshots are unavailable.");
   }
 
   if (demosRes.error) {
     console.error("[client-event-detail] audience read failed:", demosRes.error.message);
+    supportingDataWarnings.push("Audience demographics are unavailable.");
   }
 
   if (campaignsRes.error) {
     console.error("[client-event-detail] linked campaign read failed:", campaignsRes.error.message);
+    supportingDataWarnings.push("Linked ad campaigns are unavailable.");
   }
 
   const snapshots: TicketSnapshot[] = (snapshotsRes.error ? [] : (snapshotsRes.data ?? [])).map((s) => ({
@@ -164,6 +168,7 @@ export async function getEventDetail(
     velocity,
     audience,
     linkedCampaigns,
+    supportingDataWarnings,
     channelBreakdown,
   };
 }

@@ -209,6 +209,7 @@ export interface EventDetailData {
   velocity: SalesVelocity | null;
   audience: AudienceProfile | null;
   linkedCampaigns: LinkedCampaign[];
+  supportingDataWarnings?: string[];
   channelBreakdown: {
     internet: number | null;
     mobile: number | null;

@@ -163,9 +163,10 @@ export async function requireClientEventsAccess(
 ): Promise<{
   userId: string;
   scope: ScopeFilter | undefined;
+  viewer: Viewer;
 }> {
   const access = requireResolvedClientAccess(await resolveClientPortalFeatureAccess(slug, "events"));
-  return { userId: access.userId, scope: access.scope };
+  return { userId: access.userId, scope: access.scope, viewer: access.viewer };
 }
 
 export async function requireClientReportsAccess(

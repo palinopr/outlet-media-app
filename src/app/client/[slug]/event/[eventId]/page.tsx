@@ -47,7 +47,7 @@ const PLATFORM_LABELS: Record<TicketPlatform, { name: string; color: string }> =
 
 export default async function EventDetailPage({ params }: Props) {
   const { slug, eventId } = await params;
-  const { scope } = await requireClientEventsAccess(slug);
+  const { scope, viewer } = await requireClientEventsAccess(slug);
   const data = await getEventDetail(slug, eventId, scope);
 
   if (!data) {
@@ -64,7 +64,16 @@ export default async function EventDetailPage({ params }: Props) {
     );
   }
 
-  const { event: e, snapshots, dailyDeltas, velocity, audience, linkedCampaigns, channelBreakdown } = data;
+  const {
+    event: e,
+    snapshots,
+    dailyDeltas,
+    velocity,
+    audience,
+    linkedCampaigns,
+    supportingDataWarnings = [],
+    channelBreakdown,
+  } = data;
   const operatingView = await getClientEventOperatingView({
     clientSlug: slug,
     eventId,
@@ -154,6 +163,19 @@ export default async function EventDetailPage({ params }: Props) {
         <p className="text-sm font-semibold text-white/80">Event Intelligence Brief</p>
         <p className="mt-2 text-sm leading-6 text-white/50">{briefText}</p>
       </section>
+
+      {viewer === "admin_preview" && supportingDataWarnings.length > 0 && (
+        <section className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.07] px-4 py-3">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-amber-200/80">
+            Admin data warning
+          </p>
+          <ul className="mt-2 space-y-1 text-sm text-amber-100/70">
+            {supportingDataWarnings.map((warning) => (
+              <li key={warning}>{warning}</li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* -- Key Metrics Row -- */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">

@@ -1,5 +1,11 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-web | admin event warnings and reset-doc cleanup
+- Added admin-preview-only warnings when optional event detail reads fail, while keeping member-facing event pages available.
+- Updated the architecture reset context so it reflects the current Campaigns/Reports/optional Events/optional Agent client package instead of the retired broad portal.
+- Recorded the removed client overview support components in the dead-code audit page.
+- Recorded the remaining unmapped live-campaign ownership issue as admin data cleanup instead of guessing client ownership in code.
+
 ## [2026-04-27] client-web | fix campaign range and event detail fallbacks
 - Preserved the client campaign index's 30-day reporting window when opening campaign detail rows/cards.
 - Changed client event detail loading so linked campaigns, snapshots, and demographics fail soft instead of making an existing event render as not found.
