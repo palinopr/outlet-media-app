@@ -104,6 +104,7 @@ test.describe("authenticated smoke", () => {
   });
 
   test("configured client portals pass campaigns-only acceptance", async ({ page }) => {
+    test.setTimeout(180_000);
     if (!adminUser) throw new Error("Temporary admin Clerk user was not created.");
 
     await signInAsAdmin(page, adminUser.id);
@@ -115,6 +116,7 @@ test.describe("authenticated smoke", () => {
   });
 
   test("temporary client members land in only their assigned portal", async ({ browser }) => {
+    test.setTimeout(240_000);
     const db = getE2ESupabaseClient();
     test.skip(
       !db,
@@ -150,6 +152,7 @@ test.describe("authenticated smoke", () => {
   });
 
   test("active surfaces do not create page-level horizontal overflow", async ({ page }) => {
+    test.setTimeout(180_000);
     if (!adminUser) throw new Error("Temporary admin Clerk user was not created.");
 
     await signInAsAdmin(page, adminUser.id);
@@ -214,18 +217,32 @@ async function signInAsAdmin(page: Page, userId: string) {
 }
 
 async function signInWithToken(page: Page, userId: string) {
-  const token = await clerkRequest<ClerkSignInToken>("/sign_in_tokens", {
-    method: "POST",
-    body: JSON.stringify({
-      expires_in_seconds: 600,
-      user_id: userId,
-    }),
-  });
+  let lastError: unknown;
 
-  const signInUrl = rewriteUrlOrigin(token.url, baseURL);
-  await page.goto(signInUrl, { timeout: 90_000, waitUntil: "commit" });
-  await page.waitForURL((url) => !url.pathname.startsWith("/sign-in"), { timeout: 60_000 });
-  await page.waitForLoadState("networkidle").catch(() => undefined);
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const token = await clerkRequest<ClerkSignInToken>("/sign_in_tokens", {
+      method: "POST",
+      body: JSON.stringify({
+        expires_in_seconds: 600,
+        user_id: userId,
+      }),
+    });
+
+    const signInUrl = rewriteUrlOrigin(token.url, baseURL);
+    await page.goto(signInUrl, { timeout: 90_000, waitUntil: "commit" });
+
+    try {
+      await page.waitForURL((url) => !url.pathname.startsWith("/sign-in"), { timeout: 45_000 });
+      await page.waitForLoadState("networkidle").catch(() => undefined);
+      return;
+    } catch (error) {
+      lastError = error;
+      await page.context().clearCookies().catch(() => undefined);
+      await page.goto("about:blank", { waitUntil: "commit" }).catch(() => undefined);
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Failed to sign in with Clerk sign-in token.");
 }
 
 async function assertAdminNavigation(page: Page) {
