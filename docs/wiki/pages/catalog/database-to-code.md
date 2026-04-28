@@ -1,10 +1,10 @@
 # Database-to-Code Map
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 This page maps database objects discovered in `supabase/migrations/*` to routes, features, libs, agent files, tests, and docs that mention them.
 
-- Database objects tracked: 100
+- Database objects tracked: 83
 
 ## `acquire_runtime_lease`
 - Kinds: function
@@ -105,13 +105,13 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `agent_tasks`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260302000000_agent_tasks.sql, supabase/migrations/20260306223000_agent_tasks_visibility_rls.sql
-- Mentioned by groups: Docs / Plans (3), Docs / Superpowers Plans (2), Docs / Superpowers Specs (1)
+- Mentioned by groups: Docs / Plans (3)
 - Routes: none
 - Features: none
 - Shared libs: none
 - Agent runtime files: none
 - Tests: none
-- Docs: docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md, docs/superpowers/plans/2026-04-03-enterprise-readiness.md, docs/superpowers/specs/2026-04-03-enterprise-readiness-design.md
+- Docs: docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-07-discord-growth-team-plan.md
 - Other mentions: none
 
 ## `application_errors`
@@ -177,13 +177,13 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `calls`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306184000_backend_tables_rls.sql
-- Mentioned by groups: Docs / Plans (6), Docs / Superpowers Plans (4), Root Files (3), src/app / client (2), Docs / Context (1), Docs / Superpowers Specs (1), src/lib (1)
+- Mentioned by groups: Docs / Plans (6), Root Files (3), src/app / client (2), Docs / Context (1), src/lib (1)
 - Routes: none
 - Features: none
 - Shared libs: src/lib/google-ads.test.ts
 - Agent runtime files: none
 - Tests: src/app/client/[slug]/components/campaign-detail-header.test.tsx
-- Docs: docs/context/google-ads-api.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-design.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, docs/superpowers/plans/2026-03-31-client-agent-tab.md, docs/superpowers/plans/2026-04-01-client-agent-tool-driven-runtime.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md, … (+2 more)
+- Docs: docs/context/google-ads-api.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-design.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md
 - Other mentions: audit/agent-dead-code.md, audit/architecture-smells.md, audit/dead-routes.md, src/app/client/[slug]/campaign/[campaignId]/data.ts
 
 ## `campaign_action_items`
@@ -237,13 +237,13 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `client_access_invites`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260322100000_client_portal_reset.sql
-- Mentioned by groups: src/app / api (2), src/features / client-portal (2), Docs / References (1), Docs / Superpowers Plans (1), src/app / admin (1), src/features / invitations (1), src/lib (1)
+- Mentioned by groups: src/app / api (2), src/features / client-portal (2), Docs / References (1), src/app / admin (1), src/features / invitations (1), src/lib (1)
 - Routes: src/app/api/admin/invite/route.ts
 - Features: src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/features/invitations/server.ts
 - Shared libs: src/lib/database.types.ts
 - Agent runtime files: none
 - Tests: src/app/api/admin/invite/route.test.ts
-- Docs: docs/references/database-safety-runbook.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md
+- Docs: docs/references/database-safety-runbook.md
 - Other mentions: src/app/admin/actions/users.ts
 
 ## `client_access_invites_updated_at`
@@ -273,25 +273,25 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `client_agent_messages`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260331160000_client_agent_tab.sql, supabase/migrations/20260401173000_client_agent_context_payload.sql
-- Mentioned by groups: Docs / Superpowers Plans (2)
+- Mentioned by groups: none
 - Routes: none
 - Features: none
 - Shared libs: none
 - Agent runtime files: none
 - Tests: none
-- Docs: docs/superpowers/plans/2026-03-31-client-agent-tab.md, docs/superpowers/plans/2026-04-01-client-agent-tool-driven-runtime.md
+- Docs: none
 - Other mentions: none
 
 ## `client_agent_threads`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260331160000_client_agent_tab.sql
-- Mentioned by groups: Docs / Superpowers Plans (1)
+- Mentioned by groups: none
 - Routes: none
 - Features: none
 - Shared libs: none
 - Agent runtime files: none
 - Tests: none
-- Docs: docs/superpowers/plans/2026-03-31-client-agent-tab.md
+- Docs: none
 - Other mentions: none
 
 ## `client_agent_threads_updated_at`
@@ -333,13 +333,13 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `client_members`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260307143000_client_member_roster_rls.sql
-- Mentioned by groups: src/app / admin (4), Root Files (2), Docs / Plans (2), Docs / Superpowers Plans (2), src/app / api (2), src/features / client-portal (2), src/lib (2), Docs / Context (1), Docs / References (1)
+- Mentioned by groups: src/app / admin (4), Root Files (2), Docs / Plans (2), src/app / api (2), src/features / client-portal (2), src/lib (2), Docs / Context (1), Docs / References (1)
 - Routes: src/app/api/admin/users/[id]/route.ts
 - Features: src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts
 - Shared libs: src/lib/database.types.ts, src/lib/member-access.ts
 - Agent runtime files: none
 - Tests: src/app/admin/clients/data.test.ts, src/app/api/admin/users/[id]/route.test.ts
-- Docs: docs/context/engineering-principles.md, docs/plans/2026-03-03-client-accounts-design.md, docs/plans/2026-03-03-client-accounts-plan.md, docs/references/database-safety-runbook.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, docs/superpowers/plans/2026-03-31-client-agent-tab.md
+- Docs: docs/context/engineering-principles.md, docs/plans/2026-03-03-client-accounts-design.md, docs/plans/2026-03-03-client-accounts-plan.md, docs/references/database-safety-runbook.md
 - Other mentions: AGENTS.md, audit/architecture-smells.md, src/app/admin/actions/clients.ts, src/app/admin/clients/data.ts, src/app/admin/users/data.ts
 
 ## `client_services`
@@ -357,13 +357,13 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `clients`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260311120000_client_events_enabled.sql, supabase/migrations/20260322100000_client_portal_reset.sql, supabase/migrations/20260331160000_client_agent_tab.sql, supabase/migrations/20260403120000_clients_read_member_policy.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql, supabase/migrations/20260427001000_retire_events_reports_surfaces.sql
-- Mentioned by groups: Docs / Plans (19), src/components / admin (19), src/app / admin (15), Root Files (6), Docs / Superpowers Specs (5), src/app / api (5), Docs / Superpowers Plans (4), src/features / client-portal (4), Docs / Context (3), src/lib (3), Tests / Features (2), Docs / References (1), … (+4 more)
+- Mentioned by groups: Docs / Plans (19), src/components / admin (19), src/app / admin (15), Root Files (6), src/app / api (5), src/features / client-portal (4), Docs / Context (3), src/lib (3), Tests / Features (2), Docs / References (1), src/app / root routes (1), src/features / access (1), … (+2 more)
 - Routes: src/app/admin/campaigns/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/health/route.ts
 - Features: src/features/access/revalidation.ts, src/features/client-portal/config.test.ts, src/features/client-portal/config.ts, src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/features/invitations/server.ts, src/features/users/summary.ts
 - Shared libs: src/lib/database.types.ts, src/lib/member-access.ts, src/lib/meta-campaigns.ts
 - Agent runtime files: none
 - Tests: __tests__/features/access/revalidation.test.ts, __tests__/features/clients/summary.test.ts, src/app/admin/actions/clients.test.ts, src/app/admin/actions/search.test.ts, src/app/admin/campaigns/page.test.tsx, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/shell-import-smoke.test.ts, src/components/admin/clients/client-detail.test.tsx, … (+1 more)
-- Docs: docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-03-02-admin-crud-design.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-admin-activity-tracking-plan.md, … (+22 more)
+- Docs: docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-03-02-admin-crud-design.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-admin-activity-tracking-plan.md, … (+13 more)
 - Other mentions: AGENTS.md, README.md, audit/architecture-smells.md, audit/dead-routes.md, e2e/authenticated-smoke.spec.ts, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, src/app/admin/actions/search.ts, src/app/admin/actions/users.ts, src/app/admin/campaigns/data.ts, … (+20 more)
 
 ## `compliance_logs`
@@ -477,13 +477,13 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `email_events`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306070100_email_agent_intelligence.sql, supabase/migrations/20260306073000_lock_email_agent_tables.sql
-- Mentioned by groups: Root Files (1), Docs / Superpowers Plans (1)
+- Mentioned by groups: Root Files (1)
 - Routes: none
 - Features: none
 - Shared libs: none
 - Agent runtime files: none
 - Tests: none
-- Docs: docs/superpowers/plans/2026-03-10-agent-code-quality-10-10.md
+- Docs: none
 - Other mentions: audit/architecture-smells.md
 
 ## `email_reply_examples`
@@ -765,13 +765,13 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `if`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260428002000_remove_ticketing_artifacts.sql
-- Mentioned by groups: Docs / Plans (22), src/components / admin (22), src/lib (19), src/app / admin (16), src/app / api (14), Docs / Superpowers Plans (12), Docs / Superpowers Specs (11), src/components / client (11), src/app / client (9), src/features / client-portal (7), Root Files (5), Docs / Context (4), … (+18 more)
+- Mentioned by groups: Docs / Plans (22), src/components / admin (22), src/lib (19), src/app / admin (16), src/app / api (14), src/components / client (11), src/app / client (9), src/features / client-portal (7), Root Files (5), Docs / Context (4), src/app / root routes (4), src / scripts (4), … (+16 more)
 - Routes: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/layout.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, src/app/api/health/route.ts, src/app/api/ingest/route.ts, … (+12 more)
 - Features: src/features/access/revalidation.ts, src/features/campaigns/revalidation.ts, src/features/campaigns/server.ts, src/features/client-portal/access.ts, src/features/client-portal/config.ts, src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/features/client-portal/insights.ts, src/features/client-portal/scope.ts, src/features/client-portal/theme.ts, … (+6 more)
 - Shared libs: src/lib/api-helpers.test.ts, src/lib/api-helpers.ts, src/lib/api-schemas.ts, src/lib/campaign-client-assignment.test.ts, src/lib/campaign-client-assignment.ts, src/lib/client-slug.ts, src/lib/constants.ts, src/lib/env.ts, src/lib/export-csv.ts, src/lib/formatters.tsx, … (+9 more)
 - Agent runtime files: none
 - Tests: __tests__/api/ingest.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, src/app/admin/actions/search.test.ts, src/app/admin/clients/data.test.ts, src/app/api/admin/invite/route.test.ts, src/app/api/admin/users/[id]/route.test.ts, src/app/api/observability/client-error/route.test.ts
-- Docs: docs/context/codex-workflow.md, docs/context/google-ads-api.md, docs/context/meta-ads-playbook.md, docs/context/shopify-merch-sync.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, … (+40 more)
+- Docs: docs/context/codex-workflow.md, docs/context/google-ads-api.md, docs/context/meta-ads-playbook.md, docs/context/shopify-merch-sync.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, … (+17 more)
 - Other mentions: .github/workflows/codex-pr-review.yml, .github/workflows/db-drift.yml, .github/workflows/e2e-smoke.yml, AGENTS.md, audit/architecture-smells.md, audit/dead-routes.md, audit/imports-deps.md, e2e/authenticated-smoke.spec.ts, src/app/admin/actions/audit.ts, src/app/admin/actions/campaigns.ts, … (+56 more)
 
 ## `internal_dnc`
@@ -801,13 +801,13 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `leads`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306184000_backend_tables_rls.sql
-- Mentioned by groups: Root Files (1), Docs / Plans (1), Docs / Superpowers Specs (1), src/app / root routes (1), src/components / landing (1), src/features / client-portal (1)
+- Mentioned by groups: Root Files (1), Docs / Plans (1), src/app / root routes (1), src/components / landing (1), src/features / client-portal (1)
 - Routes: src/app/landing/page.tsx
 - Features: src/features/client-portal/insights.ts
 - Shared libs: none
 - Agent runtime files: none
 - Tests: none
-- Docs: docs/plans/2026-03-07-discord-growth-team-plan.md, docs/superpowers/specs/2026-04-20-mobile-funnel-landing-design.md
+- Docs: docs/plans/2026-03-07-discord-growth-team-plan.md
 - Other mentions: audit/architecture-smells.md, src/components/landing/faq.tsx
 
 ## `meta_campaigns`
@@ -837,13 +837,13 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `notifications`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260306111500_notification_entities.sql, supabase/migrations/20260306163500_client_surface_rls.sql
-- Mentioned by groups: Root Files (3), Docs / Plans (2), Docs / Superpowers Plans (2), Docs / Superpowers Specs (2), src/app / root routes (1)
+- Mentioned by groups: Root Files (3), Docs / Plans (2), src/app / root routes (1)
 - Routes: src/app/privacy/page.tsx
 - Features: none
 - Shared libs: none
 - Agent runtime files: none
 - Tests: none
-- Docs: docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, docs/superpowers/plans/2026-04-02-core-reset-salvage-map.md, docs/superpowers/specs/2026-03-22-web-reset-design.md, docs/superpowers/specs/2026-03-27-shell-reset-design.md
+- Docs: docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md
 - Other mentions: audit/agent-dead-code.md, audit/architecture-smells.md, audit/dead-routes.md
 
 ## `pf_update_updated_at`
@@ -897,13 +897,13 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `system_events`
 - Kinds: table
 - Defined in migrations: supabase/migrations/20260305000000_system_events.sql, supabase/migrations/20260305001000_system_events_private_read.sql, supabase/migrations/20260306143000_system_events_envelope.sql, supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql
-- Mentioned by groups: Docs / Context (5), Root Files (2), Docs / Superpowers Plans (2), Docs / Superpowers Specs (2), src/app / admin (2), Tests / Features (1), Docs / Plans (1), Docs / References (1), src/app / root routes (1), src/features / root files (1), src/features / system-events (1), src/lib (1), … (+1 more)
+- Mentioned by groups: Docs / Context (5), Root Files (2), src/app / admin (2), Tests / Features (1), Docs / Plans (1), Docs / References (1), src/app / root routes (1), src/features / root files (1), src/features / system-events (1), src/lib (1), supabase / root (1)
 - Routes: none
 - Features: src/features/AGENTS.md, src/features/system-events/server.ts
 - Shared libs: src/lib/database.types.ts
 - Agent runtime files: none
 - Tests: __tests__/features/system-events/list.test.ts
-- Docs: docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/references/database-safety-runbook.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md, docs/superpowers/specs/2026-03-31-client-agent-tab-design.md, … (+1 more)
+- Docs: docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/references/database-safety-runbook.md
 - Other mentions: AGENTS.md, audit/architecture-smells.md, src/app/AGENTS.md, src/app/admin/actions/campaigns.ts, src/app/admin/actions/clients.ts, supabase/AGENTS.md
 
 ## `tm_event_daily`
@@ -957,210 +957,6 @@ This page maps database objects discovered in `supabase/migrations/*` to routes,
 ## `update_updated_at_column`
 - Kinds: function
 - Defined in migrations: supabase/migrations/20260306155500_updated_at_function_search_paths.sql
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: none
-- Other mentions: none
-
-## `whatsapp_accounts`
-- Kinds: table
-- Defined in migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: none
-- Other mentions: none
-
-## `whatsapp_accounts_updated_at`
-- Kinds: trigger
-- Defined in migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: none
-- Other mentions: none
-
-## `whatsapp_contacts`
-- Kinds: table
-- Defined in migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Mentioned by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-- Other mentions: none
-
-## `whatsapp_contacts_updated_at`
-- Kinds: trigger
-- Defined in migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: none
-- Other mentions: none
-
-## `whatsapp_conversations`
-- Kinds: table
-- Defined in migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql
-- Mentioned by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-- Other mentions: none
-
-## `whatsapp_conversations_updated_at`
-- Kinds: trigger
-- Defined in migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: none
-- Other mentions: none
-
-## `whatsapp_messages`
-- Kinds: table
-- Defined in migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Mentioned by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-- Other mentions: none
-
-## `whatsapp_messages_updated_at`
-- Kinds: trigger
-- Defined in migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: none
-- Other mentions: none
-
-## `whatsapp_ticket_concierge_bans`
-- Kinds: table
-- Defined in migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Mentioned by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-- Other mentions: none
-
-## `whatsapp_ticket_concierge_bans_updated_at`
-- Kinds: trigger
-- Defined in migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: none
-- Other mentions: none
-
-## `whatsapp_ticket_concierge_checkout_attempts`
-- Kinds: table
-- Defined in migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Mentioned by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-- Other mentions: none
-
-## `whatsapp_ticket_concierge_checkout_attempts_updated_at`
-- Kinds: trigger
-- Defined in migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: none
-- Other mentions: none
-
-## `whatsapp_ticket_concierge_option_sets`
-- Kinds: table
-- Defined in migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Mentioned by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-- Other mentions: none
-
-## `whatsapp_ticket_concierge_option_sets_updated_at`
-- Kinds: trigger
-- Defined in migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Mentioned by groups: none
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: none
-- Other mentions: none
-
-## `whatsapp_ticket_concierge_options`
-- Kinds: table
-- Defined in migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Mentioned by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-- Other mentions: none
-
-## `whatsapp_ticket_concierge_runs`
-- Kinds: table
-- Defined in migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Mentioned by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent runtime files: none
-- Tests: none
-- Docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-- Other mentions: none
-
-## `whatsapp_ticket_concierge_runs_updated_at`
-- Kinds: trigger
-- Defined in migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
 - Mentioned by groups: none
 - Routes: none
 - Features: none

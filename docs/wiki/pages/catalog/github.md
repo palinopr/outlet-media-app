@@ -1,6 +1,6 @@
 # .github
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 - Files: 4
 - File kinds: file (.yml) (4)
@@ -33,8 +33,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Group: .github
 - Ownership: GitHub workflow/config
 - Type: file (.yml)
-- Lines: 43
-- Bytes: 1213
+- Lines: 38
+- Bytes: 940
 - Contents summary: text lines: name: Supabase Drift Check \| on: \| workflow_dispatch: \| inputs: \| project_ref: \| description: "Supabase project ref"
 
 ## `.github/workflows/e2e-smoke.yml`

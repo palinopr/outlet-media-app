@@ -1,6 +1,6 @@
 # Root Files
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 - Files: 26
 - File kinds: Markdown doc (6), TypeScript module (6), JSON config/data (4), env/config text file (3), ignore file (2), file (no extension) (2), JavaScript module (2), TypeScript build info (1)
@@ -33,9 +33,9 @@ Each entry below documents the file path, system ownership, construction style, 
 - Group: Root Files
 - Ownership: repo root
 - Type: ignore file
-- Lines: 38
-- Bytes: 600
-- Contents summary: ignore patterns: .env.local, .next, agent/.next, .local, session, output, tmp, .opencode, .playwright-mcp, .superpowers, docs/superpowers/, docs/screenshots/prototypes/, supabase/migrations/*_whatsapp_ticket_concierge.sql, root-next-artifact-2026-03-08, root-next-artifact-2026-03-08-2
+- Lines: 37
+- Bytes: 548
+- Contents summary: ignore patterns: .env.local, .next, agent/.next, .local, session, output, tmp, .opencode, .playwright-mcp, .superpowers, docs/superpowers/, docs/screenshots/prototypes/, root-next-artifact-2026-03-08, root-next-artifact-2026-03-08-2, root-next-artifact-2026-03-08-3
 
 ## `.railwayignore`
 - Status: tracked-clean
@@ -158,7 +158,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Type: TypeScript module
 - Construction: code module
 - Lines: 253
-- Bytes: 9984
+- Bytes: 9992
 - Imports (packages): @playwright/test
 - Symbol details: function assertSignedOutRedirect, function signInAsAdmin, function signInWithToken, function assertAdminNavigation, function assertSettingsIsTechnicalOnly, function assertClientsOwnClientCreation, function assertCampaignDetailIsPerformanceOnly, function assertClientPortalIsCampaignsOnly, function assertRetiredRoutesRedirect, function createTemporaryUser, function deleteClerkUser, function clerkRequest, function appUrl, function rewriteUrlOrigin, function trimTrailingSlash, function slugToTitle, … (+5 more)
 - Defines: assertSignedOutRedirect, signInAsAdmin, signInWithToken, assertAdminNavigation, assertSettingsIsTechnicalOnly, assertClientsOwnClientCreation, assertCampaignDetailIsPerformanceOnly, assertClientPortalIsCampaignsOnly, assertRetiredRoutesRedirect, createTemporaryUser, deleteClerkUser, clerkRequest, … (+25 more)
@@ -296,7 +296,7 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: repo root
 - Type: TypeScript build info
 - Lines: 1
-- Bytes: 285647
+- Bytes: 285465
 - Contents summary: text lines: {"fileNames":["./node_modules/typescript/lib/lib.es5.d.ts","./node_modules/typescript/lib/lib.es2015.d.ts","./node_modules/typescript/lib/lib.es2016.d.ts","./node_modules/typescript/lib/lib.es2017.d.ts","./node_modules/typescript/lib/lib.es2018.d.ts","./node_modules/typescript/lib/lib.es2019.d.ts","./node_…
 
 ## `vitest.config.ts`

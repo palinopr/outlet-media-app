@@ -1,6 +1,6 @@
 # Tests / Lib
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 - Files: 4
 - File kinds: test file (4)
@@ -8,18 +8,18 @@ Generated from the current working tree on 2026-04-28 02:32:49.
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
 ## `__tests__/lib/api-schemas.test.ts`
-- Status: tracked-clean
+- Status: modified
 - System: tests
 - Group: Tests / Lib
 - Ownership: library test suite
 - Type: test file
 - Construction: test specification
 - Lines: 103
-- Bytes: 3675
+- Bytes: 3679
 - Imports (internal): src/lib/api-schemas.ts
 - Imports (packages): vitest
 - Depends on groups: src/lib
-- Defines: validBase, result, ticketmaster, demographics
+- Defines: validBase, result, retiredTicketing, demographics
 - Tests / describe labels: IngestPayloadSchema, accepts a valid meta payload, rejects missing secret, rejects empty secret, rejects invalid source enum, rejects missing data.scraped_at, rejects retired ticketing sources, ContactFormSchema, … (+4 more)
 - Contents summary: tests/describes: IngestPayloadSchema; accepts a valid meta payload; rejects missing secret; internal imports: 1; package imports: 1
 
@@ -38,14 +38,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: tests/describes: guessClientSlug; maps arjona to zamora; maps alofoke to zamora; internal imports: 1
 
 ## `__tests__/lib/contact-form.test.ts`
-- Status: tracked-clean
+- Status: modified
 - System: tests
 - Group: Tests / Lib
 - Ownership: library test suite
 - Type: test file
 - Construction: test specification
 - Lines: 74
-- Bytes: 2139
+- Bytes: 2135
 - Imports (internal): src/components/landing/contact-form.tsx, src/lib/api-schemas.ts
 - Imports (packages): vitest
 - Depends on groups: src/components / landing, src/lib

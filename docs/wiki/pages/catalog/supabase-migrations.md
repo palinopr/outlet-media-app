@@ -1,6 +1,6 @@
 # supabase / migrations
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 - Files: 75
 - File kinds: SQL migration/query (75)
@@ -474,17 +474,16 @@ Each entry below documents the file path, system ownership, construction style, 
 - SQL objects: alter table: public.notifications, index: notifications_user_read_created_idx, index: notifications_entity_idx
 - Contents summary: alter table: public.notifications; index: notifications_user_read_created_idx; index: notifications_entity_idx
 
-## `supabase/migrations/20260306130000_whatsapp_cloud.sql`
-- Status: tracked-clean
+## `supabase/migrations/20260306130000_retired_messaging_prototype.sql`
+- Status: untracked
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
-- Lines: 223
-- Bytes: 8306
-- SQL objects: create table: public.whatsapp_accounts, create table: public.whatsapp_contacts, create table: public.whatsapp_conversations, create table: public.whatsapp_messages, alter table: public.whatsapp_accounts, alter table: public.whatsapp_contacts, alter table: public.whatsapp_conversations, alter table: public.whatsapp_messages, policy: "whatsapp_accounts_read" on public.whatsapp_accounts, policy: "whatsapp_accounts_insert" on public.whatsapp_accounts, policy: "whatsapp_accounts_update" on public.whatsapp_accounts, policy: "whatsapp_accounts_delete" on public.whatsapp_accounts, … (+8 more)
-- Contents summary: create table: public.whatsapp_accounts; create table: public.whatsapp_contacts; create table: public.whatsapp_conversations; create table: public.whatsapp_messages; alter table: public.whatsapp_accounts; alter table: public.whatsapp_contacts; alter table: public.whatsapp_conversations; alter table: public.whatsapp_mes…
+- Lines: 4
+- Bytes: 134
+- Contents summary: SQL migration or query file
 
 ## `supabase/migrations/20260306143000_system_events_envelope.sql`
 - Status: tracked-clean
@@ -499,14 +498,14 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: alter table: public.system_events; index: idx_system_events_occurred_at; index: idx_system_events_correlation_id; index: idx_system_events_causation_id
 
 ## `supabase/migrations/20260306152000_client_membership_rls.sql`
-- Status: tracked-clean
+- Status: modified
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
-- Lines: 126
-- Bytes: 4208
+- Lines: 123
+- Bytes: 3995
 - SQL objects: alter table: public.clients, alter table: public.client_members, alter table: public.client_member_campaigns, alter table: public.client_member_events, function: public.current_clerk_user_id, policy: "clients_read_member" on public.clients, policy: "client_members_read_self" on public.client_members, policy: "client_member_campaigns_read_self" on public.client_member_campaigns, policy: "client_member_events_read_self" on public.client_member_events, policy: "system_events_read_shared_member" on public.system_events, policy: "approval_requests_read_client_member" on public.approval_requests, policy: "campaign_action_items_read_shared_member" on public.campaign_action_items
 - Contents summary: alter table: public.clients; alter table: public.client_members; alter table: public.client_member_campaigns; alter table: public.client_member_events; function: public.current_clerk_user_id; policy: "clients_read_member" on public.clients; policy: "client_members_read_self" on public.client_members; policy: "client_m…
 
@@ -774,17 +773,16 @@ Each entry below documents the file path, system ownership, construction style, 
 - SQL objects: alter table: public.client_agent_messages
 - Contents summary: alter table: public.client_agent_messages
 
-## `supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql`
-- Status: tracked-clean
+## `supabase/migrations/20260401190000_retired_ticketing_workflow.sql`
+- Status: untracked
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
-- Lines: 247
-- Bytes: 11290
-- SQL objects: create table: public.whatsapp_ticket_concierge_runs, create table: public.whatsapp_ticket_concierge_option_sets, create table: public.whatsapp_ticket_concierge_options, create table: public.whatsapp_ticket_concierge_checkout_attempts, create table: public.whatsapp_ticket_concierge_bans, alter table: public.whatsapp_ticket_concierge_runs, alter table: public.whatsapp_ticket_concierge_option_sets, alter table: public.whatsapp_ticket_concierge_options, alter table: public.whatsapp_ticket_concierge_checkout_attempts, alter table: public.whatsapp_ticket_concierge_bans, policy: "whatsapp_ticket_concierge_runs_deny_select" on public.whatsapp_ticket_concierge_runs, policy: "whatsapp_ticket_concierge_runs_deny_insert" on public.whatsapp_ticket_concierge_runs, … (+8 more)
-- Contents summary: create table: public.whatsapp_ticket_concierge_runs; create table: public.whatsapp_ticket_concierge_option_sets; create table: public.whatsapp_ticket_concierge_options; create table: public.whatsapp_ticket_concierge_checkout_attempts; create table: public.whatsapp_ticket_concierge_bans; alter table: public.whatsapp_ti…
+- Lines: 4
+- Bytes: 133
+- Contents summary: SQL migration or query file
 
 ## `supabase/migrations/20260403120000_clients_read_member_policy.sql`
 - Status: tracked-clean
@@ -799,16 +797,16 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: policy: "clients_read_member" on public.clients
 
 ## `supabase/migrations/20260427000000_remove_agent_artifacts.sql`
-- Status: tracked-clean
+- Status: modified
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
-- Lines: 49
-- Bytes: 1628
-- SQL objects: alter table: public.system_events, alter table: public.clients, alter table: public.whatsapp_accounts, alter table: public.whatsapp_conversations, alter table: public.growth_publish_attempts
-- Contents summary: alter table: public.system_events; alter table: public.clients; alter table: public.whatsapp_accounts; alter table: public.whatsapp_conversations; alter table: public.growth_publish_attempts
+- Lines: 43
+- Bytes: 1469
+- SQL objects: alter table: public.system_events, alter table: public.clients, alter table: public.growth_publish_attempts
+- Contents summary: alter table: public.system_events; alter table: public.clients; alter table: public.growth_publish_attempts
 
 ## `supabase/migrations/20260427001000_retire_events_reports_surfaces.sql`
 - Status: tracked-clean
@@ -845,25 +843,25 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: SQL migration or query file
 
 ## `supabase/migrations/20260428000000_remove_unused_remote_backbones.sql`
-- Status: tracked-clean
+- Status: modified
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
-- Lines: 76
-- Bytes: 3998
+- Lines: 65
+- Bytes: 3342
 - Contents summary: SQL migration or query file
 
 ## `supabase/migrations/20260428001000_remove_unused_remote_functions.sql`
-- Status: tracked-clean
+- Status: modified
 - System: database
 - Group: supabase / migrations
 - Ownership: database migration history
 - Type: SQL migration/query
 - Construction: SQL migration/query file, ordered migration history file
-- Lines: 4
-- Bytes: 176
+- Lines: 3
+- Bytes: 64
 - Contents summary: SQL migration or query file
 
 ## `supabase/migrations/20260428002000_remove_ticketing_artifacts.sql`

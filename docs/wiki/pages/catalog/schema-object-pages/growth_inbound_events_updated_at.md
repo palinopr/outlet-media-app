@@ -1,6 +1,6 @@
 # Schema object: growth_inbound_events_updated_at
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 - Kinds: trigger
 - Migrations: supabase/migrations/20260307124500_growth_lead_ops.sql

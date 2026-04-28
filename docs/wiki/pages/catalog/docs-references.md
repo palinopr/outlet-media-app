@@ -1,6 +1,6 @@
 # Docs / References
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 - Files: 3
 - File kinds: Markdown doc (3)
@@ -26,8 +26,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Ownership: reference documentation
 - Type: Markdown doc
 - Construction: markdown document
-- Lines: 62
-- Bytes: 1344
+- Lines: 61
+- Bytes: 1413
 - Headings: Database Safety Runbook, Before schema changes, Manual GitHub drift check, Active table baseline
 - Contents summary: headings: Database Safety Runbook \| Before schema changes \| Manual GitHub drift check \| Active table baseline
 

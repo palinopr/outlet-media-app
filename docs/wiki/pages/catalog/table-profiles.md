@@ -1,28 +1,28 @@
 # Table Profiles
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 This index links to deeper per-table pages for migration-discovered database tables.
 
-- Tables tracked: 70
+- Tables tracked: 61
 
 ## Access / auth tables
 
-- [client_access_invites](./table-pages/client_access_invites.md) — refs: 9; routes: 1; features/libs/agents: 4
+- [client_access_invites](./table-pages/client_access_invites.md) — refs: 8; routes: 1; features/libs/agents: 4
 - [client_member_campaigns](./table-pages/client_member_campaigns.md) — refs: 6; routes: 0; features/libs/agents: 2
 - [client_member_events](./table-pages/client_member_events.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [client_members](./table-pages/client_members.md) — refs: 18; routes: 1; features/libs/agents: 4
+- [client_members](./table-pages/client_members.md) — refs: 16; routes: 1; features/libs/agents: 4
 
 ## Account backbone tables
 
-- [clients](./table-pages/clients.md) — refs: 90; routes: 7; features/libs/agents: 10
+- [clients](./table-pages/clients.md) — refs: 81; routes: 7; features/libs/agents: 10
 
 ## Agent runtime workflow
 
 - [agent_alerts](./table-pages/agent_alerts.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [agent_jobs](./table-pages/agent_jobs.md) — refs: 2; routes: 0; features/libs/agents: 0
 - [agent_runtime_state](./table-pages/agent_runtime_state.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [agent_tasks](./table-pages/agent_tasks.md) — refs: 6; routes: 0; features/libs/agents: 0
+- [agent_tasks](./table-pages/agent_tasks.md) — refs: 3; routes: 0; features/libs/agents: 0
 
 ## Campaign / event / asset workflow
 
@@ -34,12 +34,12 @@ This index links to deeper per-table pages for migration-discovered database tab
 
 ## Client agent conversation workflow
 
-- [client_agent_messages](./table-pages/client_agent_messages.md) — refs: 2; routes: 0; features/libs/agents: 0
-- [client_agent_threads](./table-pages/client_agent_threads.md) — refs: 1; routes: 0; features/libs/agents: 0
+- [client_agent_messages](./table-pages/client_agent_messages.md) — refs: 0; routes: 0; features/libs/agents: 0
+- [client_agent_threads](./table-pages/client_agent_threads.md) — refs: 0; routes: 0; features/libs/agents: 0
 
 ## External ingest / reporting tables
 
-- [calls](./table-pages/calls.md) — refs: 18; routes: 0; features/libs/agents: 1
+- [calls](./table-pages/calls.md) — refs: 13; routes: 0; features/libs/agents: 1
 - [contact_submissions](./table-pages/contact_submissions.md) — refs: 6; routes: 1; features/libs/agents: 1
 - [meta_campaigns](./table-pages/meta_campaigns.md) — refs: 25; routes: 0; features/libs/agents: 4
 - [tm_event_daily](./table-pages/tm_event_daily.md) — refs: 1; routes: 0; features/libs/agents: 0
@@ -62,7 +62,7 @@ This index links to deeper per-table pages for migration-discovered database tab
 - [crm_contacts](./table-pages/crm_contacts.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [crm_follow_up_items](./table-pages/crm_follow_up_items.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [email_drafts](./table-pages/email_drafts.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [email_events](./table-pages/email_events.md) — refs: 2; routes: 0; features/libs/agents: 0
+- [email_events](./table-pages/email_events.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [email_reply_examples](./table-pages/email_reply_examples.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [event_comments](./table-pages/event_comments.md) — refs: 0; routes: 0; features/libs/agents: 0
 - [event_snapshots](./table-pages/event_snapshots.md) — refs: 0; routes: 0; features/libs/agents: 0
@@ -75,20 +75,11 @@ This index links to deeper per-table pages for migration-discovered database tab
 - [growth_playbooks](./table-pages/growth_playbooks.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [growth_post_targets](./table-pages/growth_post_targets.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [growth_publish_attempts](./table-pages/growth_publish_attempts.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [if](./table-pages/if.md) — refs: 181; routes: 22; features/libs/agents: 35
+- [if](./table-pages/if.md) — refs: 158; routes: 22; features/libs/agents: 35
 - [internal_dnc](./table-pages/internal_dnc.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [leads](./table-pages/leads.md) — refs: 6; routes: 1; features/libs/agents: 1
+- [leads](./table-pages/leads.md) — refs: 5; routes: 1; features/libs/agents: 1
 - [recordings](./table-pages/recordings.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [scheduled_callbacks](./table-pages/scheduled_callbacks.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [whatsapp_accounts](./table-pages/whatsapp_accounts.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [whatsapp_contacts](./table-pages/whatsapp_contacts.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [whatsapp_conversations](./table-pages/whatsapp_conversations.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [whatsapp_messages](./table-pages/whatsapp_messages.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [whatsapp_ticket_concierge_bans](./table-pages/whatsapp_ticket_concierge_bans.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [whatsapp_ticket_concierge_checkout_attempts](./table-pages/whatsapp_ticket_concierge_checkout_attempts.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [whatsapp_ticket_concierge_option_sets](./table-pages/whatsapp_ticket_concierge_option_sets.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [whatsapp_ticket_concierge_options](./table-pages/whatsapp_ticket_concierge_options.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [whatsapp_ticket_concierge_runs](./table-pages/whatsapp_ticket_concierge_runs.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [workspace_comments](./table-pages/workspace_comments.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [workspace_pages](./table-pages/workspace_pages.md) — refs: 1; routes: 0; features/libs/agents: 0
 - [workspace_tasks](./table-pages/workspace_tasks.md) — refs: 1; routes: 0; features/libs/agents: 0
@@ -97,5 +88,5 @@ This index links to deeper per-table pages for migration-discovered database tab
 
 - [admin_activity](./table-pages/admin_activity.md) — refs: 9; routes: 1; features/libs/agents: 1
 - [approval_requests](./table-pages/approval_requests.md) — refs: 1; routes: 0; features/libs/agents: 0
-- [notifications](./table-pages/notifications.md) — refs: 10; routes: 1; features/libs/agents: 0
-- [system_events](./table-pages/system_events.md) — refs: 21; routes: 0; features/libs/agents: 3
+- [notifications](./table-pages/notifications.md) — refs: 6; routes: 1; features/libs/agents: 0
+- [system_events](./table-pages/system_events.md) — refs: 17; routes: 0; features/libs/agents: 3

@@ -1,6 +1,6 @@
 # Table: workspace_pages
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 - Category: Other tables
 - Kinds: table

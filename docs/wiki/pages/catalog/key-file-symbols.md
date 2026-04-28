@@ -1,6 +1,6 @@
 # Key File Symbol Map
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 This page highlights key code files and lists their exported symbols, top-level definitions, and route/test ownership links.
 
@@ -1518,8 +1518,8 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Type: React/TSX module
 - Ownership: landing page UI components
 - Exports: buildLandingContactPayload, ContactForm
-- Symbol details: function buildLandingContactPayload (exported), function ContactForm (exported), function formString, const INPUT_CLS, const TEXTAREA_CLS, const RAW_BOOKING_URL, const BOOKING_EMBED_URL, const WHATSAPP_AUDIT_URL
-- Defines: formString, buildLandingContactPayload, ContactForm, handleSubmit, INPUT_CLS, TEXTAREA_CLS, RAW_BOOKING_URL, BOOKING_EMBED_URL, WHATSAPP_AUDIT_URL, value, name, phone, email, company, monthlyBudget, goal, … (+4 more)
+- Symbol details: function buildLandingContactPayload (exported), function ContactForm (exported), function formString, const INPUT_CLS, const TEXTAREA_CLS, const RAW_BOOKING_URL, const BOOKING_EMBED_URL
+- Defines: formString, buildLandingContactPayload, ContactForm, handleSubmit, INPUT_CLS, TEXTAREA_CLS, RAW_BOOKING_URL, BOOKING_EMBED_URL, value, name, phone, email, company, monthlyBudget, goal, form, … (+3 more)
 - Imported by: __tests__/lib/contact-form.test.ts, src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
 - Tests related: __tests__/lib/contact-form.test.ts
@@ -1583,8 +1583,8 @@ This page highlights key code files and lists their exported symbols, top-level 
 - Type: React/TSX module
 - Ownership: landing page UI components
 - Exports: LandingProofStats, LandingProblemSection, LandingAuditDeliverables, LandingProofCarousel, LandingMidPageCTA, LandingFounderTrust, LandingScarcitySection, LandingBookingSection
-- Symbol details: function LandingProofStats (exported), function LandingProblemSection (exported), function LandingAuditDeliverables (exported), function LandingProofCarousel (exported), function LandingMidPageCTA (exported), function LandingFounderTrust (exported), function LandingScarcitySection (exported), function LandingBookingSection (exported), const STATS, const PROBLEMS, const DELIVERABLES, const PROOF_CARDS, const RAW_BOOKING_URL, const BOOKING_EMBED_URL, const WHATSAPP_AUDIT_URL, const reveal
-- Defines: LandingProofStats, LandingProblemSection, LandingAuditDeliverables, LandingProofCarousel, LandingMidPageCTA, LandingFounderTrust, LandingScarcitySection, LandingBookingSection, STATS, PROBLEMS, DELIVERABLES, PROOF_CARDS, RAW_BOOKING_URL, BOOKING_EMBED_URL, WHATSAPP_AUDIT_URL, reveal
+- Symbol details: function LandingProofStats (exported), function LandingProblemSection (exported), function LandingAuditDeliverables (exported), function LandingProofCarousel (exported), function LandingMidPageCTA (exported), function LandingFounderTrust (exported), function LandingScarcitySection (exported), function LandingBookingSection (exported), const STATS, const PROBLEMS, const DELIVERABLES, const PROOF_CARDS, const RAW_BOOKING_URL, const BOOKING_EMBED_URL, const reveal
+- Defines: LandingProofStats, LandingProblemSection, LandingAuditDeliverables, LandingProofCarousel, LandingMidPageCTA, LandingFounderTrust, LandingScarcitySection, LandingBookingSection, STATS, PROBLEMS, DELIVERABLES, PROOF_CARDS, RAW_BOOKING_URL, BOOKING_EMBED_URL, reveal
 - Imported by: src/app/landing/page.tsx
 - Route owners: src/app/landing/page.tsx
 - Contents summary: contains `use client`; exports: LandingProofStats, LandingProblemSection, LandingAuditDeliverables, LandingProofCarousel, LandingMidPageCTA, LandingFounderTrust, LandingScarcitySection, LandingBookingSection; package imports: 2

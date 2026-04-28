@@ -1,6 +1,6 @@
 # Feature: shared
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 - Files: 1
 - Entry files: src/features/shared/admin-summary-types.ts

@@ -1,9 +1,9 @@
 # Docs / Root
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
-- Files: 2
-- File kinds: Markdown doc (2)
+- Files: 1
+- File kinds: Markdown doc (1)
 
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
@@ -18,15 +18,3 @@ Each entry below documents the file path, system ownership, construction style, 
 - Bytes: 884
 - Headings: Docs Guide, Source of Truth, Historical Reference, Rule
 - Contents summary: headings: Docs Guide \| Source of Truth \| Historical Reference \| Rule
-
-## `docs/superpowers/README.md`
-- Status: tracked-clean
-- System: docs
-- Group: Docs / Root
-- Ownership: documentation
-- Type: Markdown doc
-- Construction: markdown document
-- Lines: 15
-- Bytes: 631
-- Headings: Historical Superpowers Specs and Plans
-- Contents summary: headings: Historical Superpowers Specs and Plans

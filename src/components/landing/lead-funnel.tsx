@@ -97,9 +97,6 @@ const RAW_BOOKING_URL = process.env.NEXT_PUBLIC_AUDIT_BOOKING_URL?.trim();
 const BOOKING_EMBED_URL = RAW_BOOKING_URL
   ? `${RAW_BOOKING_URL}${RAW_BOOKING_URL.includes("?") ? "&" : "?"}embed=true&theme=dark`
   : null;
-const WHATSAPP_AUDIT_URL =
-  "https://wa.me/13053225709?text=Quiero%20agendar%20mi%20auditor%C3%ADa%20gratis%20de%20ads";
-
 const reveal = {
   initial: { opacity: 0, y: 16 },
   whileInView: { opacity: 1, y: 0 },
@@ -394,25 +391,15 @@ export function LandingBookingSection() {
             Escríbenos y coordinamos el bloque.
           </p>
           <p className="mx-auto mt-2 max-w-[34ch] text-[14px] leading-relaxed text-[color:var(--landing-muted)]">
-            Mientras conectamos el calendario, WhatsApp es la vía más rápida para separar
-            tu auditoría.
+            Mientras conectamos el calendario, usa el formulario y coordinamos el bloque por
+            teléfono o email.
           </p>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2">
-            <a
-              href={WHATSAPP_AUDIT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-12 items-center justify-center rounded-[10px] bg-[color:var(--landing-brand)] px-5 font-[family-name:var(--font-landing-heading)] text-[14px] font-bold text-white"
-            >
-              Agendar por WhatsApp
-            </a>
-            <a
-              href="#form"
-              className="inline-flex h-12 items-center justify-center rounded-[10px] border border-[color:var(--landing-border)] bg-white/[0.03] px-5 font-[family-name:var(--font-landing-heading)] text-[14px] font-bold text-white"
-            >
-              Enviar mi cuenta
-            </a>
-          </div>
+          <a
+            href="#form"
+            className="mx-auto mt-5 inline-flex h-12 items-center justify-center rounded-[10px] bg-[color:var(--landing-brand)] px-5 font-[family-name:var(--font-landing-heading)] text-[14px] font-bold text-white"
+          >
+            Enviar mi cuenta
+          </a>
         </div>
       )}
 

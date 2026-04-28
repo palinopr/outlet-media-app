@@ -1,17 +1,17 @@
 # Repo File Catalog
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 This catalog is documentation-first: it describes what files exist, what each file contains, how each file is constructed, and which system or folder ownership it belongs to.
 
 ## Scope
-- Cataloged files: 522
+- Cataloged files: 498
 - Catalog uses the current working tree, so modified and untracked source files are included if they live in the documented code/doc paths.
 - Excluded from the generated catalog to avoid noise or recursion: `.git/`, `node_modules/`, `.next/`, `agent/.next/`, `agent/dist/`, `test-results/`, `tmp-playwright/`, `session/`, `.opencode/`, `.claude/`, `.worktrees/`, and `docs/wiki/pages/catalog/`.
 
 ## System counts
 - database: 83
-- docs: 110
+- docs: 86
 - github: 4
 - public: 17
 - root: 27
@@ -46,10 +46,8 @@ This catalog is documentation-first: it describes what files exist, what each fi
 - [Docs / Context](./docs-context.md) — 12 files
 - [Docs / Plans](./docs-plans.md) — 30 files
 - [Docs / References](./docs-references.md) — 3 files
-- [Docs / Root](./docs-root.md) — 2 files
+- [Docs / Root](./docs-root.md) — 1 files
 - [Docs / Screenshots](./docs-screenshots.md) — 30 files
-- [Docs / Superpowers Plans](./docs-superpowers-plans.md) — 12 files
-- [Docs / Superpowers Specs](./docs-superpowers-specs.md) — 11 files
 - [Docs / Wiki (manual control pages)](./docs-wiki.md) — 10 files
 - [.github](./github.md) — 4 files
 - [Root Mocks](./mocks.md) — 1 files

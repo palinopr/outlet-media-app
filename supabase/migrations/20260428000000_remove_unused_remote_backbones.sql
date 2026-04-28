@@ -1,7 +1,6 @@
 -- Remove remote-only backbones that no longer have any active product or code path.
 -- Keep the narrow production baseline: campaigns, campaign snapshots, client accounts,
--- memberships, invites, contact submissions, Meta campaign data, Ticketmaster ingest,
--- system events, and admin activity.
+-- memberships, invites, contact submissions, Meta campaign data, system events, and admin activity.
 
 -- Old agency operating-system prototype tables.
 drop table if exists public.agency_os_task_receipts cascade;
@@ -60,16 +59,6 @@ drop table if exists public.sbr_reports cascade;
 drop table if exists public.sbr_account_pool_state cascade;
 drop table if exists public.sbr_config cascade;
 
--- Old WhatsApp/ticket concierge backbones.
-drop table if exists public.whatsapp_ticket_concierge_checkout_attempts cascade;
-drop table if exists public.whatsapp_ticket_concierge_options cascade;
-drop table if exists public.whatsapp_ticket_concierge_option_sets cascade;
-drop table if exists public.whatsapp_ticket_concierge_runs cascade;
-drop table if exists public.whatsapp_ticket_concierge_bans cascade;
-drop table if exists public.whatsapp_messages cascade;
-drop table if exists public.whatsapp_conversations cascade;
-drop table if exists public.whatsapp_contacts cascade;
-drop table if exists public.whatsapp_accounts cascade;
 
 -- Unused aggregate not read by the active app; event_snapshots/tm_event_demographics remain.
 drop table if exists public.tm_event_daily cascade;

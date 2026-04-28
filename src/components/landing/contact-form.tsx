@@ -13,9 +13,6 @@ const RAW_BOOKING_URL = process.env.NEXT_PUBLIC_AUDIT_BOOKING_URL?.trim();
 const BOOKING_EMBED_URL = RAW_BOOKING_URL
   ? `${RAW_BOOKING_URL}${RAW_BOOKING_URL.includes("?") ? "&" : "?"}embed=true&theme=dark`
   : null;
-const WHATSAPP_AUDIT_URL =
-  "https://wa.me/13053225709?text=Quiero%20agendar%20mi%20auditor%C3%ADa%20gratis%20de%20ads";
-
 function formString(formData: FormData, key: string) {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
@@ -36,7 +33,7 @@ export function buildLandingContactPayload(formData: FormData) {
     company,
     monthlyBudget,
     goal,
-    preferredContact: "WhatsApp",
+    preferredContact: "Phone",
     pageContext: "landing-audit-funnel",
     message: [
       "Fallback audit request from the Outlet Media landing funnel.",
@@ -94,7 +91,7 @@ export function ContactForm() {
               Agenda tu llamada ahora mismo.
             </h2>
             <p className="mt-4 text-[15px] leading-relaxed text-[color:var(--landing-muted)]">
-              Escoge un bloque que te funcione. Si prefieres, te llamo yo al WhatsApp que
+              Escoge un bloque que te funcione. Si prefieres, te llamo yo al teléfono que
               dejaste — menos de 24h laborables.
             </p>
           </div>
@@ -109,14 +106,9 @@ export function ContactForm() {
               />
             </div>
           ) : (
-            <a
-              href={WHATSAPP_AUDIT_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mx-auto mt-8 flex h-12 max-w-[320px] items-center justify-center rounded-[10px] bg-[color:var(--landing-brand)] px-5 font-[family-name:var(--font-landing-heading)] text-[14px] font-bold text-white"
-            >
-              Agendar por WhatsApp
-            </a>
+            <p className="mx-auto mt-8 max-w-[360px] text-center text-[14px] leading-relaxed text-[color:var(--landing-muted)]">
+              Recibimos tu solicitud. Te contactaremos por teléfono o email para coordinar el bloque.
+            </p>
           )}
         </div>
       </section>
@@ -159,7 +151,7 @@ export function ContactForm() {
           <input
             type="tel"
             name="phone"
-            placeholder="WhatsApp"
+            placeholder="Teléfono"
             autoComplete="tel"
             required
             className={INPUT_CLS}

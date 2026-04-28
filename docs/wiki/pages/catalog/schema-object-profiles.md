@@ -1,10 +1,10 @@
 # Schema Object Profiles
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 This index links to deeper pages for migration-discovered functions, views, triggers, and other non-table schema objects.
 
-- Objects tracked: 30
+- Objects tracked: 22
 
 ## Functions
 
@@ -33,11 +33,3 @@ This index links to deeper pages for migration-discovered functions, views, trig
 - [growth_publish_attempts_updated_at](./schema-object-pages/growth_publish_attempts_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
 - [meta_campaigns_updated_at](./schema-object-pages/meta_campaigns_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
 - [tm_events_updated_at](./schema-object-pages/tm_events_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [whatsapp_accounts_updated_at](./schema-object-pages/whatsapp_accounts_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [whatsapp_contacts_updated_at](./schema-object-pages/whatsapp_contacts_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [whatsapp_conversations_updated_at](./schema-object-pages/whatsapp_conversations_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [whatsapp_messages_updated_at](./schema-object-pages/whatsapp_messages_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [whatsapp_ticket_concierge_bans_updated_at](./schema-object-pages/whatsapp_ticket_concierge_bans_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [whatsapp_ticket_concierge_checkout_attempts_updated_at](./schema-object-pages/whatsapp_ticket_concierge_checkout_attempts_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [whatsapp_ticket_concierge_option_sets_updated_at](./schema-object-pages/whatsapp_ticket_concierge_option_sets_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0
-- [whatsapp_ticket_concierge_runs_updated_at](./schema-object-pages/whatsapp_ticket_concierge_runs_updated_at.md) — refs: 0; routes: 0; features/libs/agents: 0

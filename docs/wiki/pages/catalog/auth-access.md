@@ -1,6 +1,6 @@
 # Auth and Access Map
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 This page focuses on files and database objects that participate in authentication, membership, scope, invite, or access-control behavior.
 
@@ -371,7 +371,7 @@ This page focuses on files and database objects that participate in authenticati
 - Migrations: supabase/migrations/20260322100000_client_portal_reset.sql
 - Routes: src/app/api/admin/invite/route.ts
 - Features/libs/agents: src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/features/invitations/server.ts, src/lib/database.types.ts
-- Tests/docs: docs/references/database-safety-runbook.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, src/app/api/admin/invite/route.test.ts
+- Tests/docs: docs/references/database-safety-runbook.md, src/app/api/admin/invite/route.test.ts
 
 ### `client_access_invites_updated_at`
 - Kinds: trigger
@@ -399,7 +399,7 @@ This page focuses on files and database objects that participate in authenticati
 - Migrations: supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260307143000_client_member_roster_rls.sql
 - Routes: src/app/api/admin/users/[id]/route.ts
 - Features/libs/agents: src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/lib/database.types.ts, src/lib/member-access.ts
-- Tests/docs: docs/context/engineering-principles.md, docs/plans/2026-03-03-client-accounts-design.md, docs/plans/2026-03-03-client-accounts-plan.md, docs/references/database-safety-runbook.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, docs/superpowers/plans/2026-03-31-client-agent-tab.md, src/app/admin/clients/data.test.ts, src/app/api/admin/users/[id]/route.test.ts
+- Tests/docs: docs/context/engineering-principles.md, docs/plans/2026-03-03-client-accounts-design.md, docs/plans/2026-03-03-client-accounts-plan.md, docs/references/database-safety-runbook.md, src/app/admin/clients/data.test.ts, src/app/api/admin/users/[id]/route.test.ts
 
 ### `current_clerk_user_id`
 - Kinds: function

@@ -40,10 +40,10 @@ describe("IngestPayloadSchema", () => {
   });
 
   it("rejects retired ticketing sources", () => {
-    const ticketmaster = IngestPayloadSchema.safeParse({ ...validBase, source: "ticketmaster_one" });
+    const retiredTicketing = IngestPayloadSchema.safeParse({ ...validBase, source: "ticketmaster_one" });
     const demographics = IngestPayloadSchema.safeParse({ ...validBase, source: "tm_demographics" });
 
-    expect(ticketmaster.success).toBe(false);
+    expect(retiredTicketing.success).toBe(false);
     expect(demographics.success).toBe(false);
   });
 });
@@ -59,7 +59,7 @@ describe("ContactFormSchema", () => {
       company: "Outlet Live",
       monthlyBudget: "$5K — $20K",
       goal: "Sell more tickets next week",
-      preferredContact: "WhatsApp",
+      preferredContact: "Phone",
       pageContext: "landing-audit-funnel",
       message: "Fallback audit request from the Outlet Media landing funnel.",
     });

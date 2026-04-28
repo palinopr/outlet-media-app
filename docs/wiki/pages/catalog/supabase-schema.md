@@ -1,13 +1,13 @@
 # Supabase Schema Map
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 This page groups migration-discovered database objects by schema kind and records which migrations define them plus how many code/docs references exist outside the migrations.
 
-- Database objects tracked: 100
+- Database objects tracked: 83
 
 ## Tables
-- Objects: 70
+- Objects: 61
 
 ### `ad_assets`
 - Kinds: table
@@ -66,11 +66,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `agent_tasks`
 - Kinds: table
 - Migrations: supabase/migrations/20260302000000_agent_tasks.sql, supabase/migrations/20260306223000_agent_tasks_visibility_rls.sql
-- Non-migration references: 6
-- Referenced by groups: Docs / Plans (3), Docs / Superpowers Plans (2), Docs / Superpowers Specs (1)
+- Non-migration references: 3
+- Referenced by groups: Docs / Plans (3)
 - Routes: none
 - Features/libs/agents: none
-- Tests/docs: docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md, docs/superpowers/plans/2026-04-03-enterprise-readiness.md, docs/superpowers/specs/2026-04-03-enterprise-readiness-design.md
+- Tests/docs: docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-07-discord-growth-team-plan.md
 
 ### `application_errors`
 - Kinds: table
@@ -120,11 +120,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `calls`
 - Kinds: table
 - Migrations: supabase/migrations/20260306184000_backend_tables_rls.sql
-- Non-migration references: 18
-- Referenced by groups: Docs / Plans (6), Docs / Superpowers Plans (4), Root Files (3), src/app / client (2), Docs / Context (1), Docs / Superpowers Specs (1), src/lib (1)
+- Non-migration references: 13
+- Referenced by groups: Docs / Plans (6), Root Files (3), src/app / client (2), Docs / Context (1), src/lib (1)
 - Routes: none
 - Features/libs/agents: src/lib/google-ads.test.ts
-- Tests/docs: docs/context/google-ads-api.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-design.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, docs/superpowers/plans/2026-03-31-client-agent-tab.md, docs/superpowers/plans/2026-04-01-client-agent-tool-driven-runtime.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md, … (+3 more)
+- Tests/docs: docs/context/google-ads-api.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-02-26-discord-agent-architecture-plan.md, docs/plans/2026-03-02-project-restructure-design.md, docs/plans/2026-03-02-project-restructure-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-design.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, src/app/client/[slug]/components/campaign-detail-header.test.tsx
 
 ### `campaign_action_items`
 - Kinds: table
@@ -165,11 +165,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `client_access_invites`
 - Kinds: table
 - Migrations: supabase/migrations/20260322100000_client_portal_reset.sql
-- Non-migration references: 9
-- Referenced by groups: src/app / api (2), src/features / client-portal (2), Docs / References (1), Docs / Superpowers Plans (1), src/app / admin (1), src/features / invitations (1), src/lib (1)
+- Non-migration references: 8
+- Referenced by groups: src/app / api (2), src/features / client-portal (2), Docs / References (1), src/app / admin (1), src/features / invitations (1), src/lib (1)
 - Routes: src/app/api/admin/invite/route.ts
 - Features/libs/agents: src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/features/invitations/server.ts, src/lib/database.types.ts
-- Tests/docs: docs/references/database-safety-runbook.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, src/app/api/admin/invite/route.test.ts
+- Tests/docs: docs/references/database-safety-runbook.md, src/app/api/admin/invite/route.test.ts
 
 ### `client_accounts`
 - Kinds: table
@@ -183,20 +183,20 @@ This page groups migration-discovered database objects by schema kind and record
 ### `client_agent_messages`
 - Kinds: table
 - Migrations: supabase/migrations/20260331160000_client_agent_tab.sql, supabase/migrations/20260401173000_client_agent_context_payload.sql
-- Non-migration references: 2
-- Referenced by groups: Docs / Superpowers Plans (2)
+- Non-migration references: 0
+- Referenced by groups: none
 - Routes: none
 - Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-03-31-client-agent-tab.md, docs/superpowers/plans/2026-04-01-client-agent-tool-driven-runtime.md
+- Tests/docs: none
 
 ### `client_agent_threads`
 - Kinds: table
 - Migrations: supabase/migrations/20260331160000_client_agent_tab.sql
-- Non-migration references: 1
-- Referenced by groups: Docs / Superpowers Plans (1)
+- Non-migration references: 0
+- Referenced by groups: none
 - Routes: none
 - Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-03-31-client-agent-tab.md
+- Tests/docs: none
 
 ### `client_member_campaigns`
 - Kinds: table
@@ -219,11 +219,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `client_members`
 - Kinds: table
 - Migrations: supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260307143000_client_member_roster_rls.sql
-- Non-migration references: 18
-- Referenced by groups: src/app / admin (4), Root Files (2), Docs / Plans (2), Docs / Superpowers Plans (2), src/app / api (2), src/features / client-portal (2), src/lib (2), Docs / Context (1), Docs / References (1)
+- Non-migration references: 16
+- Referenced by groups: src/app / admin (4), Root Files (2), Docs / Plans (2), src/app / api (2), src/features / client-portal (2), src/lib (2), Docs / Context (1), Docs / References (1)
 - Routes: src/app/api/admin/users/[id]/route.ts
 - Features/libs/agents: src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/lib/database.types.ts, src/lib/member-access.ts
-- Tests/docs: docs/context/engineering-principles.md, docs/plans/2026-03-03-client-accounts-design.md, docs/plans/2026-03-03-client-accounts-plan.md, docs/references/database-safety-runbook.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, docs/superpowers/plans/2026-03-31-client-agent-tab.md, src/app/admin/clients/data.test.ts, src/app/api/admin/users/[id]/route.test.ts
+- Tests/docs: docs/context/engineering-principles.md, docs/plans/2026-03-03-client-accounts-design.md, docs/plans/2026-03-03-client-accounts-plan.md, docs/references/database-safety-runbook.md, src/app/admin/clients/data.test.ts, src/app/api/admin/users/[id]/route.test.ts
 
 ### `client_services`
 - Kinds: table
@@ -237,11 +237,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `clients`
 - Kinds: table
 - Migrations: supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260311120000_client_events_enabled.sql, supabase/migrations/20260322100000_client_portal_reset.sql, supabase/migrations/20260331160000_client_agent_tab.sql, supabase/migrations/20260403120000_clients_read_member_policy.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql, supabase/migrations/20260427001000_retire_events_reports_surfaces.sql
-- Non-migration references: 90
-- Referenced by groups: Docs / Plans (19), src/components / admin (19), src/app / admin (15), Root Files (6), Docs / Superpowers Specs (5), src/app / api (5), Docs / Superpowers Plans (4), src/features / client-portal (4), Docs / Context (3), src/lib (3), Tests / Features (2), Docs / References (1), … (+4 more)
+- Non-migration references: 81
+- Referenced by groups: Docs / Plans (19), src/components / admin (19), src/app / admin (15), Root Files (6), src/app / api (5), src/features / client-portal (4), Docs / Context (3), src/lib (3), Tests / Features (2), Docs / References (1), src/app / root routes (1), src/features / access (1), … (+2 more)
 - Routes: src/app/admin/campaigns/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/clients/page.tsx, src/app/admin/users/page.tsx, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/health/route.ts
 - Features/libs/agents: src/features/access/revalidation.ts, src/features/client-portal/config.test.ts, src/features/client-portal/config.ts, src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/features/invitations/server.ts, src/features/users/summary.ts, src/lib/database.types.ts, src/lib/member-access.ts, src/lib/meta-campaigns.ts
-- Tests/docs: __tests__/features/access/revalidation.test.ts, __tests__/features/clients/summary.test.ts, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-03-02-admin-crud-design.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, … (+33 more)
+- Tests/docs: __tests__/features/access/revalidation.test.ts, __tests__/features/clients/summary.test.ts, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/context/salvage-map.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, docs/plans/2026-03-02-admin-crud-design.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, … (+24 more)
 
 ### `compliance_logs`
 - Kinds: table
@@ -309,11 +309,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `email_events`
 - Kinds: table
 - Migrations: supabase/migrations/20260306070100_email_agent_intelligence.sql, supabase/migrations/20260306073000_lock_email_agent_tables.sql
-- Non-migration references: 2
-- Referenced by groups: Root Files (1), Docs / Superpowers Plans (1)
+- Non-migration references: 1
+- Referenced by groups: Root Files (1)
 - Routes: none
 - Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-03-10-agent-code-quality-10-10.md
+- Tests/docs: none
 
 ### `email_reply_examples`
 - Kinds: table
@@ -435,11 +435,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `if`
 - Kinds: table
 - Migrations: supabase/migrations/20260428002000_remove_ticketing_artifacts.sql
-- Non-migration references: 181
-- Referenced by groups: Docs / Plans (22), src/components / admin (22), src/lib (19), src/app / admin (16), src/app / api (14), Docs / Superpowers Plans (12), Docs / Superpowers Specs (11), src/components / client (11), src/app / client (9), src/features / client-portal (7), Root Files (5), Docs / Context (4), … (+18 more)
+- Non-migration references: 158
+- Referenced by groups: Docs / Plans (22), src/components / admin (22), src/lib (19), src/app / admin (16), src/app / api (14), src/components / client (11), src/app / client (9), src/features / client-portal (7), Root Files (5), Docs / Context (4), src/app / root routes (4), src / scripts (4), … (+16 more)
 - Routes: src/app/admin/campaigns/[campaignId]/page.tsx, src/app/admin/campaigns/page.tsx, src/app/admin/clients/[id]/page.tsx, src/app/admin/layout.tsx, src/app/api/admin/activity/route.ts, src/app/api/admin/invite/route.ts, src/app/api/admin/users/[id]/route.ts, src/app/api/contact/route.ts, … (+14 more)
 - Features/libs/agents: src/features/access/revalidation.ts, src/features/campaigns/revalidation.ts, src/features/campaigns/server.ts, src/features/client-portal/access.ts, src/features/client-portal/config.ts, src/features/client-portal/entry-accept.test.ts, src/features/client-portal/entry.ts, src/features/client-portal/insights.ts, src/features/client-portal/scope.ts, src/features/client-portal/theme.ts, … (+25 more)
-- Tests/docs: __tests__/api/ingest.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, docs/context/codex-workflow.md, docs/context/google-ads-api.md, docs/context/meta-ads-playbook.md, docs/context/shopify-merch-sync.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, … (+48 more)
+- Tests/docs: __tests__/api/ingest.test.ts, __tests__/app/client/campaign-detail-data.test.ts, __tests__/features/system-events/list.test.ts, docs/context/codex-workflow.md, docs/context/google-ads-api.md, docs/context/meta-ads-playbook.md, docs/context/shopify-merch-sync.md, docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-02-26-discord-agent-architecture-design.md, … (+25 more)
 
 ### `internal_dnc`
 - Kinds: table
@@ -453,11 +453,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `leads`
 - Kinds: table
 - Migrations: supabase/migrations/20260306184000_backend_tables_rls.sql
-- Non-migration references: 6
-- Referenced by groups: Root Files (1), Docs / Plans (1), Docs / Superpowers Specs (1), src/app / root routes (1), src/components / landing (1), src/features / client-portal (1)
+- Non-migration references: 5
+- Referenced by groups: Root Files (1), Docs / Plans (1), src/app / root routes (1), src/components / landing (1), src/features / client-portal (1)
 - Routes: src/app/landing/page.tsx
 - Features/libs/agents: src/features/client-portal/insights.ts
-- Tests/docs: docs/plans/2026-03-07-discord-growth-team-plan.md, docs/superpowers/specs/2026-04-20-mobile-funnel-landing-design.md
+- Tests/docs: docs/plans/2026-03-07-discord-growth-team-plan.md
 
 ### `meta_campaigns`
 - Kinds: table
@@ -471,11 +471,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `notifications`
 - Kinds: table
 - Migrations: supabase/migrations/20260306111500_notification_entities.sql, supabase/migrations/20260306163500_client_surface_rls.sql
-- Non-migration references: 10
-- Referenced by groups: Root Files (3), Docs / Plans (2), Docs / Superpowers Plans (2), Docs / Superpowers Specs (2), src/app / root routes (1)
+- Non-migration references: 6
+- Referenced by groups: Root Files (3), Docs / Plans (2), src/app / root routes (1)
 - Routes: src/app/privacy/page.tsx
 - Features/libs/agents: none
-- Tests/docs: docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, docs/superpowers/plans/2026-04-02-core-reset-salvage-map.md, docs/superpowers/specs/2026-03-22-web-reset-design.md, docs/superpowers/specs/2026-03-27-shell-reset-design.md
+- Tests/docs: docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md
 
 ### `recordings`
 - Kinds: table
@@ -498,11 +498,11 @@ This page groups migration-discovered database objects by schema kind and record
 ### `system_events`
 - Kinds: table
 - Migrations: supabase/migrations/20260305000000_system_events.sql, supabase/migrations/20260305001000_system_events_private_read.sql, supabase/migrations/20260306143000_system_events_envelope.sql, supabase/migrations/20260306152000_client_membership_rls.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql
-- Non-migration references: 21
-- Referenced by groups: Docs / Context (5), Root Files (2), Docs / Superpowers Plans (2), Docs / Superpowers Specs (2), src/app / admin (2), Tests / Features (1), Docs / Plans (1), Docs / References (1), src/app / root routes (1), src/features / root files (1), src/features / system-events (1), src/lib (1), … (+1 more)
+- Non-migration references: 17
+- Referenced by groups: Docs / Context (5), Root Files (2), src/app / admin (2), Tests / Features (1), Docs / Plans (1), Docs / References (1), src/app / root routes (1), src/features / root files (1), src/features / system-events (1), src/lib (1), supabase / root (1)
 - Routes: none
 - Features/libs/agents: src/features/AGENTS.md, src/features/system-events/server.ts, src/lib/database.types.ts
-- Tests/docs: __tests__/features/system-events/list.test.ts, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/references/database-safety-runbook.md, docs/superpowers/plans/2026-03-22-outlet-web-reset.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md, … (+2 more)
+- Tests/docs: __tests__/features/system-events/list.test.ts, docs/context/architecture-reset.md, docs/context/codex-workflow.md, docs/context/current-priorities.md, docs/context/engineering-principles.md, docs/context/product-direction.md, docs/plans/2026-03-07-discord-growth-team-plan.md, docs/references/database-safety-runbook.md
 
 ### `tm_event_daily`
 - Kinds: table
@@ -530,87 +530,6 @@ This page groups migration-discovered database objects by schema kind and record
 - Routes: none
 - Features/libs/agents: none
 - Tests/docs: docs/plans/2026-02-23-client-portal-redesign-plan.md, docs/plans/2026-02-23-client-portal-redesign.md, docs/plans/2026-03-02-admin-crud-design.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-03-client-accounts-plan.md, docs/plans/2026-03-04-admin-must-have-upgrades.md
-
-### `whatsapp_accounts`
-- Kinds: table
-- Migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql
-- Non-migration references: 0
-- Referenced by groups: none
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: none
-
-### `whatsapp_contacts`
-- Kinds: table
-- Migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Non-migration references: 1
-- Referenced by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-
-### `whatsapp_conversations`
-- Kinds: table
-- Migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql, supabase/migrations/20260427000000_remove_agent_artifacts.sql
-- Non-migration references: 1
-- Referenced by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-
-### `whatsapp_messages`
-- Kinds: table
-- Migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Non-migration references: 1
-- Referenced by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-
-### `whatsapp_ticket_concierge_bans`
-- Kinds: table
-- Migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Non-migration references: 1
-- Referenced by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-
-### `whatsapp_ticket_concierge_checkout_attempts`
-- Kinds: table
-- Migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Non-migration references: 1
-- Referenced by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-
-### `whatsapp_ticket_concierge_option_sets`
-- Kinds: table
-- Migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Non-migration references: 1
-- Referenced by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-
-### `whatsapp_ticket_concierge_options`
-- Kinds: table
-- Migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Non-migration references: 1
-- Referenced by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-
-### `whatsapp_ticket_concierge_runs`
-- Kinds: table
-- Migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Non-migration references: 1
-- Referenced by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
 
 ### `workspace_comments`
 - Kinds: table
@@ -718,7 +637,7 @@ This page groups migration-discovered database objects by schema kind and record
 - Tests/docs: none
 
 ## Triggers
-- Objects: 22
+- Objects: 14
 
 ### `agent_jobs_updated_at`
 - Kinds: trigger
@@ -840,78 +759,6 @@ This page groups migration-discovered database objects by schema kind and record
 ### `tm_events_updated_at`
 - Kinds: trigger
 - Migrations: supabase/migrations/20260218000000_initial_schema.sql
-- Non-migration references: 0
-- Referenced by groups: none
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: none
-
-### `whatsapp_accounts_updated_at`
-- Kinds: trigger
-- Migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Non-migration references: 0
-- Referenced by groups: none
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: none
-
-### `whatsapp_contacts_updated_at`
-- Kinds: trigger
-- Migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Non-migration references: 0
-- Referenced by groups: none
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: none
-
-### `whatsapp_conversations_updated_at`
-- Kinds: trigger
-- Migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Non-migration references: 0
-- Referenced by groups: none
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: none
-
-### `whatsapp_messages_updated_at`
-- Kinds: trigger
-- Migrations: supabase/migrations/20260306130000_whatsapp_cloud.sql
-- Non-migration references: 0
-- Referenced by groups: none
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: none
-
-### `whatsapp_ticket_concierge_bans_updated_at`
-- Kinds: trigger
-- Migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Non-migration references: 0
-- Referenced by groups: none
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: none
-
-### `whatsapp_ticket_concierge_checkout_attempts_updated_at`
-- Kinds: trigger
-- Migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Non-migration references: 0
-- Referenced by groups: none
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: none
-
-### `whatsapp_ticket_concierge_option_sets_updated_at`
-- Kinds: trigger
-- Migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
-- Non-migration references: 0
-- Referenced by groups: none
-- Routes: none
-- Features/libs/agents: none
-- Tests/docs: none
-
-### `whatsapp_ticket_concierge_runs_updated_at`
-- Kinds: trigger
-- Migrations: supabase/migrations/20260401190000_whatsapp_ticket_concierge.sql
 - Non-migration references: 0
 - Referenced by groups: none
 - Routes: none

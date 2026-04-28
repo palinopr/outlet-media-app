@@ -120,6 +120,3 @@ CREATE POLICY "campaign_action_items_read_shared_member"
     )
   );
 
--- WhatsApp remains private on purpose. It is a Discord-first internal workflow,
--- so the existing deny-all user policies stay in place until a product decision
--- explicitly asks for a user-facing WhatsApp app.

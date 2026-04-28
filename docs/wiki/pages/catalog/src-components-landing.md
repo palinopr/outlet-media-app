@@ -1,6 +1,6 @@
 # src/components / landing
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 - Files: 12
 - File kinds: React/TSX module (12)
@@ -8,14 +8,14 @@ Generated from the current working tree on 2026-04-28 02:32:49.
 Each entry below documents the file path, system ownership, construction style, imports/exports when available, cross-links to tests and routes, and a concise contents summary.
 
 ## `src/components/landing/contact-form.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
-- Lines: 221
-- Bytes: 8529
+- Lines: 213
+- Bytes: 8239
 - Imports (packages): react, framer-motion
 - Imported by: __tests__/lib/contact-form.test.ts, src/app/landing/page.tsx
 - Used by groups: Tests / Lib, src/app / root routes
@@ -24,8 +24,8 @@ Each entry below documents the file path, system ownership, construction style, 
 - Tests related: __tests__/lib/contact-form.test.ts
 - Tests related (direct): __tests__/lib/contact-form.test.ts
 - Exports: buildLandingContactPayload, ContactForm
-- Symbol details: function buildLandingContactPayload (exported), function ContactForm (exported), function formString, const INPUT_CLS, const TEXTAREA_CLS, const RAW_BOOKING_URL, const BOOKING_EMBED_URL, const WHATSAPP_AUDIT_URL
-- Defines: formString, buildLandingContactPayload, ContactForm, handleSubmit, INPUT_CLS, TEXTAREA_CLS, RAW_BOOKING_URL, BOOKING_EMBED_URL, WHATSAPP_AUDIT_URL, value, name, phone, … (+8 more)
+- Symbol details: function buildLandingContactPayload (exported), function ContactForm (exported), function formString, const INPUT_CLS, const TEXTAREA_CLS, const RAW_BOOKING_URL, const BOOKING_EMBED_URL
+- Defines: formString, buildLandingContactPayload, ContactForm, handleSubmit, INPUT_CLS, TEXTAREA_CLS, RAW_BOOKING_URL, BOOKING_EMBED_URL, value, name, phone, email, … (+7 more)
 - Contents summary: contains `use client`; exports: buildLandingContactPayload, ContactForm; package imports: 2
 
 ## `src/components/landing/credibility.tsx`
@@ -135,22 +135,22 @@ Each entry below documents the file path, system ownership, construction style, 
 - Contents summary: contains `use client`; exports: LandingHowItWorks; package imports: 1
 
 ## `src/components/landing/lead-funnel.tsx`
-- Status: tracked-clean
+- Status: modified
 - System: web
 - Group: src/components / landing
 - Ownership: landing page UI components
 - Type: React/TSX module
 - Construction: component/UI-oriented module, contains `use client`
-- Lines: 431
-- Bytes: 17988
+- Lines: 418
+- Bytes: 17372
 - Imports (packages): next/image, framer-motion
 - Imported by: src/app/landing/page.tsx
 - Used by groups: src/app / root routes
 - Route owners: src/app/landing/page.tsx
 - Routes related (direct): src/app/landing/page.tsx
 - Exports: LandingProofStats, LandingProblemSection, LandingAuditDeliverables, LandingProofCarousel, LandingMidPageCTA, LandingFounderTrust, LandingScarcitySection, LandingBookingSection
-- Symbol details: function LandingProofStats (exported), function LandingProblemSection (exported), function LandingAuditDeliverables (exported), function LandingProofCarousel (exported), function LandingMidPageCTA (exported), function LandingFounderTrust (exported), function LandingScarcitySection (exported), function LandingBookingSection (exported), const STATS, const PROBLEMS, const DELIVERABLES, const PROOF_CARDS, const RAW_BOOKING_URL, const BOOKING_EMBED_URL, const WHATSAPP_AUDIT_URL, const reveal
-- Defines: LandingProofStats, LandingProblemSection, LandingAuditDeliverables, LandingProofCarousel, LandingMidPageCTA, LandingFounderTrust, LandingScarcitySection, LandingBookingSection, STATS, PROBLEMS, DELIVERABLES, PROOF_CARDS, … (+4 more)
+- Symbol details: function LandingProofStats (exported), function LandingProblemSection (exported), function LandingAuditDeliverables (exported), function LandingProofCarousel (exported), function LandingMidPageCTA (exported), function LandingFounderTrust (exported), function LandingScarcitySection (exported), function LandingBookingSection (exported), const STATS, const PROBLEMS, const DELIVERABLES, const PROOF_CARDS, const RAW_BOOKING_URL, const BOOKING_EMBED_URL, const reveal
+- Defines: LandingProofStats, LandingProblemSection, LandingAuditDeliverables, LandingProofCarousel, LandingMidPageCTA, LandingFounderTrust, LandingScarcitySection, LandingBookingSection, STATS, PROBLEMS, DELIVERABLES, PROOF_CARDS, … (+3 more)
 - Contents summary: contains `use client`; exports: LandingProofStats, LandingProblemSection, LandingAuditDeliverables, LandingProofCarousel, LandingMidPageCTA, LandingFounderTrust, LandingScarcitySection, LandingBookingSection; package imports: 2
 
 ## `src/components/landing/nav.tsx`

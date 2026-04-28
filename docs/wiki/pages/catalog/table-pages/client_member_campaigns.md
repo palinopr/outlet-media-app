@@ -1,6 +1,6 @@
 # Table: client_member_campaigns
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 - Category: Access / auth tables
 - Kinds: table

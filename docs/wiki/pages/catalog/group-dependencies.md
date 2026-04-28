@@ -1,6 +1,6 @@
 # Group Dependency Map
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 This page summarizes internal file-to-file dependencies rolled up to the catalog group level.
 
@@ -20,7 +20,7 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 - Used by groups: none
 
 ## Docs / Root
-- Files in group: 2
+- Files in group: 1
 - Depends on groups: none
 - Used by groups: none
 
@@ -28,16 +28,6 @@ This page summarizes internal file-to-file dependencies rolled up to the catalog
 - Files in group: 30
 - Depends on groups: none
 - Used by groups: src/components / landing (3)
-
-## Docs / Superpowers Plans
-- Files in group: 12
-- Depends on groups: none
-- Used by groups: none
-
-## Docs / Superpowers Specs
-- Files in group: 11
-- Depends on groups: none
-- Used by groups: none
 
 ## Docs / Wiki (manual control pages)
 - Files in group: 10

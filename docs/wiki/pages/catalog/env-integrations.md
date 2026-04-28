@@ -1,11 +1,11 @@
 # Env and Integration Map
 
-Generated from the current working tree on 2026-04-28 02:32:49.
+Generated from the current working tree on 2026-04-28 02:57:59.
 
 This page maps environment variables to integration services and to the first-party files that reference them.
 
-- Environment keys tracked: 56
-- Integration service buckets: 9
+- Environment keys tracked: 53
+- Integration service buckets: 8
 
 ## Service overview
 
@@ -23,7 +23,7 @@ This page maps environment variables to integration services and to the first-pa
 - Routes: src/app/admin/settings/page.tsx, src/app/api/admin/invite/route.ts, src/app/api/meta/callback/route.ts, src/app/api/meta/data-deletion/route.ts
 - Features/libs: src/lib/api-helpers.test.ts, src/lib/api-helpers.ts, src/lib/env.ts
 - Agent files: none
-- Tests/docs: __tests__/api/ingest.test.ts, docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/references/production-smoke-runbook.md, docs/superpowers/plans/2026-03-10-agent-code-quality-10-10.md, src/app/api/admin/invite/route.test.ts, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
+- Tests/docs: __tests__/api/ingest.test.ts, docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/references/production-smoke-runbook.md, src/app/api/admin/invite/route.test.ts, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
 
 ### Clerk
 - Env keys: CLERK_SECRET_KEY, E2E_CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL, NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL, NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, NEXT_PUBLIC_CLERK_SIGN_IN_URL, NEXT_PUBLIC_CLERK_SIGN_UP_URL
@@ -32,14 +32,6 @@ This page maps environment variables to integration services and to the first-pa
 - Features/libs: src/lib/env.ts
 - Agent files: none
 - Tests/docs: docs/plans/2026-03-03-client-accounts-plan.md, docs/plans/2026-03-27-shell-reset-implementation-plan.md, docs/references/production-smoke-runbook.md, src/app/client/[slug]/layout.test.tsx
-
-### Discord
-- Env keys: DISCORD_OWNER_USER_IDS
-- Declared in: none
-- Routes: none
-- Features/libs: none
-- Agent files: none
-- Tests/docs: docs/superpowers/plans/2026-03-10-agent-code-quality-10-10.md
 
 ### Google / Gmail / Calendar
 - Env keys: GMAIL_PUSH_WEBHOOK_SECRET, GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET, GOOGLE_ADS_CUSTOMER_ID, GOOGLE_ADS_DEVELOPER_TOKEN, GOOGLE_ADS_LOGIN_CUSTOMER_ID, GOOGLE_ADS_REFRESH_TOKEN, GOOGLE_API_KEY, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_DRIVE_REFRESH_TOKEN, GOOGLE_REFRESH_TOKEN
@@ -55,15 +47,15 @@ This page maps environment variables to integration services and to the first-pa
 - Routes: src/app/admin/campaigns/page.tsx, src/app/admin/settings/page.tsx
 - Features/libs: src/lib/env.ts, src/lib/meta-campaigns.test.ts, src/lib/meta-campaigns.ts, src/lib/meta-oauth.test.ts, src/lib/meta-oauth.ts
 - Agent files: none
-- Tests/docs: __tests__/app/client/campaign-detail-data.test.ts, docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, docs/superpowers/specs/2026-04-03-agent-simplification-design.md, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
+- Tests/docs: __tests__/app/client/campaign-detail-data.test.ts, docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, src/app/api/meta/callback/route.test.ts, src/app/api/meta/data-deletion/route.test.ts
 
 ### Other / App
-- Env keys: CHROME_DEBUG_URL, CI, CLIENT_AGENT_OPENAI_MODEL, CODEX_FINAL_MESSAGE, CONTACT_FORM_TO_EMAIL, E2E_CLIENT_SLUG, EVOLUTION_API_KEY, EVOLUTION_API_URL, EVOLUTION_INSTANCE_NAME, EVOLUTION_WEBHOOK_SECRET, NEXT_PHASE, NEXT_PUBLIC_AUDIT_BOOKING_URL, PR_NUMBER, SHOPIFY_ADMIN_ACCESS_TOKEN, SHOPIFY_ADMIN_API_VERSION, SHOPIFY_STORE_DOMAIN, SHOPIFY_WEBHOOK_SECRET, TELEGRAM_WEBHOOK_SECRET, TOKEN_ENCRYPTION_KEY
+- Env keys: CI, CODEX_FINAL_MESSAGE, CONTACT_FORM_TO_EMAIL, E2E_CLIENT_SLUG, EVOLUTION_API_KEY, EVOLUTION_API_URL, EVOLUTION_INSTANCE_NAME, EVOLUTION_WEBHOOK_SECRET, NEXT_PHASE, NEXT_PUBLIC_AUDIT_BOOKING_URL, PR_NUMBER, SHOPIFY_ADMIN_ACCESS_TOKEN, SHOPIFY_ADMIN_API_VERSION, SHOPIFY_STORE_DOMAIN, SHOPIFY_WEBHOOK_SECRET, TELEGRAM_WEBHOOK_SECRET, TOKEN_ENCRYPTION_KEY
 - Declared in: .env.example, .env.local
 - Routes: src/app/api/contact/route.ts
 - Features/libs: src/lib/env.ts, src/lib/shopify-admin.test.ts, src/lib/shopify-admin.ts
 - Agent files: none
-- Tests/docs: docs/context/codex-workflow.md, docs/context/shopify-merch-sync.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/references/database-safety-runbook.md, docs/references/production-smoke-runbook.md, docs/superpowers/plans/2026-03-31-client-agent-tab.md, docs/superpowers/plans/2026-04-01-client-agent-chatgpt-ux.md, docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md, docs/superpowers/specs/2026-04-03-enterprise-readiness-design.md, src/app/api/contact/route.test.ts
+- Tests/docs: docs/context/codex-workflow.md, docs/context/shopify-merch-sync.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/references/database-safety-runbook.md, docs/references/production-smoke-runbook.md, src/app/api/contact/route.test.ts
 
 ### Resend
 - Env keys: RESEND_API_KEY, RESEND_FROM_EMAIL
@@ -93,25 +85,15 @@ This page maps environment variables to integration services and to the first-pa
 - Agent files: none
 - Tests/docs/other: none
 
-### `CHROME_DEBUG_URL`
-- Service: Other / App
-- Declared in: none
-- Mentioned by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: docs/superpowers/plans/2026-04-01-whatsapp-ticket-concierge-runner.md
-
 ### `CI`
 - Service: Other / App
 - Declared in: none
-- Mentioned by groups: Root Files (2), Docs / References (2), .github (1), Docs / Context (1), Docs / Superpowers Specs (1)
+- Mentioned by groups: Root Files (2), Docs / References (2), .github (1), Docs / Context (1)
 - Routes: none
 - Features: none
 - Shared libs: none
 - Agent files: none
-- Tests/docs/other: .github/workflows/ci.yml, README.md, docs/context/codex-workflow.md, docs/references/database-safety-runbook.md, docs/references/production-smoke-runbook.md, docs/superpowers/specs/2026-04-03-enterprise-readiness-design.md, playwright.config.ts
+- Tests/docs/other: .github/workflows/ci.yml, README.md, docs/context/codex-workflow.md, docs/references/database-safety-runbook.md, docs/references/production-smoke-runbook.md, playwright.config.ts
 
 ### `CLERK_SECRET_KEY`
 - Service: Clerk
@@ -133,16 +115,6 @@ This page maps environment variables to integration services and to the first-pa
 - Agent files: none
 - Tests/docs/other: none
 
-### `CLIENT_AGENT_OPENAI_MODEL`
-- Service: Other / App
-- Declared in: none
-- Mentioned by groups: Docs / Superpowers Plans (2)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: docs/superpowers/plans/2026-03-31-client-agent-tab.md, docs/superpowers/plans/2026-04-01-client-agent-chatgpt-ux.md
-
 ### `CODEX_FINAL_MESSAGE`
 - Service: Other / App
 - Declared in: none
@@ -162,16 +134,6 @@ This page maps environment variables to integration services and to the first-pa
 - Shared libs: none
 - Agent files: none
 - Tests/docs/other: src/app/api/contact/route.test.ts
-
-### `DISCORD_OWNER_USER_IDS`
-- Service: Discord
-- Declared in: none
-- Mentioned by groups: Docs / Superpowers Plans (1)
-- Routes: none
-- Features: none
-- Shared libs: none
-- Agent files: none
-- Tests/docs/other: docs/superpowers/plans/2026-03-10-agent-code-quality-10-10.md
 
 ### `E2E_BASE_URL`
 - Service: App / Runtime
@@ -366,22 +328,22 @@ This page maps environment variables to integration services and to the first-pa
 ### `INGEST_SECRET`
 - Service: App / Runtime
 - Declared in: .env.example, .env.local
-- Mentioned by groups: src/lib (3), Tests / API (1), Docs / Superpowers Plans (1), src/app / admin (1)
+- Mentioned by groups: src/lib (3), Tests / API (1), src/app / admin (1)
 - Routes: src/app/admin/settings/page.tsx
 - Features: none
 - Shared libs: src/lib/api-helpers.test.ts, src/lib/api-helpers.ts, src/lib/env.ts
 - Agent files: none
-- Tests/docs/other: __tests__/api/ingest.test.ts, docs/superpowers/plans/2026-03-10-agent-code-quality-10-10.md
+- Tests/docs/other: __tests__/api/ingest.test.ts
 
 ### `META_ACCESS_TOKEN`
 - Service: Meta
 - Declared in: .env.example, .env.local
-- Mentioned by groups: Docs / Plans (4), src/lib (3), src/app / admin (2), Tests / App (1), Docs / Context (1), Docs / Superpowers Specs (1), src/app / client (1)
+- Mentioned by groups: Docs / Plans (4), src/lib (3), src/app / admin (2), Tests / App (1), Docs / Context (1), src/app / client (1)
 - Routes: src/app/admin/settings/page.tsx
 - Features: none
 - Shared libs: src/lib/env.ts, src/lib/meta-campaigns.test.ts, src/lib/meta-campaigns.ts
 - Agent files: none
-- Tests/docs/other: __tests__/app/client/campaign-detail-data.test.ts, docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, docs/superpowers/specs/2026-04-03-agent-simplification-design.md, src/app/admin/actions/meta-sync.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts
+- Tests/docs/other: __tests__/app/client/campaign-detail-data.test.ts, docs/context/meta-ads-playbook.md, docs/plans/2026-03-02-admin-crud-plan.md, docs/plans/2026-03-02-meta-oauth-integration-design.md, docs/plans/2026-03-02-meta-oauth-integration-plan.md, docs/plans/2026-03-03-direct-meta-api-campaigns-plan.md, src/app/admin/actions/meta-sync.ts, src/app/client/[slug]/campaign/[campaignId]/data.ts
 
 ### `META_AD_ACCOUNT_ID`
 - Service: Meta

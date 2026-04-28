@@ -65,7 +65,7 @@ describe("ContactFormSchema", () => {
       company: "Outlet Live",
       monthlyBudget: "$5K — $20K",
       goal: "Sell more tickets next week",
-      preferredContact: "WhatsApp",
+      preferredContact: "Phone",
       pageContext: "landing-audit-funnel",
     });
     expect(ContactFormSchema.safeParse(payload).success).toBe(true);

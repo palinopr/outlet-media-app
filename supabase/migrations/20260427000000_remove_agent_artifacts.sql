@@ -36,12 +36,6 @@ drop table if exists public.agent_alerts cascade;
 alter table public.clients
   drop column if exists agent_enabled;
 
-alter table public.whatsapp_accounts
-  drop column if exists default_agent_key;
-
-alter table public.whatsapp_conversations
-  drop column if exists agent_key;
-
 alter table public.growth_publish_attempts
   drop column if exists requested_by_agent;
 
