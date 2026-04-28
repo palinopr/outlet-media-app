@@ -12,6 +12,7 @@
     "type-check:web": "tsc --noEmit",
     "test": "npm run test:web",
     "test:web": "vitest run",
+    "playwright:install": "playwright install chromium",
     "test:e2e": "playwright test",
     "audit:deps": "npm audit --audit-level=moderate",
     "check:web": "npm run type-check:web && npm run lint:web && npm run test:web && npm run build && npm run audit:deps",

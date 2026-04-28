@@ -53,6 +53,7 @@ Copy `.env.example` to `.env.local` and fill in the required variables.
 
 ```bash
 npm run check
+npm run playwright:install # once per machine/CI image
 npm run test:e2e
 ```
 
