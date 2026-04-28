@@ -1,5 +1,10 @@
 # Repo Wiki Log
 
+## [2026-04-27] client-web | dark campaign list polish
+- Restyled the client campaign list page to match the dark campaign detail direction with charcoal/navy cards, blue-violet controls, and compact reporting tables.
+- Kept revenue/ROAS off the campaign list when no revenue attribution exists, replacing those fields with click and CPC reporting.
+- Updated the campaign range filter active states so list and detail use the same dark blue selected-control language.
+
 ## [2026-04-27] client-web | dark campaign detail redesign
 - Restyled client campaign detail toward the accepted dark Outlet Media mockup: charcoal/navy surfaces, blue-violet chart accents, and green reserved for active/positive signals.
 - Reorganized the campaign detail reporting grid into metric cards, top insight strip, timeline, markets/placements, hourly delivery, creative performance, audience breakdown, and campaign requests.

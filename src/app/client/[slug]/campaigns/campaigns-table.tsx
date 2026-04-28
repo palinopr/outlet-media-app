@@ -27,11 +27,13 @@ export function CampaignsTable({
     c.name.toLowerCase().includes(queryLower),
   );
 
+  const hasRevenue = campaigns.some((c) => c.revenue != null || c.roas != null);
+
   return (
     <div className="space-y-4">
       {/* Search bar */}
-      <div className="glass-card flex items-center gap-3 px-4 py-3">
-        <Search className="h-4 w-4 text-white/30 shrink-0" />
+      <div className="flex items-center gap-3 rounded-2xl border border-white/[0.09] bg-[#07111f]/72 px-4 py-3 shadow-[0_14px_48px_rgba(0,0,0,0.18)]">
+        <Search className="h-4 w-4 text-blue-300/60 shrink-0" />
         <input
           type="text"
           value={query}
@@ -43,7 +45,7 @@ export function CampaignsTable({
         {query && (
           <button
             onClick={() => setQuery("")}
-            className="text-xs text-white/40 hover:text-white/60 shrink-0"
+            className="text-xs text-white/42 hover:text-white/70 shrink-0"
           >
             Clear
           </button>
@@ -53,8 +55,8 @@ export function CampaignsTable({
       {/* Section header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Megaphone className="h-3.5 w-3.5 text-white/50" />
-          <span className="section-label">All Campaigns</span>
+          <Megaphone className="h-3.5 w-3.5 text-blue-300/70" />
+          <span className="text-sm font-semibold text-white">All Campaigns</span>
         </div>
         <span className="text-xs text-white/45">
           {filtered.length} of {campaigns.length}
@@ -62,7 +64,7 @@ export function CampaignsTable({
       </div>
 
       {filtered.length === 0 ? (
-        <div className="glass-card p-12 text-center">
+        <div className="rounded-2xl border border-white/[0.09] bg-[#07111f]/72 p-12 text-center">
           <div className="mx-auto h-10 w-10 rounded-full bg-white/[0.06] flex items-center justify-center mb-3">
             <Megaphone className="h-5 w-5 text-white/40" />
           </div>
@@ -80,17 +82,26 @@ export function CampaignsTable({
       ) : (
         <>
           {/* Desktop table */}
-          <div className="hidden md:block glass-card overflow-hidden">
+          <div className="hidden overflow-hidden rounded-2xl border border-white/[0.09] bg-[#07111f]/72 shadow-[0_16px_60px_rgba(0,0,0,0.22)] md:block">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/[0.06]">
+                <tr className="border-b border-white/[0.08] bg-white/[0.015]">
                   <th className="text-left text-xs font-medium text-white/40 px-4 py-3">Campaign</th>
                   <th className="text-right text-xs font-medium text-white/40 px-4 py-3">Spend</th>
-                  <th className="text-right text-xs font-medium text-white/40 px-4 py-3">Revenue</th>
-                  <th className="text-right text-xs font-medium text-white/40 px-4 py-3">ROAS</th>
+                  {hasRevenue ? (
+                    <>
+                      <th className="text-right text-xs font-medium text-white/40 px-4 py-3">Revenue</th>
+                      <th className="text-right text-xs font-medium text-white/40 px-4 py-3">ROAS</th>
+                    </>
+                  ) : (
+                    <>
+                      <th className="text-right text-xs font-medium text-white/40 px-4 py-3">Clicks</th>
+                      <th className="text-right text-xs font-medium text-white/40 px-4 py-3">CPC</th>
+                    </>
+                  )}
                   <th className="text-right text-xs font-medium text-white/40 px-4 py-3">Impressions</th>
                   <th className="text-right text-xs font-medium text-white/40 px-4 py-3">CTR</th>
-                  <th className="text-right text-xs font-medium text-white/40 px-4 py-3">CPC</th>
+                  <th className="w-8 px-2 py-3" aria-label="Open campaign" />
                 </tr>
               </thead>
               <tbody>
@@ -100,7 +111,7 @@ export function CampaignsTable({
                     <tr
                       key={c.campaignId}
                       onClick={() => router.push(campaignDetailHref(c.campaignId))}
-                      className="border-b border-white/[0.06] last:border-0 hover:bg-white/[0.04] transition-colors cursor-pointer group"
+                      className="border-b border-white/[0.06] last:border-0 hover:bg-blue-500/[0.06] transition-colors cursor-pointer group"
                     >
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
@@ -114,25 +125,35 @@ export function CampaignsTable({
                       <td className="text-right px-4 py-3 text-sm text-white/90 font-medium tabular-nums">
                         {fmtUsd(c.spend)}
                       </td>
-                      <td className="text-right px-4 py-3 text-sm text-white/90 font-medium tabular-nums">
-                        {fmtUsd(c.revenue)}
-                      </td>
-                      <td className="text-right px-4 py-3">
-                        <span className={`text-sm font-semibold tabular-nums ${roasColor(c.roas)}`}>
-                          {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
-                        </span>
-                      </td>
+                      {hasRevenue ? (
+                        <>
+                          <td className="text-right px-4 py-3 text-sm text-white/90 font-medium tabular-nums">
+                            {c.revenue != null ? fmtUsd(c.revenue) : "--"}
+                          </td>
+                          <td className="text-right px-4 py-3">
+                            <span className={`text-sm font-semibold tabular-nums ${roasColor(c.roas)}`}>
+                              {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
+                            </span>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="text-right px-4 py-3 text-sm text-white/55 tabular-nums">
+                            {fmtNum(c.clicks)}
+                          </td>
+                          <td className="text-right px-4 py-3 text-sm text-white/55 tabular-nums">
+                            {c.cpc != null ? fmtUsd(c.cpc) : "--"}
+                          </td>
+                        </>
+                      )}
                       <td className="text-right px-4 py-3 text-sm text-white/50 tabular-nums">
                         {fmtNum(c.impressions)}
                       </td>
                       <td className="text-right px-4 py-3 text-sm text-white/50 tabular-nums">
                         {c.ctr != null ? c.ctr.toFixed(2) + "%" : "--"}
                       </td>
-                      <td className="text-right px-4 py-3 text-sm text-white/50 tabular-nums">
-                        <span className="flex items-center justify-end gap-1">
-                          {c.cpc != null ? "$" + c.cpc.toFixed(2) : "--"}
-                          <ChevronRight className="h-3.5 w-3.5 text-white/20 group-hover:text-white/50 transition-colors" />
-                        </span>
+                      <td className="w-8 px-2 py-3">
+                        <ChevronRight className="ml-auto h-3.5 w-3.5 text-white/20 transition-colors group-hover:text-white/50" />
                       </td>
                     </tr>
                   );
@@ -142,7 +163,7 @@ export function CampaignsTable({
           </div>
 
           {/* Mobile card stack */}
-          <div className="md:hidden glass-card divide-y divide-white/[0.06] overflow-hidden">
+          <div className="divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.09] bg-[#07111f]/72 md:hidden">
             {filtered.map((c) => {
               const statusCfg = getCampaignStatusCfg(c.status);
               return (
@@ -157,16 +178,35 @@ export function CampaignsTable({
                       <span className="text-xs text-white/40">Spend</span>
                       <span className="text-white/90 font-medium tabular-nums">{fmtUsd(c.spend)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-white/40">Revenue</span>
-                      <span className="text-white/90 font-medium tabular-nums">{fmtUsd(c.revenue)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-white/40">ROAS</span>
-                      <span className={`font-semibold tabular-nums ${roasColor(c.roas)}`}>
-                        {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
-                      </span>
-                    </div>
+                    {hasRevenue ? (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-white/40">Revenue</span>
+                          <span className="text-white/90 font-medium tabular-nums">
+                            {c.revenue != null ? fmtUsd(c.revenue) : "--"}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-white/40">ROAS</span>
+                          <span className={`font-semibold tabular-nums ${roasColor(c.roas)}`}>
+                            {c.roas != null ? c.roas.toFixed(1) + "x" : "--"}
+                          </span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-white/40">Clicks</span>
+                          <span className="tabular-nums text-white/50">{fmtNum(c.clicks)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-xs text-white/40">CPC</span>
+                          <span className="tabular-nums text-white/50">
+                            {c.cpc != null ? fmtUsd(c.cpc) : "--"}
+                          </span>
+                        </div>
+                      </>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-xs text-white/40">CTR</span>
                       <span className="tabular-nums text-white/50">
@@ -177,12 +217,14 @@ export function CampaignsTable({
                       <span className="text-xs text-white/40">Impressions</span>
                       <span className="tabular-nums text-white/50">{fmtNum(c.impressions)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-xs text-white/40">CPC</span>
-                      <span className="tabular-nums text-white/50">
-                        {c.cpc != null ? "$" + c.cpc.toFixed(2) : "--"}
-                      </span>
-                    </div>
+                    {hasRevenue ? (
+                      <div className="flex justify-between">
+                        <span className="text-xs text-white/40">CPC</span>
+                        <span className="tabular-nums text-white/50">
+                          {c.cpc != null ? fmtUsd(c.cpc) : "--"}
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
                 </Link>
               );
