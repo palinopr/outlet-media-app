@@ -7,13 +7,11 @@ import { getClientNavLinks, isNavActive } from "./nav-config";
 
 interface Props {
   slug: string;
-  eventsEnabled: boolean;
-  reportsEnabled: boolean;
 }
 
-export function ClientNav({ slug, eventsEnabled, reportsEnabled }: Props) {
+export function ClientNav({ slug }: Props) {
   const pathname = usePathname();
-  const links = getClientNavLinks(slug, { eventsEnabled, reportsEnabled });
+  const links = getClientNavLinks(slug);
 
   return (
     <nav aria-label="Client navigation" className="flex-1 px-3 py-1">

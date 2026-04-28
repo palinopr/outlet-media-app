@@ -6,22 +6,14 @@ import {
   ArrowLeft,
   Users,
   Megaphone,
-  CalendarDays,
-  Eye,
-  BarChart3,
 } from "lucide-react";
 import { statusBadge } from "@/lib/formatters";
 import { StatCard } from "@/components/admin/stat-card";
 import { MembersSection } from "./members-section";
 import { CampaignsSection } from "./campaigns-section";
 import { ClientOverviewTab } from "./client-overview-tab";
-import { EventsSection } from "./events-section";
 import type { ClientDetail } from "@/app/admin/clients/data";
-type Tab =
-  | "overview"
-  | "members"
-  | "campaigns"
-  | "events";
+type Tab = "overview" | "members" | "campaigns";
 
 interface Props {
   client: ClientDetail;
@@ -34,7 +26,6 @@ export function ClientDetailView({ client }: Props) {
     { id: "overview", label: "Portal" },
     { id: "members", label: "Members", count: client.memberCount },
     { id: "campaigns", label: "Campaigns", count: client.totalCampaigns },
-    { id: "events", label: "Events", count: client.events.length },
   ];
 
   return (
@@ -59,7 +50,7 @@ export function ClientDetailView({ client }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
         <StatCard
           icon={Users}
           label="Members"
@@ -72,27 +63,6 @@ export function ClientDetailView({ client }: Props) {
           label="Active Campaigns"
           value={`${client.activeCampaigns} / ${client.totalCampaigns}`}
           accent="bg-purple-500/10 text-purple-400"
-          variant="compact"
-        />
-        <StatCard
-          icon={BarChart3}
-          label="Portal Reports"
-          value={client.reportsEnabled ? "Enabled" : "Hidden"}
-          accent="bg-violet-500/10 text-violet-400"
-          variant="compact"
-        />
-        <StatCard
-          icon={Eye}
-          label="Portal Events"
-          value={client.eventsEnabled ? "Enabled" : "Hidden"}
-          accent="bg-emerald-500/10 text-emerald-400"
-          variant="compact"
-        />
-        <StatCard
-          icon={CalendarDays}
-          label="Assigned Events"
-          value={String(client.events.length)}
-          accent="bg-amber-500/10 text-amber-400"
           variant="compact"
         />
       </div>
@@ -128,17 +98,12 @@ export function ClientDetailView({ client }: Props) {
         <ClientOverviewTab
           brandName={client.brandName}
           clientId={client.id}
-          eventsEnabled={client.eventsEnabled}
           logoAlt={client.logoAlt}
           logoUrl={client.logoUrl}
-          reportsEnabled={client.reportsEnabled}
         />
       )}
       {activeTab === "members" && <MembersSection client={client} />}
       {activeTab === "campaigns" && <CampaignsSection campaigns={client.campaigns} />}
-      {activeTab === "events" && (
-        <EventsSection events={client.events} />
-      )}
     </div>
   );
 }

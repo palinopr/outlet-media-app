@@ -1,5 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { updateClient } from "@/app/admin/actions/clients";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ClientDetailView } from "./client-detail";
 
@@ -24,8 +23,6 @@ afterEach(() => {
   cleanup();
   vi.clearAllMocks();
 });
-
-const mockedUpdateClient = vi.mocked(updateClient);
 
 const client = {
   activeCampaigns: 1,
@@ -86,50 +83,12 @@ describe("ClientDetailView", () => {
     render(<ClientDetailView client={client} />);
 
     expect(screen.getByText("Client Portal Shape")).toBeInTheDocument();
-    expect(screen.getByText("Portal Reports")).toBeInTheDocument();
-    expect(screen.getByText("Portal Events")).toBeInTheDocument();
-    expect(screen.getByText("Portal Reports Access")).toBeInTheDocument();
-    expect(screen.getByText("Portal Events Access")).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Toggle client reports access" })).toBeInTheDocument();
-    expect(screen.getByRole("switch", { name: "Toggle client events access" })).toBeInTheDocument();
     expect(
       screen.getByText(
-        /The client portal is intentionally narrow: Campaigns, optional Reports, and optional Events\./,
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /When disabled, the Events nav item is removed and direct event URLs redirect back to campaigns\./,
+        /The client portal is intentionally narrow: campaign performance only\./,
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /CRM/i })).not.toBeInTheDocument();
-  });
-
-  it("persists the reports toggle from the overview tab", async () => {
-    mockedUpdateClient.mockResolvedValue(undefined);
-
-    render(<ClientDetailView client={client} />);
-
-    fireEvent.click(screen.getByRole("switch", { name: "Toggle client reports access" }));
-
-    await waitFor(() => {
-      expect(mockedUpdateClient).toHaveBeenCalledWith({
-        clientId: "client-1",
-        reportsEnabled: false,
-      });
-    });
-  });
-
-  it("renders events when the Events tab is selected", () => {
-    render(<ClientDetailView client={client} />);
-
-    fireEvent.click(screen.getByRole("button", { name: /Events/i }));
-
-    expect(screen.getByText("Assigned events")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Arena Night" })).toHaveAttribute(
-      "href",
-      "/admin/events/event-1",
-    );
   });
 
   it("renders pending invites on the Members tab", () => {

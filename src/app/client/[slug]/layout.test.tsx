@@ -113,47 +113,15 @@ describe("ClientLayout navigation links", () => {
     );
   });
 
-  it("hides Events links when events are disabled for the client", async () => {
+  it("never renders Events or Reports links", async () => {
     vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
-    mockedGetClientPortalConfig.mockResolvedValue(config({ eventsEnabled: false }));
+    mockedGetClientPortalConfig.mockResolvedValue(config({ eventsEnabled: true, reportsEnabled: true }));
 
     await renderLayout("acme");
+    openMobileNav();
 
     expect(screen.queryByRole("link", { name: "Events" })).not.toBeInTheDocument();
-  });
-
-  it("shows Events links in desktop and mobile nav when events are enabled for the client", async () => {
-    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
-    mockedGetClientPortalConfig.mockResolvedValue(config({ eventsEnabled: true }));
-
-    await renderLayout("acme");
-    openMobileNav();
-
-    expect(within(getDesktopNav()).getByRole("link", { name: "Events" })).toHaveAttribute(
-      "href",
-      "/client/acme/events",
-    );
-    expect(within(getMobileNav()).getByRole("link", { name: "Events" })).toHaveAttribute(
-      "href",
-      "/client/acme/events",
-    );
-  });
-
-  it("shows Reports links in desktop and mobile nav when reports are enabled for the client", async () => {
-    vi.stubEnv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY", "");
-    mockedGetClientPortalConfig.mockResolvedValue(config({ reportsEnabled: true }));
-
-    await renderLayout("acme");
-    openMobileNav();
-
-    expect(within(getDesktopNav()).getByRole("link", { name: "Reports" })).toHaveAttribute(
-      "href",
-      "/client/acme/reports",
-    );
-    expect(within(getMobileNav()).getByRole("link", { name: "Reports" })).toHaveAttribute(
-      "href",
-      "/client/acme/reports",
-    );
+    expect(screen.queryByRole("link", { name: "Reports" })).not.toBeInTheDocument();
   });
 
   it("renders children inside main content area", async () => {
