@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Perreo at 9AM Orlando</title>
+    <title>Perreo at 9AM DC</title>
     <meta
       name="description"
-      content="Perreo at 9AM Orlando at The Beacham on Saturday May 2. Tequila Sunrise open bar 9AM-11AM."
+      content="Perreo at 9AM DC at A.i. Warehouse on Saturday May 2. Tequila Sunrise open bar 9AM-11AM."
     />
     <link rel="preload" as="image" href="./assets/flyer.jpg" />
     <script>
@@ -493,24 +493,24 @@
           <img
             class="hero-flyer"
             src="./assets/flyer.jpg"
-            alt="Perreo at 9AM Orlando flyer with May 2 The Beacham event details"
+            alt="Perreo at 9AM DC flyer with May 2 A.i. Warehouse event details"
             fetchpriority="high"
           />
         </div>
         <div class="hero-panel">
-          <div class="eyebrow">Orlando - This Saturday</div>
+          <div class="eyebrow">DC - This Saturday</div>
           <h1>Perreo at 9AM</h1>
           <p class="hero-copy">
-            The Beacham wakes up early for reggaeton, flags, and Tequila Sunrises from 9-11AM.
+            A.i. Warehouse wakes up early for reggaeton, flags, and Tequila Sunrises from 9-11AM.
           </p>
           <div class="hero-actions">
-            <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-orlando">Lock tickets now</a>
-            <p class="from">from<br />$14.90</p>
+            <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-dc">Lock tickets now</a>
+            <p class="from">from<br />$11.69</p>
           </div>
         </div>
       </section>
 
-      <div class="ticker" aria-label="Countdown to Perreo at 9AM Orlando">
+      <div class="ticker" aria-label="Countdown to Perreo at 9AM DC">
         <div class="tick"><strong id="days">03</strong><span>days</span></div>
         <div class="tick"><strong id="hours">20</strong><span>hours</span></div>
         <div class="tick"><strong id="minutes">18</strong><span>mins</span></div>
@@ -611,12 +611,12 @@
       </section>
 
       <section class="venue">
-        <h2 class="section-title">The Beacham. Orlando.</h2>
+        <h2 class="section-title">A.i. Warehouse. DC.</h2>
         <dl>
           <dt>Date</dt>
           <dd>Saturday, May 2 - 9AM-3PM</dd>
           <dt>Address</dt>
-          <dd>46 N Orange Ave, Orlando, FL 32801</dd>
+          <dd>530 Penn St NE, Washington, DC 20002</dd>
           <dt>Entry</dt>
           <dd>21+ with valid government-issued ID</dd>
         </dl>
@@ -643,17 +643,17 @@
       </section>
 
       <section class="final">
-        <h2 class="section-title">Orlando goes early this Saturday.</h2>
+        <h2 class="section-title">DC goes early this Saturday.</h2>
         <p class="section-lede">Ticket prices can move. Lock yours before the line decides your morning.</p>
         <div class="hero-actions">
-          <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-orlando">Lock tickets now</a>
-          <p class="from">The Beacham<br />May 2</p>
+          <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-dc">Lock tickets now</a>
+          <p class="from">A.i. Warehouse<br />May 2</p>
         </div>
       </section>
 
       <div class="sticky">
-        <div class="sticky-note"><b>From $14.90</b><span>This Saturday - open bar 9-11AM</span></div>
-        <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-orlando">Lock Orlando tickets from $14.90</a>
+        <div class="sticky-note"><b>From $11.69</b><span>This Saturday - open bar 9-11AM</span></div>
+        <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-dc">Lock DC tickets from $11.69</a>
       </div>
     </main>
 
@@ -680,7 +680,7 @@
       }
 
       function ticketHref() {
-        const target = new URL("https://posh.vip/e/perreo-at-9am-orlando");
+        const target = new URL("https://posh.vip/e/perreo-at-9am-dc");
         const incoming = new URLSearchParams(window.location.search);
         for (const [key, value] of incoming.entries()) {
           if (key.startsWith("utm_") || key === "fbclid" || key === "ttclid") {
@@ -689,9 +689,9 @@
         }
         target.searchParams.set("utm_source", incoming.get("utm_source") || "meta");
         target.searchParams.set("utm_medium", incoming.get("utm_medium") || "paid_social");
-        target.searchParams.set("utm_campaign", incoming.get("utm_campaign") || "house78_luck_9am_orlando");
-        target.searchParams.set("utm_content", incoming.get("utm_content") || "fomo_bridge_orlando");
-        target.searchParams.set("utm_city", "orlando");
+        target.searchParams.set("utm_campaign", incoming.get("utm_campaign") || "house78_luck_9am_dc");
+        target.searchParams.set("utm_content", incoming.get("utm_content") || "fomo_bridge_dc");
+        target.searchParams.set("utm_city", "dc");
         return target.toString();
       }
 
@@ -722,7 +722,7 @@
         link.addEventListener("click", () => {
           trackQualifiedView("ticket_click");
           trackCustom("OutboundTicketClick", {
-            city: "Orlando",
+            city: "DC",
             event: "Perreo at 9AM",
             destination: "posh",
           });
