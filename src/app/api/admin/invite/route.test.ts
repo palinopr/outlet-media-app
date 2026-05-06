@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const {
   adminGuard,
+  logAudit,
   clientMaybeSingle,
   clientSelect,
   createInvitation,
@@ -56,6 +57,7 @@ const {
 
   return {
     adminGuard: vi.fn(),
+    logAudit: vi.fn(),
     clientMaybeSingle,
     clientSelect,
     createInvitation,
@@ -81,6 +83,10 @@ vi.mock("@/lib/api-helpers", async () => {
 
 vi.mock("@clerk/nextjs/server", () => ({
   clerkClient: clerkClientMock,
+}));
+
+vi.mock("@/app/admin/actions/audit", () => ({
+  logAudit,
 }));
 
 vi.mock("@/lib/supabase", () => ({
@@ -189,6 +195,12 @@ describe("POST /api/admin/invite", () => {
     expect(inviteUpdate).toHaveBeenCalledWith({
       clerk_invitation_id: "clerk_invite_1",
     });
+    expect(logAudit).toHaveBeenCalledWith("invitation", "invite_1", "create_client_access_invite", null, {
+      client_id: "client_1",
+      client_role: "member",
+      client_slug: "acme",
+      email: "member@example.com",
+    });
   });
 
   it("grants admin access immediately when the invited admin email already has a Clerk user", async () => {
@@ -213,9 +225,41 @@ describe("POST /api/admin/invite", () => {
     expect(updateUserMetadata).toHaveBeenCalledWith("user_existing", {
       publicMetadata: { team: "ops", role: "admin" },
     });
+    expect(logAudit).toHaveBeenCalledWith("user", "user_existing", "grant_admin_access", null, {
+      email: "admin@example.com",
+      role: "admin",
+    });
     expect(inviteInsert).not.toHaveBeenCalled();
     expect(memberInsert).not.toHaveBeenCalled();
     expect(createInvitation).not.toHaveBeenCalled();
+  });
+
+  it("audits a new admin invitation", async () => {
+    const { POST } = await import("./route");
+
+    const response = await POST(
+      new Request("https://example.com/api/admin/invite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: "admin@example.com",
+          role: "admin",
+        }),
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(createInvitation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        emailAddress: "admin@example.com",
+        publicMetadata: { role: "admin" },
+      }),
+    );
+    expect(logAudit).toHaveBeenCalledWith("invitation", "clerk_invite_1", "create_admin_invite", null, {
+      email: "admin@example.com",
+      role: "admin",
+    });
+    expect(inviteInsert).not.toHaveBeenCalled();
   });
 
   it("grants client access immediately when the invited email already has a Clerk user", async () => {
@@ -247,6 +291,12 @@ describe("POST /api/admin/invite", () => {
       accepted_by_clerk_user_id: "user_existing",
       status: "accepted",
     }));
+    expect(logAudit).toHaveBeenCalledWith("client_member", "user_existing", "grant_client_access", null, {
+      client_id: "client_1",
+      client_role: "owner",
+      client_slug: "acme",
+      email: "member@example.com",
+    });
     expect(inviteInsert).not.toHaveBeenCalled();
     expect(createInvitation).not.toHaveBeenCalled();
   });

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { adminGuard, state, supabaseAdmin } = vi.hoisted(() => {
+const { adminGuard, logAudit, state, supabaseAdmin } = vi.hoisted(() => {
   const state = {
     existingMembership: null as { id: string } | null,
     insertMembership: vi.fn(),
@@ -56,6 +56,7 @@ const { adminGuard, state, supabaseAdmin } = vi.hoisted(() => {
 
   return {
     adminGuard: vi.fn(),
+    logAudit: vi.fn(),
     state,
     supabaseAdmin,
   };
@@ -71,6 +72,10 @@ vi.mock("@/lib/api-helpers", async () => {
 
 vi.mock("@/lib/supabase", () => ({
   supabaseAdmin,
+}));
+
+vi.mock("@/app/admin/actions/audit", () => ({
+  logAudit,
 }));
 
 describe("PATCH /api/admin/users/[id]", () => {
@@ -129,6 +134,11 @@ describe("PATCH /api/admin/users/[id]", () => {
     expect(state.insertMembership).toHaveBeenCalledWith({
       client_id: "client_1",
       clerk_user_id: "user_1",
+      role: "member",
+    });
+    expect(logAudit).toHaveBeenCalledWith("client_member", "user_1", "add_client_access", null, {
+      client_id: "client_1",
+      client_slug: "acme",
       role: "member",
     });
   });
