@@ -8,6 +8,7 @@ Read these files before making major product or architecture decisions.
 - [current-priorities.md](./current-priorities.md): what matters most right now so work stays aligned
 - [codex-workflow.md](./codex-workflow.md): how this repo should be operated inside the Codex app, including threads, branches, review, and default settings
 - [meta-ads-playbook.md](./meta-ads-playbook.md): durable rules for Context7-first uncertainty handling, canonical local Meta credential sourcing, and cross-repo ads workflow boundaries
+- [production-operating-baseline.md](./production-operating-baseline.md): current shipped surface, environment names, deployment, and HTTP-only production smoke checks
 
 These docs are meant to be durable context, not one-off plans.
 

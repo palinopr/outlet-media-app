@@ -14,6 +14,7 @@
     "test:web": "vitest run",
     "audit:deps": "npm audit --audit-level=moderate",
     "db:push:dry-run": "supabase db push --dry-run",
+    "smoke:prod": "node scripts/smoke-prod.mjs",
     "check:web": "npm run type-check:web && npm run lint:web && npm run test:web && npm run build && npm run audit:deps",
     "check": "npm run check:web",
     "test:watch": "vitest"
