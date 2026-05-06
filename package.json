@@ -15,6 +15,7 @@
     "audit:deps": "npm audit --audit-level=moderate",
     "audit:data": "node --env-file=.env.local scripts/audit-data.mjs",
     "db:push:dry-run": "supabase db push --dry-run",
+    "refresh:snapshots": "node --env-file=.env.local scripts/refresh-snapshots.mjs",
     "smoke:prod": "node scripts/smoke-prod.mjs",
     "check:web": "npm run type-check:web && npm run lint:web && npm run test:web && npm run build && npm run audit:deps",
     "check": "npm run check:web",
