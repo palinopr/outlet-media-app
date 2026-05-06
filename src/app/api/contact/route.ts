@@ -4,7 +4,7 @@ import { ContactFormSchema } from "@/lib/api-schemas";
 import { apiError, validateRequest } from "@/lib/api-helpers";
 import { enforceContentLength, enforceRateLimit } from "@/lib/request-guards";
 
-const contactRecipient = process.env.CONTACT_FORM_TO_EMAIL ?? "info@outletmedia.net";
+const contactRecipient = process.env.CONTACT_FORM_TO_EMAIL ?? "support@outletmedia.co";
 
 function withLabel(label: string, value: string | null | undefined) {
   const trimmed = value?.trim();

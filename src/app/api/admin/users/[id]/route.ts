@@ -3,6 +3,7 @@ import { z } from "zod";
 import { adminGuard, apiError, validateRequest } from "@/lib/api-helpers";
 import { enforceContentLength } from "@/lib/request-guards";
 import { supabaseAdmin } from "@/lib/supabase";
+import { logAudit } from "@/app/admin/actions/audit";
 
 // PATCH /api/admin/users/[id]
 // Body: { action: "add" | "remove", clientId: string }
@@ -72,6 +73,12 @@ export async function PATCH(
       if (insertError) {
         return apiError("Failed to add client membership", 500);
       }
+
+      await logAudit("client_member", id, "add_client_access", null, {
+        client_id: clientRow.id,
+        client_slug: clientRow.slug,
+        role: "member",
+      });
     }
   } else {
     const { error: deleteError } = await supabaseAdmin
@@ -83,6 +90,11 @@ export async function PATCH(
     if (deleteError) {
       return apiError("Failed to remove client membership", 500);
     }
+
+    await logAudit("client_member", id, "remove_client_access", {
+      client_id: clientRow.id,
+      client_slug: clientRow.slug,
+    }, null);
   }
 
   const { data: remaining, error: remainingError } = await supabaseAdmin

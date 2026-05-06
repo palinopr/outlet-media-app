@@ -4,6 +4,7 @@ import { InviteSchema } from "@/lib/api-schemas";
 import { adminGuard, validateRequest } from "@/lib/api-helpers";
 import { enforceContentLength } from "@/lib/request-guards";
 import { supabaseAdmin } from "@/lib/supabase";
+import { logAudit } from "@/app/admin/actions/audit";
 
 async function grantClientMembership(input: {
   clientId: string;
@@ -92,6 +93,10 @@ export async function POST(request: Request) {
     await client.users.updateUserMetadata(existingUser.id, {
       publicMetadata: { ...existingUser.publicMetadata, role: "admin" },
     });
+    await logAudit("user", existingUser.id, "grant_admin_access", null, {
+      email: normalizedEmail,
+      role: "admin",
+    });
     return NextResponse.json({
       ok: true,
       message: "Admin access granted to existing user.",
@@ -115,6 +120,12 @@ export async function POST(request: Request) {
         .eq("client_id", clientRow.id)
         .eq("email", normalizedEmail)
         .eq("status", "pending");
+      await logAudit("client_member", existingUser.id, "grant_client_access", null, {
+        client_id: clientRow.id,
+        client_role: clientRole,
+        client_slug: clientRow.slug,
+        email: normalizedEmail,
+      });
     } catch (error) {
       const detail = error instanceof Error ? error.message : "Failed to grant client access";
       return NextResponse.json({ error: detail }, { status: 500 });
@@ -142,7 +153,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Failed to create invite record" }, { status: 500 });
     }
 
-    inviteId = data.id;
+    const createdInviteId = data.id;
+    inviteId = createdInviteId;
+    await logAudit("invitation", createdInviteId, "create_client_access_invite", null, {
+      client_id: clientRow.id,
+      client_role: clientRole,
+      client_slug: clientRow.slug,
+      email: normalizedEmail,
+    });
   }
 
   const publicMetadata: Record<string, string> = {};
@@ -172,6 +190,13 @@ export async function POST(request: Request) {
         .from("client_access_invites")
         .update({ clerk_invitation_id: invitation.id })
         .eq("id", inviteId);
+    }
+
+    if (body.role === "admin") {
+      await logAudit("invitation", invitation.id, "create_admin_invite", null, {
+        email: normalizedEmail,
+        role: "admin",
+      });
     }
   } catch (err: unknown) {
     // Clerk errors carry an `errors` array with detailed messages

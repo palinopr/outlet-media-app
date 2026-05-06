@@ -55,7 +55,7 @@ export default function PrivacyPage() {
         <li>Disconnect your ad account in Settings, then contact us at support@outletmedia.co to request full data deletion</li>
         <li>Or use Facebook&apos;s data deletion request (we process these automatically within 48 hours)</li>
       </ul>
-      <p>Upon deletion, we remove your encrypted access token, cached campaign data, and account records from our database.</p>
+      <p>Facebook data deletion requests remove the Meta ad account connection records associated with the Facebook user. For broader cached campaign or account data deletion, contact support@outletmedia.co.</p>
 
       <h2>7. Data Security</h2>
       <p>Access tokens are encrypted at rest using AES-256-GCM. All communication uses HTTPS. We follow the principle of least privilege for data access.</p>

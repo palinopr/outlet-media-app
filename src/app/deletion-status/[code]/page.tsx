@@ -20,7 +20,7 @@ export default async function DeletionStatusPage({
         <p className="font-mono text-lg">{code}</p>
       </div>
       <p className="text-sm text-muted-foreground">
-        All associated data has been removed from our systems. If you have questions, contact us at support@outletmedia.co
+        Meta ad account connection data associated with this request has been removed. If you need a broader account or campaign data deletion, contact us at support@outletmedia.co.
       </p>
     </div>
   );
