@@ -14,7 +14,7 @@ const supabase = createClient(url, key, {
 });
 
 const clientRules = [
-  { keywords: ["arjona", "alofoke", "camila"], slug: "zamora" },
+  { keywords: ["zamora", "arjona", "alofoke", "camila"], slug: "zamora" },
   { keywords: ["kybba"], slug: "kybba" },
   { keywords: ["beamina"], slug: "beamina" },
   { keywords: ["happy paws", "happy_paws"], slug: "happy_paws" },

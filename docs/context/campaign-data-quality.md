@@ -11,3 +11,5 @@ The audit is read-only and uses existing Supabase environment variables. It prin
 - `intentional/inactive`: safe to leave alone when the client, campaign, or account is not part of the current shipped scope.
 
 Only make data changes when the mapping is obvious from campaign naming, active client records, or documented client rules. Prefer `campaign_client_overrides` for safe assignment corrections. Do not change UI, add reports, or create generated audit files for routine data checks.
+
+Use `npm run refresh:snapshots` when active campaign snapshots are stale and Meta credentials are available locally. The command refreshes active Meta campaigns only, converts Meta dollar spend into Supabase cents, and upserts today's `campaign_snapshots` rows.

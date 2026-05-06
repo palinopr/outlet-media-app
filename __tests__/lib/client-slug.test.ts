@@ -10,6 +10,9 @@ describe("guessClientSlug", () => {
   it("maps camila to zamora", () => {
     expect(guessClientSlug("Camila Anaheim")).toBe("zamora");
   });
+  it("maps explicit zamora campaign names to zamora", () => {
+    expect(guessClientSlug("Zamora - Ataca Sergio - 05/30")).toBe("zamora");
+  });
   it("maps kybba", () => {
     expect(guessClientSlug("KYBBA Miami")).toBe("kybba");
   });
