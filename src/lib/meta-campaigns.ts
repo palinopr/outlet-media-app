@@ -131,6 +131,7 @@ interface StoredSnapshotRow {
 interface StoredCampaignMetadata {
   campaignType: string | null;
   clientSlug: string | null;
+  syncedAt: string | null;
 }
 
 async function loadCampaignMetadata(): Promise<Map<string, StoredCampaignMetadata>> {
@@ -138,12 +139,13 @@ async function loadCampaignMetadata(): Promise<Map<string, StoredCampaignMetadat
   if (!supabaseAdmin) return metadata;
   const { data, error } = await supabaseAdmin
     .from("meta_campaigns")
-    .select("campaign_id, campaign_type, client_slug");
+    .select("campaign_id, campaign_type, client_slug, synced_at");
   if (error) throw new Error(error.message);
   for (const row of data ?? []) {
     metadata.set(row.campaign_id, {
       campaignType: row.campaign_type ?? null,
       clientSlug: row.client_slug ?? null,
+      syncedAt: row.synced_at ?? null,
     });
   }
   return metadata;
@@ -328,11 +330,25 @@ async function fetchStoredCampaigns(
   }
 }
 
+const PURCHASE_ACTION_TYPES = [
+  "omni_purchase",
+  "purchase",
+  "offsite_conversion.fb_pixel_purchase",
+  "onsite_web_purchase",
+];
+
 function getPurchaseRoas(insight: Pick<RawInsight, "purchase_roas"> | undefined): number | null {
-  const roasVal = insight?.purchase_roas?.find(
-    (r) => r.action_type === "omni_purchase",
-  )?.value;
-  return roasVal ? parseFloat(roasVal) : null;
+  const metrics = insight?.purchase_roas;
+  if (!metrics?.length) return null;
+
+  for (const actionType of PURCHASE_ACTION_TYPES) {
+    const metric = metrics.find((entry) => entry.action_type === actionType);
+    const value = safeParseFloat(metric?.value);
+    if (value != null) return value;
+  }
+
+  const fallback = metrics.find((entry) => entry.action_type?.includes("purchase"));
+  return safeParseFloat(fallback?.value);
 }
 
 function toCampaignCard(
@@ -362,6 +378,117 @@ function toCampaignCard(
     dailyBudget: campaign.daily_budget ? centsToUsd(parseInt(campaign.daily_budget)) : null,
     startTime: campaign.start_time ?? null,
   };
+}
+
+function centsFromMetaDollarString(value: string | null | undefined): number | null {
+  const parsed = safeParseFloat(value);
+  return parsed == null ? null : Math.round(parsed * 100);
+}
+
+function integerFromMeta(value: string | null | undefined): number | null {
+  const parsed = safeParseFloat(value);
+  return parsed == null ? null : Math.round(parsed);
+}
+
+function shouldPersistClientRefresh(
+  campaigns: RawCampaign[],
+  campaignMetadata: Map<string, StoredCampaignMetadata>,
+  now: Date,
+) {
+  const minAgeMs = 10 * 60 * 1000;
+  return campaigns.some((campaign) => {
+    const syncedAt = campaignMetadata.get(campaign.id)?.syncedAt;
+    if (!syncedAt) return true;
+    const timestamp = new Date(syncedAt).getTime();
+    return !Number.isFinite(timestamp) || now.getTime() - timestamp >= minAgeMs;
+  });
+}
+
+async function persistClientCampaignRefresh(input: {
+  campaigns: RawCampaign[];
+  campaignMetadata: Map<string, StoredCampaignMetadata>;
+  campaignSlugs: Map<string, string>;
+  insightMap: Map<string, RawInsight>;
+  dailyInsights: RawDailyInsight[];
+}) {
+  if (!supabaseAdmin || input.campaigns.length === 0) return;
+
+  try {
+    const now = new Date();
+    if (!shouldPersistClientRefresh(input.campaigns, input.campaignMetadata, now)) return;
+
+    const syncedAt = now.toISOString();
+    const campaignRows = input.campaigns.map((campaign) => {
+      const insight = input.insightMap.get(campaign.id);
+      return {
+        campaign_id: campaign.id,
+        campaign_type: input.campaignMetadata.get(campaign.id)?.campaignType ?? "sales",
+        client_slug: input.campaignSlugs.get(campaign.id) ?? "unknown",
+        clicks: insight ? integerFromMeta(insight.clicks) : 0,
+        cpc: insight ? safeParseFloat(insight.cpc) : null,
+        cpm: insight ? safeParseFloat(insight.cpm) : null,
+        ctr: insight ? safeParseFloat(insight.ctr) : null,
+        daily_budget: integerFromMeta(campaign.daily_budget),
+        impressions: insight ? integerFromMeta(insight.impressions) : 0,
+        name: campaign.name,
+        objective: campaign.objective ?? "",
+        roas: getPurchaseRoas(insight),
+        spend: insight ? centsFromMetaDollarString(insight.spend) : 0,
+        start_time: campaign.start_time ?? null,
+        status: campaign.status,
+        synced_at: syncedAt,
+      };
+    });
+
+    const latestSnapshotByKey = new Map<string, {
+      campaign_id: string;
+      clicks: number | null;
+      cpc: number | null;
+      cpm: number | null;
+      ctr: number | null;
+      impressions: number | null;
+      roas: number | null;
+      snapshot_date: string;
+      spend: number | null;
+    }>();
+
+    for (const row of input.dailyInsights) {
+      latestSnapshotByKey.set(`${row.campaign_id}:${row.date_start}`, {
+        campaign_id: row.campaign_id,
+        clicks: integerFromMeta(row.clicks),
+        cpc: safeParseFloat(row.cpc),
+        cpm: safeParseFloat(row.cpm),
+        ctr: safeParseFloat(row.ctr),
+        impressions: integerFromMeta(row.impressions),
+        roas: getPurchaseRoas(row),
+        snapshot_date: row.date_start,
+        spend: centsFromMetaDollarString(row.spend),
+      });
+    }
+
+    if (campaignRows.length > 0) {
+      const { error } = await supabaseAdmin
+        .from("meta_campaigns")
+        .upsert(campaignRows, { onConflict: "campaign_id" });
+      if (error) {
+        console.warn(`[meta-campaigns] client refresh campaign persistence failed: ${error.message}`);
+        return;
+      }
+    }
+
+    const snapshotRows = [...latestSnapshotByKey.values()];
+    if (snapshotRows.length > 0) {
+      const { error } = await supabaseAdmin
+        .from("campaign_snapshots")
+        .upsert(snapshotRows, { onConflict: "campaign_id,snapshot_date" });
+      if (error) {
+        console.warn(`[meta-campaigns] client refresh snapshot persistence failed: ${error.message}`);
+      }
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.warn(`[meta-campaigns] optional client refresh persistence unavailable: ${message}`);
+  }
 }
 
 async function fetchMetaJson<T>(url: string, label: string): Promise<T> {
@@ -566,7 +693,7 @@ export async function fetchAllCampaigns(
           `insights-${i}`,
         ),
         fetchAllPages<RawDailyInsight>(
-          buildInsightsUrl(base, token, range, filter, "campaign_id,spend,purchase_roas", "5000", "1"),
+          buildInsightsUrl(base, token, range, filter, insightsFields, "5000", "1"),
           `daily-${i}`,
         ),
       ]);
@@ -594,6 +721,16 @@ export async function fetchAllCampaigns(
       spend: parseFloat(d.spend) || 0,
       roas: getPurchaseRoas(d),
     }));
+
+    if (clientSlug) {
+      await persistClientCampaignRefresh({
+        campaigns: filtered,
+        campaignMetadata,
+        campaignSlugs,
+        insightMap,
+        dailyInsights: rawDaily,
+      });
+    }
 
     return { campaigns, dailyInsights, clients, error: null };
   } catch (err) {
