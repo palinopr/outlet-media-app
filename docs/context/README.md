@@ -7,6 +7,7 @@ Read these files before making major product or architecture decisions.
 - [agent-patterns.md](./agent-patterns.md): current retirement note for the old agent runtime and what not to rebuild by default
 - [current-priorities.md](./current-priorities.md): what matters most right now so work stays aligned
 - [codex-workflow.md](./codex-workflow.md): how this repo should be operated inside the Codex app, including threads, branches, review, and default settings
+- [campaign-data-quality.md](./campaign-data-quality.md): how to interpret the read-only campaign/client data readiness audit
 - [meta-ads-playbook.md](./meta-ads-playbook.md): durable rules for Context7-first uncertainty handling, canonical local Meta credential sourcing, and cross-repo ads workflow boundaries
 - [production-operating-baseline.md](./production-operating-baseline.md): current shipped surface, environment names, deployment, and HTTP-only production smoke checks
 
