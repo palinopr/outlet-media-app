@@ -74,7 +74,7 @@ npm run check
 npm run db:push:dry-run
 ```
 
-8. Run the authenticated Playwright smoke test against production after redeploy.
+8. Run the production smoke checklist after redeploy.
 
 ## Targeted restore path
 
@@ -90,5 +90,5 @@ If only a small table or row set is affected, prefer targeted repair over full p
 
 - Document root cause and exact restore timestamp.
 - Re-run GitHub Supabase Drift Check.
-- Re-run production E2E smoke.
+- Re-run the production smoke checklist in `docs/references/production-smoke-runbook.md`.
 - Remove local dumps from developer machines.
