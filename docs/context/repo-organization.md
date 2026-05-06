@@ -14,7 +14,7 @@ The previous top-level `agent/` runtime has been retired and should not be recre
 
 ## What Should Not Live In The Root
 
-Do not leave one-off screenshots, generated assets, browser output, temp folders, or ambiguous top-level folders at the repo root. Move durable references into `docs/references/`, screenshots into `docs/screenshots/`, and bulky historical material into `archive/` or out of the repo.
+Do not leave one-off screenshots, generated assets, browser output, temp folders, generated reports, local worktrees, or ambiguous top-level folders at the repo root. Move durable references into `docs/references/`, screenshots into `docs/screenshots/`, and bulky historical material into `archive/` or out of the repo.
 
 ## Active Placement Rules
 
@@ -36,6 +36,7 @@ Do not leave one-off screenshots, generated assets, browser output, temp folders
 - small durable reference inputs -> `docs/references/`
 - screenshots worth keeping -> `docs/screenshots/`
 - historical bulk material -> `archive/` or external storage
+- generated wiki/report output -> delete by default unless it has been deliberately promoted into `docs/context/` or `docs/references/`
 
 ## Cleanup Rule
 

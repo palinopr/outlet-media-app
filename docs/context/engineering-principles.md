@@ -28,9 +28,9 @@ Client portal packaging is intentionally simple right now: Campaigns are the onl
 
 No dead nav items, placeholder routes, duplicate surfaces, or speculative UI breadth. If a workflow is not part of Campaigns or account/access management, keep it embedded or remove it until there is an explicit product decision. ticketing workflows and ingest are retired for now and should not be reintroduced without a new explicit product decision.
 
-## Authenticated Browser Smoke Tests
+## Verification Discipline
 
-Use Playwright for repeatable authenticated app smoke tests. The production Clerk instance only accepts the real `outletmedia.net` origin, so production E2E must target `https://outletmedia.net` rather than the Railway preview URL. Prefer temporary Clerk users plus backend sign-in tokens, cover signed-out/admin/client-member access, use temporary `client_members` rows for non-admin portal acceptance instead of inviting real clients, and always delete temporary users and memberships in teardown. Keep GitHub non-admin membership coverage to a small representative slug set by default; use `E2E_CLIENT_MEMBER_SLUGS` for heavier access audits.
+Default verification should stay lean: `npm run type-check`, `npm run lint`, `npm test`, and `npm run build`. Do not add browser automation, generated reports, screenshots, or broad E2E machinery unless the change touches auth-critical behavior that focused tests cannot prove.
 
 ## Agent Runtime Status
 

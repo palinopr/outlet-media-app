@@ -52,13 +52,11 @@ Copy `.env.example` to `.env.local` and fill in the required variables.
 
 ```bash
 npm run check
-npm run playwright:install # once per machine/CI image
-npm run test:e2e
 ```
 
-Authenticated Playwright smoke tests create temporary Clerk users with sign-in tokens, then delete them after the run. Set `E2E_BASE_URL` to the real app domain for the Clerk environment being tested (production auth uses `https://outletmedia.net`, not the Railway preview URL) and provide `E2E_CLERK_SECRET_KEY`.
+The normal verification path is TypeScript, ESLint, Vitest, build, and dependency audit. Browser automation is not part of the default project workflow; add it back only for a specific auth-critical production smoke need that cannot be covered by focused tests.
 
-See `docs/references/production-smoke-runbook.md` for the production deploy smoke checklist, `docs/references/database-safety-runbook.md` for Supabase migration safety, and the manual GitHub Actions smoke path.
+See `docs/references/production-smoke-runbook.md` for the production deploy smoke checklist and `docs/references/database-safety-runbook.md` for Supabase migration safety.
 
 ## Deploy
 

@@ -11,6 +11,8 @@ Read these files before making major product or architecture decisions.
 
 These docs are meant to be durable context, not one-off plans.
 
+Use [../references/current-project-map.md](../references/current-project-map.md) as the compact current-state map. Do not recreate broad generated wiki folders by default.
+
 When a new repeated pattern or architectural lesson becomes durable, update these docs instead of burying it in a single task thread.
 
 When starting a new build thread, default to the web product unless the user explicitly asks for another surface.

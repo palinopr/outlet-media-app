@@ -62,11 +62,14 @@ Execution sequencing should stay concise in the active issue, PR, or task thread
 
 Before handing work back:
 - run `npm run type-check` for app changes
-- run targeted lint for touched files
+- run `npm run lint` or targeted lint for touched files
 - run targeted tests when the path already has coverage or the behavior is risky
+- run `npm run build` when code or config changes affect the Next.js app
 - use `/review` or the review pane before merge
 
 For scripted or CI-oriented runs, prefer `codex exec` or the GitHub workflow in `.github/workflows/codex-pr-review.yml`.
+
+Do not use Playwright, screenshots, browser reports, or generated E2E artifacts as the default verification path. Add browser automation only when the specific change touches auth-critical browser behavior that focused tests cannot cover.
 
 ## 5a. Know When To Stop Building
 
@@ -159,8 +162,8 @@ pkill -f 'chrome-devtools-mcp|@playwright/mcp|playwright-chrome-clone|mcp-discor
 ```
 
 For browser debugging, stabilize one MCP path first:
-- get `chrome-devtools` healthy before changing Playwright config
-- do not mix Playwright profile experiments with a broken DevTools session in the same Codex run unless you are explicitly debugging MCP behavior itself
+- get `chrome-devtools` healthy before adding another browser automation path
+- do not mix browser automation experiments with a broken DevTools session in the same Codex run unless you are explicitly debugging MCP behavior itself
 
 When running local Next.js dev with Clerk and a real browser session:
 - prefer `npm run dev -- --hostname localhost --port <port>` over `127.0.0.1`

@@ -7,13 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "npm run lint:web",
-    "lint:web": "eslint src __tests__ e2e playwright.config.ts vitest.config.ts vitest.setup.ts",
+    "lint:web": "eslint src __tests__ vitest.config.ts vitest.setup.ts",
     "type-check": "npm run type-check:web",
     "type-check:web": "tsc --noEmit",
     "test": "npm run test:web",
     "test:web": "vitest run",
-    "playwright:install": "playwright install chromium",
-    "test:e2e": "playwright test",
     "audit:deps": "npm audit --audit-level=moderate",
     "db:push:dry-run": "supabase db push --dry-run",
     "check:web": "npm run type-check:web && npm run lint:web && npm run test:web && npm run build && npm run audit:deps",
@@ -40,7 +38,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
