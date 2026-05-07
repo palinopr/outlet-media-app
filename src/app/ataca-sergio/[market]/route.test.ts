@@ -1,0 +1,28 @@
+import { describe, expect, it } from "vitest";
+import { GET } from "./route";
+
+function getMarket(market: string) {
+  return GET(new Request(`https://outletmedia.net/ataca-sergio/${market}`), {
+    params: Promise.resolve({ market }),
+  });
+}
+
+describe("/ataca-sergio/[market] funnel route", () => {
+  it("serves the Newark public landing page without auth redirects", async () => {
+    const response = await getMarket("newark");
+    const html = await response.text();
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("text/html");
+    expect(html).toContain('<base href="/ataca-sergio/newark/" />');
+    expect(html).toContain('fbq("init", "465799745886450")');
+    expect(html).toContain("Festival Ataca Sergio");
+    expect(html).toContain("https://www.ticketmaster.com/festival-ataca-sergio-newark-new-jersey-05-30-2026/event/02006478E042F9B1");
+  });
+
+  it("rejects unknown market slugs", async () => {
+    const response = await getMarket("miami");
+
+    expect(response.status).toBe(404);
+  });
+});

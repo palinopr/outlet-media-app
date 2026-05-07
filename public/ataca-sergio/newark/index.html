@@ -1,0 +1,1148 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Festival Ataca Sergio · Sábado 30 de mayo · Prudential Center</title>
+    <meta
+      name="description"
+      content="Festival Ataca Sergio. Sábado 30 de mayo en el Prudential Center, Newark. El cumpleaños de Sergio George con Oscar D'León, Andy Montañez, Luis Enrique y más leyendas de la salsa."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Festival Ataca Sergio · Sábado 30 de mayo · Prudential Center" />
+    <meta
+      property="og:description"
+      content="Una noche. Una arena. El cumpleaños de Sergio George reunido con las leyendas de la salsa en Newark, NJ."
+    />
+    <meta property="og:image" content="./assets/atmosphere/og-share.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="./assets/atmosphere/og-share.jpg" />
+    <link rel="preconnect" href="https://www.ticketmaster.com" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="image"
+      href="./assets/hero-poster.jpg"
+      fetchpriority="high"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;700;800;900&display=optional"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+        --black: #060606;
+        --wine: #1a050a;
+        --wine-2: #2a070d;
+        --salsa: #8e1018;
+        --glow: #b51e28;
+        --ivory: #f2e7d3;
+        --gold: #c6a15e;
+        --gold-2: #e1c081;
+        --muted: rgba(242, 231, 211, 0.66);
+        --line: rgba(198, 161, 94, 0.22);
+        --display: "Anton", "Bebas Neue", "Oswald", Impact, sans-serif;
+        --body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      html { background: var(--black); }
+      body {
+        margin: 0;
+        min-height: 100svh;
+        background: var(--black);
+        color: var(--ivory);
+        font-family: var(--body);
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+      button { font: inherit; }
+      img, video { display: block; max-width: 100%; }
+
+      .shell {
+        width: 100%;
+        max-width: 430px;
+        margin: 0 auto;
+        padding-bottom: 116px;
+        background: var(--black);
+        box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
+        overflow: clip;
+      }
+      section { padding: 42px 22px; }
+      h1, h2, h3, p, dl, dd, ul { margin: 0; }
+
+      /* HERO with video background */
+      .hero {
+        position: relative;
+        padding: 0;
+        min-height: 100svh;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        background: var(--black);
+        overflow: hidden;
+      }
+      .hero-media {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+      }
+      .hero-media video,
+      .hero-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+      .hero-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        background:
+          radial-gradient(80% 60% at 70% 20%, rgba(181, 30, 40, 0.42), transparent 65%),
+          linear-gradient(180deg, rgba(6, 6, 6, 0.45) 0%, rgba(6, 6, 6, 0.85) 70%, rgba(6, 6, 6, 0.98) 100%);
+        pointer-events: none;
+      }
+      .hero-grain {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 3px 3px;
+        mix-blend-mode: overlay;
+        pointer-events: none;
+      }
+      .hero-panel {
+        position: relative;
+        z-index: 3;
+        padding: 26px 22px 30px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        margin-bottom: 22px;
+        padding-bottom: 9px;
+        border-bottom: 1px solid var(--gold);
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+      }
+      h1.title {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: clamp(60px, 17vw, 86px);
+        line-height: 0.84;
+        letter-spacing: 0.005em;
+        text-transform: uppercase;
+        text-shadow: 0 4px 28px rgba(0, 0, 0, 0.85);
+      }
+      .title em {
+        display: block;
+        color: var(--gold);
+        font-style: normal;
+      }
+      .hero-sub {
+        margin-top: 18px;
+        max-width: 22ch;
+        color: rgba(242, 231, 211, 0.94);
+        font-size: 17px;
+        line-height: 1.36;
+        text-shadow: 0 1px 14px rgba(0, 0, 0, 0.6);
+      }
+      .hero-anfitrion {
+        margin-top: 14px;
+        max-width: 28ch;
+        color: rgba(242, 231, 211, 0.78);
+        font-size: 13.5px;
+        line-height: 1.45;
+        text-shadow: 0 1px 14px rgba(0, 0, 0, 0.6);
+      }
+      .hero-anfitrion b { color: var(--gold); font-weight: 700; }
+      .hero-fact {
+        margin-top: 16px;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+      .hero-trust {
+        margin-top: 12px;
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+      }
+      /* Promo video section — unlabeled, just the video */
+      .promo {
+        padding: 22px 22px 26px;
+        background: var(--black);
+      }
+      .video-frame {
+        position: relative;
+        aspect-ratio: 16 / 9;
+        background: #0a0303;
+        overflow: hidden;
+        cursor: pointer;
+      }
+      .video-frame video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #0a0303;
+      }
+      .video-play {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 3;
+        width: 76px;
+        height: 76px;
+        border-radius: 50%;
+        border: 1px solid rgba(242, 231, 211, 0.5);
+        background: rgba(6, 6, 6, 0.55);
+        color: var(--ivory);
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+        transition: background 160ms ease, border-color 160ms ease, opacity 200ms ease, transform 200ms ease;
+      }
+      .video-play:hover {
+        background: rgba(181, 30, 40, 0.42);
+        border-color: var(--gold);
+      }
+      .video-play.is-hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, -50%) scale(0.85);
+      }
+      .video-play-icon {
+        font-size: 24px;
+        line-height: 1;
+        padding-left: 4px;
+        display: inline-block;
+      }
+      .video-frame.is-playing { cursor: default; }
+      .hero-cta {
+        margin-top: 22px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .primary {
+        display: inline-flex;
+        min-height: 56px;
+        flex: 1;
+        align-items: center;
+        justify-content: center;
+        padding: 0 18px;
+        background: var(--gold);
+        color: var(--black);
+        font-size: 15.5px;
+        font-weight: 900;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        text-decoration: none;
+        border: 0;
+        border-radius: 2px;
+        box-shadow: 0 18px 36px rgba(198, 161, 94, 0.18);
+        transition: transform 140ms ease, background 140ms ease;
+      }
+      .primary:hover { background: var(--gold-2); transform: translateY(-1px); }
+
+      /* Marquee */
+      .marquee {
+        display: flex;
+        overflow: hidden;
+        background: var(--wine);
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        padding: 14px 0;
+        gap: 32px;
+        white-space: nowrap;
+        mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+      }
+      .marquee-track {
+        display: flex;
+        gap: 32px;
+        animation: marquee 38s linear infinite;
+        flex-shrink: 0;
+        padding-right: 32px;
+      }
+      .marquee-track span {
+        font-family: var(--display);
+        font-size: 22px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--ivory);
+      }
+      .marquee-track i {
+        font-style: normal;
+        color: var(--gold);
+        margin: 0 4px;
+      }
+      @keyframes marquee {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+      }
+
+      /* Ticker */
+      .ticker {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        background: linear-gradient(180deg, #100407, var(--wine-2));
+        border-bottom: 1px solid var(--line);
+      }
+      .tick {
+        padding: 16px 6px 14px;
+        text-align: center;
+        border-right: 1px solid var(--line);
+      }
+      .tick:last-child { border-right: 0; }
+      .tick strong {
+        display: block;
+        font-family: var(--body);
+        font-variant-numeric: tabular-nums;
+        font-feature-settings: "tnum";
+        font-size: 26px;
+        font-weight: 800;
+        line-height: 1;
+        letter-spacing: 0.01em;
+        color: var(--ivory);
+      }
+      .tick span {
+        display: block;
+        margin-top: 5px;
+        color: var(--gold);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      /* Stub */
+      .stub {
+        position: relative;
+        background:
+          linear-gradient(180deg, rgba(10, 3, 3, 0.9) 0%, rgba(10, 3, 3, 0.98) 100%),
+          url("./assets/atmosphere/arena-interior.webp") center / cover;
+        border-bottom: 1px solid var(--line);
+      }
+      .stub > * { position: relative; }
+      .stub h2 {
+        font-family: var(--display);
+        font-size: 32px;
+        line-height: 1;
+        text-transform: uppercase;
+      }
+      .stub-grid {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 12px 18px;
+        margin-top: 18px;
+      }
+      .stub dt {
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .stub dd {
+        color: var(--ivory);
+        font-size: 15px;
+        line-height: 1.36;
+      }
+
+      /* Manifesto */
+      .manifesto {
+        position: relative;
+        padding: 70px 22px;
+        background:
+          linear-gradient(180deg, rgba(6, 6, 6, 0.78) 0%, rgba(6, 6, 6, 0.92) 100%),
+          url("./assets/atmosphere/crowd-bg.webp") center / cover;
+        border-bottom: 1px solid var(--line);
+      }
+      .manifesto::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(70% 50% at 50% 50%, rgba(142, 16, 24, 0.18), transparent 70%);
+        pointer-events: none;
+      }
+      .manifesto > * { position: relative; z-index: 1; }
+      .manifesto h2 {
+        font-family: var(--display);
+        font-size: clamp(40px, 11vw, 58px);
+        line-height: 0.92;
+        text-transform: uppercase;
+        max-width: 14ch;
+      }
+      .manifesto h2 b { color: var(--gold); font-weight: 400; }
+      .manifesto p {
+        margin-top: 18px;
+        max-width: 32ch;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.5;
+      }
+
+      /* Lineup */
+      .lineup {
+        padding: 48px 22px;
+        background: linear-gradient(180deg, var(--black) 0%, #0d0405 100%);
+      }
+      .section-eyebrow {
+        margin-bottom: 6px;
+        color: var(--gold);
+        font-size: 11px;
+        font-weight: 900;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+      .section-title {
+        font-family: var(--display);
+        font-size: 42px;
+        line-height: 0.92;
+        text-transform: uppercase;
+        margin-bottom: 24px;
+      }
+      .section-title em { color: var(--gold); font-style: normal; }
+
+      .lineup-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        list-style: none;
+        padding: 0;
+      }
+      .lineup-grid li {
+        position: relative;
+        aspect-ratio: 3 / 4;
+        background: linear-gradient(160deg, #1a070b 0%, #0a0203 100%);
+        border: 1px solid var(--line);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+      }
+      .lineup-grid li.headliner {
+        grid-column: span 2;
+        aspect-ratio: 16 / 9;
+      }
+      .tile-photo {
+        position: absolute;
+        inset: 0;
+        background-size: cover;
+        background-position: center 20%;
+        opacity: 0;
+        transition: opacity 240ms ease;
+      }
+      .tile-photo.has-image { opacity: 1; }
+      .tile-mono {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--display);
+        font-size: 84px;
+        line-height: 1;
+        color: rgba(198, 161, 94, 0.18);
+        letter-spacing: -0.02em;
+        pointer-events: none;
+        user-select: none;
+        opacity: 1;
+        transition: opacity 200ms ease;
+      }
+      .tile-photo.has-image ~ .tile-mono { opacity: 0; }
+      .lineup-grid li.headliner .tile-mono { font-size: 140px; }
+      .tile-cover {
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(80% 60% at 30% 0%, rgba(181, 30, 40, 0.22), transparent 65%),
+          linear-gradient(180deg, transparent 38%, rgba(6, 6, 6, 0.78) 78%, rgba(6, 6, 6, 0.96) 100%);
+        pointer-events: none;
+      }
+      .tile-name {
+        position: relative;
+        z-index: 2;
+        padding: 12px 14px;
+        font-family: var(--body);
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.1;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--ivory);
+      }
+      .lineup-grid li.headliner .tile-name {
+        padding: 16px 18px 6px;
+        font-family: var(--display);
+        font-size: 30px;
+        font-weight: 400;
+        letter-spacing: 0.005em;
+        color: var(--gold);
+      }
+      .tile-tag {
+        position: relative;
+        z-index: 2;
+        padding: 0 18px 16px;
+        color: rgba(242, 231, 211, 0.72);
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .lineup-tier {
+        margin-top: 36px;
+      }
+      .tile-rule {
+        position: absolute;
+        top: 12px;
+        left: 14px;
+        right: 14px;
+        height: 1px;
+        background: var(--gold);
+        opacity: 0.45;
+      }
+      .lineup-note {
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      /* Why this show */
+      .why { padding: 48px 22px; background: #090303; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+      .why-grid {
+        display: grid;
+        gap: 22px;
+        margin-top: 22px;
+      }
+      .why-item {
+        padding: 20px 18px;
+        border: 1px solid var(--line);
+        background: linear-gradient(160deg, rgba(33, 7, 11, 0.6), rgba(10, 4, 5, 0.6));
+      }
+      .why-item strong {
+        display: block;
+        font-family: var(--display);
+        font-size: 38px;
+        line-height: 1;
+        color: var(--gold);
+      }
+      .why-item p {
+        margin-top: 10px;
+        color: var(--ivory);
+        font-size: 15px;
+        line-height: 1.4;
+      }
+
+      /* FAQ */
+      .faq { background: #090404; }
+      .faq h2 {
+        font-family: var(--display);
+        font-size: 36px;
+        line-height: 1;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      details {
+        border-bottom: 1px solid var(--line);
+        padding: 16px 0;
+      }
+      summary {
+        cursor: pointer;
+        list-style: none;
+        font-size: 16px;
+        font-weight: 800;
+        color: var(--ivory);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+      summary::-webkit-details-marker { display: none; }
+      summary::after {
+        content: "+";
+        color: var(--gold);
+        font-size: 22px;
+        line-height: 1;
+        font-weight: 700;
+      }
+      details[open] summary::after { content: "−"; }
+      details p {
+        margin-top: 10px;
+        color: var(--muted);
+        font-size: 14.5px;
+        line-height: 1.55;
+      }
+
+      /* Final */
+      .final {
+        position: relative;
+        padding: 70px 22px 78px;
+        background:
+          linear-gradient(180deg, rgba(6, 6, 6, 0.62) 0%, rgba(6, 6, 6, 0.92) 65%, rgba(6, 6, 6, 0.98) 100%),
+          url("./assets/atmosphere/silhouette-cta.webp") center / cover;
+        border-top: 1px solid var(--line);
+      }
+      .final h2 {
+        font-family: var(--display);
+        font-size: clamp(46px, 12vw, 64px);
+        line-height: 0.9;
+        text-transform: uppercase;
+        max-width: 12ch;
+      }
+      .final h2 em { color: var(--gold); font-style: normal; display: block; }
+      .final p {
+        margin-top: 16px;
+        max-width: 28ch;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.5;
+      }
+      .final .hero-cta { margin-top: 28px; }
+
+      /* Sticky */
+      .sticky {
+        position: fixed;
+        left: 50%;
+        bottom: 0;
+        z-index: 20;
+        width: 100%;
+        max-width: 430px;
+        transform: translate(-50%, 100%);
+        padding: 9px 14px calc(11px + env(safe-area-inset-bottom));
+        background: linear-gradient(to top, rgba(6, 6, 6, 0.99), rgba(6, 6, 6, 0.88));
+        backdrop-filter: blur(18px);
+        border-top: 1px solid var(--line);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 220ms ease, opacity 200ms ease;
+      }
+      .sticky.is-visible {
+        transform: translate(-50%, 0);
+        opacity: 1;
+        pointer-events: auto;
+      }
+      .sticky-note {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 7px;
+        color: rgba(242, 231, 211, 0.78);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        line-height: 1.1;
+        text-transform: uppercase;
+      }
+      .sticky-note b { color: var(--gold); }
+      .sticky a { width: 100%; }
+
+      footer {
+        padding: 22px;
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        text-align: center;
+      }
+
+      /* Offscreen sections skip layout/paint until near viewport. */
+      .lineup, .why, .faq, .final {
+        content-visibility: auto;
+        contain-intrinsic-size: 0 1200px;
+      }
+
+      @media (max-width: 390px) {
+        .primary { padding: 0 14px; font-size: 14px; }
+        .hero-panel { padding: 22px 18px 24px; }
+        .tick strong { font-size: 24px; }
+        .tick span { font-size: 9px; }
+      }
+
+      /* Bigger touch targets on FAQ summary (WCAG 2.2). */
+      summary { min-height: 48px; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .sticky, .primary { transition: none; }
+        .marquee-track { animation: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <img
+        height="1"
+        width="1"
+        style="display: none"
+        src="https://www.facebook.com/tr?id=1553637492361321&ev=PageView&noscript=1"
+        alt=""
+      />
+    </noscript>
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-media" aria-hidden="true">
+          <video
+            id="heroVideo"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            poster="./assets/hero-poster.jpg"
+          >
+            <source src="./assets/hero.webm" type="video/webm" />
+            <source src="./assets/hero.mp4" type="video/mp4" />
+          </video>
+        </div>
+        <div class="hero-overlay" aria-hidden="true"></div>
+        <div class="hero-grain" aria-hidden="true"></div>
+        <div class="hero-panel">
+          <div class="eyebrow">Sábado 30 de mayo · Newark, NJ</div>
+          <h1 class="title">Festival<br />Ataca<br /><em>Sergio</em></h1>
+          <p class="hero-sub">
+            Oscar D'León, Andy Montañez, Luis Enrique y las leyendas de la salsa en una sola noche.
+          </p>
+          <p class="hero-anfitrion">
+            Anfitrión y cumpleañero: <b>Sergio George</b> · productor de DLG, Marc Anthony, La India y Tito Nieves.
+          </p>
+          <p class="hero-fact">Prudential Center · Puertas 7PM · Show 8PM</p>
+          <div class="hero-cta">
+            <a class="primary js-ticket" href="#" data-cta="hero">Comprar boletos</a>
+          </div>
+          <p class="hero-trust">Boletos oficiales solo en Ticketmaster.</p>
+        </div>
+      </section>
+
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-track">
+          <span>Sergio George <i>·</i></span>
+          <span>Oscar D'León <i>·</i></span>
+          <span>Andy Montañez <i>·</i></span>
+          <span>Luis Enrique <i>·</i></span>
+          <span>Huey Dunbar <i>·</i></span>
+          <span>Anthony Ramos <i>·</i></span>
+          <span>Guaynaa <i>·</i></span>
+          <span>Luis Figueroa <i>·</i></span>
+          <span>Servando &amp; Florentino <i>·</i></span>
+          <span>Willy García <i>·</i></span>
+          <span>Sergio George <i>·</i></span>
+          <span>Oscar D'León <i>·</i></span>
+          <span>Andy Montañez <i>·</i></span>
+          <span>Luis Enrique <i>·</i></span>
+          <span>Huey Dunbar <i>·</i></span>
+          <span>Anthony Ramos <i>·</i></span>
+          <span>Guaynaa <i>·</i></span>
+          <span>Luis Figueroa <i>·</i></span>
+          <span>Servando &amp; Florentino <i>·</i></span>
+          <span>Willy García <i>·</i></span>
+        </div>
+      </div>
+
+      <div class="ticker" aria-label="Cuenta regresiva">
+        <div class="tick"><strong id="days">--</strong><span>días</span></div>
+        <div class="tick"><strong id="hours">--</strong><span>horas</span></div>
+        <div class="tick"><strong id="minutes">--</strong><span>min</span></div>
+        <div class="tick"><strong id="seconds">--</strong><span>seg</span></div>
+      </div>
+
+      <section class="promo">
+        <div class="video-frame" id="promoFrame">
+          <video
+            id="promoVideo"
+            class="promo-video"
+            loop
+            playsinline
+            preload="none"
+            poster="./assets/promo-poster.jpg"
+            src="./assets/promo-full.mp4"
+          ></video>
+          <button class="video-play" type="button" id="promoToggle" aria-label="Reproducir promo">
+            <span class="video-play-icon" aria-hidden="true">▶</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="stub">
+        <h2>El boleto</h2>
+        <dl class="stub-grid">
+          <dt>Fecha</dt><dd>Sábado 30 de mayo de 2026</dd>
+          <dt>Puertas</dt><dd>7:00 PM</dd>
+          <dt>Show</dt><dd>8:00 PM</dd>
+          <dt>Lugar</dt><dd>Prudential Center<br />25 Lafayette St, Newark, NJ 07102</dd>
+        </dl>
+      </section>
+
+      <section class="manifesto">
+        <h2>Una sola noche. <b>Un solo escenario.</b> Las leyendas reunidas.</h2>
+        <p>De Nueva York a Newark, una noche para celebrar la salsa que nos crió.</p>
+      </section>
+
+      <section class="lineup">
+        <div class="section-eyebrow">Anfitrión · Cumpleañero</div>
+        <ul class="lineup-grid lineup-anfitrion" id="lineupAnfitrion">
+          <li class="headliner" data-slug="sergio-george" data-mono="SG">
+            <div class="tile-photo"></div>
+            <div class="tile-cover"></div>
+            <div class="tile-mono">SG</div>
+            <div class="tile-rule"></div>
+            <div class="tile-name">Sergio George</div>
+            <div class="tile-tag">Productor · DLG · Marc Anthony · La India</div>
+          </li>
+        </ul>
+
+        <div class="section-eyebrow lineup-tier">Leyendas de la salsa</div>
+        <ul class="lineup-grid" id="lineupLeyendas">
+          <li class="headliner" data-slug="oscar-deleon" data-mono="OD">
+            <div class="tile-photo"></div>
+            <div class="tile-cover"></div>
+            <div class="tile-mono">OD</div>
+            <div class="tile-rule"></div>
+            <div class="tile-name">Oscar D'León</div>
+          </li>
+          <li data-slug="andy-montanez" data-mono="AM"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">AM</div><div class="tile-name">Andy Montañez</div></li>
+          <li data-slug="huey-dunbar" data-mono="HD"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">HD</div><div class="tile-name">Huey Dunbar</div></li>
+          <li data-slug="servando-florentino" data-mono="SF"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">SF</div><div class="tile-name">Servando &amp; Florentino</div></li>
+          <li data-slug="willy-garcia" data-mono="WG"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">WG</div><div class="tile-name">Willy García</div></li>
+          <li data-slug="javier-vazquez" data-mono="JV"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">JV</div><div class="tile-name">Javier Vázquez</div></li>
+        </ul>
+
+        <div class="section-eyebrow lineup-tier">Voces de hoy</div>
+        <ul class="lineup-grid" id="lineupVoces">
+          <li data-slug="luis-enrique" data-mono="LE"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">LE</div><div class="tile-name">Luis Enrique</div></li>
+          <li data-slug="luis-figueroa" data-mono="LF"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">LF</div><div class="tile-name">Luis Figueroa</div></li>
+          <li data-slug="lala-garcia" data-mono="LG"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">LG</div><div class="tile-name">Lala García</div></li>
+        </ul>
+
+        <div class="section-eyebrow lineup-tier">Invitados especiales</div>
+        <ul class="lineup-grid" id="lineupInvitados">
+          <li data-slug="anthony-ramos" data-mono="AR"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">AR</div><div class="tile-name">Anthony Ramos</div></li>
+          <li data-slug="guaynaa" data-mono="GU"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">GU</div><div class="tile-name">Guaynaa</div></li>
+        </ul>
+
+        <p class="lineup-note">Cartelera sujeta a cambios</p>
+      </section>
+
+      <section class="why">
+        <div class="section-eyebrow">Por qué este show</div>
+        <h2 class="section-title">No se repite.</h2>
+        <div class="why-grid">
+          <div class="why-item">
+            <strong>1 noche</strong>
+            <p>Una sola fecha en Newark. No hay segundo show, no hay tour.</p>
+          </div>
+          <div class="why-item">
+            <strong>12+</strong>
+            <p>Leyendas de la salsa en un solo escenario, lideradas por Sergio George.</p>
+          </div>
+          <div class="why-item">
+            <strong>16,500</strong>
+            <p>Capacidad total del Prudential Center. Las mejores secciones se agotan primero.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="faq">
+        <h2>Preguntas rápidas</h2>
+        <details open>
+          <summary>¿A qué hora llego?</summary>
+          <p>Las puertas abren a las 7:00 PM y el show empieza a las 8:00 PM. Llega temprano para evitar fila en seguridad.</p>
+        </details>
+        <details>
+          <summary>¿Hay límite de edad?</summary>
+          <p>Evento para todas las edades. Menores de 16 años deben entrar acompañados de un adulto. Confirma la política oficial al comprar tu boleto.</p>
+        </details>
+        <details>
+          <summary>¿Qué puedo llevar?</summary>
+          <p>El Prudential Center solo permite carteras pequeñas (máx. 12" x 6" x 12") o bolsos transparentes. No se permiten cámaras profesionales ni bebidas externas.</p>
+        </details>
+        <details>
+          <summary>¿Puedo devolver mi boleto?</summary>
+          <p>Las ventas son finales en Ticketmaster. Si el evento cambia de fecha, recibirás instrucciones por correo del vendedor oficial.</p>
+        </details>
+        <details>
+          <summary>¿Y si cambia el lineup?</summary>
+          <p>La cartelera está sujeta a cambios. El evento se realiza el 30 de mayo de 2026 en el Prudential Center sin importar variaciones de artistas.</p>
+        </details>
+      </section>
+
+      <section class="final">
+        <h2>Una noche.<br /><em>Una sola vez.</em></h2>
+        <p>30 de mayo en el Prudential Center. Newark, NJ. No se repite.</p>
+        <div class="hero-cta">
+          <a class="primary js-ticket" href="#" data-cta="final">Comprar boletos</a>
+        </div>
+      </section>
+
+      <footer>Festival Ataca Sergio · Prudential Center · Newark NJ</footer>
+    </main>
+
+    <div class="sticky" id="stickyBar" aria-hidden="true">
+      <div class="sticky-note"><b>Sábado 30 de mayo</b><span>· Prudential Center</span></div>
+      <a class="primary js-ticket" href="#" data-cta="sticky">Comprar boletos</a>
+    </div>
+
+
+    <script>
+      // Defer Meta Pixel: load on first interaction, scroll, or 2s idle — whichever first.
+      // Cuts ~70KB off the critical path; PageView still fires within ~2s of load.
+      let pixelLoaded = false;
+      function loadPixel() {
+        if (pixelLoaded) return;
+        pixelLoaded = true;
+        !(function (f, b, e, v, n, t, s) {
+          if (f.fbq) return;
+          n = f.fbq = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
+          if (!f._fbq) f._fbq = n;
+          n.push = n; n.loaded = true; n.version = "2.0"; n.queue = [];
+          t = b.createElement(e); t.async = true; t.src = v;
+          s = b.getElementsByTagName(e)[0];
+          s.parentNode.insertBefore(t, s);
+        })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+        window.fbq("init", "1553637492361321");
+        window.fbq("track", "PageView");
+      }
+      ["scroll", "pointerdown", "touchstart", "keydown"].forEach((ev) =>
+        window.addEventListener(ev, loadPixel, { once: true, passive: true }),
+      );
+      (window.requestIdleCallback || ((cb) => setTimeout(cb, 2000)))(loadPixel, { timeout: 2500 });
+
+      const TICKETMASTER_URL = "https://www.ticketmaster.com/event/02006478E042F9B1";
+      const EVENT_TIME = new Date("2026-05-30T19:00:00-04:00").getTime();
+
+      const ids = ["days", "hours", "minutes", "seconds"];
+      const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
+
+      function tick() {
+        const remaining = Math.max(0, EVENT_TIME - Date.now());
+        const seconds = Math.floor(remaining / 1000);
+        const values = [
+          Math.floor(seconds / 86400),
+          Math.floor((seconds % 86400) / 3600),
+          Math.floor((seconds % 3600) / 60),
+          seconds % 60,
+        ];
+        ids.forEach((id, i) => {
+          const el = document.getElementById(id);
+          if (el) el.textContent = pad(values[i]);
+        });
+      }
+
+      function ticketHref() {
+        const target = new URL(TICKETMASTER_URL);
+        const incoming = new URLSearchParams(window.location.search);
+        for (const [key, value] of incoming.entries()) {
+          if (key.startsWith("utm_") || key === "fbclid" || key === "ttclid" || key === "gclid") {
+            target.searchParams.set(key, value);
+          }
+        }
+        target.searchParams.set("utm_source", incoming.get("utm_source") || "meta");
+        target.searchParams.set("utm_medium", incoming.get("utm_medium") || "paid_social");
+        target.searchParams.set("utm_campaign", incoming.get("utm_campaign") || "ataca_sergio_newark");
+        target.searchParams.set("utm_content", incoming.get("utm_content") || "lp_default");
+        return target.toString();
+      }
+
+      function trackCustom(name, payload) {
+        if (typeof window.fbq === "function") window.fbq("trackCustom", name, payload);
+      }
+
+      const funnelPayload = {
+        content_name: "Festival Ataca Sergio",
+        content_category: "event_ticket",
+        content_ids: ["ataca-sergio-newark-2026-05-30"],
+        city: "Newark",
+        venue: "Prudential Center",
+      };
+
+      let qualifiedTracked = false;
+      function trackQualifiedView(reason) {
+        if (qualifiedTracked || typeof window.fbq !== "function") return;
+        qualifiedTracked = true;
+        const payload = { ...funnelPayload, engagement_reason: reason };
+        window.fbq("track", "ViewContent", payload);
+        trackCustom("FunnelQualifiedView", payload);
+      }
+      window.setTimeout(() => trackQualifiedView("time_6s"), 6000);
+
+      const depths = [25, 50, 75, 100];
+      const fired = new Set();
+      function checkDepth() {
+        const doc = document.documentElement;
+        const scrolled = window.scrollY + window.innerHeight;
+        const total = doc.scrollHeight;
+        const pct = Math.min(100, Math.round((scrolled / total) * 100));
+        depths.forEach((d) => {
+          if (pct >= d && !fired.has(d)) {
+            fired.add(d);
+            trackCustom("ScrollDepth", { ...funnelPayload, depth: d });
+            if (d >= 50) trackQualifiedView("scroll_50");
+          }
+        });
+      }
+
+      document.querySelectorAll(".js-ticket").forEach((link) => {
+        link.href = ticketHref();
+        link.addEventListener("click", () => {
+          trackQualifiedView("ticket_click");
+          // NOTE: do NOT fire InitiateCheckout here — this is an outbound click,
+          // not actual checkout. Misleads Meta optimization toward click-happy
+          // users instead of buyers. Real IC must come from Ticketmaster's
+          // postback / CAPI bridge once that's wired up.
+          trackCustom("OutboundTicketClick", {
+            ...funnelPayload,
+            cta: link.dataset.cta || "unknown",
+            destination: "ticketmaster",
+          });
+        });
+      });
+
+      // Sticky CTA: appear once user scrolls past ~45% of hero, not when CTA
+      // fully exits viewport (which on mobile is ~900px of scroll = too late).
+      const stickyBar = document.getElementById("stickyBar");
+      const heroSection = document.querySelector(".hero");
+      if (stickyBar && heroSection && "IntersectionObserver" in window) {
+        const obs = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              // Show sticky as soon as <55% of hero remains visible.
+              const showSticky = entry.intersectionRatio < 0.55;
+              stickyBar.classList.toggle("is-visible", showSticky);
+              stickyBar.setAttribute("aria-hidden", showSticky ? "false" : "true");
+            });
+          },
+          { threshold: [0, 0.25, 0.45, 0.55, 0.75, 1] },
+        );
+        obs.observe(heroSection);
+      }
+
+      // Lineup tile auto-image: ship WebP only.
+      // Falls back gracefully to monogram placeholder when missing.
+      const tiles = document.querySelectorAll(".lineup-grid li");
+      tiles.forEach((tile) => {
+        const slug = tile.dataset.slug;
+        const photo = tile.querySelector(".tile-photo");
+        if (!slug || !photo) return;
+        const img = new Image();
+        img.onload = () => {
+          photo.style.backgroundImage = `url(./assets/artists/${slug}.webp)`;
+          photo.classList.add("has-image");
+        };
+        img.src = `./assets/artists/${slug}.webp`;
+      });
+
+      // Pause hero video on reduced motion or when offscreen to save CPU
+      const heroVideo = document.getElementById("heroVideo");
+      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (heroVideo) {
+        if (reduceMotion) {
+          heroVideo.removeAttribute("autoplay");
+          heroVideo.pause();
+        } else if ("IntersectionObserver" in window) {
+          const vobs = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) heroVideo.play().catch(() => {});
+                else heroVideo.pause();
+              });
+            },
+            { threshold: 0.1 },
+          );
+          vobs.observe(heroVideo);
+        }
+      }
+
+      // Promo video: tap-to-play with sound. No autoplay, no preload —
+      // the video only loads and plays when the user explicitly taps it.
+      // Pauses when scrolled offscreen so it doesn't keep playing audio
+      // out of view.
+      const promoVideo = document.getElementById("promoVideo");
+      const promoToggle = document.getElementById("promoToggle");
+      const promoFrame = document.getElementById("promoFrame");
+      let promoStarted = false;
+      let promoSoundFired = false;
+
+      function startPromo() {
+        if (!promoVideo) return;
+        promoVideo.muted = false;
+        const p = promoVideo.play();
+        if (p && p.catch) {
+          p.catch(() => {
+            // If unmuted autoplay was blocked, fall back to muted playback.
+            promoVideo.muted = true;
+            promoVideo.play().catch(() => {});
+          });
+        }
+        promoToggle?.classList.add("is-hidden");
+        promoFrame?.classList.add("is-playing");
+        if (!promoStarted) {
+          promoStarted = true;
+          trackQualifiedView("promo_video_play");
+          trackCustom("PromoVideoStart", funnelPayload);
+        }
+        if (!promoSoundFired && !promoVideo.muted) {
+          promoSoundFired = true;
+          trackCustom("PromoVideoSoundOn", funnelPayload);
+        }
+      }
+
+      function stopPromo() {
+        if (!promoVideo) return;
+        promoVideo.pause();
+        promoToggle?.classList.remove("is-hidden");
+        promoFrame?.classList.remove("is-playing");
+      }
+
+      promoFrame?.addEventListener("click", (event) => {
+        if (event.target.closest(".video-play")) return;
+        // If video is currently playing, click pauses; otherwise plays.
+        if (promoVideo && !promoVideo.paused) {
+          stopPromo();
+        } else {
+          startPromo();
+        }
+      });
+      promoToggle?.addEventListener("click", startPromo);
+
+      // Pause when scrolled offscreen so audio doesn't bleed.
+      if (promoVideo && promoFrame && "IntersectionObserver" in window) {
+        const pobs = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting && !promoVideo.paused) {
+                stopPromo();
+              }
+            });
+          },
+          { threshold: 0.25 },
+        );
+        pobs.observe(promoFrame);
+      }
+
+      promoVideo?.addEventListener("ended", () => {
+        trackCustom("PromoVideoComplete", funnelPayload);
+      });
+
+      window.addEventListener("scroll", checkDepth, { passive: true });
+      window.addEventListener("load", checkDepth);
+
+      tick();
+      setInterval(tick, 1000);
+    </script>
+  </body>
+</html>
