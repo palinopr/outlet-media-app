@@ -7,9 +7,11 @@ The current shipped product is intentionally narrow:
 1. **Campaigns**
 2. Admin account/access management required to support campaign access
 
-Events, Reports, ticketing workflows and ingest are retired for now. Direct Events/Reports URLs should redirect back to the active Dashboard/Campaigns experience rather than exposing hidden product pages.
+Events, Reports, ticketing workflows and ingest product surfaces are retired for now. Direct Events/Reports routes should remain absent unless a new explicit product decision restores them.
 
-Exception: public client marketing funnels are allowed when they are explicitly live for a client. `/9am/orlando` is an active client event landing page under `src/app/9am` + `public/9am`; do not remove it during app-surface cleanup. This exception does not restore the retired Events product surface.
+Exception: public client marketing funnels are allowed when they are explicitly live for a client. `/9am/orlando` is an active client event landing page under `src/app/9am` + `public/9am`, and `/ataca-sergio/newark` is an active client event landing page under `src/app/ataca-sergio` + `public/ataca-sergio`; do not remove them during app-surface cleanup. These exceptions do not restore the retired Events product surface.
+
+New public funnel namespaces must be added to the public route matcher in `src/proxy.ts`; otherwise Clerk will protect the route and media assets such as MP4 files.
 
 Do not add standalone client apps for Events, Reports, CRM, assets, approvals, action items, conversations, workspace, updates, or chat unless there is an explicit product decision and a maintainable end-to-end slice.
 

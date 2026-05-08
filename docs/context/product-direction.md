@@ -9,7 +9,7 @@ The active web product should focus on:
 - **Campaigns**
 - Admin-managed clients, users, memberships, branding, and portal packaging
 
-Events and Reports are not active navigable surfaces right now. Keep those direct routes redirected back to the active Dashboard/Campaigns experience until a later product decision restores them.
+Events and Reports are not active navigable surfaces right now. Keep those direct routes absent unless a later product decision restores them.
 
 Client-facing campaign pages should stay read-only and analytics-first for now. Do not add request/comment boxes, reports tabs, events tabs, or workflow panels back onto those pages unless there is a clear customer need.
 

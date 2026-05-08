@@ -33,7 +33,7 @@ curl -fsS https://outletmedia.net/api/health && echo
 - Admin nav exposes only Dashboard, Campaigns, Clients, Users, Settings.
 - Campaign and client pages used by the change render without app errors.
 - Client portal navigation is Campaigns-only.
-- Retired Events/Reports direct URLs redirect back to active surfaces.
+- Retired Events/Reports direct URLs are absent and should return not found behavior.
 - Settings remains technical only and has no client creation form.
 
 ## Scheduled production monitor

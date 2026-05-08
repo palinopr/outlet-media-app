@@ -8,8 +8,8 @@ This is the lean operating baseline for the shipped Outlet Media app. Keep it cu
 - Active client surface: Campaigns only.
 - Active integrations: Supabase, Clerk, Meta Marketing API, contact form email delivery.
 - Active public/support routes: `/privacy`, `/terms`, `/api/contact`, `/api/health`, `/api/meta/callback`, `/api/meta/data-deletion`, `/deletion-status/[code]`.
-- Active client funnel: `/9am/orlando` under `src/app/9am` and `public/9am`.
-- Retired route guards: admin Events/Reports and client Events/Reports/event detail redirect back to Dashboard/Campaigns.
+- Active client funnels: `/9am/orlando` under `src/app/9am` and `public/9am`; `/ataca-sergio/newark` under `src/app/ataca-sergio` and `public/ataca-sergio`.
+- Retired direct routes: admin Events/Reports and client Events/Reports/event detail are intentionally absent.
 
 ## Environment
 

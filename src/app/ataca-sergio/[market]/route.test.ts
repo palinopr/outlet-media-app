@@ -15,9 +15,9 @@ describe("/ataca-sergio/[market] funnel route", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/html");
     expect(html).toContain('<base href="/ataca-sergio/newark/" />');
-    expect(html).toContain('fbq("init", "465799745886450")');
+    expect(html).toContain('fbq("init", "1553637492361321")');
     expect(html).toContain("Festival Ataca Sergio");
-    expect(html).toContain("https://www.ticketmaster.com/festival-ataca-sergio-newark-new-jersey-05-30-2026/event/02006478E042F9B1");
+    expect(html).toContain("https://www.ticketmaster.com/event/02006478E042F9B1");
   });
 
   it("rejects unknown market slugs", async () => {

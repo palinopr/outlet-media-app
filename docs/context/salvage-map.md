@@ -5,13 +5,9 @@ The active product reset keeps only the maintainable web surfaces needed for Cam
 ## Keep Active
 
 - `src/app/admin/campaigns`
-- `src/app/admin/events` redirect guard only
-- `src/app/admin/reports` redirect guard only
 - `src/app/admin/clients`
 - `src/app/admin/users`
 - `src/app/client/[slug]/campaigns`
-- `src/app/client/[slug]/events` redirect guard only
-- `src/app/client/[slug]/reports` redirect guard only
 - shared feature modules that power Campaigns/account access
 - Supabase migrations and generated active DB types
 
@@ -19,6 +15,7 @@ The active product reset keeps only the maintainable web surfaces needed for Cam
 
 - broad workspace/client app surfaces
 - approvals, conversations, updates, CRM, reports, events, action items, follow-up, or asset centers outside the core pages
+- direct admin/client Events and Reports routes while those surfaces remain retired
 - the old agent runtime, admin agent page, client agent tab, task queue, and outcome widgets
 - one-off scripts and local artifacts at the repo root
 

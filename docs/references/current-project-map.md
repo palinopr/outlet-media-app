@@ -19,7 +19,7 @@ This is the compact replacement for the retired generated wiki. Keep it short an
 
 ## Retired By Default
 
-- Events and Reports product surfaces stay redirect-only.
+- Events and Reports product surfaces are removed while the active baseline stays focused on Campaigns and account access.
 - Agent runtime, agent chat, task queues, outcomes, approvals, requests, comments, CRM, ticketing, assets, action items, and workspace UI stay out of the shipped app.
 - Generated wiki pages, browser reports, local worktrees, screenshots from ad hoc testing, and temporary outputs should not live in the root project surface.
 

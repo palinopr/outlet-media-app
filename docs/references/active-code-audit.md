@@ -15,7 +15,7 @@ Scope: narrowed Outlet web baseline only — admin Dashboard, Campaigns, Clients
 - Client routes resolve through DB-backed `client_members` / invite acceptance before access.
 - Public APIs are limited to contact, ingest, health, Meta callback, and Meta data deletion.
 - Mutating JSON APIs have request size guards; public APIs also have IP rate limits or signed/secret validation.
-- Events/Reports direct routes are intentional redirect guards only.
+- Events/Reports direct routes were removed after the active baseline narrowed to Campaigns and account access.
 
 ## Cleanup/fixes completed in this audit
 
