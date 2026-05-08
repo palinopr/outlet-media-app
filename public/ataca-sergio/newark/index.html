@@ -230,6 +230,68 @@
         display: inline-block;
       }
       .video-frame.is-playing { cursor: default; }
+
+      /* Proof video carousel — horizontal scroll of vertical clips */
+      .proof {
+        padding: 28px 0 32px;
+        background: var(--black);
+      }
+      .proof-strip {
+        display: grid;
+        grid-auto-flow: column;
+        grid-auto-columns: 72%;
+        gap: 12px;
+        padding: 0 22px 6px;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .proof-strip::-webkit-scrollbar { display: none; }
+      .proof-card {
+        position: relative;
+        aspect-ratio: 9 / 16;
+        background: #0a0303;
+        border: 1px solid var(--line);
+        overflow: hidden;
+        scroll-snap-align: start;
+        cursor: pointer;
+      }
+      .proof-card video {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #0a0303;
+      }
+      .proof-play {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 3;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 1px solid rgba(242, 231, 211, 0.5);
+        background: rgba(6, 6, 6, 0.55);
+        color: var(--ivory);
+        font-size: 18px;
+        line-height: 1;
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+        transition: background 160ms ease, border-color 160ms ease, opacity 200ms ease, transform 200ms ease;
+      }
+      .proof-play span { padding-left: 3px; display: inline-block; }
+      .proof-play:hover {
+        background: rgba(181, 30, 40, 0.42);
+        border-color: var(--gold);
+      }
+      .proof-card.is-playing .proof-play {
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, -50%) scale(0.85);
+      }
       .hero-cta {
         margin-top: 22px;
         display: flex;
@@ -838,6 +900,35 @@
         <p class="lineup-note">Cartelera sujeta a cambios</p>
       </section>
 
+      <section class="proof">
+        <div class="proof-strip" id="proofStrip" aria-label="Los artistas hablan del evento">
+          <article class="proof-card" data-proof="1">
+            <video class="proof-video" playsinline preload="metadata" poster="./assets/proof/proof-1-poster.jpg" src="./assets/proof/proof-1.mp4"></video>
+            <button class="proof-play" type="button" aria-label="Reproducir clip 1">
+              <span aria-hidden="true">▶</span>
+            </button>
+          </article>
+          <article class="proof-card" data-proof="2">
+            <video class="proof-video" playsinline preload="metadata" poster="./assets/proof/proof-2-poster.jpg" src="./assets/proof/proof-2.mp4"></video>
+            <button class="proof-play" type="button" aria-label="Reproducir clip 2">
+              <span aria-hidden="true">▶</span>
+            </button>
+          </article>
+          <article class="proof-card" data-proof="3">
+            <video class="proof-video" playsinline preload="metadata" poster="./assets/proof/proof-3-poster.jpg" src="./assets/proof/proof-3.mp4"></video>
+            <button class="proof-play" type="button" aria-label="Reproducir clip 3">
+              <span aria-hidden="true">▶</span>
+            </button>
+          </article>
+          <article class="proof-card" data-proof="4">
+            <video class="proof-video" playsinline preload="metadata" poster="./assets/proof/proof-4-poster.jpg" src="./assets/proof/proof-4.mp4"></video>
+            <button class="proof-play" type="button" aria-label="Reproducir clip 4">
+              <span aria-hidden="true">▶</span>
+            </button>
+          </article>
+        </div>
+      </section>
+
       <section class="why">
         <div class="section-eyebrow">Por qué este show</div>
         <h2 class="section-title">No se repite.</h2>
@@ -1137,6 +1228,79 @@
       promoVideo?.addEventListener("ended", () => {
         trackCustom("PromoVideoComplete", funnelPayload);
       });
+
+      // Proof carousel: tap-to-play with sound. Only one plays at a time.
+      // Auto-pauses on scroll-out so audio doesn't bleed between cards.
+      const proofCards = document.querySelectorAll(".proof-card");
+      const proofVideosFired = new Set();
+
+      function pauseAllProof(except) {
+        proofCards.forEach((card) => {
+          const v = card.querySelector("video");
+          if (v && v !== except && !v.paused) {
+            v.pause();
+            card.classList.remove("is-playing");
+          }
+        });
+      }
+
+      proofCards.forEach((card) => {
+        const video = card.querySelector("video");
+        const playBtn = card.querySelector(".proof-play");
+        const slug = card.dataset.proof;
+        if (!video) return;
+
+        function startProof() {
+          pauseAllProof(video);
+          video.muted = false;
+          const p = video.play();
+          if (p && p.catch) {
+            p.catch(() => {
+              video.muted = true;
+              video.play().catch(() => {});
+            });
+          }
+          card.classList.add("is-playing");
+          if (!proofVideosFired.has(slug)) {
+            proofVideosFired.add(slug);
+            trackQualifiedView("proof_video_play");
+            trackCustom("ProofVideoStart", { ...funnelPayload, clip: slug });
+          }
+        }
+        function stopProof() {
+          video.pause();
+          card.classList.remove("is-playing");
+        }
+
+        card.addEventListener("click", (event) => {
+          if (event.target.closest(".proof-play")) return;
+          if (!video.paused) stopProof();
+          else startProof();
+        });
+        playBtn?.addEventListener("click", startProof);
+        video.addEventListener("ended", () => {
+          card.classList.remove("is-playing");
+          trackCustom("ProofVideoComplete", { ...funnelPayload, clip: slug });
+        });
+      });
+
+      // Pause any playing proof video when its card is scrolled offscreen.
+      if ("IntersectionObserver" in window) {
+        const proofObs = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              const v = entry.target.querySelector("video");
+              if (!v) return;
+              if (!entry.isIntersecting && !v.paused) {
+                v.pause();
+                entry.target.classList.remove("is-playing");
+              }
+            });
+          },
+          { threshold: 0.4 },
+        );
+        proofCards.forEach((c) => proofObs.observe(c));
+      }
 
       window.addEventListener("scroll", checkDepth, { passive: true });
       window.addEventListener("load", checkDepth);
