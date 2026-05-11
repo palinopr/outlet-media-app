@@ -44,7 +44,7 @@ describe("POST /api/contact", () => {
           name: "Buyer",
           pageContext: "landing-growth-system-funnel",
           phone: "+1 555 000 1111",
-          recommendedOffer: "Ticket Sales Sprint - desde $5,000",
+          recommendedOffer: "Sprint de boletos - desde $5,000",
           stage: "Necesito vender boletos",
           utmCampaign: "spring_launch",
           utmContent: "hero",
@@ -64,7 +64,7 @@ describe("POST /api/contact", () => {
       }),
     );
     expect(insert.mock.calls[0]?.[0].message).toContain(
-      "Recommended offer: Ticket Sales Sprint - desde $5,000",
+      "Recommended offer: Sprint de boletos - desde $5,000",
     );
     expect(insert.mock.calls[0]?.[0].message).toContain("UTM campaign: spring_launch");
     expect(fetch).toHaveBeenCalledWith(
@@ -78,7 +78,7 @@ describe("POST /api/contact", () => {
     expect(fetch).toHaveBeenCalledWith(
       "https://api.resend.com/emails",
       expect.objectContaining({
-        body: expect.stringContaining("Recommended offer: Ticket Sales Sprint - desde $5,000"),
+        body: expect.stringContaining("Recommended offer: Sprint de boletos - desde $5,000"),
       }),
     );
   });

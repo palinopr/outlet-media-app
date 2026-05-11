@@ -9,7 +9,7 @@ const QA = [
   },
   {
     q: "¿Outlet corre los anuncios o me enseña?",
-    a: "La oferta principal es done-for-you: configuramos, lanzamos y operamos. La llamada privada existe para negocios que todavía no están listos para un sprint.",
+    a: "La oferta principal es que Outlet configure, lance y opere. La llamada privada existe para negocios que todavía no están listos para un sprint.",
   },
   {
     q: "¿Por qué no vender solo manejo de ads?",
@@ -17,11 +17,11 @@ const QA = [
   },
   {
     q: "¿Esto es solo para eventos?",
-    a: "No. Eventos y música son prueba fuerte porque requieren urgencia y ejecución rápida. La máquina aplica a productos, leads, citas, WhatsApp y negocios locales.",
+    a: "No. Eventos y música son prueba fuerte porque requieren urgencia y ejecución rápida. La misma disciplina aplica a productos, leads, citas, WhatsApp y negocios locales.",
   },
   {
     q: "¿Cuánto tarda el próximo paso?",
-    a: "Después del diagnóstico respondemos en menos de 24h laborables con la ruta recomendada: setup, fix, sprint, manejo o llamada privada.",
+    a: "Después del diagnóstico respondemos en menos de 24h laborables con la ruta recomendada: setup, arreglo, sprint, manejo o llamada privada.",
   },
   {
     q: "¿Me van a vender aunque no esté listo?",

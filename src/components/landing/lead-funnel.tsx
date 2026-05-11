@@ -2,50 +2,51 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { LandingTrackedLink } from "./tracked-link";
 
 const STATS = [
-  { value: "$12M+", label: "invertidos en ads" },
-  { value: "$100M+", label: "ventas" },
-  { value: "150+", label: "sold outs" },
+  { value: "$12M+", label: "ad spend operado" },
+  { value: "$100M+", label: "ventas atribuidas" },
+  { value: "150+", label: "sold outs trabajados" },
   { value: "7 años", label: "operando" },
 ] as const;
 
 const STARTING_POINTS = [
   {
     stage: "never_ran_ads",
-    title: "Nunca he corrido anuncios",
-    body: "Empezamos desde cero: cuenta, tracking, ruta a WhatsApp o landing y primera campaña.",
-    route: "Ads Setup Sprint",
+    title: "Empiezo desde cero",
+    body: "Montamos Business Manager, cuenta, tracking, ruta a WhatsApp o landing y primera campaña medible.",
+    route: "Setup de anuncios",
   },
   {
     stage: "boosting_posts",
     title: "Boosteo posts y no vendo",
-    body: "Dejamos de adivinar y rearmamos campaña, mensaje, tracking y seguimiento.",
-    route: "Fix My Ads Sprint",
+    body: "Separamos likes de ventas: mensaje, objetivo, audiencia, tracking y seguimiento.",
+    route: "Arreglo de anuncios",
   },
   {
     stage: "has_ad_account",
     title: "Ya tengo campañas",
-    body: "Auditoría práctica para saber qué pausar, qué escalar y qué probar.",
-    route: "30-Day Revenue Sprint",
+    body: "Revisamos qué pausar, qué escalar y qué probar para dejar de gastar a ciegas.",
+    route: "Sprint de ventas",
   },
   {
     stage: "needs_leads",
     title: "Necesito leads o citas",
-    body: "Anuncios, formulario o WhatsApp, cualificación y seguimiento para no perder prospectos.",
-    route: "Lead Engine Sprint",
+    body: "Creamos una ruta clara de anuncio a formulario o WhatsApp, cualificación y seguimiento.",
+    route: "Sprint de leads",
   },
   {
     stage: "sells_products",
     title: "Vendo productos online",
-    body: "Creativos, retargeting, tienda, conversiones y decisiones de presupuesto.",
-    route: "Ecommerce Revenue Sprint",
+    body: "Ajustamos creativos, conversiones, retargeting y presupuesto alrededor del margen.",
+    route: "Sprint de ecommerce",
   },
   {
     stage: "sells_tickets",
     title: "Necesito vender boletos",
-    body: "Funnel, urgencia, creativos, tracking y pacing por fecha, mercado o ciudad.",
-    route: "Ticket Sales Sprint",
+    body: "Trabajamos urgencia, pacing por fecha, creativos, tracking y mercados clave.",
+    route: "Sprint de boletos",
   },
 ] as const;
 
@@ -56,7 +57,7 @@ const SYSTEM_STEPS = [
   },
   {
     title: "Base",
-    body: "Business Manager, ad account, pixel, tracking, landing, WhatsApp o checkout.",
+    body: "Business Manager, cuenta publicitaria, pixel, tracking, landing, WhatsApp o checkout.",
   },
   {
     title: "Campañas",
@@ -70,18 +71,18 @@ const SYSTEM_STEPS = [
 
 const PROOF_CARDS = [
   {
-    vertical: "Music & Events",
+    vertical: "Operación de pauta",
     name: "Rauw Alejandro",
     result: "370K+ boletos",
-    detail: "Escala de tour",
+    detail: "Pacing, creativos y demanda",
     image: "/images/landing/rauw-shauring.png",
     objectPosition: "center 12%",
   },
   {
-    vertical: "Puerto Rico",
+    vertical: "Demanda local",
     name: "Young Miko",
     result: "Coca-Cola Music Hall",
-    detail: "Demanda local",
+    detail: "Mercado PR y venta por fecha",
     image: "/images/landing/young-miko-poster.png",
     objectPosition: "center top",
   },
@@ -89,64 +90,64 @@ const PROOF_CARDS = [
     vertical: "Tour USA",
     name: "Luis Miguel",
     result: "Sold out",
-    detail: "Demanda premium",
+    detail: "Presupuesto y timing",
     image: "/images/landing/luis-miguel.png",
     objectPosition: "center 30%",
   },
   {
-    vertical: "Event Funnel",
+    vertical: "Funnel de evento",
     name: "Gilberto Santa Rosa",
     result: "Sold out",
-    detail: "Campaña digital",
+    detail: "Anuncio a compra",
     image: "/images/landing/gilberto-santa-rosa.png",
     objectPosition: "center 20%",
   },
   {
-    vertical: "Client",
+    vertical: "Creativo local",
     name: "Gallimbo Studios",
     result: "Content",
-    detail: "Creativo de performance",
+    detail: "Piezas para performance",
     logo: "/images/landing/gallimbo-studios.png",
   },
   {
-    vertical: "Local Funnel",
+    vertical: "Funnel local",
     name: "9AM",
     result: "Ticket clicks",
-    detail: "Posh / Meta tracking",
+    detail: "Meta a ticket link",
     logo: "/images/landing/9am.png",
   },
 ] as const;
 
 const OFFERS = [
   {
-    name: "Private Operator Call",
+    name: "Llamada privada",
     price: "$350-$750",
-    fit: "Para negocios con poco presupuesto o dudas grandes antes de gastar.",
+    fit: "Para decidir qué hacer antes de gastar más. Sales con diagnóstico, prioridades y presupuesto recomendado.",
   },
   {
-    name: "Ads Setup Sprint",
+    name: "Setup de anuncios",
     price: "desde $1,500",
-    fit: "Para empezar desde cero con cuenta, tracking, ruta y primera estructura.",
+    fit: "Para negocios que empiezan desde cero: cuenta, tracking, estructura inicial y primera campaña lista para medir.",
   },
   {
-    name: "Fix My Ads Sprint",
+    name: "Arreglo de anuncios",
     price: "desde $2,500",
-    fit: "Para negocios que boostean o corren campañas sin ventas claras.",
+    fit: "Para cuentas que ya gastan pero no convierten: auditoría, reparación de funnel y nueva estructura de campaña.",
   },
   {
-    name: "Revenue Sprint",
+    name: "Sprint de ventas 30 días",
     price: "desde $3,500",
-    fit: "Para probar 30 días con oferta, funnel, campañas y decisiones.",
+    fit: "Para probar oferta, creativos, landing o WhatsApp y tomar decisiones de presupuesto con seguimiento.",
   },
   {
-    name: "Ticket / Ecommerce / Lead Sprint",
+    name: "Sprint de boletos / ecom / leads",
     price: "desde $5,000",
-    fit: "Para eventos, tiendas o servicios con urgencia, margen y upside.",
+    fit: "Para campañas con fecha, inventario, margen o meta clara donde hay que mover rápido.",
   },
   {
-    name: "Managed Growth Partner",
+    name: "Manejo mensual",
     price: "desde $3,000/mes",
-    fit: "Para cuentas listas para que Outlet opere el sistema todos los meses.",
+    fit: "Para negocios listos para que Outlet opere, mida y optimice el sistema todos los meses.",
   },
 ] as const;
 
@@ -159,27 +160,31 @@ const reveal = {
 
 export function LandingProofStats() {
   return (
-    <motion.section
-      className="grid grid-cols-2 overflow-hidden rounded-[14px] border border-[color:var(--landing-border)] bg-white/[0.025] lg:grid-cols-4"
-      {...reveal}
-    >
-      {STATS.map((stat, idx) => (
-        <div
-          key={stat.label}
-          className={`p-3.5 sm:p-5 lg:p-6 ${
-            idx % 2 === 0 ? "border-r border-[color:var(--landing-border)]" : ""
-          } ${idx < 2 ? "border-b border-[color:var(--landing-border)] lg:border-b-0" : ""} ${
-            idx > 0 ? "lg:border-l lg:border-[color:var(--landing-border)]" : ""
-          }`}
-        >
-          <p className="font-[family-name:var(--font-landing-heading)] text-[1.65rem] font-extrabold leading-none tracking-[-0.035em] text-white sm:text-[1.9rem] lg:text-[2.35rem]">
-            {stat.value}
-          </p>
-          <p className="mt-1.5 font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.14em] text-[color:var(--landing-muted-2)]">
-            {stat.label}
-          </p>
-        </div>
-      ))}
+    <motion.section className="mt-2 lg:mt-0" {...reveal}>
+      <p className="mb-3 max-w-[62ch] text-[13.5px] leading-relaxed text-[color:var(--landing-muted)] lg:text-[15px]">
+        La prueba grande viene de campañas con presión real. La misma disciplina se
+        baja a negocios locales: cuenta correcta, tracking claro, creativo,
+        seguimiento y presupuesto con criterio.
+      </p>
+      <div className="grid grid-cols-2 overflow-hidden rounded-[14px] border border-[color:var(--landing-border)] bg-white/[0.025] lg:grid-cols-4">
+        {STATS.map((stat, idx) => (
+          <div
+            key={stat.label}
+            className={`p-3.5 sm:p-5 lg:p-6 ${
+              idx % 2 === 0 ? "border-r border-[color:var(--landing-border)]" : ""
+            } ${idx < 2 ? "border-b border-[color:var(--landing-border)] lg:border-b-0" : ""} ${
+              idx > 0 ? "lg:border-l lg:border-[color:var(--landing-border)]" : ""
+            }`}
+          >
+            <p className="font-[family-name:var(--font-landing-heading)] text-[1.65rem] font-extrabold leading-none tracking-[-0.035em] text-white sm:text-[1.9rem] lg:text-[2.35rem]">
+              {stat.value}
+            </p>
+            <p className="mt-1.5 font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.14em] text-[color:var(--landing-muted-2)]">
+              {stat.label}
+            </p>
+          </div>
+        ))}
+      </div>
     </motion.section>
   );
 }
@@ -192,39 +197,45 @@ export function LandingPathSelector() {
   }
 
   return (
-    <motion.section id="starting-point" className="mt-10 scroll-mt-6 lg:mt-24" {...reveal}>
+    <motion.section id="starting-point" className="mt-10 scroll-mt-6 lg:mt-20" {...reveal}>
       <div className="grid gap-6 lg:grid-cols-[0.86fr_1.14fr] lg:items-end">
         <div>
           <h2 className="font-[family-name:var(--font-landing-heading)] text-[2rem] font-extrabold leading-[0.98] tracking-[-0.04em] text-white min-[390px]:text-[2.25rem] lg:text-[3.4rem]">
-            No todos empiezan en el mismo lugar.
+            Escoge tu punto de partida.
           </h2>
           <p className="mt-3 max-w-[43ch] text-[14.5px] leading-relaxed text-[color:var(--landing-muted)] lg:mt-4 lg:text-[17px]">
-            Toca la opción más parecida a tu situación. El formulario se ajusta y te
-            recomienda la ruta correcta.
+            Cada negocio llega con una fuga distinta: cuenta mal montada, posts
+            boosteados, mensajes sin seguimiento, tienda que no convierte o evento
+            con fecha encima.
           </p>
         </div>
         <p className="rounded-[14px] border border-[color:var(--landing-border)] bg-white/[0.025] p-4 text-[13.5px] leading-relaxed text-[color:var(--landing-muted)] lg:p-5 lg:text-[14px]">
-          Todos pueden empezar. No todos necesitan el mismo servicio. Por eso el funnel
-          recomienda setup, arreglo, sprint o manejo completo antes de pedirte una llamada.
+          No necesitas hablar en jerga de marketing. Solo dinos qué vendes, cuánto
+          puedes invertir y qué resultado necesitas.
         </p>
       </div>
 
-      <div className="-mx-5 mt-6 flex snap-x gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:mt-7 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden">
+      <div className="mt-6 grid gap-2.5 sm:grid-cols-2 lg:mt-7 lg:grid-cols-3">
         {STARTING_POINTS.map((point) => (
           <a
             key={point.title}
             href="#form"
             onClick={() => selectStartingPoint(point.stage)}
-            className="group min-h-[164px] min-w-[82%] snap-start rounded-[14px] border border-[color:var(--landing-border)] bg-white/[0.025] p-4 transition-colors hover:border-[color:var(--landing-brand-soft)]/60 hover:bg-[rgba(30,31,184,0.1)] sm:min-w-0 lg:min-h-[172px] lg:p-5"
+            className="group rounded-[14px] border border-white/12 bg-white/[0.045] p-3.5 transition-colors hover:border-[color:var(--landing-brand-soft)]/60 hover:bg-[rgba(30,31,184,0.1)] lg:min-h-[168px] lg:p-5"
           >
-            <h3 className="font-[family-name:var(--font-landing-heading)] text-[18px] font-bold leading-tight tracking-[-0.02em] text-white">
-              {point.title}
-            </h3>
-            <p className="mt-2 text-[13.5px] leading-relaxed text-[color:var(--landing-muted)]">
+            <div className="flex items-start justify-between gap-3">
+              <h3 className="font-[family-name:var(--font-landing-heading)] text-[17px] font-bold leading-tight tracking-[-0.02em] text-white lg:text-[18px]">
+                {point.title}
+              </h3>
+              <span className="shrink-0 rounded-full bg-white/10 px-2 py-1 font-[family-name:var(--font-landing-mono)] text-[9px] uppercase tracking-[0.12em] text-white/58">
+                {point.route}
+              </span>
+            </div>
+            <p className="mt-2 text-[13px] leading-relaxed text-[color:var(--landing-muted)] lg:text-[13.5px]">
               {point.body}
             </p>
-            <p className="mt-4 font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.14em] text-[color:var(--landing-brand-soft)]">
-              Ruta: {point.route}
+            <p className="mt-3 inline-flex min-h-9 items-center rounded-full bg-white px-3 font-[family-name:var(--font-landing-heading)] text-[12.5px] font-extrabold text-[#101010]">
+              Usar este punto
             </p>
           </a>
         ))}
@@ -303,7 +314,7 @@ export function LandingProofCarousel() {
       <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr] lg:items-end">
         <div>
           <h2 className="font-[family-name:var(--font-landing-heading)] text-[2.35rem] font-extrabold leading-[1] tracking-[-0.04em] text-white lg:text-[3.25rem]">
-            Los eventos prueban la máquina.
+            Los eventos prueban la disciplina.
           </h2>
         </div>
         <p className="text-[15px] leading-relaxed text-[color:var(--landing-muted)] lg:text-[17px]">
@@ -363,18 +374,20 @@ export function LandingProofCarousel() {
 export function LandingMidPageCTA() {
   return (
     <motion.section className="mt-10 flex flex-col items-center text-center" {...reveal}>
-      <a
+      <LandingTrackedLink
         href="#form"
+        eventPayload={{ source: "mid_page", target: "form" }}
         className="inline-flex h-[54px] w-full max-w-[320px] items-center justify-center rounded-[10px] bg-[color:var(--landing-brand)] px-7 font-[family-name:var(--font-landing-heading)] text-[15px] font-bold tracking-wide text-white shadow-[0_16px_40px_-12px_rgba(30,31,184,0.65)] transition-shadow hover:shadow-[0_22px_50px_-12px_rgba(30,31,184,0.78)]"
       >
         Encontrar mi próximo paso
-      </a>
-      <a
+      </LandingTrackedLink>
+      <LandingTrackedLink
         href="#offers"
+        eventPayload={{ source: "mid_page", target: "offers" }}
         className="mt-3 font-[family-name:var(--font-landing-mono)] text-[10.5px] uppercase tracking-[0.14em] text-[color:var(--landing-muted-2)] underline decoration-white/10 underline-offset-4 transition-colors hover:text-white"
       >
         Ver rutas y precios
-      </a>
+      </LandingTrackedLink>
     </motion.section>
   );
 }
@@ -382,37 +395,53 @@ export function LandingMidPageCTA() {
 export function LandingFounderTrust() {
   return (
     <motion.section
-      className="mt-16 overflow-hidden rounded-[16px] border border-[color:var(--landing-border)] bg-white/[0.025] lg:mt-24 lg:grid lg:grid-cols-[38%_1fr] lg:items-stretch"
+      className="mt-16 rounded-[16px] border border-[color:var(--landing-border)] bg-white/[0.025] p-5 lg:mt-24 lg:p-7"
       {...reveal}
     >
-      <div className="relative mx-auto aspect-[4/3] w-full overflow-hidden lg:aspect-auto">
-        <Image
-          src="/images/landing/jaime-ortiz.png"
-          alt="Jaime Ortiz"
-          fill
-          sizes="(max-width: 900px) 100vw, 420px"
-          className="object-cover object-top"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d0d] via-transparent to-transparent lg:hidden" />
-      </div>
-      <div className="p-6 lg:p-8">
-        <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.22em] text-[color:var(--landing-brand-soft)]">
-          Fundador & operador
-        </p>
-        <h2 className="mt-3 max-w-[13ch] font-[family-name:var(--font-landing-heading)] text-[2.15rem] font-extrabold leading-[1] tracking-[-0.035em] text-white lg:text-[3rem]">
-          No compras una plantilla. Compras criterio.
-        </h2>
-        <p className="mt-2 font-[family-name:var(--font-landing-mono)] text-[11px] uppercase tracking-[0.18em] text-[color:var(--landing-brand-soft)]">
-          Jaime Ortiz · Outlet Media
-        </p>
-        <p className="mt-5 text-[15px] leading-relaxed text-[color:var(--landing-muted)]">
-          La ventaja de Outlet es saber cuándo una cuenta necesita setup, cuándo un
-          funnel está roto y cuándo sí hace sentido correr ads agresivamente.
-        </p>
-        <p className="mt-4 text-[15px] leading-relaxed text-[color:var(--landing-muted)]">
-          Empezamos simple para negocios pequeños y escalamos solo cuando hay margen,
-          urgencia y una ruta real hacia clientes.
-        </p>
+      <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="relative h-14 w-14 overflow-hidden rounded-[12px] bg-white/10">
+              <Image
+                src="/images/landing/jaime-ortiz-founder.jpg"
+                alt="Jaime Ortiz"
+                fill
+                sizes="56px"
+                className="object-cover object-[center_20%]"
+              />
+            </div>
+            <div>
+              <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.22em] text-[color:var(--landing-brand-soft)]">
+                Fundador & operador
+              </p>
+              <p className="mt-1 font-[family-name:var(--font-landing-heading)] text-[18px] font-extrabold tracking-[-0.02em] text-white">
+                Jaime Ortiz · Outlet Media
+              </p>
+            </div>
+          </div>
+          <h2 className="mt-5 max-w-[14ch] font-[family-name:var(--font-landing-heading)] text-[2.15rem] font-extrabold leading-[1] tracking-[-0.035em] text-white lg:text-[3rem]">
+            No compras una plantilla. Compras criterio.
+          </h2>
+          <p className="mt-4 text-[15px] leading-relaxed text-[color:var(--landing-muted)]">
+            La ventaja de Outlet es saber cuándo una cuenta necesita setup, cuándo un
+            funnel está roto y cuándo sí hace sentido correr ads agresivamente.
+          </p>
+        </div>
+        <div className="grid gap-3">
+          {[
+            "Puedes empezar sin cuenta publicitaria.",
+            "El presupuesto de anuncios es separado de los fees de Outlet.",
+            "Tus activos, cuenta y data deben quedar bajo tu negocio.",
+            "No prometemos resultados falsos; medimos, decidimos y ajustamos.",
+          ].map((item) => (
+            <div
+              key={item}
+              className="rounded-[12px] border border-[color:var(--landing-border)] bg-[#101010] p-4 text-[14px] leading-relaxed text-[color:var(--landing-muted)]"
+            >
+              {item}
+            </div>
+          ))}
+        </div>
       </div>
     </motion.section>
   );
@@ -432,7 +461,11 @@ export function LandingScarcitySection() {
           </h2>
           <p className="mt-4 max-w-[42ch] text-[15px] leading-relaxed text-[color:var(--landing-muted)]">
             No ponemos a un negocio desde cero en el mismo paquete que una cuenta con
-            $20K de ad spend. Cada nivel tiene un rol.
+            $20K de presupuesto mensual en ads. Cada nivel tiene un rol.
+          </p>
+          <p className="mt-4 max-w-[42ch] text-[13.5px] leading-relaxed text-[color:var(--landing-muted-2)]">
+            Empieza con el diagnóstico. Te decimos cuál aplica, qué no debes comprar
+            todavía y cuánto presupuesto mínimo hace sentido.
           </p>
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
@@ -501,12 +534,13 @@ export function LandingBookingSection() {
             El calendario se muestra cuando esté conectado. Mientras tanto, el formulario
             guarda la ruta recomendada y tus datos clave.
           </p>
-          <a
+          <LandingTrackedLink
             href="#form"
+            eventPayload={{ source: "booking_fallback", target: "form" }}
             className="mx-auto mt-5 inline-flex h-12 items-center justify-center rounded-[10px] bg-[color:var(--landing-brand)] px-5 font-[family-name:var(--font-landing-heading)] text-[14px] font-bold text-white"
           >
             Completar diagnóstico
-          </a>
+          </LandingTrackedLink>
         </div>
       )}
     </motion.section>

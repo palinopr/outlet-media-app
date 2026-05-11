@@ -5,6 +5,7 @@ import { ContactForm } from "@/components/landing/contact-form";
 import { LandingFAQ } from "@/components/landing/faq";
 import { LandingHero } from "@/components/landing/hero";
 import { LandingHowItWorks } from "@/components/landing/how-it-works";
+import { LandingTrackedLink } from "@/components/landing/tracked-link";
 import {
   LandingAuditDeliverables,
   LandingBookingSection,
@@ -38,14 +39,24 @@ const monoFont = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://outletmedia.net"),
-  title: "Outlet Media · Paid Growth System",
+  title: "Outlet Media · Anuncios que traen clientes en Puerto Rico",
   description:
-    "Outlet helps Puerto Rico businesses build and run the ad system behind sales, leads, bookings, tickets, and WhatsApp conversations.",
+    "Recibe un diagnóstico gratis para saber si necesitas setup, arreglar campañas o dejar que Outlet corra tus anuncios hacia WhatsApp, citas, ventas o boletos.",
+  alternates: { canonical: "/landing" },
   openGraph: {
-    title: "Outlet Media · Paid Growth System",
+    title: "Outlet Media · Anuncios que traen clientes en Puerto Rico",
     description:
-      "Find your starting point: setup, fix, sprint, or managed growth.",
+      "Revisamos tu cuenta, oferta, tracking y ruta de conversión para decirte qué arreglar primero.",
+    url: "/landing",
+    type: "website",
     images: [{ url: "/icon.png", width: 512, height: 512 }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Outlet Media · Anuncios que traen clientes en Puerto Rico",
+    description:
+      "Diagnóstico gratis para saber qué ruta de anuncios necesita tu negocio.",
+    images: ["/icon.png"],
   },
   robots: { index: true, follow: true },
 };
@@ -66,9 +77,8 @@ export default function LandingPage() {
       className={`${headingFont.variable} ${bodyFont.variable} ${monoFont.variable} font-[family-name:var(--font-landing-body)]`}
       style={BRAND_TOKENS}
     >
-      <div className="relative min-h-screen bg-[#0d0d0d] text-white [overflow-x:clip]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_46%_at_50%_-10%,rgba(30,31,184,0.18),transparent)]" />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.06] [background-image:radial-gradient(circle,white_1px,transparent_1px)] [background-size:28px_28px]" />
+      <div className="relative min-h-screen bg-[linear-gradient(180deg,#101010_0%,#0d0d0d_42%,#111111_100%)] text-white [overflow-x:clip]">
+        <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(255,255,255,0.22)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:34px_34px]" />
 
         <main className="relative z-[1] mx-auto max-w-[460px] px-5 pb-32 pt-6 lg:max-w-[1120px] lg:px-10 lg:pb-20 lg:pt-14">
           <nav className="flex items-center justify-between gap-3 pb-4">
@@ -81,18 +91,19 @@ export default function LandingPage() {
               className="opacity-90"
               style={{ width: 140, height: "auto" }}
             />
-            <a
+            <LandingTrackedLink
               href="#form"
-              className="font-[family-name:var(--font-landing-mono)] text-[11px] uppercase tracking-[0.14em] text-[color:var(--landing-muted)] transition-colors hover:text-white"
+              eventPayload={{ source: "nav", target: "form" }}
+              className="inline-flex h-11 items-center justify-center rounded-[10px] bg-white px-4 font-[family-name:var(--font-landing-heading)] text-[13px] font-extrabold text-[#0d0d0d] shadow-[0_14px_32px_-18px_rgba(255,255,255,0.65)] transition-transform hover:scale-[1.02]"
             >
-              Gratis →
-            </a>
+              Diagnóstico gratis
+            </LandingTrackedLink>
           </nav>
 
           <LandingHero />
+          <LandingProofStats />
           <LandingPathSelector />
           <ContactForm />
-          <LandingProofStats />
           <LandingProblemSection />
           <LandingAuditDeliverables />
           <LandingProofCarousel />

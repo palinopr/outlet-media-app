@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { LandingTrackedLink } from "./tracked-link";
 
 export function LandingStickyCTA() {
   const [visible, setVisible] = useState(false);
@@ -88,12 +89,13 @@ export function LandingStickyCTA() {
           "linear-gradient(180deg, transparent, rgba(13,13,13,0.95) 40%)",
       }}
     >
-      <a
+      <LandingTrackedLink
         href="#form"
-        className="flex h-12 w-full items-center justify-center rounded-[10px] bg-[color:var(--landing-brand)] font-[family-name:var(--font-landing-heading)] text-sm font-bold tracking-wide text-white shadow-[0_14px_40px_-12px_rgba(30,31,184,0.65)] backdrop-blur-md"
+        eventPayload={{ source: "mobile_sticky", target: "form" }}
+        className="flex h-14 w-full items-center justify-center rounded-[12px] bg-white font-[family-name:var(--font-landing-heading)] text-[15px] font-extrabold tracking-wide text-[#101010] shadow-[0_16px_42px_-18px_rgba(255,255,255,0.8)] backdrop-blur-md"
       >
-        Recibir ruta gratis
-      </a>
+        Recibir diagnóstico gratis
+      </LandingTrackedLink>
     </div>
   );
 }

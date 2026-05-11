@@ -28,6 +28,8 @@ function getApiKeyStatus() {
     { label: "RESEND_API_KEY", envVar: "RESEND_API_KEY", group: "Email", required: false },
     { label: "RESEND_FROM_EMAIL", envVar: "RESEND_FROM_EMAIL", group: "Email", required: false },
     { label: "CONTACT_FORM_TO_EMAIL", envVar: "CONTACT_FORM_TO_EMAIL", group: "Email", required: false },
+    { label: "NEXT_PUBLIC_AUDIT_BOOKING_URL", envVar: "NEXT_PUBLIC_AUDIT_BOOKING_URL", group: "Landing", required: false },
+    { label: "NEXT_PUBLIC_WHATSAPP_URL", envVar: "NEXT_PUBLIC_WHATSAPP_URL", group: "Landing", required: false },
   ];
   return keys.map((k) => {
     const value = process.env[k.envVar];
