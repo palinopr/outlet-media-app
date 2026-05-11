@@ -63,12 +63,12 @@ export const metadata: Metadata = {
 
 const BRAND_TOKENS = {
   "--landing-bg": "#0d0d0d",
-  "--landing-bg-elev": "#141414",
-  "--landing-muted": "#a3a3a3",
-  "--landing-muted-2": "#686868",
-  "--landing-border": "rgba(255,255,255,0.09)",
+  "--landing-bg-elev": "#151515",
+  "--landing-muted": "#b3b3ad",
+  "--landing-muted-2": "#777771",
+  "--landing-border": "rgba(255,255,255,0.12)",
   "--landing-brand": "#1e1fb8",
-  "--landing-brand-soft": "#5661ff",
+  "--landing-brand-soft": "#6f7bff",
 } as React.CSSProperties;
 
 export default function LandingPage() {
@@ -77,7 +77,7 @@ export default function LandingPage() {
       className={`${headingFont.variable} ${bodyFont.variable} ${monoFont.variable} font-[family-name:var(--font-landing-body)]`}
       style={BRAND_TOKENS}
     >
-      <div className="relative min-h-screen bg-[linear-gradient(180deg,#101010_0%,#0d0d0d_42%,#111111_100%)] text-white [overflow-x:clip]">
+      <div className="relative min-h-screen bg-[linear-gradient(180deg,#101010_0%,#0b0b0b_46%,#111111_100%)] text-white [overflow-x:clip]">
         <div className="pointer-events-none absolute inset-0 opacity-[0.045] [background-image:linear-gradient(rgba(255,255,255,0.22)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:34px_34px]" />
 
         <main className="relative z-[1] mx-auto max-w-[460px] px-5 pb-32 pt-6 lg:max-w-[1120px] lg:px-10 lg:pb-20 lg:pt-14">
@@ -94,7 +94,7 @@ export default function LandingPage() {
             <LandingTrackedLink
               href="#form"
               eventPayload={{ source: "nav", target: "form" }}
-              className="inline-flex h-11 items-center justify-center rounded-[10px] bg-white px-4 font-[family-name:var(--font-landing-heading)] text-[13px] font-extrabold text-[#0d0d0d] shadow-[0_14px_32px_-18px_rgba(255,255,255,0.65)] transition-transform hover:scale-[1.02]"
+              className="inline-flex h-11 items-center justify-center rounded-[8px] bg-[color:var(--landing-brand)] px-4 font-[family-name:var(--font-landing-heading)] text-[13px] font-extrabold text-white shadow-[0_16px_38px_-18px_rgba(30,31,184,0.9)] transition-transform hover:scale-[1.02]"
             >
               Diagnóstico gratis
             </LandingTrackedLink>

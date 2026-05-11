@@ -92,7 +92,7 @@ export function LandingStickyCTA() {
       <LandingTrackedLink
         href="#form"
         eventPayload={{ source: "mobile_sticky", target: "form" }}
-        className="flex h-14 w-full items-center justify-center rounded-[12px] bg-white font-[family-name:var(--font-landing-heading)] text-[15px] font-extrabold tracking-wide text-[#101010] shadow-[0_16px_42px_-18px_rgba(255,255,255,0.8)] backdrop-blur-md"
+        className="flex h-14 w-full items-center justify-center rounded-[10px] bg-[color:var(--landing-brand)] font-[family-name:var(--font-landing-heading)] text-[15px] font-extrabold tracking-wide text-white shadow-[0_16px_42px_-18px_rgba(30,31,184,0.9)] backdrop-blur-md"
       >
         Recibir diagnóstico gratis
       </LandingTrackedLink>

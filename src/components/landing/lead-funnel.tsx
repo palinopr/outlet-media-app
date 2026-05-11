@@ -166,7 +166,7 @@ export function LandingProofStats() {
         baja a negocios locales: cuenta correcta, tracking claro, creativo,
         seguimiento y presupuesto con criterio.
       </p>
-      <div className="grid grid-cols-2 overflow-hidden rounded-[14px] border border-[color:var(--landing-border)] bg-white/[0.025] lg:grid-cols-4">
+      <div className="grid grid-cols-2 overflow-hidden rounded-[12px] border border-[color:var(--landing-border)] bg-white/[0.035] lg:grid-cols-4">
         {STATS.map((stat, idx) => (
           <div
             key={stat.label}
@@ -209,7 +209,7 @@ export function LandingPathSelector() {
             con fecha encima.
           </p>
         </div>
-        <p className="rounded-[14px] border border-[color:var(--landing-border)] bg-white/[0.025] p-4 text-[13.5px] leading-relaxed text-[color:var(--landing-muted)] lg:p-5 lg:text-[14px]">
+        <p className="rounded-[12px] border border-[color:var(--landing-border)] bg-white/[0.035] p-4 text-[13.5px] leading-relaxed text-[color:var(--landing-muted)] lg:p-5 lg:text-[14px]">
           No necesitas hablar en jerga de marketing. Solo dinos qué vendes, cuánto
           puedes invertir y qué resultado necesitas.
         </p>
@@ -221,7 +221,7 @@ export function LandingPathSelector() {
             key={point.title}
             href="#form"
             onClick={() => selectStartingPoint(point.stage)}
-            className="group rounded-[14px] border border-white/12 bg-white/[0.045] p-3.5 transition-colors hover:border-[color:var(--landing-brand-soft)]/60 hover:bg-[rgba(30,31,184,0.1)] lg:min-h-[168px] lg:p-5"
+            className="group rounded-[12px] border border-white/12 bg-white/[0.045] p-3.5 transition-colors hover:border-[color:var(--landing-brand-soft)]/60 hover:bg-[rgba(30,31,184,0.1)] lg:min-h-[168px] lg:p-5"
           >
             <div className="flex items-start justify-between gap-3">
               <h3 className="font-[family-name:var(--font-landing-heading)] text-[17px] font-bold leading-tight tracking-[-0.02em] text-white lg:text-[18px]">
@@ -234,7 +234,7 @@ export function LandingPathSelector() {
             <p className="mt-2 text-[13px] leading-relaxed text-[color:var(--landing-muted)] lg:text-[13.5px]">
               {point.body}
             </p>
-            <p className="mt-3 inline-flex min-h-9 items-center rounded-full bg-white px-3 font-[family-name:var(--font-landing-heading)] text-[12.5px] font-extrabold text-[#101010]">
+            <p className="mt-3 inline-flex min-h-9 items-center rounded-[8px] bg-[color:var(--landing-brand)] px-3 font-[family-name:var(--font-landing-heading)] text-[12.5px] font-extrabold text-white">
               Usar este punto
             </p>
           </a>
@@ -266,7 +266,7 @@ export function LandingProblemSection() {
           ].map((item) => (
             <div
               key={item}
-              className="rounded-[12px] border border-[color:var(--landing-border)] bg-white/[0.025] p-4 text-[14px] leading-relaxed text-[color:var(--landing-muted)]"
+              className="rounded-[10px] border border-[color:var(--landing-border)] bg-white/[0.035] p-4 text-[14px] leading-relaxed text-[color:var(--landing-muted)]"
             >
               {item}
             </div>
@@ -293,7 +293,7 @@ export function LandingAuditDeliverables() {
         {SYSTEM_STEPS.map((item) => (
           <article
             key={item.title}
-            className="rounded-[14px] border border-[color:var(--landing-border)] bg-[linear-gradient(180deg,rgba(30,31,184,0.1),rgba(255,255,255,0.018))] p-5"
+            className="rounded-[12px] border border-[color:var(--landing-border)] bg-[linear-gradient(180deg,rgba(30,31,184,0.1),rgba(255,255,255,0.025))] p-5"
           >
             <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.18em] text-[color:var(--landing-brand-soft)]">
               {item.title}
@@ -327,7 +327,7 @@ export function LandingProofCarousel() {
         {PROOF_CARDS.map((card) => (
           <li
             key={card.name}
-            className="group relative flex aspect-[4/5] min-w-[72%] snap-start overflow-hidden rounded-[14px] border border-[color:var(--landing-border)] bg-[color:var(--landing-bg-elev)] sm:min-w-0 lg:aspect-[3/4]"
+            className="group relative flex aspect-[4/5] min-w-[72%] snap-start overflow-hidden rounded-[12px] border border-[color:var(--landing-border)] bg-[color:var(--landing-bg-elev)] sm:min-w-0 lg:aspect-[3/4]"
           >
             {"image" in card ? (
               <Image
@@ -395,13 +395,13 @@ export function LandingMidPageCTA() {
 export function LandingFounderTrust() {
   return (
     <motion.section
-      className="mt-16 rounded-[16px] border border-[color:var(--landing-border)] bg-white/[0.025] p-5 lg:mt-24 lg:p-7"
+      className="mt-16 rounded-[12px] border border-[color:var(--landing-border)] bg-white/[0.035] p-5 lg:mt-24 lg:p-7"
       {...reveal}
     >
       <div className="grid gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-center">
         <div>
           <div className="flex items-center gap-3">
-            <div className="relative h-14 w-14 overflow-hidden rounded-[12px] bg-white/10">
+            <div className="relative h-14 w-14 overflow-hidden rounded-[10px] bg-white/10">
               <Image
                 src="/images/landing/jaime-ortiz-founder.jpg"
                 alt="Jaime Ortiz"
@@ -436,7 +436,7 @@ export function LandingFounderTrust() {
           ].map((item) => (
             <div
               key={item}
-              className="rounded-[12px] border border-[color:var(--landing-border)] bg-[#101010] p-4 text-[14px] leading-relaxed text-[color:var(--landing-muted)]"
+              className="rounded-[10px] border border-[color:var(--landing-border)] bg-[#101010] p-4 text-[14px] leading-relaxed text-[color:var(--landing-muted)]"
             >
               {item}
             </div>
@@ -451,7 +451,7 @@ export function LandingScarcitySection() {
   return (
     <motion.section
       id="offers"
-      className="mt-5 scroll-mt-6 rounded-[16px] border border-[color:var(--landing-border)] bg-white/[0.025] p-5 lg:mt-6 lg:p-7"
+      className="mt-5 scroll-mt-6 rounded-[12px] border border-[color:var(--landing-border)] bg-white/[0.035] p-5 lg:mt-6 lg:p-7"
       {...reveal}
     >
       <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
@@ -472,7 +472,7 @@ export function LandingScarcitySection() {
           {OFFERS.map((offer) => (
             <article
               key={offer.name}
-              className="rounded-[12px] border border-[color:var(--landing-border)] bg-[#101010] p-4"
+              className="rounded-[10px] border border-[color:var(--landing-border)] bg-[#101010] p-4"
             >
               <p className="font-[family-name:var(--font-landing-heading)] text-[16px] font-bold tracking-[-0.02em] text-white">
                 {offer.name}
@@ -500,7 +500,7 @@ export function LandingBookingSection() {
   return (
     <motion.section
       id="booking"
-      className="mt-16 scroll-mt-6 rounded-[16px] border border-[color:var(--landing-border)] bg-[linear-gradient(180deg,rgba(30,31,184,0.08),rgba(255,255,255,0.018))] p-5 lg:mt-24 lg:p-8"
+      className="mt-16 scroll-mt-6 rounded-[12px] border border-[color:var(--landing-border)] bg-[linear-gradient(180deg,rgba(30,31,184,0.08),rgba(255,255,255,0.024))] p-5 lg:mt-24 lg:p-8"
       {...reveal}
     >
       <div className="mx-auto max-w-[720px] text-center">
@@ -517,7 +517,7 @@ export function LandingBookingSection() {
       </div>
 
       {bookingEmbedUrl ? (
-        <div className="mt-6 overflow-hidden rounded-[12px] border border-[color:var(--landing-border)] bg-[#080808]">
+        <div className="mt-6 overflow-hidden rounded-[10px] border border-[color:var(--landing-border)] bg-[#080808]">
           <iframe
             src={bookingEmbedUrl}
             title="Agenda una llamada con Jaime Ortiz"
@@ -526,7 +526,7 @@ export function LandingBookingSection() {
           />
         </div>
       ) : (
-        <div className="mx-auto mt-7 max-w-[520px] rounded-[14px] border border-[color:var(--landing-border)] bg-white/[0.025] p-5 text-center">
+        <div className="mx-auto mt-7 max-w-[520px] rounded-[12px] border border-[color:var(--landing-border)] bg-white/[0.035] p-5 text-center">
           <p className="font-[family-name:var(--font-landing-heading)] text-[1.35rem] font-bold tracking-[-0.02em] text-white">
             El diagnóstico es el primer paso.
           </p>

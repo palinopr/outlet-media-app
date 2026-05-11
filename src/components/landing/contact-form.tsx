@@ -5,14 +5,14 @@ import { motion } from "framer-motion";
 import { trackLandingEvent } from "./analytics";
 
 const INPUT_CLS =
-  "h-[60px] w-full rounded-[12px] border border-[#d8d8d0] bg-white px-[18px] text-[16px] font-medium text-[#101010] placeholder:text-[#77756d] focus:border-[color:var(--landing-brand)] focus:bg-white focus:outline-none";
+  "h-[60px] w-full rounded-[10px] border border-white/12 bg-[#0f0f0f] px-[18px] text-[16px] font-medium text-white placeholder:text-white/32 focus:border-[color:var(--landing-brand-soft)] focus:bg-[#111111] focus:outline-none";
 
 const TEXTAREA_CLS =
-  "min-h-[124px] w-full rounded-[12px] border border-[#d8d8d0] bg-white px-[18px] py-4 text-[16px] font-medium text-[#101010] placeholder:text-[#77756d] focus:border-[color:var(--landing-brand)] focus:bg-white focus:outline-none";
+  "min-h-[124px] w-full rounded-[10px] border border-white/12 bg-[#0f0f0f] px-[18px] py-4 text-[16px] font-medium text-white placeholder:text-white/32 focus:border-[color:var(--landing-brand-soft)] focus:bg-[#111111] focus:outline-none";
 
 const FIELD_CLS = "grid gap-1.5";
 const LABEL_CLS =
-  "font-[family-name:var(--font-landing-heading)] text-[13px] font-extrabold text-[#2f2d27]";
+  "font-[family-name:var(--font-landing-heading)] text-[13px] font-extrabold text-white/72";
 
 const RAW_BOOKING_URL = process.env.NEXT_PUBLIC_AUDIT_BOOKING_URL?.trim();
 const BOOKING_EMBED_URL = RAW_BOOKING_URL
@@ -244,17 +244,17 @@ export function ContactForm() {
     return (
       <section
         id="form"
-        className="mt-16 scroll-mt-6 rounded-[18px] border border-white/10 bg-[#f3f1e8] p-6 text-[#101010] shadow-[0_30px_80px_-48px_rgba(255,255,255,0.5)] lg:mt-24 lg:p-12"
+        className="mt-16 scroll-mt-6 rounded-[14px] border border-white/12 bg-[#111111] p-6 text-white shadow-[0_30px_90px_-54px_rgba(255,255,255,0.35)] lg:mt-24 lg:p-12"
       >
         <div className="mx-auto max-w-[760px]">
           <div className="text-center">
-            <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.22em] text-[color:var(--landing-brand)]">
+            <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.22em] text-[color:var(--landing-brand-soft)]">
               Solicitud recibida
             </p>
-            <h2 className="mt-3 font-[family-name:var(--font-landing-heading)] text-[2.25rem] font-extrabold leading-[1] tracking-[-0.035em] text-[#101010] lg:text-[3rem]">
+            <h2 className="mt-3 font-[family-name:var(--font-landing-heading)] text-[2.25rem] font-extrabold leading-[1] tracking-[-0.035em] text-white lg:text-[3rem]">
               Ya sabemos tu punto de partida.
             </h2>
-            <p className="mx-auto mt-4 max-w-[52ch] text-[15px] leading-relaxed text-[#4b4942]">
+            <p className="mx-auto mt-4 max-w-[52ch] text-[15px] leading-relaxed text-[color:var(--landing-muted)]">
               Revisaremos tu información y te diremos la ruta real: setup, llamada
               privada, sprint o manejo completo. Si todavía no debes comprar, también
               te lo diremos.
@@ -274,7 +274,7 @@ export function ContactForm() {
             <a
               href="#booking"
               onClick={() => trackLandingEvent("BookingClicked", { source: "success" })}
-              className="inline-flex h-12 items-center justify-center rounded-[10px] border border-[#d8d8d0] bg-white px-5 font-[family-name:var(--font-landing-heading)] text-[14px] font-bold text-[#101010]"
+              className="inline-flex h-12 items-center justify-center rounded-[10px] border border-white/12 bg-white/[0.045] px-5 font-[family-name:var(--font-landing-heading)] text-[14px] font-bold text-white"
             >
               Ver calendario
             </a>
@@ -298,7 +298,7 @@ export function ContactForm() {
   return (
     <motion.section
         id="form"
-        className="mt-8 scroll-mt-6 overflow-hidden rounded-[18px] border border-white/10 bg-[#f3f1e8] p-4 text-[#101010] shadow-[0_30px_90px_-54px_rgba(255,255,255,0.55)] lg:mt-14 lg:p-10"
+        className="mt-8 scroll-mt-6 overflow-hidden rounded-[14px] border border-white/12 bg-[#111111] p-4 text-white shadow-[0_30px_90px_-54px_rgba(255,255,255,0.35)] lg:mt-14 lg:p-10"
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
@@ -306,37 +306,37 @@ export function ContactForm() {
     >
       <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
         <div>
-          <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.18em] text-[color:var(--landing-brand)]">
+          <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.18em] text-[color:var(--landing-brand-soft)]">
             Diagnóstico gratis · 2 min
           </p>
-          <h2 className="mt-3 font-[family-name:var(--font-landing-heading)] text-[2.12rem] font-extrabold leading-[0.96] tracking-[-0.04em] text-[#101010] lg:text-[3rem]">
+          <h2 className="mt-3 font-[family-name:var(--font-landing-heading)] text-[2.12rem] font-extrabold leading-[0.96] tracking-[-0.04em] text-white lg:text-[3rem]">
             Dinos dónde se está perdiendo la venta.
           </h2>
-          <p className="mt-3 max-w-[42ch] text-[15px] leading-relaxed text-[#4b4942] lg:mt-4">
+          <p className="mt-3 max-w-[42ch] text-[15px] leading-relaxed text-[color:var(--landing-muted)] lg:mt-4">
             No tienes que saber Ads Manager. Marca tu punto de partida y te devolvemos
             una recomendación concreta: setup, arreglo de campañas, sprint de 30 días
             o manejo mensual.
           </p>
-          <ul className="mt-4 grid gap-2 text-[14px] leading-relaxed text-[#3e3c35]">
-            <li className="rounded-[10px] border border-[#d8d8d0] bg-white px-3 py-2">
+          <ul className="mt-4 grid gap-2 text-[14px] leading-relaxed text-white/72">
+            <li className="rounded-[10px] border border-white/10 bg-white/[0.035] px-3 py-2">
               Puedes empezar sin cuenta publicitaria.
             </li>
-            <li className="rounded-[10px] border border-[#d8d8d0] bg-white px-3 py-2">
+            <li className="rounded-[10px] border border-white/10 bg-white/[0.035] px-3 py-2">
               Si ya inviertes, revisamos campaña, oferta y seguimiento.
             </li>
-            <li className="rounded-[10px] border border-[#d8d8d0] bg-white px-3 py-2">
+            <li className="rounded-[10px] border border-white/10 bg-white/[0.035] px-3 py-2">
               La recomendación no te obliga a comprar.
             </li>
           </ul>
 
-          <div className="mt-5 rounded-[14px] border border-[rgba(30,31,184,0.18)] bg-white p-4 shadow-[0_18px_50px_-38px_rgba(13,13,13,0.7)] lg:mt-6 lg:p-5">
-            <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.18em] text-[color:var(--landing-brand)]">
+          <div className="mt-5 rounded-[12px] border border-[color:var(--landing-brand-soft)]/30 bg-[rgba(30,31,184,0.12)] p-4 shadow-[0_18px_50px_-38px_rgba(13,13,13,0.7)] lg:mt-6 lg:p-5">
+            <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.18em] text-[color:var(--landing-brand-soft)]">
               Ruta que probablemente aplica
             </p>
-            <p className="mt-2 font-[family-name:var(--font-landing-heading)] text-[1.32rem] font-extrabold leading-tight tracking-[-0.025em] text-[#101010] lg:text-[1.45rem]">
+            <p className="mt-2 font-[family-name:var(--font-landing-heading)] text-[1.32rem] font-extrabold leading-tight tracking-[-0.025em] text-white lg:text-[1.45rem]">
               {recommendedOffer}
             </p>
-            <p className="mt-2 text-[13.5px] leading-relaxed text-[#5d5a52]">
+            <p className="mt-2 text-[13.5px] leading-relaxed text-[color:var(--landing-muted)]">
               Esta recomendación puede cambiar después de ver tu oferta, presupuesto,
               urgencia y ruta de conversión.
             </p>
@@ -350,7 +350,7 @@ export function ContactForm() {
           onSubmit={handleSubmit}
         >
           <div className="grid gap-3 lg:grid-cols-2">
-            <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.18em] text-[color:var(--landing-brand)] lg:col-span-2">
+            <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.18em] text-[color:var(--landing-brand-soft)] lg:col-span-2">
               1. Qué necesitas
             </p>
             <label className={`${FIELD_CLS} lg:col-span-2`}>
@@ -421,8 +421,8 @@ export function ContactForm() {
             </label>
           </div>
 
-          <div className="grid gap-3 border-t border-[#d8d8d0] pt-4 lg:grid-cols-2">
-            <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.18em] text-[color:var(--landing-brand)] lg:col-span-2">
+          <div className="grid gap-3 border-t border-white/10 pt-4 lg:grid-cols-2">
+            <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.18em] text-[color:var(--landing-brand-soft)] lg:col-span-2">
               2. Datos para responderte
             </p>
             <label className={FIELD_CLS}>
@@ -460,8 +460,8 @@ export function ContactForm() {
             </label>
           </div>
 
-          <details className="rounded-[12px] border border-[#d8d8d0] bg-white p-3">
-            <summary className="cursor-pointer list-none font-[family-name:var(--font-landing-heading)] text-[15px] font-extrabold text-[#101010] marker:hidden">
+          <details className="rounded-[10px] border border-white/12 bg-[#0f0f0f] p-3">
+            <summary className="cursor-pointer list-none font-[family-name:var(--font-landing-heading)] text-[15px] font-extrabold text-white marker:hidden">
               Agregar Instagram, fecha o notas
             </summary>
             <div className="mt-3 grid gap-3 lg:grid-cols-2">
@@ -497,14 +497,14 @@ export function ContactForm() {
           <button
             type="submit"
             disabled={pending}
-            className="mt-1 inline-flex h-[64px] w-full items-center justify-center gap-2 rounded-[12px] bg-[color:var(--landing-brand)] px-5 font-[family-name:var(--font-landing-heading)] text-[16px] font-extrabold tracking-wide text-white shadow-[0_22px_50px_-20px_rgba(30,31,184,0.78)] disabled:opacity-60"
+            className="mt-1 inline-flex h-[64px] w-full items-center justify-center gap-2 rounded-[10px] bg-[color:var(--landing-brand)] px-5 font-[family-name:var(--font-landing-heading)] text-[16px] font-extrabold tracking-wide text-white shadow-[0_22px_50px_-20px_rgba(30,31,184,0.78)] disabled:opacity-60"
           >
             {pending ? "Enviando..." : "Recibir diagnóstico gratis"}
           </button>
           {error ? (
-            <p className="mt-1 text-center text-[13px] text-red-600">{error}</p>
+            <p className="mt-1 text-center text-[13px] text-red-300">{error}</p>
           ) : (
-            <p className="mt-1 text-center text-[13px] font-semibold text-[#6b675d]">
+            <p className="mt-1 text-center text-[13px] font-semibold text-white/50">
               Respuesta humana en menos de 24h laborables
             </p>
           )}
