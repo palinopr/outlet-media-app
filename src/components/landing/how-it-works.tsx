@@ -5,18 +5,18 @@ import { motion } from "framer-motion";
 const STEPS = [
   {
     label: "1",
-    title: "Mandas tus números",
-    body: "Compartes tu cuenta, negocio y objetivo principal.",
+    title: "Dices qué necesitas",
+    body: "Ventas, leads, citas, WhatsApp, productos o boletos. Empezamos por el resultado.",
   },
   {
     label: "2",
-    title: "Auditamos en 24h",
-    body: "Revisamos campañas, anuncios, audiencias, presupuesto y rendimiento real.",
+    title: "Detectamos la fuga",
+    body: "Revisamos oferta, cuenta, tracking, landing, WhatsApp, campañas y seguimiento.",
   },
   {
     label: "3",
-    title: "Te decimos qué hacer",
-    body: "Recibes un plan claro con acciones específicas para mejorar resultados desde mañana.",
+    title: "Te digo qué hacer",
+    body: "Setup, llamada, sprint o manejo completo. Si no debes comprar todavía, te lo digo claro.",
   },
 ] as const;
 
@@ -30,10 +30,10 @@ export function LandingHowItWorks() {
       transition={{ duration: 0.5 }}
     >
       <p className="text-center font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.22em] text-[color:var(--landing-brand-soft)]">
-        Cómo funciona
+        Cómo se convierte
       </p>
       <h2 className="mt-3 text-center font-[family-name:var(--font-landing-heading)] text-[2.25rem] font-extrabold tracking-[-0.035em] text-white lg:text-[3rem]">
-        3 pasos. Tú decides si seguimos.
+        Primero diagnosticamos. Después vendemos.
       </h2>
       <div className="mt-8 grid gap-4 lg:grid-cols-3 lg:gap-7">
         {STEPS.map((step) => (

@@ -11,12 +11,15 @@ export function LandingStickyCTA() {
     );
     const booking = document.getElementById("booking");
     const form = document.getElementById("form");
+    const startingPoint = document.getElementById("starting-point");
 
     let heroInView = true;
     let bookingInView = false;
     let formInView = false;
+    let startingPointInView = false;
 
-    const recompute = () => setVisible(!heroInView && !bookingInView && !formInView);
+    const recompute = () =>
+      setVisible(!heroInView && !bookingInView && !formInView && !startingPointInView);
     const observers: IntersectionObserver[] = [];
 
     if (heroCta) {
@@ -57,13 +60,25 @@ export function LandingStickyCTA() {
       observers.push(io);
     }
 
+    if (startingPoint) {
+      const io = new IntersectionObserver(
+        ([entry]) => {
+          startingPointInView = entry.isIntersecting;
+          recompute();
+        },
+        { threshold: 0.08 },
+      );
+      io.observe(startingPoint);
+      observers.push(io);
+    }
+
     recompute();
     return () => observers.forEach((observer) => observer.disconnect());
   }, []);
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-50 px-4 pb-4 pt-2 transition-all duration-300 lg:hidden ${
+      className={`fixed inset-x-0 bottom-0 z-50 px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-2 transition-all duration-300 lg:hidden ${
         visible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none translate-y-6 opacity-0"
@@ -74,10 +89,10 @@ export function LandingStickyCTA() {
       }}
     >
       <a
-        href="#booking"
+        href="#form"
         className="flex h-12 w-full items-center justify-center rounded-[10px] bg-[color:var(--landing-brand)] font-[family-name:var(--font-landing-heading)] text-sm font-bold tracking-wide text-white shadow-[0_14px_40px_-12px_rgba(30,31,184,0.65)] backdrop-blur-md"
       >
-        Agenda tu auditoría gratis
+        Recibir ruta gratis
       </a>
     </div>
   );

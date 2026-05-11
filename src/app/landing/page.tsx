@@ -10,6 +10,7 @@ import {
   LandingBookingSection,
   LandingFounderTrust,
   LandingMidPageCTA,
+  LandingPathSelector,
   LandingProblemSection,
   LandingProofCarousel,
   LandingProofStats,
@@ -36,13 +37,14 @@ const monoFont = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Outlet Media · Agenda tu auditoría gratis",
+  metadataBase: new URL("https://outletmedia.net"),
+  title: "Outlet Media · Paid Growth System",
   description:
-    "Auditoría gratis en 24h para saber qué anuncios pausar, escalar y mover mañana. Paid media para eventos, ecommerce, leads y negocios locales.",
+    "Outlet helps Puerto Rico businesses build and run the ad system behind sales, leads, bookings, tickets, and WhatsApp conversations.",
   openGraph: {
-    title: "Outlet Media · Agenda tu auditoría gratis",
+    title: "Outlet Media · Paid Growth System",
     description:
-      "Pagas por anuncios. En 24h te decimos cuáles venden y qué mover mañana.",
+      "Find your starting point: setup, fix, sprint, or managed growth.",
     images: [{ url: "/icon.png", width: 512, height: 512 }],
   },
   robots: { index: true, follow: true },
@@ -80,14 +82,16 @@ export default function LandingPage() {
               style={{ width: 140, height: "auto" }}
             />
             <a
-              href="#booking"
+              href="#form"
               className="font-[family-name:var(--font-landing-mono)] text-[11px] uppercase tracking-[0.14em] text-[color:var(--landing-muted)] transition-colors hover:text-white"
             >
-              Agenda gratis →
+              Gratis →
             </a>
           </nav>
 
           <LandingHero />
+          <LandingPathSelector />
+          <ContactForm />
           <LandingProofStats />
           <LandingProblemSection />
           <LandingAuditDeliverables />
@@ -97,7 +101,6 @@ export default function LandingPage() {
           <LandingFounderTrust />
           <LandingScarcitySection />
           <LandingBookingSection />
-          <ContactForm />
           <LandingFAQ />
 
           <footer className="mt-16 flex items-center justify-between border-t border-[color:var(--landing-border)] pb-6 pt-6 font-[family-name:var(--font-landing-mono)] text-[11px] uppercase tracking-[0.08em] text-[color:var(--landing-muted-2)]">

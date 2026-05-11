@@ -30,12 +30,26 @@ describe("POST /api/contact", () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          businessLink: "https://example.com/event",
           company: "Acme Live",
+          deadline: "30 days",
+          desiredOutcome: "Tickets",
           email: "buyer@example.com",
+          fbclid: "fb.1.test",
+          gclid: "gclid-test",
           goal: "Sell more tickets",
+          hasAdAccount: "Yes, but needs help",
           message: "Need help with paid media.",
+          monthlyBudget: "$5,000 - $20,000/mes",
           name: "Buyer",
+          pageContext: "landing-growth-system-funnel",
           phone: "+1 555 000 1111",
+          recommendedOffer: "Ticket Sales Sprint - desde $5,000",
+          stage: "Necesito vender boletos",
+          utmCampaign: "spring_launch",
+          utmContent: "hero",
+          utmMedium: "paid_social",
+          utmSource: "meta",
         }),
       }),
     );
@@ -49,12 +63,22 @@ describe("POST /api/contact", () => {
         name: "Buyer",
       }),
     );
+    expect(insert.mock.calls[0]?.[0].message).toContain(
+      "Recommended offer: Ticket Sales Sprint - desde $5,000",
+    );
+    expect(insert.mock.calls[0]?.[0].message).toContain("UTM campaign: spring_launch");
     expect(fetch).toHaveBeenCalledWith(
       "https://api.resend.com/emails",
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({ Authorization: "Bearer resend_test_key" }),
         body: expect.stringContaining("New audit request: Buyer (Acme Live)"),
+      }),
+    );
+    expect(fetch).toHaveBeenCalledWith(
+      "https://api.resend.com/emails",
+      expect.objectContaining({
+        body: expect.stringContaining("Recommended offer: Ticket Sales Sprint - desde $5,000"),
       }),
     );
   });

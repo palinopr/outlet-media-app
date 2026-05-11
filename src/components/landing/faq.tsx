@@ -4,24 +4,28 @@ import { motion } from "framer-motion";
 
 const QA = [
   {
-    q: "¿Cuánto cuesta?",
-    a: "La auditoría inicial es gratis. Si decidimos trabajar juntos, el fee es mes a mes y escala con tu ad spend. Sin retainer anual ni letras chiquitas.",
+    q: "Nunca he corrido anuncios. ¿Esto es para mí?",
+    a: "Sí. Si no tienes base, no te empujamos manejo mensual. Primero vemos si necesitas setup, una llamada privada o un primer lanzamiento simple.",
   },
   {
-    q: "¿Y si ya tengo agencia?",
-    a: "No tienes que romper con nadie para pedirnos la auditoría. Te damos una segunda opinión y los números hablan. Si tu agencia actual está haciendo un trabajo mejor, te lo decimos nosotros mismos.",
+    q: "¿Outlet corre los anuncios o me enseña?",
+    a: "La oferta principal es done-for-you: configuramos, lanzamos y operamos. La llamada privada existe para negocios que todavía no están listos para un sprint.",
   },
   {
-    q: "¿Qué recibo en la auditoría?",
-    a: "Un video corto con prioridades claras: qué campañas pausar, qué anuncios están funcionando, dónde mover presupuesto y qué probar en los próximos 7 días.",
+    q: "¿Por qué no vender solo manejo de ads?",
+    a: "Porque muchas cuentas no fallan por el anuncio. Fallan por oferta, tracking, landing, WhatsApp, seguimiento o falta de decisiones. Outlet mira el sistema completo.",
   },
   {
-    q: "¿Manejan eventos, ecommerce o leads?",
-    a: "Sí. Eventos y artistas son una fortaleza clara, pero también trabajamos ecommerce, leads y negocios locales que ya están invirtiendo en paid media.",
+    q: "¿Esto es solo para eventos?",
+    a: "No. Eventos y música son prueba fuerte porque requieren urgencia y ejecución rápida. La máquina aplica a productos, leads, citas, WhatsApp y negocios locales.",
   },
   {
-    q: "¿Cuánto tarda?",
-    a: "La llamada queda agendada al momento. Si envías la cuenta por formulario, respondemos en menos de 24h laborables.",
+    q: "¿Cuánto tarda el próximo paso?",
+    a: "Después del diagnóstico respondemos en menos de 24h laborables con la ruta recomendada: setup, fix, sprint, manejo o llamada privada.",
+  },
+  {
+    q: "¿Me van a vender aunque no esté listo?",
+    a: "No. Si tu oferta, presupuesto o ruta de conversión todavía no aguanta ads, te decimos qué arreglar primero. Eso protege tu dinero y nuestra reputación.",
   },
 ] as const;
 
@@ -35,10 +39,10 @@ export function LandingFAQ() {
       transition={{ duration: 0.5 }}
     >
       <p className="font-[family-name:var(--font-landing-mono)] text-[10px] uppercase tracking-[0.22em] text-[color:var(--landing-brand-soft)]">
-        Preguntas
+        Preguntas honestas
       </p>
       <h2 className="mt-3 font-[family-name:var(--font-landing-heading)] text-[2.25rem] font-extrabold tracking-[-0.035em] text-white lg:text-[3rem]">
-        Lo que preguntan antes de arrancar.
+        Lo que debe quedar claro antes de pagar.
       </h2>
       <div className="mt-8 border-t border-[color:var(--landing-border)]">
         {QA.map(({ q, a }) => (

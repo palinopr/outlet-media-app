@@ -59,9 +59,9 @@ describe("ContactFormSchema", () => {
       company: "Outlet Live",
       monthlyBudget: "$5K — $20K",
       goal: "Sell more tickets next week",
-      preferredContact: "Phone",
-      pageContext: "landing-audit-funnel",
-      message: "Fallback audit request from the Outlet Media landing funnel.",
+      preferredContact: "Phone / WhatsApp",
+      pageContext: "landing-growth-system-funnel",
+      message: "Growth system request from the Outlet Media segmented funnel.",
     });
 
     expect(result.success).toBe(true);

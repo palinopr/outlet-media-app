@@ -65,8 +65,8 @@ describe("ContactFormSchema", () => {
       company: "Outlet Live",
       monthlyBudget: "$5K — $20K",
       goal: "Sell more tickets next week",
-      preferredContact: "Phone",
-      pageContext: "landing-audit-funnel",
+      preferredContact: "Phone / WhatsApp",
+      pageContext: "landing-growth-system-funnel",
     });
     expect(ContactFormSchema.safeParse(payload).success).toBe(true);
   });
