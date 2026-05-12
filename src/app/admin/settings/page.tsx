@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bug, CheckCircle2, Key, Link2, Settings, TriangleAlert } from "lucide-react";
+import { Bug, CheckCircle2, Key, Link2, ReceiptText, Settings, TriangleAlert } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import type { ConnectedAccount } from "@/features/settings/connected-accounts";
@@ -52,6 +52,39 @@ function formatErrorDate(value: string) {
   });
 }
 
+function formatCurrency(value: number | string | null, currency: string | null) {
+  if (value === null || value === undefined) return "n/a";
+  const parsed = typeof value === "string" ? Number(value) : value;
+  if (!Number.isFinite(parsed)) return "n/a";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency || "USD",
+  }).format(parsed);
+}
+
+type TicketmasterCapiEvent = {
+  attempt_count: number;
+  created_at: string;
+  currency: string | null;
+  error_message: string | null;
+  event_id: string;
+  event_name: string;
+  id: string;
+  is_test: boolean;
+  last_seen_at: string;
+  meta_ok: boolean;
+  meta_status: number | null;
+  order_hash: string | null;
+  order_id: string | null;
+  quantity: number | null;
+  skip_reason: string | null;
+  source_url: string | null;
+  ticketmaster_event_date: string | null;
+  ticketmaster_event_id: string | null;
+  ticketmaster_event_name: string | null;
+  value: number | string | null;
+};
+
 export default async function SettingsPage() {
   const apiKeys = getApiKeyStatus();
   const connectedAccountsRes = await supabaseAdmin
@@ -76,6 +109,14 @@ export default async function SettingsPage() {
     .order("created_at", { ascending: false })
     .limit(6);
   const applicationErrors = applicationErrorsRes?.data ?? [];
+  const ticketmasterCapiEventsRes = await supabaseAdmin
+    ?.from("ticketmaster_capi_events")
+    .select(
+      "id, created_at, last_seen_at, attempt_count, event_name, event_id, order_id, order_hash, ticketmaster_event_id, ticketmaster_event_name, ticketmaster_event_date, value, currency, quantity, meta_status, meta_ok, skip_reason, error_message, is_test, source_url",
+    )
+    .order("created_at", { ascending: false })
+    .limit(12);
+  const ticketmasterCapiEvents = (ticketmasterCapiEventsRes?.data ?? []) as TicketmasterCapiEvent[];
 
   const stats = [
     {
@@ -232,6 +273,77 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-border/60">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ReceiptText className="h-4 w-4 text-emerald-400" />
+            <CardTitle className="text-sm">Ticketmaster CAPI events</CardTitle>
+          </div>
+          <CardDescription>
+            Recent Custom IMG pixel hits from Ticketmaster and whether Meta accepted the server event.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {ticketmasterCapiEvents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No Ticketmaster CAPI events have been recorded yet.</p>
+          ) : (
+            ticketmasterCapiEvents.map((event) => {
+              const statusLabel = event.skip_reason
+                ? event.skip_reason
+                : event.meta_ok
+                  ? "Meta accepted"
+                  : event.meta_status
+                    ? `Meta HTTP ${event.meta_status}`
+                    : "received";
+              const statusClass = event.meta_ok
+                ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                : event.skip_reason || event.error_message
+                  ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
+                  : "border-muted-foreground/20 bg-white/[0.04] text-muted-foreground";
+              return (
+                <div key={event.id} className="rounded-xl border border-border/60 bg-muted/20 p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">
+                        {event.event_name} • {formatCurrency(event.value, event.currency)}
+                        {event.quantity ? ` • ${event.quantity} ticket${event.quantity === 1 ? "" : "s"}` : ""}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {event.ticketmaster_event_name ?? "unknown event"} • {formatErrorDate(event.created_at)}
+                      </p>
+                      <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground/70">
+                        order {event.order_id ?? event.order_hash?.slice(0, 12) ?? "n/a"} • event_id {event.event_id.slice(0, 28)}
+                      </p>
+                      {event.source_url ? (
+                        <p className="mt-1 truncate text-[11px] text-muted-foreground/60">{event.source_url}</p>
+                      ) : null}
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <span className={`rounded border px-2 py-0.5 text-[10px] font-medium ${statusClass}`}>
+                        {statusLabel}
+                      </span>
+                      {event.attempt_count > 1 ? (
+                        <span className="rounded bg-white/[0.04] px-2 py-0.5 text-[10px] text-muted-foreground/70">
+                          {event.attempt_count} hits
+                        </span>
+                      ) : null}
+                      {event.is_test ? (
+                        <span className="rounded bg-blue-500/10 px-2 py-0.5 text-[10px] text-blue-300">test</span>
+                      ) : null}
+                    </div>
+                  </div>
+                  {event.error_message ? (
+                    <p className="mt-2 rounded bg-amber-500/10 px-2 py-1 text-[11px] text-amber-200">
+                      {event.error_message}
+                    </p>
+                  ) : null}
+                </div>
+              );
+            })
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="border-border/60">
         <CardHeader>

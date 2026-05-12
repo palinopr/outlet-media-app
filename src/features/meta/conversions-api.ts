@@ -50,9 +50,28 @@ export type MetaCapiEvent = {
   user_data: MetaUserData;
 };
 
+export type TicketmasterCapiLogFields = {
+  billingState?: string;
+  billingZip?: string;
+  country?: string;
+  currency?: string;
+  eventId?: string;
+  eventName: string;
+  orderHash?: string;
+  orderId?: string;
+  quantity?: number;
+  requestIpHash?: string;
+  sourceUrl?: string;
+  ticketmasterEventDate?: string;
+  ticketmasterEventId?: string;
+  ticketmasterEventName?: string;
+  userAgentHash?: string;
+  value?: number;
+};
+
 type BuildTicketmasterCapiEventResult =
-  | { event: MetaCapiEvent; skipReason: null }
-  | { event: null; skipReason: string };
+  | { event: MetaCapiEvent; log: TicketmasterCapiLogFields; skipReason: null }
+  | { event: null; log: TicketmasterCapiLogFields; skipReason: string };
 
 export type MetaCapiSendResult = {
   body: unknown;
@@ -89,7 +108,7 @@ function parsePositiveInteger(value: string | undefined) {
   return parsed;
 }
 
-function sha256(value: string) {
+export function sha256(value: string) {
   return createHash("sha256").update(value).digest("hex");
 }
 
@@ -167,20 +186,40 @@ export function buildTicketmasterCapiEvent(url: URL, headers: Headers, now = new
   const ticketmasterEventDate = firstParam(params, ["tm_event_date", "eventdate", "ticketmaster_event_date"]);
   const contentId = ticketmasterEventId ?? DEFAULT_ATACA_SERGIO_CONTENT_ID;
   const contentName = ticketmasterEventName ?? DEFAULT_CONTENT_NAME;
+  const sourceUrl = sourceUrlFromRequest(url, headers);
+  const clientIp = getClientIp(headers);
+  const clientUserAgent = cleanText(headers.get("user-agent"), 500);
+  const logBase: TicketmasterCapiLogFields = {
+    billingState: firstParam(params, ["state", "st", "billing_state"]),
+    billingZip: firstParam(params, ["zip", "zp", "zipcode", "postal_code", "billing_zip"]),
+    country: firstParam(params, ["country", "country_code"]),
+    currency,
+    eventName,
+    orderHash: orderId ? sha256(orderId) : undefined,
+    orderId,
+    quantity,
+    requestIpHash: clientIp ? sha256(clientIp) : undefined,
+    sourceUrl,
+    ticketmasterEventDate,
+    ticketmasterEventId,
+    ticketmasterEventName: contentName,
+    userAgentHash: clientUserAgent ? sha256(clientUserAgent) : undefined,
+    value,
+  };
 
   if (eventName === "Purchase" && !orderId) {
-    return { event: null, skipReason: "missing_order_id" };
+    return { event: null, log: logBase, skipReason: "missing_order_id" };
   }
   if (eventName === "Purchase" && value === undefined) {
-    return { event: null, skipReason: "missing_value" };
+    return { event: null, log: logBase, skipReason: "missing_value" };
   }
 
   const fbclid = fbclidFrom(url, headers);
   const providedFbc = firstParam(params, ["fbc"]);
   const providedFbp = firstParam(params, ["fbp"]);
   const userData: MetaUserData = {
-    client_ip_address: getClientIp(headers),
-    client_user_agent: cleanText(headers.get("user-agent"), 500),
+    client_ip_address: clientIp,
+    client_user_agent: clientUserAgent,
     fbc: providedFbc ?? (fbclid ? `fb.1.${now.getTime()}.${fbclid}` : undefined),
     fbp: providedFbp,
     em: hashedParam(params, ["em", "email"], "email"),
@@ -220,10 +259,11 @@ export function buildTicketmasterCapiEvent(url: URL, headers: Headers, now = new
       custom_data: JSON.parse(JSON.stringify(customData)) as MetaCustomData,
       event_id: eventId,
       event_name: eventName,
-      event_source_url: sourceUrlFromRequest(url, headers),
+      event_source_url: sourceUrl,
       event_time: eventTime,
       user_data: JSON.parse(JSON.stringify(userData)) as MetaUserData,
     },
+    log: { ...logBase, eventId },
     skipReason: null,
   };
 }

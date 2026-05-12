@@ -89,6 +89,96 @@ export type Database = {
         }
         Relationships: []
       }
+      ticketmaster_capi_events: {
+        Row: {
+          attempt_count: number
+          billing_state: string | null
+          billing_zip: string | null
+          country: string | null
+          created_at: string
+          currency: string | null
+          error_message: string | null
+          event_id: string
+          event_name: string
+          id: string
+          is_test: boolean
+          last_seen_at: string
+          meta_ok: boolean
+          meta_pixel_id: string | null
+          meta_response: Json | null
+          meta_status: number | null
+          order_hash: string | null
+          order_id: string | null
+          quantity: number | null
+          request_ip_hash: string | null
+          skip_reason: string | null
+          source_url: string | null
+          ticketmaster_event_date: string | null
+          ticketmaster_event_id: string | null
+          ticketmaster_event_name: string | null
+          user_agent_hash: string | null
+          value: number | null
+        }
+        Insert: {
+          attempt_count?: number
+          billing_state?: string | null
+          billing_zip?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          error_message?: string | null
+          event_id: string
+          event_name: string
+          id?: string
+          is_test?: boolean
+          last_seen_at?: string
+          meta_ok?: boolean
+          meta_pixel_id?: string | null
+          meta_response?: Json | null
+          meta_status?: number | null
+          order_hash?: string | null
+          order_id?: string | null
+          quantity?: number | null
+          request_ip_hash?: string | null
+          skip_reason?: string | null
+          source_url?: string | null
+          ticketmaster_event_date?: string | null
+          ticketmaster_event_id?: string | null
+          ticketmaster_event_name?: string | null
+          user_agent_hash?: string | null
+          value?: number | null
+        }
+        Update: {
+          attempt_count?: number
+          billing_state?: string | null
+          billing_zip?: string | null
+          country?: string | null
+          created_at?: string
+          currency?: string | null
+          error_message?: string | null
+          event_id?: string
+          event_name?: string
+          id?: string
+          is_test?: boolean
+          last_seen_at?: string
+          meta_ok?: boolean
+          meta_pixel_id?: string | null
+          meta_response?: Json | null
+          meta_status?: number | null
+          order_hash?: string | null
+          order_id?: string | null
+          quantity?: number | null
+          request_ip_hash?: string | null
+          skip_reason?: string | null
+          source_url?: string | null
+          ticketmaster_event_date?: string | null
+          ticketmaster_event_id?: string | null
+          ticketmaster_event_name?: string | null
+          user_agent_hash?: string | null
+          value?: number | null
+        }
+        Relationships: []
+      }
       campaign_client_overrides: {
         Row: {
           campaign_id: string

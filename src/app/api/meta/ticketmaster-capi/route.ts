@@ -4,6 +4,7 @@ import {
   getMetaCapiConfig,
   sendMetaCapiEvent,
 } from "@/features/meta/conversions-api";
+import { recordTicketmasterCapiEvent } from "@/features/meta/ticketmaster-capi-log";
 
 const transparentGif = Uint8Array.from([
   71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 0, 0, 0, 0, 0, 255, 255, 255, 33, 249,
@@ -36,26 +37,50 @@ export async function GET(request: Request) {
     return response;
   }
 
+  const { event, log, skipReason } = buildTicketmasterCapiEvent(url, request.headers);
+
   if (!config.accessToken || !config.pixelId) {
     console.warn("[meta:capi] Meta CAPI credentials are not configured");
+    await recordTicketmasterCapiEvent({
+      log,
+      metaPixelId: config.pixelId,
+      skipReason: "missing_meta_credentials",
+    });
     return response;
   }
 
-  const { event, skipReason } = buildTicketmasterCapiEvent(url, request.headers);
   if (!event) {
     console.warn(`[meta:capi] skipped Ticketmaster event: ${skipReason}`);
+    await recordTicketmasterCapiEvent({
+      log,
+      metaPixelId: config.pixelId,
+      skipReason,
+    });
     return response;
   }
 
   try {
-    await sendMetaCapiEvent({
+    const metaResult = await sendMetaCapiEvent({
       accessToken: config.accessToken,
       event,
       pixelId: config.pixelId,
       testEventCode: config.testEventCode,
     });
+    await recordTicketmasterCapiEvent({
+      isTest: Boolean(config.testEventCode),
+      log,
+      metaPixelId: config.pixelId,
+      metaResult,
+    });
   } catch (error) {
     console.error("[meta:capi] failed to send Ticketmaster event", error);
+    await recordTicketmasterCapiEvent({
+      errorMessage: error instanceof Error ? error.message : String(error),
+      isTest: Boolean(config.testEventCode),
+      log,
+      metaPixelId: config.pixelId,
+      skipReason: "send_failed",
+    });
   }
 
   return response;
