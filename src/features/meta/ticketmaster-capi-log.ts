@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { MetaCapiSendResult, TicketmasterCapiLogFields } from "@/features/meta/conversions-api";
-import { rowFromAttribution } from "@/features/meta/attribution";
+import { attributionFromUrlString, mergeAttribution, rowFromAttribution } from "@/features/meta/attribution";
 import { sha256 } from "@/lib/hash";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -98,8 +98,13 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
     console.error("[meta:capi] failed to read CAPI event log:", existing.error.message);
   }
 
+  const attribution = mergeAttribution(
+    attributionFromUrlString(input.log.sourceUrl),
+    input.log.attribution,
+  );
+
   const row: TicketmasterCapiEventRow = {
-    ...rowFromAttribution(input.log.attribution),
+    ...rowFromAttribution(attribution),
     attempt_count: ((existing.data as { attempt_count?: number } | null)?.attempt_count ?? 0) + 1,
     billing_state: input.log.billingState ?? null,
     billing_zip: input.log.billingZip ?? null,
