@@ -89,6 +89,108 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_attribution_events: {
+        Row: {
+          click_id: string | null
+          created_at: string
+          cta: string | null
+          event_name: string
+          fbclid: string | null
+          fbc: string | null
+          fbp: string | null
+          funnel: string
+          id: string
+          landing_url: string | null
+          market: string | null
+          meta_ad_id: string | null
+          meta_ad_name: string | null
+          meta_adset_id: string | null
+          meta_adset_name: string | null
+          meta_campaign_id: string | null
+          meta_campaign_name: string | null
+          metadata: Json
+          page_path: string | null
+          placement: string | null
+          referrer: string | null
+          request_ip_hash: string | null
+          session_id: string | null
+          site_source: string | null
+          source_url: string | null
+          user_agent_hash: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          click_id?: string | null
+          created_at?: string
+          cta?: string | null
+          event_name: string
+          fbclid?: string | null
+          fbc?: string | null
+          fbp?: string | null
+          funnel: string
+          id?: string
+          landing_url?: string | null
+          market?: string | null
+          meta_ad_id?: string | null
+          meta_ad_name?: string | null
+          meta_adset_id?: string | null
+          meta_adset_name?: string | null
+          meta_campaign_id?: string | null
+          meta_campaign_name?: string | null
+          metadata?: Json
+          page_path?: string | null
+          placement?: string | null
+          referrer?: string | null
+          request_ip_hash?: string | null
+          session_id?: string | null
+          site_source?: string | null
+          source_url?: string | null
+          user_agent_hash?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          click_id?: string | null
+          created_at?: string
+          cta?: string | null
+          event_name?: string
+          fbclid?: string | null
+          fbc?: string | null
+          fbp?: string | null
+          funnel?: string
+          id?: string
+          landing_url?: string | null
+          market?: string | null
+          meta_ad_id?: string | null
+          meta_ad_name?: string | null
+          meta_adset_id?: string | null
+          meta_adset_name?: string | null
+          meta_campaign_id?: string | null
+          meta_campaign_name?: string | null
+          metadata?: Json
+          page_path?: string | null
+          placement?: string | null
+          referrer?: string | null
+          request_ip_hash?: string | null
+          session_id?: string | null
+          site_source?: string | null
+          source_url?: string | null
+          user_agent_hash?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
       ticketmaster_capi_events: {
         Row: {
           attempt_count: number
@@ -107,6 +209,24 @@ export type Database = {
           meta_pixel_id: string | null
           meta_response: Json | null
           meta_status: number | null
+          om_click_id: string | null
+          om_session_id: string | null
+          fbclid: string | null
+          fbc: string | null
+          fbp: string | null
+          meta_ad_id: string | null
+          meta_ad_name: string | null
+          meta_adset_id: string | null
+          meta_adset_name: string | null
+          meta_campaign_id: string | null
+          meta_campaign_name: string | null
+          placement: string | null
+          site_source: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
           order_hash: string | null
           order_id: string | null
           quantity: number | null
@@ -136,6 +256,24 @@ export type Database = {
           meta_pixel_id?: string | null
           meta_response?: Json | null
           meta_status?: number | null
+          om_click_id?: string | null
+          om_session_id?: string | null
+          fbclid?: string | null
+          fbc?: string | null
+          fbp?: string | null
+          meta_ad_id?: string | null
+          meta_ad_name?: string | null
+          meta_adset_id?: string | null
+          meta_adset_name?: string | null
+          meta_campaign_id?: string | null
+          meta_campaign_name?: string | null
+          placement?: string | null
+          site_source?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
           order_hash?: string | null
           order_id?: string | null
           quantity?: number | null
@@ -165,6 +303,24 @@ export type Database = {
           meta_pixel_id?: string | null
           meta_response?: Json | null
           meta_status?: number | null
+          om_click_id?: string | null
+          om_session_id?: string | null
+          fbclid?: string | null
+          fbc?: string | null
+          fbp?: string | null
+          meta_ad_id?: string | null
+          meta_ad_name?: string | null
+          meta_adset_id?: string | null
+          meta_adset_name?: string | null
+          meta_campaign_id?: string | null
+          meta_campaign_name?: string | null
+          placement?: string | null
+          site_source?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
           order_hash?: string | null
           order_id?: string | null
           quantity?: number | null

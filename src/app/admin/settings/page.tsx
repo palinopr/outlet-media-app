@@ -72,10 +72,19 @@ type TicketmasterCapiEvent = {
   id: string;
   is_test: boolean;
   last_seen_at: string;
+  meta_ad_id: string | null;
+  meta_ad_name: string | null;
+  meta_adset_id: string | null;
+  meta_adset_name: string | null;
+  meta_campaign_id: string | null;
+  meta_campaign_name: string | null;
   meta_ok: boolean;
   meta_status: number | null;
+  om_click_id: string | null;
+  om_session_id: string | null;
   order_hash: string | null;
   order_id: string | null;
+  placement: string | null;
   quantity: number | null;
   skip_reason: string | null;
   source_url: string | null;
@@ -84,6 +93,80 @@ type TicketmasterCapiEvent = {
   ticketmaster_event_name: string | null;
   value: number | string | null;
 };
+
+type RevenueSummary = {
+  acceptedRate: number;
+  averageOrderValue: number;
+  failures: number;
+  purchases: number;
+  revenue: number;
+  tickets: number;
+};
+
+function numericValue(value: number | string | null) {
+  if (value === null || value === undefined) return 0;
+  const parsed = typeof value === "string" ? Number(value) : value;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function summarizePurchases(events: TicketmasterCapiEvent[]): RevenueSummary {
+  const purchases = events.filter((event) => event.event_name === "Purchase" && !event.skip_reason && numericValue(event.value) > 0);
+  const accepted = purchases.filter((event) => event.meta_ok);
+  const revenue = purchases.reduce((sum, event) => sum + numericValue(event.value), 0);
+  const tickets = purchases.reduce((sum, event) => sum + (event.quantity ?? 0), 0);
+  return {
+    acceptedRate: purchases.length === 0 ? 0 : Math.round((accepted.length / purchases.length) * 100),
+    averageOrderValue: purchases.length === 0 ? 0 : revenue / purchases.length,
+    failures: events.filter((event) => Boolean(event.skip_reason || event.error_message || (!event.meta_ok && event.meta_status))).length,
+    purchases: purchases.length,
+    revenue,
+    tickets,
+  };
+}
+
+function groupPurchasesByEvent(events: TicketmasterCapiEvent[]) {
+  const groups = new Map<string, TicketmasterCapiEvent[]>();
+  events
+    .filter((event) => event.event_name === "Purchase" && !event.skip_reason && numericValue(event.value) > 0)
+    .forEach((event) => {
+      const key = event.ticketmaster_event_name ?? event.ticketmaster_event_id ?? "Unknown event";
+      groups.set(key, [...(groups.get(key) ?? []), event]);
+    });
+  return Array.from(groups.entries())
+    .map(([name, rows]) => ({ name, ...summarizePurchases(rows) }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+}
+
+function groupPurchasesByAd(events: TicketmasterCapiEvent[]) {
+  const groups = new Map<string, TicketmasterCapiEvent[]>();
+  events
+    .filter((event) => event.event_name === "Purchase" && !event.skip_reason && numericValue(event.value) > 0 && (event.meta_ad_id || event.meta_adset_id || event.meta_campaign_id))
+    .forEach((event) => {
+      const key = event.meta_ad_name ?? event.meta_ad_id ?? event.meta_adset_name ?? event.meta_adset_id ?? event.meta_campaign_name ?? event.meta_campaign_id ?? "Unknown ad";
+      groups.set(key, [...(groups.get(key) ?? []), event]);
+    });
+  return Array.from(groups.entries())
+    .map(([name, rows]) => ({ name, ...summarizePurchases(rows) }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 5);
+}
+
+function buildTicketmasterRevenueMetrics(rows: TicketmasterCapiEvent[]) {
+  const now = Date.now();
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayRows = rows.filter((event) => new Date(event.created_at).getTime() >= todayStart.getTime());
+  const sevenDayRows = rows.filter((event) => new Date(event.created_at).getTime() >= now - 7 * 24 * 60 * 60 * 1000);
+  const thirtyDayRows = rows.filter((event) => new Date(event.created_at).getTime() >= now - 30 * 24 * 60 * 60 * 1000);
+  return {
+    adBreakdown: groupPurchasesByAd(thirtyDayRows),
+    eventBreakdown: groupPurchasesByEvent(thirtyDayRows),
+    sevenDaySummary: summarizePurchases(sevenDayRows),
+    thirtyDaySummary: summarizePurchases(thirtyDayRows),
+    todaySummary: summarizePurchases(todayRows),
+  };
+}
 
 export default async function SettingsPage() {
   const apiKeys = getApiKeyStatus();
@@ -112,11 +195,19 @@ export default async function SettingsPage() {
   const ticketmasterCapiEventsRes = await supabaseAdmin
     ?.from("ticketmaster_capi_events")
     .select(
-      "id, created_at, last_seen_at, attempt_count, event_name, event_id, order_id, order_hash, ticketmaster_event_id, ticketmaster_event_name, ticketmaster_event_date, value, currency, quantity, meta_status, meta_ok, skip_reason, error_message, is_test, source_url",
+      "id, created_at, last_seen_at, attempt_count, event_name, event_id, order_id, order_hash, om_click_id, om_session_id, ticketmaster_event_id, ticketmaster_event_name, ticketmaster_event_date, value, currency, quantity, meta_status, meta_ok, skip_reason, error_message, is_test, source_url, meta_campaign_id, meta_campaign_name, meta_adset_id, meta_adset_name, meta_ad_id, meta_ad_name, placement",
     )
     .order("created_at", { ascending: false })
-    .limit(12);
-  const ticketmasterCapiEvents = (ticketmasterCapiEventsRes?.data ?? []) as TicketmasterCapiEvent[];
+    .limit(500);
+  const ticketmasterCapiRows = (ticketmasterCapiEventsRes?.data ?? []) as TicketmasterCapiEvent[];
+  const ticketmasterCapiEvents = ticketmasterCapiRows.slice(0, 12);
+  const {
+    adBreakdown,
+    eventBreakdown,
+    sevenDaySummary,
+    thirtyDaySummary,
+    todaySummary,
+  } = buildTicketmasterRevenueMetrics(ticketmasterCapiRows);
 
   const stats = [
     {
@@ -278,6 +369,77 @@ export default async function SettingsPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <ReceiptText className="h-4 w-4 text-emerald-400" />
+            <CardTitle className="text-sm">Ticketmaster CAPI revenue</CardTitle>
+          </div>
+          <CardDescription>
+            Confirmed Ticketmaster purchase revenue received by the custom pixel, separate from Meta ad spend.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {[
+              { label: "Today revenue", value: formatCurrency(todaySummary.revenue, "USD"), sub: `${todaySummary.purchases} purchases` },
+              { label: "7-day revenue", value: formatCurrency(sevenDaySummary.revenue, "USD"), sub: `${sevenDaySummary.tickets} tickets` },
+              { label: "30-day revenue", value: formatCurrency(thirtyDaySummary.revenue, "USD"), sub: `${thirtyDaySummary.purchases} purchases` },
+              { label: "Avg order", value: formatCurrency(thirtyDaySummary.averageOrderValue, "USD"), sub: "30-day AOV" },
+              { label: "Meta accepted", value: `${thirtyDaySummary.acceptedRate}%`, sub: `${thirtyDaySummary.failures} issues` },
+            ].map((item) => (
+              <div key={item.label} className="rounded-xl border border-border/50 bg-muted/20 p-3">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{item.label}</p>
+                <p className="mt-1 text-lg font-semibold">{item.value}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground/70">{item.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Revenue by Ticketmaster event</p>
+              {eventBreakdown.length === 0 ? (
+                <p className="mt-3 text-sm text-muted-foreground">No purchase revenue recorded in the last 30 days.</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {eventBreakdown.map((event) => (
+                    <div key={event.name} className="flex items-center justify-between gap-3 rounded-lg bg-white/[0.03] px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{event.name}</p>
+                        <p className="text-xs text-muted-foreground">{event.purchases} purchases • {event.tickets} tickets</p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold">{formatCurrency(event.revenue, "USD")}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Revenue by ad/ad set</p>
+              {adBreakdown.length === 0 ? (
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Waiting on ad URL parameters and Ticketmaster click-id preservation before deterministic ad revenue appears here.
+                </p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {adBreakdown.map((ad) => (
+                    <div key={ad.name} className="flex items-center justify-between gap-3 rounded-lg bg-white/[0.03] px-3 py-2">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{ad.name}</p>
+                        <p className="text-xs text-muted-foreground">{ad.purchases} purchases • {ad.acceptedRate}% accepted</p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold">{formatCurrency(ad.revenue, "USD")}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <ReceiptText className="h-4 w-4 text-emerald-400" />
             <CardTitle className="text-sm">Ticketmaster CAPI events</CardTitle>
           </div>
           <CardDescription>
@@ -315,6 +477,11 @@ export default async function SettingsPage() {
                       <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground/70">
                         order {event.order_id ?? event.order_hash?.slice(0, 12) ?? "n/a"} • event_id {event.event_id.slice(0, 28)}
                       </p>
+                      {(event.om_click_id || event.meta_ad_id || event.meta_adset_id) ? (
+                        <p className="mt-1 truncate font-mono text-[11px] text-emerald-200/70">
+                          click {event.om_click_id?.slice(0, 24) ?? "n/a"} • ad {event.meta_ad_name ?? event.meta_ad_id ?? event.meta_adset_name ?? event.meta_adset_id ?? "n/a"}
+                        </p>
+                      ) : null}
                       {event.source_url ? (
                         <p className="mt-1 truncate text-[11px] text-muted-foreground/60">{event.source_url}</p>
                       ) : null}

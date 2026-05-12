@@ -1148,7 +1148,131 @@
       (window.requestIdleCallback || ((cb) => setTimeout(cb, 2000)))(loadPixel, { timeout: 2500 });
 
       const TICKETMASTER_URL = "https://www.ticketmaster.com/event/02006478E042F9B1";
+      const TICKET_REDIRECT_URL = "/out/ticketmaster/ataca-sergio-newark";
+      const FUNNEL_NAME = "ataca-sergio";
+      const MARKET = "newark";
+      const SESSION_KEY = "om_ataca_sergio_session_id";
+      const ATTRIBUTION_KEY = "om_ataca_sergio_attribution";
       const EVENT_TIME = new Date("2026-05-30T19:00:00-04:00").getTime();
+      const ATTRIBUTION_KEYS = [
+        "campaign_id",
+        "campaign_name",
+        "adset_id",
+        "adset_name",
+        "ad_id",
+        "ad_name",
+        "placement",
+        "site_source",
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_content",
+        "utm_term",
+        "fbclid",
+        "gclid",
+        "ttclid",
+      ];
+
+      function randomId(prefix) {
+        if (window.crypto && typeof window.crypto.randomUUID === "function") {
+          return `${prefix}_${window.crypto.randomUUID()}`;
+        }
+        return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+      }
+
+      function storageGet(key) {
+        try { return window.localStorage.getItem(key); } catch { return null; }
+      }
+
+      function storageSet(key, value) {
+        try { window.localStorage.setItem(key, value); } catch { /* ignore blocked storage */ }
+      }
+
+      function readCookie(name) {
+        return document.cookie
+          .split(";")
+          .map((part) => part.trim())
+          .find((part) => part.startsWith(`${name}=`))
+          ?.split("=")
+          .slice(1)
+          .join("=") || "";
+      }
+
+      function safeDecode(value) {
+        try { return decodeURIComponent(value); } catch { return value; }
+      }
+
+      function getSessionId() {
+        const existing = storageGet(SESSION_KEY);
+        if (existing) return existing;
+        const created = randomId("oms");
+        storageSet(SESSION_KEY, created);
+        return created;
+      }
+
+      function readIncomingAttribution() {
+        const incoming = new URLSearchParams(window.location.search);
+        const attribution = {};
+        ATTRIBUTION_KEYS.forEach((key) => {
+          const value = incoming.get(key);
+          if (value) attribution[key] = value;
+        });
+        const fbp = readCookie("_fbp");
+        const fbc = readCookie("_fbc");
+        if (fbp) attribution.fbp = safeDecode(fbp);
+        if (fbc) attribution.fbc = safeDecode(fbc);
+        return attribution;
+      }
+
+      function getAttribution() {
+        const incoming = readIncomingAttribution();
+        let stored = {};
+        try { stored = JSON.parse(storageGet(ATTRIBUTION_KEY) || "{}"); } catch { stored = {}; }
+        const merged = { ...stored, ...incoming };
+        storageSet(ATTRIBUTION_KEY, JSON.stringify(merged));
+        return merged;
+      }
+
+      const sessionId = getSessionId();
+      let attribution = getAttribution();
+
+      function addAttributionParams(params) {
+        attribution = getAttribution();
+        params.set("om_session_id", sessionId);
+        Object.entries(attribution).forEach(([key, value]) => {
+          if (typeof value === "string" && value) params.set(key, value);
+        });
+      }
+
+      function sendAttributionEvent(eventName, metadata = {}) {
+        attribution = getAttribution();
+        const payload = {
+          attribution,
+          event_name: eventName,
+          funnel: FUNNEL_NAME,
+          landing_url: window.location.href,
+          market: MARKET,
+          metadata,
+          page_url: window.location.href,
+          referrer: document.referrer,
+          session_id: sessionId,
+        };
+        if (metadata.click_id) payload.click_id = metadata.click_id;
+        if (metadata.cta) payload.cta = metadata.cta;
+        const body = JSON.stringify(payload);
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon("/api/attribution/funnel", new Blob([body], { type: "application/json" }));
+          return;
+        }
+        fetch("/api/attribution/funnel", {
+          body,
+          headers: { "Content-Type": "application/json" },
+          keepalive: true,
+          method: "POST",
+        }).catch(() => {});
+      }
+
+      sendAttributionEvent("page_view");
 
       const ids = ["days", "hours", "minutes", "seconds"];
       const pad = (n) => String(Math.max(0, n)).padStart(2, "0");
@@ -1168,18 +1292,15 @@
         });
       }
 
-      function ticketHref() {
-        const target = new URL(TICKETMASTER_URL);
-        const incoming = new URLSearchParams(window.location.search);
-        for (const [key, value] of incoming.entries()) {
-          if (key.startsWith("utm_") || key === "fbclid" || key === "ttclid" || key === "gclid") {
-            target.searchParams.set(key, value);
-          }
-        }
-        target.searchParams.set("utm_source", incoming.get("utm_source") || "meta");
-        target.searchParams.set("utm_medium", incoming.get("utm_medium") || "paid_social");
-        target.searchParams.set("utm_campaign", incoming.get("utm_campaign") || "ataca_sergio_newark");
-        target.searchParams.set("utm_content", incoming.get("utm_content") || "lp_default");
+      function ticketHref(cta, clickId) {
+        const target = new URL(TICKET_REDIRECT_URL, window.location.origin);
+        addAttributionParams(target.searchParams);
+        target.searchParams.set("om_click_id", clickId);
+        target.searchParams.set("cta", cta || "unknown");
+        target.searchParams.set("utm_source", attribution.utm_source || "meta");
+        target.searchParams.set("utm_medium", attribution.utm_medium || "paid_social");
+        target.searchParams.set("utm_campaign", attribution.utm_campaign || "ataca_sergio_newark");
+        target.searchParams.set("utm_content", attribution.utm_content || cta || "lp_default");
         return target.toString();
       }
 
@@ -1197,11 +1318,14 @@
 
       let qualifiedTracked = false;
       function trackQualifiedView(reason) {
-        if (qualifiedTracked || typeof window.fbq !== "function") return;
+        if (qualifiedTracked) return;
         qualifiedTracked = true;
         const payload = { ...funnelPayload, engagement_reason: reason };
-        window.fbq("track", "ViewContent", payload);
-        trackCustom("FunnelQualifiedView", payload);
+        if (typeof window.fbq === "function") {
+          window.fbq("track", "ViewContent", payload);
+          trackCustom("FunnelQualifiedView", payload);
+        }
+        sendAttributionEvent("qualified_view", { reason });
       }
       window.setTimeout(() => trackQualifiedView("time_6s"), 6000);
 
@@ -1216,14 +1340,25 @@
           if (pct >= d && !fired.has(d)) {
             fired.add(d);
             trackCustom("ScrollDepth", { ...funnelPayload, depth: d });
+            sendAttributionEvent("scroll_depth", { depth: d });
             if (d >= 50) trackQualifiedView("scroll_50");
           }
         });
       }
 
       document.querySelectorAll(".js-ticket").forEach((link) => {
-        link.href = ticketHref();
+        function refreshTicketHref() {
+          const cta = link.dataset.cta || "unknown";
+          const clickId = randomId("omc");
+          link.dataset.omClickId = clickId;
+          link.href = ticketHref(cta, clickId);
+        }
+        refreshTicketHref();
+        link.addEventListener("pointerdown", refreshTicketHref, { passive: true });
         link.addEventListener("click", () => {
+          const cta = link.dataset.cta || "unknown";
+          const clickId = link.dataset.omClickId || randomId("omc");
+          link.href = ticketHref(cta, clickId);
           trackQualifiedView("ticket_click");
           // NOTE: do NOT fire InitiateCheckout here — this is an outbound click,
           // not actual checkout. Misleads Meta optimization toward click-happy
@@ -1231,7 +1366,13 @@
           // postback / CAPI bridge once that's wired up.
           trackCustom("OutboundTicketClick", {
             ...funnelPayload,
-            cta: link.dataset.cta || "unknown",
+            click_id: clickId,
+            cta,
+            destination: "ticketmaster",
+          });
+          sendAttributionEvent("ticket_click", {
+            click_id: clickId,
+            cta,
             destination: "ticketmaster",
           });
         });

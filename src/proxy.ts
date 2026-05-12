@@ -11,12 +11,14 @@ const isPublicRoute = createRouteMatcher([
   "/terms",
   "/9am(.*)",
   "/ataca-sergio(.*)",
+  "/out/ticketmaster(.*)",
   "/deletion-status(.*)",
   "/api/ingest(.*)",
   "/api/health(.*)",
   "/api/meta/callback(.*)",
   "/api/meta/data-deletion(.*)",
   "/api/meta/ticketmaster-capi(.*)",
+  "/api/attribution/funnel(.*)",
   "/api/contact(.*)",
 ]);
 

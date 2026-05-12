@@ -80,14 +80,29 @@ Use the log to answer:
 - Was the hit duplicated or retried?
 - Is the issue Ticketmaster delivery, Outlet bridge parsing, or Meta acceptance?
 
+### Hyros-style attribution layer
+
+The Ataca Sergio funnel now has a first-party attribution layer before the Ticketmaster handoff:
+
+- landing page captures/stores `om_session_id` plus Meta/UTM parameters
+- funnel engagement events post to `/api/attribution/funnel`
+- ticket CTAs route through `/out/ticketmaster/ataca-sergio-newark`
+- the redirect logs `ticket_redirect`, appends `om_click_id` / `om_session_id`, and forwards attribution parameters to Ticketmaster
+- Ticketmaster CAPI logs parse `om_click_id`, `om_session_id`, Meta campaign/ad set/ad fields, placement, and UTMs from request params or `source_url` when Ticketmaster preserves them
+
+Standard Meta ad URL parameter template for this funnel:
+
+```text
+campaign_id={{campaign.id}}&campaign_name={{campaign.name}}&adset_id={{adset.id}}&adset_name={{adset.name}}&ad_id={{ad.id}}&ad_name={{ad.name}}&placement={{placement}}&site_source={{site_source_name}}&utm_source=meta&utm_medium=paid_social&utm_campaign=ataca_sergio_newark&utm_content={{ad.name}}
+```
+
 ### Ticketmaster CAPI todo / future improvements
 
 1. Confirm a real Ticketmaster sale appears as `Purchase` with `Meta accepted` in Admin Settings.
-2. Add a compact revenue dashboard using `ticketmaster_capi_events`: revenue, purchases, tickets, average order value, Meta accepted rate, and failures by day/event.
+2. Run a controlled purchase/comp-order test to confirm whether Ticketmaster preserves `om_click_id` on the confirmation page `source_url`.
 3. Add alerting for broken signal: no recent purchase hits during active sales windows, repeated missing `order_id`/`value`, or elevated Meta rejection rates.
 4. If Ticketmaster exposes more fields, pass hashed email/phone/name/city/zip/country to improve Meta match quality.
-5. Later, test whether Ticketmaster preserves custom click IDs like `om_click_id` through checkout and exposes them on the confirmation pixel. If yes, build deterministic ad/adset/ad revenue attribution.
-6. Standardize Meta ad URL parameters for future funnels: `campaign_id`, `campaign_name`, `adset_id`, `adset_name`, `ad_id`, `ad_name`, `placement`, and `site_source`.
+5. Join Meta spend by campaign/adset/ad with `ticketmaster_capi_events` once real purchases contain preserved ad/click parameters.
 
 ## Repeated operating rules
 

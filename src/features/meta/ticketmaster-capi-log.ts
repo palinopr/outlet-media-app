@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { MetaCapiSendResult, TicketmasterCapiLogFields } from "@/features/meta/conversions-api";
-import { sha256 } from "@/features/meta/conversions-api";
+import { rowFromAttribution } from "@/features/meta/attribution";
+import { sha256 } from "@/lib/hash";
 import { supabaseAdmin } from "@/lib/supabase";
 
 type RecordTicketmasterCapiEventInput = {
@@ -29,11 +30,29 @@ type TicketmasterCapiEventRow = {
   meta_pixel_id?: string | null;
   meta_response?: unknown;
   meta_status?: number | null;
+  om_click_id?: string | null;
+  om_session_id?: string | null;
   order_hash?: string | null;
   order_id?: string | null;
   quantity?: number | null;
   request_ip_hash?: string | null;
   skip_reason?: string | null;
+  fbclid?: string | null;
+  fbc?: string | null;
+  fbp?: string | null;
+  meta_ad_id?: string | null;
+  meta_ad_name?: string | null;
+  meta_adset_id?: string | null;
+  meta_adset_name?: string | null;
+  meta_campaign_id?: string | null;
+  meta_campaign_name?: string | null;
+  placement?: string | null;
+  site_source?: string | null;
+  utm_campaign?: string | null;
+  utm_content?: string | null;
+  utm_medium?: string | null;
+  utm_source?: string | null;
+  utm_term?: string | null;
   source_url?: string | null;
   ticketmaster_event_date?: string | null;
   ticketmaster_event_id?: string | null;
@@ -80,6 +99,7 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
   }
 
   const row: TicketmasterCapiEventRow = {
+    ...rowFromAttribution(input.log.attribution),
     attempt_count: ((existing.data as { attempt_count?: number } | null)?.attempt_count ?? 0) + 1,
     billing_state: input.log.billingState ?? null,
     billing_zip: input.log.billingZip ?? null,
@@ -94,6 +114,8 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
     meta_pixel_id: input.metaPixelId ?? null,
     meta_response: compactResponse(input.metaResult),
     meta_status: input.metaResult?.status ?? null,
+    om_click_id: input.log.omClickId ?? null,
+    om_session_id: input.log.omSessionId ?? null,
     order_hash: input.log.orderHash ?? null,
     order_id: input.log.orderId ?? null,
     quantity: input.log.quantity ?? null,

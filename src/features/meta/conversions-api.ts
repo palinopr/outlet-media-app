@@ -1,5 +1,13 @@
-import { createHash } from "node:crypto";
+import {
+  attributionFromSearchParams,
+  attributionFromUrlString,
+  clickIdFromParamsOrUrl,
+  mergeAttribution,
+  sessionIdFromParamsOrUrl,
+  type MarketingAttribution,
+} from "@/features/meta/attribution";
 import { META_API_VERSION } from "@/lib/constants";
+import { sha256 } from "@/lib/hash";
 
 const DEFAULT_ATACA_SERGIO_PIXEL_ID = "1553637492361321";
 const DEFAULT_ATACA_SERGIO_CONTENT_ID = "ataca-sergio-newark-2026-05-30";
@@ -55,8 +63,11 @@ export type TicketmasterCapiLogFields = {
   billingZip?: string;
   country?: string;
   currency?: string;
+  attribution?: MarketingAttribution;
   eventId?: string;
   eventName: string;
+  omClickId?: string;
+  omSessionId?: string;
   orderHash?: string;
   orderId?: string;
   quantity?: number;
@@ -108,10 +119,6 @@ function parsePositiveInteger(value: string | undefined) {
   return parsed;
 }
 
-export function sha256(value: string) {
-  return createHash("sha256").update(value).digest("hex");
-}
-
 function normalizeForHash(value: string, kind: "email" | "phone" | "text") {
   const trimmed = value.trim().toLowerCase();
   if (kind === "phone") return trimmed.replace(/[^0-9]/g, "");
@@ -134,8 +141,10 @@ function getClientIp(headers: Headers) {
 
 function sourceUrlFromRequest(url: URL, headers: Headers) {
   return (
-    firstParam(url.searchParams, ["source_url", "event_source_url", "page_url"]) ??
-    cleanText(headers.get("referer"), 500) ??
+    cleanText(url.searchParams.get("source_url"), 1000) ??
+    cleanText(url.searchParams.get("event_source_url"), 1000) ??
+    cleanText(url.searchParams.get("page_url"), 1000) ??
+    cleanText(headers.get("referer"), 1000) ??
     `${url.origin}${url.pathname}`
   );
 }
@@ -187,6 +196,12 @@ export function buildTicketmasterCapiEvent(url: URL, headers: Headers, now = new
   const contentId = ticketmasterEventId ?? DEFAULT_ATACA_SERGIO_CONTENT_ID;
   const contentName = ticketmasterEventName ?? DEFAULT_CONTENT_NAME;
   const sourceUrl = sourceUrlFromRequest(url, headers);
+  const attribution = mergeAttribution(
+    attributionFromUrlString(sourceUrl),
+    attributionFromSearchParams(params),
+  );
+  const omClickId = clickIdFromParamsOrUrl(params, sourceUrl);
+  const omSessionId = sessionIdFromParamsOrUrl(params, sourceUrl);
   const clientIp = getClientIp(headers);
   const clientUserAgent = cleanText(headers.get("user-agent"), 500);
   const logBase: TicketmasterCapiLogFields = {
@@ -194,7 +209,10 @@ export function buildTicketmasterCapiEvent(url: URL, headers: Headers, now = new
     billingZip: firstParam(params, ["zip", "zp", "zipcode", "postal_code", "billing_zip"]),
     country: firstParam(params, ["country", "country_code"]),
     currency,
+    attribution,
     eventName,
+    omClickId,
+    omSessionId,
     orderHash: orderId ? sha256(orderId) : undefined,
     orderId,
     quantity,
