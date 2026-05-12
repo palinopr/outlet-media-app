@@ -56,6 +56,39 @@ The endpoint always returns a 1x1 GIF so Ticketmaster validation/browser renderi
 
 Do not enable multiple Ticketmaster purchase emitters unless they deduplicate with the same Meta `event_id`; otherwise Meta can double-count purchases. Prefer one source of truth for `Purchase`, then use `OutboundTicketClick` from the funnel as a diagnostic proxy only.
 
+### Current Ataca Sergio setup
+
+- Funnel pages keep the browser Meta pixel for upper/mid-funnel events such as `PageView`, `ViewContent`, and `OutboundTicketClick`.
+- Ticketmaster confirmation uses the Custom IMG pixel as the sole `Purchase` source.
+- The Custom IMG hits `/api/meta/ticketmaster-capi`, which validates `TICKETMASTER_CAPI_PIXEL_SECRET`, builds a deterministic Meta `event_id`, sends the event to Meta CAPI, and returns a 1x1 GIF.
+- Ticketmaster's built-in Meta purchase emitter should stay disabled unless exact Meta dedupe by matching `event_name + event_id` is confirmed.
+- Production pixel id currently used for this bridge: `1553637492361321`.
+
+### Ticketmaster CAPI observability
+
+Every valid keyed Ticketmaster CAPI hit is recorded in `ticketmaster_capi_events` for audit/debugging. View recent activity in:
+
+- `Admin → Settings → Ticketmaster CAPI events`
+
+The log is intentionally privacy-safe. It stores order/event/value metadata, Meta status/response summaries, skip/error reason, hit count, and hashed request identifiers. Do not log buyer PII or secrets.
+
+Use the log to answer:
+
+- Did Ticketmaster fire the custom pixel?
+- Did the event contain `order_id` and `value`?
+- Did Meta accept the CAPI event?
+- Was the hit duplicated or retried?
+- Is the issue Ticketmaster delivery, Outlet bridge parsing, or Meta acceptance?
+
+### Ticketmaster CAPI todo / future improvements
+
+1. Confirm a real Ticketmaster sale appears as `Purchase` with `Meta accepted` in Admin Settings.
+2. Add a compact revenue dashboard using `ticketmaster_capi_events`: revenue, purchases, tickets, average order value, Meta accepted rate, and failures by day/event.
+3. Add alerting for broken signal: no recent purchase hits during active sales windows, repeated missing `order_id`/`value`, or elevated Meta rejection rates.
+4. If Ticketmaster exposes more fields, pass hashed email/phone/name/city/zip/country to improve Meta match quality.
+5. Later, test whether Ticketmaster preserves custom click IDs like `om_click_id` through checkout and exposes them on the confirmation pixel. If yes, build deterministic ad/adset/ad revenue attribution.
+6. Standardize Meta ad URL parameters for future funnels: `campaign_id`, `campaign_name`, `adset_id`, `adset_name`, `ad_id`, `ad_name`, `placement`, and `site_source`.
+
 ## Repeated operating rules
 
 - keep post/feed and story/reels creatives separate
