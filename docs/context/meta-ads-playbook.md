@@ -35,7 +35,26 @@ Common Meta variables referenced across the repo:
 - `META_APP_SECRET`
 - `NEXT_PUBLIC_APP_URL`
 
+Ticketmaster Custom IMG pixel / Meta CAPI bridge variables:
+
+- `META_CAPI_ACCESS_TOKEN`
+- `META_CAPI_PIXEL_ID`
+- `META_CAPI_TEST_EVENT_CODE`
+- `TICKETMASTER_CAPI_PIXEL_SECRET`
+
 Meta credentials should stay centralized in the parent app env rather than duplicated across local tools.
+
+## Ticketmaster Custom IMG pixel to Meta CAPI
+
+Ticketmaster Custom tags can only render a single `<img>` tag. For closed-loop purchase signal when the built-in Meta vendor cannot emit the needed event shape, use the app endpoint:
+
+- Starting URL: `https://outletmedia.net/api/meta/ticketmaster-capi?key=<TICKETMASTER_CAPI_PIXEL_SECRET>`
+- Required dynamic parameters for `Purchase`: `order_id` and `value`
+- Recommended dynamic parameters: `currency`, `eventname`, `eventdate`, `eventid`, `quantity`, `fbclid` when Ticketmaster can expose it
+
+The endpoint always returns a 1x1 GIF so Ticketmaster validation/browser rendering stays stable, but it only sends to Meta when the static `key` matches `TICKETMASTER_CAPI_PIXEL_SECRET` and CAPI credentials are configured.
+
+Do not enable multiple Ticketmaster purchase emitters unless they deduplicate with the same Meta `event_id`; otherwise Meta can double-count purchases. Prefer one source of truth for `Purchase`, then use `OutboundTicketClick` from the funnel as a diagnostic proxy only.
 
 ## Repeated operating rules
 

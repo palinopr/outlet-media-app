@@ -16,6 +16,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/health(.*)",
   "/api/meta/callback(.*)",
   "/api/meta/data-deletion(.*)",
+  "/api/meta/ticketmaster-capi(.*)",
   "/api/contact(.*)",
 ]);
 
