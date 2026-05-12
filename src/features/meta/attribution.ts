@@ -184,7 +184,16 @@ export function sessionIdFromParamsOrUrl(params: URLSearchParams, sourceUrl: str
 }
 
 export function mergeAttribution(...items: Array<MarketingAttribution | undefined>): MarketingAttribution {
-  return Object.assign({}, ...items.filter(Boolean));
+  const merged: MarketingAttribution = {};
+  for (const item of items) {
+    if (!item) continue;
+    for (const [key, value] of Object.entries(item)) {
+      if (value !== undefined) {
+        (merged as Record<string, string>)[key] = value;
+      }
+    }
+  }
+  return merged;
 }
 
 export function rowFromAttribution(attribution: MarketingAttribution | undefined) {
