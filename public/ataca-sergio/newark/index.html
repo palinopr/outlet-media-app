@@ -6,7 +6,7 @@
     <title>Festival Ataca Sergio · Sábado 30 de mayo · Prudential Center</title>
     <meta
       name="description"
-      content="Festival Ataca Sergio. Sábado 30 de mayo en el Prudential Center, Newark. El cumpleaños de Sergio George con Oscar D'León, Andy Montañez, Luis Enrique y más leyendas de la salsa."
+      content="Festival Ataca Sergio. Sábado 30 de mayo en el Prudential Center, Newark. El cumpleaños de Sergio George con Oscar D'León, Andy Montañez, Luis Enrique, La India y más leyendas de la salsa."
     />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Festival Ataca Sergio · Sábado 30 de mayo · Prudential Center" />
@@ -67,19 +67,19 @@
         width: 100%;
         max-width: 430px;
         margin: 0 auto;
-        padding-bottom: 116px;
+        padding-bottom: 104px;
         background: var(--black);
         box-shadow: 0 0 80px rgba(0, 0, 0, 0.6);
         overflow: clip;
       }
-      section { padding: 42px 22px; }
+      section { padding: 38px 20px; }
       h1, h2, h3, p, dl, dd, ul { margin: 0; }
 
       /* HERO with video background */
       .hero {
         position: relative;
         padding: 0;
-        min-height: 100svh;
+        min-height: 94svh;
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
@@ -119,13 +119,13 @@
       .hero-panel {
         position: relative;
         z-index: 3;
-        padding: 26px 22px 30px;
+        padding: 22px 20px 22px;
       }
 
       .eyebrow {
         display: inline-block;
-        margin-bottom: 22px;
-        padding-bottom: 9px;
+        margin-bottom: 15px;
+        padding-bottom: 7px;
         border-bottom: 1px solid var(--gold);
         color: var(--gold);
         font-size: 11px;
@@ -136,7 +136,7 @@
       h1.title {
         font-family: var(--display);
         font-weight: 400;
-        font-size: clamp(60px, 17vw, 86px);
+        font-size: clamp(56px, 16.5vw, 78px);
         line-height: 0.84;
         letter-spacing: 0.005em;
         text-transform: uppercase;
@@ -148,24 +148,24 @@
         font-style: normal;
       }
       .hero-sub {
-        margin-top: 18px;
-        max-width: 22ch;
+        margin-top: 14px;
+        max-width: 24ch;
         color: rgba(242, 231, 211, 0.94);
         font-size: 17px;
         line-height: 1.36;
         text-shadow: 0 1px 14px rgba(0, 0, 0, 0.6);
       }
       .hero-anfitrion {
-        margin-top: 14px;
-        max-width: 28ch;
+        margin-top: 10px;
+        max-width: 27ch;
         color: rgba(242, 231, 211, 0.78);
-        font-size: 13.5px;
+        font-size: 12.8px;
         line-height: 1.45;
         text-shadow: 0 1px 14px rgba(0, 0, 0, 0.6);
       }
       .hero-anfitrion b { color: var(--gold); font-weight: 700; }
       .hero-fact {
-        margin-top: 16px;
+        margin-top: 13px;
         color: var(--muted);
         font-size: 12px;
         font-weight: 700;
@@ -173,15 +173,25 @@
         text-transform: uppercase;
       }
       .hero-trust {
-        margin-top: 12px;
+        margin-top: 10px;
         color: var(--muted);
         font-size: 11px;
         letter-spacing: 0.1em;
         text-transform: uppercase;
       }
+      .hero-kicker {
+        margin-top: 10px;
+        max-width: 30ch;
+        color: rgba(242, 231, 211, 0.86);
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        line-height: 1.35;
+        text-transform: uppercase;
+      }
       /* Promo video section — unlabeled, just the video */
       .promo {
-        padding: 22px 22px 26px;
+        padding: 20px 20px 24px;
         background: var(--black);
       }
       .video-frame {
@@ -233,15 +243,28 @@
 
       /* Proof video carousel — horizontal scroll of vertical clips */
       .proof {
-        padding: 28px 0 32px;
+        padding: 34px 0 34px;
         background: var(--black);
+      }
+      .proof-header {
+        padding: 0 20px 18px;
+      }
+      .proof-header .section-title {
+        margin-bottom: 8px;
+      }
+      .proof-header p {
+        max-width: 34ch;
+        color: var(--muted);
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.45;
       }
       .proof-strip {
         display: grid;
         grid-auto-flow: column;
         grid-auto-columns: 72%;
         gap: 12px;
-        padding: 0 22px 6px;
+        padding: 0 20px 6px;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
@@ -256,6 +279,15 @@
         overflow: hidden;
         scroll-snap-align: start;
         cursor: pointer;
+      }
+      .proof-card::after {
+        content: "";
+        position: absolute;
+        inset: auto 0 0;
+        height: 38%;
+        z-index: 1;
+        background: linear-gradient(180deg, transparent, rgba(6, 6, 6, 0.86));
+        pointer-events: none;
       }
       .proof-card video {
         display: block;
@@ -292,15 +324,29 @@
         pointer-events: none;
         transform: translate(-50%, -50%) scale(0.85);
       }
+      .proof-caption {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 2;
+        color: var(--ivory);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.1em;
+        line-height: 1.25;
+        text-transform: uppercase;
+        pointer-events: none;
+      }
       .hero-cta {
-        margin-top: 22px;
+        margin-top: 18px;
         display: flex;
         align-items: center;
         gap: 14px;
       }
       .primary {
         display: inline-flex;
-        min-height: 56px;
+        min-height: 54px;
         flex: 1;
         align-items: center;
         justify-content: center;
@@ -363,7 +409,7 @@
         border-bottom: 1px solid var(--line);
       }
       .tick {
-        padding: 16px 6px 14px;
+        padding: 14px 6px 12px;
         text-align: center;
         border-right: 1px solid var(--line);
       }
@@ -373,7 +419,7 @@
         font-family: var(--body);
         font-variant-numeric: tabular-nums;
         font-feature-settings: "tnum";
-        font-size: 26px;
+        font-size: 25px;
         font-weight: 800;
         line-height: 1;
         letter-spacing: 0.01em;
@@ -387,6 +433,36 @@
         font-weight: 800;
         letter-spacing: 0.16em;
         text-transform: uppercase;
+      }
+
+      .urgency {
+        padding: 22px 20px;
+        background: linear-gradient(180deg, #120507 0%, #080202 100%);
+        border-bottom: 1px solid var(--line);
+      }
+      .urgency-box {
+        border: 1px solid rgba(198, 161, 94, 0.34);
+        background: rgba(198, 161, 94, 0.08);
+        padding: 16px 15px;
+      }
+      .urgency strong {
+        display: block;
+        color: var(--gold);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+      .urgency p {
+        margin-top: 7px;
+        color: var(--ivory);
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.35;
+      }
+      .urgency .primary {
+        width: 100%;
+        margin-top: 14px;
       }
 
       /* Stub */
@@ -458,7 +534,7 @@
 
       /* Lineup */
       .lineup {
-        padding: 48px 22px;
+        padding: 42px 20px;
         background: linear-gradient(180deg, var(--black) 0%, #0d0405 100%);
       }
       .section-eyebrow {
@@ -477,6 +553,13 @@
         margin-bottom: 24px;
       }
       .section-title em { color: var(--gold); font-style: normal; }
+      .section-copy {
+        margin: -10px 0 22px;
+        color: var(--muted);
+        font-size: 15px;
+        font-weight: 700;
+        line-height: 1.45;
+      }
 
       .lineup-grid {
         display: grid;
@@ -584,9 +667,15 @@
         letter-spacing: 0.14em;
         text-transform: uppercase;
       }
+      .lineup-cta {
+        margin-top: 22px;
+      }
+      .lineup-cta .primary {
+        width: 100%;
+      }
 
       /* Why this show */
-      .why { padding: 48px 22px; background: #090303; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+      .why { padding: 42px 20px; background: #090303; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
       .why-grid {
         display: grid;
         gap: 22px;
@@ -654,7 +743,7 @@
       /* Final */
       .final {
         position: relative;
-        padding: 70px 22px 78px;
+        padding: 62px 20px 74px;
         background:
           linear-gradient(180deg, rgba(6, 6, 6, 0.62) 0%, rgba(6, 6, 6, 0.92) 65%, rgba(6, 6, 6, 0.98) 100%),
           url("./assets/atmosphere/silhouette-cta.webp") center / cover;
@@ -732,7 +821,9 @@
 
       @media (max-width: 390px) {
         .primary { padding: 0 14px; font-size: 14px; }
-        .hero-panel { padding: 22px 18px 24px; }
+        .hero-panel { padding: 20px 18px 22px; }
+        h1.title { font-size: clamp(52px, 16vw, 68px); }
+        .hero-sub { font-size: 16px; }
         .tick strong { font-size: 24px; }
         .tick span { font-size: 9px; }
       }
@@ -778,11 +869,12 @@
           <div class="eyebrow">Sábado 30 de mayo · Newark, NJ</div>
           <h1 class="title">Festival<br />Ataca<br /><em>Sergio</em></h1>
           <p class="hero-sub">
-            Oscar D'León, Andy Montañez, Luis Enrique y las leyendas de la salsa en una sola noche.
+            Sergio George celebra su cumpleaños reuniendo a Oscar D'León, Andy Montañez, Luis Enrique, La India y más leyendas de la salsa.
           </p>
           <p class="hero-anfitrion">
             Anfitrión y cumpleañero: <b>Sergio George</b> · productor de DLG, Marc Anthony, La India y Tito Nieves.
           </p>
+          <p class="hero-kicker">Una sola fecha en Newark. Sin segundo show.</p>
           <p class="hero-fact">Prudential Center · Puertas 7PM · Show 8PM</p>
           <div class="hero-cta">
             <a class="primary js-ticket" href="#" data-cta="hero">Comprar boletos</a>
@@ -798,6 +890,7 @@
           <span>Andy Montañez <i>·</i></span>
           <span>Luis Enrique <i>·</i></span>
           <span>Huey Dunbar <i>·</i></span>
+          <span>La India <i>·</i></span>
           <span>Anthony Ramos <i>·</i></span>
           <span>Guaynaa <i>·</i></span>
           <span>Luis Figueroa <i>·</i></span>
@@ -808,6 +901,7 @@
           <span>Andy Montañez <i>·</i></span>
           <span>Luis Enrique <i>·</i></span>
           <span>Huey Dunbar <i>·</i></span>
+          <span>La India <i>·</i></span>
           <span>Anthony Ramos <i>·</i></span>
           <span>Guaynaa <i>·</i></span>
           <span>Luis Figueroa <i>·</i></span>
@@ -822,6 +916,14 @@
         <div class="tick"><strong id="minutes">--</strong><span>min</span></div>
         <div class="tick"><strong id="seconds">--</strong><span>seg</span></div>
       </div>
+
+      <section class="urgency" aria-label="Compra oficial">
+        <div class="urgency-box">
+          <strong>Ticketmaster oficial</strong>
+          <p>Compra ahora y asegura tus mejores secciones para el 30 de mayo.</p>
+          <a class="primary js-ticket" href="#" data-cta="urgency">Comprar boletos</a>
+        </div>
+      </section>
 
       <section class="promo">
         <div class="video-frame" id="promoFrame">
@@ -856,6 +958,10 @@
       </section>
 
       <section class="lineup">
+        <div class="section-eyebrow">Cartelera</div>
+        <h2 class="section-title">Las leyendas que hacen <em>la noche.</em></h2>
+        <p class="section-copy">Sergio George celebra con leyendas de la salsa, voces de hoy e invitados especiales en un solo escenario.</p>
+
         <div class="section-eyebrow">Anfitrión · Cumpleañero</div>
         <ul class="lineup-grid lineup-anfitrion" id="lineupAnfitrion">
           <li class="headliner" data-slug="sergio-george" data-mono="SG">
@@ -882,6 +988,7 @@
           <li data-slug="servando-florentino" data-mono="SF"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">SF</div><div class="tile-name">Servando &amp; Florentino</div></li>
           <li data-slug="willy-garcia" data-mono="WG"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">WG</div><div class="tile-name">Willy García</div></li>
           <li data-slug="javier-vazquez" data-mono="JV"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">JV</div><div class="tile-name">Javier Vázquez</div></li>
+          <li data-slug="la-india" data-mono="LI"><div class="tile-photo"></div><div class="tile-cover"></div><div class="tile-mono">LI</div><div class="tile-name">La India</div></li>
         </ul>
 
         <div class="section-eyebrow lineup-tier">Voces de hoy</div>
@@ -898,33 +1005,52 @@
         </ul>
 
         <p class="lineup-note">Cartelera sujeta a cambios</p>
+        <div class="lineup-cta">
+          <a class="primary js-ticket" href="#" data-cta="lineup">Ver boletos en Ticketmaster</a>
+        </div>
       </section>
 
       <section class="proof">
+        <div class="proof-header">
+          <div class="section-eyebrow">Mensajes de los artistas</div>
+          <h2 class="section-title">Ellos te <em>invitan.</em></h2>
+          <p>Toca cada video para escuchar por qué esta noche es especial.</p>
+        </div>
         <div class="proof-strip" id="proofStrip" aria-label="Los artistas hablan del evento">
-          <article class="proof-card" data-proof="4">
-            <video class="proof-video" playsinline preload="metadata" poster="./assets/proof/proof-4-poster.jpg" src="./assets/proof/proof-4.mp4"></video>
-            <button class="proof-play" type="button" aria-label="Reproducir clip 1">
+          <article class="proof-card" data-proof="la-india">
+            <video class="proof-video" playsinline preload="none" poster="./assets/la-india-poster.jpg" data-src="./assets/la-india-message.mp4"></video>
+            <button class="proof-play" type="button" aria-label="Reproducir mensaje de La India">
               <span aria-hidden="true">▶</span>
             </button>
+            <div class="proof-caption">La India</div>
+          </article>
+          <article class="proof-card" data-proof="4">
+            <video class="proof-video" playsinline preload="none" poster="./assets/proof/proof-4-poster.jpg" data-src="./assets/proof/proof-4.mp4"></video>
+            <button class="proof-play" type="button" aria-label="Reproducir mensaje especial 1">
+              <span aria-hidden="true">▶</span>
+            </button>
+            <div class="proof-caption">Mensaje especial</div>
           </article>
           <article class="proof-card" data-proof="1">
-            <video class="proof-video" playsinline preload="metadata" poster="./assets/proof/proof-1-poster.jpg" src="./assets/proof/proof-1.mp4"></video>
-            <button class="proof-play" type="button" aria-label="Reproducir clip 2">
+            <video class="proof-video" playsinline preload="none" poster="./assets/proof/proof-1-poster.jpg" data-src="./assets/proof/proof-1.mp4"></video>
+            <button class="proof-play" type="button" aria-label="Reproducir mensaje especial 2">
               <span aria-hidden="true">▶</span>
             </button>
+            <div class="proof-caption">Mensaje especial</div>
           </article>
           <article class="proof-card" data-proof="2">
-            <video class="proof-video" playsinline preload="metadata" poster="./assets/proof/proof-2-poster.jpg" src="./assets/proof/proof-2.mp4"></video>
-            <button class="proof-play" type="button" aria-label="Reproducir clip 3">
+            <video class="proof-video" playsinline preload="none" poster="./assets/proof/proof-2-poster.jpg" data-src="./assets/proof/proof-2.mp4"></video>
+            <button class="proof-play" type="button" aria-label="Reproducir mensaje especial 3">
               <span aria-hidden="true">▶</span>
             </button>
+            <div class="proof-caption">Mensaje especial</div>
           </article>
           <article class="proof-card" data-proof="3">
-            <video class="proof-video" playsinline preload="metadata" poster="./assets/proof/proof-3-poster.jpg" src="./assets/proof/proof-3.mp4"></video>
-            <button class="proof-play" type="button" aria-label="Reproducir clip 4">
+            <video class="proof-video" playsinline preload="none" poster="./assets/proof/proof-3-poster.jpg" data-src="./assets/proof/proof-3.mp4"></video>
+            <button class="proof-play" type="button" aria-label="Reproducir mensaje especial 4">
               <span aria-hidden="true">▶</span>
             </button>
+            <div class="proof-caption">Mensaje especial</div>
           </article>
         </div>
       </section>
@@ -935,7 +1061,7 @@
         <div class="why-grid">
           <div class="why-item">
             <strong>1 noche</strong>
-            <p>Una sola fecha en Newark. No hay segundo show, no hay tour.</p>
+            <p>Una sola fecha anunciada en Newark para celebrar el cumpleaños de Sergio George.</p>
           </div>
           <div class="why-item">
             <strong>12+</strong>
@@ -963,6 +1089,14 @@
           <p>El Prudential Center solo permite carteras pequeñas (máx. 12" x 6" x 12") o bolsos transparentes. No se permiten cámaras profesionales ni bebidas externas.</p>
         </details>
         <details>
+          <summary>¿Dónde compro seguro?</summary>
+          <p>Compra únicamente por Ticketmaster desde los botones de esta página. Evita capturas, transferencias no verificadas o enlaces enviados por terceros.</p>
+        </details>
+        <details>
+          <summary>¿Hay parking cerca?</summary>
+          <p>Prudential Center tiene opciones de estacionamiento alrededor de la arena. Compra o reserva parking con anticipación si vas en grupo.</p>
+        </details>
+        <details>
           <summary>¿Puedo devolver mi boleto?</summary>
           <p>Las ventas son finales en Ticketmaster. Si el evento cambia de fecha, recibirás instrucciones por correo del vendedor oficial.</p>
         </details>
@@ -984,7 +1118,7 @@
     </main>
 
     <div class="sticky" id="stickyBar" aria-hidden="true">
-      <div class="sticky-note"><b>Sábado 30 de mayo</b><span>· Prudential Center</span></div>
+      <div class="sticky-note"><b>Ticketmaster oficial</b><span>· 30 de mayo</span></div>
       <a class="primary js-ticket" href="#" data-cta="sticky">Comprar boletos</a>
     </div>
 
@@ -1103,29 +1237,21 @@
         });
       });
 
-      // Sticky CTA: appear once user scrolls past ~45% of hero, not when CTA
-      // fully exits viewport (which on mobile is ~900px of scroll = too late).
       const stickyBar = document.getElementById("stickyBar");
-      const heroSection = document.querySelector(".hero");
-      if (stickyBar && heroSection && "IntersectionObserver" in window) {
-        const obs = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              // Show sticky as soon as <55% of hero remains visible.
-              const showSticky = entry.intersectionRatio < 0.55;
-              stickyBar.classList.toggle("is-visible", showSticky);
-              stickyBar.setAttribute("aria-hidden", showSticky ? "false" : "true");
-            });
-          },
-          { threshold: [0, 0.25, 0.45, 0.55, 0.75, 1] },
-        );
-        obs.observe(heroSection);
+      function updateStickyBar() {
+        if (!stickyBar) return;
+        const shouldShow = window.scrollY > Math.max(360, window.innerHeight * 0.72);
+        stickyBar.classList.toggle("is-visible", shouldShow);
+        stickyBar.setAttribute("aria-hidden", shouldShow ? "false" : "true");
       }
+      updateStickyBar();
 
       // Lineup tile auto-image: ship WebP only.
-      // Falls back gracefully to monogram placeholder when missing.
+      // Lazy-load as tiles approach the viewport; fall back to monogram placeholders when missing.
       const tiles = document.querySelectorAll(".lineup-grid li");
-      tiles.forEach((tile) => {
+      function loadTileImage(tile) {
+        if (tile.dataset.imageLoaded === "true") return;
+        tile.dataset.imageLoaded = "true";
         const slug = tile.dataset.slug;
         const photo = tile.querySelector(".tile-photo");
         if (!slug || !photo) return;
@@ -1135,7 +1261,22 @@
           photo.classList.add("has-image");
         };
         img.src = `./assets/artists/${slug}.webp`;
-      });
+      }
+      if ("IntersectionObserver" in window) {
+        const tileObserver = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              loadTileImage(entry.target);
+              tileObserver.unobserve(entry.target);
+            });
+          },
+          { rootMargin: "500px 0px" },
+        );
+        tiles.forEach((tile) => tileObserver.observe(tile));
+      } else {
+        tiles.forEach(loadTileImage);
+      }
 
       // Pause hero video on reduced motion or when offscreen to save CPU
       const heroVideo = document.getElementById("heroVideo");
@@ -1252,6 +1393,11 @@
 
         function startProof() {
           pauseAllProof(video);
+          const dataSrc = video.dataset.src;
+          if (dataSrc && !video.getAttribute("src")) {
+            video.src = dataSrc;
+            video.load();
+          }
           video.muted = false;
           const p = video.play();
           if (p && p.catch) {
@@ -1302,8 +1448,14 @@
         proofCards.forEach((c) => proofObs.observe(c));
       }
 
-      window.addEventListener("scroll", checkDepth, { passive: true });
-      window.addEventListener("load", checkDepth);
+      window.addEventListener("scroll", () => {
+        checkDepth();
+        updateStickyBar();
+      }, { passive: true });
+      window.addEventListener("load", () => {
+        checkDepth();
+        updateStickyBar();
+      });
 
       tick();
       setInterval(tick, 1000);

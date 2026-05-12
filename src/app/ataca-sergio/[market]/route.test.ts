@@ -17,6 +17,9 @@ describe("/ataca-sergio/[market] funnel route", () => {
     expect(html).toContain('<base href="/ataca-sergio/newark/" />');
     expect(html).toContain('fbq("init", "1553637492361321")');
     expect(html).toContain("Festival Ataca Sergio");
+    expect(html).toContain('data-slug="la-india"');
+    expect(html).toContain('data-proof="la-india"');
+    expect(html).toContain("la-india-message.mp4");
     expect(html).toContain("https://www.ticketmaster.com/event/02006478E042F9B1");
   });
 
