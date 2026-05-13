@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
 import type { MetaCapiSendResult, TicketmasterCapiLogFields } from "@/features/meta/conversions-api";
-import { attributionFromUrlString, mergeAttribution, rowFromAttribution } from "@/features/meta/attribution";
+import {
+  attributionFromUrlString,
+  mergeAttribution,
+  rowFromAttribution,
+  type MarketingAttribution,
+} from "@/features/meta/attribution";
 import { sha256 } from "@/lib/hash";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -11,6 +16,12 @@ type RecordTicketmasterCapiEventInput = {
   metaPixelId?: string;
   metaResult?: MetaCapiSendResult;
   skipReason?: string;
+};
+
+type AttributionMatch = {
+  attribution: MarketingAttribution;
+  clickId?: string;
+  sessionId?: string;
 };
 
 type TicketmasterCapiEventRow = {
@@ -82,6 +93,70 @@ function generatedEventId(input: RecordTicketmasterCapiEventInput) {
   return `tm_log_${sha256(seed).slice(0, 32)}`;
 }
 
+function hasDeterministicAttribution(input: RecordTicketmasterCapiEventInput) {
+  return Boolean(
+    input.log.omClickId ||
+    input.log.attribution?.metaAdId ||
+    input.log.attribution?.metaAdsetId ||
+    input.log.attribution?.metaCampaignId,
+  );
+}
+
+async function findRecentAttributionMatch(input: RecordTicketmasterCapiEventInput, now: string): Promise<AttributionMatch | null> {
+  if (
+    input.log.eventName !== "Purchase" ||
+    hasDeterministicAttribution(input) ||
+    !input.log.requestIpHash ||
+    !input.log.userAgentHash
+  ) {
+    return null;
+  }
+
+  const sevenDaysAgo = new Date(new Date(now).getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const match = await supabaseAdmin
+    ?.from("marketing_attribution_events")
+    .select("click_id, session_id, fbclid, fbc, fbp, meta_ad_id, meta_ad_name, meta_adset_id, meta_adset_name, meta_campaign_id, meta_campaign_name, placement, site_source, utm_campaign, utm_content, utm_medium, utm_source, utm_term")
+    .eq("request_ip_hash", input.log.requestIpHash)
+    .eq("user_agent_hash", input.log.userAgentHash)
+    .in("event_name", ["ticket_redirect", "ticket_click"])
+    .gte("created_at", sevenDaysAgo)
+    .lte("created_at", now)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (match?.error) {
+    console.error("[meta:capi] failed to match attribution event:", match.error.message);
+    return null;
+  }
+
+  const data = match?.data as Record<string, string | null> | null;
+  if (!data) return null;
+
+  return {
+    attribution: {
+      fbclid: data.fbclid ?? undefined,
+      fbc: data.fbc ?? undefined,
+      fbp: data.fbp ?? undefined,
+      metaAdId: data.meta_ad_id ?? undefined,
+      metaAdName: data.meta_ad_name ?? undefined,
+      metaAdsetId: data.meta_adset_id ?? undefined,
+      metaAdsetName: data.meta_adset_name ?? undefined,
+      metaCampaignId: data.meta_campaign_id ?? undefined,
+      metaCampaignName: data.meta_campaign_name ?? undefined,
+      placement: data.placement ?? undefined,
+      siteSource: data.site_source ?? undefined,
+      utmCampaign: data.utm_campaign ?? undefined,
+      utmContent: data.utm_content ?? undefined,
+      utmMedium: data.utm_medium ?? undefined,
+      utmSource: data.utm_source ?? undefined,
+      utmTerm: data.utm_term ?? undefined,
+    },
+    clickId: data.click_id ?? undefined,
+    sessionId: data.session_id ?? undefined,
+  };
+}
+
 export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiEventInput) {
   if (!supabaseAdmin) return;
 
@@ -98,10 +173,14 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
     console.error("[meta:capi] failed to read CAPI event log:", existing.error.message);
   }
 
+  const recentAttributionMatch = await findRecentAttributionMatch(input, now);
   const attribution = mergeAttribution(
+    recentAttributionMatch?.attribution,
     attributionFromUrlString(input.log.sourceUrl),
     input.log.attribution,
   );
+  const omClickId = input.log.omClickId ?? recentAttributionMatch?.clickId;
+  const omSessionId = input.log.omSessionId ?? recentAttributionMatch?.sessionId;
 
   const row: TicketmasterCapiEventRow = {
     ...rowFromAttribution(attribution),
@@ -119,8 +198,8 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
     meta_pixel_id: input.metaPixelId ?? null,
     meta_response: compactResponse(input.metaResult),
     meta_status: input.metaResult?.status ?? null,
-    om_click_id: input.log.omClickId ?? null,
-    om_session_id: input.log.omSessionId ?? null,
+    om_click_id: omClickId ?? null,
+    om_session_id: omSessionId ?? null,
     order_hash: input.log.orderHash ?? null,
     order_id: input.log.orderId ?? null,
     quantity: input.log.quantity ?? null,
