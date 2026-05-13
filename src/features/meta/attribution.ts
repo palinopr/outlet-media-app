@@ -152,35 +152,51 @@ export function attributionFromSearchParams(params: URLSearchParams): MarketingA
   };
 }
 
-export function attributionFromUrlString(value: string | undefined) {
-  if (!value) return {};
+const NESTED_URL_PARAM_KEYS = ["edp", "source_url", "event_source_url", "page_url"];
+
+function nestedUrlValues(params: URLSearchParams) {
+  return NESTED_URL_PARAM_KEYS
+    .map((key) => cleanText(params.get(key), 2000))
+    .filter((value): value is string => Boolean(value?.startsWith("http://") || value?.startsWith("https://")));
+}
+
+function attributionFromUrlStringWithDepth(value: string | undefined, depth: number): MarketingAttribution {
+  if (!value || depth > 2) return {};
   try {
-    return attributionFromSearchParams(new URL(value).searchParams);
+    const parsed = new URL(value);
+    const nested = nestedUrlValues(parsed.searchParams).map((nestedValue) => attributionFromUrlStringWithDepth(nestedValue, depth + 1));
+    return mergeAttribution(...nested, attributionFromSearchParams(parsed.searchParams));
   } catch {
     return {};
   }
 }
 
-export function clickIdFromParamsOrUrl(params: URLSearchParams, sourceUrl: string | undefined) {
-  const explicit = firstParam(params, ["om_click_id", "click_id", "omc"]);
-  if (explicit) return explicit;
-  if (!sourceUrl) return undefined;
+function firstParamFromUrlString(value: string | undefined, names: string[], depth = 0): string | undefined {
+  if (!value || depth > 2) return undefined;
   try {
-    return firstParam(new URL(sourceUrl).searchParams, ["om_click_id", "click_id", "omc"]);
+    const parsed = new URL(value);
+    const direct = firstParam(parsed.searchParams, names);
+    if (direct) return direct;
+    for (const nestedValue of nestedUrlValues(parsed.searchParams)) {
+      const nested = firstParamFromUrlString(nestedValue, names, depth + 1);
+      if (nested) return nested;
+    }
+    return undefined;
   } catch {
     return undefined;
   }
 }
 
+export function attributionFromUrlString(value: string | undefined) {
+  return attributionFromUrlStringWithDepth(value, 0);
+}
+
+export function clickIdFromParamsOrUrl(params: URLSearchParams, sourceUrl: string | undefined) {
+  return firstParam(params, ["om_click_id", "click_id", "omc"]) ?? firstParamFromUrlString(sourceUrl, ["om_click_id", "click_id", "omc"]);
+}
+
 export function sessionIdFromParamsOrUrl(params: URLSearchParams, sourceUrl: string | undefined) {
-  const explicit = firstParam(params, ["om_session_id", "session_id", "oms"]);
-  if (explicit) return explicit;
-  if (!sourceUrl) return undefined;
-  try {
-    return firstParam(new URL(sourceUrl).searchParams, ["om_session_id", "session_id", "oms"]);
-  } catch {
-    return undefined;
-  }
+  return firstParam(params, ["om_session_id", "session_id", "oms"]) ?? firstParamFromUrlString(sourceUrl, ["om_session_id", "session_id", "oms"]);
 }
 
 export function mergeAttribution(...items: Array<MarketingAttribution | undefined>): MarketingAttribution {
