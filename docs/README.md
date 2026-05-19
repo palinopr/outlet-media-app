@@ -1,17 +1,5 @@
-# Docs Guide
+# Docs Moved
 
-Use this folder intentionally. Not every document here should steer current product decisions.
+Canonical documentation now lives in the LLM-friendly wiki at [`../wiki/Home.md`](../wiki/Home.md).
 
-## Source of Truth
-
-- `docs/context/` is the durable source of truth for product direction, architecture rules, agent patterns, and current priorities.
-- `AGENTS.md` is the repo-level operating brief for future Codex sessions.
-- `README.md` is the short public-facing project summary.
-
-## Historical Reference
-
-- `docs/screenshots/` contains visual references and old implementation snapshots. Keep them as supporting material, not product direction.
-
-## Rule
-
-When a lesson becomes durable, move it into `docs/context/` or `AGENTS.md`. Do not leave important product knowledge buried in a one-off plan.
+Keep `docs/` for screenshots or small reference assets only. Do not add explanatory product, architecture, ops, or workflow docs here; add them to `wiki/` instead.

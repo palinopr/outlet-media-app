@@ -1,0 +1,11 @@
+# Outlet Media App
+
+Canonical knowledge source: `wiki/Home.md`.
+
+For coding agents and LLMs:
+
+1. Read `wiki/Home.md` first.
+2. Follow the task-specific read path from the Home page.
+3. Treat `wiki/` as the single source of truth for product scope, architecture, operations, and workflow.
+4. Treat `AGENTS.md` files as bootstrap instructions only.
+5. Do not put secrets, tokens, credentials, or private client PII in prompts, commits, logs, or wiki pages.

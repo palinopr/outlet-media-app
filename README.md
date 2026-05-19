@@ -4,40 +4,18 @@ Client-facing agency operating system focused on campaign performance, client ac
 
 ## Stack
 
-- **Frontend/API**: Next.js 16 (App Router), TypeScript, Tailwind CSS, shadcn/ui
+- **Frontend/API**: Next.js 16 App Router, React 19, TypeScript, Tailwind CSS, shadcn/ui
 - **Auth**: Clerk
-- **Database**: Supabase (PostgreSQL)
+- **Database**: Supabase PostgreSQL
 - **Deploy**: Railway
 
-## Product Shape
+## Canonical knowledge
 
-Current active product reset target:
+The single source of truth is the LLM-friendly Markdown wiki:
 
-- Campaigns
-- Admin client/account access
+- [wiki/Home.md](./wiki/Home.md)
 
-Events, Reports, ticketing workflows and ingest are retired for now; direct Events/Reports URLs redirect back to Dashboard/Campaigns.
-
-Supporting infrastructure remains for auth, client accounts, memberships, invitations, and access control. The prior agent runtime and agent-facing product surfaces are retired for now.
-
-## Structure
-
-- `src/` -- active web app
-- `docs/` -- durable product, architecture, ops, and planning docs
-- `supabase/` -- database migrations and Supabase assets
-- `public/` -- static web assets
-- `archive/` -- legacy/reference material kept out of the active root surface
-
-Key deeper paths:
-- `src/app/admin/` -- admin product surfaces (dashboard, campaigns, clients, users, settings)
-- `src/app/client/[slug]/` -- client portal (campaigns)
-- `src/app/api/` -- API routes (ingest, meta, contact, admin access)
-- `docs/context/` -- durable product and architecture context for future sessions
-
-## Read First
-
-- `AGENTS.md` -- repo operating brief and durable project instructions
-- `docs/context/` -- current product direction, engineering rules, and priorities
+Use the wiki for product scope, architecture, runbooks, Meta ads guidance, Supabase safety, deployment, and Codex/AI workflow. Repo files outside `wiki/` should stay as short pointers or operational bootstraps only.
 
 ## Development
 
@@ -46,19 +24,17 @@ npm install
 npm run dev
 ```
 
-Copy `.env.example` to `.env.local` and fill in the required variables.
+Copy `.env.example` to `.env.local` and fill in the required variables. Never commit secrets.
 
-## Quality Gates
+## Quality gate
 
 ```bash
 npm run check
 ```
 
-The normal verification path is TypeScript, ESLint, Vitest, build, and dependency audit. Browser automation is not part of the default project workflow; add it back only for a specific auth-critical production smoke need that cannot be covered by focused tests.
-
-See `docs/references/production-smoke-runbook.md` for the production deploy smoke checklist and `docs/references/database-safety-runbook.md` for Supabase migration safety.
-
 ## Deploy
+
+Railway does not auto-deploy from git push:
 
 ```bash
 git push
