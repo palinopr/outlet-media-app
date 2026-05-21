@@ -848,7 +848,7 @@
       />
     </noscript>
     <main class="shell">
-      <section class="hero">
+      <section class="hero" data-om-section="hero">
         <div class="hero-media" aria-hidden="true">
           <video
             id="heroVideo"
@@ -917,7 +917,7 @@
         <div class="tick"><strong id="seconds">--</strong><span>seg</span></div>
       </div>
 
-      <section class="urgency" aria-label="Compra oficial">
+      <section class="urgency" data-om-section="urgency" aria-label="Compra oficial">
         <div class="urgency-box">
           <strong>Ticketmaster oficial</strong>
           <p>Compra ahora y asegura tus mejores secciones para el 30 de mayo.</p>
@@ -925,7 +925,7 @@
         </div>
       </section>
 
-      <section class="promo">
+      <section class="promo" data-om-section="promo_video">
         <div class="video-frame" id="promoFrame">
           <video
             id="promoVideo"
@@ -942,7 +942,7 @@
         </div>
       </section>
 
-      <section class="stub">
+      <section class="stub" data-om-section="event_details">
         <h2>El boleto</h2>
         <dl class="stub-grid">
           <dt>Fecha</dt><dd>Sábado 30 de mayo de 2026</dd>
@@ -952,12 +952,12 @@
         </dl>
       </section>
 
-      <section class="manifesto">
+      <section class="manifesto" data-om-section="manifesto">
         <h2>Una sola noche. <b>Un solo escenario.</b> Las leyendas reunidas.</h2>
         <p>De Nueva York a Newark, una noche para celebrar la salsa que nos crió.</p>
       </section>
 
-      <section class="lineup">
+      <section class="lineup" data-om-section="lineup">
         <div class="section-eyebrow">Cartelera</div>
         <h2 class="section-title">Las leyendas que hacen <em>la noche.</em></h2>
         <p class="section-copy">Sergio George celebra con leyendas de la salsa, voces de hoy e invitados especiales en un solo escenario.</p>
@@ -1010,7 +1010,7 @@
         </div>
       </section>
 
-      <section class="proof">
+      <section class="proof" data-om-section="artist_proof">
         <div class="proof-header">
           <div class="section-eyebrow">Mensajes de los artistas</div>
           <h2 class="section-title">Ellos te <em>invitan.</em></h2>
@@ -1055,7 +1055,7 @@
         </div>
       </section>
 
-      <section class="why">
+      <section class="why" data-om-section="why_go">
         <div class="section-eyebrow">Por qué este show</div>
         <h2 class="section-title">No se repite.</h2>
         <div class="why-grid">
@@ -1074,7 +1074,7 @@
         </div>
       </section>
 
-      <section class="faq">
+      <section class="faq" data-om-section="faq">
         <h2>Preguntas rápidas</h2>
         <details open>
           <summary>¿A qué hora llego?</summary>
@@ -1106,7 +1106,7 @@
         </details>
       </section>
 
-      <section class="final">
+      <section class="final" data-om-section="final_cta">
         <h2>Una noche.<br /><em>Una sola vez.</em></h2>
         <p>30 de mayo en el Prudential Center. Newark, NJ. No se repite.</p>
         <div class="hero-cta">
@@ -1233,6 +1233,21 @@
         return merged;
       }
 
+      function safePageUrl() {
+        const current = new URL(window.location.href);
+        const safe = new URL(current.pathname, current.origin);
+        ATTRIBUTION_KEYS.concat(["cta", "click_id", "om_click_id", "om_session_id", "omc", "oms"]).forEach((key) => {
+          const value = current.searchParams.get(key);
+          if (value) safe.searchParams.set(key, value.slice(0, 500));
+        });
+        return safe.toString();
+      }
+
+      function safeReferrer() {
+        if (!document.referrer) return undefined;
+        try { return new URL(document.referrer).origin; } catch { return undefined; }
+      }
+
       const sessionId = getSessionId();
       let attribution = getAttribution();
 
@@ -1244,17 +1259,29 @@
         });
       }
 
+      function viewportPayload() {
+        const width = Math.max(1, Math.round(window.innerWidth || document.documentElement.clientWidth || 0));
+        const height = Math.max(1, Math.round(window.innerHeight || document.documentElement.clientHeight || 0));
+        return {
+          device_type: width < 768 ? "mobile" : width < 1024 ? "tablet" : "desktop",
+          viewport_height: height,
+          viewport_orientation: width >= height ? "landscape" : "portrait",
+          viewport_width: width,
+        };
+      }
+
       function sendAttributionEvent(eventName, metadata = {}) {
         attribution = getAttribution();
         const payload = {
+          ...viewportPayload(),
           attribution,
           event_name: eventName,
           funnel: FUNNEL_NAME,
-          landing_url: window.location.href,
+          landing_url: safePageUrl(),
           market: MARKET,
           metadata,
-          page_url: window.location.href,
-          referrer: document.referrer,
+          page_url: safePageUrl(),
+          referrer: safeReferrer(),
           session_id: sessionId,
         };
         if (metadata.click_id) payload.click_id = metadata.click_id;
@@ -1600,6 +1627,22 @@
 
       tick();
       setInterval(tick, 1000);
+    </script>
+    <script src="/om-funnel-analytics.js"></script>
+    <script>
+      window.OmFunnelAnalytics?.start({
+        attributionStorageKey: ATTRIBUTION_KEY,
+        ctaSelector: ".js-ticket[data-cta]",
+        endpoint: "/api/attribution/funnel",
+        funnel: FUNNEL_NAME,
+        market: MARKET,
+        sampleRate: 1,
+        sectionSelector: "[data-om-section]",
+        sendPageView: false,
+        sendScrollDepth: false,
+        sendTicketClick: false,
+        sessionStorageKey: SESSION_KEY,
+      });
     </script>
   </body>
 </html>

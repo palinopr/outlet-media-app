@@ -10,11 +10,12 @@ import { centsToUsd, fmtUsd, fmtNum, computeBlendedRoas, fmtTodayLong } from "@/
 import { StatCard } from "@/components/admin/stat-card";
 import { getData } from "./data";
 import { CampaignCards } from "./campaign-cards";
+import { FunnelEngagementSection } from "@/components/admin/funnel-engagement-section";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
 export default async function AdminDashboard() {
-  const { campaigns, trendData, marginalRoasByCampaign, fromDb } = await getData();
+  const { campaigns, trendData, marginalRoasByCampaign, fromDb, funnelEngagement } = await getData();
 
   const totalSpend = campaigns.reduce((sum, campaign) => sum + (centsToUsd(campaign.spend) ?? 0), 0);
   const totalImpressions = campaigns.reduce((sum, campaign) => sum + (campaign.impressions ?? 0), 0);
@@ -99,6 +100,8 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
       ) : null}
+
+      <FunnelEngagementSection data={funnelEngagement} />
 
       <CampaignCards campaigns={campaigns} marginalRoasByCampaign={marginalRoasByCampaign} />
     </div>

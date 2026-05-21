@@ -92,8 +92,10 @@ export type Database = {
       marketing_attribution_events: {
         Row: {
           click_id: string | null
+          client_event_id: string | null
           created_at: string
           cta: string | null
+          device_type: string | null
           event_name: string
           fbclid: string | null
           fbc: string | null
@@ -113,10 +115,17 @@ export type Database = {
           placement: string | null
           referrer: string | null
           request_ip_hash: string | null
+          sample_rate: number
+          scroll_depth_pct: number | null
+          section_id: string | null
           session_id: string | null
           site_source: string | null
           source_url: string | null
           user_agent_hash: string | null
+          viewport_height: number | null
+          viewport_orientation: string | null
+          viewport_width: number | null
+          visible_ratio: number | null
           utm_campaign: string | null
           utm_content: string | null
           utm_medium: string | null
@@ -125,8 +134,10 @@ export type Database = {
         }
         Insert: {
           click_id?: string | null
+          client_event_id?: string | null
           created_at?: string
           cta?: string | null
+          device_type?: string | null
           event_name: string
           fbclid?: string | null
           fbc?: string | null
@@ -146,10 +157,17 @@ export type Database = {
           placement?: string | null
           referrer?: string | null
           request_ip_hash?: string | null
+          sample_rate?: number
+          scroll_depth_pct?: number | null
+          section_id?: string | null
           session_id?: string | null
           site_source?: string | null
           source_url?: string | null
           user_agent_hash?: string | null
+          viewport_height?: number | null
+          viewport_orientation?: string | null
+          viewport_width?: number | null
+          visible_ratio?: number | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null
@@ -158,8 +176,10 @@ export type Database = {
         }
         Update: {
           click_id?: string | null
+          client_event_id?: string | null
           created_at?: string
           cta?: string | null
+          device_type?: string | null
           event_name?: string
           fbclid?: string | null
           fbc?: string | null
@@ -179,10 +199,17 @@ export type Database = {
           placement?: string | null
           referrer?: string | null
           request_ip_hash?: string | null
+          sample_rate?: number
+          scroll_depth_pct?: number | null
+          section_id?: string | null
           session_id?: string | null
           site_source?: string | null
           source_url?: string | null
           user_agent_hash?: string | null
+          viewport_height?: number | null
+          viewport_orientation?: string | null
+          viewport_width?: number | null
+          visible_ratio?: number | null
           utm_campaign?: string | null
           utm_content?: string | null
           utm_medium?: string | null

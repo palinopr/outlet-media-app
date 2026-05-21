@@ -20,10 +20,15 @@ export type MarketingAttribution = {
   utmTerm?: string;
 };
 
+export type MarketingDeviceType = "mobile" | "tablet" | "desktop" | "unknown";
+export type MarketingViewportOrientation = "portrait" | "landscape" | "unknown";
+
 export type MarketingAttributionEventInput = {
   attribution?: MarketingAttribution;
   clickId?: string;
+  clientEventId?: string;
   cta?: string;
+  deviceType?: string;
   eventName: string;
   funnel: string;
   landingUrl?: string;
@@ -31,14 +36,23 @@ export type MarketingAttributionEventInput = {
   metadata?: Record<string, unknown>;
   pagePath?: string;
   referrer?: string;
+  sampleRate?: number;
+  scrollDepthPct?: number;
+  sectionId?: string;
   sessionId?: string;
   sourceUrl?: string;
+  viewportHeight?: number;
+  viewportOrientation?: string;
+  viewportWidth?: number;
+  visibleRatio?: number;
 };
 
 type MarketingAttributionEventRow = {
   click_id?: string | null;
+  client_event_id?: string | null;
   created_at?: string;
   cta?: string | null;
+  device_type?: string | null;
   event_name: string;
   fbclid?: string | null;
   fbc?: string | null;
@@ -58,10 +72,17 @@ type MarketingAttributionEventRow = {
   placement?: string | null;
   referrer?: string | null;
   request_ip_hash?: string | null;
+  sample_rate?: number;
+  scroll_depth_pct?: number | null;
+  section_id?: string | null;
   session_id?: string | null;
   site_source?: string | null;
   source_url?: string | null;
   user_agent_hash?: string | null;
+  viewport_height?: number | null;
+  viewport_orientation?: string | null;
+  viewport_width?: number | null;
+  visible_ratio?: number | null;
   utm_campaign?: string | null;
   utm_content?: string | null;
   utm_medium?: string | null;
@@ -88,19 +109,112 @@ export const ATTRIBUTION_QUERY_KEYS = [
   "fbc",
 ] as const;
 
+const SAFE_MARKETING_URL_QUERY_KEYS = new Set<string>([
+  ...ATTRIBUTION_QUERY_KEYS,
+  "cta",
+  "click_id",
+  "om_click_id",
+  "om_session_id",
+  "omc",
+  "oms",
+  "utm_city",
+]);
+
 const EVENT_NAME_ALLOWLIST = new Set([
   "page_view",
   "qualified_view",
   "scroll_depth",
+  "section_visible",
+  "cta_impression",
   "ticket_click",
   "ticket_redirect",
 ]);
+
+const DEVICE_TYPES = new Set<MarketingDeviceType>(["mobile", "tablet", "desktop", "unknown"]);
+const VIEWPORT_ORIENTATIONS = new Set<MarketingViewportOrientation>(["portrait", "landscape", "unknown"]);
+const SCROLL_DEPTHS = new Set([25, 50, 75, 100]);
 
 function cleanText(value: unknown, maxLength = 500) {
   if (typeof value !== "string") return undefined;
   const trimmed = value.trim();
   if (!trimmed) return undefined;
   return trimmed.slice(0, maxLength);
+}
+
+export function cleanMarketingSlug(value: unknown, maxLength = 120) {
+  const cleaned = cleanText(value, maxLength)?.toLowerCase().replace(/[^a-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "");
+  return cleaned || undefined;
+}
+
+export function sanitizeMarketingUrlForStorage(value: unknown) {
+  const raw = cleanText(value, 2000);
+  if (!raw) return undefined;
+  try {
+    const parsed = new URL(raw);
+    const sanitized = new URL(parsed.pathname, parsed.origin);
+    for (const key of SAFE_MARKETING_URL_QUERY_KEYS) {
+      for (const paramValue of parsed.searchParams.getAll(key)) {
+        const cleaned = cleanText(paramValue, 500);
+        if (cleaned) sanitized.searchParams.append(key, cleaned);
+      }
+    }
+    return sanitized.toString().slice(0, 1000);
+  } catch {
+    return undefined;
+  }
+}
+
+export function sanitizeMarketingReferrerForStorage(value: unknown) {
+  const raw = cleanText(value, 2000);
+  if (!raw) return undefined;
+  try {
+    return new URL(raw).origin.slice(0, 500);
+  } catch {
+    return undefined;
+  }
+}
+
+function finiteNumber(value: unknown) {
+  const numberValue = typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+  return Number.isFinite(numberValue) ? numberValue : undefined;
+}
+
+export function normalizeScrollDepthPct(value: unknown) {
+  const numberValue = finiteNumber(value);
+  if (numberValue == null) return undefined;
+  const rounded = Math.round(numberValue);
+  return SCROLL_DEPTHS.has(rounded) ? rounded : undefined;
+}
+
+export function normalizeVisibleRatio(value: unknown) {
+  const numberValue = finiteNumber(value);
+  if (numberValue == null) return undefined;
+  return Math.min(1, Math.max(0, Math.round(numberValue * 10_000) / 10_000));
+}
+
+export function normalizeViewportDimension(value: unknown) {
+  const numberValue = finiteNumber(value);
+  if (numberValue == null) return undefined;
+  const rounded = Math.round(numberValue);
+  if (rounded < 1 || rounded > 10_000) return undefined;
+  return rounded;
+}
+
+export function normalizeSampleRate(value: unknown) {
+  const numberValue = finiteNumber(value);
+  if (numberValue == null) return undefined;
+  if (numberValue <= 0 || numberValue > 1) return undefined;
+  return Math.round(numberValue * 100_000) / 100_000;
+}
+
+export function normalizeDeviceType(value: unknown): MarketingDeviceType | undefined {
+  const cleaned = cleanMarketingSlug(value, 24) as MarketingDeviceType | undefined;
+  return cleaned && DEVICE_TYPES.has(cleaned) ? cleaned : undefined;
+}
+
+export function normalizeViewportOrientation(value: unknown): MarketingViewportOrientation | undefined {
+  const cleaned = cleanMarketingSlug(value, 24) as MarketingViewportOrientation | undefined;
+  return cleaned && VIEWPORT_ORIENTATIONS.has(cleaned) ? cleaned : undefined;
 }
 
 function getClientIp(headers: Headers) {
@@ -241,18 +355,27 @@ export async function recordMarketingAttributionEvent(input: MarketingAttributio
   const row: MarketingAttributionEventRow = {
     ...rowFromAttribution(input.attribution),
     click_id: cleanText(input.clickId, 160) ?? null,
-    cta: cleanText(input.cta, 120) ?? null,
+    client_event_id: cleanText(input.clientEventId, 160) ?? null,
+    cta: cleanMarketingSlug(input.cta, 120) ?? null,
+    device_type: normalizeDeviceType(input.deviceType) ?? null,
     event_name: input.eventName,
-    funnel: cleanText(input.funnel, 120) ?? "unknown",
-    landing_url: cleanText(input.landingUrl, 1000) ?? null,
-    market: cleanText(input.market, 120) ?? null,
+    funnel: cleanMarketingSlug(input.funnel, 120) ?? "unknown",
+    landing_url: sanitizeMarketingUrlForStorage(input.landingUrl) ?? null,
+    market: cleanMarketingSlug(input.market, 120) ?? null,
     metadata: safeMetadata(input.metadata),
     page_path: cleanText(input.pagePath, 500) ?? null,
-    referrer: cleanText(input.referrer, 1000) ?? null,
+    referrer: sanitizeMarketingReferrerForStorage(input.referrer) ?? null,
     request_ip_hash: clientIp ? sha256(clientIp) : null,
+    sample_rate: normalizeSampleRate(input.sampleRate) ?? 1,
+    scroll_depth_pct: normalizeScrollDepthPct(input.scrollDepthPct) ?? null,
+    section_id: cleanMarketingSlug(input.sectionId, 120) ?? null,
     session_id: cleanText(input.sessionId, 160) ?? null,
-    source_url: cleanText(input.sourceUrl, 1000) ?? null,
+    source_url: sanitizeMarketingUrlForStorage(input.sourceUrl) ?? null,
     user_agent_hash: userAgent ? sha256(userAgent) : null,
+    viewport_height: normalizeViewportDimension(input.viewportHeight) ?? null,
+    viewport_orientation: normalizeViewportOrientation(input.viewportOrientation) ?? null,
+    viewport_width: normalizeViewportDimension(input.viewportWidth) ?? null,
+    visible_ratio: normalizeVisibleRatio(input.visibleRatio) ?? null,
   };
 
   const { error } = await supabaseAdmin

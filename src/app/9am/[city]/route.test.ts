@@ -17,6 +17,9 @@ describe("/9am/[city] funnel route", () => {
       expect(response.headers.get("content-type")).toContain("text/html");
       expect(html).toContain(`<base href="/9am/${city}/" />`);
       expect(html).toContain('fbq("init", "465799745886450")');
+      expect(html).toContain('data-om-section="hero"');
+      expect(html).toContain('src="/om-funnel-analytics.js"');
+      expect(html).toContain("window.OmFunnelAnalytics?.start");
     }
   });
 

@@ -3,6 +3,7 @@ import { computeMarginalRoas } from "@/lib/formatters";
 import { buildTrendData } from "@/features/client-portal/insights";
 import type { Database } from "@/lib/database.types";
 import { applyEffectiveCampaignClientSlugs } from "@/lib/campaign-client-assignment";
+import { getFunnelEngagementSummary, type FunnelEngagementSummary } from "@/features/meta/funnel-analytics";
 
 export type MetaCampaign = Database["public"]["Tables"]["meta_campaigns"]["Row"];
 
@@ -18,6 +19,7 @@ export interface DashboardData {
   trendData: Array<{ date: string; roas: number; spend: number }>;
   marginalRoasByCampaign: Record<string, number | null>;
   fromDb: boolean;
+  funnelEngagement: FunnelEngagementSummary;
 }
 
 const EMPTY: DashboardData = {
@@ -25,6 +27,24 @@ const EMPTY: DashboardData = {
   trendData: [],
   marginalRoasByCampaign: {},
   fromDb: false,
+  funnelEngagement: {
+    ctas: [],
+    deviceSplit: [],
+    fromDb: false,
+    lookbackDays: 7,
+    scrollDepths: [],
+    sections: [],
+    topSources: [],
+    totals: {
+      ctaClicks: 0,
+      ctaCtr: null,
+      ctaImpressions: 0,
+      pageViews: 0,
+      scroll75Rate: null,
+      sessions: 0,
+    },
+    updatedAt: null,
+  },
 };
 
 export async function getData(): Promise<DashboardData> {
@@ -34,7 +54,7 @@ export async function getData(): Promise<DashboardData> {
     .toISOString()
     .slice(0, 10);
 
-  const [campaignsRes, snapshotsRes] = await Promise.all([
+  const [campaignsRes, snapshotsRes, funnelEngagement] = await Promise.all([
     supabaseAdmin
       .from("meta_campaigns")
       .select("*")
@@ -47,6 +67,7 @@ export async function getData(): Promise<DashboardData> {
       .gte("snapshot_date", thirtyDaysAgo)
       .order("snapshot_date", { ascending: true })
       .limit(500),
+    getFunnelEngagementSummary({ lookbackDays: 7 }),
   ]);
 
   const campaigns = (await applyEffectiveCampaignClientSlugs(
@@ -74,5 +95,6 @@ export async function getData(): Promise<DashboardData> {
     trendData: buildTrendData(snapshots),
     marginalRoasByCampaign,
     fromDb: campaigns.length > 0,
+    funnelEngagement,
   };
 }

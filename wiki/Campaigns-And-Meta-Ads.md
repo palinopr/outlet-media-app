@@ -1,6 +1,6 @@
 ---
 status: canonical
-last_updated: 2026-05-19
+last_updated: 2026-05-21
 replaces:
   - docs/context/campaign-data-quality.md
   - docs/context/meta-ads-playbook.md
@@ -10,6 +10,10 @@ replaces:
 # Campaigns and Meta Ads
 
 Use this page when work touches campaign reporting, Meta campaign operations, launch mechanics, attribution, or local ad credentials.
+
+For the consolidated “how we think about campaigns” philosophy, CBO/testing structure, and cross-source Meta strategy, start with [Meta Ads Operating System](./Meta-Ads-Operating-System.md).
+
+For broader ecommerce/DTC marketing ops, creative testing, funnel/AOV economics, and the Mark Builds Brands Highlights source corpus, use [Marketing Ops Playbook](./Marketing-Ops-Playbook.md).
 
 ## Campaign data quality
 
@@ -78,6 +82,12 @@ Ticketmaster Custom IMG pixel / Meta CAPI bridge variables:
 - `TICKETMASTER_CAPI_PIXEL_SECRET`
 
 Meta credentials should stay centralized in the parent app env rather than duplicated across local tools.
+
+## Live Meta mutation rule
+
+For live Meta changes, do not use local/bulk scripts.
+
+Use direct Meta API calls object-by-object, or Ads Manager, for status, spend, budget, structure, creative, and launch mutations. Read the object first, make the smallest explicit change, inspect the response, and re-read after. For launches, activate ads first, ad sets second, and the campaign last so no campaign can spend before child objects are confirmed.
 
 ## Meta ad creative rules
 
@@ -177,6 +187,31 @@ Standard Meta ad URL parameter template:
 ```text
 campaign_id={{campaign.id}}&campaign_name={{campaign.name}}&adset_id={{adset.id}}&adset_name={{adset.name}}&ad_id={{ad.id}}&ad_name={{ad.name}}&placement={{placement}}&site_source={{site_source_name}}&utm_source=meta&utm_medium=paid_social&utm_campaign=ataca_sergio_newark&utm_content={{ad.name}}
 ```
+
+### Heatmap-lite funnel analytics
+
+Use the privacy-safe heatmap-lite layer for directional funnel optimization only. It tracks aggregate section visibility, CTA impressions, scroll-depth buckets, ticket clicks, viewport/device fields, and ad/creative URL sources through `/api/attribution/funnel` and `marketing_attribution_events`.
+
+Guardrails:
+
+- no session recordings
+- no mouse coordinates
+- no screenshots
+- no DOM text capture
+- no form values
+- no raw IP or raw user-agent display
+- no buyer PII or secrets
+- client and server URL storage keeps only page path plus approved attribution params; referrer is origin-only
+- public funnel API cannot create `ticket_redirect`; Ticketmaster redirects remain server-recorded only
+- public sample-rate values are not used to weight admin counts
+- not purchase attribution; Ticketmaster CAPI remains the purchase source of truth
+
+Current static tracker:
+
+- `public/om-funnel-analytics.js`
+- Ataca Newark sends section/CTA visibility only because page view, scroll, and ticket click already exist in the custom Ataca script.
+- 9AM city pages send page view, section visibility, CTA impressions, scroll depth, and ticket clicks.
+- Admin dashboard reads aggregate summaries through `src/features/meta/funnel-analytics.ts` and renders `Funnel engagement`.
 
 ### Ticketmaster CAPI future improvements
 
