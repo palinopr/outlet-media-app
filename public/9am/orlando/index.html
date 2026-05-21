@@ -492,7 +492,7 @@
       />
     </noscript>
     <main class="shell">
-      <section class="hero">
+      <section class="hero" data-om-section="hero">
         <div class="hero-visual">
           <img
             class="hero-flyer"
@@ -508,7 +508,7 @@
             The Beacham wakes up early for reggaeton, flags, and Tequila Sunrises from 9-11AM.
           </p>
           <div class="hero-actions">
-            <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-orlando">Lock tickets now</a>
+            <a class="primary js-ticket" data-cta="ticket" href="https://posh.vip/e/perreo-at-9am-orlando">Lock tickets now</a>
             <p class="from">from<br />$14.90</p>
           </div>
         </div>
@@ -521,7 +521,7 @@
         <div class="tick"><strong id="seconds">09</strong><span>secs</span></div>
       </div>
 
-      <section class="first-proof">
+      <section class="first-proof" data-om-section="first_proof">
         <h2 class="section-title">Yes, it really starts at 9AM.</h2>
         <p class="section-lede">The first question is always the same. This is the fastest answer.</p>
         <div class="video-frame">
@@ -539,7 +539,7 @@
         </div>
       </section>
 
-      <section class="proof">
+      <section class="proof" data-om-section="proof_stats">
         <p><strong>60K</strong><span>tickets sold across the 9AM world</span></p>
         <p><strong>134K</strong><span>Instagram followers watching the tour</span></p>
         <p><strong>47K</strong><span>TikTok followers and 1.2M likes</span></p>
@@ -548,7 +548,7 @@
         <p><strong>9-11</strong><span>Tequila Sunrise open bar window</span></p>
       </section>
 
-      <section>
+      <section data-om-section="proof_videos">
         <h2 class="section-title">Watch the proof.</h2>
         <p class="section-lede">Phone-camera clips show what the morning actually feels like.</p>
         <div class="media-strip" aria-label="Social proof videos">
@@ -594,7 +594,7 @@
         </div>
       </section>
 
-      <section class="expect">
+      <section class="expect" data-om-section="expectations">
         <h2 class="section-title">What you are walking into.</h2>
         <div class="expect-row">
           <b>Open bar</b>
@@ -614,7 +614,7 @@
         </div>
       </section>
 
-      <section class="venue">
+      <section class="venue" data-om-section="venue">
         <h2 class="section-title">The Beacham. Orlando.</h2>
         <dl>
           <dt>Date</dt>
@@ -626,7 +626,7 @@
         </dl>
       </section>
 
-      <section class="faq">
+      <section class="faq" data-om-section="faq">
         <h2 class="section-title">Quick answers.</h2>
         <details open>
           <summary>Is the party really at 9AM?</summary>
@@ -646,18 +646,18 @@
         </details>
       </section>
 
-      <section class="final">
+      <section class="final" data-om-section="final_cta">
         <h2 class="section-title">Orlando goes early this Saturday.</h2>
         <p class="section-lede">Ticket prices can move. Lock yours before the line decides your morning.</p>
         <div class="hero-actions">
-          <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-orlando">Lock tickets now</a>
+          <a class="primary js-ticket" data-cta="final" href="https://posh.vip/e/perreo-at-9am-orlando">Lock tickets now</a>
           <p class="from">The Beacham<br />May 2</p>
         </div>
       </section>
 
       <div class="sticky">
         <div class="sticky-note"><b>From $14.90</b><span>This Saturday - open bar 9-11AM</span></div>
-        <a class="primary js-ticket" href="https://posh.vip/e/perreo-at-9am-orlando">Lock Orlando tickets from $14.90</a>
+        <a class="primary js-ticket" data-cta="sticky" href="https://posh.vip/e/perreo-at-9am-orlando">Lock Orlando tickets from $14.90</a>
       </div>
     </main>
 
@@ -683,14 +683,34 @@
         });
       }
 
+      const ATTRIBUTION_FORWARD_KEYS = [
+        "campaign_id",
+        "campaign_name",
+        "adset_id",
+        "adset_name",
+        "ad_id",
+        "ad_name",
+        "placement",
+        "site_source",
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_content",
+        "utm_term",
+        "fbclid",
+        "fbc",
+        "fbp",
+        "gclid",
+        "ttclid",
+      ];
+
       function ticketHref() {
         const target = new URL("https://posh.vip/e/perreo-at-9am-orlando");
         const incoming = new URLSearchParams(window.location.search);
-        for (const [key, value] of incoming.entries()) {
-          if (key.startsWith("utm_") || key === "fbclid" || key === "ttclid") {
-            target.searchParams.set(key, value);
-          }
-        }
+        ATTRIBUTION_FORWARD_KEYS.forEach((key) => {
+          const value = incoming.get(key);
+          if (value) target.searchParams.set(key, value);
+        });
         target.searchParams.set("utm_source", incoming.get("utm_source") || "meta");
         target.searchParams.set("utm_medium", incoming.get("utm_medium") || "paid_social");
         target.searchParams.set("utm_campaign", incoming.get("utm_campaign") || "house78_luck_9am_orlando");
@@ -809,6 +829,23 @@
 
       tick();
       setInterval(tick, 1000);
+    </script>
+    <script src="/om-funnel-analytics.js"></script>
+    <script>
+      window.OmFunnelAnalytics?.start({
+        attributionStorageKey: "om_9am_orlando_attribution",
+        ctaSelector: ".js-ticket[data-cta]",
+        destination: "posh",
+        endpoint: "/api/attribution/funnel",
+        funnel: "9am",
+        market: "orlando",
+        sampleRate: 1,
+        sectionSelector: "[data-om-section]",
+        sendPageView: true,
+        sendScrollDepth: true,
+        sendTicketClick: true,
+        sessionStorageKey: "om_9am_orlando_session_id",
+      });
     </script>
   </body>
 </html>

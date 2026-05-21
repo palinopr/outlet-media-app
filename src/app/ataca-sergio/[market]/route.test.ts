@@ -19,6 +19,9 @@ describe("/ataca-sergio/[market] funnel route", () => {
     expect(html).toContain("Festival Ataca Sergio");
     expect(html).toContain('data-slug="la-india"');
     expect(html).toContain('data-proof="la-india"');
+    expect(html).toContain('data-om-section="hero"');
+    expect(html).toContain('src="/om-funnel-analytics.js"');
+    expect(html).toContain("window.OmFunnelAnalytics?.start");
     expect(html).toContain("la-india-message.mp4");
     expect(html).toContain("https://www.ticketmaster.com/event/02006478E042F9B1");
   });
