@@ -128,6 +128,32 @@
     return created;
   }
 
+  function decorateTicketHref(link, values) {
+    if (!link || typeof link.getAttribute !== "function" || typeof link.setAttribute !== "function") return;
+    const rawHref = link.getAttribute("href");
+    if (!rawHref) return;
+
+    try {
+      const target = new URL(rawHref, window.location.origin);
+      const isOutletTicketHandoff = target.origin === window.location.origin && target.pathname.startsWith("/out/ticketmaster/");
+      if (!isOutletTicketHandoff) return;
+
+      const attributionValues = values?.attribution || {};
+      ATTRIBUTION_KEYS.forEach((key) => {
+        const value = attributionValues[key];
+        if (value) target.searchParams.set(key, String(value).slice(0, 500));
+      });
+
+      if (values?.sessionId) target.searchParams.set("om_session_id", values.sessionId);
+      if (values?.clickId) target.searchParams.set("om_click_id", values.clickId);
+      if (values?.cta) target.searchParams.set("cta", values.cta);
+
+      link.setAttribute("href", target.toString());
+    } catch {
+      // Leave the original destination untouched if URL parsing fails.
+    }
+  }
+
   function deviceType(width) {
     if (width < 768) return "mobile";
     if (width < 1024) return "tablet";
@@ -284,10 +310,23 @@
 
     if (config.sendTicketClick) {
       document.querySelectorAll(ctaSelector).forEach((link) => {
+        const initialCta = cleanSlug(link.getAttribute("data-cta"), "unknown");
+        decorateTicketHref(link, {
+          attribution: attribution(),
+          cta: initialCta,
+          sessionId,
+        });
+
         link.addEventListener("click", () => {
           const cta = cleanSlug(link.getAttribute("data-cta"), "unknown");
           const clickId = link.getAttribute("data-om-click-id") || randomId("omc");
           link.setAttribute("data-om-click-id", clickId);
+          decorateTicketHref(link, {
+            attribution: attribution(),
+            clickId,
+            cta,
+            sessionId,
+          });
           fire("ticket_click", {
             click_id: clickId,
             cta,
