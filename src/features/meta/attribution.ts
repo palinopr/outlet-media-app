@@ -115,6 +115,7 @@ const SAFE_MARKETING_URL_QUERY_KEYS = new Set<string>([
   "click_id",
   "om_click_id",
   "om_session_id",
+  "session_id",
   "omc",
   "oms",
   "utm_city",
@@ -133,6 +134,13 @@ const EVENT_NAME_ALLOWLIST = new Set([
 const DEVICE_TYPES = new Set<MarketingDeviceType>(["mobile", "tablet", "desktop", "unknown"]);
 const VIEWPORT_ORIENTATIONS = new Set<MarketingViewportOrientation>(["portrait", "landscape", "unknown"]);
 const SCROLL_DEPTHS = new Set([25, 50, 75, 100]);
+const ATTRIBUTION_SECRET_RE = /(sk_live|sk_test|xox[baprs]-|ghp_|ya29\.|access[_-]?token|api[_-]?key|secret|password|bearer)/i;
+const ATTRIBUTION_EMAIL_RE = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+const ATTRIBUTION_PHONE_RE = /(?:^|[^A-Za-z0-9])(?:\+?\d[\d\s().-]{7,}\d)(?=$|[^A-Za-z0-9])|\d{10,}/;
+
+function hasUnsafeAttributionValue(value: string) {
+  return ATTRIBUTION_SECRET_RE.test(value) || ATTRIBUTION_EMAIL_RE.test(value);
+}
 
 function cleanText(value: unknown, maxLength = 500) {
   if (typeof value !== "string") return undefined;
@@ -141,8 +149,103 @@ function cleanText(value: unknown, maxLength = 500) {
   return trimmed.slice(0, maxLength);
 }
 
+const META_ENTITY_ID_QUERY_KEYS = new Set(["campaign_id", "adset_id", "ad_id"]);
+const TICKETMASTER_EVENT_ID_QUERY_KEYS = new Set(["eventid", "tm_event_id", "ticketmaster_event_id"]);
+const EVENT_ID_QUERY_KEYS = new Set(["meta_event_id", "dedupe_event_id"]);
+const DATE_QUERY_KEYS = new Set(["event_date", "tm_event_date", "eventdate", "ticketmaster_event_date"]);
+const FACEBOOK_COOKIE_QUERY_KEYS = new Set(["fbc", "fbp"]);
+const CLICK_SESSION_QUERY_KEYS = new Set(["click_id", "om_click_id", "om_session_id", "session_id", "omc", "oms"]);
+const TEXT_QUERY_KEYS = new Set(["campaign_name", "adset_name", "ad_name", "utm_content"]);
+const SLUG_QUERY_KEYS = new Set([
+  "cta",
+  "placement",
+  "site_source",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+  "utm_term",
+  "utm_city",
+  "om_cta",
+  "om_funnel",
+  "om_market",
+  "eventid",
+  "tm_event_id",
+  "ticketmaster_event_id",
+  "event_date",
+  "tm_event_date",
+  "eventdate",
+  "ticketmaster_event_date",
+]);
+
+function isSafeMetaEntityId(value: string) {
+  return /^\d{12,30}$/.test(value);
+}
+
+function isSafeTicketmasterEventId(value: string) {
+  return /^[A-Za-z0-9_.:-]{8,240}$/.test(value) && /[A-Za-z]/.test(value);
+}
+
+function isSafeFacebookClickId(value: string) {
+  return /^[A-Za-z0-9_-]{12,500}$/.test(value) && /[A-Za-z]/.test(value);
+}
+
+function isSafeFacebookCookie(value: string) {
+  return /^fb\.\d+\.\d{10,13}\.[A-Za-z0-9_.:-]{1,500}$/.test(value);
+}
+
+export function sanitizeMarketingTrackingToken(value: unknown, maxLength = 160) {
+  const cleaned = cleanText(value, maxLength);
+  if (!cleaned) return undefined;
+  if (hasUnsafeAttributionValue(cleaned) || ATTRIBUTION_PHONE_RE.test(cleaned) || /^https?:\/\//i.test(cleaned)) return undefined;
+  if (!/^[A-Za-z0-9_.:-]{8,160}$/.test(cleaned)) return undefined;
+  if (!/[A-Za-z_:-]/.test(cleaned)) return undefined;
+  return cleaned;
+}
+
+export function cleanAttributionQueryValue(key: string, value: unknown, maxLength = 500) {
+  const cleaned = cleanText(value, maxLength);
+  if (!cleaned) return undefined;
+  if (hasUnsafeAttributionValue(cleaned) || /^https?:\/\//i.test(cleaned)) return undefined;
+
+  if (key === "fbclid") return isSafeFacebookClickId(cleaned) ? cleaned : undefined;
+  if (FACEBOOK_COOKIE_QUERY_KEYS.has(key)) return isSafeFacebookCookie(cleaned) ? cleaned : undefined;
+  if (META_ENTITY_ID_QUERY_KEYS.has(key)) return isSafeMetaEntityId(cleaned) ? cleaned : undefined;
+  if (TICKETMASTER_EVENT_ID_QUERY_KEYS.has(key)) return isSafeTicketmasterEventId(cleaned) ? cleaned : undefined;
+  if (DATE_QUERY_KEYS.has(key)) return /^\d{4}-\d{2}-\d{2}(?:[T ][0-9:.-]+Z?)?$/.test(cleaned) ? cleaned.slice(0, 50) : undefined;
+  if (EVENT_ID_QUERY_KEYS.has(key) || CLICK_SESSION_QUERY_KEYS.has(key)) return sanitizeMarketingTrackingToken(cleaned, maxLength);
+  if (TEXT_QUERY_KEYS.has(key)) {
+    if (ATTRIBUTION_PHONE_RE.test(cleaned)) return undefined;
+    return cleaned.replace(/[<>]/g, "").slice(0, 240);
+  }
+  if (SLUG_QUERY_KEYS.has(key)) {
+    if (ATTRIBUTION_PHONE_RE.test(cleaned)) return undefined;
+    return /^[A-Za-z0-9_.:-]{1,240}$/.test(cleaned) ? cleaned : undefined;
+  }
+  return undefined;
+}
+
+function safeDecodePathSegment(value: string) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+export function sanitizeMarketingPathname(pathname: string) {
+  const sanitized = pathname.split("/").map((segment) => {
+    if (!segment) return "";
+    const decoded = safeDecodePathSegment(segment);
+    if (hasUnsafeAttributionValue(decoded) || ATTRIBUTION_PHONE_RE.test(decoded)) return "redacted";
+    return decoded.replace(/[^A-Za-z0-9_.~:-]+/g, "-").slice(0, 120) || "redacted";
+  }).join("/");
+  return sanitized.startsWith("/") ? sanitized : `/${sanitized}`;
+}
+
 export function cleanMarketingSlug(value: unknown, maxLength = 120) {
-  const cleaned = cleanText(value, maxLength)?.toLowerCase().replace(/[^a-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "");
+  const raw = cleanText(value, maxLength);
+  if (!raw || hasUnsafeAttributionValue(raw) || ATTRIBUTION_PHONE_RE.test(raw)) return undefined;
+  const cleaned = raw.toLowerCase().replace(/[^a-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "");
   return cleaned || undefined;
 }
 
@@ -151,10 +254,10 @@ export function sanitizeMarketingUrlForStorage(value: unknown) {
   if (!raw) return undefined;
   try {
     const parsed = new URL(raw);
-    const sanitized = new URL(parsed.pathname, parsed.origin);
+    const sanitized = new URL(sanitizeMarketingPathname(parsed.pathname), parsed.origin);
     for (const key of SAFE_MARKETING_URL_QUERY_KEYS) {
       for (const paramValue of parsed.searchParams.getAll(key)) {
-        const cleaned = cleanText(paramValue, 500);
+        const cleaned = cleanAttributionQueryValue(key, paramValue);
         if (cleaned) sanitized.searchParams.append(key, cleaned);
       }
     }
@@ -305,12 +408,16 @@ export function attributionFromUrlString(value: string | undefined) {
   return attributionFromUrlStringWithDepth(value, 0);
 }
 
+export function paramFromParamsOrUrl(params: URLSearchParams, sourceUrl: string | undefined, names: string[]) {
+  return firstParam(params, names) ?? firstParamFromUrlString(sourceUrl, names);
+}
+
 export function clickIdFromParamsOrUrl(params: URLSearchParams, sourceUrl: string | undefined) {
-  return firstParam(params, ["om_click_id", "click_id", "omc"]) ?? firstParamFromUrlString(sourceUrl, ["om_click_id", "click_id", "omc"]);
+  return paramFromParamsOrUrl(params, sourceUrl, ["om_click_id", "click_id", "omc"]);
 }
 
 export function sessionIdFromParamsOrUrl(params: URLSearchParams, sourceUrl: string | undefined) {
-  return firstParam(params, ["om_session_id", "session_id", "oms"]) ?? firstParamFromUrlString(sourceUrl, ["om_session_id", "session_id", "oms"]);
+  return paramFromParamsOrUrl(params, sourceUrl, ["om_session_id", "session_id", "oms"]);
 }
 
 export function mergeAttribution(...items: Array<MarketingAttribution | undefined>): MarketingAttribution {
@@ -326,24 +433,80 @@ export function mergeAttribution(...items: Array<MarketingAttribution | undefine
   return merged;
 }
 
-export function rowFromAttribution(attribution: MarketingAttribution | undefined) {
+const ATTRIBUTION_META_ID_KEYS = new Set<keyof MarketingAttribution>([
+  "metaAdId",
+  "metaAdsetId",
+  "metaCampaignId",
+]);
+const ATTRIBUTION_TOKEN_KEYS = new Set<keyof MarketingAttribution>([
+  "fbclid",
+  "fbp",
+  "fbc",
+]);
+const ATTRIBUTION_SLUG_KEYS = new Set<keyof MarketingAttribution>([
+  "placement",
+  "siteSource",
+  "utmCampaign",
+  "utmMedium",
+  "utmSource",
+  "utmTerm",
+]);
+
+function cleanAttributionValue(key: keyof MarketingAttribution, value: string | undefined, maxLength = 500) {
+  const cleaned = cleanText(value, maxLength);
+  if (!cleaned) return null;
+  if (hasUnsafeAttributionValue(cleaned) || /^https?:\/\//i.test(cleaned)) return null;
+  if (key === "fbclid") return isSafeFacebookClickId(cleaned) ? cleaned : null;
+  if (key === "fbc" || key === "fbp") return isSafeFacebookCookie(cleaned) ? cleaned : null;
+  if (ATTRIBUTION_META_ID_KEYS.has(key)) return isSafeMetaEntityId(cleaned) ? cleaned : null;
+  if (ATTRIBUTION_TOKEN_KEYS.has(key)) return /^[A-Za-z0-9_.:-]{12,500}$/.test(cleaned) ? cleaned : null;
+  if (ATTRIBUTION_PHONE_RE.test(cleaned)) return null;
+  if (ATTRIBUTION_SLUG_KEYS.has(key)) {
+    return /^[A-Za-z0-9_.:-]{1,240}$/.test(cleaned) ? cleaned : null;
+  }
+  return cleaned.replace(/[<>]/g, "").slice(0, maxLength);
+}
+
+export function sanitizeMarketingAttribution(attribution: MarketingAttribution | undefined): MarketingAttribution {
   return {
-    fbclid: attribution?.fbclid ?? null,
-    fbc: attribution?.fbc ?? null,
-    fbp: attribution?.fbp ?? null,
-    meta_ad_id: attribution?.metaAdId ?? null,
-    meta_ad_name: attribution?.metaAdName ?? null,
-    meta_adset_id: attribution?.metaAdsetId ?? null,
-    meta_adset_name: attribution?.metaAdsetName ?? null,
-    meta_campaign_id: attribution?.metaCampaignId ?? null,
-    meta_campaign_name: attribution?.metaCampaignName ?? null,
-    placement: attribution?.placement ?? null,
-    site_source: attribution?.siteSource ?? null,
-    utm_campaign: attribution?.utmCampaign ?? null,
-    utm_content: attribution?.utmContent ?? null,
-    utm_medium: attribution?.utmMedium ?? null,
-    utm_source: attribution?.utmSource ?? null,
-    utm_term: attribution?.utmTerm ?? null,
+    fbclid: cleanAttributionValue("fbclid", attribution?.fbclid) ?? undefined,
+    fbc: cleanAttributionValue("fbc", attribution?.fbc) ?? undefined,
+    fbp: cleanAttributionValue("fbp", attribution?.fbp) ?? undefined,
+    metaAdId: cleanAttributionValue("metaAdId", attribution?.metaAdId) ?? undefined,
+    metaAdName: cleanAttributionValue("metaAdName", attribution?.metaAdName) ?? undefined,
+    metaAdsetId: cleanAttributionValue("metaAdsetId", attribution?.metaAdsetId) ?? undefined,
+    metaAdsetName: cleanAttributionValue("metaAdsetName", attribution?.metaAdsetName) ?? undefined,
+    metaCampaignId: cleanAttributionValue("metaCampaignId", attribution?.metaCampaignId) ?? undefined,
+    metaCampaignName: cleanAttributionValue("metaCampaignName", attribution?.metaCampaignName) ?? undefined,
+    placement: cleanAttributionValue("placement", attribution?.placement) ?? undefined,
+    siteSource: cleanAttributionValue("siteSource", attribution?.siteSource) ?? undefined,
+    utmCampaign: cleanAttributionValue("utmCampaign", attribution?.utmCampaign) ?? undefined,
+    utmContent: cleanAttributionValue("utmContent", attribution?.utmContent) ?? undefined,
+    utmMedium: cleanAttributionValue("utmMedium", attribution?.utmMedium) ?? undefined,
+    utmSource: cleanAttributionValue("utmSource", attribution?.utmSource) ?? undefined,
+    utmTerm: cleanAttributionValue("utmTerm", attribution?.utmTerm) ?? undefined,
+  };
+}
+
+export function rowFromAttribution(attribution: MarketingAttribution | undefined) {
+  const sanitized = sanitizeMarketingAttribution(attribution);
+  return {
+    fbclid: sanitized.fbclid ?? null,
+    fbc: sanitized.fbc ?? null,
+    fbp: sanitized.fbp ?? null,
+    meta_ad_id: sanitized.metaAdId ?? null,
+    meta_ad_name: sanitized.metaAdName ?? null,
+    meta_adset_id: sanitized.metaAdsetId ?? null,
+    meta_adset_name: sanitized.metaAdsetName ?? null,
+    meta_campaign_id: sanitized.metaCampaignId ?? null,
+    meta_campaign_name: sanitized.metaCampaignName ?? null,
+    placement: sanitized.placement ?? null,
+    site_source: sanitized.siteSource ?? null,
+    utm_campaign: sanitized.utmCampaign ?? null,
+    utm_content: sanitized.utmContent ?? null,
+    utm_medium: sanitized.utmMedium ?? null,
+    utm_source: sanitized.utmSource ?? null,
+    utm_term: sanitized.utmTerm ?? null,
   };
 }
 
@@ -354,8 +517,8 @@ export async function recordMarketingAttributionEvent(input: MarketingAttributio
   const userAgent = cleanText(headers.get("user-agent"), 500);
   const row: MarketingAttributionEventRow = {
     ...rowFromAttribution(input.attribution),
-    click_id: cleanText(input.clickId, 160) ?? null,
-    client_event_id: cleanText(input.clientEventId, 160) ?? null,
+    click_id: sanitizeMarketingTrackingToken(input.clickId) ?? null,
+    client_event_id: sanitizeMarketingTrackingToken(input.clientEventId) ?? null,
     cta: cleanMarketingSlug(input.cta, 120) ?? null,
     device_type: normalizeDeviceType(input.deviceType) ?? null,
     event_name: input.eventName,
@@ -363,13 +526,13 @@ export async function recordMarketingAttributionEvent(input: MarketingAttributio
     landing_url: sanitizeMarketingUrlForStorage(input.landingUrl) ?? null,
     market: cleanMarketingSlug(input.market, 120) ?? null,
     metadata: safeMetadata(input.metadata),
-    page_path: cleanText(input.pagePath, 500) ?? null,
+    page_path: input.pagePath ? sanitizeMarketingPathname(input.pagePath).slice(0, 500) : null,
     referrer: sanitizeMarketingReferrerForStorage(input.referrer) ?? null,
     request_ip_hash: clientIp ? sha256(clientIp) : null,
     sample_rate: normalizeSampleRate(input.sampleRate) ?? 1,
     scroll_depth_pct: normalizeScrollDepthPct(input.scrollDepthPct) ?? null,
     section_id: cleanMarketingSlug(input.sectionId, 120) ?? null,
-    session_id: cleanText(input.sessionId, 160) ?? null,
+    session_id: sanitizeMarketingTrackingToken(input.sessionId) ?? null,
     source_url: sanitizeMarketingUrlForStorage(input.sourceUrl) ?? null,
     user_agent_hash: userAgent ? sha256(userAgent) : null,
     viewport_height: normalizeViewportDimension(input.viewportHeight) ?? null,
