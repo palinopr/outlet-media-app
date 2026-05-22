@@ -1,5 +1,22 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/features/meta/attribution", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/features/meta/attribution")>();
+  return {
+    ...actual,
+    recordMarketingAttributionEvent: vi.fn(),
+  };
+});
+
+vi.mock("@/features/meta/ticketmaster-attribution-handoff", () => ({
+  recordTicketmasterAttributionHandoff: vi.fn(),
+}));
+
 import { GET } from "./route";
+
+const META_CAMPAIGN_ID = "120247445551520525";
+const META_ADSET_ID = "120247445606520525";
+const META_AD_ID = "120247446000000525";
 
 function getRedirect(slug: string, query = "") {
   return GET(new Request(`https://outletmedia.net/out/ticketmaster/${slug}${query}`), {
@@ -11,7 +28,7 @@ describe("GET /out/ticketmaster/[slug]", () => {
   it("redirects through to Ticketmaster with click and ad attribution parameters", async () => {
     const response = await getRedirect(
       "ataca-sergio-newark",
-      "?om_session_id=oms_test&om_click_id=omc_test&cta=hero&campaign_id=111&adset_id=222&ad_id=333&placement=instagram_stories&utm_content=story_v1",
+      `?om_session_id=oms_test&om_click_id=omc_test&cta=hero&campaign_id=${META_CAMPAIGN_ID}&adset_id=${META_ADSET_ID}&ad_id=${META_AD_ID}&placement=instagram_stories&utm_content=story_v1`,
     );
 
     expect(response.status).toBe(302);
@@ -21,9 +38,11 @@ describe("GET /out/ticketmaster/[slug]", () => {
     expect(target.searchParams.get("om_click_id")).toBe("omc_test");
     expect(target.searchParams.get("om_session_id")).toBe("oms_test");
     expect(target.searchParams.get("om_cta")).toBe("hero");
-    expect(target.searchParams.get("campaign_id")).toBe("111");
-    expect(target.searchParams.get("adset_id")).toBe("222");
-    expect(target.searchParams.get("ad_id")).toBe("333");
+    expect(target.searchParams.get("om_funnel")).toBe("ataca-sergio");
+    expect(target.searchParams.get("om_market")).toBe("newark");
+    expect(target.searchParams.get("campaign_id")).toBe(META_CAMPAIGN_ID);
+    expect(target.searchParams.get("adset_id")).toBe(META_ADSET_ID);
+    expect(target.searchParams.get("ad_id")).toBe(META_AD_ID);
     expect(target.searchParams.get("placement")).toBe("instagram_stories");
     expect(target.searchParams.get("utm_source")).toBe("meta");
     expect(target.searchParams.get("utm_medium")).toBe("paid_social");

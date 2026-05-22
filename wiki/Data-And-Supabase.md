@@ -32,7 +32,7 @@ The active app currently expects these public tables:
 - `meta_campaigns`
 - `system_events`
 
-Additional active attribution/observability tables can exist for explicitly live funnels, such as `ticketmaster_capi_events`, but ticketing product surfaces and event snapshot tables should not be recreated without a new explicit product decision.
+Additional active attribution/observability tables can exist for explicitly live funnels, such as `marketing_attribution_events`, `ticketmaster_attribution_handoffs`, and `ticketmaster_capi_events`, but ticketing product surfaces and event snapshot tables should not be recreated without a new explicit product decision.
 
 ## Before schema changes
 

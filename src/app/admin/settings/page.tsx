@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Bug, CheckCircle2, Key, Link2, ReceiptText, Settings, TriangleAlert } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { AdminPageHeader } from "@/components/admin/page-header";
+import { cleanAttributionQueryValue } from "@/features/meta/attribution";
+import { sanitizeTicketmasterCapiSourceUrl } from "@/features/meta/conversions-api";
 import type { ConnectedAccount } from "@/features/settings/connected-accounts";
 import {
   buildConnectedAccountsSummary,
@@ -64,6 +66,10 @@ function formatCurrency(value: number | string | null, currency: string | null) 
 
 type TicketmasterCapiEvent = {
   attempt_count: number;
+  attribution_handoff_id: string | null;
+  attribution_match_confidence: string | null;
+  attribution_match_method: string | null;
+  attribution_matched_at: string | null;
   created_at: string;
   currency: string | null;
   error_message: string | null;
@@ -110,7 +116,7 @@ function numericValue(value: number | string | null) {
 }
 
 function summarizePurchases(events: TicketmasterCapiEvent[]): RevenueSummary {
-  const purchases = events.filter((event) => event.event_name === "Purchase" && !event.skip_reason && numericValue(event.value) > 0);
+  const purchases = events.filter((event) => event.event_name === "Purchase" && !event.is_test && !event.skip_reason && numericValue(event.value) > 0);
   const accepted = purchases.filter((event) => event.meta_ok);
   const revenue = purchases.reduce((sum, event) => sum + numericValue(event.value), 0);
   const tickets = purchases.reduce((sum, event) => sum + (event.quantity ?? 0), 0);
@@ -124,12 +130,29 @@ function summarizePurchases(events: TicketmasterCapiEvent[]): RevenueSummary {
   };
 }
 
+function safeAdminLabel(value: string | null | undefined, fallback: string) {
+  return cleanAttributionQueryValue("utm_content", value) ?? cleanAttributionQueryValue("ticketmaster_event_id", value) ?? fallback;
+}
+
+function safeAdminAdLabel(value: string | null | undefined, fallback: string) {
+  return cleanAttributionQueryValue("utm_content", value) ?? cleanAttributionQueryValue("ad_id", value) ?? fallback;
+}
+
+function safeAdminErrorMessage(value: string | null | undefined) {
+  if (!value) return undefined;
+  return value
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[redacted-email]")
+    .replace(/(?:^|[^A-Za-z0-9])(?:\+?\d[\d\s().-]{7,}\d)(?=$|[^A-Za-z0-9])|\d{10,}/g, "[redacted-phone]")
+    .replace(/(sk_live|sk_test|xox[baprs]-|ghp_|ya29\.|access[_-]?token|api[_-]?key|secret|password|bearer)[^\s]*/gi, "[redacted-secret]")
+    .slice(0, 500);
+}
+
 function groupPurchasesByEvent(events: TicketmasterCapiEvent[]) {
   const groups = new Map<string, TicketmasterCapiEvent[]>();
   events
-    .filter((event) => event.event_name === "Purchase" && !event.skip_reason && numericValue(event.value) > 0)
+    .filter((event) => event.event_name === "Purchase" && !event.is_test && !event.skip_reason && numericValue(event.value) > 0)
     .forEach((event) => {
-      const key = event.ticketmaster_event_name ?? event.ticketmaster_event_id ?? "Unknown event";
+      const key = safeAdminLabel(event.ticketmaster_event_name ?? event.ticketmaster_event_id, "Unknown event");
       groups.set(key, [...(groups.get(key) ?? []), event]);
     });
   return Array.from(groups.entries())
@@ -138,12 +161,16 @@ function groupPurchasesByEvent(events: TicketmasterCapiEvent[]) {
     .slice(0, 5);
 }
 
+function hasOptimizationGradeAttribution(event: TicketmasterCapiEvent) {
+  return event.attribution_match_confidence === "deterministic" || event.attribution_match_confidence === "high";
+}
+
 function groupPurchasesByAd(events: TicketmasterCapiEvent[]) {
   const groups = new Map<string, TicketmasterCapiEvent[]>();
   events
-    .filter((event) => event.event_name === "Purchase" && !event.skip_reason && numericValue(event.value) > 0 && (event.meta_ad_id || event.meta_adset_id || event.meta_campaign_id))
+    .filter((event) => event.event_name === "Purchase" && !event.is_test && !event.skip_reason && numericValue(event.value) > 0 && hasOptimizationGradeAttribution(event) && (event.meta_ad_id || event.meta_adset_id || event.meta_campaign_id))
     .forEach((event) => {
-      const key = event.meta_ad_name ?? event.meta_ad_id ?? event.meta_adset_name ?? event.meta_adset_id ?? event.meta_campaign_name ?? event.meta_campaign_id ?? "Unknown ad";
+      const key = safeAdminAdLabel(event.meta_ad_name ?? event.meta_ad_id ?? event.meta_adset_name ?? event.meta_adset_id ?? event.meta_campaign_name ?? event.meta_campaign_id, "Unknown ad");
       groups.set(key, [...(groups.get(key) ?? []), event]);
     });
   return Array.from(groups.entries())
@@ -195,7 +222,7 @@ export default async function SettingsPage() {
   const ticketmasterCapiEventsRes = await supabaseAdmin
     ?.from("ticketmaster_capi_events")
     .select(
-      "id, created_at, last_seen_at, attempt_count, event_name, event_id, order_id, order_hash, om_click_id, om_session_id, ticketmaster_event_id, ticketmaster_event_name, ticketmaster_event_date, value, currency, quantity, meta_status, meta_ok, skip_reason, error_message, is_test, source_url, meta_campaign_id, meta_campaign_name, meta_adset_id, meta_adset_name, meta_ad_id, meta_ad_name, placement",
+      "id, created_at, last_seen_at, attempt_count, event_name, event_id, order_id, order_hash, om_click_id, om_session_id, attribution_handoff_id, attribution_match_method, attribution_match_confidence, attribution_matched_at, ticketmaster_event_id, ticketmaster_event_name, ticketmaster_event_date, value, currency, quantity, meta_status, meta_ok, skip_reason, error_message, is_test, source_url, meta_campaign_id, meta_campaign_name, meta_adset_id, meta_adset_name, meta_ad_id, meta_ad_name, placement",
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -416,7 +443,7 @@ export default async function SettingsPage() {
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Revenue by ad/ad set</p>
               {adBreakdown.length === 0 ? (
                 <p className="mt-3 text-sm text-muted-foreground">
-                  Waiting on ad URL parameters and Ticketmaster click-id preservation before deterministic ad revenue appears here.
+                  Waiting on deterministic/high-confidence ad attribution before optimization-grade ad revenue appears here.
                 </p>
               ) : (
                 <div className="mt-3 space-y-2">
@@ -451,6 +478,7 @@ export default async function SettingsPage() {
             <p className="text-sm text-muted-foreground">No Ticketmaster CAPI events have been recorded yet.</p>
           ) : (
             ticketmasterCapiEvents.map((event) => {
+              const safeSourceUrl = sanitizeTicketmasterCapiSourceUrl(event.source_url ?? undefined);
               const statusLabel = event.skip_reason
                 ? event.skip_reason
                 : event.meta_ok
@@ -472,18 +500,24 @@ export default async function SettingsPage() {
                         {event.quantity ? ` • ${event.quantity} ticket${event.quantity === 1 ? "" : "s"}` : ""}
                       </p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {event.ticketmaster_event_name ?? "unknown event"} • {formatErrorDate(event.created_at)}
+                        {safeAdminLabel(event.ticketmaster_event_name ?? event.ticketmaster_event_id, "unknown event")} • {formatErrorDate(event.created_at)}
                       </p>
                       <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground/70">
-                        order {event.order_id ?? event.order_hash?.slice(0, 12) ?? "n/a"} • event_id {event.event_id.slice(0, 28)}
+                        order {event.order_hash?.slice(0, 12) ?? (event.order_id ? "stored" : "n/a")} • event_id {cleanAttributionQueryValue("meta_event_id", event.event_id)?.slice(0, 28) ?? "stored"}
                       </p>
                       {(event.om_click_id || event.meta_ad_id || event.meta_adset_id) ? (
                         <p className="mt-1 truncate font-mono text-[11px] text-emerald-200/70">
-                          click {event.om_click_id?.slice(0, 24) ?? "n/a"} • ad {event.meta_ad_name ?? event.meta_ad_id ?? event.meta_adset_name ?? event.meta_adset_id ?? "n/a"}
+                          click {cleanAttributionQueryValue("om_click_id", event.om_click_id)?.slice(0, 24) ?? "n/a"} • ad {safeAdminAdLabel(event.meta_ad_name ?? event.meta_ad_id ?? event.meta_adset_name ?? event.meta_adset_id, "n/a")}
                         </p>
                       ) : null}
-                      {event.source_url ? (
-                        <p className="mt-1 truncate text-[11px] text-muted-foreground/60">{event.source_url}</p>
+                      {event.attribution_match_method ? (
+                        <p className="mt-1 truncate font-mono text-[11px] text-cyan-200/70">
+                          attribution {event.attribution_match_confidence ?? "unknown"} • {event.attribution_match_method}
+                          {event.attribution_handoff_id ? ` • handoff ${event.attribution_handoff_id.slice(0, 8)}` : ""}
+                        </p>
+                      ) : null}
+                      {safeSourceUrl ? (
+                        <p className="mt-1 truncate text-[11px] text-muted-foreground/60">{safeSourceUrl}</p>
                       ) : null}
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -500,9 +534,9 @@ export default async function SettingsPage() {
                       ) : null}
                     </div>
                   </div>
-                  {event.error_message ? (
+                  {safeAdminErrorMessage(event.error_message) ? (
                     <p className="mt-2 rounded bg-amber-500/10 px-2 py-1 text-[11px] text-amber-200">
-                      {event.error_message}
+                      {safeAdminErrorMessage(event.error_message)}
                     </p>
                   ) : null}
                 </div>

@@ -218,17 +218,125 @@ export type Database = {
         }
         Relationships: []
       }
+      ticketmaster_attribution_handoffs: {
+        Row: {
+          click_id: string
+          created_at: string
+          cta: string | null
+          destination_url: string | null
+          fbclid: string | null
+          fbc: string | null
+          fbp: string | null
+          funnel: string
+          id: string
+          market: string | null
+          meta_ad_id: string | null
+          meta_ad_name: string | null
+          meta_adset_id: string | null
+          meta_adset_name: string | null
+          meta_campaign_id: string | null
+          meta_campaign_name: string | null
+          metadata: Json
+          placement: string | null
+          referrer: string | null
+          request_ip_hash: string | null
+          session_id: string | null
+          site_source: string | null
+          source_url: string | null
+          ticketmaster_event_id: string | null
+          ticketmaster_event_name: string | null
+          user_agent_hash: string | null
+          utm_campaign: string | null
+          utm_content: string | null
+          utm_medium: string | null
+          utm_source: string | null
+          utm_term: string | null
+        }
+        Insert: {
+          click_id: string
+          created_at?: string
+          cta?: string | null
+          destination_url?: string | null
+          fbclid?: string | null
+          fbc?: string | null
+          fbp?: string | null
+          funnel: string
+          id?: string
+          market?: string | null
+          meta_ad_id?: string | null
+          meta_ad_name?: string | null
+          meta_adset_id?: string | null
+          meta_adset_name?: string | null
+          meta_campaign_id?: string | null
+          meta_campaign_name?: string | null
+          metadata?: Json
+          placement?: string | null
+          referrer?: string | null
+          request_ip_hash?: string | null
+          session_id?: string | null
+          site_source?: string | null
+          source_url?: string | null
+          ticketmaster_event_id?: string | null
+          ticketmaster_event_name?: string | null
+          user_agent_hash?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Update: {
+          click_id?: string
+          created_at?: string
+          cta?: string | null
+          destination_url?: string | null
+          fbclid?: string | null
+          fbc?: string | null
+          fbp?: string | null
+          funnel?: string
+          id?: string
+          market?: string | null
+          meta_ad_id?: string | null
+          meta_ad_name?: string | null
+          meta_adset_id?: string | null
+          meta_adset_name?: string | null
+          meta_campaign_id?: string | null
+          meta_campaign_name?: string | null
+          metadata?: Json
+          placement?: string | null
+          referrer?: string | null
+          request_ip_hash?: string | null
+          session_id?: string | null
+          site_source?: string | null
+          source_url?: string | null
+          ticketmaster_event_id?: string | null
+          ticketmaster_event_name?: string | null
+          user_agent_hash?: string | null
+          utm_campaign?: string | null
+          utm_content?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+          utm_term?: string | null
+        }
+        Relationships: []
+      }
       ticketmaster_capi_events: {
         Row: {
           attempt_count: number
+          attribution_handoff_id: string | null
+          attribution_match_confidence: string | null
+          attribution_match_method: string | null
+          attribution_matched_at: string | null
           billing_state: string | null
           billing_zip: string | null
           country: string | null
           created_at: string
+          cta: string | null
           currency: string | null
           error_message: string | null
           event_id: string
           event_name: string
+          funnel: string | null
           id: string
           is_test: boolean
           last_seen_at: string
@@ -236,6 +344,7 @@ export type Database = {
           meta_pixel_id: string | null
           meta_response: Json | null
           meta_status: number | null
+          market: string | null
           om_click_id: string | null
           om_session_id: string | null
           fbclid: string | null
@@ -268,14 +377,20 @@ export type Database = {
         }
         Insert: {
           attempt_count?: number
+          attribution_handoff_id?: string | null
+          attribution_match_confidence?: string | null
+          attribution_match_method?: string | null
+          attribution_matched_at?: string | null
           billing_state?: string | null
           billing_zip?: string | null
           country?: string | null
           created_at?: string
+          cta?: string | null
           currency?: string | null
           error_message?: string | null
           event_id: string
           event_name: string
+          funnel?: string | null
           id?: string
           is_test?: boolean
           last_seen_at?: string
@@ -283,6 +398,7 @@ export type Database = {
           meta_pixel_id?: string | null
           meta_response?: Json | null
           meta_status?: number | null
+          market?: string | null
           om_click_id?: string | null
           om_session_id?: string | null
           fbclid?: string | null
@@ -315,14 +431,20 @@ export type Database = {
         }
         Update: {
           attempt_count?: number
+          attribution_handoff_id?: string | null
+          attribution_match_confidence?: string | null
+          attribution_match_method?: string | null
+          attribution_matched_at?: string | null
           billing_state?: string | null
           billing_zip?: string | null
           country?: string | null
           created_at?: string
+          cta?: string | null
           currency?: string | null
           error_message?: string | null
           event_id?: string
           event_name?: string
+          funnel?: string | null
           id?: string
           is_test?: boolean
           last_seen_at?: string
@@ -330,6 +452,7 @@ export type Database = {
           meta_pixel_id?: string | null
           meta_response?: Json | null
           meta_status?: number | null
+          market?: string | null
           om_click_id?: string | null
           om_session_id?: string | null
           fbclid?: string | null
@@ -360,7 +483,15 @@ export type Database = {
           user_agent_hash?: string | null
           value?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ticketmaster_capi_events_attribution_handoff_id_fkey"
+            columns: ["attribution_handoff_id"]
+            isOneToOne: false
+            referencedRelation: "ticketmaster_attribution_handoffs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaign_client_overrides: {
         Row: {
