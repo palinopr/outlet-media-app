@@ -4,6 +4,7 @@ import {
   cleanMarketingSlug,
   rowFromAttribution,
   sanitizeMarketingAttribution,
+  sanitizeMarketingAttributionWithInferredMetaAdId,
   sanitizeMarketingReferrerForStorage,
   sanitizeMarketingTrackingToken,
   sanitizeMarketingUrlForStorage,
@@ -196,7 +197,7 @@ function hasStrongMatchContext(log: TicketmasterCapiLogFields) {
 }
 
 function stableDirectAttribution(log: TicketmasterCapiLogFields) {
-  const attribution = sanitizeMarketingAttribution(log.attribution);
+  const attribution = sanitizeMarketingAttributionWithInferredMetaAdId(log.attribution);
   return attribution.metaAdId || attribution.metaAdsetId || attribution.metaCampaignId ? attribution : null;
 }
 

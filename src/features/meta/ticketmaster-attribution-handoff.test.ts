@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { attributionMatchFromHandoffRow } from "./ticketmaster-attribution-handoff";
+import type { TicketmasterCapiLogFields } from "./conversions-api";
+import { attributionMatchFromHandoffRow, findTicketmasterAttributionMatch } from "./ticketmaster-attribution-handoff";
 
 describe("ticketmaster attribution handoffs", () => {
   it("maps handoff rows into attribution matches with method and confidence", () => {
@@ -40,6 +41,26 @@ describe("ticketmaster attribution handoffs", () => {
       placement: "instagram_stories",
       siteSource: "ig",
       utmContent: "333",
+    });
+  });
+
+  it("treats numeric Ticketmaster utm_content values as direct Meta ad ids", async () => {
+    const match = await findTicketmasterAttributionMatch(
+      {
+        attribution: {
+          utmContent: "120247527692050525",
+        },
+        eventName: "Purchase",
+      } as TicketmasterCapiLogFields,
+      "2026-05-23T15:00:00.000Z",
+    );
+
+    expect(match).toMatchObject({
+      confidence: "deterministic",
+      method: "direct_ticketmaster_params",
+    });
+    expect(match?.attribution).toMatchObject({
+      metaAdId: "120247527692050525",
     });
   });
 });

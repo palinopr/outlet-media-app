@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/features/meta/attribution", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/features/meta/attribution")>();
@@ -12,6 +12,8 @@ vi.mock("@/features/meta/ticketmaster-attribution-handoff", () => ({
   recordTicketmasterAttributionHandoff: vi.fn(),
 }));
 
+import { recordMarketingAttributionEvent } from "@/features/meta/attribution";
+import { recordTicketmasterAttributionHandoff } from "@/features/meta/ticketmaster-attribution-handoff";
 import { GET } from "./route";
 
 const META_CAMPAIGN_ID = "120247445551520525";
@@ -25,6 +27,12 @@ function getRedirect(slug: string, query = "") {
 }
 
 describe("GET /out/ticketmaster/[slug]", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.mocked(recordMarketingAttributionEvent).mockReset();
+    vi.mocked(recordTicketmasterAttributionHandoff).mockReset();
+  });
+
   it("redirects through to Ticketmaster with click and ad attribution parameters", async () => {
     const response = await getRedirect(
       "ataca-sergio-newark",
@@ -48,6 +56,36 @@ describe("GET /out/ticketmaster/[slug]", () => {
     expect(target.searchParams.get("utm_medium")).toBe("paid_social");
     expect(target.searchParams.get("utm_campaign")).toBe("ataca_sergio_newark");
     expect(target.searchParams.get("utm_content")).toBe("story_v1");
+  });
+
+  it("waits for the handoff write instead of timing out before redirect", async () => {
+    vi.useFakeTimers();
+    let handoffCompleted = false;
+    vi.mocked(recordTicketmasterAttributionHandoff).mockImplementationOnce(() => new Promise<void>((resolve) => {
+      setTimeout(() => {
+        handoffCompleted = true;
+        resolve();
+      }, 300);
+    }));
+
+    let responseSettled = false;
+    const responsePromise = getRedirect(
+      "ataca-sergio-newark",
+      `?om_session_id=oms_test&om_click_id=omc_test&cta=hero&ad_id=${META_AD_ID}`,
+    ).then((response) => {
+      responseSettled = true;
+      return response;
+    });
+
+    await vi.advanceTimersByTimeAsync(250);
+    expect(responseSettled).toBe(false);
+    expect(handoffCompleted).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(50);
+    const response = await responsePromise;
+
+    expect(handoffCompleted).toBe(true);
+    expect(response.status).toBe(302);
   });
 
   it("rejects unknown ticket destination slugs", async () => {

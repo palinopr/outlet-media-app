@@ -488,6 +488,17 @@ export function sanitizeMarketingAttribution(attribution: MarketingAttribution |
   };
 }
 
+export function sanitizeMarketingAttributionWithInferredMetaAdId(
+  attribution: MarketingAttribution | undefined,
+): MarketingAttribution {
+  const inferredMetaAdId = cleanAttributionValue("metaAdId", attribution?.utmContent);
+  const sanitized = sanitizeMarketingAttribution(attribution);
+  return {
+    ...sanitized,
+    metaAdId: sanitized.metaAdId ?? inferredMetaAdId ?? undefined,
+  };
+}
+
 export function rowFromAttribution(attribution: MarketingAttribution | undefined) {
   const sanitized = sanitizeMarketingAttribution(attribution);
   return {

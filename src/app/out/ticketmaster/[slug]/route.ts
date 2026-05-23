@@ -42,19 +42,6 @@ function firstParam(params: URLSearchParams, names: string[]) {
   return undefined;
 }
 
-async function settleWithTimeout<T>(promise: Promise<PromiseSettledResult<T>[]>, timeoutMs = 250) {
-  let timedOut = false;
-  const timeout = new Promise<PromiseSettledResult<T>[]>((resolve) => {
-    setTimeout(() => {
-      timedOut = true;
-      resolve([]);
-    }, timeoutMs).unref?.();
-  });
-  const result = await Promise.race([promise, timeout]);
-  if (timedOut) console.warn("[ticketmaster:redirect] attribution write timed out before redirect");
-  return result;
-}
-
 export async function GET(request: Request, context: RouteContext) {
   const { slug } = await context.params;
   const destination = destinations[slug as keyof typeof destinations];
@@ -86,25 +73,7 @@ export async function GET(request: Request, context: RouteContext) {
   target.searchParams.set("utm_campaign", cleanAttributionQueryValue("utm_campaign", firstParam(incoming, ["utm_campaign"])) ?? destination.defaultUtmCampaign);
   target.searchParams.set("utm_content", cleanAttributionQueryValue("utm_content", firstParam(incoming, ["utm_content"])) ?? cta ?? "lp_default");
 
-  const attributionWrites = await settleWithTimeout(Promise.allSettled([
-    recordMarketingAttributionEvent(
-      {
-        attribution,
-        clickId,
-        cta,
-        eventName: "ticket_redirect",
-        funnel: destination.funnel,
-        market: destination.market,
-        metadata: {
-          destination: "ticketmaster",
-          ticketmaster_event_id: destination.eventId,
-        },
-        referrer,
-        sessionId,
-        sourceUrl: requestUrl.toString(),
-      },
-      request.headers,
-    ),
+  const attributionWrites = await Promise.allSettled([
     recordTicketmasterAttributionHandoff(
       {
         attribution,
@@ -124,7 +93,25 @@ export async function GET(request: Request, context: RouteContext) {
       },
       request.headers,
     ),
-  ]));
+    recordMarketingAttributionEvent(
+      {
+        attribution,
+        clickId,
+        cta,
+        eventName: "ticket_redirect",
+        funnel: destination.funnel,
+        market: destination.market,
+        metadata: {
+          destination: "ticketmaster",
+          ticketmaster_event_id: destination.eventId,
+        },
+        referrer,
+        sessionId,
+        sourceUrl: requestUrl.toString(),
+      },
+      request.headers,
+    ),
+  ]);
 
   for (const write of attributionWrites) {
     if (write.status === "rejected") console.error("[ticketmaster:redirect] attribution write failed", write.reason);

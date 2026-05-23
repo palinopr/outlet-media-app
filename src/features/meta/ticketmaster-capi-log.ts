@@ -7,6 +7,7 @@ import {
   mergeAttribution,
   rowFromAttribution,
   sanitizeMarketingAttribution,
+  sanitizeMarketingAttributionWithInferredMetaAdId,
   sanitizeMarketingTrackingToken,
 } from "@/features/meta/attribution";
 import {
@@ -130,7 +131,7 @@ function generatedEventId(input: RecordTicketmasterCapiEventInput) {
 }
 
 function hasDirectAttribution(input: RecordTicketmasterCapiEventInput) {
-  const attribution = sanitizeMarketingAttribution(input.log.attribution);
+  const attribution = sanitizeMarketingAttributionWithInferredMetaAdId(input.log.attribution);
   return Boolean(attribution.metaAdId || attribution.metaAdsetId || attribution.metaCampaignId);
 }
 
@@ -199,11 +200,11 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
   const existingRow = existing.data as ExistingTicketmasterCapiEventRow | null;
   const matchCutoff = existingRow?.created_at ?? receivedAt;
   const attributionMatch = await findTicketmasterAttributionMatch(input.log, matchCutoff);
-  const newAttribution = mergeAttribution(
+  const newAttribution = sanitizeMarketingAttributionWithInferredMetaAdId(mergeAttribution(
     sanitizeMarketingAttribution(attributionFromUrlString(input.log.sourceUrl)),
     sanitizeMarketingAttribution(input.log.attribution),
     sanitizeMarketingAttribution(attributionMatch?.attribution),
-  );
+  ));
   const newOmClickId = sanitizeMarketingTrackingToken(input.log.omClickId ?? attributionMatch?.clickId);
   const newOmSessionId = sanitizeMarketingTrackingToken(input.log.omSessionId ?? attributionMatch?.sessionId);
   const newAttributionMatchMethod = attributionMatch?.method ?? (hasDirectAttribution(input) ? "direct_ticketmaster_params" : null);
