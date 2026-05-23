@@ -9,16 +9,18 @@ import {
   Eye,
   Gauge,
   Image as ImageIcon,
+  Megaphone,
   MousePointerClick,
   Globe2,
   MapPin,
   Percent,
+  TrendingUp,
   Trophy,
   Users,
   type LucideIcon,
 } from "lucide-react";
 import { parseClientCampaignRange } from "@/lib/constants";
-import { fmtDate, fmtUsd, fmtNum } from "@/lib/formatters";
+import { fmtDate, fmtUsd, fmtNum, roasColor } from "@/lib/formatters";
 import { getCampaignDetail } from "./data";
 import { AdsPreview } from "@/components/client/ads-preview";
 import {
@@ -32,7 +34,7 @@ import { ClientPortalFooter } from "../../components/client-portal-footer";
 import { CampaignDetailHeader } from "../../components/campaign-detail-header";
 import { requireClientAccess } from "@/features/client-portal/access";
 import { getClientPortalTheme } from "@/features/client-portal/theme";
-import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket } from "@/features/client-portal/insights";
+import { findBestDayOfWeek, findBestHour, findTopCreative, findTopMarket, roasLabel } from "@/features/client-portal/insights";
 
 interface Props {
   params: Promise<{ slug: string; campaignId: string }>;
@@ -85,28 +87,35 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 
   const performanceCards = [
     {
-      label: "Spend",
+      label: "Total Ad Spend",
       value: fmtUsd(c.spend),
       detail: rangeLabel,
       icon: DollarSign,
     },
     {
-      label: "Impressions",
+      label: "Ad Revenue",
+      value: fmtUsd(c.revenue),
+      detail: c.roas != null ? `$${c.roas.toFixed(2)} return per dollar` : "Attribution unavailable",
+      icon: TrendingUp,
+    },
+    {
+      label: "Blended ROAS",
+      value: c.roas != null ? `${c.roas.toFixed(1)}x` : "--",
+      valueColor: roasColor(c.roas),
+      detail: roasLabel(c.roas),
+      icon: Megaphone,
+    },
+    {
+      label: "Audience Reach",
       value: fmtNum(c.impressions),
-      detail: "Ad views",
+      detail: `${fmtNum(c.clicks)} clicks`,
       icon: Eye,
     },
     {
-      label: "Clicks",
-      value: fmtNum(c.clicks),
-      detail: "Link clicks",
-      icon: MousePointerClick,
-    },
-    {
-      label: "CTR",
-      value: c.ctr != null ? `${c.ctr.toFixed(2)}%` : "--",
-      detail: "Click rate",
-      icon: Gauge,
+      label: "CPM",
+      value: c.cpm != null ? fmtUsd(c.cpm) : "--",
+      detail: "Cost per 1,000 views",
+      icon: BarChart3,
     },
     {
       label: "CPC",
@@ -115,10 +124,10 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
       icon: MousePointerClick,
     },
     {
-      label: "CPM",
-      value: c.cpm != null ? fmtUsd(c.cpm) : "--",
-      detail: "Cost per 1,000 views",
-      icon: BarChart3,
+      label: "Click Rate",
+      value: c.ctr != null ? `${c.ctr.toFixed(2)}%` : "--",
+      detail: "of viewers who clicked",
+      icon: Gauge,
     },
   ];
 
@@ -248,7 +257,7 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
         theme={theme}
       />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 2xl:grid-cols-7">
         {performanceCards.map((card) => (
           <MetricCard key={card.label} {...card} />
         ))}
@@ -361,11 +370,13 @@ export default async function CampaignDetailPage({ params, searchParams }: Props
 function MetricCard({
   label,
   value,
+  valueColor,
   detail,
   icon: Icon,
 }: {
   label: string;
   value: string;
+  valueColor?: string;
   detail: string;
   icon: LucideIcon;
 }) {
@@ -375,7 +386,7 @@ function MetricCard({
         <Icon className="h-4 w-4" />
       </div>
       <p className="text-xs font-medium text-white/72">{label}</p>
-      <p className="mt-1.5 text-2xl font-semibold tracking-tight text-white leading-none">{value}</p>
+      <p className={`mt-1.5 text-2xl font-semibold tracking-tight leading-none ${valueColor ?? "text-white"}`}>{value}</p>
       <p className="mt-2 text-[11px] leading-4 text-white/42">{detail}</p>
     </div>
   );
