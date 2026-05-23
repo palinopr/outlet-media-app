@@ -1,11 +1,13 @@
 # Outlet Media App
 
-Canonical knowledge source: `wiki/Home.md`.
+Canonical knowledge source:
+
+`/Users/jaimeortiz/projects/Oulet Media Memory/Outlet Media Memory v2/Outlet Media Memory 2`
 
 For coding agents and LLMs:
 
-1. Read `wiki/Home.md` first.
-2. Follow the task-specific read path from the Home page.
-3. Treat `wiki/` as the single source of truth for product scope, architecture, operations, and workflow.
+1. Read the Obsidian v2 vault bootstrap first: `AGENTS.md`, `00 Start Here.md`, `01 Indexes/Global Index.md`, `10 Doctrine/Agent Memory Protocol.md`, and `90 System/Outlet App Wiki Pointer.md`.
+2. Follow the relevant v2 doctrine/client/source path for the task.
+3. Treat Obsidian v2 as the durable source of truth for product scope, architecture, operations, and workflow.
 4. Treat `AGENTS.md` files as bootstrap instructions only.
-5. Do not put secrets, tokens, credentials, or private client PII in prompts, commits, logs, or wiki pages.
+5. Do not put secrets, tokens, credentials, or private client PII in prompts, commits, logs, or Obsidian pages.

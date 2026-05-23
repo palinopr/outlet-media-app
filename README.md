@@ -11,11 +11,13 @@ Client-facing agency operating system focused on campaign performance, client ac
 
 ## Canonical knowledge
 
-The single source of truth is the LLM-friendly Markdown wiki:
+The single source of truth is the Obsidian v2 LLM-wiki / knowledge graph:
 
-- [wiki/Home.md](./wiki/Home.md)
+```text
+/Users/jaimeortiz/projects/Oulet Media Memory/Outlet Media Memory v2/Outlet Media Memory 2
+```
 
-Use the wiki for product scope, architecture, runbooks, Meta ads guidance, Supabase safety, deployment, and Codex/AI workflow. Repo files outside `wiki/` should stay as short pointers or operational bootstraps only.
+Use Obsidian v2 for product scope, architecture, runbooks, Meta ads guidance, Supabase safety, deployment, and Codex/AI workflow. This repo intentionally does not carry a local `wiki/` folder anymore; repo Markdown should stay as short pointers or operational bootstraps only.
 
 ## Development
 

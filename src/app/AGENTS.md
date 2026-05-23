@@ -1,6 +1,12 @@
 # App Routes Bootstrap
 
-Canonical engineering and product rules live in [`../../wiki/Home.md`](../../wiki/Home.md), especially [`../../wiki/Engineering-Principles.md`](../../wiki/Engineering-Principles.md) and [`../../wiki/Current-State.md`](../../wiki/Current-State.md).
+Canonical engineering and product rules live in Obsidian v2:
+
+```text
+/Users/jaimeortiz/projects/Oulet Media Memory/Outlet Media Memory v2/Outlet Media Memory 2
+```
+
+Start with `AGENTS.md`, `10 Doctrine/Agent Memory Protocol.md`, and `90 System/Outlet App Wiki Pointer.md`, then verify current route behavior in this repo.
 
 Local route rules:
 
