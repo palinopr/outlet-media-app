@@ -181,6 +181,7 @@ The Ataca Sergio funnel has a first-party attribution layer before the Ticketmas
 - ticket CTAs route through `/out/ticketmaster/ataca-sergio-newark`
 - the redirect logs `ticket_redirect`, writes a durable `ticketmaster_attribution_handoffs` row, appends `om_click_id` / `om_session_id`, and forwards attribution parameters to Ticketmaster
 - Ticketmaster CAPI logs parse `om_click_id`, `om_session_id`, Meta campaign/ad set/ad fields, placement, and UTMs from request params or `source_url` when Ticketmaster preserves them
+- if Ticketmaster preserves only a deterministic `ad_id`, the CAPI logger resolves that ad's parent ad set and campaign through the Meta Graph API before storing the row
 - when Ticketmaster drops query params, the CAPI logger matches purchases back to first-party handoffs using direct click/session IDs, nested source URL attribution, `fbclid`/`fbc`/`fbp`, exact hashed IP+UA, or safe unique recent browser matches
 - CAPI rows store `attribution_match_method`, `attribution_match_confidence`, `attribution_handoff_id`, and `attribution_matched_at` so deterministic and inferred attribution stay separate
 
@@ -222,7 +223,8 @@ Current static tracker:
 3. Add alerting for broken signal: no recent purchase hits during active sales windows, repeated missing `order_id`/`value`, or elevated Meta rejection rates.
 4. If Ticketmaster exposes more fields, pass hashed email/phone/name/city/zip/country to improve Meta match quality.
 5. Join Meta spend by campaign/adset/ad with `ticketmaster_capi_events` using deterministic/high-confidence handoff matches before treating ad-level CAPI value as optimization truth.
-6. Run `npm run backfill:ticketmaster-attribution` after deploying handoff schema changes to safely re-match recent unknown purchase rows. The command defaults to dry-run; set `TICKETMASTER_ATTRIBUTION_BACKFILL_APPLY=1` to write safe deterministic/high matches, and only set `TICKETMASTER_ATTRIBUTION_BACKFILL_ALLOW_MEDIUM=1` when medium-confidence inferred matches have been reviewed.
+6. Run `npm run enrich:ticketmaster-capi-meta` to dry-run recent deterministic `ad_id` rows that can be enriched with Meta ad set/campaign hierarchy. Set `TICKETMASTER_META_HIERARCHY_APPLY=1` only when the dry-run counts are reviewed.
+7. Run `npm run backfill:ticketmaster-attribution` after deploying handoff schema changes to safely re-match recent unknown purchase rows. The command defaults to dry-run; set `TICKETMASTER_ATTRIBUTION_BACKFILL_APPLY=1` to write safe deterministic/high matches, and only set `TICKETMASTER_ATTRIBUTION_BACKFILL_ALLOW_MEDIUM=1` when medium-confidence inferred matches have been reviewed.
 
 ## Cross-repo rule
 
