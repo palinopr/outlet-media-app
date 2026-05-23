@@ -7,6 +7,10 @@ const metaAccessToken = process.env.META_CAPI_ACCESS_TOKEN || process.env.META_A
 const days = Number(process.env.TICKETMASTER_META_HIERARCHY_DAYS ?? 30);
 const cutoff = new Date(Date.now() - (Number.isFinite(days) ? days : 30) * 24 * 60 * 60 * 1000).toISOString();
 const apply = process.env.TICKETMASTER_META_HIERARCHY_APPLY === "1";
+const lookupTimeoutMsInput = Number(process.env.TICKETMASTER_META_HIERARCHY_TIMEOUT_MS ?? 5_000);
+const lookupTimeoutMs = Number.isFinite(lookupTimeoutMsInput) && lookupTimeoutMsInput > 0
+  ? lookupTimeoutMsInput
+  : 5_000;
 
 if (!supabaseUrl || !supabaseKey) {
   console.error("FAIL missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
@@ -44,7 +48,9 @@ async function resolveHierarchy(adId) {
   endpoint.searchParams.set("fields", "id,name,adset{id,name},campaign{id,name}");
   endpoint.searchParams.set("access_token", metaAccessToken);
 
-  const promise = fetch(endpoint.toString())
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), lookupTimeoutMs);
+  const promise = fetch(endpoint.toString(), { signal: controller.signal })
     .then(async (response) => {
       const body = await response.json().catch(() => null);
       if (!response.ok || !body || body.error) return null;
@@ -57,6 +63,7 @@ async function resolveHierarchy(adId) {
         meta_campaign_name: safeText(body.campaign?.name),
       };
     })
+    .finally(() => clearTimeout(timeout))
     .catch(() => null);
 
   hierarchyCache.set(adId, promise);
