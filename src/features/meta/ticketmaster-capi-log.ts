@@ -201,8 +201,8 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
   const matchCutoff = existingRow?.created_at ?? receivedAt;
   const attributionMatch = await findTicketmasterAttributionMatch(input.log, matchCutoff);
   const newAttribution = sanitizeMarketingAttributionWithInferredMetaAdId(mergeAttribution(
-    sanitizeMarketingAttribution(attributionFromUrlString(input.log.sourceUrl)),
-    sanitizeMarketingAttribution(input.log.attribution),
+    sanitizeMarketingAttributionWithInferredMetaAdId(attributionFromUrlString(input.log.sourceUrl)),
+    sanitizeMarketingAttributionWithInferredMetaAdId(input.log.attribution),
     sanitizeMarketingAttribution(attributionMatch?.attribution),
   ));
   const newOmClickId = sanitizeMarketingTrackingToken(input.log.omClickId ?? attributionMatch?.clickId);
