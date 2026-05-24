@@ -86,6 +86,8 @@ export async function GET(request: Request, context: RouteContext) {
   const sessionId = sanitizeMarketingTrackingToken(firstParam(incoming, ["om_session_id", "session_id", "oms"]));
   const cta = cleanMarketingSlug(firstParam(incoming, ["cta"]));
   const attribution = attributionFromSearchParams(incoming);
+  const metaAdIdForCfc = cleanAttributionQueryValue("ad_id", firstParam(incoming, ["ad_id", "meta_ad_id"]));
+  const fallbackCfc = cleanAttributionQueryValue("utm_content", firstParam(incoming, ["utm_content"]));
   const referrer = cleanText(request.headers.get("referer"), 1000);
 
   const target = new URL(destination.ticketmasterUrl);
@@ -105,7 +107,7 @@ export async function GET(request: Request, context: RouteContext) {
   target.searchParams.set("utm_source", cleanAttributionQueryValue("utm_source", firstParam(incoming, ["utm_source"])) ?? "meta");
   target.searchParams.set("utm_medium", cleanAttributionQueryValue("utm_medium", firstParam(incoming, ["utm_medium"])) ?? "paid_social");
   target.searchParams.set("utm_campaign", cleanAttributionQueryValue("utm_campaign", firstParam(incoming, ["utm_campaign"])) ?? destination.defaultUtmCampaign);
-  target.searchParams.set("utm_content", cleanAttributionQueryValue("utm_content", firstParam(incoming, ["utm_content"])) ?? cta ?? "lp_default");
+  target.searchParams.set("utm_content", metaAdIdForCfc ?? fallbackCfc ?? cta ?? "lp_default");
 
   const attributionWrites = await settleWithTimeout(Promise.allSettled([
     recordMarketingAttributionEvent(

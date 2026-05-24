@@ -50,6 +50,16 @@ describe("GET /out/ticketmaster/[slug]", () => {
     expect(target.searchParams.get("utm_source")).toBe("meta");
     expect(target.searchParams.get("utm_medium")).toBe("paid_social");
     expect(target.searchParams.get("utm_campaign")).toBe("ataca_sergio_newark");
+    expect(target.searchParams.get("utm_content")).toBe(META_AD_ID);
+  });
+
+  it("falls back to the original CFC value when no Meta ad id is present", async () => {
+    const response = await getRedirect(
+      "ataca-sergio-newark",
+      "?om_click_id=omc_test&cta=hero&utm_content=story_v1",
+    );
+
+    const target = new URL(response.headers.get("location") ?? "");
     expect(target.searchParams.get("utm_content")).toBe("story_v1");
   });
 

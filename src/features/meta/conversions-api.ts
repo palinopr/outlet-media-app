@@ -290,6 +290,18 @@ function eventNameFrom(params: URLSearchParams) {
   return ALLOWED_STANDARD_EVENTS.has(requested) ? requested : "Purchase";
 }
 
+function attributionFromTicketmasterCfc(params: URLSearchParams, rawSourceUrl: string | undefined) {
+  const baseAttribution = mergeAttribution(
+    attributionFromUrlString(rawSourceUrl),
+    attributionFromSearchParams(params),
+  );
+  const cfcAdId = cleanAttributionQueryValue("ad_id", paramFromParamsOrUrl(params, rawSourceUrl, ["utm_content"]));
+  const existingAdId = cleanAttributionQueryValue("ad_id", baseAttribution.metaAdId);
+  if (!cfcAdId || existingAdId) return baseAttribution;
+
+  return mergeAttribution(baseAttribution, { metaAdId: cfcAdId });
+}
+
 function ticketmasterEventIdFromUrlString(value: string | undefined, depth = 0): string | undefined {
   if (!value || depth > 2) return undefined;
   try {
@@ -338,10 +350,7 @@ export function buildTicketmasterCapiEvent(url: URL, headers: Headers, now = new
   const contentId = ticketmasterEventId ?? DEFAULT_ATACA_SERGIO_CONTENT_ID;
   const contentName = ticketmasterEventName ?? DEFAULT_CONTENT_NAME;
   const sourceUrl = sanitizeTicketmasterCapiSourceUrl(rawSourceUrl) ?? `${url.origin}${url.pathname}`;
-  const attribution = mergeAttribution(
-    attributionFromUrlString(rawSourceUrl),
-    attributionFromSearchParams(params),
-  );
+  const attribution = attributionFromTicketmasterCfc(params, rawSourceUrl);
   const omClickId = sanitizeMarketingTrackingToken(clickIdFromParamsOrUrl(params, rawSourceUrl));
   const omSessionId = sanitizeMarketingTrackingToken(sessionIdFromParamsOrUrl(params, rawSourceUrl));
   const funnel = cleanMarketingSlug(paramFromParamsOrUrl(params, rawSourceUrl, ["om_funnel", "funnel"]))

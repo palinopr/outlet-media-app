@@ -180,15 +180,19 @@ The Ataca Sergio funnel has a first-party attribution layer before the Ticketmas
 - funnel engagement events post to `/api/attribution/funnel`
 - ticket CTAs route through `/out/ticketmaster/ataca-sergio-newark`
 - the redirect logs `ticket_redirect`, writes a durable `ticketmaster_attribution_handoffs` row, appends `om_click_id` / `om_session_id`, and forwards attribution parameters to Ticketmaster
+- the Ticketmaster CFC / `utm_content` value should carry `ad_id` when available because TM1 can pass CFC back from the confirmation pixel
+- when CFC is a valid Meta ad ID, the CAPI parser promotes it into deterministic `meta_ad_id` attribution and then fills ad set / campaign hierarchy through Meta enrichment
 - Ticketmaster CAPI logs parse `om_click_id`, `om_session_id`, Meta campaign/ad set/ad fields, placement, and UTMs from request params or `source_url` when Ticketmaster preserves them
 - when Ticketmaster drops query params, the CAPI logger matches purchases back to first-party handoffs using direct click/session IDs, nested source URL attribution, `fbclid`/`fbc`/`fbp`, exact hashed IP+UA, or safe unique recent browser matches
 - CAPI rows store `attribution_match_method`, `attribution_match_confidence`, `attribution_handoff_id`, and `attribution_matched_at` so deterministic and inferred attribution stay separate
 
-Standard Meta ad URL parameter template:
+Canonical Meta ad URL parameter template for Outlet-tracked traffic:
 
 ```text
-campaign_id={{campaign.id}}&campaign_name={{campaign.name}}&adset_id={{adset.id}}&adset_name={{adset.name}}&ad_id={{ad.id}}&ad_name={{ad.name}}&placement={{placement}}&site_source={{site_source_name}}&utm_source=meta&utm_medium=paid_social&utm_campaign=ataca_sergio_newark&utm_content={{ad.name}}
+utm_source=meta&utm_medium=paid_social&utm_campaign={{campaign.name}}&utm_content={{ad.name}}&utm_term={{adset.name}}&campaign_id={{campaign.id}}&campaign_name={{campaign.name}}&adset_id={{adset.id}}&adset_name={{adset.name}}&ad_id={{ad.id}}&ad_name={{ad.name}}&placement={{placement}}&site_source={{site_source_name}}
 ```
+
+Do not launch Outlet/Ticketmaster handoff traffic without this full set unless there is a documented client-specific reason.
 
 ### Heatmap-lite funnel analytics
 
