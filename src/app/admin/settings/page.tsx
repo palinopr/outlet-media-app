@@ -8,6 +8,7 @@ import { sanitizeTicketmasterCapiSourceUrl } from "@/features/meta/conversions-a
 import {
   buildTicketmasterCapiEventMatchingBreakdown,
   buildTicketmasterCapiMatchingSummary,
+  hasOptimizationGradeMetaObject,
 } from "@/features/meta/ticketmaster-capi-diagnostics";
 import type { ConnectedAccount } from "@/features/settings/connected-accounts";
 import {
@@ -279,14 +280,10 @@ function groupPurchasesByEvent(events: TicketmasterCapiEvent[]) {
     .slice(0, 5);
 }
 
-function hasOptimizationGradeAttribution(event: TicketmasterCapiEvent) {
-  return event.attribution_match_confidence === "deterministic" || event.attribution_match_confidence === "high";
-}
-
 function groupPurchasesByAd(events: TicketmasterCapiEvent[]) {
   const groups = new Map<string, TicketmasterCapiEvent[]>();
   events
-    .filter((event) => event.event_name === "Purchase" && !event.is_test && !event.skip_reason && numericValue(event.value) > 0 && hasOptimizationGradeAttribution(event) && (event.meta_ad_id || event.meta_adset_id || event.meta_campaign_id))
+    .filter((event) => event.event_name === "Purchase" && !event.is_test && !event.skip_reason && numericValue(event.value) > 0 && hasOptimizationGradeMetaObject(event))
     .forEach((event) => {
       const key = safeAdminAdLabel(event.meta_ad_name ?? event.meta_ad_id ?? event.meta_adset_name ?? event.meta_adset_id ?? event.meta_campaign_name ?? event.meta_campaign_id, "Unknown ad");
       groups.set(key, [...(groups.get(key) ?? []), event]);

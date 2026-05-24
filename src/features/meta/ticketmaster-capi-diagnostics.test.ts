@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildTicketmasterCapiEventMatchingBreakdown,
   buildTicketmasterCapiMatchingSummary,
+  hasOptimizationGradeMetaObject,
   hasValidCfcCandidate,
   isValidMetaEntityId,
 } from "./ticketmaster-capi-diagnostics";
@@ -95,6 +96,23 @@ describe("ticketmaster CAPI diagnostics", () => {
     expect(summary.directMetaObjectCount).toBe(1);
     expect(summary.optimizationGradeCount).toBe(0);
     expect(summary.status).toBe("accepted_without_optimization_grade_matching");
+  });
+
+  it("requires Meta acceptance for optimization-grade Meta object rows", () => {
+    expect(hasOptimizationGradeMetaObject({
+      attribution_match_confidence: "deterministic",
+      attribution_match_method: "direct_ticketmaster_params",
+      event_name: "Purchase",
+      is_test: false,
+      meta_ad_id: META_AD_ID,
+      meta_adset_id: null,
+      meta_campaign_id: null,
+      meta_ok: false,
+      quantity: 1,
+      skip_reason: null,
+      source_url: null,
+      value: 100,
+    })).toBe(false);
   });
 
   it("ignores failed Meta sends when judging matching quality", () => {

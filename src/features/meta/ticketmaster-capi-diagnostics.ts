@@ -102,6 +102,11 @@ export function hasValidCfcCandidate(event: TicketmasterCapiDiagnosticEvent) {
   );
 }
 
+export function hasOptimizationGradeMetaObject(event: TicketmasterCapiDiagnosticEvent) {
+  const confidence = normalizedConfidence(event.attribution_match_confidence);
+  return event.meta_ok && (confidence === "deterministic" || confidence === "high") && hasDirectMetaObject(event);
+}
+
 export function buildTicketmasterCapiMatchingSummary(events: TicketmasterCapiDiagnosticEvent[]): TicketmasterCapiMatchingSummary {
   const purchases = events.filter(isCoveredPurchase);
   const accepted = purchases.filter((event) => event.meta_ok);
@@ -133,7 +138,7 @@ export function buildTicketmasterCapiMatchingSummary(events: TicketmasterCapiDia
     if (hasMetaObject) directMetaObjectCount += 1;
     if (hasCfc) cfcCandidateCount += 1;
     if (event.attribution_match_method && event.attribution_match_method !== "direct_ticketmaster_params") handoffDerivedCount += 1;
-    if ((confidence === "deterministic" || confidence === "high") && hasMetaObject) optimizationGradeCount += 1;
+    if (hasOptimizationGradeMetaObject(event)) optimizationGradeCount += 1;
   }
 
   const acceptedRate = purchases.length === 0 ? 0 : Math.round((accepted.length / purchases.length) * 100);
