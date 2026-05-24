@@ -383,12 +383,6 @@ export async function findTicketmasterAttributionMatch(
 ): Promise<TicketmasterAttributionMatch | null> {
   if (log.eventName !== "Purchase") return null;
 
-  const directClick = await latestHandoffByField("click_id", log.omClickId, log, now);
-  if (directClick) return attributionMatchFromHandoffRow(directClick, "direct_click_id", "deterministic");
-
-  const directSession = await latestHandoffByField("session_id", log.omSessionId, log, now);
-  if (directSession) return attributionMatchFromHandoffRow(directSession, "direct_session_id", "deterministic");
-
   const directAttribution = stableDirectAttribution(log);
   if (directAttribution) {
     return {
@@ -399,6 +393,12 @@ export async function findTicketmasterAttributionMatch(
       sessionId: log.omSessionId,
     };
   }
+
+  const directClick = await latestHandoffByField("click_id", log.omClickId, log, now);
+  if (directClick) return attributionMatchFromHandoffRow(directClick, "direct_click_id", "deterministic");
+
+  const directSession = await latestHandoffByField("session_id", log.omSessionId, log, now);
+  if (directSession) return attributionMatchFromHandoffRow(directSession, "direct_session_id", "deterministic");
 
   const browserAttribution = sanitizeMarketingAttribution(log.attribution);
   const fbcMatch = await uniqueHandoffByField("fbc", browserAttribution.fbc, log, now);
