@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Outlet Media mobile mock</title>
+    <style>
+      :root {
+        --bg: #050505;
+        --ink: #f8f3ea;
+        --muted: rgba(248, 243, 234, 0.72);
+        --soft: rgba(248, 243, 234, 0.11);
+        --line: rgba(248, 243, 234, 0.14);
+        --red: #ef3636;
+        --blue: #243cff;
+        --green: #20c269;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #161616;
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+      }
+
+      .phone {
+        width: min(100vw, 430px);
+        margin: 0 auto;
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 90% 0%, rgba(239, 54, 54, 0.16), transparent 32rem),
+          linear-gradient(180deg, #050505 0%, #0a0a0a 36%, #050505 100%);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+      }
+
+      .hero,
+      .section,
+      .form-band {
+        padding: 24px 22px;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 22px;
+      }
+
+      .logo {
+        width: 136px;
+        height: auto;
+      }
+
+      .menu {
+        display: grid;
+        gap: 5px;
+        width: 28px;
+      }
+
+      .menu span {
+        display: block;
+        height: 2px;
+        background: var(--ink);
+        border-radius: 99px;
+      }
+
+      .hero-media {
+        position: relative;
+        height: 214px;
+        margin-top: 20px;
+        overflow: hidden;
+        border-radius: 22px;
+        border: 1px solid var(--line);
+        background: #111;
+      }
+
+      .hero-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 40%;
+        filter: saturate(0.92) contrast(1.04);
+      }
+
+      .hero-media::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 35%, rgba(0, 0, 0, 0.68));
+      }
+
+      .operator {
+        position: absolute;
+        left: 14px;
+        right: 14px;
+        bottom: 14px;
+        z-index: 2;
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        font-size: 12px;
+        color: rgba(248, 243, 234, 0.78);
+      }
+
+      .operator strong {
+        display: block;
+        margin-bottom: 2px;
+        color: var(--ink);
+        font-size: 14px;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        font-weight: 860;
+        letter-spacing: -0.045em;
+        line-height: 0.96;
+      }
+
+      h1 {
+        margin-top: 22px;
+        max-width: 9.8ch;
+        font-size: 43px;
+      }
+
+      h1 span {
+        color: var(--red);
+      }
+
+      .body {
+        margin: 16px 0 0;
+        max-width: 32ch;
+        color: var(--muted);
+        font-size: 17px;
+        line-height: 1.5;
+      }
+
+      .cta-row {
+        display: grid;
+        gap: 14px;
+        margin-top: 22px;
+      }
+
+      .cta {
+        display: flex;
+        min-height: 58px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--blue), #1828bc);
+        color: white;
+        font-size: 16px;
+        font-weight: 820;
+        text-decoration: none;
+      }
+
+      .secondary {
+        width: fit-content;
+        color: var(--ink);
+        font-size: 15px;
+        text-underline-offset: 5px;
+      }
+
+      .category {
+        margin-top: 18px;
+        color: rgba(248, 243, 234, 0.72);
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1px;
+        margin-top: 18px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: var(--line);
+      }
+
+      .stat {
+        min-height: 84px;
+        padding: 14px 10px;
+        background: rgba(255, 255, 255, 0.045);
+      }
+
+      .stat strong {
+        display: block;
+        color: white;
+        font-size: 24px;
+        letter-spacing: -0.05em;
+      }
+
+      .stat span {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.2;
+      }
+
+      .section {
+        border-top: 1px solid var(--line);
+      }
+
+      .section h2 {
+        max-width: 11ch;
+        font-size: 31px;
+      }
+
+      .section-copy {
+        margin: 11px 0 0;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 1.52;
+      }
+
+      .proof-rail {
+        display: flex;
+        gap: 12px;
+        margin: 20px -22px 0;
+        overflow-x: auto;
+        padding: 0 22px 6px;
+        scroll-snap-type: x mandatory;
+      }
+
+      .proof-card {
+        position: relative;
+        flex: 0 0 154px;
+        height: 204px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: #121212;
+        scroll-snap-align: start;
+      }
+
+      .proof-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .proof-card.logo-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+      }
+
+      .proof-card.logo-card img {
+        height: auto;
+        object-fit: contain;
+      }
+
+      .proof-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 42%, rgba(0, 0, 0, 0.84));
+      }
+
+      .proof-caption {
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        z-index: 2;
+      }
+
+      .proof-caption strong {
+        display: block;
+        font-size: 18px;
+        line-height: 1;
+      }
+
+      .proof-caption span {
+        display: block;
+        margin-top: 6px;
+        color: rgba(248, 243, 234, 0.76);
+        font-size: 12px;
+        line-height: 1.25;
+      }
+
+      .bridge {
+        margin-top: 22px;
+        padding: 16px;
+        border-left: 3px solid var(--red);
+        background: rgba(255, 255, 255, 0.045);
+        color: rgba(248, 243, 234, 0.82);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
+      .rows {
+        margin-top: 20px;
+        border-top: 1px solid var(--line);
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 40px 1fr 22px;
+        gap: 14px;
+        align-items: center;
+        min-height: 86px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .icon {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border-radius: 999px;
+        background: rgba(239, 54, 54, 0.1);
+        color: var(--red);
+        font-weight: 900;
+      }
+
+      .row strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 16px;
+      }
+
+      .row span {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .form-band {
+        margin-top: 12px;
+        border-radius: 24px 24px 0 0;
+        background: #f7f1e8;
+        color: #111;
+      }
+
+      .form-band h2 {
+        max-width: 10ch;
+        color: #111;
+        font-size: 31px;
+      }
+
+      .field-stack {
+        display: grid;
+        gap: 12px;
+        margin-top: 18px;
+      }
+
+      .field {
+        min-height: 58px;
+        padding: 10px 14px;
+        border: 1px solid rgba(0, 0, 0, 0.18);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.76);
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 4px;
+        color: rgba(0, 0, 0, 0.66);
+        font-size: 11px;
+        font-weight: 800;
+      }
+
+      .field span {
+        color: rgba(0, 0, 0, 0.46);
+        font-size: 15px;
+      }
+
+      .form-cta {
+        margin-top: 14px;
+        background: linear-gradient(135deg, var(--blue), #1c2bd7);
+      }
+
+      .recommendation {
+        margin-top: 14px;
+        padding: 14px;
+        border-radius: 14px;
+        background: #ece1d2;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .recommendation strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 15px;
+      }
+
+      .fine-print {
+        margin: 13px 0 0;
+        color: rgba(0, 0, 0, 0.58);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="phone" aria-label="Outlet Media mobile mock">
+      <section class="hero">
+        <nav class="nav" aria-label="Principal">
+          <img class="logo" src="/public/images/brand/logotype-horizontal-white.png" alt="Outlet Media" />
+          <span class="menu" aria-hidden="true"><span></span><span></span><span></span></span>
+        </nav>
+
+        <h1>Anuncios que traen <span>mensajes, citas, ventas o boletos.</span></h1>
+        <p class="body">
+          Revisamos tu cuenta, oferta y ruta de venta para decirte si necesitas
+          montar, arreglar, escalar o pausar antes de gastar más.
+        </p>
+        <div class="cta-row">
+          <a class="cta" href="#form">Pedir diagnóstico gratis</a>
+          <a class="secondary" href="#lanes">No sé qué necesito -></a>
+        </div>
+        <p class="category">
+          Ads · funnels · boletos · ecommerce · WhatsApp · automatización AI
+        </p>
+
+        <div class="hero-media">
+          <img src="/public/images/landing/jaime-ortiz.png" alt="Jaime Ortiz revisando campañas" />
+          <div class="operator">
+            <span><strong>Operado por Jaime Ortiz</strong>7 años operando campañas</span>
+            <span>Puerto Rico</span>
+          </div>
+        </div>
+
+        <div class="stats" aria-label="Prueba principal">
+          <div class="stat"><strong>$12M+</strong><span>pauta operada</span></div>
+          <div class="stat"><strong>$100M+</strong><span>ventas atribuidas</span></div>
+          <div class="stat"><strong>150+</strong><span>sold outs trabajados</span></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>Prueba con presión real.</h2>
+        <p class="section-copy">
+          La experiencia de tickets y artistas baja a negocios locales: cuenta
+          correcta, tracking claro, creativo que vende y seguimiento.
+        </p>
+
+        <div class="proof-rail" aria-label="Prueba de campañas">
+          <article class="proof-card">
+            <img src="/public/images/landing/rauw-shauring.png" alt="Rauw Alejandro" />
+            <div class="proof-caption"><strong>Rauw Alejandro</strong><span>tickets · pacing</span></div>
+          </article>
+          <article class="proof-card">
+            <img src="/public/images/landing/young-miko-poster.png" alt="Young Miko" />
+            <div class="proof-caption"><strong>Young Miko</strong><span>evento · demanda</span></div>
+          </article>
+          <article class="proof-card">
+            <img src="/public/images/landing/luis-miguel.png" alt="Luis Miguel" />
+            <div class="proof-caption"><strong>Luis Miguel</strong><span>tour · timing</span></div>
+          </article>
+          <article class="proof-card">
+            <img src="/public/images/landing/gilberto-santa-rosa.png" alt="Gilberto Santa Rosa" />
+            <div class="proof-caption"><strong>Gilberto</strong><span>funnel · compra</span></div>
+          </article>
+          <article class="proof-card logo-card">
+            <img src="/public/images/landing/9am.png" alt="9AM" />
+            <div class="proof-caption"><strong>9AM</strong><span>Meta a tickets</span></div>
+          </article>
+          <article class="proof-card logo-card">
+            <img src="/public/images/landing/gallimbo-studios.png" alt="Gallimbo Studios" />
+            <div class="proof-caption"><strong>Gallimbo</strong><span>creativo local</span></div>
+          </article>
+        </div>
+
+        <p class="bridge">
+          No es solo eventos. El mismo sistema aplica para clínicas, restaurantes,
+          ecommerce, servicios locales, artistas y cualquier negocio que necesita
+          convertir atención en ventas medibles.
+        </p>
+      </section>
+
+      <section class="section" id="lanes">
+        <h2>No tienes que saber Ads Manager.</h2>
+        <div class="rows">
+          <div class="row">
+            <span class="icon">1</span>
+            <p><strong>No tengo cuenta publicitaria</strong><span>Montamos la base.</span></p>
+            <span>></span>
+          </div>
+          <div class="row">
+            <span class="icon">2</span>
+            <p><strong>Boosteo posts y no vendo</strong><span>Arreglamos objetivo, mensaje y seguimiento.</span></p>
+            <span>></span>
+          </div>
+          <div class="row">
+            <span class="icon">3</span>
+            <p><strong>Ya gasto y no sé qué funciona</strong><span>Auditamos y decidimos qué pausar o escalar.</span></p>
+            <span>></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="form-band" id="form">
+        <h2>Dinos qué vendes y qué resultado necesitas.</h2>
+        <div class="field-stack">
+          <div class="field"><label>Punto de partida</label><span>Selecciona una opción</span></div>
+          <div class="field"><label>Resultado principal</label><span>WhatsApp, citas, ventas o boletos</span></div>
+          <div class="field"><label>WhatsApp</label><span>(787) 000-0000</span></div>
+          <div class="field"><label>Negocio</label><span>Clínica, tienda, restaurante, artista...</span></div>
+        </div>
+        <a class="cta form-cta" href="#form">Pedir diagnóstico gratis</a>
+        <div class="recommendation">
+          <strong>Posible próximo paso, no una obligación.</strong>
+          Primero revisamos si debes montar, arreglar, escalar o pausar.
+        </div>
+        <p class="fine-print">
+          Ad spend va separado. Si no conviene invertir todavía, te lo decimos.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
