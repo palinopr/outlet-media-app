@@ -132,9 +132,15 @@ function generatedEventId(input: RecordTicketmasterCapiEventInput) {
   return `tm_log_${sha256(seed).slice(0, 32)}`;
 }
 
-function hasDirectAttribution(input: RecordTicketmasterCapiEventInput) {
-  const attribution = sanitizeMarketingAttributionWithInferredMetaAdId(input.log.attribution);
-  return Boolean(attribution.metaAdId || attribution.metaAdsetId || attribution.metaCampaignId);
+function hasMetaAttribution(attribution: MarketingAttribution | null | undefined) {
+  return Boolean(attribution?.metaAdId || attribution?.metaAdsetId || attribution?.metaCampaignId);
+}
+
+function directAttributionFromInput(input: RecordTicketmasterCapiEventInput) {
+  return sanitizeMarketingAttributionWithInferredMetaAdId(mergeAttribution(
+    sanitizeMarketingAttributionWithInferredMetaAdId(attributionFromUrlString(input.log.sourceUrl)),
+    sanitizeMarketingAttributionWithInferredMetaAdId(input.log.attribution),
+  ));
 }
 
 function confidenceRank(value: AttributionMatchConfidence | null | undefined) {
@@ -153,12 +159,37 @@ function confidenceRank(value: AttributionMatchConfidence | null | undefined) {
   }
 }
 
-function existingHasDirectMetaAttribution(row: ExistingTicketmasterCapiEventRow | null | undefined) {
+function hasValidMetaAttribution(row: ExistingTicketmasterCapiEventRow | null | undefined) {
   return Boolean(
     cleanAttributionQueryValue("ad_id", row?.meta_ad_id)
       || cleanAttributionQueryValue("adset_id", row?.meta_adset_id)
       || cleanAttributionQueryValue("campaign_id", row?.meta_campaign_id),
   );
+}
+
+function isDirectTicketmasterAttribution(method: string | null | undefined) {
+  return method === "direct_ticketmaster_params";
+}
+
+function existingAttributionRank(row: ExistingTicketmasterCapiEventRow | null | undefined) {
+  const rank = confidenceRank(row?.attribution_match_confidence);
+  if (!hasValidMetaAttribution(row)) return rank;
+  return isDirectTicketmasterAttribution(row?.attribution_match_method)
+    ? Math.max(rank, confidenceRank("deterministic"))
+    : rank;
+}
+
+function shouldPreserveExistingAttribution(input: {
+  existingRow: ExistingTicketmasterCapiEventRow | null;
+  fillExistingHierarchy: boolean;
+  newConfidence: AttributionMatchConfidence;
+  newMethod: string | null | undefined;
+}) {
+  if (!input.existingRow || input.fillExistingHierarchy) return false;
+  if (isDirectTicketmasterAttribution(input.newMethod) && !isDirectTicketmasterAttribution(input.existingRow.attribution_match_method)) {
+    return false;
+  }
+  return existingAttributionRank(input.existingRow) >= confidenceRank(input.newConfidence);
 }
 
 function attributionFromExistingRow(row: ExistingTicketmasterCapiEventRow | null | undefined) {
@@ -248,27 +279,33 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
   const existingRow = existing.data as ExistingTicketmasterCapiEventRow | null;
   const matchCutoff = existingRow?.created_at ?? receivedAt;
   const attributionMatch = await findTicketmasterAttributionMatch(input.log, matchCutoff);
+  const directAttribution = directAttributionFromInput(input);
+  const effectiveAttributionMatch = hasMetaAttribution(directAttribution)
+    ? {
+      attribution: directAttribution,
+      clickId: input.log.omClickId,
+      confidence: "deterministic" as const,
+      handoffId: undefined,
+      method: "direct_ticketmaster_params",
+      sessionId: input.log.omSessionId,
+    }
+    : attributionMatch;
   const newAttribution = await enrichAttributionWithMetaAdHierarchy(sanitizeMarketingAttributionWithInferredMetaAdId(mergeAttribution(
-    sanitizeMarketingAttributionWithInferredMetaAdId(attributionFromUrlString(input.log.sourceUrl)),
-    sanitizeMarketingAttributionWithInferredMetaAdId(input.log.attribution),
-    sanitizeMarketingAttribution(attributionMatch?.attribution),
+    directAttribution,
+    sanitizeMarketingAttribution(effectiveAttributionMatch?.attribution),
   )));
-  const newOmClickId = sanitizeMarketingTrackingToken(input.log.omClickId ?? attributionMatch?.clickId);
-  const newOmSessionId = sanitizeMarketingTrackingToken(input.log.omSessionId ?? attributionMatch?.sessionId);
-  const newAttributionMatchMethod = attributionMatch?.method ?? (hasDirectAttribution(input) ? "direct_ticketmaster_params" : null);
-  const newAttributionMatchConfidence = attributionMatch?.confidence ?? (hasDirectAttribution(input) ? "deterministic" : "unknown");
-  const existingAttributionRank = existingHasDirectMetaAttribution(existingRow)
-    ? Math.max(confidenceRank(existingRow?.attribution_match_confidence), confidenceRank("deterministic"))
-    : confidenceRank(existingRow?.attribution_match_confidence);
-  const newAttributionRank = confidenceRank(newAttributionMatchConfidence);
+  const newOmClickId = sanitizeMarketingTrackingToken(input.log.omClickId ?? effectiveAttributionMatch?.clickId);
+  const newOmSessionId = sanitizeMarketingTrackingToken(input.log.omSessionId ?? effectiveAttributionMatch?.sessionId);
+  const newAttributionMatchMethod = effectiveAttributionMatch?.method ?? null;
+  const newAttributionMatchConfidence = effectiveAttributionMatch?.confidence ?? "unknown";
   const existingAttribution = attributionFromExistingRow(existingRow);
   const fillExistingHierarchy = Boolean(existingRow && attributionAddsMetaHierarchy(existingRow, newAttribution));
-  const preserveExistingAttribution = Boolean(existingRow)
-    && !fillExistingHierarchy
-    && (
-      existingAttributionRank > newAttributionRank
-      || existingAttributionRank === newAttributionRank
-    );
+  const preserveExistingAttribution = shouldPreserveExistingAttribution({
+    existingRow,
+    fillExistingHierarchy,
+    newConfidence: newAttributionMatchConfidence,
+    newMethod: newAttributionMatchMethod,
+  });
   const preserveExistingMatchFields = preserveExistingAttribution || (fillExistingHierarchy && existingHasMatchContext(existingRow));
   const attribution = preserveExistingAttribution
     ? existingAttribution
@@ -279,7 +316,7 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
   const omSessionId = preserveExistingMatchFields ? existingRow?.om_session_id : newOmSessionId;
   const attributionMatchMethod = preserveExistingMatchFields ? existingRow?.attribution_match_method : newAttributionMatchMethod;
   const attributionMatchConfidence = preserveExistingMatchFields ? existingRow?.attribution_match_confidence : newAttributionMatchConfidence;
-  const attributionHandoffId = preserveExistingMatchFields ? existingRow?.attribution_handoff_id : attributionMatch?.handoffId;
+  const attributionHandoffId = preserveExistingMatchFields ? existingRow?.attribution_handoff_id : effectiveAttributionMatch?.handoffId;
   const attributionMatchedAt = preserveExistingMatchFields ? existingRow?.attribution_matched_at : (attributionMatchMethod ? now : null);
 
   const row: TicketmasterCapiEventRow = {

@@ -86,6 +86,38 @@ describe("Meta ad hierarchy enrichment", () => {
     });
   });
 
+  it("does not merge hierarchy fields when Meta returns conflicting parent ids", async () => {
+    const fetchFn = vi.fn(async () => response({
+      id: META_AD_ID,
+      name: "Graph ad name",
+      adset: {
+        id: "120247445606520999",
+        name: "Wrong ad set",
+      },
+      campaign: {
+        id: "120247445551520999",
+        name: "Wrong campaign",
+      },
+    }));
+
+    const attribution = await enrichAttributionWithMetaAdHierarchy({
+      metaAdId: META_AD_ID,
+      metaAdsetId: META_ADSET_ID,
+      utmContent: "story_v1",
+    }, { fetchFn });
+
+    expect(fetchFn).toHaveBeenCalledOnce();
+    expect(attribution).toMatchObject({
+      metaAdId: META_AD_ID,
+      metaAdsetId: META_ADSET_ID,
+      utmContent: "story_v1",
+    });
+    expect(attribution.metaAdName).toBeUndefined();
+    expect(attribution.metaAdsetName).toBeUndefined();
+    expect(attribution.metaCampaignId).toBeUndefined();
+    expect(attribution.metaCampaignName).toBeUndefined();
+  });
+
   it("does not fetch when the attribution has no valid ad id", async () => {
     const fetchFn = vi.fn();
 

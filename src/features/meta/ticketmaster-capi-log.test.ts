@@ -189,4 +189,56 @@ describe("recordTicketmasterCapiEvent", () => {
       om_session_id: "oms_existing",
     });
   });
+
+  it("lets direct Ticketmaster params replace an existing handoff-derived ad id", async () => {
+    state.existing = {
+      attempt_count: 1,
+      attribution_handoff_id: "handoff_existing",
+      attribution_match_confidence: "deterministic",
+      attribution_match_method: "direct_click_id",
+      created_at: "2026-05-23T20:00:00.000Z",
+      meta_ad_id: "120247446000000999",
+      om_click_id: "omc_old_123",
+    };
+    findTicketmasterAttributionMatch.mockResolvedValueOnce({
+      attribution: {
+        metaAdId: "120247446000000999",
+      },
+      clickId: "omc_old_123",
+      confidence: "deterministic",
+      handoffId: "handoff_existing",
+      method: "direct_click_id",
+    });
+
+    await recordTicketmasterCapiEvent({
+      log: {
+        attribution: {
+          metaAdId: META_AD_ID,
+        },
+        eventId: "tm_direct_priority",
+        eventName: "Purchase",
+        hitAt: "2026-05-23T20:05:00.000Z",
+        omClickId: "omc_new_123",
+        orderId: "ORDER-1",
+        ticketmasterEventId: "02006478E042F9B1",
+        value: 125,
+      },
+      metaPixelId: "pixel",
+      metaResult: {
+        body: { events_received: 1 },
+        ok: true,
+        status: 200,
+      },
+    });
+
+    expect(state.updated).toMatchObject({
+      attempt_count: 2,
+      attribution_handoff_id: null,
+      attribution_match_confidence: "deterministic",
+      attribution_match_method: "direct_ticketmaster_params",
+      event_id: "tm_direct_priority",
+      meta_ad_id: META_AD_ID,
+      om_click_id: "omc_new_123",
+    });
+  });
 });

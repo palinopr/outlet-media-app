@@ -6,6 +6,9 @@ const days = Number(process.env.TICKETMASTER_ATTRIBUTION_BACKFILL_DAYS ?? 30);
 const cutoff = new Date(Date.now() - (Number.isFinite(days) ? days : 30) * 24 * 60 * 60 * 1000).toISOString();
 const apply = process.env.TICKETMASTER_ATTRIBUTION_BACKFILL_APPLY === "1";
 const allowMedium = process.env.TICKETMASTER_ATTRIBUTION_BACKFILL_ALLOW_MEDIUM === "1";
+const metaAccessToken = process.env.META_ACCESS_TOKEN || process.env.META_CAPI_ACCESS_TOKEN;
+const metaApiVersion = "v21.0";
+const metaEntityCache = new Map();
 
 if (!supabaseUrl || !supabaseKey) {
   console.error("FAIL missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
@@ -108,10 +111,42 @@ function safeFacebookCookie(value) {
 }
 
 function validDirectMetaUpdate(purchase) {
-  const meta_ad_id = isValidMetaEntityId(purchase.meta_ad_id) ? purchase.meta_ad_id : null;
-  const meta_adset_id = isValidMetaEntityId(purchase.meta_adset_id) ? purchase.meta_adset_id : null;
-  const meta_campaign_id = isValidMetaEntityId(purchase.meta_campaign_id) ? purchase.meta_campaign_id : null;
-  return { meta_ad_id, meta_adset_id, meta_campaign_id };
+  const meta_ad_id = isValidMetaEntityId(purchase.meta_ad_id) ? purchase.meta_ad_id : safeMetaIdFromUrl(purchase.source_url, ["ad_id", "meta_ad_id"]);
+  const meta_adset_id = isValidMetaEntityId(purchase.meta_adset_id) ? purchase.meta_adset_id : safeMetaIdFromUrl(purchase.source_url, ["adset_id", "meta_adset_id"]);
+  const meta_campaign_id = isValidMetaEntityId(purchase.meta_campaign_id) ? purchase.meta_campaign_id : safeMetaIdFromUrl(purchase.source_url, ["campaign_id", "meta_campaign_id"]);
+  return {
+    meta_ad_id,
+    meta_ad_name: safeText(purchase.meta_ad_name),
+    meta_adset_id,
+    meta_adset_name: safeText(purchase.meta_adset_name),
+    meta_campaign_id,
+    meta_campaign_name: safeText(purchase.meta_campaign_name),
+  };
+}
+
+function directMetaUpdateFromSourceUrl(purchase) {
+  return {
+    meta_ad_id: safeMetaIdFromUrl(purchase.source_url, ["ad_id", "meta_ad_id"]),
+    meta_ad_name: safeText(firstParamFromUrl(purchase.source_url, ["ad_name", "meta_ad_name"])),
+    meta_adset_id: safeMetaIdFromUrl(purchase.source_url, ["adset_id", "meta_adset_id"]),
+    meta_adset_name: safeText(firstParamFromUrl(purchase.source_url, ["adset_name", "meta_adset_name"])),
+    meta_campaign_id: safeMetaIdFromUrl(purchase.source_url, ["campaign_id", "meta_campaign_id"]),
+    meta_campaign_name: safeText(firstParamFromUrl(purchase.source_url, ["campaign_name", "meta_campaign_name"])),
+  };
+}
+
+function safeMetaIdFromUrl(sourceUrl, names) {
+  const value = firstParamFromUrl(sourceUrl, names);
+  return isValidMetaEntityId(value) ? value : null;
+}
+
+function hasDirectMetaFromSourceUrl(purchase) {
+  const direct = directMetaUpdateFromSourceUrl(purchase);
+  return Boolean(direct.meta_ad_id || direct.meta_adset_id || direct.meta_campaign_id);
+}
+
+function hasExistingDirectMethod(purchase) {
+  return purchase.attribution_match_method === "direct_ticketmaster_params";
 }
 
 function hasInvalidDirectMetaIds(purchase) {
@@ -124,6 +159,136 @@ function hasInvalidDirectMetaIds(purchase) {
 
 function hasStrongBackfillContext(purchase) {
   return Boolean(purchase.ticketmaster_event_id && purchase.funnel && purchase.market);
+}
+
+function mergeMissingMetaHierarchy(base, enrichment) {
+  if (!metaHierarchyMatches(base, enrichment)) return base;
+
+  return {
+    ...base,
+    meta_ad_id: base.meta_ad_id ?? enrichment.meta_ad_id ?? null,
+    meta_ad_name: base.meta_ad_name ?? enrichment.meta_ad_name ?? null,
+    meta_adset_id: base.meta_adset_id ?? enrichment.meta_adset_id ?? null,
+    meta_adset_name: base.meta_adset_name ?? enrichment.meta_adset_name ?? null,
+    meta_campaign_id: base.meta_campaign_id ?? enrichment.meta_campaign_id ?? null,
+    meta_campaign_name: base.meta_campaign_name ?? enrichment.meta_campaign_name ?? null,
+  };
+}
+
+function sameKnownId(baseValue, enrichmentValue) {
+  return !baseValue || !enrichmentValue || baseValue === enrichmentValue;
+}
+
+function metaHierarchyMatches(base, enrichment) {
+  return sameKnownId(base.meta_ad_id, enrichment.meta_ad_id)
+    && sameKnownId(base.meta_adset_id, enrichment.meta_adset_id)
+    && sameKnownId(base.meta_campaign_id, enrichment.meta_campaign_id);
+}
+
+function needsMetaHierarchy(update) {
+  return Boolean(
+    (
+      update.meta_ad_id
+      && (
+        !update.meta_ad_name
+        || !update.meta_adset_id
+        || !update.meta_adset_name
+        || !update.meta_campaign_id
+        || !update.meta_campaign_name
+      )
+    )
+      || (
+        update.meta_adset_id
+        && (
+          !update.meta_adset_name
+          || !update.meta_campaign_id
+          || !update.meta_campaign_name
+        )
+      ),
+  );
+}
+
+async function fetchMetaEntity(path, fields) {
+  if (!metaAccessToken) return {};
+  const cacheKey = `${path}:${fields}`;
+  if (metaEntityCache.has(cacheKey)) return metaEntityCache.get(cacheKey);
+
+  const url = new URL(`https://graph.facebook.com/${metaApiVersion}/${path}`);
+  url.searchParams.set("access_token", metaAccessToken);
+  url.searchParams.set("fields", fields);
+
+  try {
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      console.error(`WARN Meta hierarchy lookup failed HTTP ${response.status}`);
+      metaEntityCache.set(cacheKey, {});
+      return {};
+    }
+    const json = await response.json();
+    if (json?.error) {
+      console.error("WARN Meta hierarchy lookup returned an API error");
+      metaEntityCache.set(cacheKey, {});
+      return {};
+    }
+    metaEntityCache.set(cacheKey, json);
+    return json;
+  } catch (error) {
+    console.error(`WARN Meta hierarchy lookup failed: ${error instanceof Error ? error.message : String(error)}`);
+    metaEntityCache.set(cacheKey, {});
+    return {};
+  }
+}
+
+async function enrichMetaHierarchy(update) {
+  if (!needsMetaHierarchy(update)) return update;
+
+  if (update.meta_ad_id) {
+    const ad = await fetchMetaEntity(encodeURIComponent(update.meta_ad_id), "id,name,adset{id,name,campaign{id,name}}");
+    return mergeMissingMetaHierarchy(update, {
+      meta_ad_id: isValidMetaEntityId(ad?.id) ? ad.id : null,
+      meta_ad_name: safeText(ad?.name),
+      meta_adset_id: isValidMetaEntityId(ad?.adset?.id) ? ad.adset.id : null,
+      meta_adset_name: safeText(ad?.adset?.name),
+      meta_campaign_id: isValidMetaEntityId(ad?.adset?.campaign?.id) ? ad.adset.campaign.id : null,
+      meta_campaign_name: safeText(ad?.adset?.campaign?.name),
+    });
+  }
+
+  if (update.meta_adset_id) {
+    const adset = await fetchMetaEntity(encodeURIComponent(update.meta_adset_id), "id,name,campaign{id,name}");
+    return mergeMissingMetaHierarchy(update, {
+      meta_adset_id: isValidMetaEntityId(adset?.id) ? adset.id : null,
+      meta_adset_name: safeText(adset?.name),
+      meta_campaign_id: isValidMetaEntityId(adset?.campaign?.id) ? adset.campaign.id : null,
+      meta_campaign_name: safeText(adset?.campaign?.name),
+    });
+  }
+
+  return update;
+}
+
+function hasHierarchyImprovement(purchase, update) {
+  return Boolean(
+    (!purchase.meta_adset_id && update.meta_adset_id)
+      || (!purchase.meta_adset_name && update.meta_adset_name)
+      || (!purchase.meta_campaign_id && update.meta_campaign_id)
+      || (!purchase.meta_campaign_name && update.meta_campaign_name)
+      || (!purchase.meta_ad_name && update.meta_ad_name),
+  );
+}
+
+function hasMetaEntity(update) {
+  return Boolean(update.meta_ad_id || update.meta_adset_id || update.meta_campaign_id);
+}
+
+function shouldPromoteSourceDirectAttribution(purchase, update) {
+  return hasMetaEntity(update) && !hasExistingDirectMethod(purchase);
+}
+
+function canUpdateExistingMatchedRow(purchase) {
+  return purchase.attribution_match_confidence === "deterministic"
+    || purchase.attribution_match_confidence === "high"
+    || (allowMedium && purchase.attribution_match_confidence === "medium");
 }
 
 function handoffUpdate(row, method, confidence) {
@@ -247,7 +412,7 @@ async function matchPurchase(purchase) {
 
 const { data: purchases, error } = await supabase
   .from("ticketmaster_capi_events")
-  .select("id, created_at, event_id, ticketmaster_event_id, funnel, market, source_url, request_ip_hash, user_agent_hash, om_click_id, om_session_id, fbclid, fbc, fbp, meta_ad_id, meta_adset_id, meta_campaign_id, attribution_match_confidence, is_test, order_hash, order_id")
+  .select("id, created_at, event_id, ticketmaster_event_id, funnel, market, source_url, request_ip_hash, user_agent_hash, om_click_id, om_session_id, fbclid, fbc, fbp, meta_ad_id, meta_ad_name, meta_adset_id, meta_adset_name, meta_campaign_id, meta_campaign_name, attribution_match_confidence, attribution_match_method, is_test, order_hash, order_id")
   .eq("event_name", "Purchase")
   .eq("is_test", false)
   .is("skip_reason", null)
@@ -263,18 +428,56 @@ let checked = 0;
 let matched = 0;
 let proposed = 0;
 let skipped = 0;
+let hierarchyEnriched = 0;
 for (const purchase of purchases ?? []) {
   checked += 1;
   if (purchase.is_test || (!purchase.order_hash && !purchase.order_id)) {
     skipped += 1;
     continue;
   }
+  const sourceUrlDirectMeta = directMetaUpdateFromSourceUrl(purchase);
+  const provenDirectMeta = hasExistingDirectMethod(purchase) ? validDirectMetaUpdate(purchase) : sourceUrlDirectMeta;
+  const validDirectMeta = await enrichMetaHierarchy(provenDirectMeta);
+  const sourceDirectReplacement = shouldPromoteSourceDirectAttribution(purchase, validDirectMeta);
+  const directHierarchyImproved = hasHierarchyImprovement(purchase, validDirectMeta);
   if (purchase.attribution_match_confidence && purchase.attribution_match_confidence !== "unknown") {
-    skipped += 1;
+    if (sourceDirectReplacement) {
+      proposed += 1;
+      if (directHierarchyImproved) hierarchyEnriched += 1;
+      if (apply) {
+        const update = await supabase
+          .from("ticketmaster_capi_events")
+          .update({
+            ...validDirectMeta,
+            attribution_handoff_id: null,
+            attribution_match_confidence: "deterministic",
+            attribution_match_method: "direct_ticketmaster_params",
+            attribution_matched_at: new Date().toISOString(),
+          })
+          .eq("id", purchase.id);
+
+        if (update.error) throw new Error(`promote direct ${purchase.event_id.slice(0, 12)}: ${update.error.message}`);
+        matched += 1;
+      }
+    } else if (directHierarchyImproved && canUpdateExistingMatchedRow(purchase)) {
+      proposed += 1;
+      hierarchyEnriched += 1;
+      if (apply) {
+        const update = await supabase
+          .from("ticketmaster_capi_events")
+          .update(validDirectMeta)
+          .eq("id", purchase.id);
+
+        if (update.error) throw new Error(`enrich direct ${purchase.event_id.slice(0, 12)}: ${update.error.message}`);
+        matched += 1;
+      }
+    } else {
+      skipped += 1;
+    }
     continue;
   }
-  const validDirectMeta = validDirectMetaUpdate(purchase);
-  const hasValidDirectMeta = Boolean(validDirectMeta.meta_ad_id || validDirectMeta.meta_adset_id || validDirectMeta.meta_campaign_id);
+  const hasValidDirectMeta = Boolean(validDirectMeta.meta_ad_id || validDirectMeta.meta_adset_id || validDirectMeta.meta_campaign_id)
+    && (hasExistingDirectMethod(purchase) || hasDirectMetaFromSourceUrl(purchase));
   if (hasInvalidDirectMetaIds(purchase)) {
     if (apply) {
       const scrub = await supabase
@@ -288,6 +491,7 @@ for (const purchase of purchases ?? []) {
   }
   if (hasValidDirectMeta) {
     proposed += 1;
+    if (directHierarchyImproved) hierarchyEnriched += 1;
     if (apply) {
       const update = await supabase
         .from("ticketmaster_capi_events")
@@ -311,11 +515,13 @@ for (const purchase of purchases ?? []) {
   }
 
   proposed += 1;
+  const handoffUpdatePayload = await enrichMetaHierarchy(handoffUpdate(match.row, match.method, match.confidence));
+  if (hasHierarchyImprovement(purchase, handoffUpdatePayload)) hierarchyEnriched += 1;
   if (!apply) continue;
 
   const update = await supabase
     .from("ticketmaster_capi_events")
-    .update(handoffUpdate(match.row, match.method, match.confidence))
+    .update(handoffUpdatePayload)
     .eq("id", purchase.id);
 
   if (update.error) throw new Error(`update ${purchase.event_id.slice(0, 12)}: ${update.error.message}`);
@@ -327,6 +533,8 @@ console.log(JSON.stringify({
   apply,
   checked,
   cutoff,
+  hierarchy_enriched: hierarchyEnriched,
+  meta_hierarchy_lookup_enabled: Boolean(metaAccessToken),
   matched,
   mode: apply ? "apply" : "dry_run",
   proposed,

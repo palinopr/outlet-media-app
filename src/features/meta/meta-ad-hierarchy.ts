@@ -40,6 +40,29 @@ function attributionFromGraphAd(ad: MetaGraphAd): MarketingAttribution {
   });
 }
 
+function sameKnownId(baseValue: string | undefined, hierarchyValue: string | undefined) {
+  return !baseValue || !hierarchyValue || baseValue === hierarchyValue;
+}
+
+function hierarchyMatches(base: MarketingAttribution, hierarchy: MarketingAttribution) {
+  return sameKnownId(base.metaAdId, hierarchy.metaAdId)
+    && sameKnownId(base.metaAdsetId, hierarchy.metaAdsetId)
+    && sameKnownId(base.metaCampaignId, hierarchy.metaCampaignId);
+}
+
+function fillMissingHierarchy(base: MarketingAttribution, hierarchy: MarketingAttribution) {
+  if (!hierarchyMatches(base, hierarchy)) return base;
+
+  return sanitizeMarketingAttribution({
+    ...base,
+    metaAdName: base.metaAdName ?? hierarchy.metaAdName,
+    metaAdsetId: base.metaAdsetId ?? hierarchy.metaAdsetId,
+    metaAdsetName: base.metaAdsetName ?? hierarchy.metaAdsetName,
+    metaCampaignId: base.metaCampaignId ?? hierarchy.metaCampaignId,
+    metaCampaignName: base.metaCampaignName ?? hierarchy.metaCampaignName,
+  });
+}
+
 async function fetchMetaAdHierarchy(
   adId: string,
   options: ResolveMetaAdHierarchyOptions,
@@ -121,14 +144,7 @@ export async function enrichAttributionWithMetaAdHierarchy(
   }
 
   const hierarchy = await resolveMetaAdHierarchy(sanitized.metaAdId, options);
-  return sanitizeMarketingAttribution({
-    ...sanitized,
-    metaAdName: sanitized.metaAdName ?? hierarchy.metaAdName,
-    metaAdsetId: sanitized.metaAdsetId ?? hierarchy.metaAdsetId,
-    metaAdsetName: sanitized.metaAdsetName ?? hierarchy.metaAdsetName,
-    metaCampaignId: sanitized.metaCampaignId ?? hierarchy.metaCampaignId,
-    metaCampaignName: sanitized.metaCampaignName ?? hierarchy.metaCampaignName,
-  });
+  return fillMissingHierarchy(sanitized, hierarchy);
 }
 
 export function clearMetaAdHierarchyCacheForTests() {
