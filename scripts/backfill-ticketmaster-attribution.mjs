@@ -111,9 +111,9 @@ function safeFacebookCookie(value) {
 }
 
 function validDirectMetaUpdate(purchase) {
-  const meta_ad_id = isValidMetaEntityId(purchase.meta_ad_id) ? purchase.meta_ad_id : null;
-  const meta_adset_id = isValidMetaEntityId(purchase.meta_adset_id) ? purchase.meta_adset_id : null;
-  const meta_campaign_id = isValidMetaEntityId(purchase.meta_campaign_id) ? purchase.meta_campaign_id : null;
+  const meta_ad_id = isValidMetaEntityId(purchase.meta_ad_id) ? purchase.meta_ad_id : safeMetaIdFromUrl(purchase.source_url, ["ad_id", "meta_ad_id"]);
+  const meta_adset_id = isValidMetaEntityId(purchase.meta_adset_id) ? purchase.meta_adset_id : safeMetaIdFromUrl(purchase.source_url, ["adset_id", "meta_adset_id"]);
+  const meta_campaign_id = isValidMetaEntityId(purchase.meta_campaign_id) ? purchase.meta_campaign_id : safeMetaIdFromUrl(purchase.source_url, ["campaign_id", "meta_campaign_id"]);
   return {
     meta_ad_id,
     meta_ad_name: safeText(purchase.meta_ad_name),
@@ -122,6 +122,31 @@ function validDirectMetaUpdate(purchase) {
     meta_campaign_id,
     meta_campaign_name: safeText(purchase.meta_campaign_name),
   };
+}
+
+function directMetaUpdateFromSourceUrl(purchase) {
+  return {
+    meta_ad_id: safeMetaIdFromUrl(purchase.source_url, ["ad_id", "meta_ad_id"]),
+    meta_ad_name: safeText(firstParamFromUrl(purchase.source_url, ["ad_name", "meta_ad_name"])),
+    meta_adset_id: safeMetaIdFromUrl(purchase.source_url, ["adset_id", "meta_adset_id"]),
+    meta_adset_name: safeText(firstParamFromUrl(purchase.source_url, ["adset_name", "meta_adset_name"])),
+    meta_campaign_id: safeMetaIdFromUrl(purchase.source_url, ["campaign_id", "meta_campaign_id"]),
+    meta_campaign_name: safeText(firstParamFromUrl(purchase.source_url, ["campaign_name", "meta_campaign_name"])),
+  };
+}
+
+function safeMetaIdFromUrl(sourceUrl, names) {
+  const value = firstParamFromUrl(sourceUrl, names);
+  return isValidMetaEntityId(value) ? value : null;
+}
+
+function hasDirectMetaFromSourceUrl(purchase) {
+  const direct = directMetaUpdateFromSourceUrl(purchase);
+  return Boolean(direct.meta_ad_id || direct.meta_adset_id || direct.meta_campaign_id);
+}
+
+function hasExistingDirectMethod(purchase) {
+  return purchase.attribution_match_method === "direct_ticketmaster_params";
 }
 
 function hasInvalidDirectMetaIds(purchase) {
@@ -379,7 +404,7 @@ async function matchPurchase(purchase) {
 
 const { data: purchases, error } = await supabase
   .from("ticketmaster_capi_events")
-  .select("id, created_at, event_id, ticketmaster_event_id, funnel, market, source_url, request_ip_hash, user_agent_hash, om_click_id, om_session_id, fbclid, fbc, fbp, meta_ad_id, meta_ad_name, meta_adset_id, meta_adset_name, meta_campaign_id, meta_campaign_name, attribution_match_confidence, is_test, order_hash, order_id")
+  .select("id, created_at, event_id, ticketmaster_event_id, funnel, market, source_url, request_ip_hash, user_agent_hash, om_click_id, om_session_id, fbclid, fbc, fbp, meta_ad_id, meta_ad_name, meta_adset_id, meta_adset_name, meta_campaign_id, meta_campaign_name, attribution_match_confidence, attribution_match_method, is_test, order_hash, order_id")
   .eq("event_name", "Purchase")
   .eq("is_test", false)
   .is("skip_reason", null)
@@ -402,7 +427,9 @@ for (const purchase of purchases ?? []) {
     skipped += 1;
     continue;
   }
-  const validDirectMeta = await enrichMetaHierarchy(validDirectMetaUpdate(purchase));
+  const sourceUrlDirectMeta = directMetaUpdateFromSourceUrl(purchase);
+  const provenDirectMeta = hasExistingDirectMethod(purchase) ? validDirectMetaUpdate(purchase) : sourceUrlDirectMeta;
+  const validDirectMeta = await enrichMetaHierarchy(provenDirectMeta);
   const directHierarchyImproved = hasHierarchyImprovement(purchase, validDirectMeta);
   if (purchase.attribution_match_confidence && purchase.attribution_match_confidence !== "unknown") {
     if (directHierarchyImproved && canUpdateExistingMatchedRow(purchase)) {
@@ -422,7 +449,8 @@ for (const purchase of purchases ?? []) {
     }
     continue;
   }
-  const hasValidDirectMeta = Boolean(validDirectMeta.meta_ad_id || validDirectMeta.meta_adset_id || validDirectMeta.meta_campaign_id);
+  const hasValidDirectMeta = Boolean(validDirectMeta.meta_ad_id || validDirectMeta.meta_adset_id || validDirectMeta.meta_campaign_id)
+    && (hasExistingDirectMethod(purchase) || hasDirectMetaFromSourceUrl(purchase));
   if (hasInvalidDirectMetaIds(purchase)) {
     if (apply) {
       const scrub = await supabase
