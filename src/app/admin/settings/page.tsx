@@ -521,6 +521,8 @@ export default async function SettingsPage() {
                       ? "Ad-level matching is usable"
                       : matchingSummary.status === "accepted_without_direct_matching"
                         ? "CAPI is accepted, but ad-level matching is missing"
+                        : matchingSummary.status === "accepted_without_optimization_grade_matching"
+                          ? "CAPI is accepted, but optimization-grade matching is missing"
                         : matchingSummary.status === "acceptance_issue"
                           ? "Meta acceptance needs review"
                           : "Waiting for purchase data"}
@@ -591,6 +593,7 @@ export default async function SettingsPage() {
                       <span>{formatCurrency(event.revenue, "USD")}</span>
                       <span>{event.tickets} tickets</span>
                       <span>{event.confidenceCounts.deterministic} deterministic</span>
+                      <span>{event.confidenceCounts.high} high</span>
                       <span>{event.confidenceCounts.medium} medium</span>
                       <span>{event.confidenceCounts.low} low</span>
                       <span>{event.cfcCandidateCount} CFC candidates</span>

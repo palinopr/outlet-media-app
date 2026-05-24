@@ -31,7 +31,7 @@ export type TicketmasterCapiMatchingSummary = {
   optimizationGradeCount: number;
   purchaseCount: number;
   revenue: number;
-  status: "healthy" | "accepted_without_direct_matching" | "acceptance_issue" | "waiting_for_purchases";
+  status: "healthy" | "accepted_without_direct_matching" | "accepted_without_optimization_grade_matching" | "acceptance_issue" | "waiting_for_purchases";
   tickets: number;
   unknownCount: number;
 };
@@ -149,6 +149,9 @@ export function buildTicketmasterCapiMatchingSummary(events: TicketmasterCapiDia
   } else if (directMetaObjectCount === 0) {
     status = "accepted_without_direct_matching";
     nextAction = "CAPI is accepted, but Ticketmaster is not returning numeric Meta object IDs or CFC ad IDs.";
+  } else if (optimizationGradeCount === 0) {
+    status = "accepted_without_optimization_grade_matching";
+    nextAction = "Meta object IDs exist, but no deterministic/high-confidence rows are ready for optimization-grade reads.";
   }
 
   return {

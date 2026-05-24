@@ -74,6 +74,29 @@ describe("ticketmaster CAPI diagnostics", () => {
     expect(summary.status).toBe("healthy");
   });
 
+  it("does not mark direct Meta object rows usable when confidence is not optimization-grade", () => {
+    const summary = buildTicketmasterCapiMatchingSummary([
+      {
+        attribution_match_confidence: "low",
+        attribution_match_method: "unique_recent_ua_handoff",
+        event_name: "Purchase",
+        is_test: false,
+        meta_ad_id: META_AD_ID,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: true,
+        quantity: 1,
+        skip_reason: null,
+        source_url: null,
+        value: 100,
+      },
+    ]);
+
+    expect(summary.directMetaObjectCount).toBe(1);
+    expect(summary.optimizationGradeCount).toBe(0);
+    expect(summary.status).toBe("accepted_without_optimization_grade_matching");
+  });
+
   it("detects valid CFC candidates in nested source URLs without accepting non-Meta CFC labels", () => {
     expect(isValidMetaEntityId("CFC_BUYAT_2197213")).toBe(false);
     expect(hasValidCfcCandidate({
@@ -132,7 +155,7 @@ describe("ticketmaster CAPI diagnostics", () => {
         value: 100,
       },
       {
-        attribution_match_confidence: "medium",
+        attribution_match_confidence: "high",
         attribution_match_method: "exact_ip_ua_handoff",
         event_name: "Purchase",
         funnel: "jay-wheeler",
@@ -158,6 +181,8 @@ describe("ticketmaster CAPI diagnostics", () => {
       optimizationGradeCount: 0,
       unknownCount: 1,
     });
+    expect(breakdown[0].confidenceCounts.high).toBe(1);
+    expect(breakdown[0].status).toBe("accepted_without_direct_matching");
     expect(breakdown[1]).toMatchObject({
       name: "Festival ATACA SERGIO",
       purchaseCount: 1,
