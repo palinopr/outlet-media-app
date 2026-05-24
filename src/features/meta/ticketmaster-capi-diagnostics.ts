@@ -1,3 +1,5 @@
+import { cleanAttributionQueryValue } from "./attribution";
+
 type TicketmasterCapiDiagnosticEvent = {
   attribution_match_confidence: string | null;
   attribution_match_method: string | null;
@@ -173,19 +175,53 @@ export function buildTicketmasterCapiMatchingSummary(events: TicketmasterCapiDia
   };
 }
 
+function safeEventId(value: string | null | undefined) {
+  return cleanAttributionQueryValue("ticketmaster_event_id", value, 160) ?? null;
+}
+
+function safeEventName(value: string | null | undefined) {
+  return cleanAttributionQueryValue("utm_content", value, 160) ?? null;
+}
+
+function safeFunnel(value: string | null | undefined) {
+  return cleanAttributionQueryValue("om_funnel", value, 120) ?? null;
+}
+
+function safeMarket(value: string | null | undefined) {
+  return cleanAttributionQueryValue("om_market", value, 120) ?? null;
+}
+
 function eventBreakdownKey(event: TicketmasterCapiDiagnosticEvent) {
+  const eventId = safeEventId(event.ticketmaster_event_id);
+  const eventName = safeEventName(event.ticketmaster_event_name);
+  const eventIdentity = eventId ? `id:${eventId.toLowerCase()}` : `name:${eventName?.toLowerCase() ?? "unknown-event"}`;
   return [
-    event.ticketmaster_event_id?.trim() || "no-event-id",
-    event.ticketmaster_event_name?.trim() || "no-event-name",
-    event.funnel?.trim() || "no-funnel",
-    event.market?.trim() || "no-market",
+    eventIdentity,
+    safeFunnel(event.funnel) ?? "no-funnel",
+    safeMarket(event.market) ?? "no-market",
   ].join("|");
 }
 
-function eventBreakdownName(event: TicketmasterCapiDiagnosticEvent) {
-  return event.ticketmaster_event_name?.trim()
-    || event.ticketmaster_event_id?.trim()
-    || [event.funnel, event.market].filter(Boolean).join(" / ")
+function firstSafeValue(
+  events: TicketmasterCapiDiagnosticEvent[],
+  selector: (event: TicketmasterCapiDiagnosticEvent) => string | null,
+) {
+  for (const event of events) {
+    const value = selector(event);
+    if (value) return value;
+  }
+  return null;
+}
+
+function eventBreakdownName(
+  rows: TicketmasterCapiDiagnosticEvent[],
+  eventId: string | null,
+  funnel: string | null,
+  market: string | null,
+) {
+  return firstSafeValue(rows, (event) => safeEventName(event.ticketmaster_event_name))
+    || eventId
+    || [funnel, market].filter(Boolean).join(" / ")
     || "Unknown event";
 }
 
@@ -201,14 +237,16 @@ export function buildTicketmasterCapiEventMatchingBreakdown(
 
   return Array.from(groups.entries())
     .map(([key, rows]) => {
-      const first = rows[0];
+      const eventId = firstSafeValue(rows, (event) => safeEventId(event.ticketmaster_event_id));
+      const funnel = firstSafeValue(rows, (event) => safeFunnel(event.funnel));
+      const market = firstSafeValue(rows, (event) => safeMarket(event.market));
       return {
         ...buildTicketmasterCapiMatchingSummary(rows),
-        eventId: first.ticketmaster_event_id?.trim() || null,
-        funnel: first.funnel?.trim() || null,
+        eventId,
+        funnel,
         key,
-        market: first.market?.trim() || null,
-        name: eventBreakdownName(first),
+        market,
+        name: eventBreakdownName(rows, eventId, funnel, market),
       };
     })
     .sort((a, b) => {

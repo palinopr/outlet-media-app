@@ -190,4 +190,89 @@ describe("ticketmaster CAPI diagnostics", () => {
       status: "healthy",
     });
   });
+
+  it("groups by stable Ticketmaster event ID even when event names vary", () => {
+    const breakdown = buildTicketmasterCapiEventMatchingBreakdown([
+      {
+        attribution_match_confidence: "deterministic",
+        attribution_match_method: "direct_ticketmaster_params",
+        event_name: "Purchase",
+        funnel: "jay-wheeler",
+        is_test: false,
+        market: "san-juan",
+        meta_ad_id: META_AD_ID,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: true,
+        quantity: 1,
+        skip_reason: null,
+        source_url: null,
+        ticketmaster_event_id: "JAY12345",
+        ticketmaster_event_name: "Jay Wheeler",
+        value: 100,
+      },
+      {
+        attribution_match_confidence: "high",
+        attribution_match_method: "exact_ip_ua_handoff",
+        event_name: "Purchase",
+        funnel: "jay-wheeler",
+        is_test: false,
+        market: "san-juan",
+        meta_ad_id: META_AD_ID,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: true,
+        quantity: 1,
+        skip_reason: null,
+        source_url: null,
+        ticketmaster_event_id: "JAY12345",
+        ticketmaster_event_name: "Jay Wheeler Live",
+        value: 120,
+      },
+    ]);
+
+    expect(breakdown).toHaveLength(1);
+    expect(breakdown[0]).toMatchObject({
+      eventId: "JAY12345",
+      funnel: "jay-wheeler",
+      market: "san-juan",
+      name: "Jay Wheeler",
+      purchaseCount: 2,
+      revenue: 220,
+    });
+  });
+
+  it("returns privacy-safe event labels for the matching breakdown", () => {
+    const breakdown = buildTicketmasterCapiEventMatchingBreakdown([
+      {
+        attribution_match_confidence: "unknown",
+        attribution_match_method: null,
+        event_name: "Purchase",
+        funnel: "https://unsafe.example/funnel",
+        is_test: false,
+        market: "555-111-2222",
+        meta_ad_id: null,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: true,
+        quantity: 1,
+        skip_reason: null,
+        source_url: null,
+        ticketmaster_event_id: "https://unsafe.example/event",
+        ticketmaster_event_name: "buyer@example.com",
+        value: 100,
+      },
+    ]);
+
+    expect(breakdown).toHaveLength(1);
+    expect(breakdown[0]).toMatchObject({
+      eventId: null,
+      funnel: null,
+      market: null,
+      name: "Unknown event",
+    });
+    expect(JSON.stringify(breakdown[0])).not.toContain("buyer@example.com");
+    expect(JSON.stringify(breakdown[0])).not.toContain("unsafe.example");
+    expect(JSON.stringify(breakdown[0])).not.toContain("555-111-2222");
+  });
 });
