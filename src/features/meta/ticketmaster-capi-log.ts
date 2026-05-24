@@ -154,12 +154,36 @@ function confidenceRank(value: AttributionMatchConfidence | null | undefined) {
   }
 }
 
-function existingHasDirectMetaAttribution(row: ExistingTicketmasterCapiEventRow | null | undefined) {
+function hasValidMetaAttribution(row: ExistingTicketmasterCapiEventRow | null | undefined) {
   return Boolean(
     cleanAttributionQueryValue("ad_id", row?.meta_ad_id)
       || cleanAttributionQueryValue("adset_id", row?.meta_adset_id)
       || cleanAttributionQueryValue("campaign_id", row?.meta_campaign_id),
   );
+}
+
+function isDirectTicketmasterAttribution(method: string | null | undefined) {
+  return method === "direct_ticketmaster_params";
+}
+
+function existingAttributionRank(row: ExistingTicketmasterCapiEventRow | null | undefined) {
+  const rank = confidenceRank(row?.attribution_match_confidence);
+  if (!hasValidMetaAttribution(row)) return rank;
+  return isDirectTicketmasterAttribution(row?.attribution_match_method)
+    ? Math.max(rank, confidenceRank("deterministic"))
+    : rank;
+}
+
+function shouldPreserveExistingAttribution(input: {
+  existingRow: ExistingTicketmasterCapiEventRow | null;
+  newConfidence: AttributionMatchConfidence;
+  newMethod: string | null | undefined;
+}) {
+  if (!input.existingRow) return false;
+  if (isDirectTicketmasterAttribution(input.newMethod) && !isDirectTicketmasterAttribution(input.existingRow.attribution_match_method)) {
+    return false;
+  }
+  return existingAttributionRank(input.existingRow) >= confidenceRank(input.newConfidence);
 }
 
 function attributionFromExistingRow(row: ExistingTicketmasterCapiEventRow | null | undefined) {
@@ -212,11 +236,11 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
   const newOmSessionId = sanitizeMarketingTrackingToken(input.log.omSessionId ?? attributionMatch?.sessionId);
   const newAttributionMatchMethod = attributionMatch?.method ?? (hasDirectAttribution(input) ? "direct_ticketmaster_params" : null);
   const newAttributionMatchConfidence = attributionMatch?.confidence ?? (hasDirectAttribution(input) ? "deterministic" : "unknown");
-  const existingAttributionRank = existingHasDirectMetaAttribution(existingRow)
-    ? Math.max(confidenceRank(existingRow?.attribution_match_confidence), confidenceRank("deterministic"))
-    : confidenceRank(existingRow?.attribution_match_confidence);
-  const preserveExistingAttribution = Boolean(existingRow)
-    && existingAttributionRank >= confidenceRank(newAttributionMatchConfidence);
+  const preserveExistingAttribution = shouldPreserveExistingAttribution({
+    existingRow,
+    newConfidence: newAttributionMatchConfidence,
+    newMethod: newAttributionMatchMethod,
+  });
   const attribution = await enrichMetaAttributionHierarchy({
     accessToken: getMetaAttributionEnrichmentToken(),
     attribution: preserveExistingAttribution ? attributionFromExistingRow(existingRow) : newAttribution,
