@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { isValidMetaEntityId, metaAdIdFromCfc } from "./backfill-ticketmaster-attribution-helpers.mjs";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -86,10 +87,6 @@ function canApplyMatch(match) {
 
 const unsafeValuePattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}|sk_live|sk_test|xox[baprs]-|ghp_|ya29\.|access[_-]?token|api[_-]?key|secret|password|bearer|(?:^|[^A-Za-z0-9])(?:\+?\d[\d\s().-]{7,}\d)(?=$|[^A-Za-z0-9])|\d{10,}/i;
 
-function isValidMetaEntityId(value) {
-  return typeof value === "string" && /^\d{12,30}$/.test(value);
-}
-
 function safeText(value, maxLength = 240) {
   if (typeof value !== "string") return null;
   const cleaned = value.trim().slice(0, maxLength);
@@ -111,7 +108,9 @@ function safeFacebookCookie(value) {
 }
 
 function validDirectMetaUpdate(purchase) {
-  const meta_ad_id = isValidMetaEntityId(purchase.meta_ad_id) ? purchase.meta_ad_id : safeMetaIdFromUrl(purchase.source_url, ["ad_id", "meta_ad_id"]);
+  const meta_ad_id = isValidMetaEntityId(purchase.meta_ad_id)
+    ? purchase.meta_ad_id
+    : safeMetaIdFromUrl(purchase.source_url, ["ad_id", "meta_ad_id"]) ?? metaAdIdFromCfc(purchase);
   const meta_adset_id = isValidMetaEntityId(purchase.meta_adset_id) ? purchase.meta_adset_id : safeMetaIdFromUrl(purchase.source_url, ["adset_id", "meta_adset_id"]);
   const meta_campaign_id = isValidMetaEntityId(purchase.meta_campaign_id) ? purchase.meta_campaign_id : safeMetaIdFromUrl(purchase.source_url, ["campaign_id", "meta_campaign_id"]);
   return {
@@ -124,9 +123,9 @@ function validDirectMetaUpdate(purchase) {
   };
 }
 
-function directMetaUpdateFromSourceUrl(purchase) {
+function directMetaUpdateFromTicketmasterFields(purchase) {
   return {
-    meta_ad_id: safeMetaIdFromUrl(purchase.source_url, ["ad_id", "meta_ad_id"]),
+    meta_ad_id: safeMetaIdFromUrl(purchase.source_url, ["ad_id", "meta_ad_id"]) ?? metaAdIdFromCfc(purchase),
     meta_ad_name: safeText(firstParamFromUrl(purchase.source_url, ["ad_name", "meta_ad_name"])),
     meta_adset_id: safeMetaIdFromUrl(purchase.source_url, ["adset_id", "meta_adset_id"]),
     meta_adset_name: safeText(firstParamFromUrl(purchase.source_url, ["adset_name", "meta_adset_name"])),
@@ -140,8 +139,8 @@ function safeMetaIdFromUrl(sourceUrl, names) {
   return isValidMetaEntityId(value) ? value : null;
 }
 
-function hasDirectMetaFromSourceUrl(purchase) {
-  const direct = directMetaUpdateFromSourceUrl(purchase);
+function hasDirectMetaFromTicketmasterFields(purchase) {
+  const direct = directMetaUpdateFromTicketmasterFields(purchase);
   return Boolean(direct.meta_ad_id || direct.meta_adset_id || direct.meta_campaign_id);
 }
 
@@ -412,7 +411,7 @@ async function matchPurchase(purchase) {
 
 const { data: purchases, error } = await supabase
   .from("ticketmaster_capi_events")
-  .select("id, created_at, event_id, ticketmaster_event_id, funnel, market, source_url, request_ip_hash, user_agent_hash, om_click_id, om_session_id, fbclid, fbc, fbp, meta_ad_id, meta_ad_name, meta_adset_id, meta_adset_name, meta_campaign_id, meta_campaign_name, attribution_match_confidence, attribution_match_method, is_test, order_hash, order_id")
+  .select("id, created_at, event_id, ticketmaster_event_id, funnel, market, source_url, request_ip_hash, user_agent_hash, om_click_id, om_session_id, fbclid, fbc, fbp, meta_ad_id, meta_ad_name, meta_adset_id, meta_adset_name, meta_campaign_id, meta_campaign_name, attribution_match_confidence, attribution_match_method, is_test, order_hash, order_id, utm_content")
   .eq("event_name", "Purchase")
   .eq("is_test", false)
   .is("skip_reason", null)
@@ -435,8 +434,8 @@ for (const purchase of purchases ?? []) {
     skipped += 1;
     continue;
   }
-  const sourceUrlDirectMeta = directMetaUpdateFromSourceUrl(purchase);
-  const provenDirectMeta = hasExistingDirectMethod(purchase) ? validDirectMetaUpdate(purchase) : sourceUrlDirectMeta;
+  const directTicketmasterMeta = directMetaUpdateFromTicketmasterFields(purchase);
+  const provenDirectMeta = hasExistingDirectMethod(purchase) ? validDirectMetaUpdate(purchase) : directTicketmasterMeta;
   const validDirectMeta = await enrichMetaHierarchy(provenDirectMeta);
   const sourceDirectReplacement = shouldPromoteSourceDirectAttribution(purchase, validDirectMeta);
   const directHierarchyImproved = hasHierarchyImprovement(purchase, validDirectMeta);
@@ -477,7 +476,7 @@ for (const purchase of purchases ?? []) {
     continue;
   }
   const hasValidDirectMeta = Boolean(validDirectMeta.meta_ad_id || validDirectMeta.meta_adset_id || validDirectMeta.meta_campaign_id)
-    && (hasExistingDirectMethod(purchase) || hasDirectMetaFromSourceUrl(purchase));
+    && (hasExistingDirectMethod(purchase) || hasDirectMetaFromTicketmasterFields(purchase));
   if (hasInvalidDirectMetaIds(purchase)) {
     if (apply) {
       const scrub = await supabase

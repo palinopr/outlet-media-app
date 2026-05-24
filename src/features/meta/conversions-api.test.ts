@@ -100,4 +100,36 @@ describe("buildTicketmasterCapiEvent", () => {
     expect(result.log.sourceUrl).toContain("checkout.ticketmaster.com/confirmation");
     expect(result.log.sourceUrl).not.toContain("test-order");
   });
+
+  it("promotes a valid Ticketmaster CFC value to Meta ad attribution", () => {
+    const result = buildTicketmasterCapiEvent(
+      new URL(`https://outletmedia.net/api/meta/ticketmaster-capi?order_id=ABC123&value=125&utm_content=${META_AD_ID}`),
+      new Headers({ "user-agent": "vitest-browser", "x-forwarded-for": "203.0.113.10" }),
+      new Date("2026-05-12T16:00:00Z"),
+    );
+
+    expect(result.log.attribution?.metaAdId).toBe(META_AD_ID);
+    expect(result.log.attribution?.utmContent).toBe(META_AD_ID);
+  });
+
+  it("promotes valid CFC attribution when a raw ad id is invalid", () => {
+    const result = buildTicketmasterCapiEvent(
+      new URL(`https://outletmedia.net/api/meta/ticketmaster-capi?order_id=ABC123&value=125&ad_id=bad&utm_content=${META_AD_ID}`),
+      new Headers({ "user-agent": "vitest-browser", "x-forwarded-for": "203.0.113.10" }),
+      new Date("2026-05-12T16:00:00Z"),
+    );
+
+    expect(result.log.attribution?.metaAdId).toBe(META_AD_ID);
+  });
+
+  it("keeps non-Meta CFC values as labels only", () => {
+    const result = buildTicketmasterCapiEvent(
+      new URL("https://outletmedia.net/api/meta/ticketmaster-capi?order_id=ABC123&value=125&utm_content=CFC_BUYAT_2197213"),
+      new Headers({ "user-agent": "vitest-browser", "x-forwarded-for": "203.0.113.10" }),
+      new Date("2026-05-12T16:00:00Z"),
+    );
+
+    expect(result.log.attribution?.metaAdId).toBeUndefined();
+    expect(result.log.attribution?.utmContent).toBe("CFC_BUYAT_2197213");
+  });
 });

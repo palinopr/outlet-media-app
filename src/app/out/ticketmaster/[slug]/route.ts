@@ -60,6 +60,16 @@ function firstParam(params: URLSearchParams, names: string[]) {
   return undefined;
 }
 
+function firstValidAttributionParam(params: URLSearchParams, key: string, names: string[]) {
+  for (const name of names) {
+    for (const rawValue of params.getAll(name)) {
+      const value = cleanAttributionQueryValue(key, rawValue);
+      if (value) return value;
+    }
+  }
+  return undefined;
+}
+
 export async function GET(request: Request, context: RouteContext) {
   const { slug } = await context.params;
   const destination = destinations[slug as keyof typeof destinations];
@@ -73,11 +83,13 @@ export async function GET(request: Request, context: RouteContext) {
   const sessionId = sanitizeMarketingTrackingToken(firstParam(incoming, ["om_session_id", "session_id", "oms"]));
   const cta = cleanMarketingSlug(firstParam(incoming, ["cta"]));
   const attribution = attributionFromSearchParams(incoming);
+  const metaAdIdForCfc = firstValidAttributionParam(incoming, "ad_id", ["ad_id", "meta_ad_id"]);
+  const fallbackCfc = firstValidAttributionParam(incoming, "utm_content", ["utm_content"]);
   const referrer = cleanText(request.headers.get("referer"), 1000);
 
   const target = new URL(destination.ticketmasterUrl);
   for (const [key, names] of REDIRECT_ATTRIBUTION_PARAMS) {
-    const value = cleanAttributionQueryValue(key, firstParam(incoming, names));
+    const value = firstValidAttributionParam(incoming, key, names);
     if (value) target.searchParams.set(key, value);
   }
 
@@ -89,10 +101,10 @@ export async function GET(request: Request, context: RouteContext) {
   target.searchParams.set("eventid", destination.eventId);
   target.searchParams.set("tm_event_id", destination.eventId);
   target.searchParams.set("ticketmaster_event_id", destination.eventId);
-  target.searchParams.set("utm_source", cleanAttributionQueryValue("utm_source", firstParam(incoming, ["utm_source"])) ?? "meta");
-  target.searchParams.set("utm_medium", cleanAttributionQueryValue("utm_medium", firstParam(incoming, ["utm_medium"])) ?? "paid_social");
-  target.searchParams.set("utm_campaign", cleanAttributionQueryValue("utm_campaign", firstParam(incoming, ["utm_campaign"])) ?? destination.defaultUtmCampaign);
-  target.searchParams.set("utm_content", cleanAttributionQueryValue("utm_content", firstParam(incoming, ["utm_content"])) ?? cta ?? "lp_default");
+  target.searchParams.set("utm_source", firstValidAttributionParam(incoming, "utm_source", ["utm_source"]) ?? "meta");
+  target.searchParams.set("utm_medium", firstValidAttributionParam(incoming, "utm_medium", ["utm_medium"]) ?? "paid_social");
+  target.searchParams.set("utm_campaign", firstValidAttributionParam(incoming, "utm_campaign", ["utm_campaign"]) ?? destination.defaultUtmCampaign);
+  target.searchParams.set("utm_content", metaAdIdForCfc ?? fallbackCfc ?? cta ?? "lp_default");
 
   const attributionWrites = await Promise.allSettled([
     recordTicketmasterAttributionHandoff(
