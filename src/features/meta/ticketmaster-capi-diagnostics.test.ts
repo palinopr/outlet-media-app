@@ -97,6 +97,47 @@ describe("ticketmaster CAPI diagnostics", () => {
     expect(summary.status).toBe("accepted_without_optimization_grade_matching");
   });
 
+  it("ignores failed Meta sends when judging matching quality", () => {
+    const acceptedRows = Array.from({ length: 9 }, () => ({
+      attribution_match_confidence: "unknown",
+      attribution_match_method: null,
+      event_name: "Purchase",
+      is_test: false,
+      meta_ad_id: null,
+      meta_adset_id: null,
+      meta_campaign_id: null,
+      meta_ok: true,
+      quantity: 1,
+      skip_reason: null,
+      source_url: null,
+      value: 100,
+    }));
+    const summary = buildTicketmasterCapiMatchingSummary([
+      ...acceptedRows,
+      {
+        attribution_match_confidence: "deterministic",
+        attribution_match_method: "direct_ticketmaster_params",
+        event_name: "Purchase",
+        is_test: false,
+        meta_ad_id: META_AD_ID,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: false,
+        quantity: 1,
+        skip_reason: null,
+        source_url: null,
+        value: 100,
+      },
+    ]);
+
+    expect(summary.acceptedCount).toBe(9);
+    expect(summary.purchaseCount).toBe(10);
+    expect(summary.acceptedRate).toBe(90);
+    expect(summary.directMetaObjectCount).toBe(0);
+    expect(summary.optimizationGradeCount).toBe(0);
+    expect(summary.status).toBe("accepted_without_direct_matching");
+  });
+
   it("detects valid CFC candidates in nested source URLs without accepting non-Meta CFC labels", () => {
     expect(isValidMetaEntityId("CFC_BUYAT_2197213")).toBe(false);
     expect(hasValidCfcCandidate({
@@ -274,5 +315,56 @@ describe("ticketmaster CAPI diagnostics", () => {
     expect(JSON.stringify(breakdown[0])).not.toContain("buyer@example.com");
     expect(JSON.stringify(breakdown[0])).not.toContain("unsafe.example");
     expect(JSON.stringify(breakdown[0])).not.toContain("555-111-2222");
+  });
+
+  it("excludes failed Meta sends from event-level breakdown rows", () => {
+    const acceptedRows = Array.from({ length: 2 }, () => ({
+      attribution_match_confidence: "unknown",
+      attribution_match_method: null,
+      event_name: "Purchase",
+      funnel: "ataca-sergio",
+      is_test: false,
+      market: "newark",
+      meta_ad_id: null,
+      meta_adset_id: null,
+      meta_campaign_id: null,
+      meta_ok: true,
+      quantity: 1,
+      skip_reason: null,
+      source_url: null,
+      ticketmaster_event_id: "SERGIO123",
+      ticketmaster_event_name: "Festival ATACA SERGIO",
+      value: 100,
+    }));
+    const breakdown = buildTicketmasterCapiEventMatchingBreakdown([
+      ...acceptedRows,
+      {
+        attribution_match_confidence: "deterministic",
+        attribution_match_method: "direct_ticketmaster_params",
+        event_name: "Purchase",
+        funnel: "ataca-sergio",
+        is_test: false,
+        market: "newark",
+        meta_ad_id: META_AD_ID,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: false,
+        quantity: 1,
+        skip_reason: null,
+        source_url: null,
+        ticketmaster_event_id: "SERGIO123",
+        ticketmaster_event_name: "Festival ATACA SERGIO",
+        value: 100,
+      },
+    ]);
+
+    expect(breakdown).toHaveLength(1);
+    expect(breakdown[0]).toMatchObject({
+      acceptedCount: 2,
+      directMetaObjectCount: 0,
+      optimizationGradeCount: 0,
+      purchaseCount: 2,
+      status: "accepted_without_direct_matching",
+    });
   });
 });

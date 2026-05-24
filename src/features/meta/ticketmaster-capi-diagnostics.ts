@@ -67,6 +67,10 @@ function isCoveredPurchase(event: TicketmasterCapiDiagnosticEvent) {
   return event.event_name === "Purchase" && !event.is_test && !event.skip_reason && numericCapiValue(event.value) > 0;
 }
 
+function isAcceptedCoveredPurchase(event: TicketmasterCapiDiagnosticEvent) {
+  return isCoveredPurchase(event) && event.meta_ok;
+}
+
 function firstValidMetaParamFromUrl(value: string | null | undefined, names: string[], depth = 0): string | null {
   if (!value || depth > 2) return null;
   try {
@@ -121,7 +125,7 @@ export function buildTicketmasterCapiMatchingSummary(events: TicketmasterCapiDia
   let revenue = 0;
   let tickets = 0;
 
-  for (const event of purchases) {
+  for (const event of accepted) {
     const confidence = normalizedConfidence(event.attribution_match_confidence);
     confidenceCounts[confidence] += 1;
     revenue += numericCapiValue(event.value);
@@ -137,7 +141,7 @@ export function buildTicketmasterCapiMatchingSummary(events: TicketmasterCapiDia
   }
 
   const acceptedRate = purchases.length === 0 ? 0 : Math.round((accepted.length / purchases.length) * 100);
-  const adLevelCoverageRate = purchases.length === 0 ? 0 : Math.round((directMetaObjectCount / purchases.length) * 100);
+  const adLevelCoverageRate = accepted.length === 0 ? 0 : Math.round((directMetaObjectCount / accepted.length) * 100);
   const unknownCount = confidenceCounts.unknown;
 
   let status: TicketmasterCapiMatchingSummary["status"] = "healthy";
@@ -230,7 +234,7 @@ export function buildTicketmasterCapiEventMatchingBreakdown(
 ): TicketmasterCapiEventMatchingBreakdown[] {
   const groups = new Map<string, TicketmasterCapiDiagnosticEvent[]>();
 
-  for (const event of events.filter(isCoveredPurchase)) {
+  for (const event of events.filter(isAcceptedCoveredPurchase)) {
     const key = eventBreakdownKey(event);
     groups.set(key, [...(groups.get(key) ?? []), event]);
   }
