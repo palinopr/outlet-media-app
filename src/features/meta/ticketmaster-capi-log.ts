@@ -13,6 +13,10 @@ import {
   findTicketmasterAttributionMatch,
   type AttributionMatchConfidence,
 } from "@/features/meta/ticketmaster-attribution-handoff";
+import {
+  enrichMetaAttributionHierarchy,
+  getMetaAttributionEnrichmentToken,
+} from "@/features/meta/meta-attribution-enrichment";
 import { sha256 } from "@/lib/hash";
 import { supabaseAdmin } from "@/lib/supabase";
 
@@ -213,7 +217,10 @@ export async function recordTicketmasterCapiEvent(input: RecordTicketmasterCapiE
     : confidenceRank(existingRow?.attribution_match_confidence);
   const preserveExistingAttribution = Boolean(existingRow)
     && existingAttributionRank >= confidenceRank(newAttributionMatchConfidence);
-  const attribution = preserveExistingAttribution ? attributionFromExistingRow(existingRow) : newAttribution;
+  const attribution = await enrichMetaAttributionHierarchy({
+    accessToken: getMetaAttributionEnrichmentToken(),
+    attribution: preserveExistingAttribution ? attributionFromExistingRow(existingRow) : newAttribution,
+  });
   const omClickId = preserveExistingAttribution ? existingRow?.om_click_id : newOmClickId;
   const omSessionId = preserveExistingAttribution ? existingRow?.om_session_id : newOmSessionId;
   const attributionMatchMethod = preserveExistingAttribution ? existingRow?.attribution_match_method : newAttributionMatchMethod;

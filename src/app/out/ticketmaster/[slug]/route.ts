@@ -1,7 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import {
-  ATTRIBUTION_QUERY_KEYS,
   attributionFromSearchParams,
   cleanAttributionQueryValue,
   cleanMarketingSlug,
@@ -21,6 +20,25 @@ const destinations = {
     ticketmasterUrl: "https://www.ticketmaster.com/event/02006478E042F9B1",
   },
 } as const;
+
+const REDIRECT_ATTRIBUTION_PARAMS: Array<[string, string[]]> = [
+  ["campaign_id", ["campaign_id", "meta_campaign_id"]],
+  ["campaign_name", ["campaign_name", "meta_campaign_name"]],
+  ["adset_id", ["adset_id", "meta_adset_id"]],
+  ["adset_name", ["adset_name", "meta_adset_name"]],
+  ["ad_id", ["ad_id", "meta_ad_id"]],
+  ["ad_name", ["ad_name", "meta_ad_name"]],
+  ["placement", ["placement"]],
+  ["site_source", ["site_source", "site_source_name"]],
+  ["utm_source", ["utm_source"]],
+  ["utm_medium", ["utm_medium"]],
+  ["utm_campaign", ["utm_campaign"]],
+  ["utm_content", ["utm_content"]],
+  ["utm_term", ["utm_term"]],
+  ["fbclid", ["fbclid"]],
+  ["fbp", ["fbp"]],
+  ["fbc", ["fbc"]],
+];
 
 type RouteContext = {
   params: Promise<{
@@ -71,8 +89,8 @@ export async function GET(request: Request, context: RouteContext) {
   const referrer = cleanText(request.headers.get("referer"), 1000);
 
   const target = new URL(destination.ticketmasterUrl);
-  for (const key of ATTRIBUTION_QUERY_KEYS) {
-    const value = cleanAttributionQueryValue(key, firstParam(incoming, [key]));
+  for (const [key, names] of REDIRECT_ATTRIBUTION_PARAMS) {
+    const value = cleanAttributionQueryValue(key, firstParam(incoming, names));
     if (value) target.searchParams.set(key, value);
   }
 
@@ -81,6 +99,9 @@ export async function GET(request: Request, context: RouteContext) {
   if (cta) target.searchParams.set("om_cta", cta);
   target.searchParams.set("om_funnel", destination.funnel);
   target.searchParams.set("om_market", destination.market);
+  target.searchParams.set("eventid", destination.eventId);
+  target.searchParams.set("tm_event_id", destination.eventId);
+  target.searchParams.set("ticketmaster_event_id", destination.eventId);
   target.searchParams.set("utm_source", cleanAttributionQueryValue("utm_source", firstParam(incoming, ["utm_source"])) ?? "meta");
   target.searchParams.set("utm_medium", cleanAttributionQueryValue("utm_medium", firstParam(incoming, ["utm_medium"])) ?? "paid_social");
   target.searchParams.set("utm_campaign", cleanAttributionQueryValue("utm_campaign", firstParam(incoming, ["utm_campaign"])) ?? destination.defaultUtmCampaign);
