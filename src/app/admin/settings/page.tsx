@@ -186,6 +186,17 @@ function safeAdminErrorMessage(value: string | null | undefined) {
     .slice(0, 500);
 }
 
+export function safeAdminSourceUrl(value: string | null | undefined) {
+  const sanitized = sanitizeTicketmasterCapiSourceUrl(value ?? undefined);
+  if (!sanitized) return undefined;
+  try {
+    const parsed = new URL(sanitized);
+    return `${parsed.origin}${parsed.pathname}`.slice(0, 500);
+  } catch {
+    return undefined;
+  }
+}
+
 function hasSafeMetaObject(value: string | null | undefined, key: "ad_id" | "adset_id" | "campaign_id") {
   return Boolean(cleanAttributionQueryValue(key, value));
 }
@@ -814,7 +825,10 @@ export default async function SettingsPage() {
             <p className="text-sm text-muted-foreground">No Ticketmaster CAPI events have been recorded yet.</p>
           ) : (
             ticketmasterCapiEvents.map((event) => {
-              const safeSourceUrl = sanitizeTicketmasterCapiSourceUrl(event.source_url ?? undefined);
+              const adminSourceUrl = safeAdminSourceUrl(event.source_url);
+              const adLabel = safeAdminAdLabel(event.meta_ad_name ?? event.meta_ad_id ?? event.meta_adset_name ?? event.meta_adset_id, "n/a");
+              const hasClickContext = Boolean(event.om_click_id || event.om_session_id || event.attribution_handoff_id);
+              const hasAdContext = adLabel !== "n/a";
               const statusLabel = event.skip_reason
                 ? event.skip_reason
                 : event.meta_ok
@@ -839,21 +853,21 @@ export default async function SettingsPage() {
                         {safeAdminLabel(event.ticketmaster_event_name ?? event.ticketmaster_event_id, "unknown event")} • {formatErrorDate(event.created_at)}
                       </p>
                       <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground/70">
-                        order {event.order_hash?.slice(0, 12) ?? (event.order_id ? "stored" : "n/a")} • event_id {cleanAttributionQueryValue("meta_event_id", event.event_id)?.slice(0, 28) ?? "stored"}
+                        order {event.order_hash ? "hashed" : event.order_id ? "stored" : "n/a"} • event_id {cleanAttributionQueryValue("meta_event_id", event.event_id) ? "stored" : "n/a"}
                       </p>
-                      {(event.om_click_id || event.meta_ad_id || event.meta_adset_id) ? (
+                      {(hasClickContext || hasAdContext) ? (
                         <p className="mt-1 truncate font-mono text-[11px] text-emerald-200/70">
-                          click {cleanAttributionQueryValue("om_click_id", event.om_click_id)?.slice(0, 24) ?? "n/a"} • ad {safeAdminAdLabel(event.meta_ad_name ?? event.meta_ad_id ?? event.meta_adset_name ?? event.meta_adset_id, "n/a")}
+                          {hasClickContext ? "click context captured" : "no click context"} • ad {adLabel}
                         </p>
                       ) : null}
                       {event.attribution_match_method ? (
                         <p className="mt-1 truncate font-mono text-[11px] text-cyan-200/70">
                           attribution {event.attribution_match_confidence ?? "unknown"} • {event.attribution_match_method}
-                          {event.attribution_handoff_id ? ` • handoff ${event.attribution_handoff_id.slice(0, 8)}` : ""}
+                          {event.attribution_handoff_id ? " • handoff matched" : ""}
                         </p>
                       ) : null}
-                      {safeSourceUrl ? (
-                        <p className="mt-1 truncate text-[11px] text-muted-foreground/60">{safeSourceUrl}</p>
+                      {adminSourceUrl ? (
+                        <p className="mt-1 truncate text-[11px] text-muted-foreground/60">{adminSourceUrl}</p>
                       ) : null}
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1.5">
