@@ -1,10 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Bug, CheckCircle2, Key, Link2, ReceiptText, Settings, TriangleAlert } from "lucide-react";
+import { Activity, Bug, CheckCircle2, Key, Link2, ReceiptText, Settings, TriangleAlert } from "lucide-react";
 import { StatCard } from "@/components/admin/stat-card";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { cleanAttributionQueryValue } from "@/features/meta/attribution";
 import { sanitizeTicketmasterCapiSourceUrl } from "@/features/meta/conversions-api";
+import { buildTicketmasterCapiMatchingSummary } from "@/features/meta/ticketmaster-capi-diagnostics";
 import type { ConnectedAccount } from "@/features/settings/connected-accounts";
 import {
   buildConnectedAccountsSummary,
@@ -97,6 +98,7 @@ type TicketmasterCapiEvent = {
   ticketmaster_event_date: string | null;
   ticketmaster_event_id: string | null;
   ticketmaster_event_name: string | null;
+  utm_content?: string | null;
   value: number | string | null;
 };
 
@@ -222,7 +224,7 @@ export default async function SettingsPage() {
   const ticketmasterCapiEventsRes = await supabaseAdmin
     ?.from("ticketmaster_capi_events")
     .select(
-      "id, created_at, last_seen_at, attempt_count, event_name, event_id, order_id, order_hash, om_click_id, om_session_id, attribution_handoff_id, attribution_match_method, attribution_match_confidence, attribution_matched_at, ticketmaster_event_id, ticketmaster_event_name, ticketmaster_event_date, value, currency, quantity, meta_status, meta_ok, skip_reason, error_message, is_test, source_url, meta_campaign_id, meta_campaign_name, meta_adset_id, meta_adset_name, meta_ad_id, meta_ad_name, placement",
+      "id, created_at, last_seen_at, attempt_count, event_name, event_id, order_id, order_hash, om_click_id, om_session_id, attribution_handoff_id, attribution_match_method, attribution_match_confidence, attribution_matched_at, ticketmaster_event_id, ticketmaster_event_name, ticketmaster_event_date, value, currency, quantity, meta_status, meta_ok, skip_reason, error_message, is_test, source_url, meta_campaign_id, meta_campaign_name, meta_adset_id, meta_adset_name, meta_ad_id, meta_ad_name, placement, utm_content",
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -235,6 +237,7 @@ export default async function SettingsPage() {
     thirtyDaySummary,
     todaySummary,
   } = buildTicketmasterRevenueMetrics(ticketmasterCapiRows);
+  const matchingSummary = buildTicketmasterCapiMatchingSummary(ticketmasterCapiRows);
 
   const stats = [
     {
@@ -458,6 +461,79 @@ export default async function SettingsPage() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Activity className="h-4 w-4 text-cyan-400" />
+            <CardTitle className="text-sm">Ticketmaster CAPI matching quality</CardTitle>
+          </div>
+          <CardDescription>
+            Accepted purchase sends versus ad-level matching quality from the last 500 CAPI rows.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {[
+              { label: "Accepted", value: `${matchingSummary.acceptedCount}/${matchingSummary.purchaseCount}`, sub: `${matchingSummary.acceptedRate}% Meta accepted` },
+              { label: "Ad-level rows", value: String(matchingSummary.directMetaObjectCount), sub: `${matchingSummary.adLevelCoverageRate}% direct coverage` },
+              { label: "Optimization-grade", value: String(matchingSummary.optimizationGradeCount), sub: "deterministic/high plus Meta object ID" },
+              { label: "CFC candidates", value: String(matchingSummary.cfcCandidateCount), sub: "numeric ad IDs found in CFC/source" },
+              { label: "Unknown", value: String(matchingSummary.unknownCount), sub: "no usable match context" },
+            ].map((item) => (
+              <div key={item.label} className="rounded-xl border border-border/50 bg-muted/20 p-3">
+                <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{item.label}</p>
+                <p className="mt-1 text-lg font-semibold">{item.value}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground/70">{item.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+            <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Confidence split</p>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5 xl:grid-cols-2">
+                {Object.entries(matchingSummary.confidenceCounts).map(([label, count]) => (
+                  <div key={label} className="rounded-lg bg-white/[0.03] px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</p>
+                    <p className="mt-1 text-base font-semibold">{count}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Diagnosis</p>
+                  <p className="mt-2 text-sm font-medium">
+                    {matchingSummary.status === "healthy"
+                      ? "Ad-level matching is usable"
+                      : matchingSummary.status === "accepted_without_direct_matching"
+                        ? "CAPI is accepted, but ad-level matching is missing"
+                        : matchingSummary.status === "acceptance_issue"
+                          ? "Meta acceptance needs review"
+                          : "Waiting for purchase data"}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {matchingSummary.nextAction}
+                  </p>
+                </div>
+                <div className="grid shrink-0 grid-cols-2 gap-2 text-right">
+                  <div className="rounded-lg bg-white/[0.03] px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Direct TM</p>
+                    <p className="text-sm font-semibold">{matchingSummary.directTicketmasterParamCount}</p>
+                  </div>
+                  <div className="rounded-lg bg-white/[0.03] px-3 py-2">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Handoff</p>
+                    <p className="text-sm font-semibold">{matchingSummary.handoffDerivedCount}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </CardContent>

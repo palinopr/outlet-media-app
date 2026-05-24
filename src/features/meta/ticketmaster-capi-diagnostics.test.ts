@@ -1,0 +1,94 @@
+import { describe, expect, it } from "vitest";
+import {
+  buildTicketmasterCapiMatchingSummary,
+  hasValidCfcCandidate,
+  isValidMetaEntityId,
+} from "./ticketmaster-capi-diagnostics";
+
+const META_AD_ID = "120247446000000525";
+
+describe("ticketmaster CAPI diagnostics", () => {
+  it("counts accepted purchases separately from deterministic ad matching", () => {
+    const summary = buildTicketmasterCapiMatchingSummary([
+      {
+        attribution_match_confidence: "medium",
+        attribution_match_method: "exact_ip_ua_handoff",
+        event_name: "Purchase",
+        is_test: false,
+        meta_ad_id: null,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: true,
+        quantity: 2,
+        skip_reason: null,
+        source_url: null,
+        value: 125,
+      },
+      {
+        attribution_match_confidence: "unknown",
+        attribution_match_method: null,
+        event_name: "Purchase",
+        is_test: false,
+        meta_ad_id: null,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: true,
+        quantity: 1,
+        skip_reason: null,
+        source_url: null,
+        value: "75",
+      },
+    ]);
+
+    expect(summary.acceptedCount).toBe(2);
+    expect(summary.acceptedRate).toBe(100);
+    expect(summary.directMetaObjectCount).toBe(0);
+    expect(summary.optimizationGradeCount).toBe(0);
+    expect(summary.confidenceCounts).toMatchObject({ medium: 1, unknown: 1 });
+    expect(summary.status).toBe("accepted_without_direct_matching");
+  });
+
+  it("treats direct numeric Meta object rows as optimization-grade when confidence is strong", () => {
+    const summary = buildTicketmasterCapiMatchingSummary([
+      {
+        attribution_match_confidence: "deterministic",
+        attribution_match_method: "direct_ticketmaster_params",
+        event_name: "Purchase",
+        is_test: false,
+        meta_ad_id: META_AD_ID,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: true,
+        quantity: 3,
+        skip_reason: null,
+        source_url: null,
+        value: 300,
+      },
+    ]);
+
+    expect(summary.directMetaObjectCount).toBe(1);
+    expect(summary.directTicketmasterParamCount).toBe(1);
+    expect(summary.optimizationGradeCount).toBe(1);
+    expect(summary.adLevelCoverageRate).toBe(100);
+    expect(summary.status).toBe("healthy");
+  });
+
+  it("detects valid CFC candidates in nested source URLs without accepting non-Meta CFC labels", () => {
+    expect(isValidMetaEntityId("CFC_BUYAT_2197213")).toBe(false);
+    expect(hasValidCfcCandidate({
+      attribution_match_confidence: null,
+      attribution_match_method: null,
+      event_name: "Purchase",
+      is_test: false,
+      meta_ad_id: null,
+      meta_adset_id: null,
+      meta_campaign_id: null,
+      meta_ok: true,
+      quantity: 1,
+      skip_reason: null,
+      source_url: `https://checkout.ticketmaster.com/confirmation?edp=${encodeURIComponent(`https://www.ticketmaster.com/event/abc?ad_id=${META_AD_ID}`)}`,
+      utm_content: "CFC_BUYAT_2197213",
+      value: 100,
+    })).toBe(true);
+  });
+});

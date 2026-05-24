@@ -17,6 +17,7 @@
     "audit:surfaces": "node scripts/audit-surfaces.mjs",
     "backfill:ticketmaster-attribution": "node --env-file=.env.local scripts/backfill-ticketmaster-attribution.mjs",
     "enrich:ticketmaster-capi-meta": "node --env-file=.env.local scripts/enrich-ticketmaster-capi-meta-hierarchy.mjs",
+    "report:ticketmaster-capi": "node --env-file=.env.local scripts/report-ticketmaster-capi-matching.mjs",
     "db:push:dry-run": "supabase db push --dry-run",
     "refresh:snapshots": "node --env-file=.env.local scripts/refresh-snapshots.mjs",
     "smoke:prod": "node scripts/smoke-prod.mjs",
