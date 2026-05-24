@@ -317,7 +317,7 @@ describe("ticketmaster CAPI diagnostics", () => {
     expect(JSON.stringify(breakdown[0])).not.toContain("555-111-2222");
   });
 
-  it("excludes failed Meta sends from event-level breakdown rows", () => {
+  it("keeps event-level acceptance failures visible without counting them as matches", () => {
     const acceptedRows = Array.from({ length: 2 }, () => ({
       attribution_match_confidence: "unknown",
       attribution_match_method: null,
@@ -361,10 +361,11 @@ describe("ticketmaster CAPI diagnostics", () => {
     expect(breakdown).toHaveLength(1);
     expect(breakdown[0]).toMatchObject({
       acceptedCount: 2,
+      acceptedRate: 67,
       directMetaObjectCount: 0,
       optimizationGradeCount: 0,
-      purchaseCount: 2,
-      status: "accepted_without_direct_matching",
+      purchaseCount: 3,
+      status: "acceptance_issue",
     });
   });
 });

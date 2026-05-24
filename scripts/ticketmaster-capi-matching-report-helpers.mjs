@@ -84,10 +84,6 @@ function isCoveredPurchase(row) {
   return row.event_name === "Purchase" && !row.is_test && !row.skip_reason && numericValue(row.value) > 0;
 }
 
-function isAcceptedCoveredPurchase(row) {
-  return isCoveredPurchase(row) && row.meta_ok;
-}
-
 function increment(object, key) {
   object[key] = (object[key] ?? 0) + 1;
 }
@@ -190,7 +186,7 @@ function eventBreakdownName(rows, event_id, funnel, market) {
 export function buildTicketmasterCapiEventBreakdown(rows, limit = 12) {
   const groups = new Map();
 
-  for (const row of rows.filter(isAcceptedCoveredPurchase)) {
+  for (const row of rows.filter(isCoveredPurchase)) {
     const key = eventBreakdownKey(row);
     groups.set(key, [...(groups.get(key) ?? []), row]);
   }

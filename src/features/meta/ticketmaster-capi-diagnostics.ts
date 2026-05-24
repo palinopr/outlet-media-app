@@ -67,10 +67,6 @@ function isCoveredPurchase(event: TicketmasterCapiDiagnosticEvent) {
   return event.event_name === "Purchase" && !event.is_test && !event.skip_reason && numericCapiValue(event.value) > 0;
 }
 
-function isAcceptedCoveredPurchase(event: TicketmasterCapiDiagnosticEvent) {
-  return isCoveredPurchase(event) && event.meta_ok;
-}
-
 function firstValidMetaParamFromUrl(value: string | null | undefined, names: string[], depth = 0): string | null {
   if (!value || depth > 2) return null;
   try {
@@ -234,7 +230,7 @@ export function buildTicketmasterCapiEventMatchingBreakdown(
 ): TicketmasterCapiEventMatchingBreakdown[] {
   const groups = new Map<string, TicketmasterCapiDiagnosticEvent[]>();
 
-  for (const event of events.filter(isAcceptedCoveredPurchase)) {
+  for (const event of events.filter(isCoveredPurchase)) {
     const key = eventBreakdownKey(event);
     groups.set(key, [...(groups.get(key) ?? []), event]);
   }

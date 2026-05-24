@@ -123,6 +123,29 @@ describe("ticketmaster CAPI matching report helpers", () => {
     expect(JSON.stringify(breakdown[0])).not.toContain("555-111-2222");
   });
 
+  it("keeps event-level acceptance failures visible without counting them as matches", () => {
+    const breakdown = buildTicketmasterCapiEventBreakdown([
+      purchase(),
+      purchase(),
+      purchase({
+        attribution_match_confidence: "deterministic",
+        attribution_match_method: "direct_ticketmaster_params",
+        meta_ad_id: META_AD_ID,
+        meta_ok: false,
+      }),
+    ]);
+
+    expect(breakdown).toHaveLength(1);
+    expect(breakdown[0]).toMatchObject({
+      accepted_purchases: 2,
+      accepted_rate: 67,
+      direct_meta_object_rows: 0,
+      optimization_grade_rows: 0,
+      purchases: 3,
+      status: "acceptance_issue",
+    });
+  });
+
   it("builds the full report with capped event breakdown", () => {
     const report = buildTicketmasterCapiMatchingReport({
       breakdownLimit: 1,
