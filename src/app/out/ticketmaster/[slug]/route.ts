@@ -15,6 +15,7 @@ const destinations = {
   "ataca-sergio-newark": {
     defaultUtmCampaign: "ataca_sergio_newark",
     eventId: "02006478E042F9B1",
+    eventName: "Festival ATACA SERGIO",
     funnel: "ataca-sergio",
     market: "newark",
     ticketmasterUrl: "https://www.ticketmaster.com/event/02006478E042F9B1",
@@ -101,6 +102,8 @@ export async function GET(request: Request, context: RouteContext) {
   target.searchParams.set("eventid", destination.eventId);
   target.searchParams.set("tm_event_id", destination.eventId);
   target.searchParams.set("ticketmaster_event_id", destination.eventId);
+  target.searchParams.set("tm_event_name", destination.eventName);
+  target.searchParams.set("ticketmaster_event_name", destination.eventName);
   target.searchParams.set("utm_source", firstValidAttributionParam(incoming, "utm_source", ["utm_source"]) ?? "meta");
   target.searchParams.set("utm_medium", firstValidAttributionParam(incoming, "utm_medium", ["utm_medium"]) ?? "paid_social");
   target.searchParams.set("utm_campaign", firstValidAttributionParam(incoming, "utm_campaign", ["utm_campaign"]) ?? destination.defaultUtmCampaign);
@@ -118,11 +121,13 @@ export async function GET(request: Request, context: RouteContext) {
         metadata: {
           destination: "ticketmaster",
           ticketmaster_event_id: destination.eventId,
+          ticketmaster_event_name: destination.eventName,
         },
         referrer,
         sessionId,
         sourceUrl: requestUrl.toString(),
         ticketmasterEventId: destination.eventId,
+        ticketmasterEventName: destination.eventName,
       },
       request.headers,
     ),
@@ -137,6 +142,7 @@ export async function GET(request: Request, context: RouteContext) {
         metadata: {
           destination: "ticketmaster",
           ticketmaster_event_id: destination.eventId,
+          ticketmaster_event_name: destination.eventName,
         },
         referrer,
         sessionId,

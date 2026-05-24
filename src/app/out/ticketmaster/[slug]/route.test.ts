@@ -51,6 +51,8 @@ describe("GET /out/ticketmaster/[slug]", () => {
     expect(target.searchParams.get("eventid")).toBe("02006478E042F9B1");
     expect(target.searchParams.get("tm_event_id")).toBe("02006478E042F9B1");
     expect(target.searchParams.get("ticketmaster_event_id")).toBe("02006478E042F9B1");
+    expect(target.searchParams.get("tm_event_name")).toBe("Festival ATACA SERGIO");
+    expect(target.searchParams.get("ticketmaster_event_name")).toBe("Festival ATACA SERGIO");
     expect(target.searchParams.get("campaign_id")).toBe(META_CAMPAIGN_ID);
     expect(target.searchParams.get("adset_id")).toBe(META_ADSET_ID);
     expect(target.searchParams.get("ad_id")).toBe(META_AD_ID);
@@ -59,6 +61,10 @@ describe("GET /out/ticketmaster/[slug]", () => {
     expect(target.searchParams.get("utm_medium")).toBe("paid_social");
     expect(target.searchParams.get("utm_campaign")).toBe("ataca_sergio_newark");
     expect(target.searchParams.get("utm_content")).toBe(META_AD_ID);
+    expect(vi.mocked(recordTicketmasterAttributionHandoff).mock.calls[0]?.[0]).toMatchObject({
+      ticketmasterEventId: "02006478E042F9B1",
+      ticketmasterEventName: "Festival ATACA SERGIO",
+    });
   });
 
   it("falls back to the original CFC value when no Meta ad id is present", async () => {

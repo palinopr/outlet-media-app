@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { isValidMetaEntityId } from "./backfill-ticketmaster-attribution-helpers.mjs";
+import { buildTicketmasterCapiMatchingReport } from "./ticketmaster-capi-matching-report-helpers.mjs";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -12,8 +12,6 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false },
 });
-
-const nestedSourceUrlKeys = ["edp", "source_url", "event_source_url", "page_url"];
 
 function argValue(name) {
   const prefix = `${name}=`;
@@ -39,133 +37,11 @@ function isoCutoff() {
   return new Date(Date.now() - hours * 60 * 60 * 1000).toISOString();
 }
 
-function numericValue(value) {
-  if (value === null || value === undefined) return 0;
-  const parsed = typeof value === "string" ? Number(value) : value;
-  return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function nestedUrlValues(params) {
-  return nestedSourceUrlKeys
-    .map((key) => params.get(key)?.trim())
-    .filter((value) => value?.startsWith("http://") || value?.startsWith("https://"));
-}
-
-function validMetaParamFromUrl(value, names, depth = 0) {
-  if (!value || depth > 2) return null;
-  try {
-    const parsed = new URL(value);
-    for (const name of names) {
-      const candidate = parsed.searchParams.get(name);
-      if (isValidMetaEntityId(candidate)) return candidate;
-    }
-    for (const nested of nestedUrlValues(parsed.searchParams)) {
-      const found = validMetaParamFromUrl(nested, names, depth + 1);
-      if (found) return found;
-    }
-  } catch {
-    return null;
-  }
-  return null;
-}
-
-function confidenceOf(row) {
-  return ["deterministic", "high", "medium", "low"].includes(row.attribution_match_confidence)
-    ? row.attribution_match_confidence
-    : "unknown";
-}
-
-function hasDirectMetaObject(row) {
-  return Boolean(
-    isValidMetaEntityId(row.meta_ad_id)
-      || isValidMetaEntityId(row.meta_adset_id)
-      || isValidMetaEntityId(row.meta_campaign_id),
-  );
-}
-
-function hasCfcCandidate(row) {
-  return Boolean(
-    isValidMetaEntityId(row.utm_content)
-      || validMetaParamFromUrl(row.source_url, ["ad_id", "meta_ad_id"]),
-  );
-}
-
-function coveredPurchase(row) {
-  return row.event_name === "Purchase" && !row.is_test && !row.skip_reason && numericValue(row.value) > 0;
-}
-
-function increment(object, key) {
-  object[key] = (object[key] ?? 0) + 1;
-}
-
-function summarize(rows) {
-  const purchases = rows.filter(coveredPurchase);
-  const accepted = purchases.filter((row) => row.meta_ok);
-  const confidence_counts = { deterministic: 0, high: 0, medium: 0, low: 0, unknown: 0 };
-  const method_counts = {};
-  let direct_meta_object_rows = 0;
-  let direct_ticketmaster_param_rows = 0;
-  let handoff_derived_rows = 0;
-  let cfc_candidate_rows = 0;
-  let optimization_grade_rows = 0;
-  let revenue = 0;
-  let tickets = 0;
-
-  for (const row of purchases) {
-    const confidence = confidenceOf(row);
-    const hasMetaObject = hasDirectMetaObject(row);
-    const method = row.attribution_match_method || "missing";
-    increment(confidence_counts, confidence);
-    increment(method_counts, method);
-    revenue += numericValue(row.value);
-    tickets += row.quantity ?? 0;
-    if (hasMetaObject) direct_meta_object_rows += 1;
-    if (hasCfcCandidate(row)) cfc_candidate_rows += 1;
-    if (row.attribution_match_method === "direct_ticketmaster_params") direct_ticketmaster_param_rows += 1;
-    if (row.attribution_match_method && row.attribution_match_method !== "direct_ticketmaster_params") handoff_derived_rows += 1;
-    if ((confidence === "deterministic" || confidence === "high") && hasMetaObject) optimization_grade_rows += 1;
-  }
-
-  const accepted_rate = purchases.length ? Math.round((accepted.length / purchases.length) * 100) : 0;
-  const ad_level_coverage_rate = purchases.length ? Math.round((direct_meta_object_rows / purchases.length) * 100) : 0;
-  const status = purchases.length === 0
-    ? "waiting_for_purchases"
-    : accepted_rate < 90
-      ? "acceptance_issue"
-      : direct_meta_object_rows === 0
-        ? "accepted_without_direct_matching"
-        : "healthy";
-  const next_action = status === "accepted_without_direct_matching"
-    ? "Ticketmaster CAPI is accepted, but Ticketmaster is not returning numeric Meta object IDs or CFC ad IDs."
-    : status === "acceptance_issue"
-      ? "Fix Meta acceptance before judging attribution matching."
-      : status === "waiting_for_purchases"
-        ? "Wait for real non-test Ticketmaster purchases."
-        : "Use optimization-grade rows for ad-level CAPI revenue reads.";
-
-  return {
-    accepted_purchases: accepted.length,
-    accepted_rate,
-    ad_level_coverage_rate,
-    cfc_candidate_rows,
-    confidence_counts,
-    direct_meta_object_rows,
-    direct_ticketmaster_param_rows,
-    handoff_derived_rows,
-    method_counts,
-    next_action,
-    optimization_grade_rows,
-    purchases: purchases.length,
-    revenue: Math.round(revenue * 100) / 100,
-    status,
-    tickets,
-    unknown_rows: confidence_counts.unknown,
-  };
-}
-
 const cutoff = isoCutoff();
 const limitInput = Number(argValue("--limit") ?? process.env.TICKETMASTER_CAPI_REPORT_LIMIT ?? 1000);
 const limit = Number.isFinite(limitInput) && limitInput > 0 ? Math.min(limitInput, 5000) : 1000;
+const breakdownLimitInput = Number(argValue("--breakdown-limit") ?? process.env.TICKETMASTER_CAPI_REPORT_BREAKDOWN_LIMIT ?? 12);
+const breakdownLimit = Number.isFinite(breakdownLimitInput) && breakdownLimitInput > 0 ? Math.min(breakdownLimitInput, 50) : 12;
 const funnel = argValue("--funnel");
 const market = argValue("--market");
 const ticketmasterEventId = argValue("--ticketmaster-event-id");
@@ -184,18 +60,33 @@ if (ticketmasterEventId) query = query.eq("ticketmaster_event_id", ticketmasterE
 const { data, error } = await query;
 if (error) throw new Error(`ticketmaster_capi_events: ${error.message}`);
 
-const report = {
+let handoffQuery = supabase
+  .from("ticketmaster_attribution_handoffs")
+  .select("created_at, ticketmaster_event_id, ticketmaster_event_name, funnel, market, click_id, session_id, fbclid, fbc, fbp, meta_campaign_id, meta_adset_id, meta_ad_id")
+  .gte("created_at", cutoff)
+  .order("created_at", { ascending: false })
+  .limit(limit);
+
+if (funnel) handoffQuery = handoffQuery.eq("funnel", funnel);
+if (market) handoffQuery = handoffQuery.eq("market", market);
+if (ticketmasterEventId) handoffQuery = handoffQuery.eq("ticketmaster_event_id", ticketmasterEventId);
+
+const { data: handoffData, error: handoffError } = await handoffQuery;
+if (handoffError) throw new Error(`ticketmaster_attribution_handoffs: ${handoffError.message}`);
+
+const report = buildTicketmasterCapiMatchingReport({
   cutoff,
+  breakdownLimit,
   filters: {
     funnel: funnel ?? null,
     market: market ?? null,
     ticketmaster_event_id: ticketmasterEventId ?? null,
   },
-  generated_at: new Date().toISOString(),
-  row_limit: limit,
-  rows_read: data?.length ?? 0,
-  summary: summarize(data ?? []),
-};
+  generatedAt: new Date().toISOString(),
+  handoffRows: handoffData ?? [],
+  rowLimit: limit,
+  rows: data ?? [],
+});
 
 if (hasArg("--json")) {
   console.log(JSON.stringify(report, null, 2));
@@ -204,6 +95,7 @@ if (hasArg("--json")) {
   console.log(`generated_at: ${report.generated_at}`);
   console.log(`cutoff: ${report.cutoff}`);
   console.log(`rows_read: ${report.rows_read}`);
+  console.log(`handoff_rows_read: ${report.handoff_rows_read}`);
   console.log(`filters: ${JSON.stringify(report.filters)}`);
   console.log("");
   console.log(`purchases: ${report.summary.purchases}`);
@@ -218,4 +110,31 @@ if (hasArg("--json")) {
   console.log(`method_counts: ${JSON.stringify(report.summary.method_counts)}`);
   console.log(`status: ${report.summary.status}`);
   console.log(`next_action: ${report.summary.next_action}`);
+  console.log("");
+  console.log("handoff_capture:");
+  console.log(`handoff_rows: ${report.handoff_summary.rows}`);
+  console.log(`handoff_meta_object_rows: ${report.handoff_summary.any_meta_object_rows} (${report.handoff_summary.meta_object_capture_rate}%)`);
+  console.log(`handoff_meta_ad_rows: ${report.handoff_summary.meta_ad_rows}`);
+  console.log(`handoff_meta_adset_rows: ${report.handoff_summary.meta_adset_rows}`);
+  console.log(`handoff_meta_campaign_rows: ${report.handoff_summary.meta_campaign_rows}`);
+  console.log(`handoff_click_id_rows: ${report.handoff_summary.click_id_rows}`);
+  console.log(`handoff_session_id_rows: ${report.handoff_summary.session_id_rows}`);
+  console.log(`handoff_fbclid_rows: ${report.handoff_summary.fbclid_rows}`);
+  console.log(`handoff_fbc_rows: ${report.handoff_summary.fbc_rows}`);
+  console.log(`handoff_fbp_rows: ${report.handoff_summary.fbp_rows}`);
+  console.log("");
+  console.log(`event_breakdown_top_${report.event_breakdown.length}:`);
+  for (const event of report.event_breakdown) {
+    console.log(`- ${event.name} | event_id=${event.event_id ?? "n/a"} | funnel=${event.funnel ?? "n/a"} | market=${event.market ?? "n/a"}`);
+    console.log(`  purchases=${event.purchases} accepted=${event.accepted_purchases} revenue=$${event.revenue} tickets=${event.tickets}`);
+    console.log(`  direct_meta_object_rows=${event.direct_meta_object_rows} optimization_grade_rows=${event.optimization_grade_rows} unknown_rows=${event.unknown_rows} cfc_candidate_rows=${event.cfc_candidate_rows}`);
+    console.log(`  confidence_counts=${JSON.stringify(event.confidence_counts)} status=${event.status}`);
+  }
+  console.log("");
+  console.log(`handoff_breakdown_top_${report.handoff_event_breakdown.length}:`);
+  for (const event of report.handoff_event_breakdown) {
+    console.log(`- ${event.name} | event_id=${event.event_id ?? "n/a"} | funnel=${event.funnel ?? "n/a"} | market=${event.market ?? "n/a"}`);
+    console.log(`  handoff_rows=${event.rows} meta_object_rows=${event.any_meta_object_rows} (${event.meta_object_capture_rate}%) click_id_rows=${event.click_id_rows} session_id_rows=${event.session_id_rows}`);
+    console.log(`  fbclid_rows=${event.fbclid_rows} fbc_rows=${event.fbc_rows} fbp_rows=${event.fbp_rows}`);
+  }
 }

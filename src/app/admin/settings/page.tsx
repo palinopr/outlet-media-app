@@ -116,6 +116,37 @@ type RevenueSummary = {
   tickets: number;
 };
 
+type TicketmasterAttributionHandoff = {
+  click_id: string | null;
+  created_at: string;
+  fbc: string | null;
+  fbclid: string | null;
+  fbp: string | null;
+  funnel: string | null;
+  id: string;
+  market: string | null;
+  meta_ad_id: string | null;
+  meta_adset_id: string | null;
+  meta_campaign_id: string | null;
+  session_id: string | null;
+  ticketmaster_event_id: string | null;
+  ticketmaster_event_name: string | null;
+};
+
+type HandoffCaptureSummary = {
+  clickIdRows: number;
+  fbcRows: number;
+  fbclidRows: number;
+  fbpRows: number;
+  metaAdRows: number;
+  metaAdsetRows: number;
+  metaCampaignRows: number;
+  metaObjectCaptureRate: number;
+  metaObjectRows: number;
+  rows: number;
+  sessionIdRows: number;
+};
+
 function numericValue(value: number | string | null) {
   if (value === null || value === undefined) return 0;
   const parsed = typeof value === "string" ? Number(value) : value;
@@ -152,6 +183,86 @@ function safeAdminErrorMessage(value: string | null | undefined) {
     .replace(/(?:^|[^A-Za-z0-9])(?:\+?\d[\d\s().-]{7,}\d)(?=$|[^A-Za-z0-9])|\d{10,}/g, "[redacted-phone]")
     .replace(/(sk_live|sk_test|xox[baprs]-|ghp_|ya29\.|access[_-]?token|api[_-]?key|secret|password|bearer)[^\s]*/gi, "[redacted-secret]")
     .slice(0, 500);
+}
+
+function hasSafeMetaObject(value: string | null | undefined, key: "ad_id" | "adset_id" | "campaign_id") {
+  return Boolean(cleanAttributionQueryValue(key, value));
+}
+
+function summarizeHandoffCapture(rows: TicketmasterAttributionHandoff[]): HandoffCaptureSummary {
+  let clickIdRows = 0;
+  let fbcRows = 0;
+  let fbclidRows = 0;
+  let fbpRows = 0;
+  let metaAdRows = 0;
+  let metaAdsetRows = 0;
+  let metaCampaignRows = 0;
+  let metaObjectRows = 0;
+  let sessionIdRows = 0;
+
+  for (const row of rows) {
+    const hasMetaAd = hasSafeMetaObject(row.meta_ad_id, "ad_id");
+    const hasMetaAdset = hasSafeMetaObject(row.meta_adset_id, "adset_id");
+    const hasMetaCampaign = hasSafeMetaObject(row.meta_campaign_id, "campaign_id");
+    if (hasMetaAd) metaAdRows += 1;
+    if (hasMetaAdset) metaAdsetRows += 1;
+    if (hasMetaCampaign) metaCampaignRows += 1;
+    if (hasMetaAd || hasMetaAdset || hasMetaCampaign) metaObjectRows += 1;
+    if (row.click_id) clickIdRows += 1;
+    if (row.session_id) sessionIdRows += 1;
+    if (row.fbclid) fbclidRows += 1;
+    if (row.fbc) fbcRows += 1;
+    if (row.fbp) fbpRows += 1;
+  }
+
+  return {
+    clickIdRows,
+    fbcRows,
+    fbclidRows,
+    fbpRows,
+    metaAdRows,
+    metaAdsetRows,
+    metaCampaignRows,
+    metaObjectCaptureRate: rows.length === 0 ? 0 : Math.round((metaObjectRows / rows.length) * 100),
+    metaObjectRows,
+    rows: rows.length,
+    sessionIdRows,
+  };
+}
+
+function groupHandoffsByEvent(rows: TicketmasterAttributionHandoff[]) {
+  const groups = new Map<string, TicketmasterAttributionHandoff[]>();
+  rows.forEach((row) => {
+    const eventId = cleanAttributionQueryValue("ticketmaster_event_id", row.ticketmaster_event_id);
+    const eventName = cleanAttributionQueryValue("utm_content", row.ticketmaster_event_name);
+    const funnel = cleanAttributionQueryValue("om_funnel", row.funnel);
+    const market = cleanAttributionQueryValue("om_market", row.market);
+    const key = [
+      eventId ? `id:${eventId.toLowerCase()}` : `name:${eventName?.toLowerCase() ?? "unknown-event"}`,
+      funnel ?? "no-funnel",
+      market ?? "no-market",
+    ].join("|");
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  });
+
+  return Array.from(groups.entries())
+    .map(([key, eventRows]) => {
+      const first = eventRows[0];
+      return {
+        ...summarizeHandoffCapture(eventRows),
+        eventId: cleanAttributionQueryValue("ticketmaster_event_id", first.ticketmaster_event_id) ?? null,
+        funnel: cleanAttributionQueryValue("om_funnel", first.funnel) ?? null,
+        key,
+        market: cleanAttributionQueryValue("om_market", first.market) ?? null,
+        name: safeAdminLabel(first.ticketmaster_event_name ?? first.ticketmaster_event_id, "Unknown event"),
+      };
+    })
+    .sort((a, b) => {
+      if (b.rows !== a.rows) return b.rows - a.rows;
+      if (b.metaObjectRows !== a.metaObjectRows) return b.metaObjectRows - a.metaObjectRows;
+      return a.name.localeCompare(b.name);
+    })
+    .slice(0, 4);
 }
 
 function groupPurchasesByEvent(events: TicketmasterCapiEvent[]) {
@@ -234,6 +345,14 @@ export default async function SettingsPage() {
     .order("created_at", { ascending: false })
     .limit(500);
   const ticketmasterCapiRows = (ticketmasterCapiEventsRes?.data ?? []) as TicketmasterCapiEvent[];
+  const ticketmasterHandoffsRes = await supabaseAdmin
+    ?.from("ticketmaster_attribution_handoffs")
+    .select("id, created_at, ticketmaster_event_id, ticketmaster_event_name, funnel, market, click_id, session_id, fbclid, fbc, fbp, meta_campaign_id, meta_adset_id, meta_ad_id")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  const ticketmasterHandoffs = (ticketmasterHandoffsRes?.data ?? []) as TicketmasterAttributionHandoff[];
+  const handoffSummary = summarizeHandoffCapture(ticketmasterHandoffs);
+  const handoffEventBreakdown = groupHandoffsByEvent(ticketmasterHandoffs);
   const ticketmasterCapiEvents = ticketmasterCapiRows.slice(0, 12);
   const {
     adBreakdown,
@@ -600,6 +719,80 @@ export default async function SettingsPage() {
                       <span className={event.status === "healthy" ? "text-emerald-300" : "text-amber-300"}>
                         {event.status === "healthy" ? "usable" : event.status.replaceAll("_", " ")}
                       </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">First-party handoff capture</p>
+                <p className="mt-1 text-xs text-muted-foreground/70">
+                  Counts from the latest {handoffSummary.rows} Ticketmaster redirect handoffs before checkout.
+                </p>
+              </div>
+              <p className={handoffSummary.metaObjectRows > 0 ? "text-[11px] text-emerald-300" : "text-[11px] text-amber-300"}>
+                {handoffSummary.metaObjectRows}/{handoffSummary.rows} with Meta object IDs
+              </p>
+            </div>
+
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+              {[
+                { label: "Meta objects", value: String(handoffSummary.metaObjectRows), sub: `${handoffSummary.metaObjectCaptureRate}% capture` },
+                { label: "Ad IDs", value: String(handoffSummary.metaAdRows), sub: "numeric ad IDs" },
+                { label: "Ad set IDs", value: String(handoffSummary.metaAdsetRows), sub: "numeric ad set IDs" },
+                { label: "Campaign IDs", value: String(handoffSummary.metaCampaignRows), sub: "numeric campaign IDs" },
+                { label: "Click/session", value: `${handoffSummary.clickIdRows}/${handoffSummary.sessionIdRows}`, sub: "first-party context" },
+              ].map((item) => (
+                <div key={item.label} className="rounded-lg bg-white/[0.03] px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{item.label}</p>
+                  <p className="mt-1 text-base font-semibold">{item.value}</p>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground/70">{item.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground/70">
+              <span>fbclid {handoffSummary.fbclidRows}</span>
+              <span>fbc {handoffSummary.fbcRows}</span>
+              <span>fbp {handoffSummary.fbpRows}</span>
+            </div>
+
+            {handoffEventBreakdown.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">No Ticketmaster redirect handoffs have been captured yet.</p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {handoffEventBreakdown.map((event) => (
+                  <div key={event.key} className="rounded-lg bg-white/[0.03] px-3 py-2">
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{event.name}</p>
+                        <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground/70">
+                          {event.eventId ?? "no event id"}
+                          {event.funnel || event.market ? ` • ${[event.funnel, event.market].filter(Boolean).join(" / ")}` : ""}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-left sm:grid-cols-4 lg:min-w-[520px]">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Handoffs</p>
+                          <p className="text-sm font-semibold">{event.rows}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Meta IDs</p>
+                          <p className="text-sm font-semibold">{event.metaObjectRows} <span className="text-xs font-normal text-muted-foreground">({event.metaObjectCaptureRate}%)</span></p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Click/session</p>
+                          <p className="text-sm font-semibold">{event.clickIdRows}/{event.sessionIdRows}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">FB context</p>
+                          <p className="text-sm font-semibold">{event.fbclidRows}/{event.fbcRows}/{event.fbpRows}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
