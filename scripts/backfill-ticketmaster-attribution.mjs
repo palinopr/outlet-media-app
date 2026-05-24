@@ -277,6 +277,14 @@ function hasHierarchyImprovement(purchase, update) {
   );
 }
 
+function hasMetaEntity(update) {
+  return Boolean(update.meta_ad_id || update.meta_adset_id || update.meta_campaign_id);
+}
+
+function shouldPromoteSourceDirectAttribution(purchase, update) {
+  return hasMetaEntity(update) && !hasExistingDirectMethod(purchase);
+}
+
 function canUpdateExistingMatchedRow(purchase) {
   return purchase.attribution_match_confidence === "deterministic"
     || purchase.attribution_match_confidence === "high"
@@ -430,9 +438,28 @@ for (const purchase of purchases ?? []) {
   const sourceUrlDirectMeta = directMetaUpdateFromSourceUrl(purchase);
   const provenDirectMeta = hasExistingDirectMethod(purchase) ? validDirectMetaUpdate(purchase) : sourceUrlDirectMeta;
   const validDirectMeta = await enrichMetaHierarchy(provenDirectMeta);
+  const sourceDirectReplacement = shouldPromoteSourceDirectAttribution(purchase, validDirectMeta);
   const directHierarchyImproved = hasHierarchyImprovement(purchase, validDirectMeta);
   if (purchase.attribution_match_confidence && purchase.attribution_match_confidence !== "unknown") {
-    if (directHierarchyImproved && canUpdateExistingMatchedRow(purchase)) {
+    if (sourceDirectReplacement) {
+      proposed += 1;
+      if (directHierarchyImproved) hierarchyEnriched += 1;
+      if (apply) {
+        const update = await supabase
+          .from("ticketmaster_capi_events")
+          .update({
+            ...validDirectMeta,
+            attribution_handoff_id: null,
+            attribution_match_confidence: "deterministic",
+            attribution_match_method: "direct_ticketmaster_params",
+            attribution_matched_at: new Date().toISOString(),
+          })
+          .eq("id", purchase.id);
+
+        if (update.error) throw new Error(`promote direct ${purchase.event_id.slice(0, 12)}: ${update.error.message}`);
+        matched += 1;
+      }
+    } else if (directHierarchyImproved && canUpdateExistingMatchedRow(purchase)) {
       proposed += 1;
       hierarchyEnriched += 1;
       if (apply) {
