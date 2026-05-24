@@ -5,7 +5,10 @@ import { StatCard } from "@/components/admin/stat-card";
 import { AdminPageHeader } from "@/components/admin/page-header";
 import { cleanAttributionQueryValue } from "@/features/meta/attribution";
 import { sanitizeTicketmasterCapiSourceUrl } from "@/features/meta/conversions-api";
-import { buildTicketmasterCapiMatchingSummary } from "@/features/meta/ticketmaster-capi-diagnostics";
+import {
+  buildTicketmasterCapiEventMatchingBreakdown,
+  buildTicketmasterCapiMatchingSummary,
+} from "@/features/meta/ticketmaster-capi-diagnostics";
 import type { ConnectedAccount } from "@/features/settings/connected-accounts";
 import {
   buildConnectedAccountsSummary,
@@ -76,9 +79,11 @@ type TicketmasterCapiEvent = {
   error_message: string | null;
   event_id: string;
   event_name: string;
+  funnel?: string | null;
   id: string;
   is_test: boolean;
   last_seen_at: string;
+  market?: string | null;
   meta_ad_id: string | null;
   meta_ad_name: string | null;
   meta_adset_id: string | null;
@@ -224,7 +229,7 @@ export default async function SettingsPage() {
   const ticketmasterCapiEventsRes = await supabaseAdmin
     ?.from("ticketmaster_capi_events")
     .select(
-      "id, created_at, last_seen_at, attempt_count, event_name, event_id, order_id, order_hash, om_click_id, om_session_id, attribution_handoff_id, attribution_match_method, attribution_match_confidence, attribution_matched_at, ticketmaster_event_id, ticketmaster_event_name, ticketmaster_event_date, value, currency, quantity, meta_status, meta_ok, skip_reason, error_message, is_test, source_url, meta_campaign_id, meta_campaign_name, meta_adset_id, meta_adset_name, meta_ad_id, meta_ad_name, placement, utm_content",
+      "id, created_at, last_seen_at, attempt_count, event_name, event_id, order_id, order_hash, om_click_id, om_session_id, attribution_handoff_id, attribution_match_method, attribution_match_confidence, attribution_matched_at, ticketmaster_event_id, ticketmaster_event_name, ticketmaster_event_date, value, currency, quantity, meta_status, meta_ok, skip_reason, error_message, is_test, source_url, funnel, market, meta_campaign_id, meta_campaign_name, meta_adset_id, meta_adset_name, meta_ad_id, meta_ad_name, placement, utm_content",
     )
     .order("created_at", { ascending: false })
     .limit(500);
@@ -238,6 +243,7 @@ export default async function SettingsPage() {
     todaySummary,
   } = buildTicketmasterRevenueMetrics(ticketmasterCapiRows);
   const matchingSummary = buildTicketmasterCapiMatchingSummary(ticketmasterCapiRows);
+  const eventMatchingBreakdown = buildTicketmasterCapiEventMatchingBreakdown(ticketmasterCapiRows).slice(0, 6);
 
   const stats = [
     {
@@ -535,6 +541,67 @@ export default async function SettingsPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          <div className="rounded-xl border border-border/50 bg-muted/20 p-3">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Matching by Ticketmaster event</p>
+                <p className="mt-1 text-xs text-muted-foreground/70">
+                  Use this to see which event is actually getting deterministic ad matching.
+                </p>
+              </div>
+              <p className="text-[11px] text-muted-foreground/60">Top {eventMatchingBreakdown.length} by purchase count</p>
+            </div>
+
+            {eventMatchingBreakdown.length === 0 ? (
+              <p className="mt-3 text-sm text-muted-foreground">No non-test purchase rows available for event-level matching.</p>
+            ) : (
+              <div className="mt-3 space-y-2">
+                {eventMatchingBreakdown.map((event) => (
+                  <div key={event.key} className="rounded-lg bg-white/[0.03] px-3 py-2">
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{event.name}</p>
+                        <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground/70">
+                          {event.eventId ?? "no event id"}
+                          {event.funnel || event.market ? ` • ${[event.funnel, event.market].filter(Boolean).join(" / ")}` : ""}
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-left sm:grid-cols-4 lg:min-w-[520px]">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Accepted</p>
+                          <p className="text-sm font-semibold">{event.acceptedCount}/{event.purchaseCount}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Ad-level</p>
+                          <p className="text-sm font-semibold">{event.directMetaObjectCount} <span className="text-xs font-normal text-muted-foreground">({event.adLevelCoverageRate}%)</span></p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Opt grade</p>
+                          <p className="text-sm font-semibold">{event.optimizationGradeCount}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Unknown</p>
+                          <p className="text-sm font-semibold">{event.unknownCount}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground/70">
+                      <span>{formatCurrency(event.revenue, "USD")}</span>
+                      <span>{event.tickets} tickets</span>
+                      <span>{event.confidenceCounts.deterministic} deterministic</span>
+                      <span>{event.confidenceCounts.medium} medium</span>
+                      <span>{event.confidenceCounts.low} low</span>
+                      <span>{event.cfcCandidateCount} CFC candidates</span>
+                      <span className={event.status === "healthy" ? "text-emerald-300" : "text-amber-300"}>
+                        {event.status === "healthy" ? "usable" : event.status.replaceAll("_", " ")}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

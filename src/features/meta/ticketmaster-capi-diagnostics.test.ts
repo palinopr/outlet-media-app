@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildTicketmasterCapiEventMatchingBreakdown,
   buildTicketmasterCapiMatchingSummary,
   hasValidCfcCandidate,
   isValidMetaEntityId,
@@ -90,5 +91,78 @@ describe("ticketmaster CAPI diagnostics", () => {
       utm_content: "CFC_BUYAT_2197213",
       value: 100,
     })).toBe(true);
+  });
+
+  it("breaks matching quality out by Ticketmaster event and funnel", () => {
+    const breakdown = buildTicketmasterCapiEventMatchingBreakdown([
+      {
+        attribution_match_confidence: "deterministic",
+        attribution_match_method: "direct_ticketmaster_params",
+        event_name: "Purchase",
+        funnel: "ataca-sergio",
+        is_test: false,
+        market: "newark",
+        meta_ad_id: META_AD_ID,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: true,
+        quantity: 2,
+        skip_reason: null,
+        source_url: null,
+        ticketmaster_event_id: "02006478E042F9B1",
+        ticketmaster_event_name: "Festival ATACA SERGIO",
+        value: 250,
+      },
+      {
+        attribution_match_confidence: "unknown",
+        attribution_match_method: null,
+        event_name: "Purchase",
+        funnel: "jay-wheeler",
+        is_test: false,
+        market: "san-juan",
+        meta_ad_id: null,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: true,
+        quantity: 1,
+        skip_reason: null,
+        source_url: null,
+        ticketmaster_event_id: "JAY123",
+        ticketmaster_event_name: "Jay Wheeler",
+        value: 100,
+      },
+      {
+        attribution_match_confidence: "medium",
+        attribution_match_method: "exact_ip_ua_handoff",
+        event_name: "Purchase",
+        funnel: "jay-wheeler",
+        is_test: false,
+        market: "san-juan",
+        meta_ad_id: null,
+        meta_adset_id: null,
+        meta_campaign_id: null,
+        meta_ok: true,
+        quantity: 1,
+        skip_reason: null,
+        source_url: null,
+        ticketmaster_event_id: "JAY123",
+        ticketmaster_event_name: "Jay Wheeler",
+        value: 100,
+      },
+    ]);
+
+    expect(breakdown).toHaveLength(2);
+    expect(breakdown[0]).toMatchObject({
+      name: "Jay Wheeler",
+      purchaseCount: 2,
+      optimizationGradeCount: 0,
+      unknownCount: 1,
+    });
+    expect(breakdown[1]).toMatchObject({
+      name: "Festival ATACA SERGIO",
+      purchaseCount: 1,
+      optimizationGradeCount: 1,
+      status: "healthy",
+    });
   });
 });

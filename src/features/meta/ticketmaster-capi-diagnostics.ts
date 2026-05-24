@@ -7,9 +7,13 @@ type TicketmasterCapiDiagnosticEvent = {
   meta_adset_id: string | null;
   meta_campaign_id: string | null;
   meta_ok: boolean;
+  funnel?: string | null;
+  market?: string | null;
   quantity: number | null;
   skip_reason: string | null;
   source_url: string | null;
+  ticketmaster_event_id?: string | null;
+  ticketmaster_event_name?: string | null;
   utm_content?: string | null;
   value: number | string | null;
 };
@@ -30,6 +34,14 @@ export type TicketmasterCapiMatchingSummary = {
   status: "healthy" | "accepted_without_direct_matching" | "acceptance_issue" | "waiting_for_purchases";
   tickets: number;
   unknownCount: number;
+};
+
+export type TicketmasterCapiEventMatchingBreakdown = TicketmasterCapiMatchingSummary & {
+  eventId: string | null;
+  funnel: string | null;
+  key: string;
+  market: string | null;
+  name: string;
 };
 
 const NESTED_SOURCE_URL_KEYS = ["edp", "source_url", "event_source_url", "page_url"];
@@ -156,4 +168,49 @@ export function buildTicketmasterCapiMatchingSummary(events: TicketmasterCapiDia
     tickets,
     unknownCount,
   };
+}
+
+function eventBreakdownKey(event: TicketmasterCapiDiagnosticEvent) {
+  return [
+    event.ticketmaster_event_id?.trim() || "no-event-id",
+    event.ticketmaster_event_name?.trim() || "no-event-name",
+    event.funnel?.trim() || "no-funnel",
+    event.market?.trim() || "no-market",
+  ].join("|");
+}
+
+function eventBreakdownName(event: TicketmasterCapiDiagnosticEvent) {
+  return event.ticketmaster_event_name?.trim()
+    || event.ticketmaster_event_id?.trim()
+    || [event.funnel, event.market].filter(Boolean).join(" / ")
+    || "Unknown event";
+}
+
+export function buildTicketmasterCapiEventMatchingBreakdown(
+  events: TicketmasterCapiDiagnosticEvent[],
+): TicketmasterCapiEventMatchingBreakdown[] {
+  const groups = new Map<string, TicketmasterCapiDiagnosticEvent[]>();
+
+  for (const event of events.filter(isCoveredPurchase)) {
+    const key = eventBreakdownKey(event);
+    groups.set(key, [...(groups.get(key) ?? []), event]);
+  }
+
+  return Array.from(groups.entries())
+    .map(([key, rows]) => {
+      const first = rows[0];
+      return {
+        ...buildTicketmasterCapiMatchingSummary(rows),
+        eventId: first.ticketmaster_event_id?.trim() || null,
+        funnel: first.funnel?.trim() || null,
+        key,
+        market: first.market?.trim() || null,
+        name: eventBreakdownName(first),
+      };
+    })
+    .sort((a, b) => {
+      if (b.purchaseCount !== a.purchaseCount) return b.purchaseCount - a.purchaseCount;
+      if (b.revenue !== a.revenue) return b.revenue - a.revenue;
+      return a.name.localeCompare(b.name);
+    });
 }
