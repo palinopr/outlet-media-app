@@ -46,9 +46,44 @@ describe("enrichMetaAttributionHierarchy", () => {
     const fetchImpl = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({
         id: META_AD_ID,
+        name: "Story creative",
         adset: {
           id: "120247445606520999",
-          campaign: { id: "120247445551520999" },
+          name: "Wrong ad set",
+          campaign: { id: "120247445551520999", name: "Wrong campaign" },
+        },
+      }), { status: 200 }),
+    );
+
+    const enriched = await enrichMetaAttributionHierarchy({
+      accessToken: "token",
+      attribution: {
+        metaAdId: META_AD_ID,
+        metaAdsetId: META_ADSET_ID,
+      },
+      fetchImpl,
+    });
+
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(enriched.metaAdsetId).toBe(META_ADSET_ID);
+    expect(enriched.metaAdName).toBeUndefined();
+    expect(enriched.metaAdsetName).toBeUndefined();
+    expect(enriched.metaCampaignId).toBeUndefined();
+    expect(enriched.metaCampaignName).toBeUndefined();
+  });
+
+  it("fills missing names when canonical ids are already present", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({
+        id: META_AD_ID,
+        name: "Story creative",
+        adset: {
+          id: META_ADSET_ID,
+          name: "Newark buyers",
+          campaign: {
+            id: META_CAMPAIGN_ID,
+            name: "Ataca Sergio final push",
+          },
         },
       }), { status: 200 }),
     );
@@ -63,9 +98,35 @@ describe("enrichMetaAttributionHierarchy", () => {
       fetchImpl,
     });
 
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(enriched).toMatchObject({
+      metaAdId: META_AD_ID,
+      metaAdName: "Story creative",
+      metaAdsetId: META_ADSET_ID,
+      metaAdsetName: "Newark buyers",
+      metaCampaignId: META_CAMPAIGN_ID,
+      metaCampaignName: "Ataca Sergio final push",
+    });
+  });
+
+  it("does not call Meta when hierarchy ids and names are already complete", async () => {
+    const fetchImpl = vi.fn();
+
+    const enriched = await enrichMetaAttributionHierarchy({
+      accessToken: "token",
+      attribution: {
+        metaAdId: META_AD_ID,
+        metaAdName: "Story creative",
+        metaAdsetId: META_ADSET_ID,
+        metaAdsetName: "Newark buyers",
+        metaCampaignId: META_CAMPAIGN_ID,
+        metaCampaignName: "Ataca Sergio final push",
+      },
+      fetchImpl,
+    });
+
     expect(fetchImpl).not.toHaveBeenCalled();
-    expect(enriched.metaAdsetId).toBe(META_ADSET_ID);
-    expect(enriched.metaCampaignId).toBe(META_CAMPAIGN_ID);
+    expect(enriched.metaCampaignName).toBe("Ataca Sergio final push");
   });
 
   it("does not call Meta without an access token", async () => {

@@ -137,6 +137,8 @@ function hasStrongBackfillContext(purchase) {
 }
 
 function mergeMissingMetaHierarchy(base, enrichment) {
+  if (!metaHierarchyMatches(base, enrichment)) return base;
+
   return {
     ...base,
     meta_ad_id: base.meta_ad_id ?? enrichment.meta_ad_id ?? null,
@@ -148,10 +150,36 @@ function mergeMissingMetaHierarchy(base, enrichment) {
   };
 }
 
+function sameKnownId(baseValue, enrichmentValue) {
+  return !baseValue || !enrichmentValue || baseValue === enrichmentValue;
+}
+
+function metaHierarchyMatches(base, enrichment) {
+  return sameKnownId(base.meta_ad_id, enrichment.meta_ad_id)
+    && sameKnownId(base.meta_adset_id, enrichment.meta_adset_id)
+    && sameKnownId(base.meta_campaign_id, enrichment.meta_campaign_id);
+}
+
 function needsMetaHierarchy(update) {
   return Boolean(
-    (update.meta_ad_id && (!update.meta_adset_id || !update.meta_campaign_id))
-      || (update.meta_adset_id && !update.meta_campaign_id),
+    (
+      update.meta_ad_id
+      && (
+        !update.meta_ad_name
+        || !update.meta_adset_id
+        || !update.meta_adset_name
+        || !update.meta_campaign_id
+        || !update.meta_campaign_name
+      )
+    )
+      || (
+        update.meta_adset_id
+        && (
+          !update.meta_adset_name
+          || !update.meta_campaign_id
+          || !update.meta_campaign_name
+        )
+      ),
   );
 }
 
@@ -222,6 +250,12 @@ function hasHierarchyImprovement(purchase, update) {
       || (!purchase.meta_campaign_name && update.meta_campaign_name)
       || (!purchase.meta_ad_name && update.meta_ad_name),
   );
+}
+
+function canUpdateExistingMatchedRow(purchase) {
+  return purchase.attribution_match_confidence === "deterministic"
+    || purchase.attribution_match_confidence === "high"
+    || (allowMedium && purchase.attribution_match_confidence === "medium");
 }
 
 function handoffUpdate(row, method, confidence) {
@@ -371,7 +405,7 @@ for (const purchase of purchases ?? []) {
   const validDirectMeta = await enrichMetaHierarchy(validDirectMetaUpdate(purchase));
   const directHierarchyImproved = hasHierarchyImprovement(purchase, validDirectMeta);
   if (purchase.attribution_match_confidence && purchase.attribution_match_confidence !== "unknown") {
-    if (directHierarchyImproved) {
+    if (directHierarchyImproved && canUpdateExistingMatchedRow(purchase)) {
       proposed += 1;
       hierarchyEnriched += 1;
       if (apply) {

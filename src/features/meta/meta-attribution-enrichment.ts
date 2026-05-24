@@ -31,6 +31,8 @@ export function getMetaAttributionEnrichmentToken() {
 }
 
 function fillMissingAttribution(base: MarketingAttribution, enrichment: MarketingAttribution): MarketingAttribution {
+  if (!hierarchyMatches(base, enrichment)) return base;
+
   return sanitizeMarketingAttribution({
     ...base,
     metaAdId: base.metaAdId ?? enrichment.metaAdId,
@@ -40,6 +42,40 @@ function fillMissingAttribution(base: MarketingAttribution, enrichment: Marketin
     metaCampaignId: base.metaCampaignId ?? enrichment.metaCampaignId,
     metaCampaignName: base.metaCampaignName ?? enrichment.metaCampaignName,
   });
+}
+
+function sameKnownId(baseValue: string | undefined, enrichmentValue: string | undefined) {
+  return !baseValue || !enrichmentValue || baseValue === enrichmentValue;
+}
+
+function hierarchyMatches(base: MarketingAttribution, enrichment: MarketingAttribution) {
+  return sameKnownId(base.metaAdId, enrichment.metaAdId)
+    && sameKnownId(base.metaAdsetId, enrichment.metaAdsetId)
+    && sameKnownId(base.metaCampaignId, enrichment.metaCampaignId);
+}
+
+function needsAdLookup(attribution: MarketingAttribution) {
+  return Boolean(
+    attribution.metaAdId
+      && (
+        !attribution.metaAdName
+        || !attribution.metaAdsetId
+        || !attribution.metaAdsetName
+        || !attribution.metaCampaignId
+        || !attribution.metaCampaignName
+      ),
+  );
+}
+
+function needsAdsetLookup(attribution: MarketingAttribution) {
+  return Boolean(
+    attribution.metaAdsetId
+      && (
+        !attribution.metaAdsetName
+        || !attribution.metaCampaignId
+        || !attribution.metaCampaignName
+      ),
+  );
 }
 
 function text(value: unknown) {
@@ -104,11 +140,12 @@ export async function enrichMetaAttributionHierarchy(input: {
   const fetchImpl = input.fetchImpl ?? fetch;
 
   if (!accessToken || (!base.metaAdId && !base.metaAdsetId)) return base;
-  if (base.metaAdId && base.metaAdsetId && base.metaCampaignId) return base;
 
-  if (base.metaAdId) {
+  if (needsAdLookup(base)) {
+    const metaAdId = base.metaAdId;
+    if (!metaAdId) return base;
     const ad = await graphGet<MetaGraphAd>(
-      encodeURIComponent(base.metaAdId),
+      encodeURIComponent(metaAdId),
       accessToken,
       "id,name,adset{id,name,campaign{id,name}}",
       fetchImpl,
@@ -116,9 +153,11 @@ export async function enrichMetaAttributionHierarchy(input: {
     return ad ? fillMissingAttribution(base, attributionFromAd(ad)) : base;
   }
 
-  if (base.metaAdsetId && !base.metaCampaignId) {
+  if (needsAdsetLookup(base)) {
+    const metaAdsetId = base.metaAdsetId;
+    if (!metaAdsetId) return base;
     const adset = await graphGet<MetaGraphAdset>(
-      encodeURIComponent(base.metaAdsetId),
+      encodeURIComponent(metaAdsetId),
       accessToken,
       "id,name,campaign{id,name}",
       fetchImpl,
