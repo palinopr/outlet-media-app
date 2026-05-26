@@ -1,9 +1,9 @@
 # App Routes Bootstrap
 
-Canonical engineering and product rules live in Obsidian v2:
+Canonical engineering and product rules live in Outlet Media Memory:
 
 ```text
-/Users/jaimeortiz/projects/Oulet Media Memory/Outlet Media Memory v2/Outlet Media Memory 2
+/Users/jaimeortiz/projects/Oulet Media Memory/Outlet Media Memory
 ```
 
 Start with `AGENTS.md`, `10 Doctrine/Agent Memory Protocol.md`, and `90 System/Outlet App Wiki Pointer.md`, then verify current route behavior in this repo.
