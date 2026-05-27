@@ -16,6 +16,7 @@ describe("/ataca-sergio/[market] funnel route", () => {
     expect(response.headers.get("content-type")).toContain("text/html");
     expect(html).toContain('<base href="/ataca-sergio/newark/" />');
     expect(html).toContain('fbq("init", "1553637492361321")');
+    expect(html).toContain('const TIKTOK_PIXEL_ID = "D8BISAJC77U45OQLORR0"');
     expect(html).toContain("Festival Ataca Sergio");
     expect(html).toContain('data-slug="la-india"');
     expect(html).toContain('data-proof="la-india"');

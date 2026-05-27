@@ -1124,9 +1124,10 @@
 
 
     <script>
-      // Defer Meta Pixel: load on first interaction, scroll, or 2s idle — whichever first.
+      // Defer ad pixels: load on first interaction, scroll, or 2s idle — whichever first.
       // Cuts ~70KB off the critical path; PageView still fires within ~2s of load.
       let pixelLoaded = false;
+      const TIKTOK_PIXEL_ID = "D8BISAJC77U45OQLORR0";
       function loadPixel() {
         if (pixelLoaded) return;
         pixelLoaded = true;
@@ -1141,6 +1142,58 @@
         })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
         window.fbq("init", "1553637492361321");
         window.fbq("track", "PageView");
+
+        !(function (w, d, t) {
+          w.TiktokAnalyticsObject = t;
+          const ttq = (w[t] = w[t] || []);
+          ttq.methods = [
+            "page",
+            "track",
+            "identify",
+            "instances",
+            "debug",
+            "on",
+            "off",
+            "once",
+            "ready",
+            "alias",
+            "group",
+            "enableCookie",
+            "disableCookie",
+            "holdConsent",
+            "revokeConsent",
+            "grantConsent",
+          ];
+          ttq.setAndDefer = function (queue, method) {
+            queue[method] = function () {
+              queue.push([method].concat(Array.prototype.slice.call(arguments, 0)));
+            };
+          };
+          for (let i = 0; i < ttq.methods.length; i += 1) ttq.setAndDefer(ttq, ttq.methods[i]);
+          ttq.instance = function (id) {
+            const instance = ttq._i[id] || [];
+            for (let i = 0; i < ttq.methods.length; i += 1) ttq.setAndDefer(instance, ttq.methods[i]);
+            return instance;
+          };
+          ttq.load = function (id, options) {
+            const src = "https://analytics.tiktok.com/i18n/pixel/events.js";
+            ttq._i = ttq._i || {};
+            ttq._i[id] = [];
+            ttq._i[id]._u = src;
+            ttq._t = ttq._t || {};
+            ttq._t[id] = +new Date();
+            ttq._o = ttq._o || {};
+            ttq._o[id] = options || {};
+            const script = d.createElement("script");
+            script.type = "text/javascript";
+            script.async = true;
+            script.src = `${src}?sdkid=${id}&lib=${t}`;
+            const firstScript = d.getElementsByTagName("script")[0];
+            firstScript.parentNode.insertBefore(script, firstScript);
+          };
+          ttq.load(TIKTOK_PIXEL_ID);
+          ttq.page();
+        })(window, document, "ttq");
       }
       ["scroll", "pointerdown", "touchstart", "keydown"].forEach((ev) =>
         window.addEventListener(ev, loadPixel, { once: true, passive: true }),
@@ -1333,6 +1386,7 @@
 
       function trackCustom(name, payload) {
         if (typeof window.fbq === "function") window.fbq("trackCustom", name, payload);
+        if (typeof window.ttq?.track === "function") window.ttq.track(name, payload);
       }
 
       const funnelPayload = {
@@ -1351,6 +1405,10 @@
         if (typeof window.fbq === "function") {
           window.fbq("track", "ViewContent", payload);
           trackCustom("FunnelQualifiedView", payload);
+        }
+        if (typeof window.ttq?.track === "function") {
+          window.ttq.track("ViewContent", payload);
+          window.ttq.track("FunnelQualifiedView", payload);
         }
         sendAttributionEvent("qualified_view", { reason });
       }
@@ -1397,6 +1455,14 @@
             cta,
             destination: "ticketmaster",
           });
+          if (typeof window.ttq?.track === "function") {
+            window.ttq.track("ClickButton", {
+              ...funnelPayload,
+              click_id: clickId,
+              cta,
+              destination: "ticketmaster",
+            });
+          }
           sendAttributionEvent("ticket_click", {
             click_id: clickId,
             cta,
