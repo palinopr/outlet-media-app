@@ -12,6 +12,7 @@ import {
   gmailFetch,
   headersFromMessage,
   isDocumentAttachment,
+  isEphemeralSecuritySubject,
   listAllMessages,
   loadManifest,
   needsReply,
@@ -74,18 +75,23 @@ async function main() {
     const privateThreadPath = path.join(RAW_THREADS_DIR, `${threadId}.json`);
     await writeFile(privateThreadPath, JSON.stringify(thread, null, 2));
     const previousRawInboxPath = manifest.ingestedThreads[threadId]?.rawInboxPath;
-    const rawInboxPath = previousRawInboxPath ?? path.join(RAW_INBOX, `${dateSlug()}-zamora-gmail-thread-${threadId}-${safeFile(subject)}.md`);
-    await writeFile(rawInboxPath, threadNote({
-      thread,
-      threadId,
-      subject,
-      firstDate: dates[0],
-      lastDate: dates.at(-1),
-      labels,
-      privateThreadPath,
-      privateAttachmentDir: threadDir,
-      attachmentCount,
-    }));
+    const shouldWriteRawInbox = !isEphemeralSecuritySubject(subject);
+    const rawInboxPath = shouldWriteRawInbox
+      ? previousRawInboxPath ?? path.join(RAW_INBOX, `${dateSlug()}-zamora-gmail-thread-${threadId}-${safeFile(subject)}.md`)
+      : null;
+    if (rawInboxPath) {
+      await writeFile(rawInboxPath, threadNote({
+        thread,
+        threadId,
+        subject,
+        firstDate: dates[0],
+        lastDate: dates.at(-1),
+        labels,
+        privateThreadPath,
+        privateAttachmentDir: threadDir,
+        attachmentCount,
+      }));
+    }
     manifest.ingestedThreads[threadId] = {
       subject: sanitizeText(subject),
       messageCount: thread.messages.length,

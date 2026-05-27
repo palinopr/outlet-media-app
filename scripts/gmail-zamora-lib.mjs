@@ -76,6 +76,10 @@ export function categoryLabels(subject, attachmentCount) {
   return [...new Set(out)];
 }
 
+export function isEphemeralSecuritySubject(subject = "") {
+  return /\b(one-time code|verification code|security code|passcode|otp|security alert)\b/i.test(String(subject || ""));
+}
+
 export function needsReply(thread) {
   const messages = thread.messages ?? [];
   const last = headersFromMessage(messages.at(-1) ?? {});

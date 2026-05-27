@@ -8,6 +8,7 @@ import {
   compactThreadMeta,
   getHeader,
   headersFromMessage,
+  isEphemeralSecuritySubject,
   loadManifest,
   needsReply,
   safeFile,
@@ -136,6 +137,7 @@ async function loadThreads(manifest, existing) {
     const raw = JSON.parse(await readFile(path.join(RAW_THREADS_DIR, `${meta.threadId}.json`), "utf8"));
     const headers = raw.messages.map(headersFromMessage);
     const subject = sanitizeText(getHeader(headers[0] ?? {}, "subject") || meta.subject || "(no subject)");
+    if (isEphemeralSecuritySubject(subject)) continue;
     const dates = headers.map((h) => new Date(getHeader(h, "date")).toISOString()).filter(Boolean).sort();
     const froms = headers.map((h) => getHeader(h, "from")).filter(Boolean);
     const people = [...new Set(froms.map(senderName))].filter(Boolean).sort();
