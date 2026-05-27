@@ -13,9 +13,11 @@ The local app repo `wiki/` directory is deprecated and intentionally removed. Do
 Before product, architecture, database, deployment, or workflow changes:
 
 1. Read the Outlet Media Memory bootstrap at `/Users/jaimeortiz/projects/Oulet Media Memory/Outlet Media Memory/AGENTS.md`.
-2. Read `00 Start Here.md`, `01 Indexes/Global Index.md`, `10 Doctrine/Agent Memory Protocol.md`, and `90 System/Outlet App Wiki Pointer.md` in that vault.
-3. Follow the relevant main memory doctrine/client/source path for the task.
-4. Verify current behavior against this repo's code, migrations, tests, and live source systems as needed.
+2. Read `00 Start Here.md` and `01 Indexes/Global Index.md` in that vault.
+3. Read `90 System/Fresh Agent 60 Second Boot.md`, `90 System/Agent Instructions.md`, and `90 System/Agent Brain Runtime Audit.md`.
+4. Read `10 Doctrine/Agent Memory Protocol.md` and `90 System/Outlet App Wiki Pointer.md`.
+5. Follow the relevant main memory doctrine/client/source path for the task.
+6. Verify current behavior against this repo's code, migrations, tests, and live source systems as needed.
 
 ## Operating rules
 
