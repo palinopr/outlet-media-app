@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Outlet Meet Memory</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="header">
+        <div>
+          <h1>Meet Memory</h1>
+          <p id="status">Checking tab...</p>
+        </div>
+        <span id="badge" class="badge">Idle</span>
+      </header>
+
+      <label class="field">
+        <span>Meeting title</span>
+        <input id="title" type="text" placeholder="Client / topic">
+      </label>
+
+      <label class="check">
+        <input id="consent" type="checkbox">
+        <span>Participants were notified</span>
+      </label>
+
+      <div class="actions">
+        <button id="start" type="button">Start Capture</button>
+        <button id="stop" type="button" class="secondary">Stop</button>
+      </div>
+
+      <section class="stats">
+        <div>
+          <strong id="lineCount">0</strong>
+          <span>lines</span>
+        </div>
+        <div>
+          <strong id="pendingCount">0</strong>
+          <span>pending</span>
+        </div>
+      </section>
+
+      <label class="field">
+        <span>Summary</span>
+        <textarea id="summary" rows="3" placeholder="What happened?"></textarea>
+      </label>
+
+      <label class="field">
+        <span>Decisions</span>
+        <textarea id="decisions" rows="3" placeholder="- Decision"></textarea>
+      </label>
+
+      <label class="field">
+        <span>Action items</span>
+        <textarea id="actions" rows="3" placeholder="- [ ] Owner - task - due"></textarea>
+      </label>
+
+      <label class="field">
+        <span>Follow-up agenda</span>
+        <textarea id="followUp" rows="3" placeholder="- Next discussion"></textarea>
+      </label>
+
+      <div class="actions">
+        <button id="send" type="button">Send To Outlet Memory</button>
+        <button id="download" type="button" class="secondary">Download MD</button>
+      </div>
+
+      <button id="clear" type="button" class="danger">Clear Session</button>
+
+      <section class="preview">
+        <h2>Latest Captions</h2>
+        <ol id="preview"></ol>
+      </section>
+
+      <p id="message" class="message" role="status"></p>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
