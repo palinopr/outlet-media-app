@@ -71,6 +71,9 @@ async function main() {
   const threads = compactThreadMeta(manifest);
   const needsReply = threads.filter((thread) => thread.needsReply);
   const documents = threads.filter((thread) => thread.attachmentCount > 0);
+  await mkdir(REPORTS_DIR, { recursive: true });
+  const reportPath = path.join(REPORTS_DIR, reportName());
+  const brain = parseJsonOutput((await run(process.execPath, ["scripts/generate-zamora-email-brain.mjs", "--latest-report", reportPath])).stdout, "generate-zamora-email-brain");
   const report = {
     ok: true,
     generatedAt: new Date().toISOString(),
@@ -94,6 +97,7 @@ async function main() {
       pendingRawInboxCount: closeoutAudit.pending_raw_inbox_count,
       unpromotedRawInboxSourceCount: closeoutAudit.unpromoted_raw_inbox_source_count,
     },
+    brain,
     totals: {
       trackedThreads: threads.length,
       needsReply: needsReply.length,
@@ -105,8 +109,6 @@ async function main() {
     documentThreads: documents,
   };
 
-  await mkdir(REPORTS_DIR, { recursive: true });
-  const reportPath = path.join(REPORTS_DIR, reportName());
   await writeFile(reportPath, JSON.stringify(report, null, 2));
 
   console.log(JSON.stringify({
