@@ -16,6 +16,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/ingest(.*)",
   "/api/health(.*)",
   "/api/meta/callback(.*)",
+  "/api/tiktok/oauth/callback(.*)",
   "/api/meta/data-deletion(.*)",
   "/api/meta/ticketmaster-capi(.*)",
   "/api/attribution/funnel(.*)",
