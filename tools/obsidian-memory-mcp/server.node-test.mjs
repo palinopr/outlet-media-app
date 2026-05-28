@@ -191,7 +191,8 @@ test("HTTP MCP endpoint can require an unguessable path token", async () => {
           const health = await fetch(`http://127.0.0.1:${address.port}/health`).then((response) =>
             response.json()
           );
-          assert.equal(health.mcpPath, `/mcp/${pathToken}`);
+          assert.equal(health.pathTokenRequired, true);
+          assert.equal("mcpPath" in health, false);
           assert.equal("vaultPath" in health, false);
 
           const wrongPathResponse = await fetch(`http://127.0.0.1:${address.port}/mcp`, {
@@ -200,6 +201,8 @@ test("HTTP MCP endpoint can require an unguessable path token", async () => {
             body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
           });
           assert.equal(wrongPathResponse.status, 404);
+          const wrongPathJson = await wrongPathResponse.json();
+          assert.doesNotMatch(wrongPathJson.error, new RegExp(pathToken));
 
           await client.connect(transport);
           const tools = await client.listTools();

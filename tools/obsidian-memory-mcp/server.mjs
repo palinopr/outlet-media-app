@@ -512,8 +512,11 @@ export function createHttpMcpServer(options = {}) {
 
       if (req.method === "GET" && requestUrl.pathname === "/health") {
         res.writeHead(200, { "content-type": "application/json" });
-        const health = { ok: true, name: "outlet-media-memory", mcpPath };
-        if (!config.pathToken) health.vaultPath = config.vaultPath;
+        const health = { ok: true, name: "outlet-media-memory", pathTokenRequired: Boolean(config.pathToken) };
+        if (!config.pathToken) {
+          health.mcpPath = mcpPath;
+          health.vaultPath = config.vaultPath;
+        }
         res.end(JSON.stringify(health));
         return;
       }
@@ -530,7 +533,8 @@ export function createHttpMcpServer(options = {}) {
 
       if (req.method !== "POST" || requestUrl.pathname !== mcpPath) {
         res.writeHead(404, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: `Use POST ${mcpPath} or GET /health.` }));
+        const error = config.pathToken ? "Use the configured MCP path or GET /health." : `Use POST ${mcpPath} or GET /health.`;
+        res.end(JSON.stringify({ ok: false, error }));
         return;
       }
 

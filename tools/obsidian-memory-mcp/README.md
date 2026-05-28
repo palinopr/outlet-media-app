@@ -34,6 +34,8 @@ OUTLET_OBSIDIAN_MCP_PATH_TOKEN="$(openssl rand -hex 24)" npm run obsidian:mcp:ht
 ```
 
 Use the `/mcp/<token>` path from the startup output as the connector URL path.
+When a path token is configured, `/health` and wrong-path errors do not echo the
+token.
 
 Stdio mode for local MCP clients:
 
