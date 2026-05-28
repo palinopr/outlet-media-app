@@ -26,6 +26,15 @@ npm run obsidian:mcp:http
 curl http://127.0.0.1:8777/health
 ```
 
+When exposing the server through a temporary HTTPS tunnel, require an unguessable
+MCP path token:
+
+```bash
+OUTLET_OBSIDIAN_MCP_PATH_TOKEN="$(openssl rand -hex 24)" npm run obsidian:mcp:http
+```
+
+Use the `/mcp/<token>` path from the startup output as the connector URL path.
+
 Stdio mode for local MCP clients:
 
 ```bash
@@ -56,6 +65,7 @@ OUTLET_OBSIDIAN_MCP_PORT=8777
 OUTLET_OBSIDIAN_MCP_ALLOWED_ROOTS="AGENTS.md,00 Start Here.md,01 Indexes,10 Doctrine,30 Clients,60 Claims,70 Triples,80 Logs,85 Snapshots,90 System"
 OUTLET_OBSIDIAN_MCP_EXCLUDED_ROOTS=".git,.obsidian,.trash,_archive,50 Sources/Raw Inbox,node_modules"
 OUTLET_OBSIDIAN_MCP_MAX_FETCH_BYTES=250000
+OUTLET_OBSIDIAN_MCP_PATH_TOKEN="<optional-url-safe-token>"
 ```
 
 ## Test
@@ -72,3 +82,5 @@ npm run test:obsidian-mcp
 - Symlinks are resolved and must remain inside the vault.
 - Raw Inbox writes are hidden unless explicitly enabled.
 - Obvious secrets or credential-like strings are rejected by the write tool.
+- Optional path-token mode avoids exposing a bare `/mcp` endpoint when using a
+  temporary HTTPS tunnel.

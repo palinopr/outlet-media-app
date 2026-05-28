@@ -173,3 +173,48 @@ test("HTTP MCP endpoint supports listTools and callTool", async () => {
     });
   });
 });
+
+test("HTTP MCP endpoint can require an unguessable path token", async () => {
+  await withVault(async (vaultPath) => {
+    const pathToken = "test_token_1234567890";
+    const server = createHttpMcpServer({ vaultPath, pathToken });
+
+    await new Promise((resolve, reject) => {
+      server.listen(0, "127.0.0.1", async () => {
+        const address = server.address();
+        const client = new Client({ name: "outlet-memory-mcp-token-test", version: "0.0.0" });
+        const transport = new StreamableHTTPClientTransport(
+          new URL(`http://127.0.0.1:${address.port}/mcp/${pathToken}`)
+        );
+
+        try {
+          const health = await fetch(`http://127.0.0.1:${address.port}/health`).then((response) =>
+            response.json()
+          );
+          assert.equal(health.mcpPath, `/mcp/${pathToken}`);
+          assert.equal("vaultPath" in health, false);
+
+          const wrongPathResponse = await fetch(`http://127.0.0.1:${address.port}/mcp`, {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+          });
+          assert.equal(wrongPathResponse.status, 404);
+
+          await client.connect(transport);
+          const tools = await client.listTools();
+          assert.deepEqual(
+            tools.tools.map((tool) => tool.name).sort(),
+            ["fetch", "open_note_uri", "search"]
+          );
+          resolve();
+        } catch (error) {
+          reject(error);
+        } finally {
+          await client.close().catch(() => {});
+          server.close();
+        }
+      });
+    });
+  });
+});

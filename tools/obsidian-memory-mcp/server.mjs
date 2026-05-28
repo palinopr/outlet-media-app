@@ -45,13 +45,23 @@ function splitEnvList(value, fallback) {
 }
 
 export function getConfig(overrides = {}) {
+  const pathToken = String(overrides.pathToken ?? process.env.OUTLET_OBSIDIAN_MCP_PATH_TOKEN ?? "").trim();
   return {
     vaultPath: resolve(overrides.vaultPath || process.env.OUTLET_MEMORY_VAULT || DEFAULT_VAULT_PATH),
     port: Number(overrides.port || process.env.OUTLET_OBSIDIAN_MCP_PORT || DEFAULT_PORT),
     allowedRoots: splitEnvList(process.env.OUTLET_OBSIDIAN_MCP_ALLOWED_ROOTS, DEFAULT_ALLOWED_ROOTS),
     excludedRoots: splitEnvList(process.env.OUTLET_OBSIDIAN_MCP_EXCLUDED_ROOTS, DEFAULT_EXCLUDED_ROOTS),
     enableWrites: Boolean(overrides.enableWrites ?? /^true$/i.test(process.env.OUTLET_OBSIDIAN_MCP_ENABLE_WRITES || "")),
+    pathToken,
   };
+}
+
+function mcpPathForConfig(config) {
+  if (!config.pathToken) return "/mcp";
+  if (!/^[A-Za-z0-9_-]{16,256}$/.test(config.pathToken)) {
+    throw new Error("OUTLET_OBSIDIAN_MCP_PATH_TOKEN must be 16-256 URL-safe characters.");
+  }
+  return `/mcp/${config.pathToken}`;
 }
 
 function normalizeSlashes(value) {
@@ -494,16 +504,21 @@ async function readJsonBody(req, maxBytes = 2 * 1024 * 1024) {
 export function createHttpMcpServer(options = {}) {
   const config = { ...getConfig(options), ...options };
   const mcpServer = createOutletMemoryMcpServer(config);
+  const mcpPath = mcpPathForConfig(config);
 
   return createHttpServer(async (req, res) => {
     try {
-      if (req.method === "GET" && req.url === "/health") {
+      const requestUrl = new URL(req.url || "/", "http://127.0.0.1");
+
+      if (req.method === "GET" && requestUrl.pathname === "/health") {
         res.writeHead(200, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: true, name: "outlet-media-memory", vaultPath: config.vaultPath }));
+        const health = { ok: true, name: "outlet-media-memory", mcpPath };
+        if (!config.pathToken) health.vaultPath = config.vaultPath;
+        res.end(JSON.stringify(health));
         return;
       }
 
-      if (req.method === "OPTIONS" && req.url === "/mcp") {
+      if (req.method === "OPTIONS" && requestUrl.pathname === mcpPath) {
         res.writeHead(204, {
           "access-control-allow-origin": "*",
           "access-control-allow-methods": "POST, OPTIONS",
@@ -513,9 +528,9 @@ export function createHttpMcpServer(options = {}) {
         return;
       }
 
-      if (req.method !== "POST" || req.url !== "/mcp") {
+      if (req.method !== "POST" || requestUrl.pathname !== mcpPath) {
         res.writeHead(404, { "content-type": "application/json" });
-        res.end(JSON.stringify({ ok: false, error: "Use POST /mcp or GET /health." }));
+        res.end(JSON.stringify({ ok: false, error: `Use POST ${mcpPath} or GET /health.` }));
         return;
       }
 
@@ -546,7 +561,7 @@ async function main() {
   if (args.has("--http") || args.size === 0) {
     const httpServer = createHttpMcpServer(config);
     httpServer.listen(config.port, "127.0.0.1", () => {
-      process.stderr.write(`Outlet Media Memory MCP listening on http://127.0.0.1:${config.port}/mcp\n`);
+      process.stderr.write(`Outlet Media Memory MCP listening on http://127.0.0.1:${config.port}${mcpPathForConfig(config)}\n`);
     });
     return;
   }
