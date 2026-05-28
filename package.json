@@ -26,6 +26,9 @@
     "zamora:gmail:brain": "node --env-file=.env.local scripts/generate-zamora-email-brain.mjs",
     "zamora:gmail:report": "node --env-file=.env.local scripts/report-zamora-gmail.mjs",
     "zamora:gmail:sync": "node --env-file=.env.local scripts/sync-zamora-gmail.mjs",
+    "obsidian:mcp:http": "node tools/obsidian-memory-mcp/server.mjs --http",
+    "obsidian:mcp:stdio": "node tools/obsidian-memory-mcp/server.mjs --stdio",
+    "test:obsidian-mcp": "node --test tools/obsidian-memory-mcp/*.node-test.mjs",
     "check:web": "npm run type-check:web && npm run lint:web && npm run test:web && npm run build && npm run audit:deps",
     "check": "npm run check:web",
     "test:watch": "vitest"
@@ -50,6 +53,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
