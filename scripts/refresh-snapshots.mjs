@@ -7,6 +7,8 @@ const today = new Date().toISOString().slice(0, 10);
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const metaToken = process.env.META_ACCESS_TOKEN;
+const rawMetaAccounts = process.env.META_AD_ACCOUNTS;
+const rawMetaAccountIds = process.env.META_AD_ACCOUNT_IDS;
 const rawMetaAccountId = process.env.META_AD_ACCOUNT_ID;
 
 if (!supabaseUrl || !supabaseKey) {
@@ -14,8 +16,8 @@ if (!supabaseUrl || !supabaseKey) {
   process.exit(1);
 }
 
-if (!metaToken || !rawMetaAccountId) {
-  console.error("FAIL missing META_ACCESS_TOKEN or META_AD_ACCOUNT_ID");
+if (!metaToken || (!rawMetaAccounts && !rawMetaAccountIds && !rawMetaAccountId)) {
+  console.error("FAIL missing META_ACCESS_TOKEN and one of META_AD_ACCOUNTS, META_AD_ACCOUNT_IDS, or META_AD_ACCOUNT_ID");
   process.exit(1);
 }
 
@@ -23,7 +25,58 @@ const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: { persistSession: false },
 });
 
-const metaAccountId = rawMetaAccountId.replace(/^act_/, "");
+function normalizeAdAccountId(value) {
+  return value.trim().replace(/^act_/, "");
+}
+
+function normalizeClientSlug(value) {
+  const slug = value.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "_").replace(/^_+|_+$/g, "");
+  return slug.length > 0 ? slug : null;
+}
+
+function accountConfigFromEntry(entry) {
+  const trimmed = entry.trim();
+  if (!trimmed) return null;
+
+  const separator = trimmed.indexOf(":");
+  const hasClientPrefix = separator > 0 && !trimmed.slice(0, separator).startsWith("act_");
+  const clientSlug = hasClientPrefix ? normalizeClientSlug(trimmed.slice(0, separator)) : null;
+  const rawAccount = hasClientPrefix ? trimmed.slice(separator + 1) : trimmed;
+  const accountId = normalizeAdAccountId(rawAccount);
+
+  if (!accountId) return null;
+  return { accountId, rawAccountId: `act_${accountId}`, clientSlug };
+}
+
+function uniqueAccounts(accounts) {
+  const seen = new Set();
+  return accounts.filter((account) => {
+    if (seen.has(account.accountId)) return false;
+    seen.add(account.accountId);
+    return true;
+  });
+}
+
+function getMetaAccounts() {
+  const explicitAccounts = rawMetaAccounts
+    ?.split(",")
+    .map(accountConfigFromEntry)
+    .filter(Boolean);
+
+  if (explicitAccounts?.length) return uniqueAccounts(explicitAccounts);
+
+  const accountIds = rawMetaAccountIds
+    ?.split(",")
+    .map(accountConfigFromEntry)
+    .filter(Boolean);
+
+  if (accountIds?.length) return uniqueAccounts(accountIds);
+
+  const fallback = rawMetaAccountId ? accountConfigFromEntry(rawMetaAccountId) : null;
+  return fallback ? [fallback] : [];
+}
+
+const metaAccounts = getMetaAccounts();
 
 const clientRules = [
   { keywords: ["zamora", "arjona", "alofoke", "camila"], slug: "zamora" },
@@ -108,8 +161,8 @@ async function fetchMetaPages(url, label) {
   return rows;
 }
 
-function buildCampaignsUrl() {
-  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/act_${metaAccountId}/campaigns`);
+function buildCampaignsUrl(account) {
+  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${account.rawAccountId}/campaigns`);
   url.searchParams.set("access_token", metaToken);
   url.searchParams.set("effective_status", JSON.stringify(["ACTIVE"]));
   url.searchParams.set("fields", "id,name,status,objective,daily_budget,start_time");
@@ -117,8 +170,8 @@ function buildCampaignsUrl() {
   return url.toString();
 }
 
-function buildInsightsUrl(campaignIds) {
-  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/act_${metaAccountId}/insights`);
+function buildInsightsUrl(account, campaignIds) {
+  const url = new URL(`https://graph.facebook.com/${META_API_VERSION}/${account.rawAccountId}/insights`);
   url.searchParams.set("access_token", metaToken);
   url.searchParams.set("level", "campaign");
   url.searchParams.set("date_preset", "today");
@@ -182,7 +235,17 @@ async function markAbsentActiveCampaignsPaused(activeMetaCampaignIds, syncedAt) 
 
 console.log(`Refreshing active campaign snapshots for ${today}`);
 
-const campaigns = await fetchMetaPages(buildCampaignsUrl(), "campaigns");
+const campaignGroups = await Promise.all(metaAccounts.map(async (account) => ({
+  account,
+  campaigns: await fetchMetaPages(buildCampaignsUrl(account), `campaigns-${account.rawAccountId}`),
+})));
+const campaigns = campaignGroups.flatMap((group) => group.campaigns);
+const campaignAccountById = new Map();
+for (const group of campaignGroups) {
+  for (const campaign of group.campaigns) {
+    campaignAccountById.set(campaign.id, group.account);
+  }
+}
 const campaignIds = campaigns.map((campaign) => campaign.id);
 const [existingMetadata, overrides] = await Promise.all([
   readExistingCampaignMetadata(campaignIds),
@@ -190,9 +253,12 @@ const [existingMetadata, overrides] = await Promise.all([
 ]);
 
 const insightRows = [];
-for (let index = 0; index < campaignIds.length; index += BATCH_SIZE) {
-  const batch = campaignIds.slice(index, index + BATCH_SIZE);
-  insightRows.push(...await fetchMetaPages(buildInsightsUrl(batch), `insights-${index}`));
+for (const group of campaignGroups) {
+  const groupCampaignIds = group.campaigns.map((campaign) => campaign.id);
+  for (let index = 0; index < groupCampaignIds.length; index += BATCH_SIZE) {
+    const batch = groupCampaignIds.slice(index, index + BATCH_SIZE);
+    insightRows.push(...await fetchMetaPages(buildInsightsUrl(group.account, batch), `insights-${group.account.rawAccountId}-${index}`));
+  }
 }
 
 const insightsByCampaignId = new Map(insightRows.map((row) => [row.campaign_id, row]));
@@ -202,9 +268,11 @@ const retiredCampaignIds = await markAbsentActiveCampaignsPaused(campaignIds, sc
 const campaignRows = campaigns.map((campaign) => {
   const insight = insightsByCampaignId.get(campaign.id);
   const existing = existingMetadata.get(campaign.id);
+  const accountClientSlug = campaignAccountById.get(campaign.id)?.clientSlug ?? null;
   const clientSlug = overrides.has(campaign.id)
     ? overrides.get(campaign.id)
     : storedClientSlugOrNull(existing?.client_slug)
+    ?? accountClientSlug
     ?? guessClientSlug(campaign.name);
 
   return {

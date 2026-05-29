@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { fmtUsd, fmtNum, slugToLabel, computeBlendedRoas } from "@/lib/formatters";
 import type { DailyInsight } from "@/lib/meta-campaigns";
+import { getDefaultMetaAdAccountId } from "@/lib/meta-accounts";
 
 import { AdminPageHeader } from "@/components/admin/page-header";
 
@@ -31,7 +32,7 @@ export default async function CampaignsPage({ searchParams }: Props) {
   const overallCtr = totalImpressions > 0 ? (totalClicks / totalImpressions) * 100 : 0;
   const unassignedCampaignCount = campaigns.filter((campaign) => campaign.clientSlug === "unknown").length;
 
-  const metaAdAccountId = process.env.META_AD_ACCOUNT_ID ?? null;
+  const metaAdAccountId = getDefaultMetaAdAccountId();
   const hasData = campaigns.length > 0;
 
   const dailyInsightsByCampaign: Record<string, DailyInsight[]> = {};

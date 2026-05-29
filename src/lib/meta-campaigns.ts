@@ -4,6 +4,7 @@ import {
   resolveEffectiveCampaignClientSlug,
 } from "./campaign-client-assignment";
 import { centsToUsd } from "./formatters";
+import { getMetaAccessToken, getMetaAccountConfigs } from "./meta-accounts";
 import type { MetaInsightsTimeRange } from "./meta-api";
 import { supabaseAdmin } from "./supabase";
 
@@ -24,6 +25,7 @@ export interface MetaCampaignCard {
   cpm: number | null;
   dailyBudget: number | null;
   startTime: string | null;
+  adAccountId?: string | null;
 }
 
 export interface DailyInsight {
@@ -41,11 +43,10 @@ export interface MetaCampaignsResult {
 }
 
 function getCredentials() {
-  const token = process.env.META_ACCESS_TOKEN;
-  const rawAccountId = process.env.META_AD_ACCOUNT_ID;
-  if (!token || !rawAccountId) return null;
-  const accountId = rawAccountId.replace(/^act_/, "");
-  return { token, accountId };
+  const token = getMetaAccessToken();
+  const account = getMetaAccountConfigs()[0];
+  if (!token || !account) return null;
+  return { token, accountId: account.accountId };
 }
 
 interface MetaPagedResponse<T> {
@@ -243,6 +244,7 @@ function toStoredCampaignCard(row: StoredCampaignRow): MetaCampaignCard {
     cpm: toNumber(row.cpm),
     dailyBudget: centsToDollars(row.daily_budget),
     startTime: row.start_time ?? null,
+    adAccountId: null,
   };
 }
 
@@ -356,6 +358,7 @@ function toCampaignCard(
   insight: RawInsight | undefined,
   clientSlug: string,
   campaignType: string,
+  adAccountId: string | null,
 ): MetaCampaignCard {
   const spend = insight ? parseFloat(insight.spend) || 0 : 0;
   const roas = getPurchaseRoas(insight);
@@ -377,6 +380,7 @@ function toCampaignCard(
     cpm: insight ? safeParseFloat(insight.cpm) : null,
     dailyBudget: campaign.daily_budget ? centsToUsd(parseInt(campaign.daily_budget)) : null,
     startTime: campaign.start_time ?? null,
+    adAccountId,
   };
 }
 
@@ -608,6 +612,7 @@ export async function fetchCampaignById(
         rawInsights.find((row) => row.campaign_id === campaignId) ?? rawInsights[0],
         clientSlug,
         campaignMetadata.get(rawCampaign.id)?.campaignType ?? "sales",
+        null,
       ),
       dailyInsights,
       error: null,
@@ -622,26 +627,29 @@ export async function fetchAllCampaigns(
   range: CampaignRangeInput | MetaInsightsTimeRange,
   clientSlug?: string | null,
 ): Promise<MetaCampaignsResult> {
-  const creds = getCredentials();
-  if (!creds) {
+  const token = getMetaAccessToken();
+  const accounts = getMetaAccountConfigs();
+  if (!token || accounts.length === 0) {
     return fetchStoredCampaigns(range, clientSlug, "Meta API credentials not configured");
   }
 
-  const { token, accountId } = creds;
-  const base = `https://graph.facebook.com/${META_API_VERSION}/act_${accountId}`;
-
-  // Phase 1: fetch campaign list (lightweight -- no insights data)
-  const campaignsUrl = new URL(`${base}/campaigns`);
-  campaignsUrl.searchParams.set("access_token", token);
-  campaignsUrl.searchParams.set(
-    "fields",
-    "id,name,status,objective,daily_budget,start_time",
-  );
-  campaignsUrl.searchParams.set("limit", "500");
-
   try {
-    const [rawCampaigns, overrides, dbClientSlugs, campaignMetadata] = await Promise.all([
-      fetchAllPages<RawCampaign>(campaignsUrl.toString(), "campaigns"),
+    const [accountCampaigns, overrides, dbClientSlugs, campaignMetadata] = await Promise.all([
+      Promise.all(accounts.map(async (account) => {
+        const base = `https://graph.facebook.com/${META_API_VERSION}/${account.rawAccountId}`;
+        const campaignsUrl = new URL(`${base}/campaigns`);
+        campaignsUrl.searchParams.set("access_token", token);
+        campaignsUrl.searchParams.set(
+          "fields",
+          "id,name,status,objective,daily_budget,start_time",
+        );
+        campaignsUrl.searchParams.set("limit", "500");
+        return {
+          account,
+          base,
+          campaigns: await fetchAllPages<RawCampaign>(campaignsUrl.toString(), `campaigns-${account.rawAccountId}`),
+        };
+      })),
       readOptionalSupabaseData("campaign overrides", () => getCampaignClientOverrideMap(), new Map<string, string>()),
       readOptionalSupabaseData("client slugs", () => loadActiveClientSlugs(), []),
       readOptionalSupabaseData(
@@ -651,13 +659,22 @@ export async function fetchAllCampaigns(
       ),
     ]);
 
+    const rawCampaigns = accountCampaigns.flatMap((group) => group.campaigns);
+    const campaignAccountById = new Map<string, typeof accounts[number]>();
+    for (const group of accountCampaigns) {
+      for (const campaign of group.campaigns) {
+        campaignAccountById.set(campaign.id, group.account);
+      }
+    }
+
     // Derive client slugs: Supabase override > stored slug > guessed fallback
     const campaignSlugs = new Map<string, string>();
     for (const c of rawCampaigns) {
+      const accountClientSlug = campaignAccountById.get(c.id)?.clientSlug ?? null;
       const resolvedClientSlug = resolveEffectiveCampaignClientSlug(
         {
           campaign_id: c.id,
-          client_slug: campaignMetadata.get(c.id)?.clientSlug ?? null,
+          client_slug: campaignMetadata.get(c.id)?.clientSlug ?? accountClientSlug,
           name: c.name,
         },
         overrides,
@@ -667,6 +684,9 @@ export async function fetchAllCampaigns(
     // Merge campaign-derived slugs with all clients from the clients table
     const slugSet = new Set(campaignSlugs.values());
     for (const s of dbClientSlugs) slugSet.add(s);
+    for (const account of accounts) {
+      if (account.clientSlug) slugSet.add(account.clientSlug);
+    }
     slugSet.delete("unknown");
     const clients = [...slugSet].sort();
 
@@ -683,22 +703,25 @@ export async function fetchAllCampaigns(
     const rawDaily: RawDailyInsight[] = [];
     const insightsFields = "campaign_id,campaign_name,spend,impressions,clicks,ctr,cpc,cpm,purchase_roas";
 
-    for (let i = 0; i < insightIds.length; i += BATCH) {
-      const batch = insightIds.slice(i, i + BATCH);
-      const filter = buildCampaignFilter(batch);
+    for (const group of accountCampaigns) {
+      const groupIds = insightIds.filter((id) => campaignAccountById.get(id)?.accountId === group.account.accountId);
+      for (let i = 0; i < groupIds.length; i += BATCH) {
+        const batch = groupIds.slice(i, i + BATCH);
+        const filter = buildCampaignFilter(batch);
 
-      const [insights, daily] = await Promise.all([
-        fetchAllPages<RawInsight>(
-          buildInsightsUrl(base, token, range, filter, insightsFields, "500"),
-          `insights-${i}`,
-        ),
-        fetchAllPages<RawDailyInsight>(
-          buildInsightsUrl(base, token, range, filter, insightsFields, "5000", "1"),
-          `daily-${i}`,
-        ),
-      ]);
-      rawInsights.push(...insights);
-      rawDaily.push(...daily);
+        const [insights, daily] = await Promise.all([
+          fetchAllPages<RawInsight>(
+            buildInsightsUrl(group.base, token, range, filter, insightsFields, "500"),
+            `insights-${group.account.rawAccountId}-${i}`,
+          ),
+          fetchAllPages<RawDailyInsight>(
+            buildInsightsUrl(group.base, token, range, filter, insightsFields, "5000", "1"),
+            `daily-${group.account.rawAccountId}-${i}`,
+          ),
+        ]);
+        rawInsights.push(...insights);
+        rawDaily.push(...daily);
+      }
     }
 
     const insightMap = new Map<string, RawInsight>();
@@ -712,6 +735,7 @@ export async function fetchAllCampaigns(
         insightMap.get(c.id),
         campaignSlugs.get(c.id) ?? "unknown",
         campaignMetadata.get(c.id)?.campaignType ?? "sales",
+        campaignAccountById.get(c.id)?.rawAccountId ?? null,
       ),
     );
 
