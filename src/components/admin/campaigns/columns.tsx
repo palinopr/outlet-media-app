@@ -242,25 +242,29 @@ export function getCampaignColumns(opts: CampaignColumnsOptions): ColumnDef<Meta
     {
       id: "actions",
       enableHiding: false,
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1.5">
-          <SyncButton
-            campaignId={row.original.campaignId}
-            status={row.original.status}
-            dailyBudget={row.original.dailyBudget != null ? Math.round(row.original.dailyBudget * 100) : null}
-          />
-          {metaAdAccountId ? (
-            <a
-              href={`https://www.facebook.com/adsmanager/manage/campaigns?act=${metaAdAccountId}&selected_campaign_ids=${row.original.campaignId}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-            </a>
-          ) : null}
-        </div>
-      ),
+      cell: ({ row }) => {
+        const rowAdAccountId = row.original.adAccountId ?? metaAdAccountId;
+
+        return (
+          <div className="flex items-center gap-1.5">
+            <SyncButton
+              campaignId={row.original.campaignId}
+              status={row.original.status}
+              dailyBudget={row.original.dailyBudget != null ? Math.round(row.original.dailyBudget * 100) : null}
+            />
+            {rowAdAccountId ? (
+              <a
+                href={`https://www.facebook.com/adsmanager/manage/campaigns?act=${rowAdAccountId}&selected_campaign_ids=${row.original.campaignId}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </a>
+            ) : null}
+          </div>
+        );
+      },
     },
   ];
 }

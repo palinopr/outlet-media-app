@@ -20,6 +20,8 @@ const serverSchema = z.object({
 
   // Optional integrations
   META_ACCESS_TOKEN: z.string().optional(),
+  META_AD_ACCOUNTS: z.string().optional(),
+  META_AD_ACCOUNT_IDS: z.string().optional(),
   META_AD_ACCOUNT_ID: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
   RESEND_FROM_EMAIL: z.string().optional(),
@@ -59,6 +61,8 @@ function validateEnv() {
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     INGEST_SECRET: process.env.INGEST_SECRET,
     META_ACCESS_TOKEN: process.env.META_ACCESS_TOKEN,
+    META_AD_ACCOUNTS: process.env.META_AD_ACCOUNTS,
+    META_AD_ACCOUNT_IDS: process.env.META_AD_ACCOUNT_IDS,
     META_AD_ACCOUNT_ID: process.env.META_AD_ACCOUNT_ID,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,

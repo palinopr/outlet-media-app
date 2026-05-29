@@ -156,7 +156,7 @@ describe("fetchAllCampaigns", () => {
     const { fetchAllCampaigns } = await import("@/lib/meta-campaigns");
     const result = await fetchAllCampaigns("30");
 
-    expect(result.error).toContain("campaigns failed (401)");
+    expect(result.error).toContain("campaigns-act_123 failed (401)");
     expect(result.campaigns).toEqual([]);
     expect(result.dailyInsights).toEqual([]);
   });
@@ -199,7 +199,7 @@ describe("fetchAllCampaigns", () => {
     const { fetchAllCampaigns } = await import("@/lib/meta-campaigns");
     const result = await fetchAllCampaigns("today", "zamora");
 
-    expect(result.error).toContain("campaigns failed (401)");
+    expect(result.error).toContain("campaigns-act_123 failed (401)");
     expect(result.campaigns).toEqual([
       expect.objectContaining({
         campaignId: "cmp_1",
@@ -508,5 +508,102 @@ describe("fetchAllCampaigns", () => {
     expect(console.warn).toHaveBeenCalledWith(
       expect.stringContaining("optional Supabase campaign overrides unavailable"),
     );
+  });
+
+  it("reads multiple named Meta ad accounts and uses the account client as durable fallback", async () => {
+    process.env = {
+      ...process.env,
+      META_AD_ACCOUNTS: "outlet_media:act_123,zamora:act_456",
+    };
+    supabaseState.reject = false;
+    supabaseState.tableData = {
+      clients: [{ slug: "outlet_media" }, { slug: "zamora" }],
+      campaign_client_overrides: [],
+      meta_campaigns: [],
+    };
+
+    vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+
+      if (url.pathname.endsWith("/act_123/campaigns")) {
+        return Response.json({
+          data: [
+            {
+              id: "cmp_outlet",
+              name: "Outlet Media Brand Campaign",
+              status: "ACTIVE",
+              objective: "OUTCOME_TRAFFIC",
+            },
+          ],
+        });
+      }
+
+      if (url.pathname.endsWith("/act_456/campaigns")) {
+        return Response.json({
+          data: [
+            {
+              id: "cmp_zamora",
+              name: "Los Tigres del Norte Norfolk",
+              status: "ACTIVE",
+              objective: "OUTCOME_TRAFFIC",
+            },
+          ],
+        });
+      }
+
+      if (url.pathname.endsWith("/act_123/insights")) {
+        return Response.json({
+          data: [
+            {
+              campaign_id: "cmp_outlet",
+              campaign_name: "Outlet Media Brand Campaign",
+              spend: "1.00",
+              impressions: "100",
+              clicks: "10",
+              ctr: "10",
+              cpc: "0.10",
+              cpm: "10",
+            },
+          ],
+        });
+      }
+
+      if (url.pathname.endsWith("/act_456/insights")) {
+        return Response.json({
+          data: [
+            {
+              campaign_id: "cmp_zamora",
+              campaign_name: "Los Tigres del Norte Norfolk",
+              spend: "2.00",
+              impressions: "200",
+              clicks: "20",
+              ctr: "10",
+              cpc: "0.10",
+              cpm: "10",
+            },
+          ],
+        });
+      }
+
+      return Response.json({ data: [] });
+    }));
+
+    const { fetchAllCampaigns } = await import("@/lib/meta-campaigns");
+    const result = await fetchAllCampaigns("today");
+
+    expect(result.error).toBeNull();
+    expect(result.clients).toEqual(["outlet_media", "zamora"]);
+    expect(result.campaigns).toEqual([
+      expect.objectContaining({
+        campaignId: "cmp_outlet",
+        clientSlug: "outlet_media",
+        adAccountId: "act_123",
+      }),
+      expect.objectContaining({
+        campaignId: "cmp_zamora",
+        clientSlug: "zamora",
+        adAccountId: "act_456",
+      }),
+    ]);
   });
 });
